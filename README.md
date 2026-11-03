@@ -34,7 +34,7 @@ tested in the Docker court.
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — 39 core tests — see [`docs/store-status.md`](docs/store-status.md) |
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — 54 court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC; some FUSE verbs are `ENOSYS` (locking, mknod, fallocate, copy_file_range) — see [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
-| P7 | Bench courts, receipt bundle, showcase, release | **In progress** — verification court passes and produced `bench/receipts/verify-20261103T172416Z.json`; benchmark contracts are frozen, but no performance claim is made. See [`docs/STATUS.md`](docs/STATUS.md) |
+| P7 | Bench courts, receipt bundle, showcase, release | **In progress** — verification court passes (`bench/receipts/verify-20261103T172416Z.json`); the `bench` court produced codec, store, and `fio` filesystem receipts (`bench/receipts/bench-*`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); no headline performance claim is made. |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
@@ -101,6 +101,25 @@ scripts/docker-court.sh fuse "bash scripts/showcase.sh"
 
 A blocked capability is recorded as `"status": "blocked"` with a precise
 reason; the script never marks an unobserved step passed.
+
+## Benchmarks
+
+The `bench` court runs the three P7 harnesses under the same hard limits as
+the other courts. It is FUSE-capable and includes the external compression
+CLIs plus `fio`.
+
+```sh
+scripts/docker-court.sh bench "bash bench/scripts/run_codec_ext_bench.sh"
+scripts/docker-court.sh bench "bash bench/scripts/run_store_bench.sh"
+scripts/docker-court.sh bench "bash bench/scripts/run_fs_bench.sh"
+```
+
+Each harness writes a receipt with raw samples and a raw log to
+`bench/receipts/`. The current results, every loss, and the remaining gaps are
+in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); tables can be regenerated with
+`bench/scripts/summarize_bench.py` and two receipts compared with
+`bench/scripts/compare_bench.py`. The tmpfs filesystem reference is
+reference-only and explicitly non-equivalent to WeftFS.
 
 ## Repository layout
 

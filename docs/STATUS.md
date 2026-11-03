@@ -6,6 +6,10 @@ implemented, tested, ignored, and not done. The verification receipt is
 The earlier `verify-20261103T165944Z` receipt is retained as history. The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
+The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
+`bench/receipts/bench-store-20261103T175920Z.json`, and
+`bench/receipts/bench-fs-20261103T180751Z.json`; the analysis, losses, and
+gaps are in `bench/RESULTS-v1.md`.
 
 ## 1. Repositories and revisions
 
@@ -117,6 +121,40 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   with `SHOWCASE_COMPARE_WITH` must match on every field except wall-clock
   timestamps.
 
+### P7 benchmark court — implemented, first measured results
+
+- `docker/bench.Dockerfile` and `scripts/docker-court.sh bench` add a
+  FUSE-capable, OOM-limited benchmark court with `zstd`, `xz`, `gzip`,
+  `brotli`, `sqlite3`, `fio`, Rust, and Go. Unknown court kinds are still
+  rejected and the memory/swap/pids/CPU limits are unchanged.
+- Codec baselines (`bench-codec-20261103T175847Z.json`): external zstd 3/9/19,
+  gzip 9, xz 9, and brotli 9 on seven deterministic corpora, plus WeftCodec
+  RAW/ZSTD/DELTA/DICTIONARY/auto with marginal and whole-object accounting.
+  Every decode is verified before its sample is accepted.
+- Store benchmark (`bench-store-20261103T175920Z.json`): 100/1,000/10,000
+  objects, 1–3 relations each, snapshots, selectors, churn, full verify, GC,
+  and on-disk bytes against the real Rust store API. Peak RSS 169 MiB.
+- Filesystem benchmark (`bench-fs-20261103T180751Z.json`): `fio` against a
+  Rust WeftFS mount, a Go WeftFS mount, and a tmpfs reference in one container.
+  The Go mount completed reliably (`go_status: ok`). The tmpfs column is
+  reference-only and explicitly non-equivalent.
+- Headline scoped observations (not claims of superiority):
+  - WeftCodec ZSTD-3 is 545 bytes on 4 MiB repetitive data and RAW is
+    4,194,404 bytes on 4 MiB random data; `auto` selects accordingly.
+  - DELTA/DICTIONARY do not reduce whole-pair bytes when the required base is
+    counted (near-dup 1 MiB: 1,128,560 / 1,073,309 vs 1,048,709 for ZSTD-3).
+  - Store relation/tag queries cost ~414–424 ms at 10,000 objects because
+    evaluation scans all relations per object; the n-result kind query costs
+    1.93 ms. Replay is 32.6 s and full verify 70.3 s at 10,000 objects.
+  - Filesystem writes rewrite the whole file per write: ~20 IOPS for 1 MiB
+    sequential writes and ~73 IOPS for 4 KiB random writes (Rust), with
+    ~7.6 ms p50 for a 4 KiB write with `fsync`.
+  - A 1,000-object ingest measurement varied by 86% between runs; the range is
+    reported rather than a single point.
+- `bench/scripts/summarize_bench.py` regenerates the tables and
+  `bench/scripts/compare_bench.py` compares two receipts for stability.
+  `bench/RESULTS-v1.md` publishes every loss and the explicit gaps.
+
 ## 3. Evidence discipline
 
 - Every build/test ran through `scripts/docker-court.sh` in a minimal official
@@ -126,15 +164,24 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - `scripts/verify-all.sh` re-ran all nine courts and produced
   `bench/receipts/verify-20261103T165944Z.{json,log}` with revisions, host,
   command log, and per-court results.
-- No performance comparison has been run. `bench/CONTRACTS.md` fixes the
-  methodology before results exist. No throughput/space/energy claim is made.
+- The P7 benchmark court ran codec, store, and filesystem benchmarks under the
+  same hard limits. Every receipt contains raw samples, environment, and
+  revisions. The codec receipt also records corpus hashes and per-tool command
+  templates; the filesystem receipt embeds the full `fio` command log. The
+  exact court commands are recorded in `bench/RESULTS-v1.md` §2. The results
+  are single-host observations; `bench/RESULTS-v1.md` states the losses and
+  gaps and makes no headline performance claim.
 - Crash tests are process-fault proxies, not physical power-loss tests.
 - No property is claimed model-checked. Invariants are tested.
 
 ## 4. What is **not** done (ranked)
 
-1. **Benchmark courts and receipts** (P7): codec/context/filesystem baselines
-   and the eight-component economic profile are specified but unrun.
+1. **Remaining benchmark gaps** (P7): no external SQLite/graph-store baseline,
+   no ext4/XFS/Btrfs/ZFS baseline, no physical power-loss or energy
+   measurement, no cold-cache/direct-I/O filesystem run, no metadata-storm or
+   concurrency sweep, and no matched Go/Rust codec performance court. The
+   codec/store/fio benchmarks themselves ran to completion in this pass; see
+   `bench/RESULTS-v1.md` §8 for the exact list.
 2. **Full formal model checking** (TLA+/Alloy/Apalache). Bounded exhaustive
    enumeration of the real commit/recovery format exists and passes, but it is
    not a proof and does not cover concurrent transaction models.
@@ -158,9 +205,10 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 
 ## 5. Next work queue (dependency order)
 
-1. Extend the benchmark court beyond the codec microbenchmark: context queries,
-   filesystem I/O, external baselines, Go/Rust matched courts (per
-   `bench/CONTRACTS.md`).
+1. Close the P7 benchmark gaps in `bench/RESULTS-v1.md` §8: external
+   SQLite/graph-store baselines, an ext4/XFS/ZFS court, cold-cache and
+   direct-I/O runs, metadata storms, concurrency, and a matched Go/Rust codec
+   court. Then add the eight-component economic profile.
 2. Full formal model checking for the commit/replay and transaction state
    machines; link the exact model revision here.
 3. Physical power-loss court on a VM/device with controllable power; today's

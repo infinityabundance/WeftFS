@@ -65,14 +65,15 @@ def codec_section(path):
             f"{fmt_ms(median(entry.get('decode_ns', [])))} |"
         )
     print("\n### WeftCodec (marginal frame and whole-object bytes)\n")
-    print("| Corpus | Mode | Chosen | Frame bytes | Dependency bytes | Whole bytes | Encode ms | Decode ms |")
-    print("|---|---|---|---:|---:|---:|---:|---:|")
+    print("| Corpus | Mode | Level | Chosen | Frame bytes | Dependency bytes | Whole bytes | Encode ms | Decode ms |")
+    print("|---|---|---:|---|---:|---:|---:|---:|---:|")
     for entry in receipt.get("weftcodec", []):
         if not entry.get("applicable", True):
-            print(f"| {entry['corpus']} | {entry['mode']} | n/a | n/a | n/a | n/a | n/a | n/a |")
+            print(f"| {entry['corpus']} | {entry['mode']} | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
             continue
         print(
-            f"| {entry['corpus']} | {entry['mode']} | {entry.get('chosen_mode', '')} | "
+            f"| {entry['corpus']} | {entry['mode']} | {entry.get('level', '')} | "
+            f"{entry.get('chosen_mode', '')} | "
             f"{fmt_bytes(entry.get('frame_bytes'))} | "
             f"{fmt_bytes(entry.get('dependency_bytes'))} | "
             f"{fmt_bytes(entry.get('whole_object_bytes'))} | "

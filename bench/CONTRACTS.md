@@ -102,6 +102,22 @@ runnable harness. A receipt without a corpus manifest and revision is invalid.
 
 ## 8. Current evidence
 
-Only correctness evidence exists: `scripts/verify-all.sh` produces a
-machine-readable verification receipt. No throughput, latency, space, or
-energy comparison has been run, and none is claimed in the README.
+Correctness evidence: `scripts/verify-all.sh` produces a machine-readable
+verification receipt, and the twelve-step showcase produces its own receipt.
+
+First benchmark pass (2026-11-03):
+
+- `bench/receipts/bench-codec-20261103T175847Z.json` — external zstd/gzip/xz/
+  brotli baselines plus WeftCodec modes with marginal and whole-object
+  accounting; every decode verified before timing.
+- `bench/receipts/bench-store-20261103T175920Z.json` — 100/1,000/10,000-object
+  stores, selectors, relations, snapshots, verify, GC, and on-disk bytes.
+- `bench/receipts/bench-fs-20261103T180751Z.json` — `fio` against Rust and Go
+  WeftFS mounts and a labelled tmpfs reference in one container.
+- `bench/RESULTS-v1.md` — tables, scoped analysis, every published loss, and
+  the explicit gaps.
+
+Still not measured: external SQLite/graph-store baselines, ext4/XFS/Btrfs/ZFS
+baselines, physical power loss, energy, cold-cache and direct-I/O filesystem
+runs, metadata storms, concurrency sweeps, and a matched Go/Rust codec court.
+No headline performance claim is made from this first benchmark pass.
