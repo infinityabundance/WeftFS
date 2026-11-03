@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fs2::FileExt as Fs2FileExt;
+use weftcodec::context::CausalClosure;
 use weftcodec::selector::Selector;
 use weftcodec::wcb::Value;
 use weftcodec::Limits;
@@ -26,9 +27,10 @@ use crate::format::{
 use crate::identity::{self, Hash32};
 use crate::recovery::{self, BlobKind};
 use crate::state::{
-    derive_entry_id, derive_version_id, validate_name_bytes, validate_snapshot_name, EntryRecord,
-    ObjectKind, ObjectRecord, Op, RelationKind, RelationRecord, RelationTarget, State,
-    ATTR_SYMLINK_TARGET, SAVED_CONTEXT_PREDICATE, SAVED_CONTEXT_SELECTOR_ATTR, XATTR_PREFIX,
+    derive_entry_id, derive_version_id, derive_version_id_with_identity, validate_name_bytes,
+    validate_snapshot_name, EntryRecord, ObjectKind, ObjectRecord, Op, RelationKind,
+    RelationRecord, RelationTarget, State, ATTR_SYMLINK_TARGET, SAVED_CONTEXT_PREDICATE,
+    SAVED_CONTEXT_SELECTOR_ATTR, XATTR_PREFIX,
 };
 
 /// Maximum current file size for `write_file`/`truncate` (256 MiB).
@@ -117,6 +119,9 @@ pub struct VerifyReport {
     pub checked_objects: u64,
     pub checked_manifests: u64,
     pub checked_chunks: u64,
+    pub checked_context_roots: u64,
+    pub checked_causal: u64,
+    pub checked_capabilities: u64,
     pub rejected_generations: Vec<u64>,
     pub problems: Vec<VerifyProblem>,
 }
@@ -646,6 +651,25 @@ impl Store {
         attrs: BTreeMap<String, Value>,
         seed: &[u8],
     ) -> Result<Hash32> {
+        self.create_file_seeded_causal(parent, name, bytes, mode, uid, gid, attrs, seed, &[])
+    }
+
+    /// Create a regular file with an explicit ObjectId seed and optional
+    /// `causal_exact` ancestry. A non-empty `causal` selects `causal_exact`;
+    /// an empty slice preserves the frozen `bytes_only` v1 behaviour.
+    #[allow(clippy::too_many_arguments)]
+    pub fn create_file_seeded_causal(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        bytes: &[u8],
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, Value>,
+        seed: &[u8],
+        causal: &[Hash32],
+    ) -> Result<Hash32> {
         self.require_writable()?;
         self.require_dir(parent)?;
         validate_name_bytes(name)?;
@@ -659,8 +683,25 @@ impl Store {
         if self.state.objects.contains_key(&object_id) {
             return Err(Error::exists("object id already exists"));
         }
+        let (attrs, identity_mode, causal_hash, causal_closure) = crate::context::prepare_causal(
+            self.current_state(),
+            attrs,
+            causal,
+            &Limits::default(),
+        )?;
+        if let Some(closure) = causal_closure {
+            crate::context::store_causal_closure(self, &closure)?;
+        }
         let mtime = self.now_ns();
-        let version = derive_version_id(object_id, manifest_id, size, mtime, None)?;
+        let version = derive_version_id_with_identity(
+            object_id,
+            manifest_id,
+            size,
+            mtime,
+            None,
+            identity_mode,
+            causal_hash,
+        )?;
         let record = ObjectRecord {
             id: object_id,
             kind: ObjectKind::File,
@@ -693,6 +734,21 @@ impl Store {
 
     /// Replace a byte range in a file, zero-filling a gap past EOF.
     pub fn write_file(&mut self, id: Hash32, offset: u64, bytes: &[u8]) -> Result<Hash32> {
+        self.write_file_causal(id, offset, bytes, &[])
+    }
+
+    /// Replace a byte range and optionally set `causal_exact` ancestry.
+    ///
+    /// An empty `causal` slice preserves an existing `causal_exact` closure
+    /// (identity mode is sticky) and keeps `bytes_only` objects byte-identical
+    /// to the frozen v1 identity.
+    pub fn write_file_causal(
+        &mut self,
+        id: Hash32,
+        offset: u64,
+        bytes: &[u8],
+        causal: &[Hash32],
+    ) -> Result<Hash32> {
         self.require_writable()?;
         let old = self.object_meta(id)?;
         if old.kind != ObjectKind::File {
@@ -713,13 +769,36 @@ impl Store {
         buffer[..current.len()].copy_from_slice(&current);
         buffer[offset as usize..end as usize].copy_from_slice(bytes);
         let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
+        let (attrs, identity_mode, causal_hash, closure) = if causal.is_empty() {
+            let (mode, hash) = crate::state::identity_from_attrs(&old)?;
+            (old.attrs.clone(), mode, hash, None)
+        } else {
+            crate::context::prepare_causal(
+                self.current_state(),
+                old.attrs.clone(),
+                causal,
+                &Limits::default(),
+            )?
+        };
+        if let Some(closure) = closure {
+            crate::context::store_causal_closure(self, &closure)?;
+        }
         let mtime = self.now_ns();
-        let version = derive_version_id(id, manifest_id, new_size, mtime, Some(old.version))?;
+        let version = derive_version_id_with_identity(
+            id,
+            manifest_id,
+            new_size,
+            mtime,
+            Some(old.version),
+            identity_mode,
+            causal_hash,
+        )?;
         let record = ObjectRecord {
             version,
             mtime_ns: mtime,
             content: manifest_id,
             size: new_size,
+            attrs,
             ..old
         };
         let ops = vec![
@@ -748,8 +827,17 @@ impl Store {
         let copy = current.len().min(buffer.len());
         buffer[..copy].copy_from_slice(&current[..copy]);
         let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
+        let (identity_mode, causal_hash) = crate::state::identity_from_attrs(&old)?;
         let mtime = self.now_ns();
-        let version = derive_version_id(id, manifest_id, size, mtime, Some(old.version))?;
+        let version = derive_version_id_with_identity(
+            id,
+            manifest_id,
+            size,
+            mtime,
+            Some(old.version),
+            identity_mode,
+            causal_hash,
+        )?;
         let record = ObjectRecord {
             version,
             mtime_ns: mtime,
@@ -1200,12 +1288,15 @@ impl Store {
         if let Some(attrs) = changes.attrs {
             record.attrs = attrs;
         }
-        record.version = derive_version_id(
+        let (identity_mode, causal_hash) = crate::state::identity_from_attrs(&record)?;
+        record.version = derive_version_id_with_identity(
             record.id,
             record.content,
             record.size,
             record.mtime_ns,
             Some(old.version),
+            identity_mode,
+            causal_hash,
         )?;
         let ops = vec![
             Op::PutObject(record.clone()),
@@ -1726,6 +1817,28 @@ impl Store {
         crate::evaluate::resolve_state(selector, snapshot, state, principal, limits)
     }
 
+    /// Resolve a saved-context view under an optional capability context.
+    /// Saved contexts have no ContextRootId, so the capability must grant the
+    /// selector namespace (a root grant alone cannot authorize them).
+    #[allow(clippy::too_many_arguments)]
+    pub fn resolve_saved_context_with_capability(
+        &self,
+        selector: &weftcodec::selector::Selector,
+        snapshot: Hash32,
+        state: &State,
+        principal: &Principal,
+        limits: &weftcodec::Limits,
+        capability: Option<&crate::context::CapabilityContext>,
+        now_ns: i64,
+    ) -> Result<crate::evaluate::Resolution> {
+        if let Some(cap) = capability {
+            cap.check_valid_at(now_ns)?;
+        }
+        crate::evaluate::resolve_state_with_budget(
+            selector, snapshot, state, principal, limits, capability, None, None,
+        )
+    }
+
     /// Resolve exactly one object, rejecting zero (`NotFound`) and many
     /// (`Ambiguous`) using the full authorized count.
     pub fn require_one(
@@ -1842,6 +1955,7 @@ impl Store {
                             });
                         }
                         self.verify_state(&state, full, &mut report);
+                        self.verify_context_state(&state, full, &mut report);
                     }
                     Err(err) => report.problems.push(VerifyProblem {
                         class: err.class_name().to_owned(),
@@ -1896,6 +2010,214 @@ impl Store {
 
         report.ok = report.problems.is_empty();
         Ok(report)
+    }
+
+    /// Validate Context Root records, causal attributes/closure records, and
+    /// stored capability hashes. In `full` mode, re-resolve every Context Root
+    /// and require it to reproduce the recorded selector/snapshot/root ids.
+    fn verify_context_state(&self, state: &State, full: bool, report: &mut VerifyReport) {
+        let limits = Limits::default();
+        let principal = match state.objects.get(&State::ROOT_ID) {
+            Some(root) => Principal::new(root.uid, root.gid, Vec::new()),
+            None => {
+                report.problems.push(VerifyProblem {
+                    class: "Corrupt".to_owned(),
+                    detail: "context verification: namespace root is missing".to_owned(),
+                });
+                return;
+            }
+        };
+        let now = self.now_ns();
+
+        // Stored capability records: decode and re-hash.
+        for relation in state.relations.values() {
+            if !crate::context::is_capability_relation(relation) {
+                continue;
+            }
+            let target = match crate::context::relation_target_text(relation) {
+                Some(text) => text.to_owned(),
+                None => {
+                    report.problems.push(VerifyProblem {
+                        class: "Corrupt".to_owned(),
+                        detail: "capability relation target is not text".to_owned(),
+                    });
+                    continue;
+                }
+            };
+            let hash = match Hash32::from_hex(&target) {
+                Ok(hash) => hash,
+                Err(_) => {
+                    report.problems.push(VerifyProblem {
+                        class: "Corrupt".to_owned(),
+                        detail: "capability target is not a hash".to_owned(),
+                    });
+                    continue;
+                }
+            };
+            match self.load_capability_at(state, hash) {
+                Ok(scope) => {
+                    report.checked_capabilities += 1;
+                    if scope.id().ok() != Some(hash) {
+                        report.problems.push(VerifyProblem {
+                            class: "Corrupt".to_owned(),
+                            detail: "stored capability hash does not match its record".to_owned(),
+                        });
+                    }
+                }
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("capability {hash}: {err}"),
+                }),
+            }
+        }
+
+        let contexts = match self.list_context_roots_at(state) {
+            Ok(contexts) => contexts,
+            Err(err) => {
+                report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("context-root records: {err}"),
+                });
+                return;
+            }
+        };
+        for stored in contexts {
+            report.checked_context_roots += 1;
+            if stored.root.id().ok() != Some(stored.context_root_id) {
+                report.problems.push(VerifyProblem {
+                    class: "Corrupt".to_owned(),
+                    detail: format!(
+                        "context root `{}` id does not match its record",
+                        stored.name
+                    ),
+                });
+                continue;
+            }
+            if let Err(err) = self.state_at(stored.root.snapshot) {
+                report.problems.push(VerifyProblem {
+                    class: "SnapshotMissing".to_owned(),
+                    detail: format!(
+                        "context root `{}` pins an unavailable snapshot: {err}",
+                        stored.name
+                    ),
+                });
+                continue;
+            }
+            if !full {
+                // Non-full verify still checks that a bound capability record is
+                // present when the store holds it; absence is not an error for a
+                // capability supplied only by the caller.
+                if let Some(hash) = stored.root.capability_hash {
+                    if self.load_capability_at(state, hash).is_ok() {
+                        report.checked_capabilities += 1;
+                    }
+                }
+                continue;
+            }
+            let capability = match stored.root.capability_hash {
+                Some(hash) => match self.load_capability_at(state, hash) {
+                    Ok(scope) => match crate::context::CapabilityContext::new(scope) {
+                        Ok(cap) => Some(cap),
+                        Err(err) => {
+                            report.problems.push(VerifyProblem {
+                                class: err.class_name().to_owned(),
+                                detail: format!("context root `{}`: {err}", stored.name),
+                            });
+                            continue;
+                        }
+                    },
+                    Err(err) => {
+                        report.problems.push(VerifyProblem {
+                            class: "CapabilityMissing".to_owned(),
+                            detail: format!(
+                                "context root `{}` binds an unavailable capability: {err}",
+                                stored.name
+                            ),
+                        });
+                        continue;
+                    }
+                },
+                None => None,
+            };
+            match self.resolve_context_at(
+                state,
+                &stored.name,
+                capability.as_ref(),
+                &principal,
+                &limits,
+                now,
+            ) {
+                Ok(resolved) => {
+                    if resolved.resolution.selector_id != stored.root.selector_id
+                        || resolved.resolution.snapshot_id != stored.root.snapshot
+                        || resolved.stored.context_root_id != stored.context_root_id
+                    {
+                        report.problems.push(VerifyProblem {
+                            class: "Corrupt".to_owned(),
+                            detail: format!(
+                                "context root `{}` resolution does not reproduce its recorded ids",
+                                stored.name
+                            ),
+                        });
+                    }
+                }
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("context root `{}` resolution failed: {err}", stored.name),
+                }),
+            }
+        }
+
+        for record in state.objects.values() {
+            match crate::state::object_causal_closure(record) {
+                Ok(None) => {}
+                Ok(Some(closure)) => {
+                    report.checked_causal += 1;
+                    if !full {
+                        continue;
+                    }
+                    let hash = match closure.id() {
+                        Ok(hash) => hash,
+                        Err(err) => {
+                            report.problems.push(VerifyProblem {
+                                class: "Corrupt".to_owned(),
+                                detail: format!("object {} causal hash: {err}", record.id),
+                            });
+                            continue;
+                        }
+                    };
+                    match recovery::read_blob_verified(
+                        &self.root,
+                        BlobKind::Manifest,
+                        hash,
+                        weftcodec::hash::DOMAIN_CAUSAL,
+                    ) {
+                        Ok(bytes) => match CausalClosure::from_canonical_bytes(&bytes, &limits) {
+                            Ok(stored_closure) if stored_closure == closure => {}
+                            Ok(_) => report.problems.push(VerifyProblem {
+                                class: "Corrupt".to_owned(),
+                                detail: format!(
+                                    "object {} causal closure blob disagrees with its attrs",
+                                    record.id
+                                ),
+                            }),
+                            Err(err) => report.problems.push(VerifyProblem {
+                                class: "Corrupt".to_owned(),
+                                detail: format!("object {} causal closure blob: {err}", record.id),
+                            }),
+                        },
+                        Err(err) => report.problems.push(VerifyProblem {
+                            class: err.class_name().to_owned(),
+                            detail: format!("object {} causal closure blob: {err}", record.id),
+                        }),
+                    }
+                }
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("object {} causal attrs: {err}", record.id),
+                }),
+            }
+        }
     }
 
     fn verify_state(&self, state: &State, full: bool, report: &mut VerifyReport) {
@@ -2112,6 +2434,29 @@ impl Store {
     }
 
     // ---- internals -------------------------------------------------------
+
+    /// Current store clock in UTC nanoseconds (the fixed fixture clock when
+    /// configured). Capability expiry is enforced against this clock.
+    pub fn clock_now_ns(&self) -> i64 {
+        self.now_ns()
+    }
+
+    /// Crate-internal commit hook used by the Context Root module so a single
+    /// commit can publish a capability record and a context-root relation
+    /// together.
+    pub(crate) fn commit_ops_pub(
+        &mut self,
+        ops: Vec<Op>,
+        force_checkpoint: bool,
+    ) -> Result<Hash32> {
+        self.commit_ops(ops, force_checkpoint)
+    }
+
+    /// Store a causal-closure record as a manifest-domain blob. The causal
+    /// record's `CausalClosureId` is exactly `H("weft/causal/v1", bytes)`.
+    pub(crate) fn store_causal_blob(&self, bytes: &[u8]) -> Result<Hash32> {
+        self.store_blob(BlobKind::Manifest, weftcodec::hash::DOMAIN_CAUSAL, bytes)
+    }
 
     fn require_writable(&self) -> Result<()> {
         if self.mode != OpenMode::ReadWrite {
@@ -2589,6 +2934,16 @@ fn mark_state(
     problems: &mut Vec<String>,
 ) {
     for record in state.objects.values() {
+        // A causal closure record is content-addressed under the manifest
+        // domain and is retained exactly as long as the object that names it
+        // (in current state, a snapshot, or a checkpoint).
+        if let Some(Value::Bytes(bytes)) = record.attrs.get(crate::state::ATTR_CAUSAL_HASH) {
+            if let Ok(hash) = Hash32::from_slice(bytes) {
+                if hash != Hash32::ZERO {
+                    manifests.insert(hash);
+                }
+            }
+        }
         if record.kind != ObjectKind::File {
             continue;
         }

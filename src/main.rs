@@ -11,15 +11,17 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use serde_json::json;
+use weftcodec::context::{Budget, ContextRoot, DEFAULT_RESOLVER};
 use weftcodec::selector;
 use weftcodec::wcb::Value;
 
 use weftfs::auth::Principal;
 use weftfs::conformance::build_fixture_store;
+use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::identity::Hash32;
-use weftfs::state::RelationTarget;
+use weftfs::state::{object_causal_closure, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE};
 use weftfs::store::{OpenMode, Options, SetAttr, Store};
 use weftfs::wcb_util::value_to_json;
 
@@ -82,6 +84,10 @@ enum Command {
         /// Explicit ObjectId seed (deterministic fixtures).
         #[arg(long)]
         seed: Option<String>,
+        /// Causal parent identities (comma-separated 64-hex ids). Selects
+        /// `causal_exact`; omitted means `bytes_only`.
+        #[arg(long)]
+        causal: Option<String>,
     },
     /// Overwrite a byte range (single atomic commit).
     Write {
@@ -92,6 +98,9 @@ enum Command {
         text: Option<String>,
         #[arg(long = "file")]
         input_file: Option<PathBuf>,
+        /// Causal parent identities (comma-separated 64-hex ids).
+        #[arg(long)]
+        causal: Option<String>,
     },
     /// Write file bytes to stdout.
     Cat {
@@ -198,6 +207,21 @@ enum Command {
     },
     /// Force a checkpoint commit.
     Checkpoint,
+    /// Context Root persistence, resolution, and materialization.
+    Context {
+        #[command(subcommand)]
+        command: ContextCommand,
+    },
+    /// Causal closure inspection.
+    Causal {
+        #[command(subcommand)]
+        command: CausalCommand,
+    },
+    /// `weft://` address canonicalization over the local store.
+    Uri {
+        #[command(subcommand)]
+        command: UriCommand,
+    },
     /// Mount the store over FUSE (requires the `fuse` feature).
     #[cfg(feature = "fuse")]
     Mount {
@@ -216,6 +240,10 @@ enum Command {
         /// Mount the current state read-only.
         #[arg(long = "read-only")]
         read_only: bool,
+        /// Capability JSON or canonical-hex file narrowing exact-id and
+        /// saved-context views.
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
     },
     /// Build the deterministic handoff fixture.
     ConformanceStore {
@@ -263,6 +291,86 @@ enum SnapshotCommand {
     Create { name: String },
     /// List snapshots.
     List,
+}
+
+#[derive(Subcommand)]
+enum ContextCommand {
+    /// Persist a Context Root relation.
+    Create {
+        #[arg(long)]
+        name: String,
+        /// Selector source text, or `@FILE`.
+        #[arg(long)]
+        selector: String,
+        /// Snapshot name or commit hex.
+        #[arg(long)]
+        snapshot: String,
+        /// Comma-separated causal entries (64-hex ids).
+        #[arg(long)]
+        causal: Option<String>,
+        /// Capability JSON or canonical-hex file.
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
+        #[arg(long = "max-results")]
+        max_results: Option<u64>,
+        #[arg(long = "max-bytes")]
+        max_bytes: Option<u64>,
+        #[arg(long = "max-depth")]
+        max_depth: Option<u64>,
+        #[arg(long = "max-work")]
+        max_work: Option<u64>,
+        /// Replace an existing same-name root in one commit.
+        #[arg(long)]
+        replace: bool,
+    },
+    /// List stored Context Roots.
+    List,
+    /// Show the stored record and identity.
+    Show { target: String },
+    /// Resolve a Context Root to its ordered result set.
+    Resolve {
+        target: String,
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+        #[arg(long = "group")]
+        groups: Vec<u64>,
+    },
+    /// Materialize exact bytes into an output directory atomically.
+    Materialize {
+        target: String,
+        #[arg(long)]
+        out: PathBuf,
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+        #[arg(long = "group")]
+        groups: Vec<u64>,
+    },
+    /// Print the canonical authoritative URI.
+    Uri { target: String },
+    /// Delete a stored Context Root by name.
+    Delete { name: String },
+}
+
+#[derive(Subcommand)]
+enum CausalCommand {
+    /// Show the recorded causal closure for an object/path/id.
+    Show { target: String },
+}
+
+#[derive(Subcommand)]
+enum UriCommand {
+    /// Canonicalize any `weft://` spelling.
+    Canonicalize { uri: String },
+    /// Show the authoritative URI for a stored name or address.
+    Show { target: String },
 }
 
 fn main() {
@@ -363,16 +471,44 @@ fn run(cli: Cli) -> Result<()> {
             attr_ints,
             attr_u64_lists,
             seed,
+            causal,
         } => {
             let (default_uid, default_gid) = current_ids();
             let bytes = read_input(text, input_file)?;
             let attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints, &attr_u64_lists)?;
             let mode = parse_mode(&mode)?;
+            let causal = parse_causal_entries(causal.as_deref())?;
             let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
-            let id = match seed {
-                Some(seed) => store.create_file_seeded(
+            let id = if causal.is_empty() {
+                match seed {
+                    Some(seed) => store.create_file_seeded(
+                        parent_id,
+                        &name,
+                        &bytes,
+                        mode,
+                        uid.unwrap_or(default_uid),
+                        gid.unwrap_or(default_gid),
+                        attrs,
+                        seed.as_bytes(),
+                    )?,
+                    None => store.create_file(
+                        parent_id,
+                        &name,
+                        &bytes,
+                        mode,
+                        uid.unwrap_or(default_uid),
+                        gid.unwrap_or(default_gid),
+                        attrs,
+                    )?,
+                }
+            } else {
+                let seed_bytes = match seed {
+                    Some(seed) => seed.into_bytes(),
+                    None => weftfs::identity::os_random_32()?.to_vec(),
+                };
+                store.create_file_seeded_causal(
                     parent_id,
                     &name,
                     &bytes,
@@ -380,26 +516,19 @@ fn run(cli: Cli) -> Result<()> {
                     uid.unwrap_or(default_uid),
                     gid.unwrap_or(default_gid),
                     attrs,
-                    seed.as_bytes(),
-                )?,
-                None => store.create_file(
-                    parent_id,
-                    &name,
-                    &bytes,
-                    mode,
-                    uid.unwrap_or(default_uid),
-                    gid.unwrap_or(default_gid),
-                    attrs,
-                )?,
+                    &seed_bytes,
+                    &causal,
+                )?
             };
             if json {
                 print_json(&json!({
                     "object_id": id.to_hex(),
                     "path": path,
                     "size": bytes.len(),
+                    "identity_mode": if causal.is_empty() { "bytes_only" } else { "causal_exact" },
                 }))
             } else {
-                println!("{}", id);
+                println!("{id}");
                 Ok(())
             }
         }
@@ -408,11 +537,13 @@ fn run(cli: Cli) -> Result<()> {
             offset,
             text,
             input_file,
+            causal,
         } => {
             let bytes = read_input(text, input_file)?;
+            let causal = parse_causal_entries(causal.as_deref())?;
             let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
-            let version = store.write_file(id, offset, &bytes)?;
+            let version = store.write_file_causal(id, offset, &bytes, &causal)?;
             if json {
                 print_json(&json!({
                     "object_id": id.to_hex(),
@@ -821,6 +952,9 @@ fn run(cli: Cli) -> Result<()> {
                     "checked_objects": report.checked_objects,
                     "checked_manifests": report.checked_manifests,
                     "checked_chunks": report.checked_chunks,
+                    "checked_context_roots": report.checked_context_roots,
+                    "checked_causal": report.checked_causal,
+                    "checked_capabilities": report.checked_capabilities,
                     "rejected_generations": report.rejected_generations,
                     "problems": problems,
                 }))
@@ -832,6 +966,9 @@ fn run(cli: Cli) -> Result<()> {
                 println!("checked_objects={}", report.checked_objects);
                 println!("checked_manifests={}", report.checked_manifests);
                 println!("checked_chunks={}", report.checked_chunks);
+                println!("checked_context_roots={}", report.checked_context_roots);
+                println!("checked_causal={}", report.checked_causal);
+                println!("checked_capabilities={}", report.checked_capabilities);
                 for problem in &report.problems {
                     println!("problem={}: {}", problem.class, problem.detail);
                 }
@@ -888,6 +1025,9 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
+        Command::Context { command } => run_context(&store, json, fixed_timestamp_ns, command),
+        Command::Causal { command } => run_causal(&store, json, fixed_timestamp_ns, command),
+        Command::Uri { command } => run_uri(&store, json, fixed_timestamp_ns, command),
         #[cfg(feature = "fuse")]
         Command::Mount {
             mountpoint,
@@ -895,11 +1035,13 @@ fn run(cli: Cli) -> Result<()> {
             allow_other,
             snapshot,
             read_only,
+            capability_file,
         } => {
             // v1 does not daemonize: the process always stays in the foreground
             // so SIGINT/SIGTERM can trigger a clean unmount.
             let _ = foreground;
-            let read_only = read_only || snapshot.is_some();
+            let capability = read_capability(&capability_file)?;
+            let read_only = read_only || snapshot.is_some() || capability.is_some();
             let mode = if read_only {
                 OpenMode::ReadOnly
             } else {
@@ -922,6 +1064,7 @@ fn run(cli: Cli) -> Result<()> {
                     read_only,
                     snapshot: snapshot_commit,
                     snapshot_state,
+                    capability,
                 },
             )
         }
@@ -1085,6 +1228,455 @@ fn run_relation(
                 &format!("deleted relation {relation_id}"),
                 json!({"relation_id": id.to_hex(), "generation": store.generation()}),
             )
+        }
+    }
+}
+
+fn parse_causal_entries(spec: Option<&str>) -> Result<Vec<Hash32>> {
+    match spec {
+        None => Ok(Vec::new()),
+        Some(text) if text.trim().is_empty() => Ok(Vec::new()),
+        Some(text) => parse_hash_list(text),
+    }
+}
+
+fn parse_hash_list(text: &str) -> Result<Vec<Hash32>> {
+    let mut out = Vec::new();
+    for entry in text.split(',') {
+        let entry = entry.trim();
+        if entry.is_empty() {
+            return Err(Error::invalid_argument("hash list contains an empty entry"));
+        }
+        out.push(Hash32::from_hex(entry)?);
+    }
+    Ok(out)
+}
+
+fn read_selector_source(spec: &str) -> Result<String> {
+    if let Some(path) = spec.strip_prefix('@') {
+        let bytes = fs::read(path)
+            .map_err(|err| Error::io(format!("cannot read selector file {path}: {err}")))?;
+        String::from_utf8(bytes).map_err(|_| Error::parse("selector file is not valid UTF-8"))
+    } else {
+        Ok(spec.to_owned())
+    }
+}
+
+fn read_capability(path: &Option<PathBuf>) -> Result<Option<CapabilityContext>> {
+    match path {
+        None => Ok(None),
+        Some(path) => {
+            let text = fs::read_to_string(path).map_err(|err| {
+                Error::io(format!("cannot read capability {}: {err}", path.display()))
+            })?;
+            let scope = parse_capability_text(&text)?;
+            CapabilityContext::new(scope).map(Some)
+        }
+    }
+}
+
+fn budget_from_flags(
+    max_results: Option<u64>,
+    max_bytes: Option<u64>,
+    max_depth: Option<u64>,
+    max_work: Option<u64>,
+) -> Result<Option<Budget>> {
+    let mut budget = Budget::new();
+    budget.max_results = max_results;
+    budget.max_bytes = max_bytes;
+    budget.max_depth = max_depth;
+    budget.max_work = max_work;
+    if budget.is_empty() {
+        Ok(None)
+    } else {
+        budget.validate()?;
+        Ok(Some(budget))
+    }
+}
+
+fn identity_mode_of(record: &weftfs::ObjectRecord) -> &'static str {
+    match record.attrs.get(ATTR_IDENTITY_MODE) {
+        Some(Value::Str(text)) if text == "causal_exact" => "causal_exact",
+        _ => "bytes_only",
+    }
+}
+
+fn context_root_json(stored: &weftfs::StoredContextRoot) -> Result<serde_json::Value> {
+    Ok(json!({
+        "name": stored.name,
+        "context_root_id": stored.context_root_id.to_hex(),
+        "uri": stored.uri,
+        "relation_id": stored.relation_id.to_hex(),
+        "namespace": stored.root.namespace,
+        "selector_id": stored.root.selector_id.to_hex(),
+        "selector_canonical_hex": hex::encode(&stored.root.selector_bytes),
+        "snapshot_id": stored.root.snapshot.to_hex(),
+        "resolver": stored.root.resolver,
+        "ordering": stored.root.ordering,
+        "closure": stored.root.causal.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
+        "capability_hash": stored.root.capability_hash.map(|hash| hash.to_hex()),
+        "budget": stored.root.budget.as_ref().map(|budget| budget.to_json()),
+        "canonical_hex": stored.record_hex,
+    }))
+}
+
+fn run_context(
+    store: &PathBuf,
+    json: bool,
+    fixed_timestamp_ns: Option<i64>,
+    command: ContextCommand,
+) -> Result<()> {
+    match command {
+        ContextCommand::Create {
+            name,
+            selector,
+            snapshot,
+            causal,
+            capability_file,
+            max_results,
+            max_bytes,
+            max_depth,
+            max_work,
+            replace,
+        } => {
+            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let source = read_selector_source(&selector)?;
+            let parsed = selector::parse(&source)?;
+            let snapshot_id = lookup_snapshot(&store, &snapshot)?;
+            let causal = parse_causal_entries(causal.as_deref())?;
+            let capability = read_capability(&capability_file)?;
+            let budget = budget_from_flags(max_results, max_bytes, max_depth, max_work)?;
+            let root = ContextRoot::new(
+                &parsed,
+                snapshot_id,
+                DEFAULT_RESOLVER,
+                causal,
+                capability.as_ref().map(|cap| cap.hash),
+                budget,
+            )?;
+            let relation_id = store.save_context_root(
+                &name,
+                &root,
+                capability.as_ref().map(|cap| &cap.scope),
+                replace,
+            )?;
+            let stored = store.load_context_root(&name)?;
+            if json {
+                let mut output = context_root_json(&stored)?;
+                output["generation"] = json!(store.generation());
+                output["relation_id"] = json!(relation_id.to_hex());
+                print_json(&output)
+            } else {
+                println!("context_root_id={}", stored.context_root_id);
+                println!("uri={}", stored.uri);
+                println!("relation_id={relation_id}");
+                Ok(())
+            }
+        }
+        ContextCommand::List => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let contexts = store.list_context_roots()?;
+            if json {
+                let items: Vec<_> = contexts
+                    .iter()
+                    .map(context_root_json)
+                    .collect::<Result<Vec<_>>>()?;
+                print_json(&json!({"contexts": items}))
+            } else {
+                for stored in contexts {
+                    println!("{} {} {}", stored.name, stored.context_root_id, stored.uri);
+                }
+                Ok(())
+            }
+        }
+        ContextCommand::Show { target } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let stored = store.load_context_root(&target)?;
+            if json {
+                print_json(&context_root_json(&stored)?)
+            } else {
+                println!("name={}", stored.name);
+                println!("context_root_id={}", stored.context_root_id);
+                println!("uri={}", stored.uri);
+                println!("selector_id={}", stored.root.selector_id);
+                println!("snapshot_id={}", stored.root.snapshot);
+                println!("resolver={}", stored.root.resolver);
+                println!("ordering={}", stored.root.ordering);
+                for entry in &stored.root.causal {
+                    println!("closure={entry}");
+                }
+                if let Some(hash) = stored.root.capability_hash {
+                    println!("capability_hash={hash}");
+                }
+                Ok(())
+            }
+        }
+        ContextCommand::Resolve {
+            target,
+            capability_file,
+            uid,
+            gid,
+            groups,
+        } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let capability = read_capability(&capability_file)?;
+            let (default_uid, default_gid) = current_ids();
+            let principal = Principal::new(
+                uid.unwrap_or(default_uid),
+                gid.unwrap_or(default_gid),
+                groups,
+            );
+            let limits = weftcodec::Limits::default();
+            let resolved = store.resolve_context(
+                &target,
+                capability.as_ref(),
+                &principal,
+                &limits,
+                store.clock_now_ns(),
+            )?;
+            let state = store.state_at(resolved.resolution.snapshot_id)?;
+            let results: Vec<_> = resolved
+                .resolution
+                .results
+                .iter()
+                .map(|reference| {
+                    let record = state.objects.get(&reference.object_id);
+                    let closure = record
+                        .and_then(|record| object_causal_closure(record).ok().flatten())
+                        .map(|closure| closure.closure.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>())
+                        .unwrap_or_default();
+                    json!({
+                        "object_id": reference.object_id.to_hex(),
+                        "version_id": reference.version_id.to_hex(),
+                        "content_id": reference.content_id.to_hex(),
+                        "size": record.map(|record| record.size).unwrap_or(0),
+                        "kind": record.map(|record| record.kind.as_str()).unwrap_or("unknown"),
+                        "path": state.path_for(reference.object_id).map(|path| String::from_utf8_lossy(&path).into_owned()),
+                        "causal_closure": closure,
+                    })
+                })
+                .collect();
+            let evidence: Vec<_> = resolved
+                .resolution
+                .evidence
+                .iter()
+                .map(|item| {
+                    let entries: Vec<_> = item
+                        .entries
+                        .iter()
+                        .map(|entry| {
+                            json!({
+                                "kind": entry.kind,
+                                "field": entry.field,
+                                "value": entry.value.as_ref().map(value_to_json),
+                            })
+                        })
+                        .collect();
+                    json!({"object_id": item.object_id.to_hex(), "entries": entries})
+                })
+                .collect();
+            if json {
+                print_json(&json!({
+                    "name": resolved.stored.name,
+                    "uri": resolved.stored.uri,
+                    "context_root_id": resolved.stored.context_root_id.to_hex(),
+                    "selector_id": resolved.resolution.selector_id.to_hex(),
+                    "snapshot_id": resolved.resolution.snapshot_id.to_hex(),
+                    "matched_count": resolved.resolution.matched_count,
+                    "returned": resolved.resolution.results.len(),
+                    "truncated": resolved.truncated,
+                    "closure": resolved.stored.root.causal.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
+                    "capability_hash": resolved.capability_hash.map(|hash| hash.to_hex()),
+                    "budget": resolved.effective_budget.as_ref().map(|budget| budget.to_json()),
+                    "work_units": resolved.work_units,
+                    "results": results,
+                    "evidence": evidence,
+                }))
+            } else {
+                for result in &resolved.resolution.results {
+                    println!("{}", result.object_id);
+                }
+                println!(
+                    "context_root_id={} selector_id={} snapshot_id={} matched_count={} returned={} truncated={}",
+                    resolved.stored.context_root_id,
+                    resolved.resolution.selector_id,
+                    resolved.resolution.snapshot_id,
+                    resolved.resolution.matched_count,
+                    resolved.resolution.results.len(),
+                    resolved.truncated
+                );
+                Ok(())
+            }
+        }
+        ContextCommand::Materialize {
+            target,
+            out,
+            capability_file,
+            uid,
+            gid,
+            groups,
+        } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let capability = read_capability(&capability_file)?;
+            let (default_uid, default_gid) = current_ids();
+            let principal = Principal::new(
+                uid.unwrap_or(default_uid),
+                gid.unwrap_or(default_gid),
+                groups,
+            );
+            let limits = weftcodec::Limits::default();
+            let report = store.materialize_context(
+                &target,
+                &out,
+                capability.as_ref(),
+                &principal,
+                &limits,
+                store.clock_now_ns(),
+            )?;
+            if json {
+                print_json(&json!({
+                    "out": report.out.display().to_string(),
+                    "manifest": report.manifest_path.display().to_string(),
+                    "files": report.files,
+                    "bytes": report.bytes,
+                    "context_root_id": report.context_root_id.to_hex(),
+                    "snapshot_id": report.snapshot_id.to_hex(),
+                    "selector_id": report.selector_id.to_hex(),
+                    "closure": report.closure.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
+                }))
+            } else {
+                println!("out={}", report.out.display());
+                println!("manifest={}", report.manifest_path.display());
+                println!("files={}", report.files);
+                println!("bytes={}", report.bytes);
+                Ok(())
+            }
+        }
+        ContextCommand::Uri { target } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let stored = store.load_context_root(&target)?;
+            if json {
+                print_json(&json!({
+                    "uri": stored.uri,
+                    "context_root_id": stored.context_root_id.to_hex(),
+                }))
+            } else {
+                println!("{}", stored.uri);
+                Ok(())
+            }
+        }
+        ContextCommand::Delete { name } => {
+            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            store.delete_context_root(&name)?;
+            success(
+                json,
+                &format!("deleted context root {name}"),
+                json!({"name": name, "generation": store.generation()}),
+            )
+        }
+    }
+}
+
+fn find_object_by_identity(store: &Store, target: &str) -> Result<weftfs::ObjectRecord> {
+    if let Ok(id) = Hash32::from_hex(target) {
+        if let Ok(record) = store.object_meta(id) {
+            return Ok(record);
+        }
+        for record in store.current_state().objects.values() {
+            if record.version == id || record.content == id {
+                return Ok(record.clone());
+            }
+        }
+        return Err(Error::not_found("no object has this identity"));
+    }
+    let id = store.resolve_path(target)?;
+    store.object_meta(id)
+}
+
+fn run_causal(
+    store: &PathBuf,
+    json: bool,
+    fixed_timestamp_ns: Option<i64>,
+    command: CausalCommand,
+) -> Result<()> {
+    match command {
+        CausalCommand::Show { target } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let record = find_object_by_identity(&store, &target)?;
+            let closure = object_causal_closure(&record)?;
+            let mode = identity_mode_of(&record);
+            let causal_hash = match record.attrs.get(ATTR_CAUSAL_HASH) {
+                Some(Value::Bytes(bytes)) => Some(Hash32::from_slice(bytes)?),
+                _ => None,
+            };
+            if json {
+                print_json(&json!({
+                    "object_id": record.id.to_hex(),
+                    "version_id": record.version.to_hex(),
+                    "identity_mode": mode,
+                    "causal_hash": causal_hash.map(|hash| hash.to_hex()),
+                    "parents": closure.as_ref().map(|closure| closure.parents.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>()).unwrap_or_default(),
+                    "closure": closure.as_ref().map(|closure| closure.closure.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>()).unwrap_or_default(),
+                }))
+            } else {
+                println!("object_id={}", record.id);
+                println!("version_id={}", record.version);
+                println!("identity_mode={mode}");
+                if let Some(hash) = causal_hash {
+                    println!("causal_hash={hash}");
+                }
+                if let Some(closure) = closure {
+                    for entry in &closure.parents {
+                        println!("parent={entry}");
+                    }
+                    for entry in &closure.closure {
+                        println!("closure={entry}");
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn run_uri(
+    store: &PathBuf,
+    json: bool,
+    fixed_timestamp_ns: Option<i64>,
+    command: UriCommand,
+) -> Result<()> {
+    match command {
+        UriCommand::Canonicalize { uri } => {
+            let limits = weftcodec::Limits::default();
+            let parsed = weftcodec::context::parse_context_uri(&uri, &limits)?;
+            let canonical = parsed.canonical_uri(&limits)?;
+            if json {
+                let mut output = json!({"uri": canonical});
+                if let Some(root) = parsed.to_context_root(&limits)? {
+                    output["context_root_id"] = json!(root.id()?.to_hex());
+                    output["form"] = json!("descriptor");
+                } else {
+                    output["form"] = json!("authoritative");
+                }
+                print_json(&output)
+            } else {
+                println!("{canonical}");
+                Ok(())
+            }
+        }
+        UriCommand::Show { target } => {
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let stored = store.load_context_root(&target)?;
+            if json {
+                print_json(&json!({
+                    "uri": stored.uri,
+                    "context_root_id": stored.context_root_id.to_hex(),
+                    "name": stored.name,
+                }))
+            } else {
+                println!("{}", stored.uri);
+                Ok(())
+            }
         }
     }
 }

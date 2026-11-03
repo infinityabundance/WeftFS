@@ -14,10 +14,12 @@
 
 use std::cmp::Ordering;
 
+use weftcodec::context::Budget;
 use weftcodec::selector::{CmpOp, Expr, Field, Literal, OrderItem, Selector};
 use weftcodec::wcb::Value;
 
 use crate::auth::{can_read, Principal};
+use crate::context::CapabilityContext;
 use crate::error::{Error, Result};
 use crate::identity::Hash32;
 use crate::state::{ObjectKind, ObjectRecord, RelationKind, RelationTarget, State};
@@ -109,12 +111,118 @@ pub(crate) fn resolve_state(
     principal: &Principal,
     limits: &weftcodec::Limits,
 ) -> Result<Resolution> {
+    resolve_state_with_budget(
+        selector,
+        snapshot_id,
+        state,
+        principal,
+        limits,
+        None,
+        None,
+        None,
+    )
+}
+
+/// Deterministic work units for the v1 resolver: authorized objects inspected
+/// plus relation edges traversed. `max_work` is checked against this value
+/// before evaluation.
+pub fn work_units(selector: &Selector, state: &State) -> u64 {
+    let objects = state.objects.len() as u64;
+    let relations = if selector_has_relations(&selector.predicate) {
+        state.relations.len() as u64
+    } else {
+        0
+    };
+    objects.saturating_add(relations)
+}
+
+fn selector_has_relations(expr: &Expr) -> bool {
+    match expr {
+        Expr::Tag(_) | Expr::Relation { .. } => true,
+        Expr::And(items) | Expr::Or(items) => items.iter().any(selector_has_relations),
+        Expr::Not(inner) => selector_has_relations(inner),
+        _ => false,
+    }
+}
+
+fn selector_predicates_allowed(expr: &Expr, capability: &CapabilityContext) -> bool {
+    match expr {
+        Expr::Tag(_) => capability.allows_predicate("tagged_as"),
+        Expr::Relation { predicate, .. } => capability.allows_predicate(predicate),
+        Expr::And(items) | Expr::Or(items) => items
+            .iter()
+            .all(|item| selector_predicates_allowed(item, capability)),
+        Expr::Not(inner) => selector_predicates_allowed(inner, capability),
+        _ => true,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn resolve_state_with_budget(
+    selector: &Selector,
+    snapshot_id: Hash32,
+    state: &State,
+    principal: &Principal,
+    limits: &weftcodec::Limits,
+    capability: Option<&CapabilityContext>,
+    context_root_id: Option<Hash32>,
+    budget: Option<&Budget>,
+) -> Result<Resolution> {
     if selector.namespace != crate::state::DEFAULT_NAMESPACE {
         return Err(Error::namespace_mismatch(format!(
             "selector namespace `{}` is not `{}`",
             selector.namespace,
             crate::state::DEFAULT_NAMESPACE
         )));
+    }
+    if let Some(cap) = capability {
+        let namespace_allowed = cap.allows_namespace(&selector.namespace)
+            || context_root_id
+                .map(|id| cap.allows_root(id))
+                .unwrap_or(false);
+        if !namespace_allowed {
+            // Non-disclosing: namespace, root, and predicate denials collapse
+            // into the same external class.
+            return Err(Error::unauthorized(
+                "capability does not grant this selection",
+            ));
+        }
+        if !cap.scope.roots.is_empty() {
+            if let Some(id) = context_root_id {
+                if !cap.allows_root(id) {
+                    return Err(Error::unauthorized(
+                        "capability does not grant this context root",
+                    ));
+                }
+            }
+        }
+        if !selector_predicates_allowed(&selector.predicate, cap) {
+            return Err(Error::unauthorized(
+                "capability does not grant every relation predicate in the selector",
+            ));
+        }
+    }
+    if let Some(budget) = budget {
+        let work = work_units(selector, state);
+        if let Some(max) = budget.max_work {
+            if work > max {
+                return Err(Error::limit_exceeded(format!(
+                    "resolver work {work} exceeds max_work {max}"
+                )));
+            }
+        }
+        if let Some(max) = budget.max_depth {
+            let depth = if selector_has_relations(&selector.predicate) {
+                1
+            } else {
+                0
+            };
+            if depth > max {
+                return Err(Error::limit_exceeded(format!(
+                    "traversal depth {depth} exceeds max_depth {max}"
+                )));
+            }
+        }
     }
     let root = state
         .objects
@@ -147,6 +255,17 @@ pub(crate) fn resolve_state(
         .min(matches.len());
     let take = usize::try_from(limit).unwrap_or(usize::MAX);
     let end = start.saturating_add(take).min(matches.len());
+
+    if let Some(budget) = budget {
+        if let Some(max) = budget.max_results {
+            if (end - start) as u64 > max {
+                return Err(Error::limit_exceeded(format!(
+                    "resolution would return {} results, budget is {max}",
+                    end - start
+                )));
+            }
+        }
+    }
 
     let mut results = Vec::with_capacity(end.saturating_sub(start));
     let mut evidence = Vec::with_capacity(end.saturating_sub(start));

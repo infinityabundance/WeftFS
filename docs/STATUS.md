@@ -98,6 +98,53 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   fallocate/copy_file_range/SEEK_DATA, persisted atime/ctime. GC is now
   implemented but is an explicit pass, not online/background.
 
+### F2 — Context Roots, capabilities, and causal identity (implemented in Rust and Go)
+
+- **Context Root persistence:** `context_root` relations from the root object
+  with the canonical record hex and authoritative `weft://` URI. Duplicate names
+  are `Exists`; `--replace` is delete+add in one commit. Capability records are
+  stored in the same commit when first referenced.
+- **Resolution:** recomputes `ContextRootId`, verifies the stored URI, requires
+  the pinned snapshot to replay, accepts only `weft-resolver-v1`, authorizes
+  before counting, and returns ordered results plus `context_root_id`,
+  `selector_id`, `snapshot_id`, `matched_count`, `returned`, and closure
+  entries. 0/1/n is always explicit.
+- **CLI:** `context create|list|show|resolve|materialize|uri|delete`,
+  `causal show`, `uri canonicalize|show`, and `--causal` on `create`/`write` in
+  both languages.
+- **Capabilities:** `weft.capability.v1` JSON/hex files; enforcement for
+  namespace/root grants, selector universe, relation/tag predicates, exact-id
+  access, saved-context views, and materialization. Denials are
+  `Unauthorized`/`NotFound` and do not expose counts, ids, evidence, or
+  existence. v1 makes no cryptographic unforgeability or timing claim.
+- **Budgets:** effective bound is the component-wise minimum of root and
+  capability budgets. No truncation policy exists in v1: exceeding a bound is
+  `LimitExceeded`, never a silent truncation. `max_bytes` bounds materialized
+  bytes, `max_results` bounds returned results, `max_depth` is one-hop, and
+  `max_work` is deterministic objects-inspected plus relation-edges.
+- **Causal identity:** `--causal` computes explicit parents plus the available
+  transitive closure with a visited set (cycles terminate), stores the four
+  reserved attrs, publishes the closure record content-addressed, and includes
+  `identity_mode`/`causal_hash` in `VersionId` only for `causal_exact`.
+  `bytes_only` remains byte-identical to the frozen v1 record.
+- **Materialization:** all content hashes are verified before output is
+  published; writes go to a sibling temporary directory and are renamed into
+  place. A mismatch leaves no partial output. The manifest records root id,
+  snapshot id, selector id, closure, capability hash, budget, counts, and
+  per-file path/hash/size/ids/causal closure.
+- **Verification and GC:** `verify --full` validates context records/URIs,
+  re-resolves roots and reproduces recorded ids, checks causal attrs and
+  closure blobs, and re-hashes stored capability records. GC retains causal
+  closure blobs while their referencing object is retained; context/capability
+  relations are ordinary metadata and never keep content alive by themselves.
+- **Evidence:** `scripts/docker-court.sh fuse "cargo test --features fuse --all-targets"`
+  reports **70 passed, 0 failed, 2 ignored** (the existing CAP_SETUID and
+  kernel-7.3 direct-I/O limitations). `scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race ./..."`
+  passes for `store` and `fusefs`, including Rust→Go and Go→Rust context,
+  causal, capability, and materialization handoff gates.
+  `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
+  Golden causal vectors are `conformance/context/v1/causal_versions.json`.
+
 ### Twelve-step showcase — implemented, all twelve pass
 
 - `scripts/showcase.sh` executes the mandated twelve scenarios inside the FUSE

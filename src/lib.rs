@@ -19,6 +19,7 @@
 
 pub mod auth;
 pub mod conformance;
+pub mod context;
 pub mod error;
 pub mod evaluate;
 pub mod format;
@@ -31,6 +32,7 @@ pub mod store;
 pub mod wcb_util;
 
 pub use auth::Principal;
+pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;

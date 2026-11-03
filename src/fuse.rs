@@ -36,6 +36,7 @@ use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
 use crate::auth::{self, Principal};
+use crate::context::CapabilityContext;
 use crate::error::{Class, Error, Result};
 use crate::identity::Hash32;
 use crate::state::{validate_name_bytes, ObjectKind, ObjectRecord, State};
@@ -89,6 +90,8 @@ pub struct MountOptions {
     pub snapshot: Option<Hash32>,
     /// Replayed state of `snapshot`, cached so lookups do not replay.
     pub snapshot_state: Option<State>,
+    /// Optional capability narrowing for exact-id and saved-context views.
+    pub capability: Option<CapabilityContext>,
 }
 
 /// A node addressable through the mount.
@@ -287,6 +290,7 @@ pub struct WeftFuse {
     read_only: bool,
     snapshot: Option<Hash32>,
     snapshot_state: Option<State>,
+    capability: Option<CapabilityContext>,
     inodes: Mutex<InodeTable>,
     handles: Mutex<BTreeMap<u64, OpenHandle>>,
     dirs: Mutex<BTreeMap<u64, DirHandle>>,
@@ -300,6 +304,7 @@ impl WeftFuse {
             read_only: options.read_only,
             snapshot: options.snapshot,
             snapshot_state: options.snapshot_state.clone(),
+            capability: options.capability.clone(),
             inodes: Mutex::new(InodeTable::new()),
             handles: Mutex::new(BTreeMap::new()),
             dirs: Mutex::new(BTreeMap::new()),
@@ -460,8 +465,22 @@ impl WeftFuse {
             }
             Node::WeftIds => {
                 let mut items = Vec::new();
+                let now = store.clock_now_ns();
                 for (id, record) in &state.objects {
                     if !auth::can_read(record, principal) {
+                        continue;
+                    }
+                    if self.capability.is_some()
+                        && store
+                            .exact_id_object_at(
+                                state,
+                                *id,
+                                self.capability.as_ref(),
+                                principal,
+                                now,
+                            )
+                            .is_err()
+                    {
                         continue;
                     }
                     let child_ino = table.ino_id_view(*id);
@@ -491,7 +510,12 @@ impl WeftFuse {
                     return Ok(Vec::new());
                 }
                 let mut items = Vec::new();
-                for saved in store.list_contexts_at(state)? {
+                for saved in store.visible_saved_contexts(
+                    state,
+                    self.capability.as_ref(),
+                    principal,
+                    store.clock_now_ns(),
+                )? {
                     let child_ino = table.ino_context_dir(&saved.name);
                     table.set_parent(child_ino, ino);
                     let attr = self.attr_for(
@@ -521,12 +545,14 @@ impl WeftFuse {
                     ));
                 }
                 let selector = store.load_context_at(state, context)?;
-                let resolution = store.resolve_state(
+                let resolution = store.resolve_saved_context_with_capability(
                     &selector,
                     self.view_snapshot(store),
                     state,
                     principal,
                     &Limits::default(),
+                    self.capability.as_ref(),
+                    store.clock_now_ns(),
                 )?;
                 let mut records = Vec::new();
                 for result in &resolution.results {
@@ -656,13 +682,15 @@ impl WeftFuse {
                 }
                 let id =
                     Hash32::from_hex(text).map_err(|_| Error::not_found("no such object id"))?;
-                let record = state
-                    .objects
-                    .get(&id)
-                    .ok_or_else(|| Error::not_found("no such object id"))?;
-                if !auth::can_read(record, principal) {
-                    return Err(Error::not_found("no such object id"));
-                }
+                store
+                    .exact_id_object_at(
+                        state,
+                        id,
+                        self.capability.as_ref(),
+                        principal,
+                        store.clock_now_ns(),
+                    )
+                    .map_err(|_| Error::not_found("no such object id"))?;
                 let child_ino = table.ino_id_view(id);
                 table.set_parent(child_ino, parent_ino);
                 Ok(Node::WeftIdNode(id))
@@ -670,7 +698,12 @@ impl WeftFuse {
             Node::WeftContexts => {
                 let name =
                     std::str::from_utf8(name).map_err(|_| Error::not_found("no such context"))?;
-                let contexts = store.list_contexts_at(state)?;
+                let contexts = store.visible_saved_contexts(
+                    state,
+                    self.capability.as_ref(),
+                    principal,
+                    store.clock_now_ns(),
+                )?;
                 if !contexts.iter().any(|context| context.name == name) {
                     return Err(Error::not_found("no such context"));
                 }

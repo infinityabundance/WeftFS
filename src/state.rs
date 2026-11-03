@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use weftcodec::context::{CausalClosure, IdentityMode};
 use weftcodec::wcb::Value;
 
 use crate::error::{Error, Result};
@@ -26,6 +27,24 @@ pub const SAVED_CONTEXT_PREDICATE: &str = "saved_context";
 pub const SAVED_CONTEXT_SELECTOR_ATTR: &str = "selector_hex";
 /// Prefix of object attributes that hold extended attributes.
 pub const XATTR_PREFIX: &str = "xattr.";
+
+/// Reserved causal attributes (`WEFT-CAUSAL.md` §3.1).
+pub const ATTR_CAUSAL_PARENTS: &str = "weft.causal.parents";
+pub const ATTR_CAUSAL_CLOSURE: &str = "weft.causal.closure";
+pub const ATTR_CAUSAL_HASH: &str = "weft.causal.hash";
+pub const ATTR_IDENTITY_MODE: &str = "weft.identity.mode";
+
+/// Reserved predicate naming a stored Context Root relation (F2).
+pub const CONTEXT_ROOT_PREDICATE: &str = "context_root";
+/// Attribute holding lowercase hex of the canonical context-root record.
+pub const CONTEXT_ROOT_RECORD_ATTR: &str = "context.record";
+/// Attribute holding the authoritative `weft://<namespace>/c/<id>` URI.
+pub const CONTEXT_ROOT_URI_ATTR: &str = "uri";
+
+/// Reserved predicate naming a stored capability record (F2).
+pub const CAPABILITY_PREDICATE: &str = "capability";
+/// Attribute holding lowercase hex of the canonical capability record.
+pub const CAPABILITY_RECORD_ATTR: &str = "capability.record";
 
 /// Object kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -352,6 +371,8 @@ impl RelationRecord {
 
 /// `VersionId` derivation. The full version record is not stored separately;
 /// the record is reconstructed at write time and only its identity is recorded.
+///
+/// This is the frozen `bytes_only` v1 form (`WEFT-MODEL.md` §2.3.1).
 pub fn derive_version_id(
     object: Hash32,
     content: Hash32,
@@ -359,16 +380,201 @@ pub fn derive_version_id(
     mtime_ns: i64,
     parent: Option<Hash32>,
 ) -> Result<Hash32> {
-    let value = wu::map([
-        ("schema", Value::Str("weftfs.version.v1".to_owned())),
-        ("object", wu::hash_value(object)),
-        ("content", wu::hash_value(content)),
-        ("size", Value::U64(size)),
-        ("mtime_ns", Value::Timestamp(mtime_ns)),
-        ("parent", wu::opt_hash_value(parent)),
-    ]);
-    let bytes = wu::encode(&value)?;
+    derive_version_id_with_identity(
+        object,
+        content,
+        size,
+        mtime_ns,
+        parent,
+        IdentityMode::BytesOnly,
+        None,
+    )
+}
+
+/// `VersionId` derivation with an explicit identity mode (`WEFT-CAUSAL.md` §2).
+///
+/// `bytes_only` emits exactly the frozen v1 record. `causal_exact` adds
+/// `identity_mode` and `causal_hash`; omitting the hash is `NonCanonical`.
+pub fn derive_version_id_with_identity(
+    object: Hash32,
+    content: Hash32,
+    size: u64,
+    mtime_ns: i64,
+    parent: Option<Hash32>,
+    mode: IdentityMode,
+    causal_hash: Option<Hash32>,
+) -> Result<Hash32> {
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(
+        "schema".to_owned(),
+        Value::Str("weftfs.version.v1".to_owned()),
+    );
+    fields.insert("object".to_owned(), wu::hash_value(object));
+    fields.insert("content".to_owned(), wu::hash_value(content));
+    fields.insert("size".to_owned(), Value::U64(size));
+    fields.insert("mtime_ns".to_owned(), Value::Timestamp(mtime_ns));
+    fields.insert("parent".to_owned(), wu::opt_hash_value(parent));
+    match mode {
+        IdentityMode::BytesOnly => {
+            if causal_hash.is_some() {
+                return Err(Error::non_canonical(
+                    "bytes_only version record must not carry a causal hash",
+                ));
+            }
+        }
+        IdentityMode::CausalExact => {
+            let hash = causal_hash.ok_or_else(|| {
+                Error::non_canonical("causal_exact version record requires a causal hash")
+            })?;
+            if hash == Hash32::ZERO {
+                return Err(Error::non_canonical("causal hash must not be all zero"));
+            }
+            fields.insert(
+                "identity_mode".to_owned(),
+                Value::Str(IdentityMode::CausalExact.as_str().to_owned()),
+            );
+            fields.insert("causal_hash".to_owned(), wu::hash_value(hash));
+        }
+    }
+    let bytes = wu::encode(&Value::Map(fields))?;
     Ok(identity::version_id(&bytes))
+}
+
+/// Parse a reserved causal attribute array into sorted, validated hashes.
+pub fn causal_hashes_from_attr(value: &Value, what: &str) -> Result<Vec<Hash32>> {
+    let items = match value {
+        Value::Array(items) => items,
+        _ => {
+            return Err(Error::malformed(format!(
+                "{what} must be an array of bytes32"
+            )))
+        }
+    };
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        let hash = match item {
+            Value::Bytes(bytes) => Hash32::from_slice(bytes)?,
+            _ => return Err(Error::malformed(format!("{what} must contain bytes32"))),
+        };
+        if hash == Hash32::ZERO {
+            return Err(Error::malformed(format!(
+                "{what} must not contain the zero hash"
+            )));
+        }
+        out.push(hash);
+    }
+    Ok(out)
+}
+
+/// Extract and validate the causal closure stored on an object record.
+///
+/// Returns `None` when no causal attributes are present. A partial or
+/// inconsistent set is `Corrupt` (never silently repaired).
+pub fn object_causal_closure(record: &ObjectRecord) -> Result<Option<CausalClosure>> {
+    let parents_value = record.attrs.get(ATTR_CAUSAL_PARENTS);
+    let closure_value = record.attrs.get(ATTR_CAUSAL_CLOSURE);
+    let hash_value = record.attrs.get(ATTR_CAUSAL_HASH);
+    let mode_value = record.attrs.get(ATTR_IDENTITY_MODE);
+
+    if parents_value.is_none()
+        && closure_value.is_none()
+        && hash_value.is_none()
+        && mode_value.is_none()
+    {
+        return Ok(None);
+    }
+    let (Some(parents_value), Some(closure_value), Some(hash_value)) =
+        (parents_value, closure_value, hash_value)
+    else {
+        return Err(Error::corrupt(
+            "partial causal attributes: parents, closure, and hash are all required",
+        ));
+    };
+    let parents = causal_hashes_from_attr(parents_value, "weft.causal.parents")?;
+    let closure = causal_hashes_from_attr(closure_value, "weft.causal.closure")?;
+    let record_hash = match hash_value {
+        Value::Bytes(bytes) => Hash32::from_slice(bytes)?,
+        _ => return Err(Error::corrupt("weft.causal.hash must be bytes32")),
+    };
+    if record_hash == Hash32::ZERO {
+        return Err(Error::corrupt("weft.causal.hash must not be all zero"));
+    }
+    let closure_record = CausalClosure::new(parents, closure)?;
+    let expected = closure_record.id()?;
+    if expected != record_hash {
+        return Err(Error::corrupt(
+            "weft.causal.hash does not match the recorded closure",
+        ));
+    }
+    match mode_value {
+        None => {
+            // An unlabelled record is `bytes_only`; the causal attributes are
+            // retained metadata and do not participate in VersionId.
+        }
+        Some(Value::Str(text)) => {
+            let mode = IdentityMode::parse(text)?;
+            if mode != IdentityMode::CausalExact {
+                return Err(Error::non_canonical(
+                    "bytes_only must be the absence of weft.identity.mode",
+                ));
+            }
+        }
+        Some(_) => return Err(Error::corrupt("weft.identity.mode must be text")),
+    }
+    Ok(Some(closure_record))
+}
+
+/// The identity mode and causal hash implied by an object's reserved attrs.
+pub fn identity_from_attrs(record: &ObjectRecord) -> Result<(IdentityMode, Option<Hash32>)> {
+    match object_causal_closure(record)? {
+        Some(closure) => Ok((IdentityMode::CausalExact, Some(closure.id()?))),
+        None => Ok((IdentityMode::BytesOnly, None)),
+    }
+}
+
+/// Attach canonical causal attributes to an object attribute map.
+pub fn apply_causal_attrs(
+    attrs: &mut BTreeMap<String, Value>,
+    closure: &CausalClosure,
+    mode: IdentityMode,
+    causal_hash: Hash32,
+) -> Result<()> {
+    attrs.insert(
+        ATTR_CAUSAL_PARENTS.to_owned(),
+        Value::Array(
+            closure
+                .parents
+                .iter()
+                .map(|hash| Value::Bytes(hash.as_bytes().to_vec()))
+                .collect(),
+        ),
+    );
+    attrs.insert(
+        ATTR_CAUSAL_CLOSURE.to_owned(),
+        Value::Array(
+            closure
+                .closure
+                .iter()
+                .map(|hash| Value::Bytes(hash.as_bytes().to_vec()))
+                .collect(),
+        ),
+    );
+    attrs.insert(
+        ATTR_CAUSAL_HASH.to_owned(),
+        Value::Bytes(causal_hash.as_bytes().to_vec()),
+    );
+    match mode {
+        IdentityMode::CausalExact => {
+            attrs.insert(
+                ATTR_IDENTITY_MODE.to_owned(),
+                Value::Str(IdentityMode::CausalExact.as_str().to_owned()),
+            );
+        }
+        IdentityMode::BytesOnly => {
+            attrs.remove(ATTR_IDENTITY_MODE);
+        }
+    }
+    Ok(())
 }
 
 /// A commit op (`WEFT-MODEL.md` §2.2).
@@ -726,6 +932,9 @@ impl State {
 }
 
 pub(crate) fn validate_object_record(record: &ObjectRecord) -> Result<()> {
+    // Reserved causal attributes must be complete and consistent whenever any
+    // of them is present (`WEFT-CAUSAL.md` §3.1).
+    object_causal_closure(record)?;
     if record.mode > 0o7777 {
         return Err(Error::malformed("mode must fit POSIX permission bits"));
     }

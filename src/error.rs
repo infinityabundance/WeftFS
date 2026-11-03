@@ -166,6 +166,9 @@ impl Error {
     pub fn unsupported_version(message: impl Into<String>) -> Self {
         Self::new(Class::UnsupportedVersion, message)
     }
+    pub fn parse(message: impl Into<String>) -> Self {
+        Self::new(Class::Parse, message)
+    }
     pub fn unknown_schema(message: impl Into<String>) -> Self {
         Self::new(Class::UnknownSchema, message)
     }

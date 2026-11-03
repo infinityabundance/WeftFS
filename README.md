@@ -35,6 +35,7 @@ tested in the Docker court.
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — 54 court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC; some FUSE verbs are `ENOSYS` (locking, mknod, fallocate, copy_file_range) — see [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
 | P7 | Bench courts, receipt bundle, showcase, release | **In progress** — verification court passes (`bench/receipts/verify-20261103T172416Z.json`); the `bench` court produced codec, store, and `fio` filesystem receipts (`bench/receipts/bench-*`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); no headline performance claim is made. |
+| F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).

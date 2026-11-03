@@ -1,6 +1,7 @@
 //! CLI contract tests: verbs run end-to-end and `--json` keeps the required
 //! identity fields separate.
 
+use std::fs;
 use std::process::{Command, Output};
 
 use serde_json::Value;
@@ -147,7 +148,175 @@ fn cli_errors_print_normative_class() {
 }
 
 #[test]
-fn cli_conformance_store_is_deterministic() {
+fn cli_context_causal_capability_end_to_end() {
+    let dir = tempdir().unwrap();
+    let store = dir.path().join("store");
+    ok(&store, &["init"]);
+    ok(
+        &store,
+        &[
+            "create",
+            "/parent.txt",
+            "--text",
+            "parent",
+            "--attr",
+            "project=demo",
+        ],
+    );
+    let parent = json(
+        &store,
+        &[
+            "--json",
+            "create",
+            "/child.txt",
+            "--text",
+            "child",
+            "--attr",
+            "project=demo",
+        ],
+    );
+    let _ = parent;
+    let parent_id = json(&store, &["--json", "stat", "/parent.txt"])["object_id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    ok(
+        &store,
+        &[
+            "write",
+            "/child.txt",
+            "--text",
+            "CHILD",
+            "--causal",
+            &parent_id,
+        ],
+    );
+    let causal = json(&store, &["--json", "causal", "show", "/child.txt"]);
+    assert_eq!(causal["identity_mode"], "causal_exact");
+    assert_eq!(causal["parents"].as_array().unwrap().len(), 1);
+    assert_eq!(causal["parents"][0].as_str().unwrap().len(), 64);
+
+    let snapshot = json(&store, &["--json", "snapshot", "create", "s1"]);
+    let snapshot_id = snapshot["snapshot_id"].as_str().unwrap().to_owned();
+    let created = json(
+        &store,
+        &[
+            "--json",
+            "context",
+            "create",
+            "--name",
+            "demo",
+            "--selector",
+            "select attrs.project == \"demo\"",
+            "--snapshot",
+            "s1",
+        ],
+    );
+    assert_eq!(created["snapshot_id"], snapshot_id);
+    assert_eq!(created["context_root_id"].as_str().unwrap().len(), 64);
+    let uri = created["uri"].as_str().unwrap().to_owned();
+
+    let list = json(&store, &["--json", "context", "list"]);
+    assert_eq!(list["contexts"].as_array().unwrap().len(), 1);
+    let show = json(&store, &["--json", "context", "show", &uri]);
+    assert_eq!(show["context_root_id"], created["context_root_id"]);
+
+    let resolved = json(&store, &["--json", "context", "resolve", "demo"]);
+    assert_eq!(resolved["matched_count"], 2);
+    assert_eq!(resolved["returned"], 2);
+    assert_eq!(resolved["context_root_id"], created["context_root_id"]);
+    assert_eq!(resolved["snapshot_id"], snapshot_id);
+    assert_eq!(resolved["selector_id"], created["selector_id"]);
+
+    let out = dir.path().join("materialized");
+    let report = json(
+        &store,
+        &[
+            "--json",
+            "context",
+            "materialize",
+            "demo",
+            "--out",
+            out.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(report["files"], 2);
+    assert!(out.join("parent.txt").exists());
+    assert!(out.join(".weft-context.json").exists());
+
+    // Capability file (JSON) binds a narrowed grant.
+    let capability_path = dir.path().join("cap.json");
+    fs::write(
+        &capability_path,
+        r#"{
+          "schema": "weft.capability.v1",
+          "principal": "agent",
+          "namespaces": ["default"],
+          "predicates": ["tagged_as"],
+          "budget": {"max_results": 10}
+        }"#,
+    )
+    .unwrap();
+    let bound = json(
+        &store,
+        &[
+            "--json",
+            "context",
+            "create",
+            "--name",
+            "bound",
+            "--selector",
+            "select attrs.project == \"demo\"",
+            "--snapshot",
+            "s1",
+            "--capability",
+            capability_path.to_str().unwrap(),
+        ],
+    );
+    assert!(bound["capability_hash"].as_str().unwrap().len() == 64);
+    let resolved = json(
+        &store,
+        &[
+            "--json",
+            "context",
+            "resolve",
+            "bound",
+            "--capability",
+            capability_path.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(resolved["matched_count"], 2);
+    assert_eq!(resolved["capability_hash"], bound["capability_hash"]);
+
+    // A budget overrun is an error, never silent truncation.
+    ok(
+        &store,
+        &[
+            "context",
+            "create",
+            "--name",
+            "limited",
+            "--selector",
+            "select attrs.project == \"demo\"",
+            "--snapshot",
+            "s1",
+            "--max-results",
+            "1",
+        ],
+    );
+    let output = run(&store, &["--json", "context", "resolve", "limited"]);
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("LimitExceeded"));
+
+    // URI canonicalization over the store name.
+    let canonical = json(&store, &["--json", "uri", "canonicalize", &uri]);
+    assert_eq!(canonical["uri"], uri);
+    let shown = json(&store, &["--json", "uri", "show", "demo"]);
+    assert_eq!(shown["uri"], uri);
+}
+
+#[test]
+fn cli_conformance_store_fixture_is_deterministic() {
     let first = tempdir().unwrap();
     let second = tempdir().unwrap();
     let one = first.path().join("store");
