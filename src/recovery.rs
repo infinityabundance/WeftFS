@@ -10,14 +10,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use weftcodec::wcb::Value;
-
 use crate::error::{Error, Result};
 use crate::format::{
     decode_commit_file, decode_state, decode_superblock, Manifest, SuperblockSlot, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
-use crate::state::{EntryRecord, ObjectKind, State};
+use crate::state::{ObjectKind, State};
 
 /// A parsed commit file.
 #[derive(Clone, Debug)]
@@ -485,23 +483,4 @@ pub fn all_commits(root: &Path, max_generation: u64) -> Result<Vec<LoadedCommit>
     }
     out.sort_by_key(|commit| commit.generation);
     Ok(out)
-}
-
-/// Return the first entry record whose target is `target` (for path cycling
-/// checks in tests and CLI helpers).
-pub fn find_entry_for(state: &State, target: Hash32) -> Option<&EntryRecord> {
-    state.entries.values().find(|entry| entry.target == target)
-}
-
-/// Convert a WCB scalar to a display string (used by relation listing).
-pub fn scalar_display(value: &Value) -> String {
-    match value {
-        Value::Null => "null".to_owned(),
-        Value::Bool(b) => b.to_string(),
-        Value::U64(n) => n.to_string(),
-        Value::I64(n) => n.to_string(),
-        Value::Timestamp(ns) => format!("{ns}"),
-        Value::Str(s) => s.clone(),
-        other => format!("{other:?}"),
-    }
 }

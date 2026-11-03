@@ -19,7 +19,7 @@ use weftfs::conformance::build_fixture_store;
 use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::identity::Hash32;
-use weftfs::state::{RelationTarget, State};
+use weftfs::state::RelationTarget;
 use weftfs::store::{OpenMode, Options, SetAttr, Store};
 use weftfs::wcb_util::value_to_json;
 
@@ -1206,8 +1206,3 @@ fn current_ids() -> (u64, u64) {
         Err(_) => (0, 0),
     }
 }
-
-// `State` is referenced in signatures above only through helper construction;
-// keep the import meaningful for future CLI verbs that need a full state.
-#[allow(dead_code)]
-fn _state_type_marker(_state: &State) {}

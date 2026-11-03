@@ -2,7 +2,7 @@
 //! and assert recovery falls back or fails closed without panicking.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use tempfile::tempdir;
 
@@ -310,7 +310,3 @@ fn writer_after_rejected_generation_does_not_overwrite_it() {
         b"recovered writer"
     );
 }
-
-// Keep PathBuf imported for future corruption helpers in this file.
-#[allow(dead_code)]
-fn _pathbuf_marker(_path: PathBuf) {}

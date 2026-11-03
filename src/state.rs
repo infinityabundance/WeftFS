@@ -698,9 +698,6 @@ pub(crate) fn validate_object_record(record: &ObjectRecord) -> Result<()> {
     if record.kind == ObjectKind::Dir && record.size != 0 {
         return Err(Error::malformed("directory objects must have size 0"));
     }
-    if record.kind == ObjectKind::Dir && record.id == State::ROOT_ID {
-        // The root is a directory; nothing else is special here.
-    }
     if record.kind == ObjectKind::Symlink && record.attrs.get(ATTR_SYMLINK_TARGET).is_none() {
         return Err(Error::malformed(
             "symlink object is missing weft.symlink.target",
