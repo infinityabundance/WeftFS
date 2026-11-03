@@ -9,16 +9,17 @@ twelve-step showcase receipt is
 The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
 `bench/receipts/bench-store-20261103T175920Z.json`, and
 `bench/receipts/bench-fs-20261103T180751Z.json`; the analysis, losses, and
-gaps are in `bench/RESULTS-v1.md`.
+gaps are in `bench/RESULTS-v1.md`. The F2 receipt is
+`bench/receipts/f2-20261103T205045Z.json` with its raw log beside it.
 
 ## 1. Repositories and revisions
 
 | Repo | Staging HEAD | Role |
 |---|---|---|
-| `WeftFS` | `66fbf3e` (+ this commit) | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `a60d9f5` | Rust codec v1 |
-| `WeftCodec-Go` | `b2beeab` | independent Go codec |
-| `WeftFS-Go` | `9d9e386` | independent Go store + FUSE |
+| `WeftFS` | `92754d1` (+ this receipt commit) | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `6571308` | Rust codec v1 |
+| `WeftCodec-Go` | `83c2b6a` | independent Go codec |
+| `WeftFS-Go` | `ac0b409` | independent Go store + FUSE |
 
 All work is on `staging`. `main` holds the P0 foundation only. The research
 directory and `AGENTS.md` are gitignored, per operator directive.
