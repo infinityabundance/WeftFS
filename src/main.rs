@@ -1344,6 +1344,16 @@ fn run_context(
             let parsed = selector::parse(&source)?;
             let snapshot_id = lookup_snapshot(&store, &snapshot)?;
             let causal = parse_causal_entries(causal.as_deref())?;
+            let causal = if causal.is_empty() {
+                causal
+            } else {
+                weftfs::context::compute_causal_closure(
+                    store.current_state(),
+                    &causal,
+                    &weftcodec::Limits::default(),
+                )?
+                .closure
+            };
             let capability = read_capability(&capability_file)?;
             let budget = budget_from_flags(max_results, max_bytes, max_depth, max_work)?;
             let root = ContextRoot::new(
