@@ -77,15 +77,17 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - Native `go-fuse/v2` frontend with the core POSIX surface, snapshot mounts,
   `/.weft/id/<hex>`, and saved-context views.
 - **31 top-level tests + 5 subtests pass** under `-race`, `go vet`, and
-  `CGO_ENABLED=0 go build`.
+  `CGO_ENABLED=0 go build`, plus **13 GC tests** including cross-language GC
+  handoff (Rust store → Go GC → Rust verify, and the reverse).
 - Rebuilding the Rust fixture through the Go writer reproduces the same head
   and byte-identical `FORMAT`, `superblock`, commits, manifests, chunks, and
   snapshot pointer.
 - Bidirectional handoff gates pass: Rust fixture → Go mutations → Rust verify;
   Go init/mutate → Rust verify/mount; alternating generations; snapshots and
   checkpoints both ways; crash proxy through both.
-- Missing: GC, byte-range locking (ENOSYS), mmap writeback, mknod/tmpfile/
-  fallocate/copy_file_range/SEEK_DATA, persisted atime/ctime.
+- Missing: byte-range locking (ENOSYS), mmap writeback, mknod/tmpfile/
+  fallocate/copy_file_range/SEEK_DATA, persisted atime/ctime. GC is now
+  implemented but is an explicit pass, not online/background.
 
 ### Twelve-step showcase — implemented, all twelve pass
 
@@ -134,8 +136,9 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 3. **Showcase re-run at a later revision.** The committed receipt is evidence
    for the exact revision it records; re-running after code changes requires a
    new receipt, not an inference from the old one.
-4. **Go WeftFS GC** and the remaining unsupported FUSE verbs; Go crash court
-   exists but GC/retention parity does not.
+4. **Remaining WeftFS-Go FUSE verbs** (locking, mknod/tmpfile, fallocate,
+   copy_file_range, SEEK_DATA) and online/background GC. Crash and GC parity
+   now exist.
 5. **Same-inode concurrent direct FUSE I/O** on kernel 7.3: blocked on the
    kernel/fuser EIO interaction; no workaround is claimed.
 6. **Physical power-loss court** and remote/object-storage backend; not

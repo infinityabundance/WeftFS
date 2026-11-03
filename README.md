@@ -33,7 +33,7 @@ tested in the Docker court.
 | P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | **Implemented** — 44 Go tests; Rust→Go and Go→Rust decode gates pass for all modes |
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — 39 core tests — see [`docs/store-status.md`](docs/store-status.md) |
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — 54 court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
-| P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff; no GC and some FUSE verbs are `ENOSYS` — see [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
+| P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC; some FUSE verbs are `ENOSYS` (locking, mknod, fallocate, copy_file_range) — see [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
 | P7 | Bench courts, receipt bundle, showcase, release | **In progress** — verification court passes and produced `bench/receipts/verify-20261103T165944Z.json`; benchmark contracts are frozen, but no performance claim is made. See [`docs/STATUS.md`](docs/STATUS.md) |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
