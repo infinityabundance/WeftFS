@@ -48,7 +48,9 @@ mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,target-rust,tar
 
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   echo "court: building missing image $image from $dockerfile" >&2
-  docker build --memory=2g --memory-swap=2g --pids-limit=512 \
+  # Buildx accepts --memory/--memory-swap but not --pids-limit. The image build
+  # is a trusted minimal Dockerfile; runtime containers always get pids limits.
+  docker build --memory=2g --memory-swap=2g --ulimit nofile=65536:65536 \
     -f "$dockerfile" -t "$image" "$repo_root/docker"
 fi
 
@@ -93,4 +95,4 @@ fi
 guarded_cmd="set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; ${cmd}"
 
 set -x
-exec docker run "${common[@]}" "$image" bash -lc "$guarded_cmd"
+exec docker run "${common[@]}" "$image" bash -c "$guarded_cmd"
