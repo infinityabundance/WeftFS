@@ -502,9 +502,10 @@ fn conformance_fixture_is_deterministic_and_small() {
     assert_eq!(a.selectors[1].matched_count, 1, "one tagged object");
     assert_eq!(a.selectors[2].matched_count, 1, "one derived_from edge");
 
-    // The committed handoff fixture must match the current implementation.
-    let committed =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("conformance/store/v1/EXPECTED.json");
+    // The committed handoff fixture must match the current implementation and
+    // must itself open, verify, and resolve through this crate.
+    let committed_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("conformance/store/v1");
+    let committed = committed_dir.join("EXPECTED.json");
     if committed.exists() {
         let text = std::fs::read_to_string(&committed).unwrap();
         let expected: serde_json::Value = serde_json::from_str(&text).unwrap();
@@ -518,6 +519,31 @@ fn conformance_fixture_is_deterministic_and_small() {
             a.head.to_hex(),
             "committed fixture head drifted"
         );
+        let store = Store::open(&committed_dir, OpenMode::ReadOnly).unwrap();
+        assert_eq!(store.generation(), a.generation);
+        assert_eq!(store.head(), a.head);
+        let report = store.verify(true).unwrap();
+        assert!(report.ok, "committed fixture verify: {:?}", report.problems);
+        let query = resolve(&store, "select kind == \"file\"", None);
+        assert_eq!(query.matched_count, 3);
+        assert_eq!(
+            store
+                .read_object(store.resolve_path("/hello.txt").unwrap())
+                .unwrap(),
+            b"hello weft\n"
+        );
+        assert_eq!(
+            store.resolve_path("/hello.txt-hard").unwrap(),
+            store.resolve_path("/hello.txt").unwrap(),
+            "hard link shares the ObjectId"
+        );
+        assert_eq!(
+            store
+                .read_object(store.resolve_path("/link").unwrap())
+                .unwrap(),
+            b"hello.txt"
+        );
+        assert_eq!(store.snapshot_list().len(), 1);
     }
 
     fn dir_size(path: &Path) -> u64 {
