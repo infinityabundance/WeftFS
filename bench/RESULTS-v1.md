@@ -389,7 +389,7 @@ compares medians of the raw samples.
   medians moved by less than 3%.
 - **Store:** 33 medians compared. Median absolute delta 0.8%, maximum 86.0%
   (1,000-object ingest wall: 13.0 s then 24.3 s). At 10,000 objects the
-  ingest, open, verification, GC, and disk medians moved by at most 2.2%,
+  ingest, open, verification, GC, and disk medians moved by at most 2.7%,
   except the 1-result one-hop query at −7.1%. The 1,000-object ingest
   variance is reported as a range above.
 - **Filesystem:** 75 medians compared. Median absolute delta 1.1%, maximum
@@ -450,8 +450,9 @@ No sample was deleted. The two receipts remain in `bench/receipts/`.
   makes `bench/receipts` writable without widening source files.
 - The first full store run (`bench-store-20261103T173129Z.json`) used five
   open samples and three full-verify samples at 10,000 objects and took 797 s.
-  The final receipt reduces those to two and one to stay under the 10-minute
-  budget; both are retained so the reduction is auditable.
+  The two bounded runs (`bench-store-20261103T174517Z.json` and
+  `bench-store-20261103T175920Z.json`) use two and one and completed in 489.6 s
+  and 508.3 s. All three are retained so the reduction is auditable.
 - The `bench` court image is defined in `docker/bench.Dockerfile`; the runner
   rejects unknown court kinds and cannot disable the memory/swap/pids/CPU
   limits.

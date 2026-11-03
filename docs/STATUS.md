@@ -127,6 +127,10 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   FUSE-capable, OOM-limited benchmark court with `zstd`, `xz`, `gzip`,
   `brotli`, `sqlite3`, `fio`, Rust, and Go. Unknown court kinds are still
   rejected and the memory/swap/pids/CPU limits are unchanged.
+- The existing `fuse` court was re-run after the runner change at `244dc26`:
+  `fuse_posix` reported 9 passed and 1 ignored (the ownership test needs
+  `CAP_SETUID`). The added `/mnt/weft-bench` tmpfs does not change the POSIX
+  result.
 - Codec baselines (`bench-codec-20261103T175847Z.json`): external zstd 3/9/19,
   gzip 9, xz 9, and brotli 9 on seven deterministic corpora, plus WeftCodec
   RAW/ZSTD/DELTA/DICTIONARY/auto with marginal and whole-object accounting.
