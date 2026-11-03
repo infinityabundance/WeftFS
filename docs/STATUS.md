@@ -2,7 +2,8 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The verification receipt is
-`bench/receipts/verify-20261103T165944Z.json` (all nine courts `pass`). The
+`bench/receipts/verify-20261103T172416Z.json` (all nine courts `pass`).
+The earlier `verify-20261103T165944Z` receipt is retained as history. The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
 
@@ -59,8 +60,12 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   context views.
 - Deterministic store fixture `conformance/store/v1/` (head
   `8959c65b...`) with `EXPECTED.json`.
-- **39 core tests pass** (CLI 4, crash proxy 3, recovery 11, store core 11,
-  extensions 10).
+- **42 core tests pass** (CLI 4, crash proxy 3, recovery 11, store core 11,
+  extensions 10, bounded recovery 3). `tests/bounded_recovery.rs` enumerates
+  every one of generations 3–5 corrupted in three ways (empty, half, bit flip)
+  and every superblock-slot corruption, asserting the previous whole state and
+  replay idempotence. This is bounded enumeration, **not** TLA+/Alloy model
+  checking.
 - **54 FUSE tests pass, 0 fail, 2 ignored**:
   - ownership test needs `CAP_SETUID` (court has only `CAP_SYS_ADMIN`);
   - same-inode concurrent direct read/write can return `EIO` on kernel 7.3
@@ -130,9 +135,9 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 
 1. **Benchmark courts and receipts** (P7): codec/context/filesystem baselines
    and the eight-component economic profile are specified but unrun.
-2. **Formal model checking** (TLA+/Alloy/Apalache or equivalent) for snapshot
-   atomicity, replay idempotence, and no-dangling-roots. Current evidence is
-   tests and crash proxies.
+2. **Full formal model checking** (TLA+/Alloy/Apalache). Bounded exhaustive
+   enumeration of the real commit/recovery format exists and passes, but it is
+   not a proof and does not cover concurrent transaction models.
 3. **Showcase re-run at a later revision.** The committed receipt is evidence
    for the exact revision it records; re-running after code changes requires a
    new receipt, not an inference from the old one.
@@ -153,11 +158,13 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 
 ## 5. Next work queue (dependency order)
 
-1. Write the showcase script and run it in the FUSE court; emit a receipt for
-   all twelve scenarios.
-2. Implement Go GC parity and run the alternating-generation GC handoff.
-3. Add the benchmark harness per `bench/CONTRACTS.md` and publish negative
-   results before any headline comparison.
-4. Add bounded model checking for the commit/replay state machine and link the
-   exact model revision in this document.
+1. Extend the benchmark court beyond the codec microbenchmark: context queries,
+   filesystem I/O, external baselines, Go/Rust matched courts (per
+   `bench/CONTRACTS.md`).
+2. Full formal model checking for the commit/replay and transaction state
+   machines; link the exact model revision here.
+3. Physical power-loss court on a VM/device with controllable power; today's
+   evidence remains process-fault proxies.
+4. Remaining Go FUSE verbs (locking, mknod/tmpfile, fallocate,
+   copy_file_range, SEEK_DATA) and online GC.
 5. Only then consider a `staging` → `main` merge and a versioned release.
