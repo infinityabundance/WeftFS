@@ -20,9 +20,9 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 
 ## 1. Repositories and revisions
 
-| Repo | Staging HEAD | Role |
+| Repo | F3 revision | Role |
 |---|---|---|
-| `WeftFS` | `a91ae16` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftFS` | `74c136e` | program home, Rust store + FUSE, specs, ADRs, courts |
 | `WeftCodec` | `6571308` | Rust codec v1 |
 | `WeftCodec-Go` | `83c2b6a` | independent Go codec |
 | `WeftFS-Go` | `7693ad4` | independent Go store + FUSE |
