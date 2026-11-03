@@ -35,6 +35,10 @@ fuse = ["dep:fuser", "dep:ctrlc", "dep:libc", "dep:log"]
 tempfile = "3"
 # Raw xattr syscalls in the FUSE integration tests (feature-gated files).
 libc = "0.2"
+# Content-defined-dedup + zstd baseline for the F7 AI-corpus cost graph.
+# The bench court already ships this crate through `weftcodec`, so no new
+# network fetch is required.
+zstd = "0.13"
 
 [workspace]
 resolver = "2"
