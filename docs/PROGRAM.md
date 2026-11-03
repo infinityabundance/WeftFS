@@ -11,7 +11,7 @@ evidence.
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
 | A1 | Context Views as mounts: one store, ≥3 simultaneous mounts rooted at typed contexts (`by:task=...`, `by:model=...`, `at:<timestamp>`); different listings; every file `sha256` matches its declared root | Context Root, mount `--context` | **implemented** — `bench/receipts/context-mounts-20261103T210625Z.json` (6/6 pass) |
-| A2 | Reproducible Agent Replay Bundle: one `weft-receipt.tar.zst` with context graph, codec snapshots, exact replay command; Rust writes, Go replays byte-exactly with no code sharing | A1, replay/export | **implemented** — `bench/receipts/replay-bundle-20261103T210635Z.json` (4/4 pass; bundle sha256 `28fd708b…`) |
+| A2 | Reproducible Agent Replay Bundle: one `weft-receipt.tar.zst` with context graph, codec snapshots, exact replay command; Rust writes, Go replays byte-exactly with no code sharing | A1, replay/export | **implemented** — `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4 pass; bundle sha256 `940579db…`) |
 | A3 | Ambiguity Court: selector matching ≥2 distinct content roots; live query returns the full set; singular API fails closed with `Ambiguous`; FUSE never silently picks | ambiguity errors (exist), court | **implemented** — `bench/receipts/ambiguity-20261103T210633Z.json` (4/4 pass) |
 | A4 | Time-Travel POSIX: many versions of one path mounted at once; historical reads exact and pinned; no withdrawal | versioned views, context mounts | **implemented, correctness-only** — `bench/receipts/time-travel-20261103T210633Z.json` (4/4 pass); no io_uring/EKBLOOM acceleration |
 

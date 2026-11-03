@@ -230,7 +230,7 @@ scripts/docker-court.sh fuse "bash scripts/demo-time-travel.sh"
 
 scripts/docker-court.sh fuse "bash scripts/demo-replay-bundle.sh"
   -> 4/4 pass. Bundle: bench/bundles/weft-receipt.tar.zst
-     sha256 28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938.
+     sha256 940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2.
 ```
 
 The receipts record WeftFS `f3d1bc1` and WeftFS-Go `acf6df6`. The Context-mount

@@ -14,7 +14,7 @@ gaps are in `bench/RESULTS-v1.md`. The F2 receipt is
 receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/ambiguity-20261103T210633Z.json` (4/4),
 `bench/receipts/time-travel-20261103T210633Z.json` (4/4), and
-`bench/receipts/replay-bundle-20261103T210635Z.json` (4/4), each with its raw
+`bench/receipts/replay-bundle-20261103T210824Z.json` (4/4), each with its raw
 `.log` and `.results.tsv`; the determinism comparison is
 `bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
 
@@ -22,7 +22,7 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 
 | Repo | Staging HEAD | Role |
 |---|---|---|
-| `WeftFS` | `ca82e28` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftFS` | `a91ae16` | program home, Rust store + FUSE, specs, ADRs, courts |
 | `WeftCodec` | `6571308` | Rust codec v1 |
 | `WeftCodec-Go` | `83c2b6a` | independent Go codec |
 | `WeftFS-Go` | `7693ad4` | independent Go store + FUSE |
@@ -202,14 +202,14 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   - `bench/receipts/time-travel-20261103T210633Z.json` (4/4) — 100 versions,
     snapshots 1/50/100 mounted together, exact historical bytes after a live
     rename/retag.
-  - `bench/receipts/replay-bundle-20261103T210635Z.json` (4/4) — bundle
-    sha256 `28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938`,
+  - `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4) — bundle
+    sha256 `940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2`,
     17 store entries, 2 contexts, 3 context files, 2 resolved identities, zero
     mismatches.
   - `bench/receipts/context-mounts-determinism.txt` — `semantic_match=true`
     between two Context-mount runs (run ids and wall-clock fields excluded).
 - **Bundle:** `bench/bundles/weft-receipt.tar.zst` (6,662 bytes), sha256
-  `28fd708b…`. Reproduction:
+  `940579db…`. Reproduction:
   `scripts/docker-court.sh fuse "bash scripts/replay-bundle.sh --bundle
   bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out"`.
 - **Not claimed:** io_uring, EKBLOOM, or any acceleration. Time travel is
