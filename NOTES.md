@@ -257,3 +257,65 @@ says `semantic_match=true`.
    months-long retention measurement is not made.
 6. **Context mount root includes `.weft`.** Listing digests exclude it
    explicitly; it is a constant control surface, not a selector result.
+
+---
+
+# F8 — WeftFS-Go FUSE verb closure and online GC
+
+Scope: close the remaining Go FUSE gaps and add an opt-in background collector.
+Detailed semantics, commands, and the precise blocked items are in
+`WeftFS-Go/NOTES.md` §F8; this section is the program-level pointer.
+
+## 8. What changed
+
+- Verbs: real in-memory `getlk`/`setlk`/`setlkw` for POSIX byte ranges and
+  flock (`EnableLocks`; blocking wait plus `EINTR` cancellation); `mknod`
+  regular files only, FIFO/socket/device `EPERM`; `tmpfile` (O_TMPFILE,
+  linkable via `/proc/self/fd`); `fallocate` modes 0/`KEEP_SIZE`/`PUNCH_HOLE`/
+  `ZERO_RANGE` plus store-level COLLAPSE/INSERT; daemon-side
+  `copy_file_range`; dense `lseek` `SEEK_DATA`/`SEEK_HOLE`. `ioctl` remains
+  absent (`ENOTTY`).
+- GC: `store.GCBounded` (bounded deletions per pass), `store.GCWatch` (standalone
+  CLI loop), and `fusefs.Server.StartBackgroundGC` (`mount --gc-watch`). Passes
+  require the writer lock, take the FUSE server mutex, re-derive roots
+  (current/snapshots/checkpoints/pins) every time, are cancellable, and are
+  disabled by default. `gc --apply --watch` requires the explicit `--apply`.
+
+## 9. Exact results
+
+```text
+scripts/docker-court.sh go "cd /work/WeftFS-Go && gofmt -l . && go vet ./... && CGO_ENABLED=0 go build ./..."
+  -> clean.
+
+scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race -count=1 -v ./..."
+  -> 74 passed, 2 skipped (existing child-process guards), 0 failed.
+     fusefs 6.503 s, store 1.893 s.
+```
+
+CLI watch smoke: two bounded passes deleted the two unreachable blobs
+(`deleted_files=1` each), later passes reported zero, SIGTERM exited 0, and
+`verify --full` was `ok=true`. Cross-language:
+`TestGCHandoffGoBackgroundWatchRustVerifies` runs the Go watcher over
+Rust-created garbage and then requires Rust `verify --full`, Rust live read,
+and a Rust snapshot mount read to pass. The existing GC handoff gates A–D
+still pass.
+
+## 10. Exact limitations
+
+1. **COLLAPSE/INSERT at the kernel boundary.** The store implements and directly
+   tests both. Kernel 7.3.1 refuses these modes with `EOPNOTSUPP` before
+   forwarding; go-fuse debug showed no `FUSE_FALLOCATE` frame. The mount test
+   records that refusal and does not claim the verb end-to-end on this kernel.
+2. **Physical space is not reclaimed.** v1 files are dense, so `PUNCH_HOLE` and
+   `ZERO_RANGE` zero content without freeing chunks; no sparse-extent format
+   exists.
+3. **Locks are per-daemon advisory.** They do not coordinate independent mounts
+   or hosts. FUSE does not reveal a POSIX owner at open, so closing a handle
+   that never acquired a lock cannot implement POSIX close-any-fd release;
+   owners seen on a handle are released at handle release, and explicit
+   `F_UNLCK` always works.
+4. **Background GC is opt-in.** Default collection remains an explicit pass.
+   Long-lived readers pinned to non-snapshot historical commits are outside the
+   root set; use snapshots or the grace window.
+5. **Still absent:** `ioctl`, mmap writeback, persisted atime/ctime, physical
+   power-loss court.

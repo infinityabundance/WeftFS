@@ -138,19 +138,53 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   commit ops, checkpoints, superblock recovery, manifests/chunks, selector
   evaluation, authorization, `verify --full`.
 - Native `go-fuse/v2` frontend with the core POSIX surface, snapshot mounts,
-  `/.weft/id/<hex>`, and saved-context views.
-- **31 top-level tests + 5 subtests pass** under `-race`, `go vet`, and
-  `CGO_ENABLED=0 go build`, plus **13 GC tests** including cross-language GC
-  handoff (Rust store → Go GC → Rust verify, and the reverse).
+  `/.weft/id/<hex>`, and saved-context views. Added in F8: `getlk`/`setlk`/
+  `setlkw` (POSIX byte ranges + flock through an in-memory manager and
+  `EnableLocks`), `mknod` (regular files only; FIFO/socket/device `EPERM`),
+  `tmpfile` (O_TMPFILE plus link through `/proc/self/fd`), `fallocate` modes
+  0/`KEEP_SIZE`/`PUNCH_HOLE`/`ZERO_RANGE` (with store-level COLLAPSE/INSERT),
+  `copy_file_range`, and `lseek` `SEEK_DATA`/`SEEK_HOLE`. `ioctl` is
+  intentionally unimplemented (`ENOTTY`).
+- **Online/background GC:** `store.GCBounded`/`GCWatch`, `gc --apply --watch`,
+  and `mount --gc-watch`. Passes require the writer lock, run under the FUSE
+  server mutex, delete at most a configured number of candidates, are
+  cancellable, preserve snapshots/checkpoints/pins, and are disabled by
+  default.
+- **74 top-level tests pass, 2 skipped (pre-existing child-process guards),
+  0 failed** under `go test -race -count=1 ./...`; `go vet ./...` and
+  `CGO_ENABLED=0 go build ./...` pass. New verb/GC tests are listed in
+  `WeftFS-Go/NOTES.md` §F8.
 - Rebuilding the Rust fixture through the Go writer reproduces the same head
   and byte-identical `FORMAT`, `superblock`, commits, manifests, chunks, and
   snapshot pointer.
 - Bidirectional handoff gates pass: Rust fixture → Go mutations → Rust verify;
   Go init/mutate → Rust verify/mount; alternating generations; snapshots and
-  checkpoints both ways; crash proxy through both.
-- Missing: byte-range locking (ENOSYS), mmap writeback, mknod/tmpfile/
-  fallocate/copy_file_range/SEEK_DATA, persisted atime/ctime. GC is now
-  implemented but is an explicit pass, not online/background.
+  checkpoints both ways; crash proxy through both; and Go background GC → Rust
+  `verify --full` + snapshot mount.
+- Remaining limits: `PUNCH_HOLE`/`ZERO_RANGE` define content but do not reclaim
+  physical chunks (dense v1); 7.3.1 FUSE rejects COLLAPSE/INSERT before
+  forwarding; locks are per-daemon advisory and do not implement the POSIX
+  close-any-fd release for owners never seen on the closed handle; `ioctl`,
+  mmap writeback, and persisted atime/ctime are not implemented.
+
+### F8 — WeftFS-Go FUSE verb closure and online GC (implemented 2026-11-03)
+
+- Commands: `scripts/docker-court.sh go "cd /work/WeftFS-Go && gofmt -l . &&
+  go vet ./... && CGO_ENABLED=0 go build ./..."` (clean) and
+  `scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race -count=1
+  -v ./..."` (**74 passed, 2 skipped, 0 failed**; skips are the existing
+  child-process guards).
+- CLI watch smoke: `gc --apply --watch --interval 100ms --max-deletes 1
+  --grace-secs 0` deleted two unreachable blobs in two bounded passes, then
+  reported zero; SIGTERM exited 0; `verify --full` reported `ok=true`.
+- Cross-language: the Rust oracle created a snapshot plus garbage; the Go
+  watcher swept it; Rust `verify --full`, Rust live read, and a Rust snapshot
+  mount all passed. Existing GC/handoff gates A–D also pass.
+- Blocked verb evidence: on kernel 7.3.1, COLLAPSE/INSERT return
+  `EOPNOTSUPP` with go-fuse debug showing no `FUSE_FALLOCATE` frame; the store
+  implementations are directly tested. `PUNCH_HOLE` without `KEEP_SIZE` is
+  also rejected at that boundary. Details and safe-use notes are in
+  `WeftFS-Go/NOTES.md` §F8.
 
 ### F2 — Context Roots, capabilities, and causal identity (implemented in Rust and Go)
 
@@ -415,9 +449,10 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
 3. **Showcase re-run at a later revision.** The committed receipt is evidence
    for the exact revision it records; re-running after code changes requires a
    new receipt, not an inference from the old one.
-4. **Remaining WeftFS-Go FUSE verbs** (locking, mknod/tmpfile, fallocate,
-   copy_file_range, SEEK_DATA) and online/background GC. Crash and GC parity
-   now exist.
+4. **WeftFS-Go verb edge cases** remain: physical-space `PUNCH_HOLE`,
+   kernel-forwarded COLLAPSE/INSERT (store code exists; 7.3.1 rejects before
+   forwarding), `ioctl`, and cross-daemon/host lock coordination. Online GC is
+   implemented and opt-in.
 5. **Same-inode concurrent direct FUSE I/O** on kernel 7.3: blocked on the
    kernel/fuser EIO interaction; no workaround is claimed.
 6. **Physical power-loss court** and remote/object-storage backend; not
@@ -426,7 +461,8 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
    scope for v1 claims.
 8. **Streaming codec API for files larger than memory**; chunked/range APIs are
    real, but the CLI materializes whole inputs within limits.
-9. **atime/ctime persistence** and `mknod`/FIFO/device nodes; not implemented.
+9. **atime/ctime persistence**, `mmap` writeback, and device/FIFO/socket
+   nodes; not implemented. `mknod` regular files and `tmpfile` are implemented.
 10. **Spec-to-Go export automation in CI**; `scripts/export-spec.sh` exists but
     no CI workflow pins the export.
 11. **F3 time travel is correctness-only.** There is no io_uring, EKBLOOM, or
@@ -454,8 +490,9 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
    machines; link the exact model revision here.
 3. Physical power-loss court on a VM/device with controllable power; today's
    evidence remains process-fault proxies.
-4. Remaining Go FUSE verbs (locking, mknod/tmpfile, fallocate,
-   copy_file_range, SEEK_DATA) and online GC.
+4. Remaining Go FUSE edge work: physical-space PUNCH_HOLE or sparse extents,
+   kernel-forwarded COLLAPSE/INSERT, `ioctl`, and cross-daemon/host locks.
+   Online GC is implemented and opt-in.
 5. F3 follow-ups: partitioned replay bundles, a long-horizon agent-memory
    retention measurement, and any future acceleration (none is claimed now).
 6. Only then consider a `staging` → `main` merge and a versioned release.
