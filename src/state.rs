@@ -691,7 +691,7 @@ impl State {
     }
 }
 
-fn validate_object_record(record: &ObjectRecord) -> Result<()> {
+pub(crate) fn validate_object_record(record: &ObjectRecord) -> Result<()> {
     if record.mode > 0o7777 {
         return Err(Error::malformed("mode must fit POSIX permission bits"));
     }

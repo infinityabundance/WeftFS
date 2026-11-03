@@ -26,12 +26,12 @@ Observed in `weft/rust-court:1` (built from `docker/rust.Dockerfile`,
 `rust:1-slim-bookworm`; `cargo 1.99.1`, `rustc 1.99.1`):
 
 ```
-tests/cli.rs          3 passed
+tests/cli.rs          4 passed
 tests/crash_proxy.rs  3 passed
 tests/recovery.rs    11 passed
 tests/store_core.rs  11 passed
 --------------------------------
-total                28 passed, 0 failed
+total                29 passed, 0 failed
 ```
 
 The court enforces `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
@@ -54,6 +54,7 @@ Tests map to the P4 requirements as follows:
 | GC mark/sweep with snapshots retained | `store_core::gc_mark_sweep_removes_only_unreachable_blobs` |
 | deterministic fixture, twice, under 100 KiB | `store_core::conformance_fixture_is_deterministic_and_small`, `cli::cli_conformance_store_is_deterministic` |
 | CLI JSON keeps identities separate; errors print classes | `cli::cli_verbs_and_query_json_contract`, `cli::cli_errors_print_normative_class` |
+| `conformance-store` works without `--store`; `--json` after a verb | `cli::cli_conformance_store_needs_no_store_flag` |
 | empty files, chunk-boundary ranges | `store_core::empty_files_and_range_reads` |
 
 ---
@@ -118,7 +119,9 @@ Tests map to the P4 requirements as follows:
 - CLI: `init`, `info`/`open`, `create`, `write`, `cat`, `ls`, `stat`,
   `unlink`, `rename`, `link`, `mkdir`, `symlink`, `setattr`,
   `relation add|list|delete`, `query`, `snapshot create|list`, `pin`,
-  `verify`, `gc`, `checkpoint`, `conformance-store`. Errors print
+  `verify`, `gc`, `checkpoint`, `conformance-store`. `--store` and `--json`
+  are global flags (they may appear before or after the verb);
+  `conformance-store` does not require `--store`. Errors print
   `Class: message` and exit nonzero. Query JSON exposes `selector_id`,
   `snapshot_id`, `matched_count`, and per-result `object_id`, `version_id`,
   `content_id`, `size`, `kind`, `path`.
@@ -179,6 +182,10 @@ reading. They are part of the Go handoff contract.
     data.
 12. **`fixed_timestamp_ns`** is a test/fixture hook on `Options`. It is not a
     format feature.
+13. **`state_at` visibility.** Only commits reachable by parent links from the
+    recovered head are addressable. A commit file written above the published
+    superblock (a crash tail) is not readable through `state_at`/`resolve`,
+    even if its hash is known.
 
 ---
 

@@ -360,8 +360,32 @@ impl Store {
         if commit == self.head {
             return Ok(self.state.clone());
         }
+        if !self.is_published_ancestor(commit)? {
+            return Err(Error::not_found(
+                "commit is not on the published parent chain",
+            ));
+        }
         let (state, _notes) = recovery::load_state_at(&self.root, commit, u64::MAX, false)?;
         Ok(state)
+    }
+
+    /// Only commits reachable from the recovered head are addressable. This
+    /// keeps an uncommitted crash-tail commit file from exposing state that the
+    /// superblock never published.
+    fn is_published_ancestor(&self, target: Hash32) -> Result<bool> {
+        let index = recovery::commit_index(&self.root, u64::MAX)?;
+        let mut cursor = Some(self.head);
+        let mut seen = BTreeSet::new();
+        while let Some(hash) = cursor {
+            if hash == target {
+                return Ok(true);
+            }
+            if !seen.insert(hash) {
+                break;
+            }
+            cursor = index.get(&hash).and_then(|loaded| loaded.commit.parent);
+        }
+        Ok(false)
     }
 
     // ---- reads -----------------------------------------------------------
@@ -585,6 +609,9 @@ impl Store {
         }
         let (manifest_id, _content_hash, size) = self.store_file_content(bytes)?;
         let object_id = identity::object_id_from_seed(seed);
+        if self.state.objects.contains_key(&object_id) {
+            return Err(Error::exists("object id already exists"));
+        }
         let mtime = self.now_ns();
         let version = derive_version_id(object_id, manifest_id, size, mtime, None)?;
         let record = ObjectRecord {
@@ -840,6 +867,9 @@ impl Store {
         self.require_free_name(parent, name)?;
         check_mode(mode)?;
         let object_id = identity::object_id_from_seed(seed);
+        if self.state.objects.contains_key(&object_id) {
+            return Err(Error::exists("object id already exists"));
+        }
         let mtime = self.now_ns();
         let content = identity::content_hash(b"");
         let version = derive_version_id(object_id, content, 0, mtime, None)?;
@@ -903,6 +933,9 @@ impl Store {
         validate_name_bytes(name)?;
         self.require_free_name(parent, name)?;
         let object_id = identity::object_id_from_seed(seed);
+        if self.state.objects.contains_key(&object_id) {
+            return Err(Error::exists("object id already exists"));
+        }
         let mtime = self.now_ns();
         let content = identity::content_hash(target_bytes);
         let size = target_bytes.len() as u64;

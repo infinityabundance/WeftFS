@@ -10,7 +10,7 @@ use weftcodec::wcb::Value;
 
 use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
-use crate::state::{EntryRecord, ObjectRecord, Op, RelationRecord, State};
+use crate::state::{validate_object_record, EntryRecord, ObjectRecord, Op, RelationRecord, State};
 use crate::wcb_util as wu;
 
 /// `FORMAT` file contents.
@@ -425,6 +425,7 @@ pub fn decode_state(value: &Value) -> Result<State> {
 
     for item in wu::get_array(map, "objects")? {
         let record = ObjectRecord::from_wcb(item)?;
+        validate_object_record(&record)?;
         if state.objects.insert(record.id, record).is_some() {
             return Err(Error::malformed("duplicate object id in state manifest"));
         }
@@ -448,6 +449,9 @@ pub fn decode_state(value: &Value) -> Result<State> {
                 .map_err(|_| Error::corrupt("snapshot hash must be 32 bytes"))?,
             _ => return Err(Error::malformed("snapshot value must be bytes32")),
         };
+        if hash == Hash32::ZERO {
+            return Err(Error::corrupt("snapshot points at the zero hash"));
+        }
         state.snapshots.insert(name, hash);
     }
 

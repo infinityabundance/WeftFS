@@ -27,10 +27,10 @@ use weftfs::wcb_util::value_to_json;
 #[command(name = "weftfs", version, about = "WeftFS transactional store core")]
 struct Cli {
     /// Store directory.
-    #[arg(long, value_name = "DIR")]
-    store: PathBuf,
+    #[arg(long, global = true, value_name = "DIR")]
+    store: Option<PathBuf>,
     /// Machine-readable JSON output.
-    #[arg(long)]
+    #[arg(long, global = true)]
     json: bool,
     #[command(subcommand)]
     command: Command,
@@ -244,6 +244,16 @@ fn run(cli: Cli) -> Result<()> {
         json,
         command,
     } = cli;
+    let needs_store = !matches!(command, Command::ConformanceStore { .. });
+    let store = match store {
+        Some(path) => path,
+        None if !needs_store => PathBuf::new(),
+        None => {
+            return Err(Error::invalid_argument(
+                "--store <DIR> is required for this command",
+            ))
+        }
+    };
     match command {
         Command::Init {
             uid,

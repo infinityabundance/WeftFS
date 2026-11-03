@@ -53,7 +53,7 @@ fn cli_verbs_and_query_json_contract() {
         .collect();
     assert_eq!(names, vec!["a.txt", "dir", "hard", "link"]);
 
-    let stat = json(&store, &["--json", "stat", "/dir/b.txt"]);
+    let stat = json(&store, &["stat", "/dir/b.txt", "--json"]);
     assert_eq!(stat["kind"], "file");
     assert_eq!(stat["size"], 5);
 
@@ -169,4 +169,27 @@ fn first_generation(store: &std::path::Path) -> u64 {
     let value: Value =
         serde_json::from_slice(&std::fs::read(store.join("EXPECTED.json")).unwrap()).unwrap();
     value["generation"].as_u64().unwrap()
+}
+
+#[test]
+fn cli_conformance_store_needs_no_store_flag() {
+    let dir = tempdir().unwrap();
+    let out = dir.path().join("v1");
+    let output = Command::new(env!("CARGO_BIN_EXE_weftfs"))
+        .args(["--json", "conformance-store", "--out"])
+        .arg(&out)
+        .output()
+        .expect("run weftfs");
+    assert!(
+        output.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let summary: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(summary["generation"], 11);
+    assert_eq!(
+        summary["snapshot_root"],
+        "8959c65b7b5d821063e8785ed950a67214b555210bec45f65fd576053b0e1d81"
+    );
+    assert!(out.join("EXPECTED.json").exists());
 }
