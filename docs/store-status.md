@@ -9,6 +9,15 @@ made. Power-loss claims are limited to the underlying filesystem's documented
 `fsync` contract; the crash tests are **process-fault proxies**, not physical
 power loss.
 
+> **P5 addendum (2026-11-03).** The store gained the extensions the FUSE layer
+> needs: `rmdir`, POSIX rename replacement, `RENAME_NOREPLACE`/`RENAME_EXCHANGE`,
+> xattr APIs, saved contexts, open-handle object/content pins, `nlink`, and
+> `statfs`. Those are covered by `tests/store_extensions.rs` and described in
+> [`docs/fuse-status.md`](fuse-status.md) §10. Items in §5 below that name
+> `rmdir`, directory replacement, xattr verbs, or open-handle pins are
+> superseded by that addendum; the P4 observations and risks remain otherwise
+> unchanged.
+
 ---
 
 ## 1. Verification commands and observed results

@@ -20,7 +20,7 @@ crc32c = "0.6"
 hex = "0.4"
 fs2 = "0.4"
 # fuser diagnostics (e.g. a dropped reply) are surfaced through `log`.
-log = "0.4"
+log = { version = "0.4", optional = true }
 # P5 Linux FUSE frontend. `fuser 0.15.1` is the exact version verified in the
 # Docker FUSE court; `abi-7-31` enables the newest ABI it understands (the
 # kernel negotiates down), including RENAME2, LSEEK, and COPY_FILE_RANGE.
@@ -30,7 +30,7 @@ ctrlc = { version = "3", optional = true }
 libc = { version = "0.2", optional = true }
 
 [features]
-fuse = ["dep:fuser", "dep:ctrlc", "dep:libc"]
+fuse = ["dep:fuser", "dep:ctrlc", "dep:libc", "dep:log"]
 
 [dev-dependencies]
 tempfile = "3"

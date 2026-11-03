@@ -32,7 +32,7 @@ tested in the Docker court.
 | P2 | Rust WeftCodec v1 (all modes, CLI, tests) | Not started |
 | P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | Not started |
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — see [`docs/store-status.md`](docs/store-status.md) |
-| P5 | Rust FUSE frontend, POSIX matrix, context views | Not started |
+| P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — frontend built; 55 court tests pass and one ownership test is `#[ignore]`d for a missing court capability — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | Not started |
 | P7 | Bench courts, receipt bundle, showcase, release | Not started |
 
@@ -61,9 +61,9 @@ only `git`, `gh`, and Docker. The runner hard-codes OOM protection and refuses
 unbounded values:
 
 ```sh
-scripts/docker-court.sh rust "cargo test --all --locked"
+scripts/docker-court.sh rust "cargo test --all-targets -- --test-threads=1"
 scripts/docker-court.sh go   "cd WeftCodec-Go && go test ./..."
-scripts/docker-court.sh fuse "cargo test --features fuse"
+scripts/docker-court.sh fuse "cargo test --features fuse --all-targets -- --test-threads=1"
 ```
 
 Container defaults: `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
