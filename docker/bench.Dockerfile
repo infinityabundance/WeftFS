@@ -18,7 +18,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates build-essential pkg-config libfuse3-dev fuse3 \
       zstd xz-utils gzip brotli \
-      sqlite3 fio \
+      sqlite3 fio time \
       util-linux coreutils findutils procps \
  && rm -rf /var/lib/apt/lists/*
 
