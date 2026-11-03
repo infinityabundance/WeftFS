@@ -90,6 +90,7 @@ common=(
   --cap-drop=ALL
   -e "WEFT_IN_COURT=1"
   -e "WEFT_COURT_IMAGE=$image"
+  -e "WEFT_COURT_KERNEL=$(uname -r)"
   -e "WEFT_COURT_IMAGE_ID=$image_id"
   -e "WEFT_COURT_MEMORY=$WEFT_MEMORY"
   -e "WEFT_COURT_CPUS=$WEFT_CPUS"
