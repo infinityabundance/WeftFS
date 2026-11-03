@@ -7,7 +7,8 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command as ProcessCommand;
 
 use clap::{Parser, Subcommand};
 use serde_json::json;
@@ -237,6 +238,12 @@ enum Command {
         /// Mount a named snapshot (or commit hex) read-only.
         #[arg(long)]
         snapshot: Option<String>,
+        /// Mount the Context Root's result set as the read-only mount root.
+        #[arg(long, value_name = "NAME|weft://...")]
+        context: Option<String>,
+        /// Mount the newest commit at or before this time (RFC 3339 or unix ns).
+        #[arg(long, value_name = "RFC3339|UNIX_NS")]
+        at: Option<String>,
         /// Mount the current state read-only.
         #[arg(long = "read-only")]
         read_only: bool,
@@ -251,6 +258,18 @@ enum Command {
         out: PathBuf,
         #[arg(long, default_value = "working-tree")]
         generator_revision: String,
+    },
+    /// Write a self-contained, replayable `weft-receipt.tar.zst` bundle.
+    ExportBundle {
+        /// Output bundle path (`.tar.zst`).
+        #[arg(long)]
+        out: PathBuf,
+        /// Restrict the bundle to these Context Roots (default: all stored).
+        #[arg(long = "context")]
+        contexts: Vec<String>,
+        /// Extra `name=revision` source records for `manifest.json`.
+        #[arg(long = "source-revision")]
+        source_revisions: Vec<String>,
     },
 }
 
@@ -352,6 +371,10 @@ enum ContextCommand {
         gid: Option<u64>,
         #[arg(long = "group")]
         groups: Vec<u64>,
+        /// Fail closed with `Ambiguous` unless the selector matches exactly one
+        /// object. No output is produced on failure.
+        #[arg(long = "require-one")]
+        require_one: bool,
     },
     /// Print the canonical authoritative URI.
     Uri { target: String },
@@ -1034,6 +1057,8 @@ fn run(cli: Cli) -> Result<()> {
             foreground,
             allow_other,
             snapshot,
+            context,
+            at,
             read_only,
             capability_file,
         } => {
@@ -1041,20 +1066,74 @@ fn run(cli: Cli) -> Result<()> {
             // so SIGINT/SIGTERM can trigger a clean unmount.
             let _ = foreground;
             let capability = read_capability(&capability_file)?;
-            let read_only = read_only || snapshot.is_some() || capability.is_some();
+            if context.is_some() && at.is_some() {
+                return Err(Error::invalid_argument(
+                    "--context pins its own snapshot; --at cannot be combined with it",
+                ));
+            }
+            let read_only = read_only
+                || snapshot.is_some()
+                || context.is_some()
+                || at.is_some()
+                || capability.is_some();
             let mode = if read_only {
                 OpenMode::ReadOnly
             } else {
                 OpenMode::ReadWrite
             };
             let store = open_store(&store, mode, fixed_timestamp_ns)?;
-            let (snapshot_commit, snapshot_state) = match snapshot {
-                Some(name) => {
-                    let commit = lookup_snapshot(&store, &name)?;
-                    let state = store.state_at(commit)?;
-                    (Some(commit), Some(state))
+
+            let limits = weftcodec::Limits::default();
+            let (context_mount, snapshot_commit, snapshot_state) = match context {
+                Some(target) => {
+                    let resolved = store.resolve_context(
+                        &target,
+                        capability.as_ref(),
+                        &Principal::root(),
+                        &limits,
+                        store.clock_now_ns(),
+                    )?;
+                    let snapshot = resolved.stored.root.snapshot;
+                    let state = store.state_at(snapshot)?;
+                    let context_mount = weftfs::fuse::ContextMount {
+                        name: resolved.stored.name.clone(),
+                        context_root_id: resolved.stored.context_root_id,
+                        snapshot,
+                        selector_id: resolved.resolution.selector_id,
+                        results: resolved
+                            .resolution
+                            .results
+                            .iter()
+                            .map(|result| result.object_id)
+                            .collect(),
+                    };
+                    (Some(context_mount), Some(snapshot), Some(state))
                 }
-                None => (None, None),
+                None => match at {
+                    Some(at_text) => {
+                        let at_ns = weftfs::timeparse::parse_at_ns(&at_text)?;
+                        let base = match &snapshot {
+                            Some(name) => lookup_snapshot(&store, name)?,
+                            None => store.head(),
+                        };
+                        let selected =
+                            store.commit_at_or_before(base, at_ns)?.ok_or_else(|| {
+                                Error::not_found(format!(
+                                    "no commit at or before {at_ns} ns in the mounted lineage"
+                                ))
+                            })?;
+                        let state = store.state_at(selected.commit)?;
+                        (None, Some(selected.commit), Some(state))
+                    }
+                    None => match snapshot {
+                        Some(name) => {
+                            let commit = lookup_snapshot(&store, &name)?;
+                            let state = store.state_at(commit)?;
+                            (None, Some(commit), Some(state))
+                        }
+                        None => (None, None, None),
+                    },
+                },
             };
             weftfs::fuse::run(
                 store,
@@ -1065,6 +1144,7 @@ fn run(cli: Cli) -> Result<()> {
                     snapshot: snapshot_commit,
                     snapshot_state,
                     capability,
+                    context: context_mount,
                 },
             )
         }
@@ -1072,6 +1152,18 @@ fn run(cli: Cli) -> Result<()> {
             out,
             generator_revision,
         } => run_conformance_store(&out, &generator_revision, json),
+        Command::ExportBundle {
+            out,
+            contexts,
+            source_revisions,
+        } => run_export_bundle(
+            &store,
+            &out,
+            &contexts,
+            &source_revisions,
+            fixed_timestamp_ns,
+            json,
+        ),
     }
 }
 
@@ -1525,6 +1617,7 @@ fn run_context(
             uid,
             gid,
             groups,
+            require_one,
         } => {
             let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let capability = read_capability(&capability_file)?;
@@ -1535,6 +1628,30 @@ fn run_context(
                 groups,
             );
             let limits = weftcodec::Limits::default();
+            if require_one {
+                // Cardinality is checked before any filesystem work. A singular
+                // materialize never writes a partial or arbitrary result.
+                let resolved = store.resolve_context(
+                    &target,
+                    capability.as_ref(),
+                    &principal,
+                    &limits,
+                    store.clock_now_ns(),
+                )?;
+                if resolved.resolution.matched_count != 1 {
+                    let ids: Vec<String> = resolved
+                        .resolution
+                        .results
+                        .iter()
+                        .map(|result| result.object_id.to_hex())
+                        .collect();
+                    return Err(Error::ambiguous(format!(
+                        "context matched {} authorized objects; require_one needs exactly 1 (object_ids: {})",
+                        resolved.resolution.matched_count,
+                        ids.join(",")
+                    )));
+                }
+            }
             let report = store.materialize_context(
                 &target,
                 &out,
@@ -1807,6 +1924,394 @@ fn run_conformance_store(out: &PathBuf, revision: &str, json: bool) -> Result<()
         println!("fixture={}", out.display());
         println!("generation={}", summary.generation);
         println!("snapshot_root={}", summary.head);
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------------
+// A2 / F3.3 — replay bundle export
+// ---------------------------------------------------------------------------
+
+fn sha256_file(path: &Path) -> Result<String> {
+    let output = ProcessCommand::new("sha256sum")
+        .arg(path)
+        .output()
+        .map_err(|err| Error::io(format!("cannot run sha256sum: {err}")))?;
+    if !output.status.success() {
+        return Err(Error::io(format!(
+            "sha256sum failed for {}: {}",
+            path.display(),
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    text.split_whitespace()
+        .next()
+        .map(|value| value.to_owned())
+        .ok_or_else(|| Error::io("sha256sum produced no output"))
+}
+
+fn run_tool(mut command: ProcessCommand, what: &str) -> Result<()> {
+    let output = command
+        .output()
+        .map_err(|err| Error::io(format!("cannot run {what}: {err}")))?;
+    if !output.status.success() {
+        return Err(Error::io(format!(
+            "{what} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+    Ok(())
+}
+
+fn copy_tree(src: &Path, dst: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(src)
+        .map_err(|err| Error::io(format!("cannot stat {}: {err}", src.display())))?;
+    if metadata.is_dir() {
+        fs::create_dir_all(dst)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", dst.display())))?;
+        for entry in fs::read_dir(src)
+            .map_err(|err| Error::io(format!("cannot read {}: {err}", src.display())))?
+        {
+            let entry = entry?;
+            copy_tree(&entry.path(), &dst.join(entry.file_name()))?;
+        }
+        return Ok(());
+    }
+    if let Some(parent) = dst.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", parent.display())))?;
+    }
+    fs::copy(src, dst).map_err(|err| {
+        Error::io(format!(
+            "cannot copy {} to {}: {err}",
+            src.display(),
+            dst.display()
+        ))
+    })?;
+    Ok(())
+}
+
+fn collect_files(base: &Path, relative: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    let path = base.join(relative);
+    let metadata = fs::symlink_metadata(&path)
+        .map_err(|err| Error::io(format!("cannot stat {}: {err}", path.display())))?;
+    if metadata.is_dir() {
+        for entry in fs::read_dir(&path)
+            .map_err(|err| Error::io(format!("cannot read {}: {err}", path.display())))?
+        {
+            let entry = entry?;
+            collect_files(base, &relative.join(entry.file_name()), out)?;
+        }
+    } else if metadata.is_file() {
+        out.push(relative.to_path_buf());
+    }
+    Ok(())
+}
+
+fn write_text(path: &Path, text: &str) -> Result<()> {
+    let mut file = fs::File::create(path)
+        .map_err(|err| Error::io(format!("cannot create {}: {err}", path.display())))?;
+    file.write_all(text.as_bytes())?;
+    file.sync_all()?;
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_export_bundle(
+    store_path: &PathBuf,
+    out: &PathBuf,
+    contexts: &[String],
+    source_revisions: &[String],
+    fixed_timestamp_ns: Option<i64>,
+    json: bool,
+) -> Result<()> {
+    let store = open_store(store_path, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+    let limits = weftcodec::Limits::default();
+    let principal = Principal::root();
+    let now = store.clock_now_ns();
+
+    let selected = if contexts.is_empty() {
+        store.list_context_roots()?
+    } else {
+        let mut selected = Vec::with_capacity(contexts.len());
+        for name in contexts {
+            selected.push(store.load_context_root(name)?);
+        }
+        selected
+    };
+
+    if let Some(parent) = out.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", parent.display())))?;
+    }
+    let stage = out.with_file_name(format!(
+        ".{}.stage-{}",
+        out.file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("weft-receipt"),
+        std::process::id()
+    ));
+    if stage.exists() {
+        fs::remove_dir_all(&stage)
+            .map_err(|err| Error::io(format!("cannot clear {}: {err}", stage.display())))?;
+    }
+    fs::create_dir_all(&stage)
+        .map_err(|err| Error::io(format!("cannot create {}: {err}", stage.display())))?;
+
+    let result = (|| -> Result<serde_json::Value> {
+        let bundle_store = stage.join("store");
+        fs::create_dir_all(&bundle_store)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", bundle_store.display())))?;
+        for name in ["FORMAT", "LOCK", "superblock"] {
+            let source = store_path.join(name);
+            if source.exists() {
+                copy_tree(&source, &bundle_store.join(name))?;
+            }
+        }
+        for name in ["commits", "objects", "manifests", "refs"] {
+            let source = store_path.join(name);
+            if source.exists() {
+                copy_tree(&source, &bundle_store.join(name))?;
+            }
+        }
+
+        // Materialize each root once, hash its exact bytes, then delete the
+        // working copy. The bundle carries the store, not a second copy of the
+        // data it already content-addresses.
+        let work = stage.join(".materialize-work");
+        fs::create_dir_all(&work)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", work.display())))?;
+        let mut manifest_contexts = Vec::new();
+        let mut materialized_checks = String::new();
+        let mut context_rows = String::new();
+        for stored in &selected {
+            let resolved = store.resolve_context(&stored.name, None, &principal, &limits, now)?;
+            let target = work.join(&stored.name);
+            let report =
+                store.materialize_context(&stored.name, &target, None, &principal, &limits, now)?;
+            let materialization_text =
+                fs::read_to_string(&report.manifest_path).map_err(|err| {
+                    Error::io(format!(
+                        "cannot read {}: {err}",
+                        report.manifest_path.display()
+                    ))
+                })?;
+            let materialization: serde_json::Value = serde_json::from_str(&materialization_text)
+                .map_err(|err| Error::io(format!("bad materialization manifest: {err}")))?;
+            let mut files = Vec::new();
+            if let Some(items) = materialization["files"].as_array() {
+                for item in items {
+                    let kind = item["kind"].as_str().unwrap_or("");
+                    let display = item["path"].as_str().unwrap_or("");
+                    let relative = display.trim_start_matches('/');
+                    let record = json!({
+                        "path": relative,
+                        "object_id": item["object_id"].clone(),
+                        "version_id": item["version_id"].clone(),
+                        "content_id": item["content_id"].clone(),
+                        "content_hash": item["content_hash"].clone(),
+                        "size": item["size"].clone(),
+                        "kind": kind,
+                    });
+                    if kind != "dir" && kind != "symlink" && !relative.is_empty() {
+                        let disk = target.join(relative);
+                        if disk.is_file() {
+                            let sha = sha256_file(&disk)?;
+                            materialized_checks.push_str(&format!(
+                                "{sha}  materialized/{}/{relative}\n",
+                                stored.name
+                            ));
+                            let mut with_sha = record.clone();
+                            with_sha["sha256"] = json!(sha);
+                            files.push(with_sha);
+                            continue;
+                        }
+                    }
+                    files.push(record);
+                }
+            }
+            manifest_contexts.push(json!({
+                "name": stored.name,
+                "uri": stored.uri,
+                "context_root_id": stored.context_root_id.to_hex(),
+                "snapshot_id": resolved.resolution.snapshot_id.to_hex(),
+                "selector_id": resolved.resolution.selector_id.to_hex(),
+                "resolver": stored.root.resolver,
+                "ordering": stored.root.ordering,
+                "matched_count": resolved.resolution.matched_count,
+                "returned": resolved.resolution.results.len(),
+                "truncated": resolved.truncated,
+                "record_hex": stored.record_hex,
+                "files": files,
+            }));
+            context_rows.push_str(&format!(
+                "{}\t{}\t{}\t{}\n",
+                stored.name,
+                stored.context_root_id.to_hex(),
+                resolved.resolution.snapshot_id.to_hex(),
+                resolved.resolution.selector_id.to_hex()
+            ));
+        }
+
+        // The context graph is the complete stored relation set; Context Root
+        // relations are included verbatim with their canonical record hex.
+        let relations: Vec<serde_json::Value> = store
+            .current_state()
+            .relations
+            .values()
+            .map(|relation| {
+                let target = match &relation.target {
+                    RelationTarget::Object(id) => json!({"object": id.to_hex()}),
+                    RelationTarget::Value(value) => json!({"value": value_to_json(value)}),
+                };
+                json!({
+                    "relation_id": relation.id.to_hex(),
+                    "subject": relation.subject.to_hex(),
+                    "predicate": relation.predicate,
+                    "target": target,
+                })
+            })
+            .collect();
+
+        let mut revisions = BTreeMap::new();
+        for (key, value) in [
+            ("WeftFS", std::env::var("WEFT_REPO_WEFTFS").ok()),
+            ("WeftFS-Go", std::env::var("WEFT_REPO_WEFTFS_GO").ok()),
+            ("WeftCodec", std::env::var("WEFT_REPO_WEFTCODEC").ok()),
+            ("WeftCodec-Go", std::env::var("WEFT_REPO_WEFTCODEC_GO").ok()),
+        ] {
+            if let Some(value) = value {
+                revisions.insert(key.to_owned(), value);
+            }
+        }
+        for item in source_revisions {
+            let (name, revision) = item.split_once('=').ok_or_else(|| {
+                Error::invalid_argument(format!("--source-revision `{item}` is not name=revision"))
+            })?;
+            revisions.insert(name.to_owned(), revision.to_owned());
+        }
+
+        let store_entries = {
+            let mut files = Vec::new();
+            collect_files(&bundle_store, Path::new(""), &mut files)?;
+            let mut entries = Vec::new();
+            for relative in files {
+                let disk = bundle_store.join(&relative);
+                let sha = sha256_file(&disk)?;
+                let bytes = fs::metadata(&disk).map(|meta| meta.len()).unwrap_or(0);
+                entries.push(json!({
+                    "path": format!("store/{}", relative.display()),
+                    "sha256": sha,
+                    "bytes": bytes,
+                }));
+            }
+            entries
+        };
+
+        let manifest = json!({
+            "schema": "weftfs.replay-bundle/1",
+            "bundle_format": "tar+zstd",
+            "source_revisions": revisions,
+            "court_command": "scripts/docker-court.sh fuse \"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\"",
+            "store": {
+                "format": "weftfs-store 1",
+                "generation": store.generation(),
+                "head": store.head().to_hex(),
+            },
+            "contexts": manifest_contexts,
+            "context_graph": relations,
+            "store_entries": store_entries,
+        });
+
+        let manifest_text = serde_json::to_string_pretty(&manifest)
+            .map_err(|err| Error::io(format!("cannot encode manifest.json: {err}")))?
+            + "\n";
+        write_text(&stage.join("manifest.json"), &manifest_text)?;
+        write_text(&stage.join("contexts.tsv"), &context_rows)?;
+        write_text(&stage.join("materialized.sha256"), &materialized_checks)?;
+        write_text(
+            &stage.join("replay.sh"),
+            "#!/usr/bin/env bash\nset -Eeuo pipefail\nhere=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\ncd \"$here\"\nWEFTFS_BIN=\"${WEFTFS_BIN:-weftfs}\"\nsha256sum -c checks.sha256\n\"$WEFTFS_BIN\" --store store --json verify --full | grep -q '\"OK\": true'\nrm -rf materialized\nmkdir -p materialized\nwhile IFS=$'\\t' read -r name ctx snapshot selector; do\n  [ -n \"$name\" ] || continue\n  \"$WEFTFS_BIN\" --store store --json context materialize \"$name\" --out \"materialized/$name\" >/dev/null\ndone < contexts.tsv\nsha256sum -c materialized.sha256\necho \"replay: ok\"\n",
+        )?;
+        write_text(
+            &stage.join("README.md"),
+            &format!(
+                "# WeftFS replay bundle\n\n\
+                 Generated by `weftfs export-bundle` from WeftFS revision `{}`.\n\n\
+                 This bundle contains the portable store (`store/`), the complete\n\
+                 relation graph and Context Root records (`manifest.json`), the\n\
+                 exact per-file hashes for every Context Root, and `replay.sh`.\n\n\
+                 Reproduce it with the OOM-protected FUSE court:\n\n\
+                 ```\n\
+                 scripts/docker-court.sh fuse \\\"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\\\"\n\
+                 ```\n\n\
+                 The Go frontend extracts the bundle, verifies every store file\n\
+                 against `manifest.json`, runs `verify --full`, materializes every\n\
+                 Context Root, and compares every output hash. No Rust binary runs\n\
+                 during replay.\n",
+                revisions.get("WeftFS").cloned().unwrap_or_else(|| "unknown".to_owned())
+            ),
+        )?;
+
+        let mut checks = String::new();
+        let mut checks_files = Vec::new();
+        collect_files(&stage, Path::new("store"), &mut checks_files)?;
+        for name in ["manifest.json", "contexts.tsv", "README.md", "replay.sh"] {
+            let path = stage.join(name);
+            if path.is_file() {
+                checks_files.push(PathBuf::from(name));
+            }
+        }
+        checks_files.sort();
+        for relative in checks_files {
+            let disk = stage.join(&relative);
+            let sha = sha256_file(&disk)?;
+            checks.push_str(&format!("{sha}  {}\n", relative.display()));
+        }
+        write_text(&stage.join("checks.sha256"), &checks)?;
+
+        // Tar and zstd are the bundle format. Both tools must be present; a
+        // missing tool is an error, never a silently uncompressed fallback.
+        let tar_path = out.with_file_name(format!(
+            ".{}.tar",
+            out.file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("weft-receipt")
+        ));
+        let mut tar = ProcessCommand::new("tar");
+        tar.arg("-C").arg(&stage).arg("-cf").arg(&tar_path).arg(".");
+        run_tool(tar, "tar")?;
+        let mut zstd = ProcessCommand::new("zstd");
+        zstd.arg("-q")
+            .arg("-f")
+            .arg("-3")
+            .arg(&tar_path)
+            .arg("-o")
+            .arg(out);
+        run_tool(zstd, "zstd")?;
+        let _ = fs::remove_file(&tar_path);
+
+        let bundle_sha = sha256_file(out)?;
+        let bundle_bytes = fs::metadata(out).map(|meta| meta.len()).unwrap_or(0);
+        Ok(json!({
+            "bundle": out.display().to_string(),
+            "sha256": bundle_sha,
+            "bytes": bundle_bytes,
+            "generation": store.generation(),
+            "head": store.head().to_hex(),
+            "contexts": selected.iter().map(|stored| stored.name.clone()).collect::<Vec<_>>(),
+        }))
+    })();
+
+    let _ = fs::remove_dir_all(&stage);
+    let summary = result?;
+    if json {
+        print_json(&summary)
+    } else {
+        println!("bundle={}", summary["bundle"].as_str().unwrap_or_default());
+        println!("sha256={}", summary["sha256"].as_str().unwrap_or_default());
+        println!("bytes={}", summary["bytes"]);
         Ok(())
     }
 }

@@ -35,6 +35,45 @@ fn json(store: &std::path::Path, args: &[&str]) -> Value {
 }
 
 #[test]
+fn require_one_ambiguity_lists_every_competing_object_id() {
+    let dir = tempdir().unwrap();
+    let store = dir.path().join("store");
+    ok(&store, &["init"]);
+    let a = json(&store, &["--json", "create", "/a.txt", "--text", "alpha"]);
+    let b = json(&store, &["--json", "create", "/b.txt", "--text", "beta"]);
+    let a_id = a["object_id"].as_str().unwrap().to_owned();
+    let b_id = b["object_id"].as_str().unwrap().to_owned();
+
+    // The full query returns the complete ordered set.
+    let full = json(&store, &["--json", "query", "select kind == \"file\""]);
+    assert_eq!(full["matched_count"], 2);
+    let returned: Vec<&str> = full["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|result| result["object_id"].as_str().unwrap())
+        .collect();
+    assert!(returned.contains(&a_id.as_str()));
+    assert!(returned.contains(&b_id.as_str()));
+
+    // A singular query fails closed and names every competing id.
+    let output = run(
+        &store,
+        &[
+            "--json",
+            "query",
+            "select kind == \"file\"",
+            "--require-one",
+        ],
+    );
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Ambiguous"), "stderr: {stderr}");
+    assert!(stderr.contains(&a_id), "stderr: {stderr}");
+    assert!(stderr.contains(&b_id), "stderr: {stderr}");
+}
+
+#[test]
 fn cli_verbs_and_query_json_contract() {
     let dir = tempdir().unwrap();
     let store = dir.path().join("store");

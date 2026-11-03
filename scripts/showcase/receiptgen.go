@@ -19,6 +19,15 @@ import (
 
 const schema = "weftfs.showcase.receipt/1"
 
+// schemaName lets the demo drivers reuse this generator with their own
+// receipt schema without changing the showcase contract.
+func schemaName() string {
+	if value := os.Getenv("WEFT_RECEIPT_SCHEMA"); value != "" {
+		return value
+	}
+	return schema
+}
+
 type Run struct {
 	StartedAt  string `json:"started_at"`
 	FinishedAt string `json:"finished_at"`
@@ -97,7 +106,7 @@ func decode(field string) string {
 
 func main() {
 	receipt := Receipt{
-		Schema:      schema,
+		Schema:      schemaName(),
 		Environment: map[string]string{},
 		Run:         Run{},
 	}

@@ -86,12 +86,26 @@ const SEEK_HOLE: i32 = 4;
 pub struct MountOptions {
     pub allow_other: bool,
     pub read_only: bool,
-    /// Pinned commit for `--snapshot` mounts.
+    /// Pinned commit for `--snapshot` / `--at` / context mounts.
     pub snapshot: Option<Hash32>,
     /// Replayed state of `snapshot`, cached so lookups do not replay.
     pub snapshot_state: Option<State>,
     /// Optional capability narrowing for exact-id and saved-context views.
     pub capability: Option<CapabilityContext>,
+    /// When present, the mount root is this Context Root's result set.
+    pub context: Option<ContextMount>,
+}
+
+/// A resolved Context Root used as the mount root.
+#[derive(Clone, Debug)]
+pub struct ContextMount {
+    /// Stored Context Root name (or the supplied URI).
+    pub name: String,
+    pub context_root_id: Hash32,
+    pub snapshot: Hash32,
+    pub selector_id: Hash32,
+    /// Ordered, capability-authorized result ids from resolution.
+    pub results: Vec<Hash32>,
 }
 
 /// A node addressable through the mount.
@@ -99,6 +113,8 @@ pub struct MountOptions {
 enum Node {
     /// A live namespace object (writable unless the mount is read-only).
     Object(Hash32),
+    /// The mount root when `--context` selected a result set.
+    ContextRoot,
     /// `/.weft`.
     WeftRoot,
     /// `/.weft/id`.
@@ -139,14 +155,23 @@ struct InodeTable {
 }
 
 impl InodeTable {
-    fn new() -> Self {
+    fn new(context_root: bool) -> Self {
         let mut by_ino = BTreeMap::new();
-        by_ino.insert(ROOT_INO, Node::Object(State::ROOT_ID));
+        by_ino.insert(
+            ROOT_INO,
+            if context_root {
+                Node::ContextRoot
+            } else {
+                Node::Object(State::ROOT_ID)
+            },
+        );
         by_ino.insert(WEFT_INO, Node::WeftRoot);
         by_ino.insert(WEFT_IDS_INO, Node::WeftIds);
         by_ino.insert(WEFT_CONTEXTS_INO, Node::WeftContexts);
         let mut object = BTreeMap::new();
-        object.insert(State::ROOT_ID, ROOT_INO);
+        if !context_root {
+            object.insert(State::ROOT_ID, ROOT_INO);
+        }
         InodeTable {
             next_virtual: VIRTUAL_BASE,
             by_ino,
@@ -291,6 +316,7 @@ pub struct WeftFuse {
     snapshot: Option<Hash32>,
     snapshot_state: Option<State>,
     capability: Option<CapabilityContext>,
+    context: Option<ContextMount>,
     inodes: Mutex<InodeTable>,
     handles: Mutex<BTreeMap<u64, OpenHandle>>,
     dirs: Mutex<BTreeMap<u64, DirHandle>>,
@@ -305,7 +331,8 @@ impl WeftFuse {
             snapshot: options.snapshot,
             snapshot_state: options.snapshot_state.clone(),
             capability: options.capability.clone(),
-            inodes: Mutex::new(InodeTable::new()),
+            context: options.context.clone(),
+            inodes: Mutex::new(InodeTable::new(options.context.is_some())),
             handles: Mutex::new(BTreeMap::new()),
             dirs: Mutex::new(BTreeMap::new()),
             next_fh: AtomicU64::new(1),
@@ -367,7 +394,7 @@ impl WeftFuse {
             Node::WeftRoot | Node::WeftIds | Node::WeftContexts => {
                 Ok(virtual_dir_attr(ino, root_owner, root_mtime(state), 0o555))
             }
-            Node::WeftContextDir(_) => {
+            Node::WeftContextDir(_) | Node::ContextRoot => {
                 Ok(virtual_dir_attr(ino, root_owner, root_mtime(state), 0o555))
             }
         }
@@ -384,6 +411,23 @@ impl WeftFuse {
             .ok_or_else(|| Error::not_found("no inode in this mount"))?;
         let attr = self.attr_for(table, state, &node, ino)?;
         Ok((attr, table.generation(ino)))
+    }
+
+    /// Deterministic names for the context mount's authorized results. The
+    /// same helper feeds `readdir` and `lookup`, so they cannot disagree.
+    fn context_entries(&self, state: &State, principal: &Principal) -> Vec<(Vec<u8>, Hash32)> {
+        let Some(context) = &self.context else {
+            return Vec::new();
+        };
+        let mut records: Vec<(Hash32, &ObjectRecord)> = Vec::new();
+        for id in &context.results {
+            if let Some(record) = state.objects.get(id) {
+                if auth::can_read(record, principal) {
+                    records.push((*id, record));
+                }
+            }
+        }
+        context_entry_names(&records, state)
     }
 
     /// Build the stable directory listing for a node. The listing is computed
@@ -443,6 +487,44 @@ impl WeftFuse {
                         generation: table.generation(WEFT_INO),
                     });
                 }
+                items.sort_by(|a, b| a.name.cmp(&b.name));
+                Ok(items)
+            }
+            Node::ContextRoot => {
+                let context = self
+                    .context
+                    .as_ref()
+                    .ok_or_else(|| Error::corrupt("context mount has no context root"))?;
+                let mut items = Vec::new();
+                for (name, object) in self.context_entries(state, principal) {
+                    let child_ino = table.ino_context_node(&context.name, object);
+                    table.set_parent(child_ino, ino);
+                    let attr = self.attr_for(
+                        table,
+                        state,
+                        &Node::WeftContextNode {
+                            context: context.name.clone(),
+                            object,
+                        },
+                        child_ino,
+                    )?;
+                    items.push(DirItem {
+                        name,
+                        ino: child_ino,
+                        attr,
+                        generation: table.generation(child_ino),
+                    });
+                }
+                // Keep the exact-id surface reachable from a context mount. It
+                // is a constant name, so it never changes the result listing.
+                table.set_parent(WEFT_INO, ROOT_INO);
+                let attr = self.attr_for(table, state, &Node::WeftRoot, WEFT_INO)?;
+                items.push(DirItem {
+                    name: b".weft".to_vec(),
+                    ino: WEFT_INO,
+                    attr,
+                    generation: table.generation(WEFT_INO),
+                });
                 items.sort_by(|a, b| a.name.cmp(&b.name));
                 Ok(items)
             }
@@ -658,6 +740,17 @@ impl WeftFuse {
                 let child_ino = table.ino_object(target);
                 table.set_parent(child_ino, parent_ino);
                 Ok(Node::Object(target))
+            }
+            Node::ContextRoot => {
+                let items = self.list_dir(table, store, state, parent, parent_ino, principal)?;
+                let item = items
+                    .iter()
+                    .find(|item| item.name == name)
+                    .ok_or_else(|| Error::not_found("no such context entry"))?;
+                match table.node_of(item.ino) {
+                    Some(node) => Ok(node),
+                    None => Err(Error::corrupt("directory entry has no inode")),
+                }
             }
             Node::WeftRoot => match name {
                 b"id" => {
@@ -2370,6 +2463,7 @@ impl Filesystem for WeftFuse {
 fn child_ino(table: &InodeTable, node: &Node, parent: u64) -> Option<u64> {
     let ino = match node {
         Node::Object(id) => *table.object.get(id)?,
+        Node::ContextRoot => ROOT_INO,
         Node::WeftRoot => WEFT_INO,
         Node::WeftIds => WEFT_IDS_INO,
         Node::WeftContexts => WEFT_CONTEXTS_INO,
@@ -2429,7 +2523,7 @@ mod tests {
 
     #[test]
     fn inode_mapping_is_stable_and_collision_safe() {
-        let mut table = InodeTable::new();
+        let mut table = InodeTable::new(false);
         assert_eq!(table.ino_object(State::ROOT_ID), ROOT_INO);
         let a = Hash32::from_slice(&[1u8; 32]).unwrap();
         let b = Hash32::from_slice(&[2u8; 32]).unwrap();
@@ -2438,5 +2532,12 @@ mod tests {
         let ino_b = table.ino_object(b);
         assert_ne!(ino_a, ino_b);
         assert!(ino_a > WEFT_CONTEXTS_INO);
+    }
+
+    #[test]
+    fn context_root_inode_table_has_no_object_root() {
+        let table = InodeTable::new(true);
+        assert_eq!(table.node_of(ROOT_INO), Some(Node::ContextRoot));
+        assert!(table.object.is_empty());
     }
 }

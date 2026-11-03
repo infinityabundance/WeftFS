@@ -14,8 +14,8 @@ RUN mkdir -p /cargo
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates fuse3 libfuse3-dev build-essential pkg-config \
-      strace fio attr acl util-linux coreutils findutils \
-      psmisc procps \
+      strace fio attr acl util-linux coreutils findutils psmisc procps \
+      tar zstd \
  && (apt-get install -y --no-install-recommends pjdfstest || true) \
  && rm -rf /var/lib/apt/lists/*
 

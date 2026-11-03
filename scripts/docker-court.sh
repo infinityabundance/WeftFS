@@ -53,7 +53,8 @@ chmod -R a+rwX "$cache_root" 2>/dev/null || true
 # override). Make the receipts directory writable by any uid exactly like the
 # cache; source files stay untouched.
 mkdir -p "$repo_root/bench/receipts"
-chmod a+rwX "$repo_root/bench/receipts" 2>/dev/null || true
+mkdir -p "$repo_root/bench/bundles"
+chmod a+rwX "$repo_root/bench/receipts" "$repo_root/bench/bundles" 2>/dev/null || true
 # `Cargo.lock` is a generated build artifact: dependency resolution inside the
 # court must be able to update it. Source files stay read-only for the court.
 chmod a+rw "$repo_root/Cargo.lock" 2>/dev/null || true

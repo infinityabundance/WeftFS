@@ -318,9 +318,24 @@ pub(crate) fn require_one(
                 .next()
                 .ok_or_else(|| Error::not_found("selector matched no authorized objects"))
         }
-        count => Err(Error::ambiguous(format!(
-            "selector matched {count} authorized objects; require_one needs exactly 1"
-        ))),
+        count => {
+            // List every authorized id, not just the page that happened to be
+            // returned. The ambiguity class is only useful if the caller can
+            // see the complete competing set.
+            let mut unpaged = selector.clone();
+            unpaged.offset = None;
+            unpaged.limit = None;
+            let complete = resolve(store, &unpaged, snapshot, principal, limits)?;
+            let ids: Vec<String> = complete
+                .results
+                .iter()
+                .map(|result| result.object_id.to_hex())
+                .collect();
+            Err(Error::ambiguous(format!(
+                "selector matched {count} authorized objects; require_one needs exactly 1 (object_ids: {})",
+                ids.join(",")
+            )))
+        }
     }
 }
 

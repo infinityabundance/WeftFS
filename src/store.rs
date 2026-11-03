@@ -90,6 +90,14 @@ pub struct DirEntry {
     pub target: Hash32,
 }
 
+/// One commit on the published parent chain (newest first).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LineageEntry {
+    pub commit: Hash32,
+    pub generation: u64,
+    pub timestamp_ns: i64,
+}
+
 /// Mutable attribute set for [`Store::setattr`].
 #[derive(Clone, Debug, Default)]
 pub struct SetAttr {
@@ -438,6 +446,56 @@ impl Store {
             cursor = index.get(&hash).and_then(|loaded| loaded.commit.parent);
         }
         Ok(false)
+    }
+
+    /// The committed ancestry of `base`, newest first, down to the genesis
+    /// commit. This is the *published* parent chain: every entry was reachable
+    /// from the recovered head when `base` was selected.
+    pub fn commit_lineage(&self, base: Hash32) -> Result<Vec<LineageEntry>> {
+        let index = recovery::commit_index(&self.root, u64::MAX)?;
+        let mut out = Vec::new();
+        let mut cursor = Some(base);
+        let mut seen = BTreeSet::new();
+        while let Some(hash) = cursor {
+            if !seen.insert(hash) {
+                return Err(Error::corrupt("commit parent chain contains a cycle"));
+            }
+            let loaded = index.get(&hash).ok_or_else(|| {
+                Error::not_found("commit is not present on the store's parent chain")
+            })?;
+            out.push(LineageEntry {
+                commit: hash,
+                generation: loaded.generation,
+                timestamp_ns: loaded.commit.timestamp_ns,
+            });
+            cursor = loaded.commit.parent;
+        }
+        Ok(out)
+    }
+
+    /// The newest commit in `base`'s lineage whose timestamp is `<= at_ns`.
+    ///
+    /// Ties on timestamp are broken by the higher generation. `None` means the
+    /// requested time predates the first commit in the lineage; callers must
+    /// fail closed rather than substitute a different state.
+    pub fn commit_at_or_before(&self, base: Hash32, at_ns: i64) -> Result<Option<LineageEntry>> {
+        let mut best: Option<LineageEntry> = None;
+        for entry in self.commit_lineage(base)? {
+            if entry.timestamp_ns > at_ns {
+                continue;
+            }
+            let better = match best {
+                None => true,
+                Some(current) => {
+                    (entry.timestamp_ns, entry.generation)
+                        > (current.timestamp_ns, current.generation)
+                }
+            };
+            if better {
+                best = Some(entry);
+            }
+        }
+        Ok(best)
     }
 
     // ---- reads -----------------------------------------------------------

@@ -29,6 +29,7 @@ pub mod identity;
 pub mod recovery;
 pub mod state;
 pub mod store;
+pub mod timeparse;
 pub mod wcb_util;
 
 pub use auth::Principal;
@@ -37,4 +38,6 @@ pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
-pub use store::{GcReport, OpenMode, Options, SavedContext, SetAttr, StatFs, Store, VerifyReport};
+pub use store::{
+    GcReport, LineageEntry, OpenMode, Options, SavedContext, SetAttr, StatFs, Store, VerifyReport,
+};
