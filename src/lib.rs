@@ -22,6 +22,8 @@ pub mod conformance;
 pub mod error;
 pub mod evaluate;
 pub mod format;
+#[cfg(feature = "fuse")]
+pub mod fuse;
 pub mod identity;
 pub mod recovery;
 pub mod state;
@@ -33,4 +35,4 @@ pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
-pub use store::{GcReport, OpenMode, Options, SetAttr, Store, VerifyReport};
+pub use store::{GcReport, OpenMode, Options, SavedContext, SetAttr, StatFs, Store, VerifyReport};

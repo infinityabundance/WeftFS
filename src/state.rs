@@ -19,6 +19,13 @@ pub const DEFAULT_NAMESPACE: &str = "default";
 pub const ATTR_SYMLINK_TARGET: &str = "weft.symlink.target";
 /// Attribute key holding a read ACL as an array of u64 uid values.
 pub const ATTR_ACL_READ: &str = "weft.acl.read";
+/// Reserved predicate naming a saved selector context (`WEFT-MODEL.md` §2.5).
+pub const SAVED_CONTEXT_PREDICATE: &str = "saved_context";
+/// Attribute key on a `saved_context` relation holding lowercase hex of the
+/// canonical selector bytes.
+pub const SAVED_CONTEXT_SELECTOR_ATTR: &str = "selector_hex";
+/// Prefix of object attributes that hold extended attributes.
+pub const XATTR_PREFIX: &str = "xattr.";
 
 /// Object kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -722,12 +729,15 @@ pub(crate) fn validate_object_record(record: &ObjectRecord) -> Result<()> {
     Ok(())
 }
 
+/// Maximum POSIX path-component length in bytes.
+pub const MAX_NAME_BYTES: usize = 255;
+
 /// Reject names that cannot be a single POSIX path component.
 pub fn validate_name_bytes(name: &[u8]) -> Result<()> {
     if name.is_empty() {
         return Err(Error::invalid_name("name must not be empty"));
     }
-    if name.len() > 255 {
+    if name.len() > MAX_NAME_BYTES {
         return Err(Error::invalid_name("name exceeds 255 bytes"));
     }
     if name.contains(&0) {

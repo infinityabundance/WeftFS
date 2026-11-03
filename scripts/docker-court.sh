@@ -49,6 +49,9 @@ mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,go-tmp,target-r
 # cache directories must therefore be writable by any uid; source files are
 # never widened. This keeps all compiler/cache writes inside .docker-cache.
 chmod -R a+rwX "$cache_root" 2>/dev/null || true
+# `Cargo.lock` is a generated build artifact: dependency resolution inside the
+# court must be able to update it. Source files stay read-only for the court.
+chmod a+rw "$repo_root/Cargo.lock" 2>/dev/null || true
 
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   echo "court: building missing image $image from $dockerfile" >&2

@@ -13,7 +13,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fs2::FileExt as Fs2FileExt;
+use weftcodec::selector::Selector;
 use weftcodec::wcb::Value;
+use weftcodec::Limits;
 
 use crate::auth::Principal;
 use crate::error::{Error, Result};
@@ -25,7 +27,8 @@ use crate::identity::{self, Hash32};
 use crate::recovery::{self, BlobKind};
 use crate::state::{
     derive_entry_id, derive_version_id, validate_name_bytes, validate_snapshot_name, EntryRecord,
-    ObjectKind, ObjectRecord, Op, RelationRecord, RelationTarget, State, ATTR_SYMLINK_TARGET,
+    ObjectKind, ObjectRecord, Op, RelationKind, RelationRecord, RelationTarget, State,
+    ATTR_SYMLINK_TARGET, SAVED_CONTEXT_PREDICATE, SAVED_CONTEXT_SELECTOR_ATTR, XATTR_PREFIX,
 };
 
 /// Maximum current file size for `write_file`/`truncate` (256 MiB).
@@ -36,6 +39,14 @@ pub const DEFAULT_CHUNK_SIZE: u64 = 65_536;
 pub const DEFAULT_CHECKPOINT_INTERVAL: u64 = 256;
 /// Default GC grace period (seconds).
 pub const DEFAULT_GC_GRACE_SECS: u64 = 3_600;
+/// Maximum name length of an extended attribute, in bytes (Linux `XATTR_NAME_MAX`
+/// is 255; the stored key adds the `xattr.` prefix).
+pub const MAX_XATTR_NAME_BYTES: usize = 255;
+/// Maximum value length of an extended attribute, in bytes (Linux
+/// `XATTR_SIZE_MAX`).
+pub const MAX_XATTR_VALUE_BYTES: u64 = 65_536;
+/// Maximum number of extended attributes on one object.
+pub const MAX_XATTR_COUNT: usize = 1_024;
 
 /// Open mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -120,7 +131,32 @@ pub struct GcReport {
     pub deleted: Vec<String>,
     pub deleted_bytes: u64,
     pub retained: u64,
+    /// Unreferenced object records removed in a dedicated commit (a crash left
+    /// an unlinked-but-pinned object behind).
+    pub removed_orphans: Vec<String>,
     pub problems: Vec<String>,
+}
+
+/// Result of [`Store::statfs`], all counters derived from replayed state.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct StatFs {
+    pub block_size: u64,
+    pub blocks: u64,
+    pub blocks_free: u64,
+    pub blocks_available: u64,
+    pub files: u64,
+    pub files_free: u64,
+    pub max_name_len: u64,
+}
+
+/// A saved selector context (`WEFT-MODEL.md` §2.5).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SavedContext {
+    pub name: String,
+    /// Lowercase hex of the canonical selector bytes.
+    pub selector_hex: String,
+    pub selector_id: Hash32,
+    pub relation_id: Hash32,
 }
 
 static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -163,6 +199,13 @@ pub struct Store {
     next_generation: u64,
     rejected: Vec<u64>,
     notes: Vec<String>,
+    /// In-memory open-handle pins by object id. Consulted by `unlink` (an
+    /// unlinked object record survives while pinned) and by GC (pinned content
+    /// is never swept). Pins are process-local and do not survive a crash.
+    pins: BTreeMap<Hash32, u64>,
+    /// In-memory content pins by manifest id, for readers that hold a pinned
+    /// `(content, size)` pair (`Store::read_content`).
+    content_pins: BTreeMap<Hash32, u64>,
 }
 
 impl Store {
@@ -232,6 +275,8 @@ impl Store {
             next_generation: 2,
             rejected: Vec::new(),
             notes: Vec::new(),
+            pins: BTreeMap::new(),
+            content_pins: BTreeMap::new(),
         };
         store.write_genesis()?;
         fsync_dir(&store.root)?;
@@ -290,6 +335,8 @@ impl Store {
             next_generation,
             rejected: recovery.rejected,
             notes: recovery.notes,
+            pins: BTreeMap::new(),
+            content_pins: BTreeMap::new(),
         })
     }
 
@@ -723,7 +770,8 @@ impl Store {
 
     /// Remove a directory entry. When the last entry for an object disappears,
     /// the object record is deleted in the same commit; snapshot states retain
-    /// their own copy for replay.
+    /// their own copy for replay. A pinned object (open handle) keeps its record
+    /// until the last pin is released so the handle stays readable/writable.
     pub fn unlink(&mut self, parent: Hash32, name: &[u8]) -> Result<()> {
         self.require_writable()?;
         self.require_dir(parent)?;
@@ -740,7 +788,46 @@ impl Store {
             .filter(|entry| entry.target == target && entry.id != entry_id)
             .count();
         let mut ops = vec![Op::DelEntry(entry_id)];
-        if remaining == 0 {
+        if remaining == 0 && !self.is_object_pinned(target) {
+            ops.push(Op::DeleteObject(target));
+        }
+        self.commit_ops(ops, false)?;
+        Ok(())
+    }
+
+    /// Remove an empty directory. A directory with any child entry is
+    /// `NotEmpty` (POSIX `ENOTEMPTY`). A pinned directory object (an open
+    /// `opendir` handle) keeps its object record until the pin is released.
+    /// The removed object's manifest/chunks are reclaimed by GC, not here.
+    pub fn rmdir(&mut self, parent: Hash32, name: &[u8]) -> Result<()> {
+        self.require_writable()?;
+        self.require_dir(parent)?;
+        validate_name_bytes(name)?;
+        let target = self.state.lookup(parent, name)?;
+        if target == State::ROOT_ID {
+            return Err(Error::invalid_argument("cannot remove the namespace root"));
+        }
+        let object = self.object_meta(target)?;
+        if object.kind != ObjectKind::Dir {
+            return Err(Error::not_dir("rmdir requires a directory entry"));
+        }
+        if self
+            .state
+            .entries
+            .values()
+            .any(|entry| entry.parent == target)
+        {
+            return Err(Error::not_empty("directory is not empty"));
+        }
+        let entry_id = derive_entry_id(parent, name)?;
+        let remaining = self
+            .state
+            .entries
+            .values()
+            .filter(|entry| entry.target == target && entry.id != entry_id)
+            .count();
+        let mut ops = vec![Op::DelEntry(entry_id)];
+        if remaining == 0 && !self.is_object_pinned(target) {
             ops.push(Op::DeleteObject(target));
         }
         self.commit_ops(ops, false)?;
@@ -748,12 +835,43 @@ impl Store {
     }
 
     /// Atomically move (and optionally replace) a directory entry.
+    ///
+    /// POSIX replacement rules: a directory may only replace an empty
+    /// directory, and a non-directory may only replace a non-directory. The
+    /// replaced object keeps its ObjectId until the replacement commit deletes
+    /// its last entry. All the delete/insert ops plus object reclamation are in
+    /// one commit.
     pub fn rename(
         &mut self,
         old_parent: Hash32,
         old_name: &[u8],
         new_parent: Hash32,
         new_name: &[u8],
+    ) -> Result<()> {
+        self.rename_with(old_parent, old_name, new_parent, new_name, false)
+    }
+
+    /// [`Store::rename`] with `RENAME_NOREPLACE` semantics: replacing an
+    /// existing destination is `Exists`.
+    pub fn rename_no_replace(
+        &mut self,
+        old_parent: Hash32,
+        old_name: &[u8],
+        new_parent: Hash32,
+        new_name: &[u8],
+    ) -> Result<()> {
+        self.rename_with(old_parent, old_name, new_parent, new_name, true)
+    }
+
+    /// Shared rename implementation. `no_replace` rejects an existing
+    /// destination instead of replacing it.
+    pub fn rename_with(
+        &mut self,
+        old_parent: Hash32,
+        old_name: &[u8],
+        new_parent: Hash32,
+        new_name: &[u8],
+        no_replace: bool,
     ) -> Result<()> {
         self.require_writable()?;
         self.require_dir(old_parent)?;
@@ -764,40 +882,60 @@ impl Store {
         if old_parent == new_parent && old_name == new_name {
             return Ok(());
         }
-        if let Some(existing) = self
-            .state
-            .entries
-            .get(&derive_entry_id(new_parent, new_name)?)
-        {
+        let target_kind = self.object_meta(target)?.kind;
+        let old_entry_id = derive_entry_id(old_parent, old_name)?;
+        let new_entry_id = derive_entry_id(new_parent, new_name)?;
+        let existing = self.state.entries.get(&new_entry_id).cloned();
+        let mut ops = Vec::new();
+        if let Some(existing) = &existing {
             if existing.target == target {
                 // POSIX rename between hard links to the same inode is a no-op.
                 return Ok(());
             }
-            let dest = self.object_meta(existing.target)?;
-            if dest.kind == ObjectKind::Dir {
-                return Err(Error::exists(
-                    "rename would replace an existing directory; not supported in v1",
-                ));
+            if no_replace {
+                return Err(Error::exists("rename destination already exists"));
             }
-            if self.object_meta(target)?.kind == ObjectKind::Dir {
-                return Err(Error::is_dir(
-                    "rename would replace a file with a directory",
-                ));
+            let dest = self.object_meta(existing.target)?;
+            match (target_kind, dest.kind) {
+                (ObjectKind::Dir, ObjectKind::Dir) => {
+                    if self
+                        .state
+                        .entries
+                        .values()
+                        .any(|entry| entry.parent == dest.id)
+                    {
+                        return Err(Error::not_empty(
+                            "rename would replace a non-empty directory",
+                        ));
+                    }
+                }
+                (ObjectKind::Dir, _) => {
+                    return Err(Error::not_dir(
+                        "rename would replace a non-directory with a directory",
+                    ));
+                }
+                (_, ObjectKind::Dir) => {
+                    return Err(Error::is_dir(
+                        "rename would replace a directory with a non-directory",
+                    ));
+                }
+                (_, _) => {}
+            }
+            ops.push(Op::DelEntry(existing.id));
+            let remaining = self
+                .state
+                .entries
+                .values()
+                .filter(|entry| entry.target == existing.target && entry.id != existing.id)
+                .count();
+            if remaining == 0 && !self.is_object_pinned(existing.target) {
+                ops.push(Op::DeleteObject(existing.target));
             }
         }
-        if self.object_meta(target)?.kind == ObjectKind::Dir
-            && self.state.is_within(target, new_parent)
-        {
+        if target_kind == ObjectKind::Dir && self.state.is_within(target, new_parent) {
             return Err(Error::invalid_argument(
                 "cannot move a directory into itself or a descendant",
             ));
-        }
-
-        let old_entry_id = derive_entry_id(old_parent, old_name)?;
-        let new_entry_id = derive_entry_id(new_parent, new_name)?;
-        let mut ops = Vec::new();
-        if let Some(existing) = self.state.entries.get(&new_entry_id) {
-            ops.push(Op::DelEntry(existing.id));
         }
         ops.push(Op::DelEntry(old_entry_id));
         ops.push(Op::PutEntry(EntryRecord {
@@ -806,6 +944,68 @@ impl Store {
             name: new_name.to_vec(),
             target,
         }));
+        self.commit_ops(ops, false)?;
+        Ok(())
+    }
+
+    /// Atomically exchange two existing directory entries (`RENAME_EXCHANGE`).
+    ///
+    /// Directories are rejected in v1: exchanging a directory with a node in
+    /// its own subtree can create a parent cycle, and v1 does not implement the
+    /// extra cycle validation for exchanges. The rejection is explicit
+    /// (`InvalidArgument`, POSIX `EINVAL`), never a silent swap.
+    pub fn rename_exchange(
+        &mut self,
+        a_parent: Hash32,
+        a_name: &[u8],
+        b_parent: Hash32,
+        b_name: &[u8],
+    ) -> Result<()> {
+        self.require_writable()?;
+        self.require_dir(a_parent)?;
+        self.require_dir(b_parent)?;
+        validate_name_bytes(a_name)?;
+        validate_name_bytes(b_name)?;
+        let a_entry = self
+            .state
+            .entries
+            .get(&derive_entry_id(a_parent, a_name)?)
+            .cloned();
+        let a_entry =
+            a_entry.ok_or_else(|| Error::not_found("rename exchange source does not exist"))?;
+        let b_entry = self
+            .state
+            .entries
+            .get(&derive_entry_id(b_parent, b_name)?)
+            .cloned();
+        let b_entry =
+            b_entry.ok_or_else(|| Error::not_found("rename exchange target does not exist"))?;
+        if a_entry.id == b_entry.id {
+            return Ok(());
+        }
+        if self.object_meta(a_entry.target)?.kind == ObjectKind::Dir
+            || self.object_meta(b_entry.target)?.kind == ObjectKind::Dir
+        {
+            return Err(Error::invalid_argument(
+                "RENAME_EXCHANGE of directories is not supported in v1",
+            ));
+        }
+        let ops = vec![
+            Op::DelEntry(a_entry.id),
+            Op::DelEntry(b_entry.id),
+            Op::PutEntry(EntryRecord {
+                id: a_entry.id,
+                parent: a_parent,
+                name: a_name.to_vec(),
+                target: b_entry.target,
+            }),
+            Op::PutEntry(EntryRecord {
+                id: b_entry.id,
+                parent: b_parent,
+                name: b_name.to_vec(),
+                target: a_entry.target,
+            }),
+        ];
         self.commit_ops(ops, false)?;
         Ok(())
     }
@@ -1016,6 +1216,374 @@ impl Store {
         ];
         self.commit_ops(ops, false)?;
         Ok(record.version)
+    }
+
+    /// Set (or replace) an extended attribute. Stored as
+    /// `attrs["xattr.<name>"] = bytes` per `WEFT-MODEL.md` §2.5. Reserved
+    /// `weft.*` names cannot be written through this API.
+    pub fn set_xattr(&mut self, id: Hash32, name: &str, value: &[u8]) -> Result<()> {
+        validate_xattr_name(name)?;
+        if value.len() as u64 > MAX_XATTR_VALUE_BYTES {
+            return Err(Error::limit_exceeded(
+                "extended attribute value exceeds the 64 KiB bound",
+            ));
+        }
+        let record = self.object_meta(id)?;
+        let key = format!("{XATTR_PREFIX}{name}");
+        let mut attrs = record.attrs.clone();
+        if !attrs.contains_key(&key)
+            && attrs.keys().filter(|k| k.starts_with(XATTR_PREFIX)).count() >= MAX_XATTR_COUNT
+        {
+            return Err(Error::limit_exceeded(
+                "object has reached the extended attribute count bound",
+            ));
+        }
+        attrs.insert(key, Value::Bytes(value.to_vec()));
+        self.setattr(
+            id,
+            SetAttr {
+                attrs: Some(attrs),
+                ..SetAttr::default()
+            },
+        )?;
+        Ok(())
+    }
+
+    /// Read an extended attribute. `Ok(None)` means absent.
+    pub fn get_xattr(&self, id: Hash32, name: &str) -> Result<Option<Vec<u8>>> {
+        validate_xattr_name(name)?;
+        let record = self.object_meta(id)?;
+        match record.attrs.get(&format!("{XATTR_PREFIX}{name}")) {
+            Some(Value::Bytes(bytes)) => Ok(Some(bytes.clone())),
+            Some(_) => Err(Error::corrupt("extended attribute is not stored as bytes")),
+            None => Ok(None),
+        }
+    }
+
+    /// List extended attribute names (the suffixes, sorted). Reserved `weft.*`
+    /// keys are never exposed.
+    pub fn list_xattr(&self, id: Hash32) -> Result<Vec<String>> {
+        let record = self.object_meta(id)?;
+        let mut names = Vec::new();
+        for (key, value) in &record.attrs {
+            let Some(name) = key.strip_prefix(XATTR_PREFIX) else {
+                continue;
+            };
+            if name.starts_with("weft.") {
+                continue;
+            }
+            if !matches!(value, Value::Bytes(_)) {
+                return Err(Error::corrupt("extended attribute is not stored as bytes"));
+            }
+            names.push(name.to_owned());
+        }
+        names.sort_by(|a, b| a.as_bytes().cmp(b.as_bytes()));
+        Ok(names)
+    }
+
+    /// Remove an extended attribute; returns whether it existed.
+    pub fn remove_xattr(&mut self, id: Hash32, name: &str) -> Result<bool> {
+        validate_xattr_name(name)?;
+        let record = self.object_meta(id)?;
+        let key = format!("{XATTR_PREFIX}{name}");
+        if !record.attrs.contains_key(&key) {
+            return Ok(false);
+        }
+        let mut attrs = record.attrs.clone();
+        attrs.remove(&key);
+        self.setattr(
+            id,
+            SetAttr {
+                attrs: Some(attrs),
+                ..SetAttr::default()
+            },
+        )?;
+        Ok(true)
+    }
+
+    // ---- saved contexts --------------------------------------------------
+
+    /// Save (or replace) a named selector context as a root-subject
+    /// `saved_context` relation. Replacement is delete+add in one commit.
+    /// Returns the relation id.
+    pub fn save_context(&mut self, name: &str, selector: &Selector) -> Result<Hash32> {
+        self.require_writable()?;
+        validate_snapshot_name(name)?;
+        let limits = Limits::default();
+        let bytes = selector.canonical_bytes_with_limits(&limits)?;
+        let selector_hex = hex::encode(&bytes);
+        let mut attrs = BTreeMap::new();
+        attrs.insert(
+            SAVED_CONTEXT_SELECTOR_ATTR.to_owned(),
+            Value::Str(selector_hex),
+        );
+        let record = RelationRecord::new(
+            State::ROOT_ID,
+            SAVED_CONTEXT_PREDICATE,
+            RelationTarget::Value(Value::Str(name.to_owned())),
+            None,
+            attrs,
+        )?;
+        let existing = self.context_relations(name)?;
+        match existing.as_slice() {
+            [] => {
+                self.commit_ops(vec![Op::PutRelation(record.clone())], false)?;
+                Ok(record.id)
+            }
+            [current] => {
+                if current.id == record.id {
+                    return Ok(record.id);
+                }
+                self.commit_ops(
+                    vec![Op::DelRelation(current.id), Op::PutRelation(record.clone())],
+                    false,
+                )?;
+                Ok(record.id)
+            }
+            _ => Err(Error::corrupt(
+                "more than one saved context relation has the same name",
+            )),
+        }
+    }
+
+    /// Delete a saved context by name.
+    pub fn delete_context(&mut self, name: &str) -> Result<()> {
+        self.require_writable()?;
+        let existing = self.context_relations(name)?;
+        match existing.as_slice() {
+            [] => Err(Error::not_found("no such saved context")),
+            [current] => {
+                self.commit_ops(vec![Op::DelRelation(current.id)], false)?;
+                Ok(())
+            }
+            _ => Err(Error::corrupt(
+                "more than one saved context relation has the same name",
+            )),
+        }
+    }
+
+    /// All saved contexts, sorted by name. Fails closed on a malformed entry.
+    pub fn list_contexts(&self) -> Result<Vec<SavedContext>> {
+        let mut out = Vec::new();
+        for relation in self.state.relations.values() {
+            if !is_saved_context(relation) {
+                continue;
+            }
+            let RelationTarget::Value(Value::Str(name)) = &relation.target else {
+                return Err(Error::corrupt("saved_context target is not text"));
+            };
+            out.push(self.context_from_relation(name, relation)?);
+        }
+        out.sort_by(|a, b| a.name.as_bytes().cmp(b.name.as_bytes()));
+        Ok(out)
+    }
+
+    /// Load a saved context selector by name.
+    pub fn load_context(&self, name: &str) -> Result<Selector> {
+        let existing = self.context_relations(name)?;
+        let relation = match existing.as_slice() {
+            [relation] => relation,
+            [] => return Err(Error::not_found("no such saved context")),
+            _ => {
+                return Err(Error::corrupt(
+                    "more than one saved context relation has the same name",
+                ))
+            }
+        };
+        let saved = self.context_from_relation(name, relation)?;
+        let bytes = hex::decode(&saved.selector_hex)
+            .map_err(|_| Error::corrupt("saved context selector is not hex"))?;
+        let selector = Selector::from_canonical_bytes(&bytes, &Limits::default())?;
+        if selector.canonical_bytes_with_limits(&Limits::default())? != bytes {
+            return Err(Error::non_canonical(
+                "saved context selector bytes are not canonical",
+            ));
+        }
+        Ok(selector)
+    }
+
+    fn context_relations(&self, name: &str) -> Result<Vec<&RelationRecord>> {
+        let mut out = Vec::new();
+        for relation in self.state.relations.values() {
+            if !is_saved_context(relation) {
+                continue;
+            }
+            if matches!(&relation.target, RelationTarget::Value(Value::Str(text)) if text == name) {
+                out.push(relation);
+            }
+        }
+        if out.len() > 1 {
+            return Err(Error::corrupt(
+                "more than one saved context relation has the same name",
+            ));
+        }
+        Ok(out)
+    }
+
+    fn context_from_relation(&self, name: &str, relation: &RelationRecord) -> Result<SavedContext> {
+        let selector_hex = match relation.attrs.get(SAVED_CONTEXT_SELECTOR_ATTR) {
+            Some(Value::Str(text)) => text.clone(),
+            _ => {
+                return Err(Error::corrupt(
+                    "saved context relation has no selector_hex attribute",
+                ))
+            }
+        };
+        let bytes = hex::decode(&selector_hex)
+            .map_err(|_| Error::corrupt("saved context selector is not hex"))?;
+        let selector = Selector::from_canonical_bytes(&bytes, &Limits::default())?;
+        Ok(SavedContext {
+            name: name.to_owned(),
+            selector_hex,
+            selector_id: selector.selector_id_with_limits(&Limits::default())?,
+            relation_id: relation.id,
+        })
+    }
+
+    // ---- open-handle pins ------------------------------------------------
+
+    /// Pin an object (open handle). A pinned object's record survives `unlink`
+    /// and `rmdir` until the last pin is released, so an open-unlinked file
+    /// stays readable and writable. Pins are in-memory and process-local; a
+    /// crash loses them and the commit chain retains an unreferenced object
+    /// record until GC.
+    pub fn pin_object(&mut self, id: Hash32) -> Result<u64> {
+        self.object_meta(id)?;
+        let count = self.pins.entry(id).or_insert(0);
+        *count = count
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("pin count overflow"))?;
+        Ok(*count)
+    }
+
+    /// Release an object pin. When the count reaches zero and the object has no
+    /// remaining directory entry, the object record is deleted in one commit
+    /// (a durable cleanup; it is not a GC sweep).
+    pub fn unpin_object(&mut self, id: Hash32) -> Result<u64> {
+        let count = match self.pins.get_mut(&id) {
+            Some(count) => {
+                *count = count.saturating_sub(1);
+                let remaining = *count;
+                if remaining == 0 {
+                    self.pins.remove(&id);
+                }
+                remaining
+            }
+            None => 0,
+        };
+        if count == 0 && self.mode == OpenMode::ReadWrite {
+            let has_entry = self.state.entries.values().any(|entry| entry.target == id);
+            let has_children = self.state.entries.values().any(|entry| entry.parent == id);
+            let exists = self.state.objects.contains_key(&id);
+            if exists && !has_entry && !has_children && id != State::ROOT_ID {
+                self.commit_ops(vec![Op::DeleteObject(id)], false)?;
+            }
+        }
+        Ok(count)
+    }
+
+    /// Current pin count for an object.
+    pub fn object_pin_count(&self, id: Hash32) -> u64 {
+        self.pins.get(&id).copied().unwrap_or(0)
+    }
+
+    /// Objects pinned in this process, sorted by id.
+    pub fn pinned_objects(&self) -> Vec<(Hash32, u64)> {
+        self.pins.iter().map(|(id, count)| (*id, *count)).collect()
+    }
+
+    /// Pin a content root (manifest id) for readers that hold a
+    /// `(content, size)` pair. GC never sweeps a pinned manifest or its chunks.
+    pub fn pin_content(&mut self, content: Hash32) -> u64 {
+        let count = self.content_pins.entry(content).or_insert(0);
+        *count = count.saturating_add(1);
+        *count
+    }
+
+    /// Release a content pin.
+    pub fn unpin_content(&mut self, content: Hash32) -> u64 {
+        match self.content_pins.get_mut(&content) {
+            Some(count) => {
+                *count = count.saturating_sub(1);
+                let remaining = *count;
+                if remaining == 0 {
+                    self.content_pins.remove(&content);
+                }
+                remaining
+            }
+            None => 0,
+        }
+    }
+
+    /// Content roots pinned in this process, sorted by id.
+    pub fn pinned_contents(&self) -> Vec<(Hash32, u64)> {
+        self.content_pins
+            .iter()
+            .map(|(id, count)| (*id, *count))
+            .collect()
+    }
+
+    fn is_object_pinned(&self, id: Hash32) -> bool {
+        self.pins.get(&id).copied().unwrap_or(0) > 0
+    }
+
+    // ---- counters --------------------------------------------------------
+
+    /// POSIX link count for an object: entries naming a non-directory, and
+    /// `2 + subdirectories` for a directory.
+    pub fn nlink(&self, id: Hash32) -> Result<u64> {
+        let record = self.object_meta(id)?;
+        if record.kind == ObjectKind::Dir {
+            let subdirs = self
+                .state
+                .entries
+                .values()
+                .filter(|entry| entry.parent == id)
+                .filter(|entry| {
+                    self.state
+                        .objects
+                        .get(&entry.target)
+                        .map(|object| object.kind == ObjectKind::Dir)
+                        .unwrap_or(false)
+                })
+                .count();
+            Ok(2 + subdirs as u64)
+        } else {
+            Ok(self
+                .state
+                .entries
+                .values()
+                .filter(|entry| entry.target == id)
+                .count() as u64)
+        }
+    }
+
+    /// Counters derived from replayed state. The store has no independent
+    /// capacity (it grows with its host filesystem), so free counters are `0`
+    /// and `blocks` is the state's used size. Documented in `docs/fuse-status.md`.
+    pub fn statfs(&self) -> StatFs {
+        const BLOCK: u64 = 4_096;
+        let mut content_bytes: u64 = 0;
+        for record in self.state.objects.values() {
+            content_bytes = content_bytes.saturating_add(record.size);
+        }
+        // One metadata block per object plus the content blocks.
+        let blocks =
+            content_bytes.saturating_add(BLOCK - 1) / BLOCK + self.state.objects.len() as u64;
+        StatFs {
+            block_size: BLOCK,
+            blocks,
+            blocks_free: 0,
+            blocks_available: 0,
+            files: self.state.objects.len() as u64,
+            files_free: 0,
+            max_name_len: crate::state::MAX_NAME_BYTES as u64,
+        }
+    }
+
+    /// The state pinned by this mount (current state for a live store).
+    pub fn mounted_state(&self) -> &State {
+        &self.state
     }
 
     /// Add a relation. Idempotent by RelationId.
@@ -1370,6 +1938,35 @@ impl Store {
             applied: apply,
             ..GcReport::default()
         };
+
+        // A pinned unlinked object is a normal open-handle retention. If the
+        // process crashed with such a handle, an unreferenced object record can
+        // remain in the commit chain; `gc --apply` removes those records in a
+        // commit so the blobs become unreachable. Pinned and relation-targeted
+        // objects are never removed here.
+        if apply {
+            let orphan_ids: Vec<Hash32> = self
+                .state
+                .objects
+                .keys()
+                .copied()
+                .filter(|id| *id != State::ROOT_ID)
+                .filter(|id| !self.is_object_pinned(*id))
+                .filter(|id| !self.state.entries.values().any(|entry| entry.target == *id))
+                .filter(|id| !self.state.entries.values().any(|entry| entry.parent == *id))
+                .filter(|id| {
+                    !self.state.relations.values().any(|relation| {
+                        matches!(relation.target, RelationTarget::Object(target) if target == *id)
+                    })
+                })
+                .collect();
+            if !orphan_ids.is_empty() {
+                let ops: Vec<Op> = orphan_ids.iter().map(|id| Op::DeleteObject(*id)).collect();
+                self.commit_ops(ops, false)?;
+                report.removed_orphans = orphan_ids.iter().map(|id| id.to_hex()).collect();
+            }
+        }
+
         let mut marked_manifests: BTreeSet<Hash32> = BTreeSet::new();
         let mut marked_chunks: BTreeSet<Hash32> = BTreeSet::new();
 
@@ -1414,6 +2011,23 @@ impl Store {
                         .problems
                         .push(format!("checkpoint {checkpoint} is unreadable: {err}")),
                 }
+            }
+        }
+
+        // Content pins held by open read handles are roots even if the object
+        // record has already been removed from state.
+        let pinned_contents: Vec<Hash32> = self.content_pins.keys().copied().collect();
+        for content in pinned_contents {
+            marked_manifests.insert(content);
+            match recovery::read_manifest(&self.root, content) {
+                Ok(manifest) => {
+                    for chunk in &manifest.chunks {
+                        marked_chunks.insert(chunk.hash);
+                    }
+                }
+                Err(err) => report
+                    .problems
+                    .push(format!("pinned content {content} is unreadable: {err}")),
             }
         }
 
@@ -1772,6 +2386,41 @@ impl Store {
 
 fn cleanup_tmp(path: &Path) {
     let _ = fs::remove_file(path);
+}
+
+/// `saved_context` relations have exactly this shape (`WEFT-MODEL.md` §2.5):
+/// root subject, value target, no provenance.
+fn is_saved_context(relation: &RelationRecord) -> bool {
+    relation.subject == State::ROOT_ID
+        && relation.predicate == SAVED_CONTEXT_PREDICATE
+        && relation.kind == RelationKind::Value
+        && relation.provenance.is_none()
+}
+
+/// Extended-attribute names are UTF-8 text without NUL or `/`, at most 255
+/// bytes, and may not use the reserved `weft.` namespace.
+fn validate_xattr_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        return Err(Error::invalid_name(
+            "extended attribute name must not be empty",
+        ));
+    }
+    if name.len() > MAX_XATTR_NAME_BYTES {
+        return Err(Error::invalid_name(
+            "extended attribute name exceeds 255 bytes",
+        ));
+    }
+    if name.contains('\0') || name.contains('/') {
+        return Err(Error::invalid_name(
+            "extended attribute name must not contain NUL or '/'",
+        ));
+    }
+    if name.starts_with("weft.") {
+        return Err(Error::invalid_name(
+            "the weft.* attribute namespace is reserved",
+        ));
+    }
+    Ok(())
 }
 
 fn validate_options(options: &Options) -> Result<()> {
