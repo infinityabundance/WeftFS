@@ -236,3 +236,89 @@ revision against `git` when `--repo-root` is supplied, and confirms no
 `manifest.json` records the original and bundled hashes. `dmesg` is recorded
 as `unavailable (no CAP_SYSLOG)` when the packaging user lacks the capability.
 No secrets, `research/`, or out-of-bundle host paths are included.
+
+## 10. F9 model-checking contract
+
+A property is called **model-checked** only when all of the following hold:
+
+- the TLA+ module, configuration, constants, and tool version are committed;
+- `scripts/run_tla.sh` ran in the hard-limited `tla` Docker court;
+- TLC terminated with `No error has been found` for the corrected model and
+  the declared invariants, over the declared bounded constants;
+- a deliberately flawed model was also checked and TLC produced the expected
+  counterexample (a harness that cannot find the injected defect is a
+  harness failure);
+- the receipt records states generated, distinct states, search depth, result,
+  tool version, jar sha256, court image, and repository revisions;
+- the abstraction mapping and assumptions are committed in
+  `verification/README.md`.
+
+Commands:
+
+```sh
+scripts/run_tla.sh
+```
+
+Current evidence: `bench/receipts/tla-20261103T223957Z.json` — corrected model
+`MaxGen=8`, 615 states generated, 591 distinct, depth 68, pass; flawed model
+`MaxGen=3`, `NoPartial` counterexample. The pinned tool is TLC 1.7.4
+`tla2tools.jar` sha256
+`936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`.
+
+Explicitly **not** claimed: that the Rust or Go source refines the model; that
+checkpoints, GC, capability filtering, selector semantics, or multi-writer
+behaviour are model-checked; that a bounded TLC run proves absence of all
+defects. A model check is not a substitute for the crash, POSIX, and
+cross-implementation courts.
+
+## 11. F9 power-loss court contract
+
+This court answers one question: after a virtual-machine power cut at a random
+point in the write loop, do the two independent implementations recover the
+same exact whole state, and does every commit that returned before the cut
+survive?
+
+Rig contract:
+
+- QEMU runs inside the hard-limited `vm` Docker court; no build/test executes
+  on the host. The guest kernel/initramfs and read-only root are built in the
+  image; the data disk is a fresh qcow2 overlay per iteration.
+- The guest mounts ext4 with `data=ordered,barrier=1` and **never runs fsck**.
+  Kernel journal replay is recorded from the guest `dmesg`.
+- The write loop uses the Rust CLI, one commit per write, and never calls
+  `sync(1)`. A `COMMIT` marker is printed only after the CLI returns.
+- The host kills `qemu-system-x86_64` with `SIGKILL`; the guest is not shut
+  down and no QEMU cache flush is requested. The kill delay is seeded and
+  recorded per iteration.
+- After reboot, Rust and Go each open the crashed image, run `verify --full`,
+  and read the target file. The host asserts: identical generation; identical
+  snapshot root; identical bytes; exact expected content for that generation;
+  every returned commit is present; and only documented crash artifacts are
+  accepted from `verify`.
+- Accepted non-clean verify results are limited to (a) the documented
+  `above the highest published superblock generation` note and (b) an
+  unparseable commit file at a generation strictly above the recovered one.
+  Any other problem fails the iteration.
+- A never-fsynced control file on the data filesystem must be smaller than the
+  number of returned commits; this proves the rig discarded guest page cache
+  and is not a process-abort substitute. The published runs observed control
+  loss in every iteration.
+
+Commands:
+
+```sh
+scripts/powerloss_court.sh
+scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=none bash scripts/powerloss_court.sh"
+```
+
+Published evidence: `bench/receipts/powerloss-20261103T224003Z.json` — 30/30
+pass, 26 old + 4 new, 0 partial, 0 durability failures, 0 Rust/Go
+disagreements, 1 accepted unpublished tail, control loss 30/30, KVM,
+`cache=none`. Secondary: `bench/receipts/powerloss-20261103T224205Z.json` —
+10/10 pass, `cache=writeback`, 2 accepted unpublished tails, control loss
+10/10.
+
+Explicitly **not** claimed: physical media power loss, real device write-cache
+loss, host page-cache loss, an fsync that lies to the guest, or a 10,000-
+iteration campaign. A process abort alone is not accepted as physical
+power-loss evidence and must never be relabelled as such.

@@ -23,15 +23,21 @@ The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens
 byte-identical in both directions). The F7 final receipt is
 `bench/receipts/ai-corpus-20261103T220113Z.json` with cost graph JSON/CSV beside
 it; analysis, losses, and caveats are in `bench/RESULTS-ai-v1.md`.
+The F9 TLA+ receipt is `bench/receipts/tla-20261103T223957Z.json` (corrected
+model pass; flawed model counterexample). The F9 power-loss receipts are
+`bench/receipts/powerloss-20261103T224003Z.json` (30/30, `cache=none`) and
+`bench/receipts/powerloss-20261103T224205Z.json` (10/10, `cache=writeback`).
+The abstraction mapping, assumptions, and limitations are in
+`verification/README.md`.
 
 ## 1. Repositories and revisions
 
-| Repo | F6/F7 revision | Role |
+| Repo | F9 revision | Role |
 |---|---|---|
-| `WeftFS` | `91409dd` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `c632aa1` | Rust codec v1 |
-| `WeftCodec-Go` | `6778f65` | independent Go codec |
-| `WeftFS-Go` | `73a6719` | independent Go store + FUSE |
+| `WeftFS` | `12acedd` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `ab50e8b` | Rust codec v1 |
+| `WeftCodec-Go` | `ce2cff9` | independent Go codec |
+| `WeftFS-Go` | `209e4c3` | independent Go store + FUSE |
 
 All work is on `staging`. `main` holds the P0 foundation only. The research
 directory and `AGENTS.md` are gitignored, per operator directive.
@@ -416,6 +422,53 @@ temporary directory and independently verifies every sha256, rejects unlisted
 files, checks all four revisions against git, and rejects unsafe tar entries.
 The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
 
+### F9 — machine-checked commit/recovery model and VM power-cut court (implemented 2026-11-03)
+
+**Model checking.** `verification/tla/WeftCommit.tla` is a bounded TLA+
+abstraction of the commit/recovery state machine: immutable commit records,
+two alternating superblock slots, objects that must be durable before a commit,
+arbitrary crash boundaries, recovery scanning for the highest valid generation,
+and replay. TLC 1.7.4 (jar pinned by sha256
+`936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`) checks
+`TypeOK`, `NoPartial`, `HighestValid`, `NoLostDependency`, `Durability`,
+`ReturnedObjectsDurable`, and `ReplayIdempotent` at `MaxGen=8`: 615 states
+generated, 591 distinct, search depth 68, no error. Receipt
+`bench/receipts/tla-20261103T223957Z.json`.
+
+`verification/tla/WeftCommitBuggy.tla` is deliberately flawed: recovery trusts
+the highest commit file, ignoring superblock visibility and CRC validation.
+TLC finds the expected `NoPartial` violation at `MaxGen=3` (32 generated, 29
+distinct, depth 9). The counterexample is
+`verification/tla/WeftCommitBuggy.counterexample.txt`; it shows a torn generation-1
+commit replayed as an operation prefix.
+
+**Power-loss rig.** `scripts/powerloss_court.sh` (new `vm` Docker court,
+`docker/vm.Dockerfile`) builds both CLIs, a read-only raw ext4 root disk with a
+Debian 6.1.0-54 kernel/initramfs, and a fresh qcow2 data overlay per iteration.
+The guest initialises the store and commits 64 KiB writes in a loop without
+`sync(1)`; the host waits for returned commits, sleeps a seeded pseudo-random
+delay, and `SIGKILL`s QEMU. Reboot uses the same image with ext4 journal replay
+and **no fsck**; Rust and Go independently recover, `verify --full`, and read
+the file. The host asserts identical generation and snapshot root, exact
+expected content, and that every returned commit survived. A never-fsynced
+control file on the data disk distinguishes this from a process abort.
+
+Published primary run (`cache=none`, KVM): 30/30 pass, 26 old states, 4 new
+states, 0 partial, 0 durability failures, 0 Rust/Go disagreements, 1 accepted
+documented unpublished tail, unsynced-control loss 30/30. Receipt
+`bench/receipts/powerloss-20261103T224003Z.json`. Secondary writeback run:
+10/10 pass, 2 accepted unpublished tails, control loss 10/10; receipt
+`bench/receipts/powerloss-20261103T224205Z.json`. The acceptance predicate
+allows only the documented `above the highest published superblock generation`
+note or an unparseable commit file strictly above the recovered generation;
+all other verifier problems fail the iteration.
+
+**Claim boundary.** This is a QEMU VM power-cut proxy, not physical media power
+loss, host page-cache loss, or an fsync that lies. The TLA+ model is checked;
+the implementation is not verified, and there is no refinement proof. See
+`verification/README.md` for the exact mapping, assumptions, and remaining
+gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
+
 ## 3. Evidence discipline
 
 - Every build/test ran through `scripts/docker-court.sh` in a minimal official
@@ -433,7 +486,14 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
   are single-host observations; `bench/RESULTS-v1.md` states the losses and
   gaps and makes no headline performance claim.
 - Crash tests are process-fault proxies, not physical power-loss tests.
-- No property is claimed model-checked. Invariants are tested.
+- The TLA+ **abstraction** is model-checked by bounded TLC runs. The Rust and
+  Go implementations are **not** formally verified; there is no refinement
+  proof. Implementation invariants remain test- and receipt-backed, and
+  checkpoint/GC/capability/selector/multi-writer behaviour is outside the
+  checked model.
+- The F9 power-loss court is a QEMU virtual-machine power-cut proxy: `SIGKILL`
+  loses the guest page cache and QEMU user-space state, not physical media or
+  host/device caches. It runs under the same hard limits as every other court.
 
 ## 4. What is **not** done (ranked)
 
@@ -443,9 +503,10 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
    concurrency sweep, and no matched Go/Rust codec performance court. The
    codec/store/fio benchmarks themselves ran to completion in this pass; see
    `bench/RESULTS-v1.md` §8 for the exact list.
-2. **Full formal model checking** (TLA+/Alloy/Apalache). Bounded exhaustive
-   enumeration of the real commit/recovery format exists and passes, but it is
-   not a proof and does not cover concurrent transaction models.
+2. **Formal model coverage beyond the commit/recovery abstraction.** The F9 TLA+
+   model checks bounded commit/recovery safety, durability, and replay
+   idempotence, but not checkpoints, GC, capability filtering, selector
+   semantics, multi-writer concurrency, or a refinement proof to Rust/Go.
 3. **Showcase re-run at a later revision.** The committed receipt is evidence
    for the exact revision it records; re-running after code changes requires a
    new receipt, not an inference from the old one.
@@ -455,8 +516,9 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
    implemented and opt-in.
 5. **Same-inode concurrent direct FUSE I/O** on kernel 7.3: blocked on the
    kernel/fuser EIO interaction; no workaround is claimed.
-6. **Physical power-loss court** and remote/object-storage backend; not
-   implemented, not claimed.
+6. **Physical power-loss court** (real media/device write-cache loss) and
+   host page-cache loss; the F9 QEMU VM proxy is not physical. Remote/object-
+   storage backend also remains unimplemented and unclaimed.
 7. **Encryption, multi-writer, distributed consistency**; explicitly out of
    scope for v1 claims.
 8. **Streaming codec API for files larger than memory**; chunked/range APIs are
@@ -486,10 +548,12 @@ The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
    SQLite/graph-store baselines, an ext4/XFS/ZFS court, cold-cache and
    direct-I/O runs, metadata storms, concurrency, and a matched Go/Rust codec
    court. Then add the eight-component economic profile.
-2. Full formal model checking for the commit/replay and transaction state
-   machines; link the exact model revision here.
-3. Physical power-loss court on a VM/device with controllable power; today's
-   evidence remains process-fault proxies.
+2. Extend the TLA+ model to checkpoints, GC reachability, capability
+   filtering, and multi-writer refusal; add a refinement mapping to the Rust
+   and Go state machines. The current F9 model covers commit/recovery only.
+3. Physical power-loss on hardware with controllable power (and host/device
+   cache loss); today's F9 evidence is a QEMU VM power-cut proxy. The VM rig is
+   `scripts/powerloss_court.sh`; it should be re-run at each release revision.
 4. Remaining Go FUSE edge work: physical-space PUNCH_HOLE or sparse extents,
    kernel-forwarded COLLAPSE/INSERT, `ioctl`, and cross-daemon/host locks.
    Online GC is implemented and opt-in.

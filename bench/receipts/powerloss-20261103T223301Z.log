@@ -1,0 +1,2158 @@
+== WeftFS power-loss court ==
+started: 2026-11-03T22:33:01Z
+kernel: Linux e0c44c9462df 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux
+court image: weft/vm-court:1 (sha256:3972a9004bbac6ce16c38ffde945575608fa6799cee60447607ab604a400cbfb)
+limits: memory=3g swap=3g cpus=4 pids=1024 tmpfs_tmp=1g
+iterations=12 seed=20261103 cache=none guest_mem=512M kill_delay_ms=100..1200
+qemu: QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)
+building Rust CLI
+    Finished `release` profile [optimized] target(s) in 0.01s
+building Go CLI (CGO disabled, static)
+building read-only guest root filesystem
+guest kernel: /boot/vmlinuz-6.1.0-54-amd64
+guest initramfs: /boot/initrd.img-6.1.0-54-amd64 (30382096 bytes)
+iteration 1: outcome=old recovered=58 go=58 last_returned=58 delay=1092ms commits=56
+iteration 2: outcome=new recovered=48 go=48 last_returned=47 delay=844ms commits=45
+iteration 3: outcome=old recovered=26 go=26 last_returned=26 delay=415ms commits=24
+iteration 4: outcome=new recovered=42 go=42 last_returned=41 delay=722ms commits=39
+iteration 5: outcome=old recovered=59 go=59 last_returned=59 delay=1116ms commits=57
+iteration 6: outcome=old recovered=58 go=58 last_returned=58 delay=1089ms commits=56
+iteration 7: outcome=old recovered=27 go=27 last_returned=27 delay=433ms commits=25
+iteration 8: outcome=fail recovered=51 go=51 last_returned=51 delay=948ms commits=49
+iteration 9: outcome=new recovered=25 go=25 last_returned=24 delay=371ms commits=22
+iteration 10: outcome=old recovered=22 go=22 last_returned=22 delay=298ms commits=20
+iteration 11: outcome=old recovered=19 go=19 last_returned=19 delay=243ms commits=17
+iteration 12: outcome=old recovered=30 go=30 last_returned=30 delay=463ms commits=28
+===== combined serial logs =====
+===== iter 1 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=b36f908d311d2dd27b66a76332393b1915ed218af17e65026ac7d62175f6b04e
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+COMMIT i=40 gen=42
+COMMIT i=41 gen=43
+COMMIT i=42 gen=44
+COMMIT i=43 gen=45
+COMMIT i=44 gen=46
+COMMIT i=45 gen=47
+COMMIT i=46 gen=48
+COMMIT i=47 gen=49
+COMMIT i=48 gen=50
+COMMIT i=49 gen=51
+COMMIT i=50 gen=52
+COMMIT i=51 gen=53
+COMMIT i=52 gen=54
+COMMIT i=53 gen=55
+COMMIT i=54 gen=56
+COMMIT i=55 gen=57
+COMMIT i=56 gen=58
+===== iter 1 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 58,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 58,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0",
+  "full": true,
+  "generation": 58,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 58,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 58,
+  "Commit": [
+    63,
+    38,
+    89,
+    129,
+    136,
+    215,
+    182,
+    36,
+    49,
+    119,
+    214,
+    27,
+    118,
+    185,
+    156,
+    191,
+    240,
+    152,
+    43,
+    173,
+    169,
+    47,
+    108,
+    194,
+    174,
+    110,
+    146,
+    33,
+    162,
+    139,
+    204,
+    208
+  ],
+  "CheckedCommits": 58,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=58 root=3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=58 root=3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006208] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532524] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.709490] EXT4-fs (vdb): recovery complete
+[    0.710279] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.796409] reboot: Power down
+===== iter 2 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=61ef9710451ce01d1ffe7513798d6128f8df059aaebab1847b7d0935bb6257cc
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+COMMIT i=40 gen=42
+COMMIT i=41 gen=43
+COMMIT i=42 gen=44
+COMMIT i=43 gen=45
+COMMIT i=44 gen=46
+COMMIT i=45 gen=47
+===== iter 2 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 48,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 48,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962",
+  "full": true,
+  "generation": 48,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 48,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 48,
+  "Commit": [
+    116,
+    119,
+    164,
+    7,
+    221,
+    243,
+    248,
+    78,
+    254,
+    154,
+    218,
+    173,
+    26,
+    7,
+    121,
+    60,
+    156,
+    194,
+    74,
+    218,
+    210,
+    104,
+    5,
+    91,
+    151,
+    151,
+    172,
+    12,
+    49,
+    186,
+    169,
+    98
+  ],
+  "CheckedCommits": 48,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=48 root=7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=48 root=7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 847723a982e3952fb13cd957b073208053d7e2877d2180326fc807cde11ec71e
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 847723a982e3952fb13cd957b073208053d7e2877d2180326fc807cde11ec71e
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006209] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532442] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.693494] EXT4-fs (vdb): recovery complete
+[    0.694301] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.773829] reboot: Power down
+===== iter 3 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=b6ae47a227cf1fdf22a7bca9cb0eaa141f5e0163216777597781c1995fc36655
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+===== iter 3 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 26,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 26,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209",
+  "full": true,
+  "generation": 26,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 26,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 26,
+  "Commit": [
+    175,
+    183,
+    165,
+    216,
+    33,
+    161,
+    217,
+    205,
+    39,
+    240,
+    78,
+    242,
+    57,
+    67,
+    25,
+    6,
+    93,
+    115,
+    229,
+    192,
+    192,
+    218,
+    48,
+    221,
+    115,
+    54,
+    14,
+    240,
+    53,
+    68,
+    34,
+    9
+  ],
+  "CheckedCommits": 26,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=26 root=afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=26 root=afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 5af3108e0bdded315c13e3354d0fae23a29dbbea12cbe9c1bbee6689e26ad3c8
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 5af3108e0bdded315c13e3354d0fae23a29dbbea12cbe9c1bbee6689e26ad3c8
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006214] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532510] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.630898] EXT4-fs (vdb): recovery complete
+[    0.631687] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.702809] reboot: Power down
+===== iter 4 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=9240dd8a92536c9cf91585d28861c7d82b3a3eb48321a926e371b5d913afac21
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+===== iter 4 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 42,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 42,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08",
+  "full": true,
+  "generation": 42,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 42,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 42,
+  "Commit": [
+    142,
+    156,
+    62,
+    169,
+    80,
+    222,
+    232,
+    211,
+    85,
+    30,
+    170,
+    147,
+    204,
+    119,
+    109,
+    148,
+    175,
+    21,
+    189,
+    35,
+    180,
+    119,
+    35,
+    51,
+    44,
+    115,
+    201,
+    58,
+    93,
+    185,
+    31,
+    8
+  ],
+  "CheckedCommits": 42,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=42 root=8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=42 root=8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA a57afad7149bb905e35dc834794b49ac0d51a751560c4233627298e96dbccdd9
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA a57afad7149bb905e35dc834794b49ac0d51a751560c4233627298e96dbccdd9
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006210] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.536751] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.669999] EXT4-fs (vdb): recovery complete
+[    0.670791] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.748304] reboot: Power down
+===== iter 5 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=4e924e5eb8519663a8b0efdc7b6403a888d81ef2d1c9e8ea9c1826290e81952c
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+COMMIT i=40 gen=42
+COMMIT i=41 gen=43
+COMMIT i=42 gen=44
+COMMIT i=43 gen=45
+COMMIT i=44 gen=46
+COMMIT i=45 gen=47
+COMMIT i=46 gen=48
+COMMIT i=47 gen=49
+COMMIT i=48 gen=50
+COMMIT i=49 gen=51
+COMMIT i=50 gen=52
+COMMIT i=51 gen=53
+COMMIT i=52 gen=54
+COMMIT i=53 gen=55
+COMMIT i=54 gen=56
+COMMIT i=55 gen=57
+COMMIT i=56 gen=58
+COMMIT i=57 gen=59
+===== iter 5 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 59,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 59,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32",
+  "full": true,
+  "generation": 59,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 59,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 59,
+  "Commit": [
+    168,
+    12,
+    162,
+    13,
+    170,
+    174,
+    228,
+    86,
+    185,
+    175,
+    48,
+    252,
+    253,
+    207,
+    223,
+    233,
+    224,
+    176,
+    100,
+    97,
+    141,
+    36,
+    186,
+    110,
+    51,
+    187,
+    198,
+    235,
+    14,
+    75,
+    202,
+    50
+  ],
+  "CheckedCommits": 59,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=59 root=a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=59 root=a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA bd84c9a1829a151c3a9e25d2f4edd99f7b5351faa991392cfa79452a1bf04820
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA bd84c9a1829a151c3a9e25d2f4edd99f7b5351faa991392cfa79452a1bf04820
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006462] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.536792] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.705298] EXT4-fs (vdb): recovery complete
+[    0.706089] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.789197] reboot: Power down
+===== iter 6 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=a8967a3116472a9d2bc97dd2f265e16022eaf139bee1bf486671f49c75780e93
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+COMMIT i=40 gen=42
+COMMIT i=41 gen=43
+COMMIT i=42 gen=44
+COMMIT i=43 gen=45
+COMMIT i=44 gen=46
+COMMIT i=45 gen=47
+COMMIT i=46 gen=48
+COMMIT i=47 gen=49
+COMMIT i=48 gen=50
+COMMIT i=49 gen=51
+COMMIT i=50 gen=52
+COMMIT i=51 gen=53
+COMMIT i=52 gen=54
+COMMIT i=53 gen=55
+COMMIT i=54 gen=56
+COMMIT i=55 gen=57
+COMMIT i=56 gen=58
+===== iter 6 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 58,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 58,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa",
+  "full": true,
+  "generation": 58,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 58,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 58,
+  "Commit": [
+    243,
+    18,
+    114,
+    124,
+    248,
+    88,
+    46,
+    249,
+    201,
+    233,
+    171,
+    219,
+    114,
+    247,
+    33,
+    71,
+    8,
+    85,
+    189,
+    139,
+    141,
+    181,
+    220,
+    98,
+    118,
+    91,
+    101,
+    132,
+    38,
+    173,
+    106,
+    250
+  ],
+  "CheckedCommits": 58,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=58 root=f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=58 root=f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006259] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532929] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.708809] EXT4-fs (vdb): recovery complete
+[    0.709896] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.792972] reboot: Power down
+===== iter 7 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=52da6d1f9b5e35340e03cfc5e3998aa344bf3d2911b1ec837f5f12c9df33aa90
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+===== iter 7 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 27,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 27,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90",
+  "full": true,
+  "generation": 27,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 27,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 27,
+  "Commit": [
+    12,
+    52,
+    151,
+    44,
+    65,
+    169,
+    60,
+    238,
+    254,
+    169,
+    238,
+    226,
+    159,
+    21,
+    142,
+    185,
+    15,
+    238,
+    163,
+    112,
+    102,
+    129,
+    179,
+    28,
+    216,
+    91,
+    216,
+    109,
+    47,
+    182,
+    223,
+    144
+  ],
+  "CheckedCommits": 27,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=27 root=0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=27 root=0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA b80b65ae99d05d11e9363d8c9d2b133de51bb7c3dcf2119927799672e1b1c07b
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA b80b65ae99d05d11e9363d8c9d2b133de51bb7c3dcf2119927799672e1b1c07b
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006236] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532635] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.630769] EXT4-fs (vdb): recovery complete
+[    0.631559] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.702868] reboot: Power down
+===== iter 8 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=89e595d0779674912e27a9ee5aa1b90c1a87f8c9877741c745d59ee4a7454e55
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+COMMIT i=29 gen=31
+COMMIT i=30 gen=32
+COMMIT i=31 gen=33
+COMMIT i=32 gen=34
+COMMIT i=33 gen=35
+COMMIT i=34 gen=36
+COMMIT i=35 gen=37
+COMMIT i=36 gen=38
+COMMIT i=37 gen=39
+COMMIT i=38 gen=40
+COMMIT i=39 gen=41
+COMMIT i=40 gen=42
+COMMIT i=41 gen=43
+COMMIT i=42 gen=44
+COMMIT i=43 gen=45
+COMMIT i=44 gen=46
+COMMIT i=45 gen=47
+COMMIT i=46 gen=48
+COMMIT i=47 gen=49
+COMMIT i=48 gen=50
+COMMIT i=49 gen=51
+===== iter 8 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 51,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 52,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742",
+  "full": true,
+  "generation": 51,
+  "ok": false,
+  "problems": [
+    {
+      "class": "Corrupt",
+      "detail": "commit file for generation 52 exists above the highest published superblock generation 51"
+    }
+  ],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 51,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": false,
+  "Full": true,
+  "Generation": 51,
+  "Commit": [
+    193,
+    95,
+    168,
+    163,
+    229,
+    198,
+    97,
+    92,
+    223,
+    43,
+    78,
+    221,
+    25,
+    83,
+    9,
+    243,
+    57,
+    150,
+    154,
+    36,
+    171,
+    208,
+    117,
+    106,
+    163,
+    71,
+    20,
+    109,
+    45,
+    131,
+    103,
+    66
+  ],
+  "CheckedCommits": 52,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": [
+    {
+      "Class": "Corrupt",
+      "Detail": "commit file for generation 52 exists above the highest published superblock generation 51"
+    }
+  ]
+}
+Corrupt: verification found 1 problem(s)
+RS_SUMMARY gen=51 root=c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742 ok=0 status=0
+RS_REJECTED 
+GO_SUMMARY gen=51 root=c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742 ok=0 status=1
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA e1dc7d484a3b05251c7bc85ac8f9c8846936aec3bf4cbeb340207cfb4934ef70
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA e1dc7d484a3b05251c7bc85ac8f9c8846936aec3bf4cbeb340207cfb4934ef70
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006277] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.536491] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.705626] EXT4-fs (vdb): recovery complete
+[    0.706424] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.792028] reboot: Power down
+===== iter 9 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=3100a55ac950dae85e7391d556057cfd903cb135f8dee652a961a98c04a2e860
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+===== iter 9 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 25,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 25,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772",
+  "full": true,
+  "generation": 25,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 25,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 25,
+  "Commit": [
+    128,
+    165,
+    3,
+    134,
+    27,
+    147,
+    77,
+    29,
+    156,
+    104,
+    52,
+    124,
+    123,
+    184,
+    161,
+    233,
+    105,
+    99,
+    139,
+    229,
+    165,
+    124,
+    152,
+    105,
+    228,
+    55,
+    54,
+    48,
+    29,
+    166,
+    231,
+    114
+  ],
+  "CheckedCommits": 25,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=25 root=80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=25 root=80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 99f51d0bdd4648c56a2051b064d47caa12e25f56597e3cc1e209285f85088293
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 99f51d0bdd4648c56a2051b064d47caa12e25f56597e3cc1e209285f85088293
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006265] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.532537] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.628543] EXT4-fs (vdb): recovery complete
+[    0.629339] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.700787] reboot: Power down
+===== iter 10 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=746035a4d13b44d21ce656e219d0a1248c63f00ef232b2a783da3acad08a768c
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+===== iter 10 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 22,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 22,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0",
+  "full": true,
+  "generation": 22,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 22,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 22,
+  "Commit": [
+    213,
+    185,
+    168,
+    89,
+    92,
+    98,
+    131,
+    31,
+    33,
+    8,
+    175,
+    144,
+    66,
+    113,
+    27,
+    122,
+    131,
+    78,
+    144,
+    73,
+    166,
+    186,
+    208,
+    92,
+    203,
+    86,
+    85,
+    96,
+    35,
+    79,
+    53,
+    176
+  ],
+  "CheckedCommits": 22,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=22 root=d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=22 root=d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 25ce4067610cb2ec593d551ba0c9551be9f8fcb68c3fdd360fd4a860e59b4d54
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 25ce4067610cb2ec593d551ba0c9551be9f8fcb68c3fdd360fd4a860e59b4d54
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006191] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.536645] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.623350] EXT4-fs (vdb): recovery complete
+[    0.624425] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.694620] reboot: Power down
+===== iter 11 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=d8ce95354201bdfe683fbdd38dac034315595434bfce6dfa4aa6515998d32d75
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+===== iter 11 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 19,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 19,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e",
+  "full": true,
+  "generation": 19,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 19,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 19,
+  "Commit": [
+    139,
+    93,
+    119,
+    67,
+    9,
+    111,
+    19,
+    60,
+    161,
+    48,
+    130,
+    172,
+    200,
+    180,
+    18,
+    26,
+    251,
+    72,
+    138,
+    78,
+    50,
+    95,
+    25,
+    68,
+    185,
+    59,
+    27,
+    13,
+    41,
+    44,
+    227,
+    46
+  ],
+  "CheckedCommits": 19,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=19 root=8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=19 root=8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA d6d37e75693070c6f634dc87aa0322db86232cb4dc7494023806d900c2727411
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA d6d37e75693070c6f634dc87aa0322db86232cb4dc7494023806d900c2727411
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006272] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.528314] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.599478] EXT4-fs (vdb): recovery complete
+[    0.600272] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.669430] reboot: Power down
+===== iter 12 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=2c3032597fc0a988b3b29eaa4f278d6233be306920eb58be016581b2a19e07bd
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+COMMIT i=3 gen=5
+COMMIT i=4 gen=6
+COMMIT i=5 gen=7
+COMMIT i=6 gen=8
+COMMIT i=7 gen=9
+COMMIT i=8 gen=10
+COMMIT i=9 gen=11
+COMMIT i=10 gen=12
+COMMIT i=11 gen=13
+COMMIT i=12 gen=14
+COMMIT i=13 gen=15
+COMMIT i=14 gen=16
+COMMIT i=15 gen=17
+COMMIT i=16 gen=18
+COMMIT i=17 gen=19
+COMMIT i=18 gen=20
+COMMIT i=19 gen=21
+COMMIT i=20 gen=22
+COMMIT i=21 gen=23
+COMMIT i=22 gen=24
+COMMIT i=23 gen=25
+COMMIT i=24 gen=26
+COMMIT i=25 gen=27
+COMMIT i=26 gen=28
+COMMIT i=27 gen=29
+COMMIT i=28 gen=30
+===== iter 12 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 30,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 30,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3",
+  "full": true,
+  "generation": 30,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 30,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 30,
+  "Commit": [
+    124,
+    225,
+    253,
+    159,
+    198,
+    246,
+    98,
+    85,
+    96,
+    102,
+    38,
+    61,
+    9,
+    255,
+    66,
+    22,
+    69,
+    241,
+    252,
+    251,
+    71,
+    149,
+    246,
+    98,
+    166,
+    69,
+    32,
+    35,
+    142,
+    229,
+    153,
+    211
+  ],
+  "CheckedCommits": 30,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=30 root=7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3 ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen=30 root=7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3 ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA 210f4b0b5bef076e7b6262e146d38a5eedacee65394f921ec8566c214a0d9052
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA 210f4b0b5bef076e7b6262e146d38a5eedacee65394f921ec8566c214a0d9052
+CONTROL_UNSYNCED_SIZE 0
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006192] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.528694] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.640431] EXT4-fs (vdb): recovery complete
+[    0.641222] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.713951] reboot: Power down
+receipt: bench/receipts/powerloss-20261103T223301Z.json
+raw log: bench/receipts/powerloss-20261103T223301Z.log
+PL_FAIL failed iterations or blocked rig

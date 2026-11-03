@@ -81,7 +81,7 @@ expose the defect.
 
 TLC checked `TypeOK`, `NoPartial`, `HighestValid`, `NoLostDependency`,
 `Durability`, `ReturnedObjectsDurable`, and `ReplayIdempotent` on the corrected
-model. Result (receipt `bench/receipts/tla-20261103T222852Z.json`):
+model. Result (receipt `bench/receipts/tla-20261103T223957Z.json`):
 
 | Model | Constants | States generated | Distinct | Depth | Result |
 |---|---|---:|---:|---:|---|
@@ -167,31 +167,45 @@ accepted as this evidence.
 
 ### 2.3 Results
 
-Published run (receipt `bench/receipts/powerloss-20261103T223659Z.json`):
-30 iterations, KVM, `cache=none`, guest kernel 6.1.0-54-amd64, Debian
-initramfs, ext4 `data=ordered,barrier=1`, no fsck.
+Published primary run (receipt
+`bench/receipts/powerloss-20261103T224003Z.json`): 30 iterations, KVM,
+`cache=none`, guest kernel 6.1.0-54-amd64, Debian initramfs, ext4
+`data=ordered,barrier=1`, no fsck.
 
 | Metric | Value |
 |---|---:|
 | Iterations | 30 |
 | Pass | 30 |
 | Fail | 0 |
-| Old state (`recovered == last returned`) | 29 |
-| New state (`recovered > last returned`) | 1 |
+| Old state (`recovered == last returned`) | 26 |
+| New state (`recovered > last returned`) | 4 |
 | Partial / mismatched state | 0 |
 | Durability violations | 0 |
 | Rust/Go disagreements | 0 |
+| Iterations with a documented unpublished tail | 1 |
 | Unsynced-control loss observed | 30 / 30 |
 
-The earlier 20-iteration and 12-iteration runs and the first single-iteration
-smoke tests are retained in `bench/receipts/` as negative/positive run history.
-One early 12-iteration run flagged a valid-but-unpublished commit tail as a
-verifier "problem". Recovery was correct and both implementations returned the
-same exact state; the court's acceptance predicate was then narrowed to accept
-only (a) the documented `above the highest published superblock generation`
-diagnostic and (b) an unparseable commit file at a generation strictly above
-the recovered generation. Any other verify problem fails the iteration. This
-classification was validated against the retained raw verify log from that run.
+The secondary run (receipt
+`bench/receipts/powerloss-20261103T224205Z.json`) used the same rig with
+`cache=writeback`: 10 iterations, 10 pass, 9 old, 1 new, 0 partial, 0
+durability failures, 0 Rust/Go disagreements, 2 documented unpublished tails,
+and unsynced-control loss in 10/10 iterations. Iteration 29 of the primary run
+is the direct exercise of the unpublished-tail acceptance path: both verifiers
+reported exactly the documented `above the highest published superblock
+generation` note for generation 58, both recovered generation 57 with the same
+root, and both read the exact expected bytes.
+
+The earlier 20-iteration and 12-iteration runs and the single-iteration smoke
+tests are retained in `bench/receipts/` as run history. One pre-fix
+12-iteration run (`powerloss-20261103T223301Z`) flagged a valid-but-unpublished
+commit tail as a verifier "problem". Recovery was correct and both
+implementations returned the same exact state; the court's acceptance
+predicate was then narrowed to accept only (a) the documented `above the
+highest published superblock generation` diagnostic and (b) an unparseable
+commit file at a generation strictly above the recovered generation. Any other
+verify problem fails the iteration. The classification was validated against
+the retained raw verify log from that run; the published primary run then
+exercised the accepted-tail path in iteration 29.
 
 ### 2.4 Reproduce
 
@@ -223,8 +237,9 @@ durability result, unsynced-control result, and raw serial logs.
 
 | Artifact | Result |
 |---|---|
-| `bench/receipts/tla-20261103T222852Z.json` / `.log` | corrected model pass; flawed model `NoPartial` counterexample |
+| `bench/receipts/tla-20261103T223957Z.json` / `.log` | corrected model pass; flawed model `NoPartial` counterexample |
 | `verification/tla/WeftCommitBuggy.counterexample.txt` | TLC trace quoted from the committed log |
-| `bench/receipts/powerloss-20261103T223659Z.json` / `.log` | 30/30 VM power-cut iterations pass, 0 partial, 0 durability failures, unsynced-control loss observed 30/30 |
+| `bench/receipts/powerloss-20261103T224003Z.json` / `.log` | 30/30 VM power-cut iterations pass, 26 old + 4 new, 0 partial, 0 durability failures, 1 accepted unpublished tail, unsynced-control loss 30/30 |
+| `bench/receipts/powerloss-20261103T224205Z.json` / `.log` | secondary writeback run: 10/10 pass, 0 partial, 2 accepted unpublished tails |
 | `tests/bounded_recovery.rs` | test-only bounded corruption enumeration (not model checking) |
 | `bench/receipts/crash-torture-*.json` | process-fault crash proxy, explicitly not physical power loss |

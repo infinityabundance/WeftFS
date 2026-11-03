@@ -1,0 +1,511 @@
+{
+  "schema": "weftfs.powerloss.receipt/1",
+  "generated_at": "2026-11-03T22:33:40Z",
+  "run": {
+    "started_at": "2026-11-03T22:33:01Z",
+    "finished_at": "2026-11-03T22:33:40Z",
+    "duration_ms": 39000
+  },
+  "rig": {
+    "type": "qemu-virtual-machine",
+    "claim": "VM power-cut proxy: SIGKILL of QEMU loses guest page cache and QEMU user-space state; not physical media power loss and not host/device cache loss",
+    "available": true,
+    "blockers": [],
+    "qemu_version": "QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)",
+    "accel": "kvm",
+    "accel_fallback_to_tcg": false,
+    "cache_mode": "none",
+    "kernel": "vmlinuz-6.1.0-54-amd64",
+    "initramfs": "initrd.img-6.1.0-54-amd64",
+    "root_disk": "raw ext4 160 MiB, mounted read-only",
+    "data_disk": "qcow2 overlay on raw ext4 128 MiB, fresh per iteration",
+    "guest_filesystem": "ext4 data=ordered barrier=1; no fsck",
+    "kill": "SIGKILL to qemu-system-x86_64 with no guest shutdown and no cache flush",
+    "qemu_command_template": "qemu-system-x86_64 -accel kvm -cpu host -smp 1 -m 512M -kernel /boot/vmlinuz-6.1.0-54-amd64 -initrd /boot/initrd.img-6.1.0-54-amd64 -append 'root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=<write|verify> weft.iters=100000' -drive file=/work/.docker-cache/powerloss/20261103T223301Z/root.img,if=virtio,format=raw,readonly=on -drive file=/work/.docker-cache/powerloss/20261103T223301Z/data.qcow2,if=virtio,format=qcow2,cache=none -display none -vga none -no-user-config -nodefaults -no-reboot -serial stdio -monitor none",
+    "guest_init": "verification/powerloss/guest-init.sh"
+  },
+  "environment": {
+    "court": "weft/vm-court:1",
+    "image_id": "sha256:3972a9004bbac6ce16c38ffde945575608fa6799cee60447607ab604a400cbfb",
+    "host_kernel": "Linux e0c44c9462df 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024",
+    "tmpfs_tmp": "1g"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "unknown"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "unknown"
+    }
+  ],
+  "limits": {
+    "iterations": 12,
+    "seed": 20261103,
+    "guest_memory_mb": 512,
+    "file_size_bytes": 1048576,
+    "payload_size_bytes": 65536,
+    "kill_delay_ms": {
+      "min": 100,
+      "max": 1200
+    },
+    "boot_timeout_seconds": 120,
+    "verify_timeout_seconds": 180,
+    "no_fsck": true,
+    "sync_after_commit_in_guest": false,
+    "unsynced_control": "one byte appended to /data/unsynced-control after each returned commit, never fsynced; a size below the observed commit count proves the rig discarded guest page cache"
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "kill_delay_ms": 1092,
+      "commits_observed": 56,
+      "last_returned_generation": 58,
+      "write_boot_seconds": 3,
+      "verify_boot_seconds": 1,
+      "rust_generation": 58,
+      "go_generation": 58,
+      "snapshot_root": {
+        "rust": "3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0",
+        "go": "3f26598188d7b6243177d61b76b99cbff0982bada92f6cc2ae6e9221a28bccd0"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "go_cat_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "expected_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 2,
+      "kill_delay_ms": 844,
+      "commits_observed": 45,
+      "last_returned_generation": 47,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 2,
+      "rust_generation": 48,
+      "go_generation": 48,
+      "snapshot_root": {
+        "rust": "7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962",
+        "go": "7477a407ddf3f84efe9adaad1a07793c9cc24adad268055b9797ac0c31baa962"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "847723a982e3952fb13cd957b073208053d7e2877d2180326fc807cde11ec71e",
+      "go_cat_sha256": "847723a982e3952fb13cd957b073208053d7e2877d2180326fc807cde11ec71e",
+      "expected_sha256": "847723a982e3952fb13cd957b073208053d7e2877d2180326fc807cde11ec71e",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "new",
+      "error": ""
+    },
+    {
+      "iteration": 3,
+      "kill_delay_ms": 415,
+      "commits_observed": 24,
+      "last_returned_generation": 26,
+      "write_boot_seconds": 1,
+      "verify_boot_seconds": 2,
+      "rust_generation": 26,
+      "go_generation": 26,
+      "snapshot_root": {
+        "rust": "afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209",
+        "go": "afb7a5d821a1d9cd27f04ef2394319065d73e5c0c0da30dd73360ef035442209"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "5af3108e0bdded315c13e3354d0fae23a29dbbea12cbe9c1bbee6689e26ad3c8",
+      "go_cat_sha256": "5af3108e0bdded315c13e3354d0fae23a29dbbea12cbe9c1bbee6689e26ad3c8",
+      "expected_sha256": "5af3108e0bdded315c13e3354d0fae23a29dbbea12cbe9c1bbee6689e26ad3c8",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 4,
+      "kill_delay_ms": 722,
+      "commits_observed": 39,
+      "last_returned_generation": 41,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 42,
+      "go_generation": 42,
+      "snapshot_root": {
+        "rust": "8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08",
+        "go": "8e9c3ea950dee8d3551eaa93cc776d94af15bd23b47723332c73c93a5db91f08"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "a57afad7149bb905e35dc834794b49ac0d51a751560c4233627298e96dbccdd9",
+      "go_cat_sha256": "a57afad7149bb905e35dc834794b49ac0d51a751560c4233627298e96dbccdd9",
+      "expected_sha256": "a57afad7149bb905e35dc834794b49ac0d51a751560c4233627298e96dbccdd9",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "new",
+      "error": ""
+    },
+    {
+      "iteration": 5,
+      "kill_delay_ms": 1116,
+      "commits_observed": 57,
+      "last_returned_generation": 59,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 2,
+      "rust_generation": 59,
+      "go_generation": 59,
+      "snapshot_root": {
+        "rust": "a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32",
+        "go": "a80ca20daaaee456b9af30fcfdcfdfe9e0b064618d24ba6e33bbc6eb0e4bca32"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "bd84c9a1829a151c3a9e25d2f4edd99f7b5351faa991392cfa79452a1bf04820",
+      "go_cat_sha256": "bd84c9a1829a151c3a9e25d2f4edd99f7b5351faa991392cfa79452a1bf04820",
+      "expected_sha256": "bd84c9a1829a151c3a9e25d2f4edd99f7b5351faa991392cfa79452a1bf04820",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 6,
+      "kill_delay_ms": 1089,
+      "commits_observed": 56,
+      "last_returned_generation": 58,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 58,
+      "go_generation": 58,
+      "snapshot_root": {
+        "rust": "f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa",
+        "go": "f312727cf8582ef9c9e9abdb72f721470855bd8b8db5dc62765b658426ad6afa"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "go_cat_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "expected_sha256": "5920db42ef4a023cff129dd503830fb5503c653bda5aa983937797da9ae45f56",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 7,
+      "kill_delay_ms": 433,
+      "commits_observed": 25,
+      "last_returned_generation": 27,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 27,
+      "go_generation": 27,
+      "snapshot_root": {
+        "rust": "0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90",
+        "go": "0c34972c41a93ceefea9eee29f158eb90feea3706681b31cd85bd86d2fb6df90"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "b80b65ae99d05d11e9363d8c9d2b133de51bb7c3dcf2119927799672e1b1c07b",
+      "go_cat_sha256": "b80b65ae99d05d11e9363d8c9d2b133de51bb7c3dcf2119927799672e1b1c07b",
+      "expected_sha256": "b80b65ae99d05d11e9363d8c9d2b133de51bb7c3dcf2119927799672e1b1c07b",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 8,
+      "kill_delay_ms": 948,
+      "commits_observed": 49,
+      "last_returned_generation": 51,
+      "write_boot_seconds": 3,
+      "verify_boot_seconds": 1,
+      "rust_generation": 51,
+      "go_generation": 51,
+      "snapshot_root": {
+        "rust": "c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742",
+        "go": "c15fa8a3e5c6615cdf2b4edd195309f339969a24abd0756aa347146d2d836742"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 0,
+      "go_verify_ok": 0,
+      "rust_verify_status": 0,
+      "go_verify_status": 1,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "e1dc7d484a3b05251c7bc85ac8f9c8846936aec3bf4cbeb340207cfb4934ef70",
+      "go_cat_sha256": "e1dc7d484a3b05251c7bc85ac8f9c8846936aec3bf4cbeb340207cfb4934ef70",
+      "expected_sha256": "e1dc7d484a3b05251c7bc85ac8f9c8846936aec3bf4cbeb340207cfb4934ef70",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 0,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "fail",
+      "error": "verify --full reported problems (rust=0 go=0)"
+    },
+    {
+      "iteration": 9,
+      "kill_delay_ms": 371,
+      "commits_observed": 22,
+      "last_returned_generation": 24,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 25,
+      "go_generation": 25,
+      "snapshot_root": {
+        "rust": "80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772",
+        "go": "80a503861b934d1d9c68347c7bb8a1e969638be5a57c9869e43736301da6e772"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "99f51d0bdd4648c56a2051b064d47caa12e25f56597e3cc1e209285f85088293",
+      "go_cat_sha256": "99f51d0bdd4648c56a2051b064d47caa12e25f56597e3cc1e209285f85088293",
+      "expected_sha256": "99f51d0bdd4648c56a2051b064d47caa12e25f56597e3cc1e209285f85088293",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "new",
+      "error": ""
+    },
+    {
+      "iteration": 10,
+      "kill_delay_ms": 298,
+      "commits_observed": 20,
+      "last_returned_generation": 22,
+      "write_boot_seconds": 1,
+      "verify_boot_seconds": 2,
+      "rust_generation": 22,
+      "go_generation": 22,
+      "snapshot_root": {
+        "rust": "d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0",
+        "go": "d5b9a8595c62831f2108af9042711b7a834e9049a6bad05ccb565560234f35b0"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "25ce4067610cb2ec593d551ba0c9551be9f8fcb68c3fdd360fd4a860e59b4d54",
+      "go_cat_sha256": "25ce4067610cb2ec593d551ba0c9551be9f8fcb68c3fdd360fd4a860e59b4d54",
+      "expected_sha256": "25ce4067610cb2ec593d551ba0c9551be9f8fcb68c3fdd360fd4a860e59b4d54",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 11,
+      "kill_delay_ms": 243,
+      "commits_observed": 17,
+      "last_returned_generation": 19,
+      "write_boot_seconds": 1,
+      "verify_boot_seconds": 1,
+      "rust_generation": 19,
+      "go_generation": 19,
+      "snapshot_root": {
+        "rust": "8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e",
+        "go": "8b5d7743096f133ca13082acc8b4121afb488a4e325f1944b93b1b0d292ce32e"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "d6d37e75693070c6f634dc87aa0322db86232cb4dc7494023806d900c2727411",
+      "go_cat_sha256": "d6d37e75693070c6f634dc87aa0322db86232cb4dc7494023806d900c2727411",
+      "expected_sha256": "d6d37e75693070c6f634dc87aa0322db86232cb4dc7494023806d900c2727411",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    },
+    {
+      "iteration": 12,
+      "kill_delay_ms": 463,
+      "commits_observed": 28,
+      "last_returned_generation": 30,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 30,
+      "go_generation": 30,
+      "snapshot_root": {
+        "rust": "7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3",
+        "go": "7ce1fd9fc6f662556066263d09ff421645f1fcfb4795f662a64520238ee599d3"
+      },
+      "rejected_generations": {
+        "rust": "",
+        "go": ""
+      },
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "210f4b0b5bef076e7b6262e146d38a5eedacee65394f921ec8566c214a0d9052",
+      "go_cat_sha256": "210f4b0b5bef076e7b6262e146d38a5eedacee65394f921ec8566c214a0d9052",
+      "expected_sha256": "210f4b0b5bef076e7b6262e146d38a5eedacee65394f921ec8566c214a0d9052",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "unsynced_control_size": 0,
+      "unsynced_control_verdict": "loss-observed",
+      "outcome": "old",
+      "error": ""
+    }
+  ],
+  "summary": {
+    "iterations": 12,
+    "pass": 11,
+    "fail": 1,
+    "old": 8,
+    "new": 3,
+    "partial": 0,
+    "durability_failures": 0,
+    "verify_failures": 1,
+    "cross_impl_disagreements": 1,
+    "unsynced_control_loss_observed": 12
+  },
+  "evidence": {
+    "raw_log": "bench/receipts/powerloss-20261103T223301Z.log",
+    "raw_log_sha256": "b300ad5320775bd7bb4a567bfadefb0a94368d7eac191df43faf3fcf3c681c75"
+  },
+  "scope": {
+    "asserted": "for every completed iteration, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean",
+    "not_asserted": [
+      "physical power loss (media/device write-cache loss)",
+      "host page-cache loss",
+      "fsync that lies to the guest",
+      "power loss during mkfs or during the read-only root mount",
+      "10,000-iteration campaign"
+    ]
+  }
+}

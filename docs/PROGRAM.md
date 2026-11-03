@@ -20,7 +20,7 @@ evidence.
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
 | B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | **implemented** — 36 vectors, 36/36 class-identical, `bench/receipts/decoder-bombs-20261103T213314Z.json`; curated corpus, not fuzzing |
-| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 1,000 process-fault iterations** — `bench/receipts/crash-torture-20261103T213446Z.json`; 10,000 command supported but not run (measured 2.9 it/s, ~58.4 min linear projection); physical power loss not done |
+| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 1,000 process-fault iterations** — `bench/receipts/crash-torture-20261103T213446Z.json`; 10,000 command supported but not run (measured 2.9 it/s, ~58.4 min linear projection). F9 adds a QEMU VM power-cut proxy: 30/30 iterations, 0 partial, 0 durability failures (`bench/receipts/powerloss-20261103T224003Z.json`). Physical power loss remains **not done**. |
 | B3 | One-command receipt bundle: Dockerfile hash, corpus hash, environment, raw output, dmesg, sha256; rerunnable by a stranger | receipts (exist) | **implemented** — `scripts/package-receipts.sh` + independent `scripts/verify-receipts.sh`; dmesg unavailable without CAP_SYSLOG |
 | B4 | POSIX conformance court: `fsx`-style randomized ops, `fsstress`/`pjdfstest` where available, Rust and Go, green matrix | FUSE frontends | **implemented** — self-written fsx-style court, 6/6 runs, 13,694 ops, `bench/receipts/posix-torture-20261103T213317Z.json`; `pjdfstest`/`fsstress` not available and not substituted |
 
@@ -49,7 +49,7 @@ evidence.
 | E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian) and `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128) implemented and cross-language; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §4) |
 | E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | partial (uid/gid + ACL) |
 | E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | not started |
-| E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | partial |
+| E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy; no refinement proof, and checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss and full CI remain outstanding. |
 | E7 | Adoption surfaces: checkpoint+delta format, dataset versioning/subset materialization, agent memory, experiment reproducibility | E3–E5 | not started |
 
 ## Implementation order (each stage ends with tests and a receipt)
@@ -80,6 +80,15 @@ evidence.
    drift CI. (D1–D3, E7)
 10. **F9 — Formal guarantees:** TLA+/Alloy or exhaustive bounded + machine
     checked invariants; bit-identical CI; AI workload court; release.
+    **Partly implemented** (2026-11-03): `verification/tla/` checks the bounded
+    commit/recovery state machine (`NoPartial`, `HighestValid`,
+    `NoLostDependency`, `Durability`, `ReturnedObjectsDurable`,
+    `ReplayIdempotent`) and includes a deliberately flawed model with a TLC
+    counterexample; `scripts/powerloss_court.sh` runs a QEMU VM power-cut proxy
+    with Rust and Go verification (30/30 published iterations, 0 partial, 0
+    durability failures). Still outstanding: checkpoints/GC/capability/
+    selector/multi-writer models, a refinement proof, physical power loss, and
+    the remaining release/CI items.
 
 ## Non-negotiables
 

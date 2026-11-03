@@ -1,0 +1,139 @@
+{
+  "schema": "weftfs.powerloss.receipt/1",
+  "generated_at": "2026-11-03T22:31:55Z",
+  "run": {
+    "started_at": "2026-11-03T22:31:49Z",
+    "finished_at": "2026-11-03T22:31:55Z",
+    "duration_ms": 6000
+  },
+  "rig": {
+    "type": "qemu-virtual-machine",
+    "claim": "VM power-cut proxy: SIGKILL of QEMU loses guest page cache and QEMU user-space state; not physical media power loss and not host/device cache loss",
+    "available": true,
+    "blockers": [],
+    "qemu_version": "QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)",
+    "accel": "kvm",
+    "accel_fallback_to_tcg": false,
+    "cache_mode": "none",
+    "kernel": "vmlinuz-6.1.0-54-amd64",
+    "initramfs": "initrd.img-6.1.0-54-amd64",
+    "root_disk": "raw ext4 160 MiB, mounted read-only",
+    "data_disk": "qcow2 overlay on raw ext4 128 MiB, fresh per iteration",
+    "guest_filesystem": "ext4 data=ordered barrier=1; no fsck",
+    "kill": "SIGKILL to qemu-system-x86_64 with no guest shutdown and no cache flush",
+    "qemu_command_template": "qemu-system-x86_64 -accel kvm -cpu host -smp 1 -m 512M -kernel /boot/vmlinuz-6.1.0-54-amd64 -initrd /boot/initrd.img-6.1.0-54-amd64 -append 'root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=<write|verify> weft.iters=100000' -drive file=/work/.docker-cache/powerloss/20261103T223149Z/root.img,if=virtio,format=raw,readonly=on -drive file=/work/.docker-cache/powerloss/20261103T223149Z/data.qcow2,if=virtio,format=qcow2,cache=none -display none -vga none -no-user-config -nodefaults -no-reboot -serial stdio -monitor none",
+    "guest_init": "verification/powerloss/guest-init.sh"
+  },
+  "environment": {
+    "court": "weft/vm-court:1",
+    "image_id": "sha256:3972a9004bbac6ce16c38ffde945575608fa6799cee60447607ab604a400cbfb",
+    "host_kernel": "Linux f499218bbbae 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024",
+    "tmpfs_tmp": "1g"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "unknown"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "unknown"
+    }
+  ],
+  "limits": {
+    "iterations": 2,
+    "seed": 20261103,
+    "guest_memory_mb": 512,
+    "file_size_bytes": 1048576,
+    "payload_size_bytes": 65536,
+    "kill_delay_ms": {
+      "min": 150,
+      "max": 800
+    },
+    "boot_timeout_seconds": 120,
+    "verify_timeout_seconds": 180,
+    "no_fsck": true,
+    "sync_after_commit_in_guest": false
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "kill_delay_ms": 635,
+      "commits_observed": 13,
+      "last_returned_generation": 0,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 15,
+      "go_generation": 15,
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "66e5bcf6b58f7fa3e8d1f93aa76b2f7d2d0ff757ccb72334ae28a38d1de1e0da",
+      "go_cat_sha256": "66e5bcf6b58f7fa3e8d1f93aa76b2f7d2d0ff757ccb72334ae28a38d1de1e0da",
+      "expected_sha256": "66e5bcf6b58f7fa3e8d1f93aa76b2f7d2d0ff757ccb72334ae28a38d1de1e0da",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "outcome": "new",
+      "error": ""
+    },
+    {
+      "iteration": 2,
+      "kill_delay_ms": 291,
+      "commits_observed": 19,
+      "last_returned_generation": 21,
+      "write_boot_seconds": 2,
+      "verify_boot_seconds": 1,
+      "rust_generation": 21,
+      "go_generation": 21,
+      "rust_verify_ok": 1,
+      "go_verify_ok": 1,
+      "rust_verify_status": 0,
+      "go_verify_status": 0,
+      "rust_cat_status": 0,
+      "go_cat_status": 0,
+      "rust_cat_sha256": "c90f984f6d054e6c58a314d3d1c7760c44b438d1448ed6fced8f972300b49864",
+      "go_cat_sha256": "c90f984f6d054e6c58a314d3d1c7760c44b438d1448ed6fced8f972300b49864",
+      "expected_sha256": "c90f984f6d054e6c58a314d3d1c7760c44b438d1448ed6fced8f972300b49864",
+      "size_ok": 1,
+      "sha_ok": 1,
+      "cross_impl_ok": 1,
+      "durability_ok": 1,
+      "outcome": "old",
+      "error": ""
+    }
+  ],
+  "summary": {
+    "iterations": 2,
+    "pass": 2,
+    "fail": 0,
+    "old": 1,
+    "new": 1,
+    "partial": 0,
+    "durability_failures": 0,
+    "verify_failures": 0,
+    "cross_impl_disagreements": 0
+  },
+  "evidence": {
+    "raw_log": "bench/receipts/powerloss-20261103T223149Z.log",
+    "raw_log_sha256": "05c3d56acdb4297a9a36abe79c3dcbeaedc73f3ae785277f087c3da0c2bd2a6f"
+  },
+  "scope": {
+    "asserted": "for every completed iteration, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean",
+    "not_asserted": [
+      "physical power loss (media/device write-cache loss)",
+      "host page-cache loss",
+      "fsync that lies to the guest",
+      "power loss during mkfs or during the read-only root mount",
+      "10,000-iteration campaign"
+    ]
+  }
+}
