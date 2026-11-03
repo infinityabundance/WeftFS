@@ -70,6 +70,38 @@ Container defaults: `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
 `--tmpfs /tmp:size=1m`-bounded (1 GiB), `no-new-privileges`, `cap-drop=ALL`,
 and for FUSE only: `/dev/fuse` plus `CAP_SYS_ADMIN`.
 
+## Twelve-step showcase
+
+One command reproduces the mandated end-to-end scenarios (mixed contexts,
+context-graph cycle plus acyclic codec DAG, ambiguity, pin stability, Rust FUSE
+writes, Rust↔Go handoff, process-fault crash proxies, authorization denials,
+and negative compression workloads):
+
+```sh
+scripts/docker-court.sh fuse "bash scripts/showcase.sh"
+```
+
+The run writes a schema-versioned receipt and its raw console log to:
+
+```
+bench/receipts/showcase-<UTC>.json
+bench/receipts/showcase-<UTC>.log
+```
+
+Every step records its commands, fixture hashes, assertions (checked with
+`cmp`, hashes, and JSON field equality), observed outputs, and the court
+environment. A determinism re-run compares semantic fields while ignoring
+wall-clock fields:
+
+```sh
+SHOWCASE_RECEIPT_NAME=showcase-rerun \
+SHOWCASE_COMPARE_WITH=/work/bench/receipts/showcase-<UTC>.json \
+scripts/docker-court.sh fuse "bash scripts/showcase.sh"
+```
+
+A blocked capability is recorded as `"status": "blocked"` with a precise
+reason; the script never marks an unobserved step passed.
+
 ## Repository layout
 
 ```

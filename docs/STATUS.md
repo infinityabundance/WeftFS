@@ -85,6 +85,24 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - Missing: GC, byte-range locking (ENOSYS), mmap writeback, mknod/tmpfile/
   fallocate/copy_file_range/SEEK_DATA, persisted atime/ctime.
 
+### Twelve-step showcase — implemented, all twelve pass
+
+- `scripts/showcase.sh` executes the mandated twelve scenarios inside the FUSE
+  court and writes a schema-versioned receipt plus a raw console log:
+  `bench/receipts/showcase-<UTC>.json` and `.log`.
+- Every step records its exact commands, fixture hashes, machine-checked
+  assertions (`cmp`, SHA-256, JSON field equality), observed outputs, court
+  limits, image/kernel/tool versions, and repository revisions.
+- Step 9 is explicitly labelled a **process-fault proxy** (`WEFT_CRASH_PHASE`),
+  not physical power loss. Step 10 records that the codec CLI has no remote
+  fetch policy; missing/mismatched dependencies fail closed, while
+  `DependencyDenied` remains an API-level class.
+- The codec-cycle fixture generator is `examples/codec_cycle_probe.rs`; the
+  real `weftcodec archive create` CLI is what rejects the forged cycle.
+- Deterministic fixtures use fixed ObjectId seeds and a fixed clock; a re-run
+  with `SHOWCASE_COMPARE_WITH` must match on every field except wall-clock
+  timestamps.
+
 ## 3. Evidence discipline
 
 - Every build/test ran through `scripts/docker-court.sh` in a minimal official
@@ -106,9 +124,9 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 2. **Formal model checking** (TLA+/Alloy/Apalache or equivalent) for snapshot
    atomicity, replay idempotence, and no-dangling-roots. Current evidence is
    tests and crash proxies.
-3. **Twelve-step showcase receipt** (mixed contexts, graph cycle + acyclic codec
-   graph, ambiguity, pin stability, Rust↔Go mount handoff, unauthorized
-   attempts, negative compression cases).
+3. **Showcase re-run at a later revision.** The committed receipt is evidence
+   for the exact revision it records; re-running after code changes requires a
+   new receipt, not an inference from the old one.
 4. **Go WeftFS GC** and the remaining unsupported FUSE verbs; Go crash court
    exists but GC/retention parity does not.
 5. **Same-inode concurrent direct FUSE I/O** on kernel 7.3: blocked on the

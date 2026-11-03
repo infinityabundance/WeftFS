@@ -32,6 +32,9 @@ struct Cli {
     /// Machine-readable JSON output.
     #[arg(long, global = true)]
     json: bool,
+    /// Fixture clock override for every generated mtime and commit timestamp.
+    #[arg(long, global = true, value_name = "NS")]
+    fixed_timestamp_ns: Option<i64>,
     #[command(subcommand)]
     command: Command,
 }
@@ -74,6 +77,11 @@ enum Command {
         attr_bytes: Vec<String>,
         #[arg(long = "attr-int")]
         attr_ints: Vec<String>,
+        #[arg(long = "attr-u64-list")]
+        attr_u64_lists: Vec<String>,
+        /// Explicit ObjectId seed (deterministic fixtures).
+        #[arg(long)]
+        seed: Option<String>,
     },
     /// Overwrite a byte range (single atomic commit).
     Write {
@@ -112,6 +120,9 @@ enum Command {
         uid: Option<u64>,
         #[arg(long)]
         gid: Option<u64>,
+        /// Explicit ObjectId seed (deterministic fixtures).
+        #[arg(long)]
+        seed: Option<String>,
     },
     /// Create a symlink.
     Symlink {
@@ -139,6 +150,8 @@ enum Command {
         attr_bytes: Vec<String>,
         #[arg(long = "attr-int")]
         attr_ints: Vec<String>,
+        #[arg(long = "attr-u64-list")]
+        attr_u64_lists: Vec<String>,
     },
     /// Relation assertions.
     Relation {
@@ -156,6 +169,9 @@ enum Command {
         gid: Option<u64>,
         #[arg(long = "group")]
         groups: Vec<u64>,
+        /// Reject zero or multiple matches with NotFound / Ambiguous.
+        #[arg(long = "require-one")]
+        require_one: bool,
     },
     /// Snapshots.
     Snapshot {
@@ -261,6 +277,7 @@ fn run(cli: Cli) -> Result<()> {
     let Cli {
         store,
         json,
+        fixed_timestamp_ns,
         command,
     } = cli;
     let needs_store = !matches!(command, Command::ConformanceStore { .. });
@@ -288,7 +305,7 @@ fn run(cli: Cli) -> Result<()> {
                 chunk_size,
                 checkpoint_interval,
                 gc_grace_secs,
-                fixed_timestamp_ns: None,
+                fixed_timestamp_ns,
             };
             let store = Store::init(&store, options)?;
             if json {
@@ -303,7 +320,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Info | Command::Open => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let state = store.current_state();
             if json {
                 print_json(&json!({
@@ -344,23 +361,37 @@ fn run(cli: Cli) -> Result<()> {
             attrs,
             attr_bytes,
             attr_ints,
+            attr_u64_lists,
+            seed,
         } => {
             let (default_uid, default_gid) = current_ids();
             let bytes = read_input(text, input_file)?;
-            let attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints)?;
+            let attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints, &attr_u64_lists)?;
             let mode = parse_mode(&mode)?;
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
-            let id = store.create_file(
-                parent_id,
-                &name,
-                &bytes,
-                mode,
-                uid.unwrap_or(default_uid),
-                gid.unwrap_or(default_gid),
-                attrs,
-            )?;
+            let id = match seed {
+                Some(seed) => store.create_file_seeded(
+                    parent_id,
+                    &name,
+                    &bytes,
+                    mode,
+                    uid.unwrap_or(default_uid),
+                    gid.unwrap_or(default_gid),
+                    attrs,
+                    seed.as_bytes(),
+                )?,
+                None => store.create_file(
+                    parent_id,
+                    &name,
+                    &bytes,
+                    mode,
+                    uid.unwrap_or(default_uid),
+                    gid.unwrap_or(default_gid),
+                    attrs,
+                )?,
+            };
             if json {
                 print_json(&json!({
                     "object_id": id.to_hex(),
@@ -379,7 +410,7 @@ fn run(cli: Cli) -> Result<()> {
             input_file,
         } => {
             let bytes = read_input(text, input_file)?;
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
             let version = store.write_file(id, offset, &bytes)?;
             if json {
@@ -394,7 +425,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Cat { path, offset, len } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
             let bytes = if offset == 0 && len.is_none() {
                 store.read_object(id)?
@@ -415,7 +446,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Ls { path } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
             let entries = store.list_dir(id)?;
             if json {
@@ -439,7 +470,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Stat { path } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
             let record = store.object_meta(id)?;
             if json {
@@ -461,7 +492,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Unlink { path } => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             store.unlink(parent_id, &name)?;
@@ -472,7 +503,7 @@ fn run(cli: Cli) -> Result<()> {
             )
         }
         Command::Rename { from, to } => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (old_parent, old_name) = split_path(&from)?;
             let (new_parent, new_name) = split_path(&to)?;
             let old_parent_id = store.resolve_path(&old_parent)?;
@@ -485,7 +516,7 @@ fn run(cli: Cli) -> Result<()> {
             )
         }
         Command::Link { target, path } => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let target_id = resolve_object(&store, &target)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
@@ -501,19 +532,30 @@ fn run(cli: Cli) -> Result<()> {
             mode,
             uid,
             gid,
+            seed,
         } => {
             let (default_uid, default_gid) = current_ids();
             let mode = parse_mode(&mode)?;
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
-            let id = store.mkdir(
-                parent_id,
-                &name,
-                mode,
-                uid.unwrap_or(default_uid),
-                gid.unwrap_or(default_gid),
-            )?;
+            let id = match seed {
+                Some(seed) => store.mkdir_seeded(
+                    parent_id,
+                    &name,
+                    mode,
+                    uid.unwrap_or(default_uid),
+                    gid.unwrap_or(default_gid),
+                    seed.as_bytes(),
+                )?,
+                None => store.mkdir(
+                    parent_id,
+                    &name,
+                    mode,
+                    uid.unwrap_or(default_uid),
+                    gid.unwrap_or(default_gid),
+                )?,
+            };
             if json {
                 print_json(&json!({"object_id": id.to_hex(), "path": path}))
             } else {
@@ -528,7 +570,7 @@ fn run(cli: Cli) -> Result<()> {
             gid,
         } => {
             let (default_uid, default_gid) = current_ids();
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             let id = store.symlink(
@@ -554,13 +596,23 @@ fn run(cli: Cli) -> Result<()> {
             attrs,
             attr_bytes,
             attr_ints,
+            attr_u64_lists,
         } => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let id = store.resolve_path(&path)?;
-            let attrs = if attrs.is_empty() && attr_bytes.is_empty() && attr_ints.is_empty() {
+            let attrs = if attrs.is_empty()
+                && attr_bytes.is_empty()
+                && attr_ints.is_empty()
+                && attr_u64_lists.is_empty()
+            {
                 None
             } else {
-                Some(parse_attrs(&attrs, &attr_bytes, &attr_ints)?)
+                Some(parse_attrs(
+                    &attrs,
+                    &attr_bytes,
+                    &attr_ints,
+                    &attr_u64_lists,
+                )?)
             };
             let changes = SetAttr {
                 mode: mode.as_deref().map(parse_mode).transpose()?,
@@ -577,15 +629,16 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
-        Command::Relation { command } => run_relation(&store, json, command),
+        Command::Relation { command } => run_relation(&store, json, fixed_timestamp_ns, command),
         Command::Query {
             weftql,
             snapshot,
             uid,
             gid,
             groups,
+            require_one,
         } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let parsed = selector::parse(&weftql)?;
             let pinned = match snapshot.as_deref() {
                 Some(spec) => Some(lookup_snapshot(&store, spec)?),
@@ -598,13 +651,34 @@ fn run(cli: Cli) -> Result<()> {
                 groups,
             );
             let limits = weftcodec::Limits::default();
-            let resolution = store.resolve(&parsed, pinned, &principal, &limits)?;
-            let state = match pinned {
-                Some(commit) => store.state_at(commit)?,
-                None => store.current_state().clone(),
-            };
-            if json {
-                let results: Vec<_> = resolution
+            if require_one {
+                let reference = store.require_one(&parsed, pinned, &principal, &limits)?;
+                let selector_id = parsed.selector_id_with_limits(&limits)?;
+                if json {
+                    print_json(&json!({
+                        "selector_id": selector_id.to_hex(),
+                        "snapshot_id": reference.snapshot.to_hex(),
+                        "matched_count": 1,
+                        "object_id": reference.object_id.to_hex(),
+                        "version_id": reference.version_id.to_hex(),
+                        "content_id": reference.content_id.to_hex(),
+                        "namespace": reference.namespace,
+                    }))
+                } else {
+                    println!("object_id={}", reference.object_id);
+                    println!("version_id={}", reference.version_id);
+                    println!("content_id={}", reference.content_id);
+                    println!("snapshot_id={}", reference.snapshot);
+                    Ok(())
+                }
+            } else {
+                let resolution = store.resolve(&parsed, pinned, &principal, &limits)?;
+                let state = match pinned {
+                    Some(commit) => store.state_at(commit)?,
+                    None => store.current_state().clone(),
+                };
+                if json {
+                    let results: Vec<_> = resolution
                     .results
                     .iter()
                     .map(|reference| {
@@ -619,61 +693,62 @@ fn run(cli: Cli) -> Result<()> {
                         })
                     })
                     .collect();
-                let evidence: Vec<_> = resolution
-                    .evidence
-                    .iter()
-                    .map(|item| {
-                        let entries: Vec<_> = item
-                            .entries
-                            .iter()
-                            .map(|entry| {
-                                json!({
-                                    "kind": entry.kind,
-                                    "field": entry.field,
-                                    "value": entry.value.as_ref().map(value_to_json),
+                    let evidence: Vec<_> = resolution
+                        .evidence
+                        .iter()
+                        .map(|item| {
+                            let entries: Vec<_> = item
+                                .entries
+                                .iter()
+                                .map(|entry| {
+                                    json!({
+                                        "kind": entry.kind,
+                                        "field": entry.field,
+                                        "value": entry.value.as_ref().map(value_to_json),
+                                    })
                                 })
-                            })
-                            .collect();
-                        json!({"object_id": item.object_id.to_hex(), "entries": entries})
-                    })
-                    .collect();
-                print_json(&json!({
-                    "selector_id": resolution.selector_id.to_hex(),
-                    "snapshot_id": resolution.snapshot_id.to_hex(),
-                    "matched_count": resolution.matched_count,
-                    "results": results,
-                    "evidence": evidence,
-                }))
-            } else {
-                for reference in &resolution.results {
-                    let record = state.objects.get(&reference.object_id);
-                    let path = state
-                        .path_for(reference.object_id)
-                        .map(|p| String::from_utf8_lossy(&p).into_owned())
-                        .unwrap_or_else(|| "-".to_owned());
+                                .collect();
+                            json!({"object_id": item.object_id.to_hex(), "entries": entries})
+                        })
+                        .collect();
+                    print_json(&json!({
+                        "selector_id": resolution.selector_id.to_hex(),
+                        "snapshot_id": resolution.snapshot_id.to_hex(),
+                        "matched_count": resolution.matched_count,
+                        "results": results,
+                        "evidence": evidence,
+                    }))
+                } else {
+                    for reference in &resolution.results {
+                        let record = state.objects.get(&reference.object_id);
+                        let path = state
+                            .path_for(reference.object_id)
+                            .map(|p| String::from_utf8_lossy(&p).into_owned())
+                            .unwrap_or_else(|| "-".to_owned());
+                        println!(
+                            "{} {} {} {} {} {}",
+                            reference.object_id,
+                            reference.version_id,
+                            reference.content_id,
+                            record.map(|r| r.size).unwrap_or(0),
+                            record.map(|r| r.kind.as_str()).unwrap_or("unknown"),
+                            path
+                        );
+                    }
                     println!(
-                        "{} {} {} {} {} {}",
-                        reference.object_id,
-                        reference.version_id,
-                        reference.content_id,
-                        record.map(|r| r.size).unwrap_or(0),
-                        record.map(|r| r.kind.as_str()).unwrap_or("unknown"),
-                        path
+                        "selector_id={} snapshot_id={} matched_count={} returned={}",
+                        resolution.selector_id,
+                        resolution.snapshot_id,
+                        resolution.matched_count,
+                        resolution.results.len()
                     );
+                    Ok(())
                 }
-                println!(
-                    "selector_id={} snapshot_id={} matched_count={} returned={}",
-                    resolution.selector_id,
-                    resolution.snapshot_id,
-                    resolution.matched_count,
-                    resolution.results.len()
-                );
-                Ok(())
             }
         }
         Command::Snapshot { command } => match command {
             SnapshotCommand::Create { name } => {
-                let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+                let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
                 let pinned = store.snapshot_create(&name)?;
                 if json {
                     print_json(&json!({
@@ -687,7 +762,7 @@ fn run(cli: Cli) -> Result<()> {
                 }
             }
             SnapshotCommand::List => {
-                let store = Store::open(&store, OpenMode::ReadOnly)?;
+                let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
                 let snapshots = store.snapshot_list();
                 if json {
                     let map: BTreeMap<String, String> = snapshots
@@ -704,7 +779,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         },
         Command::Pin { target, snapshot } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let id = resolve_object(&store, &target)?;
             let pinned = match snapshot.as_deref() {
                 Some(spec) => Some(lookup_snapshot(&store, spec)?),
@@ -729,7 +804,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Verify { full } => {
-            let store = Store::open(&store, OpenMode::ReadOnly)?;
+            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let report = store.verify(full)?;
             if json {
                 let problems: Vec<_> = report
@@ -764,7 +839,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Gc { apply, grace_secs } => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             if let Some(grace) = grace_secs {
                 let mut options = store.options().clone();
                 options.gc_grace_secs = grace;
@@ -800,7 +875,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Checkpoint => {
-            let mut store = Store::open(&store, OpenMode::ReadWrite)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let head = store.checkpoint()?;
             if json {
                 print_json(&json!({
@@ -830,7 +905,7 @@ fn run(cli: Cli) -> Result<()> {
             } else {
                 OpenMode::ReadWrite
             };
-            let store = Store::open(&store, mode)?;
+            let store = open_store(&store, mode, fixed_timestamp_ns)?;
             let (snapshot_commit, snapshot_state) = match snapshot {
                 Some(name) => {
                     let commit = lookup_snapshot(&store, &name)?;
@@ -857,7 +932,22 @@ fn run(cli: Cli) -> Result<()> {
     }
 }
 
-fn run_relation(store: &PathBuf, json: bool, command: RelationCommand) -> Result<()> {
+fn open_store(
+    path: &std::path::Path,
+    mode: OpenMode,
+    fixed_timestamp_ns: Option<i64>,
+) -> Result<Store> {
+    let mut options = Options::default();
+    options.fixed_timestamp_ns = fixed_timestamp_ns;
+    Store::open_with_options(path, mode, options)
+}
+
+fn run_relation(
+    store: &PathBuf,
+    json: bool,
+    fixed_timestamp_ns: Option<i64>,
+    command: RelationCommand,
+) -> Result<()> {
     match command {
         RelationCommand::Add {
             subject,
@@ -868,7 +958,7 @@ fn run_relation(store: &PathBuf, json: bool, command: RelationCommand) -> Result
             provenance,
             attrs,
         } => {
-            let mut store = Store::open(store, OpenMode::ReadWrite)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let subject_id = resolve_object(&store, &subject)?;
             let provided = [object.is_some(), value.is_some(), value_int.is_some()]
                 .iter()
@@ -901,7 +991,7 @@ fn run_relation(store: &PathBuf, json: bool, command: RelationCommand) -> Result
                 }
                 None => None,
             };
-            let attrs = parse_attrs(&attrs, &[], &[])?;
+            let attrs = parse_attrs(&attrs, &[], &[], &[])?;
             let id = store.relation_add(subject_id, predicate, target, provenance, attrs)?;
             if json {
                 print_json(&json!({
@@ -915,7 +1005,7 @@ fn run_relation(store: &PathBuf, json: bool, command: RelationCommand) -> Result
             }
         }
         RelationCommand::List { subject, predicate } => {
-            let store = Store::open(store, OpenMode::ReadOnly)?;
+            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
             let subject_id = match subject {
                 Some(spec) => Some(resolve_object(&store, &spec)?),
                 None => None,
@@ -987,7 +1077,7 @@ fn run_relation(store: &PathBuf, json: bool, command: RelationCommand) -> Result
             }
         }
         RelationCommand::Delete { relation_id } => {
-            let mut store = Store::open(store, OpenMode::ReadWrite)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
             let id = Hash32::from_hex(&relation_id)?;
             store.relation_delete(id)?;
             success(
@@ -1186,6 +1276,7 @@ fn parse_attrs(
     attrs: &[String],
     attr_bytes: &[String],
     attr_ints: &[String],
+    attr_u64_lists: &[String],
 ) -> Result<BTreeMap<String, Value>> {
     let mut out = BTreeMap::new();
     for item in attrs {
@@ -1210,6 +1301,21 @@ fn parse_attrs(
             .parse::<u64>()
             .map_err(|_| Error::invalid_argument(format!("bad integer for `{key}`")))?;
         out.insert(key.to_owned(), Value::U64(number));
+    }
+    for item in attr_u64_lists {
+        let (key, value) = item.split_once('=').ok_or_else(|| {
+            Error::invalid_argument(format!("attribute `{item}` is not key=list"))
+        })?;
+        let mut items = Vec::new();
+        if !value.is_empty() {
+            for part in value.split(',') {
+                let number = part.trim().parse::<u64>().map_err(|_| {
+                    Error::invalid_argument(format!("bad u64 list item `{part}` for `{key}`"))
+                })?;
+                items.push(Value::U64(number));
+            }
+        }
+        out.insert(key.to_owned(), Value::Array(items));
     }
     Ok(out)
 }
