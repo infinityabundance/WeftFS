@@ -2,7 +2,7 @@
 # WeftFS OOM-protected Docker court.
 #
 # Usage:
-#   scripts/docker-court.sh <rust|go|fuse> "<shell command>"
+#   scripts/docker-court.sh <rust|go|fuse|bench> "<shell command>"
 #
 # Every container is hard-limited: memory == swap, pids, cpus, bounded /tmp,
 # no-new-privileges, and a unique name for deterministic cleanup.
@@ -10,7 +10,7 @@
 set -Eeuo pipefail
 
 if [[ $# -lt 2 ]]; then
-  echo "usage: $0 <rust|go|fuse> \"<command>\"" >&2
+  echo "usage: $0 <rust|go|fuse|bench> \"<command>\"" >&2
   exit 64
 fi
 
@@ -19,8 +19,8 @@ shift
 cmd="$*"
 
 case "$kind" in
-  rust|go|fuse) ;;
-  *) echo "unknown court '$kind' (expected rust|go|fuse)" >&2; exit 64 ;;
+  rust|go|fuse|bench) ;;
+  *) echo "unknown court '$kind' (expected rust|go|fuse|bench)" >&2; exit 64 ;;
 esac
 
 # Hard limits. Environment override is allowed for *smaller* values only.
@@ -118,11 +118,15 @@ common=(
   -w /work
 )
 
-if [[ "$kind" == "fuse" ]]; then
+# FUSE-capable courts. `bench` is included because the filesystem benchmark
+# mounts a real WeftFS image; the device and capability are the only additions
+# and every hard limit above is unchanged.
+if [[ "$kind" == "fuse" || "$kind" == "bench" ]]; then
   common+=(
     --device /dev/fuse
     --cap-add SYS_ADMIN
     --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev
+    --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev
   )
 fi
 
