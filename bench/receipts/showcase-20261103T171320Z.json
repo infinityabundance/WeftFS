@@ -1,0 +1,2231 @@
+{
+  "schema": "weftfs.showcase.receipt/1",
+  "generated_at": "2026-11-03T17:13:20Z",
+  "run": {
+    "started_at": "2026-11-03T17:13:20Z",
+    "finished_at": "2026-11-03T17:13:22Z",
+    "duration_ms": 2000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "fixed_timestamp_ns": "1767225600000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:dd4598a79572b7de0ceeda9345c5d9290c65be95c821e35f2640e327e42192d2",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "os": "Debian GNU/Linux 12 (bookworm)",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/showcase",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "2b43cff59e6ce4bbec7fb2674cbeb7911aa86633"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "74c8c90202030ad0dcb0bca680501c6b8fef24a9"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "a60d9f55bc38e209c6e0cbef2e04ac7b9eb7d1fe"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "b2beeab4b0da0401006984214dcfd6602be795a5"
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "shared",
+      "path": ".docker-cache/showcase/fixtures/shared.bin",
+      "sha256": "be7ed85125ba9396cc40b546f6de6184135da23ac303a226fe9fbae4694bcc9e",
+      "bytes": 18
+    },
+    {
+      "name": "rev1",
+      "path": ".docker-cache/showcase/fixtures/rev1.bin",
+      "sha256": "32918291f1e1d90df5e773ff1d1912847df9a2475a7bc0fab4fd622b3177c70b",
+      "bytes": 418411
+    },
+    {
+      "name": "rev2",
+      "path": ".docker-cache/showcase/fixtures/rev2.bin",
+      "sha256": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+      "bytes": 418400
+    },
+    {
+      "name": "entropy_base",
+      "path": ".docker-cache/showcase/fixtures/entropy-base.bin",
+      "sha256": "86e0b4c18d51516dfff23a7d04949fce73140fad203fa148bebd0ea4076023e5",
+      "bytes": 65536
+    },
+    {
+      "name": "entropy_target",
+      "path": ".docker-cache/showcase/fixtures/entropy-target.bin",
+      "sha256": "8da9ca01725390fabca6a14abeb2b8d38f4946b2db4965890abd4ef73d71a8e2",
+      "bytes": 65536
+    }
+  ],
+  "steps": [
+    {
+      "id": "1",
+      "title": "Ingest two byte-identical objects with distinct logical identities and contextual relationships",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /ctx --seed ctx-dir",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /left --seed left-dir",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /right --seed right-dir",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /left/doc.txt --file /work/.docker-cache/showcase/fixtures/shared.bin --seed obj-left-doc",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /right/doc.txt --file /work/.docker-cache/showcase/fixtures/shared.bin --seed obj-right-doc",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /ctx/left --text left context --seed ctx-left",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /ctx/right --text right context --seed ctx-right",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /left/doc.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /right/doc.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /ctx/left",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /ctx/right",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate in_context --object 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate in_context --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba --predicate in_context --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s1 --json stat /left/doc.txt"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-ctx exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-ctx-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-ctx-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-ctx-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-ctx-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-right-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "distinct object ids",
+          "expected": "different from 7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba",
+          "actual": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "pass": true
+        },
+        {
+          "name": "identical content ids",
+          "expected": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "actual": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "pass": true
+        },
+        {
+          "name": "second identical object adds no manifest",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "second identical object adds no chunk",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "go1-stat-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "shared manifest has one chunk",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "shared manifest path exists",
+          "expected": "yes",
+          "actual": "yes",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "stat-left",
+          "content": "{\n  \"attrs\": {},\n  \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n  \"gid\": 0,\n  \"kind\": \"file\",\n  \"mode\": 420,\n  \"mtime_ns\": 1767225600000000000,\n  \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n  \"size\": 18,\n  \"uid\": 0,\n  \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n}\n"
+        },
+        {
+          "label": "stat-right",
+          "content": "{\n  \"attrs\": {},\n  \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n  \"gid\": 0,\n  \"kind\": \"file\",\n  \"mode\": 420,\n  \"mtime_ns\": 1767225600000000000,\n  \"object_id\": \"7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba\",\n  \"size\": 18,\n  \"uid\": 0,\n  \"version_id\": \"2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "2",
+      "title": "Directed context graph cycle is accepted; codec dependency cycle is rejected",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3 --predicate depends_on --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc --predicate depends_on --object 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(depends_on, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(depends_on, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3)",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.raw.wft --mode raw",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/rev1.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec archive create --output /work/.docker-cache/showcase/fixtures/acyclic.wfa /work/.docker-cache/showcase/fixtures/rev1.raw.wft /work/.docker-cache/showcase/fixtures/rev2.delta.wft",
+        "/work/.docker-cache/showcase/bin/weftcodec archive decode --input /work/.docker-cache/showcase/fixtures/acyclic.wfa --out-dir /work/.docker-cache/showcase/fixtures/acyclic-out",
+        "/work/.docker-cache/target-rust/debug/examples/codec_cycle_probe --out /work/.docker-cache/showcase/fixtures/cycle",
+        "/work/.docker-cache/showcase/bin/weftcodec archive create --output /work/.docker-cache/showcase/fixtures/cycle.wfa /work/.docker-cache/showcase/fixtures/cycle/cycle-a.wft /work/.docker-cache/showcase/fixtures/cycle/cycle-b.wft"
+      ],
+      "assertions": [
+        {
+          "name": "rel-cycle-ab exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-cycle-ba exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "query-cycle-a exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "query-cycle-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "cycle edge A accepted",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "cycle edge B accepted",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "cycle edge A resolves",
+          "expected": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+          "actual": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+          "pass": true
+        },
+        {
+          "name": "enc-rev1-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc-rev2-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "arc-create exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "arc-decode exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "acyclic archive contains rev1",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "acyclic archive contains rev2",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "cycle-probe exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "arc-cycle exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "codec cycle rejected",
+          "expected": "contains <DependencyCycle>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "cycle archive not written",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": [
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev1.raw.wft",
+          "sha256": "57ab150760963a4eb00f1eb55157a6cb2339ad218a3035b6dc5c6b13d9f3e67c"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev2.delta.wft",
+          "sha256": "32e3d6e0e85c5c29b291d048ea423a5ba2ed3781ff5d25a334d448a01847b493"
+        },
+        {
+          "kind": "wfa1",
+          "path": ".docker-cache/showcase/fixtures/acyclic.wfa",
+          "sha256": "dbab13fad5a62bed2b5de984c7c0dbe83c14411c3fcf62c97494b4df7d716807"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/steps/2/cycle-a.wft",
+          "sha256": "eb6c6fd0ec6a4ab2958f564ebcea59cbac03e28b5117fa9da58fdd7ba6d40619"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/steps/2/cycle-b.wft",
+          "sha256": "c99e5d759e79b52dd6b2ae904b6567b86c992216ce1e9135854a04041b4220fc"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Query by two independent relationships; one object in multiple contexts with no byte duplication",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3) and relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)"
+      ],
+      "assertions": [
+        {
+          "name": "q-left exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q-right exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q-both exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "left context matches one object",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "left context resolves the shared object",
+          "expected": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "actual": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "pass": true
+        },
+        {
+          "name": "right context matches two objects",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "intersection resolves exactly the shared object",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "intersection object id",
+          "expected": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "actual": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "pass": true
+        },
+        {
+          "name": "two object ids share one content id",
+          "expected": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "actual": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "pass": true
+        },
+        {
+          "name": "second identical object added no chunk",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "q-left",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [\n        {\n          \"field\": \"in_context\",\n          \"kind\": \"relation\",\n          \"value\": \"48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3\"\n        }\n      ],\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\"\n    }\n  ],\n  \"matched_count\": 1,\n  \"results\": [\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n      \"path\": \"/left/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n    }\n  ],\n  \"selector_id\": \"f161c00a208ff1f24a99abe1ce9d0de10463fb08569dfb3a9a8142ef37cf197b\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\"\n}\n"
+        },
+        {
+          "label": "q-right",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [\n        {\n          \"field\": \"in_context\",\n          \"kind\": \"relation\",\n          \"value\": \"b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc\"\n        }\n      ],\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\"\n    },\n    {\n      \"entries\": [\n        {\n          \"field\": \"in_context\",\n          \"kind\": \"relation\",\n          \"value\": \"b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc\"\n        }\n      ],\n      \"object_id\": \"7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba\"\n    }\n  ],\n  \"matched_count\": 2,\n  \"results\": [\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n      \"path\": \"/left/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n    },\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba\",\n      \"path\": \"/right/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5\"\n    }\n  ],\n  \"selector_id\": \"987e31be795161567e43d81e52e9a9f8bb620309239150b444f5a0cc5d4eb2c8\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\"\n}\n"
+        },
+        {
+          "label": "q-both",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [\n        {\n          \"field\": \"in_context\",\n          \"kind\": \"relation\",\n          \"value\": \"48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3\"\n        },\n        {\n          \"field\": \"in_context\",\n          \"kind\": \"relation\",\n          \"value\": \"b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc\"\n        }\n      ],\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\"\n    }\n  ],\n  \"matched_count\": 1,\n  \"results\": [\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n      \"path\": \"/left/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n    }\n  ],\n  \"selector_id\": \"51415fa4041a851c3f755073ffeaa61d8cc29c1a8285fa6852301e4547f1faae\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "4",
+      "title": "Resolve an ambiguous selector: full authorized set plus explicit Ambiguous error for require-one",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select kind == \"file\"",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query --require-one select kind == \"file\"",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query --require-one select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3) and relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)"
+      ],
+      "assertions": [
+        {
+          "name": "q-all exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "selector matches multiple objects",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "full authorized result set returned",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "q-one-ambiguous exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "require-one reports Ambiguous",
+          "expected": "contains <Ambiguous:>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "Ambiguous reports the full authorized count",
+          "expected": "contains <matched 4 authorized objects>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "q-one-unique exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "require-one succeeds on a unique match",
+          "expected": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "actual": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "pass": true
+        },
+        {
+          "name": "require-one reports one match",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "q-all",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [\n        {\n          \"field\": \"kind\",\n          \"kind\": \"attr\",\n          \"value\": \"file\"\n        }\n      ],\n      \"object_id\": \"48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3\"\n    },\n    {\n      \"entries\": [\n        {\n          \"field\": \"kind\",\n          \"kind\": \"attr\",\n          \"value\": \"file\"\n        }\n      ],\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\"\n    },\n    {\n      \"entries\": [\n        {\n          \"field\": \"kind\",\n          \"kind\": \"attr\",\n          \"value\": \"file\"\n        }\n      ],\n      \"object_id\": \"7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba\"\n    },\n    {\n      \"entries\": [\n        {\n          \"field\": \"kind\",\n          \"kind\": \"attr\",\n          \"value\": \"file\"\n        }\n      ],\n      \"object_id\": \"b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc\"\n    }\n  ],\n  \"matched_count\": 4,\n  \"results\": [\n    {\n      \"content_id\": \"36fcb0c2dc18bb0e455a60885a900b6d2d5e61417108370df8beb9e0ccc8f2fb\",\n      \"kind\": \"file\",\n      \"object_id\": \"48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3\",\n      \"path\": \"/ctx/left\",\n      \"size\": 12,\n      \"version_id\": \"a886e29544cd9a9500e4e3ad0e90cbe19ffc789e42e84900241549f5b377a21c\"\n    },\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n      \"path\": \"/left/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n    },\n    {\n      \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n      \"kind\": \"file\",\n      \"object_id\": \"7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba\",\n      \"path\": \"/right/doc.txt\",\n      \"size\": 18,\n      \"version_id\": \"2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5\"\n    },\n    {\n      \"content_id\": \"3afb3577409bfe84af7fcd7b8e40f33fc39e753199e75a105cde3953bc5526b0\",\n      \"kind\": \"file\",\n      \"object_id\": \"b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc\",\n      \"path\": \"/ctx/right\",\n      \"size\": 13,\n      \"version_id\": \"3151669fded4c2701fa0bd71750cef2e18faccb0bcf241e8ee39137439e34252\"\n    }\n  ],\n  \"selector_id\": \"195e975f9203fd933f0765a1ac56729258a326b708c864a85b0e34a5f109aa70\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\"\n}\n"
+        },
+        {
+          "label": "q-one-unique",
+          "content": "{\n  \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n  \"matched_count\": 1,\n  \"namespace\": \"default\",\n  \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n  \"selector_id\": \"51415fa4041a851c3f755073ffeaa61d8cc29c1a8285fa6852301e4547f1faae\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\",\n  \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "5",
+      "title": "Pin an exact (snapshot, object, version); rename, retag, and unrelated writes cannot change the pinned read",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 snapshot create pinned-v1",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 pin --snapshot pinned-v1 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 cat /left/doc.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 rename /left/doc.txt /left/renamed.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 write /right/doc.txt --offset 0 --text unrelated change\\n",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate tagged_as --value pinned-retag",
+        "cat /mnt/weft-fuse/showcase-5/left/doc.txt",
+        "cat /mnt/weft-fuse/showcase-5/left/renamed.txt",
+        "fusermount3 -u /mnt/weft-fuse/showcase-5",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /left/renamed.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /right/doc.txt"
+      ],
+      "assertions": [
+        {
+          "name": "snap-pin exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "pin exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "cat-before exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rename-pinned exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-unrelated exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "retag-pinned exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "cat-pinned exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "pinned snapshot read sha256",
+          "expected": "be7ed85125ba9396cc40b546f6de6184135da23ac303a226fe9fbae4694bcc9e",
+          "actual": "be7ed85125ba9396cc40b546f6de6184135da23ac303a226fe9fbae4694bcc9e",
+          "pass": true
+        },
+        {
+          "name": "pinned snapshot read bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "cat-renamed exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "snapshot retains the old path",
+          "expected": "contains <No such file or directory>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "stat-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-unrelated exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rename preserves object id",
+          "expected": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "actual": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+          "pass": true
+        },
+        {
+          "name": "rename/retag preserves version id",
+          "expected": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888",
+          "actual": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888",
+          "pass": true
+        },
+        {
+          "name": "pinned content id unchanged",
+          "expected": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "actual": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "pass": true
+        },
+        {
+          "name": "unrelated content changed",
+          "expected": "different from b5d9c533cbec3eac5c1aa8f46f003f36e803576d4905e635824bdfaa5bdea259",
+          "actual": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+          "pass": true
+        },
+        {
+          "name": "pin snapshot id",
+          "expected": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b",
+          "actual": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "pin",
+          "content": "{\n  \"content_id\": \"abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913\",\n  \"namespace\": \"default\",\n  \"object_id\": \"67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868\",\n  \"snapshot_id\": \"b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b\",\n  \"version_id\": \"799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "6",
+      "title": "Modify through the Rust FUSE mount, update metadata/relation atomically, open the new version via a fresh selector",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 create /mutable.txt --text version one\\n --seed obj-mutable",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 stat /mutable.txt",
+        "printf 'version two through fuse\\n' > /mnt/weft-fuse/showcase-6/mutable.txt",
+        "setfattr -n user.reviewed -v yes /mnt/weft-fuse/showcase-6/mutable.txt",
+        "getfattr --only-values -n user.reviewed /mnt/weft-fuse/showcase-6/mutable.txt",
+        "cat /mnt/weft-fuse/showcase-6/mutable.txt",
+        "fusermount3 -u /mnt/weft-fuse/showcase-6",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 relation add --subject /mutable.txt --predicate tagged_as --value reviewed",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 query select tag(\"reviewed\")",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 stat /mutable.txt"
+      ],
+      "assertions": [
+        {
+          "name": "init6 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create6 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat6-old exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "FUSE write visible",
+          "expected": "yes",
+          "actual": "yes",
+          "pass": true
+        },
+        {
+          "name": "setxattr exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "getxattr exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "xattr update through FUSE",
+          "expected": "yes",
+          "actual": "yes",
+          "pass": true
+        },
+        {
+          "name": "cat6-fuse exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel6 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "query6 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat6-new exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "fresh selector finds the new version",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "fresh selector version id",
+          "expected": "c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037",
+          "actual": "c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037",
+          "pass": true
+        },
+        {
+          "name": "FUSE write changed the version",
+          "expected": "different from c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037",
+          "actual": "e347135ccf3457834d5b7b6f2404fe6852e0fac76d8e35b387f37aab4b056c7b",
+          "pass": true
+        },
+        {
+          "name": "FUSE write changed the content",
+          "expected": "different from ed7249a70a332c6c24867d683daed53c4c129a67e29608a3f66080690a98a69a",
+          "actual": "7b40e265d46f48cda2155dbb4773804c5f05e10dbff4f280465faa38bdeb9957",
+          "pass": true
+        },
+        {
+          "name": "xattr persisted in store metadata",
+          "expected": "contains <796573>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "mount is gone",
+          "expected": "no",
+          "actual": "no",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "query6",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [\n        {\n          \"field\": \"tagged_as\",\n          \"kind\": \"tag\",\n          \"value\": \"reviewed\"\n        }\n      ],\n      \"object_id\": \"e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472\"\n    }\n  ],\n  \"matched_count\": 1,\n  \"results\": [\n    {\n      \"content_id\": \"ed7249a70a332c6c24867d683daed53c4c129a67e29608a3f66080690a98a69a\",\n      \"kind\": \"file\",\n      \"object_id\": \"e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472\",\n      \"path\": \"/mutable.txt\",\n      \"size\": 25,\n      \"version_id\": \"c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037\"\n    }\n  ],\n  \"selector_id\": \"412fb9f838eb9f475dc8f3c78b6f439578ef1727568b0808d307c730a11cf4a8\",\n  \"snapshot_id\": \"d466ea946551bf8c4180a48466404ca85392c4e749b03333868ca45c5e4a37eb\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "7",
+      "title": "Encode a revision with a verified base and dictionary, decode exactly, and report whole-store accounting",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.raw.wft --mode raw",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.zstd.wft --mode zstd",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.raw.wft --mode raw",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --mode zstd",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/rev1.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.dict.wft --mode dictionary --dict /work/.docker-cache/showcase/fixtures/rev1.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.reference.wft --mode reference --base /work/.docker-cache/showcase/fixtures/rev1.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.auto.wft --mode auto --base /work/.docker-cache/showcase/fixtures/rev1.bin --dict /work/.docker-cache/showcase/fixtures/rev1.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.delta.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.dict.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.raw.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev1.reference.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.auto.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev2.delta.wft --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev2.dict.wft --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev1.reference.wft --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.raw.wft --output /work/.docker-cache/showcase/steps/7/rev2.raw.dec",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --output /work/.docker-cache/showcase/steps/7/rev2.zstd.dec",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/7/rev2.delta.dec --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.dict.wft --output /work/.docker-cache/showcase/steps/7/rev2.dict.dec --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev1.reference.wft --output /work/.docker-cache/showcase/steps/7/rev1.reference.dec --deps /work/.docker-cache/showcase/fixtures/deps",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.auto.wft --output /work/.docker-cache/showcase/steps/7/rev2.auto.dec --deps /work/.docker-cache/showcase/fixtures/deps"
+      ],
+      "assertions": [
+        {
+          "name": "enc7-rev1-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev1-zstd exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev2-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev2-zstd exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev2-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev2-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev1-ref exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc7-rev2-auto exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-zstd exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-reference exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect7-auto exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify7-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "delta verified with related base",
+          "expected": "contains <OK mode=delta>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "verify7-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "dictionary verified with related dictionary",
+          "expected": "contains <OK mode=dictionary>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "verify7-reference exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "reference verified with related base",
+          "expected": "contains <OK mode=reference>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "dec7-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "RAW decode exact sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "RAW decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "dec7-zstd exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ZSTD decode exact sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "ZSTD decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "dec7-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "DELTA decode exact sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "DELTA decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "dec7-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "DICTIONARY decode exact sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "DICTIONARY decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "dec7-reference exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "REFERENCE decode exact sha256",
+          "expected": "32918291f1e1d90df5e773ff1d1912847df9a2475a7bc0fab4fd622b3177c70b",
+          "actual": "32918291f1e1d90df5e773ff1d1912847df9a2475a7bc0fab4fd622b3177c70b",
+          "pass": true
+        },
+        {
+          "name": "REFERENCE decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "dec7-auto exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "AUTO decode exact sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "AUTO decode exact bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "accounting",
+          "content": "{\n  \"rev1_plaintext_bytes\": 418411,\n  \"rev2_plaintext_bytes\": 418400,\n  \"rev1_raw_frame_bytes\": 418511,\n  \"rev1_zstd_frame_bytes\": 14148,\n  \"rev2_raw_frame_bytes\": 418500,\n  \"rev2_zstd_frame_bytes\": 13738,\n  \"rev2_delta_frame_bytes\": 272,\n  \"rev2_dictionary_frame_bytes\": 321,\n  \"rev2_auto_frame_bytes\": 272,\n  \"rev1_reference_frame_bytes\": 148,\n  \"reference_frame_body_bytes\": 0,\n  \"reference_frame_table_bytes\": 48,\n  \"base_plus_delta_total\": 14420,\n  \"base_plus_dictionary_total\": 14469,\n  \"context_free_raw_pair_total\": 837011,\n  \"context_free_zstd_pair_total\": 27886,\n  \"delta_incremental_vs_zstd\": -13466,\n  \"dictionary_incremental_vs_zstd\": -13417,\n  \"delta_wins_incremental\": true,\n  \"dictionary_wins_incremental\": true,\n  \"auto_selected_mode\": \"delta\"\n}\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev2.delta.wft",
+          "sha256": "32e3d6e0e85c5c29b291d048ea423a5ba2ed3781ff5d25a334d448a01847b493"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev2.dict.wft",
+          "sha256": "c28aa2ad6d8a7e3123ef0c601e0cbc41c422f94a04f5e137969b4e45f813d1f4"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev2.raw.wft",
+          "sha256": "455483d443a064c879d797c2d500c71362c0091e564889f8d4f241e72a971950"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev2.zstd.wft",
+          "sha256": "253ca03b275997abe5587138db552ec586c648e96a02a969f1ed7c01b8129a43"
+        },
+        {
+          "kind": "wft1",
+          "path": ".docker-cache/showcase/fixtures/rev1.reference.wft",
+          "sha256": "6098d5fb3b71bc31999adac6b22566260b55d83602072d722b35497cdedeb5db"
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "Create with Rust, open/verify/read with Go, modify with Go, then verify/read with Rust",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 mkdir /docs --seed docs-dir",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /alpha.txt --text alpha v1 from rust\\n --seed rust-alpha",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /beta.txt --text beta v1 from rust\\n --seed rust-beta",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 snapshot create r1",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 info",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /beta.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json info",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /beta.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 write /alpha.txt --offset 0 --text alpha v2 from go",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /gamma.txt --text gamma from go\\n --seed go-gamma",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 snapshot create r2",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /gamma.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json snapshot list",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /gamma.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 info",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 cat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 cat /gamma.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /alpha.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /gamma.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 snapshot list"
+      ],
+      "assertions": [
+        {
+          "name": "init8 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir8 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create8-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create8-beta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snap8-r1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-info-before exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-stat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-stat-beta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-info-before exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-verify-before exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-cat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-stat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-stat-beta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "Go opens the Rust generation",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        },
+        {
+          "name": "Go verify --full before mutation",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go reads Rust object id",
+          "expected": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+          "actual": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+          "pass": true
+        },
+        {
+          "name": "Go reads Rust content id",
+          "expected": "c1e609d428922be7a997df14809b28d9c4c55d8de1e5bfad123b9cb7f04720b4",
+          "actual": "c1e609d428922be7a997df14809b28d9c4c55d8de1e5bfad123b9cb7f04720b4",
+          "pass": true
+        },
+        {
+          "name": "Go reads Rust beta object id",
+          "expected": "212a591cfd5b05a2fce1865ce6fde2c83938b5c53e65abd9990cbd3ce12c87cc",
+          "actual": "212a591cfd5b05a2fce1865ce6fde2c83938b5c53e65abd9990cbd3ce12c87cc",
+          "pass": true
+        },
+        {
+          "name": "go8-write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-create exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-snap-r2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-cat-alpha-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-cat-gamma-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-stat-alpha-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-snap-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go8-stat-gamma exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-info-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-verify-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-cat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-cat-gamma exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-stat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-stat-gamma exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust8-snap-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "Rust verify --full after Go mutation",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Rust sees the same alpha object id",
+          "expected": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+          "actual": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+          "pass": true
+        },
+        {
+          "name": "Rust sees the same gamma object id",
+          "expected": "1ee3929faa3dfbe8dacb07653ceb5790013537291612f25bed901d8c133202c2",
+          "actual": "1ee3929faa3dfbe8dacb07653ceb5790013537291612f25bed901d8c133202c2",
+          "pass": true
+        },
+        {
+          "name": "Rust and Go agree on alpha content",
+          "expected": "9ab4c4e97f958d5da490765adf8b848dbc872da056622e742b616eaf3c06eacf",
+          "actual": "9ab4c4e97f958d5da490765adf8b848dbc872da056622e742b616eaf3c06eacf",
+          "pass": true
+        },
+        {
+          "name": "Rust reads exact Go-written alpha bytes sha256",
+          "expected": "7f471cee2ad8b25c8a32523593bd75a60eca91d2883785627976b02dcec165b9",
+          "actual": "7f471cee2ad8b25c8a32523593bd75a60eca91d2883785627976b02dcec165b9",
+          "pass": true
+        },
+        {
+          "name": "Rust reads exact Go-written alpha bytes bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "Rust reads exact Go-created gamma bytes sha256",
+          "expected": "d79030abb1b0a5c3221055aa07d429c7dedf14e5e56154a0b2ecdfedf1f17cbc",
+          "actual": "d79030abb1b0a5c3221055aa07d429c7dedf14e5e56154a0b2ecdfedf1f17cbc",
+          "pass": true
+        },
+        {
+          "name": "Rust reads exact Go-created gamma bytes bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "Rust and Go agree on r1 snapshot",
+          "expected": "803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435",
+          "actual": "803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435",
+          "pass": true
+        },
+        {
+          "name": "Rust and Go agree on r2 snapshot",
+          "expected": "5901d769f2b0154532bfcd3819a16a7b9654e5ddc54639bf9df98fb4b2f63b31",
+          "actual": "5901d769f2b0154532bfcd3819a16a7b9654e5ddc54639bf9df98fb4b2f63b31",
+          "pass": true
+        },
+        {
+          "name": "Rust and Go agree on generation",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "9",
+      "title": "Crash each daemon at configured persistence boundaries; independent verify --full; old-or-new whole state only",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_objects",
+        "env WEFT_CRASH_PHASE=after_objects /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects cat /f",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --json verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_commit_file",
+        "env WEFT_CRASH_PHASE=after_commit_file /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file cat /f",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --json verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_superblock_write",
+        "env WEFT_CRASH_PHASE=after_superblock_write /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write cat /f",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_objects",
+        "env WEFT_CRASH_PHASE=after_objects /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects cat /f",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --json verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_commit_file",
+        "env WEFT_CRASH_PHASE=after_commit_file /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file cat /f",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --json verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --json verify --full",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_superblock_write",
+        "env WEFT_CRASH_PHASE=after_superblock_write /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write cat /f",
+        "/work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --json verify --full",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --json verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "init9-rust-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-rust-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-rust-after_objects exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-rust-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust after_objects old state intact",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "rust after_objects whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "rust after_objects cross-implementation generation",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "rust after_objects cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "init9-rust-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-rust-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-rust-after_commit_file exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-rust-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust after_commit_file old state intact",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "rust after_commit_file whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "rust after_commit_file verify finding is documented",
+          "expected": "contains <above the highest published superblock generation>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "rust after_commit_file cross-implementation generation",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "rust after_commit_file cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "false",
+          "pass": true
+        },
+        {
+          "name": "init9-rust-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-rust-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-rust-after_superblock_write exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-rust-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rust after_superblock_write published state visible",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "rust after_superblock_write whole new bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "rust after_superblock_write whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "rust after_superblock_write cross-implementation generation",
+          "expected": "3",
+          "actual": "3",
+          "pass": true
+        },
+        {
+          "name": "rust after_superblock_write cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "init9-go-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-go-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-go-after_objects exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-go-after_objects exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go after_objects old state intact",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "go after_objects whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "go after_objects cross-implementation generation",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "go after_objects cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "init9-go-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-go-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-go-after_commit_file exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-go-after_commit_file exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go after_commit_file old state intact",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "go after_commit_file whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "go after_commit_file verify finding is documented",
+          "expected": "contains <above the highest published superblock generation>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "go after_commit_file cross-implementation generation",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "go after_commit_file cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "false",
+          "pass": true
+        },
+        {
+          "name": "init9-go-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create9-go-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "crash9-go-after_superblock_write exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "cat9-go-after_superblock_write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "go after_superblock_write published state visible",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "go after_superblock_write whole new bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "go after_superblock_write whole-or-nothing bytes",
+          "expected": "old or new",
+          "actual": "whole",
+          "pass": true
+        },
+        {
+          "name": "go after_superblock_write cross-implementation generation",
+          "expected": "3",
+          "actual": "3",
+          "pass": true
+        },
+        {
+          "name": "go after_superblock_write cross-implementation verify observed",
+          "expected": "recorded",
+          "actual": "true",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "10",
+      "title": "Unauthorized relation traversal, dependency fetch, and selector enumeration disclose nothing",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /public.txt --text public data --seed pub",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /private.txt --text TOPSECRET private payload --mode 0600 --seed priv",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /acl.txt --text acl protected payload --mode 0644 --attr-u64-list weft.acl.read=0 --seed acl",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /secret-ctx --text secret context --mode 0600 --seed secretctx",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /public.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /private.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /acl.txt",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /secret-ctx",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 relation add --subject 8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b --predicate hidden_link --object b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 relation add --subject e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6 --predicate points_to --object 8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select true",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select true",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select relation(hidden_link, obj:b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select relation(hidden_link, obj:b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select relation(points_to, obj:8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b)",
+        "/work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select relation(points_to, obj:8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b)",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/10/no-deps.dec",
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/10/wrong-deps.dec --deps /work/.docker-cache/showcase/fixtures/wrong-deps"
+      ],
+      "assertions": [
+        {
+          "name": "init10 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create10-public exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create10-private exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create10-acl exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create10-ctx exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat10-public exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat10-private exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat10-acl exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat10-ctx exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel10-hidden exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel10-points exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q10-root exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q10-low exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "root sees more objects than unauthorized principal",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "public object is authorized",
+          "expected": "contains <e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "private object is authorized for root",
+          "expected": "contains <8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "private object id is not disclosed",
+          "expected": "does not contain <8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b>",
+          "actual": "<absent>",
+          "pass": true
+        },
+        {
+          "name": "ACL-restricted object id is not disclosed",
+          "expected": "does not contain <c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c>",
+          "actual": "<absent>",
+          "pass": true
+        },
+        {
+          "name": "private content marker is not disclosed",
+          "expected": "does not contain <TOPSECRET>",
+          "actual": "<absent>",
+          "pass": true
+        },
+        {
+          "name": "public object id is disclosed",
+          "expected": "contains <e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "q10-hidden-root exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q10-hidden-low exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "root traverses the private relation",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "unauthorized relation traversal returns nothing",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q10-points-root exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "q10-points-low exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "relation with an authorized subject/target resolves for root",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "relation with an unauthorized target resolves for nobody unauthorized",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "unauthorized traversal output has no private id",
+          "expected": "does not contain <8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b>",
+          "actual": "<absent>",
+          "pass": true
+        },
+        {
+          "name": "unauthorized traversal output has no secret marker",
+          "expected": "does not contain <TOPSECRET>",
+          "actual": "<absent>",
+          "pass": true
+        },
+        {
+          "name": "dec10-no-deps exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "dependency fetch without base fails closed",
+          "expected": "contains <DependencyMissing>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "no plaintext written without dependency",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "dec10-wrong-deps exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "dependency fetch with mismatched bytes fails closed",
+          "expected": "contains <DependencyMismatch>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "no plaintext written from a mismatched dependency",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "q-root",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [],\n      \"object_id\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    },\n    {\n      \"entries\": [],\n      \"object_id\": \"8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b\"\n    },\n    {\n      \"entries\": [],\n      \"object_id\": \"b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb\"\n    },\n    {\n      \"entries\": [],\n      \"object_id\": \"c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c\"\n    },\n    {\n      \"entries\": [],\n      \"object_id\": \"e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6\"\n    }\n  ],\n  \"matched_count\": 5,\n  \"results\": [\n    {\n      \"content_id\": \"9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb\",\n      \"kind\": \"dir\",\n      \"object_id\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"path\": \"/\",\n      \"size\": 0,\n      \"version_id\": \"4e8347014366d8e7f2661972a5f541012c448fb5bab544f80f4d8f84f25ceedc\"\n    },\n    {\n      \"content_id\": \"1eac10dcfbf798052b937e9b0a3ebce0f112481442cf9a450d3bd9fc4c44c95b\",\n      \"kind\": \"file\",\n      \"object_id\": \"8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b\",\n      \"path\": \"/private.txt\",\n      \"size\": 25,\n      \"version_id\": \"3906b4922f2e619bb90c23572b5d09241fb12264ad1434b54ddb2b6e0096c6c8\"\n    },\n    {\n      \"content_id\": \"e270bc2145df0675ca0b272fae40f24c361476aa1bd998942d55c979db81c141\",\n      \"kind\": \"file\",\n      \"object_id\": \"b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb\",\n      \"path\": \"/secret-ctx\",\n      \"size\": 14,\n      \"version_id\": \"1b66757e632bc2771412bd103cf307efaf2869d92b69b4251e2c5447e78a58cf\"\n    },\n    {\n      \"content_id\": \"fc8449f4ce6ad709bc4df5f1c9604fe32c710b6aafb9220566fcce850dfd192f\",\n      \"kind\": \"file\",\n      \"object_id\": \"c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c\",\n      \"path\": \"/acl.txt\",\n      \"size\": 21,\n      \"version_id\": \"1656db6bb10b7d4a742300d9b674e2c345a978bbcba2106c387b74e3527475eb\"\n    },\n    {\n      \"content_id\": \"8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921\",\n      \"kind\": \"file\",\n      \"object_id\": \"e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6\",\n      \"path\": \"/public.txt\",\n      \"size\": 11,\n      \"version_id\": \"9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773\"\n    }\n  ],\n  \"selector_id\": \"42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9\",\n  \"snapshot_id\": \"884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029\"\n}\n"
+        },
+        {
+          "label": "q-low",
+          "content": "{\n  \"evidence\": [\n    {\n      \"entries\": [],\n      \"object_id\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    },\n    {\n      \"entries\": [],\n      \"object_id\": \"e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6\"\n    }\n  ],\n  \"matched_count\": 2,\n  \"results\": [\n    {\n      \"content_id\": \"9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb\",\n      \"kind\": \"dir\",\n      \"object_id\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"path\": \"/\",\n      \"size\": 0,\n      \"version_id\": \"4e8347014366d8e7f2661972a5f541012c448fb5bab544f80f4d8f84f25ceedc\"\n    },\n    {\n      \"content_id\": \"8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921\",\n      \"kind\": \"file\",\n      \"object_id\": \"e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6\",\n      \"path\": \"/public.txt\",\n      \"size\": 11,\n      \"version_id\": \"9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773\"\n    }\n  ],\n  \"selector_id\": \"42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9\",\n  \"snapshot_id\": \"884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "11",
+      "title": "Negative workload: unrelated high-entropy data gives no context gain; auto selects RAW or ZSTD",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-base.bin --output /work/.docker-cache/showcase/fixtures/entropy-base.raw.wft --mode raw",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.raw.wft --mode raw",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.zstd.wft --mode zstd",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/entropy-base.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.dict.wft --mode dictionary --dict /work/.docker-cache/showcase/fixtures/entropy-base.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.auto.wft --mode auto --base /work/.docker-cache/showcase/fixtures/entropy-base.bin --dict /work/.docker-cache/showcase/fixtures/entropy-base.bin",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.auto.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.delta.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.dict.wft --json",
+        "/work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.raw.wft --json"
+      ],
+      "assertions": [
+        {
+          "name": "enc11-base-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc11-target-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc11-target-zstd exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc11-target-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc11-target-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "enc11-target-auto exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect11-auto exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect11-delta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect11-dict exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "inspect11-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "auto selects a context-free mode",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "auto is no larger than RAW",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "auto is no larger than DELTA",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "auto is no larger than DICTIONARY",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "delta gives no gain on unrelated data",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "dictionary gives no gain on unrelated data",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "selection",
+          "content": "{\n  \"plaintext_bytes\": 65536,\n  \"raw_frame_bytes\": 65636,\n  \"zstd_frame_bytes\": 65646,\n  \"delta_frame_bytes\": 65688,\n  \"dictionary_frame_bytes\": 65694,\n  \"auto_frame_bytes\": 65636,\n  \"auto_selected_mode\": \"raw\",\n  \"context_gain\": false\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "12",
+      "title": "Emit the receipt bundle proving every assertion, including negative results and exact commands",
+      "status": "pass",
+      "commands": [
+        "/work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.raw.wft --output /work/.docker-cache/showcase/steps/12/final-check.dec"
+      ],
+      "assertions": [
+        {
+          "name": "no step failed before receipt emission",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "dec12-raw exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "final raw decode self-check sha256",
+          "expected": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "actual": "e627930a8d34455bc8ee26b41f830109e10230efa7a610ba6039036600f66544",
+          "pass": true
+        },
+        {
+          "name": "final raw decode self-check bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "bundle",
+          "content": "schema=weftfs.showcase.receipt/1\nreceipt_dir=bench/receipts\nraw_log_dir=bench/receipts\nfixed_timestamp_ns=1767225600000000000\nsteps=12\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "text",
+          "path": ".docker-cache/showcase/steps/12/bundle.txt",
+          "sha256": "4bee71595964c0baa0025d90ab7a4a7fe63d0e6dce14f1ec65da6c0d9505cd2e"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "all builds and executions run inside weft/fuse-court:1 under the Docker court limits recorded in environment",
+    "fixtures are deterministic: fixed seed strings, fixed clock 1767225600000000000 ns, and xorshift64* byte generation",
+    "step 9 is a process-fault proxy (WEFT_CRASH_PHASE); it is not a physical power-loss test",
+    "build: (cd WeftCodec && cargo build --quiet --bin weftcodec)",
+    "build: cargo build --quiet --features fuse --bin weftfs",
+    "build: cargo build --quiet --example codec_cycle_probe",
+    "build: (cd WeftFS-Go && CGO_ENABLED=0 go build ./cmd/weftfs)",
+    "step 7 accounting is incremental and whole-pair: base bytes are counted once, not hidden",
+    "step 7 delta_wins_incremental=true dictionary_wins_incremental=true",
+    "step 9 is a process-fault proxy: WEFT_CRASH_PHASE kills the CLI at a publication boundary; it is not a power-loss claim",
+    "the WeftCodec CLI has no remote fetch policy; missing or unverifiable dependencies fail closed (DependencyMissing/DependencyMismatch). DependencyDenied is an API-level class and is not claimed by this CLI step",
+    "step 11 negative result: context conditioning gives no gain on unrelated high-entropy data; auto selected raw"
+  ],
+  "summary": {
+    "total": 12,
+    "pass": 12,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

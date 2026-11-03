@@ -1,8 +1,10 @@
 # Implementation status — 2026-11-03
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. The machine-readable receipt is
-`bench/receipts/verify-20261103T165944Z.json` (all nine courts `pass`).
+implemented, tested, ignored, and not done. The verification receipt is
+`bench/receipts/verify-20261103T165944Z.json` (all nine courts `pass`). The
+twelve-step showcase receipt is
+`bench/receipts/showcase-20261103T171320Z.json` (twelve of twelve `pass`).
 
 ## 1. Repositories and revisions
 
@@ -89,10 +91,15 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 
 - `scripts/showcase.sh` executes the mandated twelve scenarios inside the FUSE
   court and writes a schema-versioned receipt plus a raw console log:
-  `bench/receipts/showcase-<UTC>.json` and `.log`.
+  `bench/receipts/showcase-20261103T171320Z.json` and `.log` (all twelve
+  `pass`; schema `weftfs.showcase.receipt/1`).
+- A second run under a different receipt name compared every field except
+  wall-clock timestamps: `semantic_match=true`
+  (`showcase-determinism-20261103T171320Z.determinism.txt`).
 - Every step records its exact commands, fixture hashes, machine-checked
   assertions (`cmp`, SHA-256, JSON field equality), observed outputs, court
-  limits, image/kernel/tool versions, and repository revisions.
+  limits, image/kernel/tool versions, and repository revisions (WeftFS
+  `2b43cff`, WeftFS-Go `74c8c90`, WeftCodec `a60d9f5`, WeftCodec-Go `b2beeab`).
 - Step 9 is explicitly labelled a **process-fault proxy** (`WEFT_CRASH_PHASE`),
   not physical power loss. Step 10 records that the codec CLI has no remote
   fetch policy; missing/mismatched dependencies fail closed, while
