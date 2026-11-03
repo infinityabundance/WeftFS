@@ -212,14 +212,21 @@ func main() {
 				Kind: decode(fields[2]), Path: decode(fields[3]), SHA256: decode(fields[4]),
 			})
 		case "E":
-			if len(fields) != 3 {
-				fail("E record needs 3 fields")
+			if len(fields) != 4 {
+				fail("E record needs 4 fields")
 			}
 			target := findStep(fields[1])
 			if target == nil {
 				fail("end for unknown step")
 			}
 			target.Status = decode(fields[2])
+			if note := decode(fields[3]); note != "" {
+				if target.Notes != "" {
+					target.Notes += "; " + note
+				} else {
+					target.Notes = note
+				}
+			}
 		case "N":
 			if len(fields) != 2 {
 				fail("N record needs 2 fields")

@@ -228,7 +228,7 @@ step_end() {
   if [ "$status" != pass ]; then
     FAILED_STEPS=$((FAILED_STEPS + 1))
   fi
-  printf 'E\t%s\t%s\n' "$STEP_ID" "$(b64s "$status")" >> "$RESULTS"
+  printf 'E\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$status")" "$(b64s "$notes")" >> "$RESULTS"
   log "----- STEP $STEP_ID: $status $notes"
   IN_STEP=0
 }
@@ -898,7 +898,7 @@ for impl in rust go; do
   done
 done
 note "step 9 is a process-fault proxy: WEFT_CRASH_PHASE kills the CLI at a publication boundary; it is not a power-loss claim"
-step_end pass "all phases: old-or-new whole bytes; no partial file"
+step_end pass "process-fault proxy (WEFT_CRASH_PHASE), not physical power loss; old-or-new whole bytes; no partial file"
 
 # ===========================================================================
 # STEP 10 — unauthorized traversal, dependency fetch, and enumeration
@@ -968,7 +968,7 @@ run_expect_fail dec10-wrong-deps "$CODEC" decode --input "$FIX/rev2.delta.wft" -
 assert_contains "dependency fetch with mismatched bytes fails closed" "$(cat "$RUN_ERR")" "DependencyMismatch"
 assert_not_exists "no plaintext written from a mismatched dependency" "$STEP_DIR/wrong-deps.dec"
 note "the WeftCodec CLI has no remote fetch policy; missing or unverifiable dependencies fail closed (DependencyMissing/DependencyMismatch). DependencyDenied is an API-level class and is not claimed by this CLI step"
-step_end pass "authorized-only counts; relation and dependency denials fail closed"
+step_end pass "authorized-only counts; relation and dependency denials fail closed; codec CLI has no remote fetch policy"
 
 # ===========================================================================
 # STEP 11 — negative workloads: auto chooses RAW/ZSTD when context gives no gain
@@ -1014,7 +1014,7 @@ assert_eq "dictionary gives no gain on unrelated data" "true" "$([ "$DICT11_LEN"
 } > "$STEP_DIR/selection.json"
 save_out selection "$STEP_DIR/selection.json"
 note "step 11 negative result: context conditioning gives no gain on unrelated high-entropy data; auto selected $AUTO11_MODE"
-step_end pass "auto=$AUTO11_MODE; context-free size=$AUTO11_LEN"
+step_end pass "negative result: auto=$AUTO11_MODE; no context gain; context-free size=$AUTO11_LEN"
 
 # ===========================================================================
 # STEP 12 — receipt bundle
