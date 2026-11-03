@@ -281,6 +281,60 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   `bench/scripts/compare_bench.py` compares two receipts for stability.
   `bench/RESULTS-v1.md` publishes every loss and the explicit gaps.
 
+### F5 — proof courts (B1–B4)
+
+The F5 code revision is parent `9d767d5`, `WeftCodec` `127bc85`,
+`WeftCodec-Go` `71066cf`; `WeftFS-Go` remains `7693ad4` (no F5 code change).
+All three F5 receipts below were generated at those revisions after the code
+commit, in the unchanged hard-limited courts.
+
+**B1 — decoder bombs (36/36 pass).** `bench/receipts/decoder-bombs-20261103T213314Z.json`
+and its raw `.log`. 36 committed adversarial vectors in both codec repos
+(byte-identical mirror checked by the court). Both CLIs were run twice per
+vector under `timeout 10s /usr/bin/time`; every run exited nonzero with the
+expected class in both implementations, no output file, no timeout, no
+OOM-kill (137), stable classes across repeats, and peak RSS below 5 MiB.
+Class matrix: LimitExceeded 15, Malformed 12, Corrupt 2, DependencyCycle 2,
+UnsupportedFeature 2, NonCanonical 1, UnsupportedMode 1, DependencyMismatch 1.
+The tiny-body/4 GiB-declared vector is the regression for the fixed zstd
+preallocation bug; Rust and Go both report Corrupt with ~3.5/4.7 MiB RSS.
+Limits are configurable through the ten requested `decode` flags (plus
+structured-item, selector-depth/operand, and archive-entry bounds); defaults
+remain the normative spec values.
+
+**B4 — randomized POSIX torture (6/6 pass).**
+`bench/receipts/posix-torture-20261103T213317Z.json`. Seeds 1–3, both
+directions (Rust write/Go read and Go write/Rust read), 2,251–2,342 completed
+operations per run (13,694 total) over create/write/read/truncate/append/
+rename/rename-over/link/unlink/mkdir/rmdir/symlink/readlink/xattr/fsync/
+open-unlinked. Every operation was checked for bytes, size, mode, nlink,
+symlink target, and xattrs; a full-tree check ran every 100 operations. After
+unmount the other implementation ran `verify --full`, remounted, and matched an
+exact manifest including names, types, modes, uid/gid, nlink, mtime, content
+sha256, symlink targets, and xattrs. This is a self-written fsx-style harness,
+not `pjdfstest`/`fsstress` (not installed in the court; no substitute run is
+claimed).
+
+**B2 — crash-consistency torture (1/1 pass).**
+`bench/receipts/crash-torture-20261103T213446Z.json`. 1,000 iterations through
+`WEFT_CRASH_PHASE`, alternating Rust/Go writers and readers. Every crash was
+followed by the other implementation's `verify --full` (accepting only the
+documented unpublished-tail note), an exact `/f` byte check, and an exact `/`
+listing. Observed old 667, new 333, partial/missing 0; verify clean 667,
+unpublished-tail 333, bad 0; phases 334/333/333; 350,541 ms at 2.9 it/s. This
+is a **process-fault proxy**, not physical power loss. The documented 10,000-
+iteration command is supported; linear projection is 3,505 s (~58.4 min), and
+the actual cost is higher because `verify --full` rescans a growing commit
+chain each iteration.
+
+**B3 — receipt bundle.** `scripts/package-receipts.sh` writes
+`bench/bundles/receipts-<stamp>.tar.zst` with manifest, checksums, revisions,
+receipts/raw logs, conformance corpus, harness/Dockerfiles, and dmesg status.
+`scripts/verify-receipts.sh <bundle> --repo-root .` extracts to a private
+temporary directory and independently verifies every sha256, rejects unlisted
+files, checks all four revisions against git, and rejects unsafe tar entries.
+The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when applicable.
+
 ## 3. Evidence discipline
 
 - Every build/test ran through `scripts/docker-court.sh` in a minimal official

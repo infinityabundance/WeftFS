@@ -121,3 +121,104 @@ Still not measured: external SQLite/graph-store baselines, ext4/XFS/Btrfs/ZFS
 baselines, physical power loss, energy, cold-cache and direct-I/O filesystem
 runs, metadata storms, concurrency sweeps, and a matched Go/Rust codec court.
 No headline performance claim is made from this first benchmark pass.
+
+## 9. F5 proof courts (B1–B4)
+
+These are correctness/adversarial courts, not performance benchmarks. Each
+runs only inside `scripts/docker-court.sh` with the unchanged hard limits
+(`--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`, bounded `/tmp`,
+`no-new-privileges`, `cap-drop=ALL`; FUSE courts add `/dev/fuse` +
+`CAP_SYS_ADMIN`).
+
+### B1 — decoder bombs
+
+```sh
+scripts/docker-court.sh bench "bash bench/scripts/run_decoder_bomb_court.sh"
+```
+
+- 36 committed vectors under `WeftCodec/conformance/v1/adversarial/`, copied
+  byte-identically to `WeftCodec-Go/conformance/v1/adversarial/`; the court
+  asserts every mirrored file hash matches.
+- Every vector is run twice per implementation under
+  `timeout 10s /usr/bin/time -f 'maxrss_kb=%M wall_s=%e'`. The court asserts
+  nonzero exit, the expected normative class in both, identical classes, no
+  output file, no timeout, no OOM kill (137), stable classes across repeats,
+  and max RSS below 512 MiB.
+- Coverage: declared 10 GiB output, zstd expansion under a low bound, zstd
+  output-length mismatch, a tiny body claiming 4 GiB (the allocation-bomb
+  regression), delta offset/length arithmetic and op counts, dependency
+  depth/cycle/count/total-fetch limits, chunk extent/overlap/gap/count faults,
+  header length overflow, unknown mode/flag/feature, non-minimal/overflow
+  WCB varints, WCB depth/items, selector depth/input, archive entry-count,
+  non-topological archive order, dictionary mismatch and size, frame/archive
+  truncation boundaries.
+- Receipt: `bench/receipts/decoder-bombs-20261103T213314Z.json` (36/36 pass)
+  and its raw `.log`. Class matrix: LimitExceeded 15, Malformed 12, Corrupt 2,
+  DependencyCycle 2, UnsupportedFeature 2, NonCanonical 1, UnsupportedMode 1,
+  DependencyMismatch 1. Peak measured RSS was below 5 MiB for every vector.
+- Not claimed: a proof of absence; coverage is curated, not fuzzing. No 10 GiB
+  payload is actually produced or allocated.
+
+### B4 — randomized POSIX torture
+
+```sh
+scripts/docker-court.sh fuse "bash bench/scripts/posix_torture.sh"
+```
+
+- `fsx`-style model of namespace and content; operations: create, write, read,
+  truncate, append, rename, rename-over, link, unlink, mkdir, rmdir, symlink,
+  readlink, user xattr, fsync, open-unlinked. Every operation is checked for
+  bytes, size, mode, nlink, symlink target, and xattrs; a full-tree check runs
+  every 100 operations.
+- Seeds 1–3, both directions (Rust writer → Go reader, Go writer → Rust
+  reader): six runs, 2,251–2,342 completed operations each (13,694 total).
+  After unmount the other implementation runs `verify --full`, remounts, and
+  compares an exact manifest (names, types, modes, uid/gid, nlink, mtime,
+  content sha256, symlink targets, xattrs).
+- Receipt: `bench/receipts/posix-torture-20261103T213317Z.json` (6/6 pass).
+- Not claimed: `pjdfstest`/`fsstress` (not installed in the court; no substitute
+  run is claimed), mmap, byte-range locking, mknod, fallocate,
+  copy_file_range, SEEK_DATA, or atime/ctime equality.
+
+### B2 — crash-consistency torture
+
+```sh
+scripts/docker-court.sh fuse "bash bench/scripts/crash_torture.sh"
+# documented 10,000-iteration command (not run; see projection):
+scripts/docker-court.sh fuse "WEFT_CRASH_ITERATIONS=10000 bash bench/scripts/crash_torture.sh"
+```
+
+- 1,000 iterations alternating Rust/Go writers and readers through the
+  existing `WEFT_CRASH_PHASE` hook, cycling `after_objects`,
+  `after_commit_file`, and `after_superblock_write`.
+- After every crash the other implementation runs `verify --full`; only the
+  documented “commit file above the highest published superblock generation”
+  note is accepted as a non-clean result. `/f` must be exactly the old whole
+  file or the new whole file, and `/` must contain exactly `f`.
+- Observed: old 667, new 333, partial/missing 0; verify clean 667,
+  unpublished-tail 333, bad 0; phases 334/333/333. Duration 350,541 ms
+  (2.9 iterations/s).
+- Receipt: `bench/receipts/crash-torture-20261103T213446Z.json` (1/1 pass).
+- Not claimed: physical power loss, cache drops, torn sectors, or a 10,000-
+  iteration run. Linear projection from the measured rate is 3,505 s
+  (≈58.4 min); the actual cost grows because `verify --full` rescans a growing
+  commit chain every iteration.
+
+### B3 — one-command receipt bundle
+
+```sh
+scripts/package-receipts.sh
+scripts/verify-receipts.sh bench/bundles/receipts-<stamp>.tar.zst --repo-root .
+```
+
+The bundle contains `manifest.json` (kernel, Docker client/server, court image
+IDs and Dockerfile sha256s, repo revisions, corpus and receipt hashes, raw log
+list, dmesg status), `CHECKSUMS.sha256`, `REVISIONS.txt`, every receipt and raw
+log, the conformance corpus, and the F5 harness/Dockerfiles. The verifier
+extracts to a private temporary directory, rejects absolute/parent-traversing
+tar entries, verifies every sha256, rejects unlisted files, checks every
+revision against `git` when `--repo-root` is supplied, and confirms no
+`research/` tree is present. Text files are sanitized for producer host paths;
+`manifest.json` records the original and bundled hashes. `dmesg` is recorded
+as `unavailable (no CAP_SYSLOG)` when the packaging user lacks the capability.
+No secrets, `research/`, or out-of-bundle host paths are included.

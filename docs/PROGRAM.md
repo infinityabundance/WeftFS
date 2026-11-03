@@ -19,10 +19,10 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | in progress |
-| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | partial (3 phases, bounded enumeration) |
-| B3 | One-command receipt bundle: Dockerfile hash, corpus hash, environment, raw output, dmesg, sha256; rerunnable by a stranger | receipts (exist) | partial |
-| B4 | POSIX conformance court: `fsx`-style randomized ops, `fsstress`/`pjdfstest` where available, Rust and Go, green matrix | FUSE frontends | partial (targeted POSIX tests) |
+| B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | **implemented** — 36 vectors, 36/36 class-identical, `bench/receipts/decoder-bombs-20261103T213314Z.json`; curated corpus, not fuzzing |
+| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 1,000 process-fault iterations** — `bench/receipts/crash-torture-20261103T213446Z.json`; 10,000 command supported but not run (measured 2.9 it/s, ~58.4 min linear projection); physical power loss not done |
+| B3 | One-command receipt bundle: Dockerfile hash, corpus hash, environment, raw output, dmesg, sha256; rerunnable by a stranger | receipts (exist) | **implemented** — `scripts/package-receipts.sh` + independent `scripts/verify-receipts.sh`; dmesg unavailable without CAP_SYSLOG |
+| B4 | POSIX conformance court: `fsx`-style randomized ops, `fsstress`/`pjdfstest` where available, Rust and Go, green matrix | FUSE frontends | **implemented** — self-written fsx-style court, 6/6 runs, 13,694 ops, `bench/receipts/posix-torture-20261103T213317Z.json`; `pjdfstest`/`fsstress` not available and not substituted |
 
 ## C. Numbers
 
@@ -66,7 +66,9 @@ evidence.
    (2026-11-03); receipts under `bench/receipts/`.
 5. **F4 — Replay bundle:** export/import, A2, one-command rerun from Go.
    **Implemented** (2026-11-03) as part of F3.
-6. **F5 — Proof courts:** B1/B2/B3/B4, receipts.
+6. **F5 — Proof courts:** B1/B2/B3/B4, receipts. **Implemented** (2026-11-03);
+   B2 is 1,000 process-fault iterations, not physical power loss, and 10,000
+   was not run.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode + semantic delta, cross-language; no mode without vectors. (E3)
 8. **F7 — AI corpus + cost graph:** C1/C2, real measurements with losses. (E3, C)

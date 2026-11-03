@@ -37,6 +37,7 @@ tested in the Docker court.
 | P7 | Bench courts, receipt bundle, showcase, release | **In progress** — verification court passes (`bench/receipts/verify-20261103T172416Z.json`); the `bench` court produced codec, store, and `fio` filesystem receipts (`bench/receipts/bench-*`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); no headline performance claim is made. |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 | F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; ≥3 concurrent read-only mounts; ambiguity fails closed and lists every ObjectId; 100-version time-travel demo; Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4), `replay-bundle-20261103T210824Z.json` (4/4). Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
+| F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), 1,000 crash iterations; one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261103T213446Z.json`. Crashes are process-fault proxies, not physical power loss; 10,000 crash iterations are supported but not run; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
@@ -142,6 +143,44 @@ A second Context-mount run is compared with the first using
 `scripts/showcase/democmp.go`; the result is
 `bench/receipts/context-mounts-determinism.txt` (semantic fields identical,
 run ids and wall-clock fields excluded).
+
+## F5 proof courts
+
+One command per court; all run only inside `scripts/docker-court.sh` with the
+unchanged hard limits.
+
+```sh
+# B1: 36 adversarial vectors, both independent CLIs, 10s timeout, class matrix
+scripts/docker-court.sh bench "bash bench/scripts/run_decoder_bomb_court.sh"
+
+# B4: fsx-style randomized POSIX ops, 3 seeds, both writer/reader directions
+scripts/docker-court.sh fuse "bash bench/scripts/posix_torture.sh"
+
+# B2: process-fault crash proxy through WEFT_CRASH_PHASE (default 1,000)
+scripts/docker-court.sh fuse "bash bench/scripts/crash_torture.sh"
+# documented 10,000-iteration command (not run; see projection in docs/STATUS.md)
+scripts/docker-court.sh fuse "WEFT_CRASH_ITERATIONS=10000 bash bench/scripts/crash_torture.sh"
+
+# B3: package and independently verify a receipt bundle
+scripts/package-receipts.sh
+scripts/verify-receipts.sh bench/bundles/receipts-<stamp>.tar.zst --repo-root .
+```
+
+Honest gaps:
+
+- Decoder bombs are a curated 36-vector corpus, not fuzzing or a proof of
+  absence. The declared 10 GiB vector is rejected before allocation; no 10 GiB
+  payload is produced.
+- The POSIX court is a self-written fsx-style harness, not `pjdfstest` or
+  `fsstress` (not installed in the court). It does not cover mmap, locking,
+  mknod, fallocate, `copy_file_range`, `SEEK_DATA`, or atime/ctime equality.
+- The crash court aborts the process at a publication boundary; it is **not**
+  physical power loss and does not drop caches or simulate torn sectors. 1,000
+  iterations ran at 2.9/s; linear projection for 10,000 is ~58.4 min, and the
+  real cost is higher because `verify --full` rescans a growing commit chain.
+- The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when the packaging
+  user lacks the capability. It is not signed; it is self-verifying against its
+  own checksums and, with `--repo-root`, against git revisions.
 
 ## Benchmarks
 
