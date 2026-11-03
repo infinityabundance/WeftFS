@@ -44,7 +44,11 @@ cache_root="$repo_root/.docker-cache"
 image="weft/${kind}-court:1"
 dockerfile="$repo_root/docker/${kind}.Dockerfile"
 
-mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,target-rust,target-go}
+mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,go-tmp,target-rust,target-go}
+# The court runs as uid 0 with cap-drop=ALL (no CAP_DAC_OVERRIDE). Host-owned
+# cache directories must therefore be writable by any uid; source files are
+# never widened. This keeps all compiler/cache writes inside .docker-cache.
+chmod -R a+rwX "$cache_root" 2>/dev/null || true
 
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   echo "court: building missing image $image from $dockerfile" >&2
@@ -75,7 +79,8 @@ common=(
   -e "CARGO_NET_RETRY=3"
   -e "GOCACHE=/work/.docker-cache/go-build"
   -e "GOMODCACHE=/work/.docker-cache/go-mod"
-  -e "GOFLAGS=-p=2"
+  -e "GOFLAGS=-p=2 -buildvcs=false"
+  -e "GOTMPDIR=/work/.docker-cache/go-tmp"
   -e "GOMAXPROCS=4"
   -v "$repo_root:/work"
   -v "$cache_root/cargo-registry:/cargo/registry"
