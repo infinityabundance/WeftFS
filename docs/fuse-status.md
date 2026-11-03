@@ -107,7 +107,7 @@ semantics and is exercised by `tests/fuse_posix.rs`, `fuse_crash.rs`, or
 | `mknod` | implemented (regular files only) | `S_IFREG` creates an empty file; FIFO/socket/device → `EPERM` |
 | `mkdir` | implemented | `mode & ~umask`; `uid`/`gid` from the request |
 | `unlink` | implemented | pinned object records survive until the last handle closes |
-| `rmdir` | implemented | non-empty → `ENOTEMPTY`; root refused; pinned empty dir survives until release |
+| `rmdir` | implemented | non-empty → `ENOTEMPTY`; root refused; a directory object pinned by an open handle survives until the last release |
 | `rename` | implemented | POSIX replacement (non-dir↔non-dir, dir↔empty dir), `ENOTEMPTY`/`EISDIR`/`ENOTDIR`, no move into own subtree; one commit |
 | `rename` flags | implemented | `RENAME_NOREPLACE` and `RENAME_EXCHANGE`; exchange of directories is `EINVAL` (cycle safety, explicit) |
 | `link` | implemented | non-directories only; directories → `EPERM` |

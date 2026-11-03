@@ -63,6 +63,15 @@ fn rmdir_removes_empty_directories_and_rejects_non_empty() {
         Class::NotDir
     );
 
+    // A directory object pinned by an open handle survives `rmdir` until the
+    // last pin is released (the store-level contract the FUSE layer uses).
+    let pinned = store.mkdir(root, b"pinned", 0o755, 0, 0).unwrap();
+    store.pin_object(pinned).unwrap();
+    store.rmdir(root, b"pinned").unwrap();
+    assert!(store.current_state().objects.contains_key(&pinned));
+    store.unpin_object(pinned).unwrap();
+    assert!(!store.current_state().objects.contains_key(&pinned));
+
     drop(store);
     let store = Store::open(dir.path(), OpenMode::ReadOnly).unwrap();
     assert_eq!(store.resolve_path("/full").unwrap(), full);
