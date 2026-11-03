@@ -10,10 +10,10 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| A1 | Context Views as mounts: one store, ≥3 simultaneous mounts rooted at typed contexts (`by:task=...`, `by:model=...`, `at:<timestamp>`); different listings; every file `sha256` matches its declared root | Context Root, mount `--context` | not started |
-| A2 | Reproducible Agent Replay Bundle: one `weft-receipt.tar.zst` with context graph, codec snapshots, exact replay command; Rust writes, Go replays byte-exactly with no code sharing | A1, replay/export | not started |
-| A3 | Ambiguity Court: selector matching ≥2 distinct content roots; live query returns the full set; singular API fails closed with `Ambiguous`; FUSE never silently picks | ambiguity errors (exist), court | in progress |
-| A4 | Time-Travel POSIX: many versions of one path mounted at once; historical reads exact and pinned; no withdrawal | versioned views, context mounts | not started |
+| A1 | Context Views as mounts: one store, ≥3 simultaneous mounts rooted at typed contexts (`by:task=...`, `by:model=...`, `at:<timestamp>`); different listings; every file `sha256` matches its declared root | Context Root, mount `--context` | **implemented** — `bench/receipts/context-mounts-20261103T210625Z.json` (6/6 pass) |
+| A2 | Reproducible Agent Replay Bundle: one `weft-receipt.tar.zst` with context graph, codec snapshots, exact replay command; Rust writes, Go replays byte-exactly with no code sharing | A1, replay/export | **implemented** — `bench/receipts/replay-bundle-20261103T210635Z.json` (4/4 pass; bundle sha256 `28fd708b…`) |
+| A3 | Ambiguity Court: selector matching ≥2 distinct content roots; live query returns the full set; singular API fails closed with `Ambiguous`; FUSE never silently picks | ambiguity errors (exist), court | **implemented** — `bench/receipts/ambiguity-20261103T210633Z.json` (4/4 pass) |
+| A4 | Time-Travel POSIX: many versions of one path mounted at once; historical reads exact and pinned; no withdrawal | versioned views, context mounts | **implemented, correctness-only** — `bench/receipts/time-travel-20261103T210633Z.json` (4/4 pass); no io_uring/EKBLOOM acceleration |
 
 ## B. Proofs
 
@@ -37,7 +37,7 @@ evidence.
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
 | D1 | Buck2 artifact-store backend: action key = typed context + toolchain version; exact rebuild; query by context | Context Root, CAS API | not started |
-| D2 | Agent long-term memory: typed edges (`generated_by`, `grounded_in`, `derived_from`, `prompted_by`), mountable by task/model/time, months-later byte-exact | A1, causal closure | not started |
+| D2 | Agent long-term memory: typed edges (`generated_by`, `grounded_in`, `derived_from`, `prompted_by`), mountable by task/model/time, months-later byte-exact | A1, causal closure | **partial** — typed edges and task/model/time mounts pass; long-horizon (months) retention is not measured |
 | D3 | Spec-as-code: generate/validate Rust and Go types from the normative spec; CI fails on drift | spec export | not started |
 
 ## E. Strategic pillars (identity, lineage, codec, agents, reproducibility, guarantees, adoption)
@@ -62,8 +62,10 @@ evidence.
 3. **F2 — Capability contexts:** enforcement in resolver, counts/evidence
    filtering, budgets; cross-language tests. (E4)
 4. **F3 — Context mounts + ambiguity + time travel:** `--context`/`--at` mount
-   roots in Rust and Go, A1/A3/A4 + receipts, sha256 verification.
+   roots in Rust and Go, A1/A3/A4 + receipts, sha256 verification. **Implemented**
+   (2026-11-03); receipts under `bench/receipts/`.
 5. **F4 — Replay bundle:** export/import, A2, one-command rerun from Go.
+   **Implemented** (2026-11-03) as part of F3.
 6. **F5 — Proof courts:** B1/B2/B3/B4, receipts.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode + semantic delta, cross-language; no mode without vectors. (E3)

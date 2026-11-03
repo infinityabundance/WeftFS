@@ -10,7 +10,13 @@ The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`
 `bench/receipts/bench-store-20261103T175920Z.json`, and
 `bench/receipts/bench-fs-20261103T180751Z.json`; the analysis, losses, and
 gaps are in `bench/RESULTS-v1.md`. The F2 receipt is
-`bench/receipts/f2-20261103T205045Z.json` with its raw log beside it.
+`bench/receipts/f2-20261103T205045Z.json` with its raw log beside it. The F3
+receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
+`bench/receipts/ambiguity-20261103T210633Z.json` (4/4),
+`bench/receipts/time-travel-20261103T210633Z.json` (4/4), and
+`bench/receipts/replay-bundle-20261103T210635Z.json` (4/4), each with its raw
+`.log` and `.results.tsv`; the determinism comparison is
+`bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
 
 ## 1. Repositories and revisions
 
@@ -146,6 +152,71 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
   Golden causal vectors are `conformance/context/v1/causal_versions.json`.
 
+### F3 — Context mounts, ambiguity court, time travel, and replay bundle (Rust + Go)
+
+- **`mount --context NAME|weft://...`** (both frontends) makes the resolved
+  Context Root's ordered, capability-authorized result set the read-only mount
+  root. Entries use the established deterministic names (percent-escaped
+  basename + `--` + 8 hex ObjectId, extended in 8-character steps on
+  collision). `readdir` and `lookup` are fed by one helper, so they cannot
+  disagree; every authorized result appears. The constant `.weft` exact-id
+  surface remains reachable. Capability-scoped mounts are forced read-only and
+  resolve (and therefore filter) before names or counts are produced.
+- **`mount --at RFC3339|unix-ns`** (both frontends) walks the published parent
+  chain of the base snapshot (or head), selects the newest commit with
+  `timestamp_ns <= t` (ties: higher generation), and mounts that state
+  read-only. A time before the first commit fails with
+  `NotFound: no commit at or before … ns in the mounted lineage`; no state is
+  substituted. `--context` pins its own snapshot, so `--context` + `--at` is
+  rejected explicitly.
+- **Concurrent mounts:** read-only opens take no writer lock in either
+  implementation. A FUSE integration test mounts three different roots at once
+  and then commits through a normal writer; the writer succeeds and the pinned
+  mount does not observe the later commit.
+- **Ambiguity:** `require_one` now re-evaluates without pagination and lists
+  every competing ObjectId in the `Ambiguous` message. `context materialize
+  --require-one` checks cardinality before any filesystem work and leaves no
+  output path on failure.
+- **Replay bundle:** Rust `export-bundle` writes `weft-receipt.tar.zst` with the
+  portable store, the complete relation graph including Context Root records,
+  `manifest.json` (ContextRootIds, snapshot/selector ids, content hashes,
+  source revisions, court command), `contexts.tsv`, `checks.sha256`,
+  `materialized.sha256`, `replay.sh`, and a README. Go extracts it with
+  `tar`/`zstd`, opens it, runs `verify --full`, resolves and materializes every
+  Context Root, and re-hashes every store entry and output file against
+  `manifest.json` using a stdlib-only verifier. No Rust runs at Go replay time.
+- **Evidence:** `scripts/docker-court.sh fuse "cargo test --features fuse
+  --all-targets"` reports **81 passed, 0 failed, 2 ignored** (unchanged
+  CAP_SETUID and kernel-7.3 limitations). `scripts/docker-court.sh fuse "cd
+  /work/WeftFS-Go && go test -race ./..."` passes for `store` and `fusefs`,
+  including four new context-mount/time-travel/concurrency tests and an
+  ambiguity message test; `go vet ./...` and `CGO_ENABLED=0 go build ./...`
+  pass.
+- **Demo receipts (all `pass`):**
+  - `bench/receipts/context-mounts-20261103T210625Z.json` (6/6) — three
+    simultaneous mounts, per-file SHA-256 and ContentId agreement, one
+    content-addressed manifest shared by two contexts, read-only denials, and a
+    live writer while mounted.
+  - `bench/receipts/ambiguity-20261103T210633Z.json` (4/4) — full ordered set,
+    `Ambiguous` with both ids, two-result mount listing, no singular output.
+  - `bench/receipts/time-travel-20261103T210633Z.json` (4/4) — 100 versions,
+    snapshots 1/50/100 mounted together, exact historical bytes after a live
+    rename/retag.
+  - `bench/receipts/replay-bundle-20261103T210635Z.json` (4/4) — bundle
+    sha256 `28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938`,
+    17 store entries, 2 contexts, 3 context files, 2 resolved identities, zero
+    mismatches.
+  - `bench/receipts/context-mounts-determinism.txt` — `semantic_match=true`
+    between two Context-mount runs (run ids and wall-clock fields excluded).
+- **Bundle:** `bench/bundles/weft-receipt.tar.zst` (6,662 bytes), sha256
+  `28fd708b…`. Reproduction:
+  `scripts/docker-court.sh fuse "bash scripts/replay-bundle.sh --bundle
+  bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out"`.
+- **Not claimed:** io_uring, EKBLOOM, or any acceleration. Time travel is
+  correctness-only. The SHA-256 value in the demos is a declared attribute and
+  a byte-identity check; the normative content root is the store's BLAKE3
+  ContentId, which `verify --full` re-checks.
+
 ### Twelve-step showcase — implemented, all twelve pass
 
 - `scripts/showcase.sh` executes the mandated twelve scenarios inside the FUSE
@@ -254,6 +325,20 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 9. **atime/ctime persistence** and `mknod`/FIFO/device nodes; not implemented.
 10. **Spec-to-Go export automation in CI**; `scripts/export-spec.sh` exists but
     no CI workflow pins the export.
+11. **F3 time travel is correctness-only.** There is no io_uring, EKBLOOM, or
+    other acceleration; none is implemented or claimed. The 100-version demo
+    measures exactness and pinning, not latency.
+12. **Long-horizon agent memory (D2) is partial.** Typed edges and task/model/
+    time mounts pass, but “months-later” retention and a multi-month corpus are
+    not measured. The demo covers 100 versions and a rename/retag within one
+    store.
+13. **Replay bundle scope.** The bundle carries one store and its Context
+    Roots; it does not yet carry a filtered/partitioned subset, remote fetch,
+    or a signature. `tar` and `zstd` are required tools and a missing tool is a
+    hard error (no uncompressed fallback).
+14. **Context mount root adds a constant `.weft` entry** for exact-id access;
+    it is not part of the Context Root result set. Listing digests in the demo
+    exclude that constant name explicitly.
 
 ## 5. Next work queue (dependency order)
 
@@ -267,4 +352,6 @@ directory and `AGENTS.md` are gitignored, per operator directive.
    evidence remains process-fault proxies.
 4. Remaining Go FUSE verbs (locking, mknod/tmpfile, fallocate,
    copy_file_range, SEEK_DATA) and online GC.
-5. Only then consider a `staging` → `main` merge and a versioned release.
+5. F3 follow-ups: partitioned replay bundles, a long-horizon agent-memory
+   retention measurement, and any future acceleration (none is claimed now).
+6. Only then consider a `staging` → `main` merge and a versioned release.

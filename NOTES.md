@@ -150,3 +150,107 @@ are asserted by both `tests/context.rs` (Rust) and `store/context_test.go` (Go).
 7. **FUSE capability wiring is exact-id/saved-context scoped.** A capability
    mount is forced read-only; full capability-scoped POSIX context mounts are
    F3 work.
+
+---
+
+# F3 implementation notes — context mounts, ambiguity, time travel, replay
+
+**Scope:** F3 of `docs/PROGRAM.md`: A1 (context mounts), A3 (ambiguity court),
+A4 (time-travel POSIX), A2 (replay bundle), and the D2 task/model/time mount
+surface. This section records the exact commands and the remaining gaps.
+
+## 5. What F3 adds
+
+### Mount roots (`--context`, `--at`)
+- `weftfs mount --context NAME|weft://...` resolves a stored Context Root at
+  mount time with the mount capability (if any) and the root principal,
+  evaluates the pinned selector, and makes that ordered result set the mount
+  root. Names are the existing deterministic `basename--<8 hex ObjectId>`
+  scheme, extended on collision. One helper builds the entry list for both
+  `readdir` and `lookup`, so they always agree. A constant `.weft` entry keeps
+  the exact-id surface reachable; it is not a selector result.
+- The root inode is a virtual directory (`0o555`), every result is a virtual
+  read-only node, and all mutation verbs return `EROFS`. A capability mount is
+  forced read-only even without `--read-only`, and resolution filters before
+  names/counts are produced.
+- `--at RFC3339|unix-ns` parses UTC nanoseconds or RFC 3339 (fractional
+  seconds, `Z` or numeric offset) and walks the published parent chain of the
+  base (head, or `--snapshot` when supplied). It selects the newest commit with
+  `timestamp_ns <= t`, breaking ties by higher generation. No match is
+  `NotFound: no commit at or before …`; no fallback state is used.
+- `--context` pins its own snapshot, so `--context` + `--at` is rejected.
+- Read-only opens take no `flock` in both implementations, so any number of
+  mounts can coexist with a live writer. The test suite exercises three
+  simultaneous roots and a successful writer commit.
+
+### Ambiguity
+- `require_one` re-evaluates without `offset`/`limit` and includes every
+  authorized ObjectId in the `Ambiguous` message. `context materialize
+  --require-one` resolves first and returns `Ambiguous` before creating any
+  output path.
+
+### Replay bundle
+- `weftfs export-bundle --out FILE [--context NAME]...` copies `FORMAT`, `LOCK`,
+  `superblock`, `commits/`, `objects/`, `manifests/`, and `refs/` into
+  `store/`; materializes each Context Root once in a temporary work directory
+  to hash its exact bytes; writes `manifest.json` (store head/generation,
+  ContextRootIds, snapshot/selector ids, per-file BLAKE3 ContentId and SHA-256,
+  full relation graph, source revisions, court command), `contexts.tsv`,
+  `checks.sha256`, `materialized.sha256`, `replay.sh`, and `README.md`; then
+  creates the tarball with `tar` and compresses with `zstd`.
+- `scripts/replay-bundle.sh` extracts with `tar --zstd`, checks
+  `checks.sha256`, builds/uses the independent Go frontend, runs
+  `verify --full`, resolves and materializes every Context Root, and runs
+  `scripts/replay/verify_manifest.go` to re-hash every store entry and
+  materialized file and compare the resolved identities. No Rust runs in this
+  path.
+
+## 6. Exact commands and results
+
+```text
+scripts/docker-court.sh fuse "cargo test --features fuse --all-targets"
+  -> 81 passed, 0 failed, 2 ignored (CAP_SETUID ownership; kernel 7.3
+     same-inode direct-I/O EIO). New: fuse_context_mount 6, CLI ambiguity 1.
+
+scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race ./..."
+  -> store and fusefs pass; new context-mount, capability, --at, three-mount,
+     and ambiguity tests pass.
+
+scripts/docker-court.sh go "cd /work/WeftFS-Go && go vet ./... && CGO_ENABLED=0 go build ./..."
+  -> clean.
+
+scripts/docker-court.sh fuse "bash scripts/demo-context-mounts.sh"
+  -> 6/6 pass. Receipt: bench/receipts/context-mounts-20261103T210625Z.json.
+
+scripts/docker-court.sh fuse "bash scripts/demo-ambiguity.sh"
+  -> 4/4 pass. Receipt: bench/receipts/ambiguity-20261103T210633Z.json.
+
+scripts/docker-court.sh fuse "bash scripts/demo-time-travel.sh"
+  -> 4/4 pass. Receipt: bench/receipts/time-travel-20261103T210633Z.json.
+
+scripts/docker-court.sh fuse "bash scripts/demo-replay-bundle.sh"
+  -> 4/4 pass. Bundle: bench/bundles/weft-receipt.tar.zst
+     sha256 28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938.
+```
+
+The receipts record WeftFS `f3d1bc1` and WeftFS-Go `acf6df6`. The Context-mount
+demo was run twice and compared with `scripts/showcase/democmp.go`:
+`bench/receipts/context-mounts-determinism.txt` says `semantic_match=true`.
+
+## 7. Remaining F3 gaps
+
+1. **No acceleration.** Time travel and context mounts are correctness-only.
+   io_uring, EKBLOOM, and similar are not implemented and not claimed.
+2. **SHA-256 vs ContentId.** The demos compare each mounted file's SHA-256
+   with a SHA-256 attribute declared in the store, and separately require the
+   store's BLAKE3 ContentId to match `stat`/`context resolve`. The normative
+   content root remains the BLAKE3 ContentId; SHA-256 is not substituted for it.
+3. **Deterministic demos use fixed timestamps and explicit ObjectId seeds.**
+   `mkdir` without `--seed` uses a random seed, so a deterministic fixture must
+   pass seeds for directories as well. This was found by the determinism run.
+4. **Replay bundles are whole-store.** No partitioned subset, remote fetch, or
+   signature exists. `tar`/`zstd` are hard requirements.
+5. **D2 is partial.** Task/model/time mounts and typed edges pass; a
+   months-long retention measurement is not made.
+6. **Context mount root includes `.weft`.** Listing digests exclude it
+   explicitly; it is a constant control surface, not a selector result.

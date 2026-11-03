@@ -1,0 +1,131 @@
+===== BUILD =====
+receipt: /work/bench/receipts/ambiguity-20261103T210633Z.json
+
+===== STEP store: Two objects with different content roots under one selector =====
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /a.txt --text alpha --seed amb-a --attr group=ambiguous
+b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /b.txt --text beta --seed amb-b --attr group=ambiguous
+e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /unique.txt --text unique --seed amb-u --attr group=unique
+1e7ad131e9a41a5c67c3c5df58ee233e4350841ac4ac8e0121e9f4441524a517
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 snapshot create s1
+c240d0afb81c0a895c7f05115d25262f580016db3d6b6720b4fb2cbe2447a789
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 stat /a.txt
+{
+  "attrs": {
+    "group": "ambiguous"
+  },
+  "content_id": "2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497",
+  "size": 5,
+  "uid": 0,
+  "version_id": "9b93dd7051d1d0d26d2a7a8f4e00fe8dfa2b495258d5406d65dd02b29df2b4ec"
+}
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 stat /b.txt
+{
+  "attrs": {
+    "group": "ambiguous"
+  },
+  "content_id": "1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8",
+  "size": 4,
+  "uid": 0,
+  "version_id": "3cdc61dcd86b424426c6cf16eec395d7d7f73b0cf4c82306fc2b87ed8f814023"
+}
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 context create --name ambiguous --selector select attrs.group == "ambiguous" --snapshot s1
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065e08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e67726f75700509616d626967756f75730508736e617073686f740620c240d0afb81c0a895c7f05115d25262f580016db3d6b6720b4fb2cbe2447a78905096e616d657370616365050764656661756c74050b73656c6563746f725f69640620e56818b440ec3834880608ad675034ec58e8799ea8a421ba1daac375f53362f3",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "0a5177ed737290a9206b982c1975a346d48dd88342be3792c15422d2f5fd3b49",
+  "generation": 6,
+  "name": "ambiguous",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "fdde3fb86caf44b4d2d958b71cfc87acf49c067132faebdb79e1014c5a2cc790",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e67726f75700509616d626967756f7573",
+  "selector_id": "e56818b440ec3834880608ad675034ec58e8799ea8a421ba1daac375f53362f3",
+  "snapshot_id": "c240d0afb81c0a895c7f05115d25262f580016db3d6b6720b4fb2cbe2447a789",
+  "uri": "weft://default/c/0a5177ed737290a9206b982c1975a346d48dd88342be3792c15422d2f5fd3b49"
+}
+----- STEP store: pass a=b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497/2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b b=e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8/1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870 ctx=0a5177ed737290a9206b982c1975a346d48dd88342be3792c15422d2f5fd3b49
+
+===== STEP full-query: The full query returns the complete ordered set =====
+CMD[full-query]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 query select attrs.group == "ambiguous"
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "attrs.group",
+          "kind": "attr",
+          "value": "ambiguous"
+        }
+      ],
+      "object_id": "b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497"
+    },
+    {
+      "entries": [
+        {
+          "field": "attrs.group",
+          "kind": "attr",
+          "value": "ambiguous"
+        }
+      ],
+      "object_id": "e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8"
+    }
+  ],
+  "matched_count": 2,
+  "results": [
+    {
+      "content_id": "2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b",
+      "kind": "file",
+      "object_id": "b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497",
+      "path": "/a.txt",
+      "size": 5,
+      "version_id": "9b93dd7051d1d0d26d2a7a8f4e00fe8dfa2b495258d5406d65dd02b29df2b4ec"
+    },
+    {
+      "content_id": "1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870",
+      "kind": "file",
+      "object_id": "e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8",
+      "path": "/b.txt",
+      "size": 4,
+      "version_id": "3cdc61dcd86b424426c6cf16eec395d7d7f73b0cf4c82306fc2b87ed8f814023"
+    }
+  ],
+  "selector_id": "e56818b440ec3834880608ad675034ec58e8799ea8a421ba1daac375f53362f3",
+  "snapshot_id": "28aed758967ab49d4aef60787980c7aabddfababe9ef436eb7042eac99f9c2ea"
+}
+----- STEP full-query: pass ordered set = b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497, e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8
+
+===== STEP singular: Singular access fails closed with Ambiguous and lists both ids =====
+CMD[singular]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 query select attrs.group == "ambiguous" --require-one
+Ambiguous: selector matched 2 authorized objects; require_one needs exactly 1 (object_ids: b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497,e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8)
+CMD[singular]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 context materialize ambiguous --require-one --out /work/.docker-cache/f3-demos/singular-8-20261103T210633Z
+Ambiguous: context matched 2 authorized objects; require_one needs exactly 1 (object_ids: b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497,e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8)
+----- STEP singular: pass require-one rejected 2 matches; no output path
+
+===== STEP context-mount: The Context mount lists both results; lookup is exact =====
+CMD[context-mount]: rust mount /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z -> /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity --context ambiguous
+CMD[context-mount]: ls /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity
+CMD[context-mount]: cat /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity/a.txt--b30798c7
+alphaCMD[context-mount]: cat /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity/b.txt--e27fc815
+betaNOTE: baseline note: 'ls | head -1' is a single-name lookup, not a set query; no competitor behavior is measured or claimed
+----- STEP context-mount: pass mount listing has 2 results; single-name lookup returns <a.txt--b30798c7> only
+summary: pass=4 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/ambiguity-20261103T210633Z.json
+raw log: /work/bench/receipts/ambiguity-20261103T210633Z.log

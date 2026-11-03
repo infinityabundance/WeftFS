@@ -1,0 +1,135 @@
+===== BUILD =====
+receipt: /work/bench/receipts/replay-bundle-20261103T210635Z.json
+NOTE: Rust writes the bundle; Go extracts/opens/verifies/materializes it with no Rust at Go runtime
+NOTE: bundle format is tar+zstd; no compression fallback exists
+
+===== STEP store: Deterministic store with two Context Roots =====
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --fixed-timestamp-ns 1767225600000000000 create /a.txt --text alpha --seed replay-a --attr project=demo
+1dbfe17ad9e2f27156066a2e094073c47a57ba8018367e1ab26433eb68459a2d
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --fixed-timestamp-ns 1767225600000000000 create /b.txt --text beta --seed replay-b --attr project=demo
+9dceae384dbe293b981082e13be19fd561d2992264151fd7488b86e5a46a14f7
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --fixed-timestamp-ns 1767225600000000000 create /c.txt --text gamma --seed replay-c --attr project=other
+366284944f9cff2e51d96652df625e5b4795052d52c66e944dcec394cfe0696b
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --fixed-timestamp-ns 1767225600000000000 snapshot create s1
+74a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc5
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --json --fixed-timestamp-ns 1767225600000000000 context create --name demo --selector select attrs.project == "demo" --snapshot s1
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065b08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a656374050464656d6f0508736e617073686f74062074a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc505096e616d657370616365050764656661756c74050b73656c6563746f725f696406201b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993",
+  "generation": 6,
+  "name": "demo",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "a4251c599ba66536e152ab86fc0bff3b113adb89c4295062af85b389e33d4735",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a656374050464656d6f",
+  "selector_id": "1b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d",
+  "snapshot_id": "74a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc5",
+  "uri": "weft://default/c/79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993"
+}
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --json --fixed-timestamp-ns 1767225600000000000 context create --name other --selector select attrs.project == "other" --snapshot s1
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a65637405056f746865720508736e617073686f74062074a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc505096e616d657370616365050764656661756c74050b73656c6563746f725f69640620acc90da52dc7c4889d909d7c817d00ec412ebebad80f91a829f6a9170ed2b605",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323",
+  "generation": 7,
+  "name": "other",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "c02616dc719e5db87aa53dcf682b08d46aa4537fc32b6d93ac994c9f3a60c058",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a65637405056f74686572",
+  "selector_id": "acc90da52dc7c4889d909d7c817d00ec412ebebad80f91a829f6a9170ed2b605",
+  "snapshot_id": "74a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc5",
+  "uri": "weft://default/c/a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323"
+}
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --json --fixed-timestamp-ns 1767225600000000000 verify --full
+{
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 3,
+  "checked_commits": 7,
+  "checked_context_roots": 2,
+  "checked_manifests": 3,
+  "checked_objects": 3,
+  "commit": "7bd4ba9669b0ac5a72a3268bb1860896ce010a260a930124864261d7596d59ec",
+  "full": true,
+  "generation": 7,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+----- STEP store: pass contexts demo=79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993 other=a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323
+
+===== STEP export: Rust writes the self-contained bundle =====
+CMD[export]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-3498-20261103T210635Z --json --fixed-timestamp-ns 1767225600000000000 export-bundle --out /work/bench/bundles/weft-receipt.tar.zst --source-revision WeftFS=f3d1bc166f11e206ca58d54514b754ab36b70599
+{
+  "bundle": "/work/bench/bundles/weft-receipt.tar.zst",
+  "bytes": 6662,
+  "contexts": [
+    "demo",
+    "other"
+  ],
+  "generation": 7,
+  "head": "7bd4ba9669b0ac5a72a3268bb1860896ce010a260a930124864261d7596d59ec",
+  "sha256": "28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938"
+}
+CMD[export]: /work/.docker-cache/f3-demos/bin/jsonq /work/.docker-cache/f3-demos/bundle-inspect-3498-20261103T210635Z/manifest.json schema
+weftfs.replay-bundle/1
+----- STEP export: pass bundle=28fd708b9afe0159deee8d36a1896d2fd415259a4bcb802caf330c78e202e938 bytes=6662
+
+===== STEP go-replay: Go extracts, verifies, resolves, and materializes every hash =====
+CMD[go-replay]: bash /work/scripts/replay-bundle.sh --bundle /work/bench/bundles/weft-receipt.tar.zst --out /work/.docker-cache/f3-demos/replay-out-3498-20261103T210635Z
+== extract ==
+== checks.sha256 ==
+README.md: OK
+contexts.tsv: OK
+manifest.json: OK
+replay.sh: OK
+store/FORMAT: OK
+store/LOCK: OK
+store/commits/1.commit: OK
+store/commits/2.commit: OK
+store/commits/3.commit: OK
+store/commits/4.commit: OK
+store/commits/5.commit: OK
+store/commits/6.commit: OK
+store/commits/7.commit: OK
+store/manifests/1f/1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870: OK
+store/manifests/2e/2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b: OK
+store/manifests/77/77dabfe74fa4db6ac49cf5907fb814e6b7b96a5a51f27bfc8958ced4d2ddc494: OK
+store/objects/58/58d10150aa001f322d6f44474c134a085f5fa0a65da9235894202678e5c483e4: OK
+store/objects/5d/5d02ce022776b89446e37b44ed485954c7516581026a8b0d15f1efe12b741708: OK
+store/objects/a3/a36ebe673301d32de171d304007cfe4d93db975109dd043f6540458f1d45176c: OK
+store/refs/snapshots/s1: OK
+store/superblock: OK
+== go open + verify --full ==
+== go resolve + materialize every Context Root ==
+== go manifest verification ==
+{
+  "ok": true,
+  "schema": "weftfs.replay-bundle/1",
+  "store_entries_checked": 17,
+  "contexts_checked": 2,
+  "context_files_checked": 3,
+  "resolved_ids_checked": 2,
+  "mismatches": [],
+  "materialized_dir": "/work/.docker-cache/f3-demos/replay-out-3498-20261103T210635Z/materialized"
+}
+replay: ok
+----- STEP go-replay: pass Go verified every store entry and materialized hash
+
+===== STEP reproduction: One-command reproduction recorded =====
+CMD[reproduction]: scripts/docker-court.sh fuse "bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out"
+----- STEP reproduction: pass reproduction command and embedded replay script recorded
+summary: pass=4 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/replay-bundle-20261103T210635Z.json
+raw log: /work/bench/receipts/replay-bundle-20261103T210635Z.log
