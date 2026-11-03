@@ -65,7 +65,8 @@ if ! sha256sum -c CHECKSUMS.sha256 --quiet; then
 fi
 
 # 3. No unlisted files.
-find . -type f -printf '%P\n' | LC_ALL=C sort > "$TMP/.actual-files"
+find . -type f ! -name '.actual-files' ! -name '.listed-files' ! -name '.file-diff' \
+  -printf '%P\n' | LC_ALL=C sort > "$TMP/.actual-files"
 {
   awk '{print $2}' CHECKSUMS.sha256 | sed 's|^\./||'
   echo CHECKSUMS.sha256
