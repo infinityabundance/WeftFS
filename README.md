@@ -31,7 +31,7 @@ tested in the Docker court.
 | P1 | Normative specs: model, selectors, codec format, compatibility | In progress |
 | P2 | Rust WeftCodec v1 (all modes, CLI, tests) | Not started |
 | P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | Not started |
-| P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | Not started |
+| P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — see [`docs/store-status.md`](docs/store-status.md) |
 | P5 | Rust FUSE frontend, POSIX matrix, context views | Not started |
 | P6 | Go WeftFS core + FUSE + storage handoff court | Not started |
 | P7 | Bench courts, receipt bundle, showcase, release | Not started |

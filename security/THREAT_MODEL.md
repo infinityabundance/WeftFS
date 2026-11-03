@@ -35,15 +35,15 @@ mitigated, what is partially mitigated, and what is explicitly not claimed.
 | Torn commit / partial superblock | dual slots, CRC, commit CRC+hash, fallback generation | implemented (store, tested by corruption) |
 | Path traversal / `..` | FUSE/Kernel lookup uses entry names; NUL and `/` rejected in names; no host path is derived from client strings | store level implemented; FUSE tests planned |
 | Symlink escape beyond mount | return symlink target as bytes; kernel resolves within its namespace; never `open` a host path from a symlink | planned with FUSE |
-| Selector query DoS | input/nesting/operand limits, authorized universe, no recursion in v1, offset cost noted | parser implemented; resolver planned |
-| Selector ambiguity | cardinality exposed; `require_one` rejects 0/n | plan (FS) |
-| Unauthorized object disclosure via counts/evidence | authorization filter before matching; evidence filtered | plan (FS) |
+| Selector query DoS | input/nesting/operand limits, authorized universe, no recursion in v1, offset cost noted | parser and resolver implemented (store) |
+| Selector ambiguity | cardinality exposed; `require_one` rejects 0/n | implemented (store) |
+| Unauthorized object disclosure via counts/evidence | authorization filter before matching; evidence filtered | implemented (store) |
 | Cross-object dedup side channel | v1 dedups within one store only; no cross-tenant store, no claim of dedup privacy | documented limitation |
 | Malicious import/export | parse as untrusted, verify all hashes, bounded archive, no path extraction outside destination | planned |
-| GC deleting live dependency | mark from snapshots, tips, checkpoints, handles; grace period; never delete reachable hash | plan (FS) |
-| Stale/duplicate object hash with wrong length | length + hash re-verified on read | implemented (codec); store read path to test |
-| Lock bypass / concurrent writers | `flock(LOCK_EX)`; open fails `Busy`; no distributed claim | plan (FS) |
-| Unauthorized relation traversal | relation visible only if subject and target visible | plan (FS) |
+| GC deleting live dependency | mark from snapshots, tips, checkpoints, handles; grace period; never delete reachable hash | implemented (store; open-handle pins arrive with FUSE) |
+| Stale/duplicate object hash with wrong length | length + hash re-verified on read | implemented (codec and store read path) |
+| Lock bypass / concurrent writers | `flock(LOCK_EX)`; open fails `Busy`; no distributed claim | implemented (store) |
+| Unauthorized relation traversal | relation visible only if subject and target visible | implemented (selector resolver) |
 
 ## Not claimed in v1
 
@@ -66,6 +66,7 @@ mitigated, what is partially mitigated, and what is explicitly not claimed.
 ## Verification status
 
 Codec controls are tested in both Rust and Go conformance suites. Store controls
-are exercised by unit, crash-proxy, and corruption tests as P4/P5 land. This
-document is updated when a control moves from planned to implemented; it is not
-a claim that planned controls exist.
+are exercised by the P4 unit, corruption, crash-proxy, and authorization tests
+recorded in `docs/store-status.md`; FUSE-level controls remain planned for P5.
+This document is updated when a control moves from planned to implemented; it
+is not a claim that planned controls exist.
