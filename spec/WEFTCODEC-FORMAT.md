@@ -39,7 +39,7 @@ encoders may appear on the wire.
 |---|---|
 | Raw chunk/plaintext bytes | `weft/chunk/v1` |
 | Whole-file content manifest | `weft/manifest/v1` |
-| Structured frame value | `weft/structured/v1` |
+| Canonical structured value identity (not the frame header) | `weft/structured/v1` |
 | Selector canonical expression | `weft/selector/v1` |
 | Snapshot record | `weft/snapshot/v1` |
 | Commit record | `weft/store/commit/v1` |
@@ -141,7 +141,9 @@ A reader MUST reject:
 
 Global mode rules:
 
-- `RAW`: `body_len == decoded_len`; `chunk_count == 0`.
+- `RAW`: `body_len == decoded_len`. Without `CHUNKED`, `chunk_count == 0`;
+  with `CHUNKED`, chunks are literal byte ranges and the chunk table rules of
+  §6 apply.
 - `ZSTD`: `chunk_count == 0` unless `CHUNKED`; `dep_count == 0` unless chunk
   dictionaries are used (not v1).
 - `REFERENCE`: `body_len == 0`, `dep_count == 1`, `chunk_count == 0`;

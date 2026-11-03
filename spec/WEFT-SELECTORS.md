@@ -26,8 +26,9 @@ primary    := "(" expr ")"
             | "true"
             | "false"
             | "has" "(" field ")"
-            | "tag" "(" string ")"
-            | "relation" "(" string "," object_ref ")"
+            | "tag" "(" name ")"
+            | "relation" "(" name "," object_ref ")"
+name       := string | IDENT
             | comparison
 comparison := field cmp literal
 cmp        := "==" | "!=" | "<=" | ">=" | "<" | ">"
@@ -42,8 +43,10 @@ literal    := string | int | "true" | "false" | "null"
 - `IDENT` is ASCII `[A-Za-z_][A-Za-z0-9_]*`; field paths join segments with `.`
   and are limited to 16 segments.
 - `HEX64` is exactly 64 ASCII hex digits (`0-9a-fA-F`, normalized to lowercase).
-- Integer literals are decimal without sign (sign is a parse error); range
-  `0..=2^64-1` for non-negative and `-1..=-(2^63)` when a leading `-` is used.
+- Integer literals are decimal digits with an optional leading `-` that must
+  be immediately followed by digits. Non-negative values are in `0..=2^64-1`
+  and encode as WCB `u64`; negative values are in `-1..=-(2^63)` and encode as
+  WCB `i64`. A `-` anywhere else is a parse error; `-0` normalizes to `u64` 0.
 - Whitespace (space, tab, LF, CR) is insignificant between tokens. Comments are
   not part of v1.
 - Input length is bounded (default 64 KiB) and nesting depth is bounded
@@ -234,9 +237,11 @@ Canonical WCB (pseudo, not literal bytes):
  "schema":"weft.selector.v1"}
 ```
 
-The map is then encoded with WCB's encoded-key ordering, so `namespace`,
-`order`, `predicate`, `limit`, `schema` appear in encoded-key order, not the
-order above. Golden bytes live in `conformance/v1/selectors/`.
+The map is then encoded with WCB's encoded-key ordering (§8.2 of
+`WEFTCODEC-FORMAT.md`): keys sort by their **full encoded bytes**, which means
+shorter encoded key strings sort before longer ones, and byte-wise comparison
+breaks ties. The order shown above is illustrative, not the wire order.
+Golden bytes live in `conformance/v1/selectors/`.
 
 ---
 
