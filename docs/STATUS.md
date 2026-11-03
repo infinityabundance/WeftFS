@@ -215,7 +215,10 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - **Not claimed:** io_uring, EKBLOOM, or any acceleration. Time travel is
   correctness-only. The SHA-256 value in the demos is a declared attribute and
   a byte-identity check; the normative content root is the store's BLAKE3
-  ContentId, which `verify --full` re-checks.
+  ContentId, which `verify --full` re-checks. Each receipt records its exact
+  revisions: the context-mount, ambiguity, and time-travel runs used WeftFS
+  `f3d1bc1` / WeftFS-Go `acf6df6`; the replay run used WeftFS `bcedd26` /
+  WeftFS-Go `7693ad4` (the replay-verifier path fix).
 
 ### Twelve-step showcase — implemented, all twelve pass
 

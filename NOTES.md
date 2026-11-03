@@ -233,9 +233,12 @@ scripts/docker-court.sh fuse "bash scripts/demo-replay-bundle.sh"
      sha256 940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2.
 ```
 
-The receipts record WeftFS `f3d1bc1` and WeftFS-Go `acf6df6`. The Context-mount
-demo was run twice and compared with `scripts/showcase/democmp.go`:
-`bench/receipts/context-mounts-determinism.txt` says `semantic_match=true`.
+The context-mount, ambiguity, and time-travel receipts record WeftFS
+`f3d1bc1` and WeftFS-Go `acf6df6`; the replay-bundle receipt records WeftFS
+`bcedd26` and WeftFS-Go `7693ad4` (the replay-verifier path fix). The
+Context-mount demo was run twice and compared with
+`scripts/showcase/democmp.go`: `bench/receipts/context-mounts-determinism.txt`
+says `semantic_match=true`.
 
 ## 7. Remaining F3 gaps
 
