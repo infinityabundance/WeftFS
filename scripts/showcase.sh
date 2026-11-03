@@ -1025,8 +1025,8 @@ run_ok dec12-raw "$CODEC" decode --input "$FIX/rev2.raw.wft" --output "$STEP_DIR
 assert_file_eq "final raw decode self-check" "$STEP_DIR/final-check.dec" "$FIX/rev2.bin"
 {
   printf 'schema=weftfs.showcase.receipt/1\n'
-  printf 'receipt=%s\n' "$(rel "$RECEIPT")"
-  printf 'raw_log=%s\n' "$(rel "$LOG")"
+  printf 'receipt_dir=%s\n' "$(rel "$RECEIPTS")"
+  printf 'raw_log_dir=%s\n' "$(rel "$RECEIPTS")"
   printf 'fixed_timestamp_ns=%s\n' "$TS"
   printf 'steps=12\n'
 } > "$STEP_DIR/bundle.txt"
