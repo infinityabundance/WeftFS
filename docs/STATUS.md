@@ -23,10 +23,10 @@ The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens
 byte-identical in both directions). The F7 final receipt is
 `bench/receipts/ai-corpus-20261103T220113Z.json` with cost graph JSON/CSV beside
 it; analysis, losses, and caveats are in `bench/RESULTS-ai-v1.md`.
-The F9 TLA+ receipt is `bench/receipts/tla-20261103T223957Z.json` (corrected
+The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
-`bench/receipts/powerloss-20261103T224003Z.json` (30/30, `cache=none`) and
-`bench/receipts/powerloss-20261103T224205Z.json` (10/10, `cache=writeback`).
+`bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`) and
+`bench/receipts/powerloss-20261103T224652Z.json` (10/10, `cache=writeback`).
 The abstraction mapping, assumptions, and limitations are in
 `verification/README.md`.
 
@@ -34,7 +34,7 @@ The abstraction mapping, assumptions, and limitations are in
 
 | Repo | F9 revision | Role |
 |---|---|---|
-| `WeftFS` | `12acedd` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftFS` | `b3e2ecc` | program home, Rust store + FUSE, specs, ADRs, courts |
 | `WeftCodec` | `ab50e8b` | Rust codec v1 |
 | `WeftCodec-Go` | `ce2cff9` | independent Go codec |
 | `WeftFS-Go` | `209e4c3` | independent Go store + FUSE |
@@ -433,7 +433,7 @@ and replay. TLC 1.7.4 (jar pinned by sha256
 `TypeOK`, `NoPartial`, `HighestValid`, `NoLostDependency`, `Durability`,
 `ReturnedObjectsDurable`, and `ReplayIdempotent` at `MaxGen=8`: 615 states
 generated, 591 distinct, search depth 68, no error. Receipt
-`bench/receipts/tla-20261103T223957Z.json`.
+`bench/receipts/tla-20261103T224446Z.json`.
 
 `verification/tla/WeftCommitBuggy.tla` is deliberately flawed: recovery trusts
 the highest commit file, ignoring superblock visibility and CRC validation.
@@ -453,12 +453,12 @@ the file. The host asserts identical generation and snapshot root, exact
 expected content, and that every returned commit survived. A never-fsynced
 control file on the data disk distinguishes this from a process abort.
 
-Published primary run (`cache=none`, KVM): 30/30 pass, 26 old states, 4 new
+Published primary run (`cache=none`, KVM): 30/30 pass, 28 old states, 2 new
 states, 0 partial, 0 durability failures, 0 Rust/Go disagreements, 1 accepted
 documented unpublished tail, unsynced-control loss 30/30. Receipt
-`bench/receipts/powerloss-20261103T224003Z.json`. Secondary writeback run:
-10/10 pass, 2 accepted unpublished tails, control loss 10/10; receipt
-`bench/receipts/powerloss-20261103T224205Z.json`. The acceptance predicate
+`bench/receipts/powerloss-20261103T224453Z.json`. Secondary writeback run:
+10/10 pass, 0 unpublished tails, control loss 10/10; receipt
+`bench/receipts/powerloss-20261103T224652Z.json`. The acceptance predicate
 allows only the documented `above the highest published superblock generation`
 note or an unparseable commit file strictly above the recovered generation;
 all other verifier problems fail the iteration.

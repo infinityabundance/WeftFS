@@ -259,7 +259,7 @@ Commands:
 scripts/run_tla.sh
 ```
 
-Current evidence: `bench/receipts/tla-20261103T223957Z.json` — corrected model
+Current evidence: `bench/receipts/tla-20261103T224446Z.json` — corrected model
 `MaxGen=8`, 615 states generated, 591 distinct, depth 68, pass; flawed model
 `MaxGen=3`, `NoPartial` counterexample. The pinned tool is TLC 1.7.4
 `tla2tools.jar` sha256
@@ -311,12 +311,11 @@ scripts/powerloss_court.sh
 scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=none bash scripts/powerloss_court.sh"
 ```
 
-Published evidence: `bench/receipts/powerloss-20261103T224003Z.json` — 30/30
-pass, 26 old + 4 new, 0 partial, 0 durability failures, 0 Rust/Go
+Published evidence: `bench/receipts/powerloss-20261103T224453Z.json` — 30/30
+pass, 28 old + 2 new, 0 partial, 0 durability failures, 0 Rust/Go
 disagreements, 1 accepted unpublished tail, control loss 30/30, KVM,
-`cache=none`. Secondary: `bench/receipts/powerloss-20261103T224205Z.json` —
-10/10 pass, `cache=writeback`, 2 accepted unpublished tails, control loss
-10/10.
+`cache=none`. Secondary: `bench/receipts/powerloss-20261103T224652Z.json` —
+10/10 pass, `cache=writeback`, 0 unpublished tails, control loss 10/10.
 
 Explicitly **not** claimed: physical media power loss, real device write-cache
 loss, host page-cache loss, an fsync that lies to the guest, or a 10,000-
