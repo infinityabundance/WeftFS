@@ -186,6 +186,11 @@ jq -n \
       }
     },
     evidence: {log: $log, log_sha256: $log_sha},
+    commands: {
+      court: "scripts/docker-court.sh tla \"bash scripts/run_tla.sh\"",
+      corrected: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommit.cfg WeftCommit",
+      flawed: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommitBuggy.cfg WeftCommitBuggy"
+    },
     scope: {
       model_checked: "bounded TLC run of the abstract state machine only",
       not_checked: "Rust/Go code refinement, checkpoints, GC, capabilities, physical media"

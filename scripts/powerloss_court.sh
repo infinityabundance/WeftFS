@@ -515,6 +515,9 @@ LOG_SHA="$(sha256sum "$LOG" | cut -d' ' -f1)"
 REV_WEFTFS="${WEFT_REPO_WEFTFS:-unknown}"
 REV_GO="${WEFT_REPO_WEFTFS_GO:-unknown}"
 QEMU_CMD="qemu-system-x86_64 -accel $ACCEL -cpu $([[ "$ACCEL" == kvm ]] && echo host || echo max) -smp 1 -m ${GUEST_MEM_MB}M -kernel $KERNEL -initrd $INITRD -append 'root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=<write|verify> weft.iters=100000' -drive file=$ROOT_IMG,if=virtio,format=raw,readonly=on -drive file=$DATA_QCOW2,if=virtio,format=qcow2,cache=$CACHE_MODE -display none -vga none -no-user-config -nodefaults -no-reboot -serial stdio -monitor none"
+COURT_CMD="scripts/docker-court.sh vm \"POWERLOSS_ITERATIONS=$ITERS POWERLOSS_SEED=$SEED POWERLOSS_CACHE_MODE=$CACHE_MODE bash scripts/powerloss_court.sh\""
+GUEST_WRITE_CMD="weftfs --store /data/store init --chunk-size 65536 --checkpoint-interval 5 --gc-grace-secs 0; weftfs --store /data/store create /f --file /tmp/base --seed powerloss-base; loop: weftfs --store /data/store --json write /f --offset 0 --file /tmp/payload"
+GUEST_VERIFY_CMD="weftfs --store /data/store --json info; weftfs --store /data/store --json verify --full; weftfs --store /data/store cat /f; go-weftfs --store /data/store --json info; go-weftfs --store /data/store --json verify --full; go-weftfs --store /data/store cat /f"
 
 jq -n \
   --arg schema "weftfs.powerloss.receipt/1" \
@@ -529,6 +532,9 @@ jq -n \
   --arg kernel "$KERNEL_REL" \
   --arg initrd "$(basename "$INITRD")" \
   --arg qemu_cmd "$QEMU_CMD" \
+  --arg court_cmd "$COURT_CMD" \
+  --arg guest_write_cmd "$GUEST_WRITE_CMD" \
+  --arg guest_verify_cmd "$GUEST_VERIFY_CMD" \
   --arg court "${WEFT_COURT_IMAGE:-unknown}" \
   --arg image_id "${WEFT_COURT_IMAGE_ID:-unknown}" \
   --arg host_kernel "$(uname -a)" \
@@ -594,6 +600,13 @@ jq -n \
     iterations: $iterations,
     summary: $summary,
     evidence: {raw_log: $log, raw_log_sha256: $log_sha},
+    commands: {
+      court: $court_cmd,
+      harness: "bash scripts/powerloss_court.sh",
+      guest_write: $guest_write_cmd,
+      guest_verify: $guest_verify_cmd,
+      qemu: $qemu_cmd
+    },
     scope: {
       asserted: "for every completed iteration, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean",
       not_asserted: [
