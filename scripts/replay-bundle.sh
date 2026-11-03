@@ -37,12 +37,7 @@ if [ ! -f "$BUNDLE" ]; then
 fi
 
 BIN="${WEFTFS_BIN:-$ROOT/.docker-cache/f3-demos/bin/go-weftfs}"
-VERIFIER=""
-if [ -n "${WEFT_REPLAY_VERIFIER:-}" ]; then
-  VERIFIER="$WEFT_REPLAY_VERIFIER"
-else
-  VERIFIER="$OUT/../replay-verify-$$"
-fi
+VERIFIER="${WEFT_REPLAY_VERIFIER:-$ROOT/.docker-cache/f3-demos/bin/replay-verify}"
 if [ ! -x "$BIN" ]; then
   echo "replay: building the independent Go frontend" >&2
   mkdir -p "$(dirname "$BIN")"
@@ -69,6 +64,7 @@ while IFS=$'\t' read -r name context_root_id snapshot_id selector_id; do
 done < "$OUT/contexts.tsv"
 
 echo "== go manifest verification =="
+mkdir -p "$(dirname "$VERIFIER")"
 ( cd /tmp && GO111MODULE=off go build -o "$VERIFIER" "$ROOT/scripts/replay/verify_manifest.go" )
 "$VERIFIER" "$OUT" "$OUT/materialized" | tee "$OUT/go-manifest-verification.json"
 grep -q '"ok": true' "$OUT/go-manifest-verification.json"
