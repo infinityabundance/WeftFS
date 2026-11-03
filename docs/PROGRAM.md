@@ -28,8 +28,8 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | partial (synthetic near-dup) |
-| C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | not started |
+| C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — `bench/receipts/ai-corpus-20261103T220113Z.json`; no Meta/production data; relation-conditioned physical bytes 176,564 vs forced-zstd 575,808 on ai-v1 |
+| C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | **implemented** — cost graph JSON/CSV beside the receipt; analysis and every loss in `bench/RESULTS-ai-v1.md` |
 | C3 | POSIX matrix results with reproducible commands | B4 | partial |
 
 ## D. Hooks
@@ -46,7 +46,7 @@ evidence.
 |---|---|---|---|
 | E1 | Context Root as primary public identity; `weft://` URI is the address; paths are a compatibility projection | — | not started |
 | E2 | Native causal closure; derived identity modes `bytes_only` vs `causal_exact`; minimal sufficient closure queries | E1 | not started |
-| E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | specified only after `spec/WEFT-AI-CODEC.md` exists |
+| E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian) and `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128) implemented and cross-language; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §4) |
 | E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | partial (uid/gid + ACL) |
 | E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | not started |
 | E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | partial |
@@ -70,8 +70,12 @@ evidence.
    B2 is 1,000 process-fault iterations, not physical power loss, and 10,000
    was not run.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
-   mode + semantic delta, cross-language; no mode without vectors. (E3)
-8. **F7 — AI corpus + cost graph:** C1/C2, real measurements with losses. (E3, C)
+   mode, cross-language, vectors for every implemented mode. **Implemented**
+   (2026-11-03): `TENSOR` (6) and `TOKEN_SEQUENCE` (7); semantic delta and all
+   other brainstormed modes are `specified, not implemented` with no wire value.
+8. **F7 — AI corpus + cost graph:** C1/C2, real measurements with losses.
+   **Implemented** (2026-11-03) on a committed synthetic corpus; results and
+   caveats in `bench/RESULTS-ai-v1.md`. (E3, C)
 9. **F8 — Hooks:** Buck2 CAS adapter, agent memory example, generated types and
    drift CI. (D1–D3, E7)
 10. **F9 — Formal guarantees:** TLA+/Alloy or exhaustive bounded + machine

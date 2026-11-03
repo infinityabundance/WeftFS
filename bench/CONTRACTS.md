@@ -117,6 +117,20 @@ First benchmark pass (2026-11-03):
 - `bench/RESULTS-v1.md` — tables, scoped analysis, every published loss, and
   the explicit gaps.
 
+F7 AI-corpus pass (2026-11-03):
+
+- Synthetic corpus `bench/corpora/ai-v1/` (60 files, CC0-1.0, deterministic
+  generator, per-file SHA-256 manifest, no downloaded or production data).
+- `bench/receipts/ai-corpus-20261103T220113Z.json` — forced zstd, content-defined
+  dedup + zstd, WeftCodec `auto`, and relation-conditioned
+  DELTA/DICTIONARY/auto, with whole-object accounting, cold dependency-DAG
+  latency, dependency depth, and every loss.
+- Cost graph JSON/CSV beside the receipt; analysis and caveats in
+  `bench/RESULTS-ai-v1.md`. The typed TENSOR/TOKENS modes were evaluated for all
+  20 typed objects and chosen 0 times; that loss is published, not hidden.
+- Not measured: external SQLite/graph/ext4/XFS AI-corpus baselines, trained
+  zstd dictionaries, or 10^4–10^6-object scaling.
+
 Still not measured: external SQLite/graph-store baselines, ext4/XFS/Btrfs/ZFS
 baselines, physical power loss, energy, cold-cache and direct-I/O filesystem
 runs, metadata storms, concurrency sweeps, and a matched Go/Rust codec court.

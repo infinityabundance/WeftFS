@@ -1,9 +1,11 @@
 # Implementation status — 2026-11-03
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. The verification receipt is
-`bench/receipts/verify-20261103T172416Z.json` (all nine courts `pass`).
-The earlier `verify-20261103T165944Z` receipt is retained as history. The
+implemented, tested, ignored, and not done. The current verification receipt is
+`bench/receipts/verify-20261103T220311Z.json` (all fourteen courts `pass`,
+including F6 tensor/tokens cross-decode and spec drift). Earlier
+`verify-20261103T172416Z` and `verify-20261103T165944Z` receipts are retained as
+history. The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
 The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
@@ -17,15 +19,19 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4), each with its raw
 `.log` and `.results.tsv`; the determinism comparison is
 `bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
+The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens
+byte-identical in both directions). The F7 final receipt is
+`bench/receipts/ai-corpus-20261103T220113Z.json` with cost graph JSON/CSV beside
+it; analysis, losses, and caveats are in `bench/RESULTS-ai-v1.md`.
 
 ## 1. Repositories and revisions
 
-| Repo | F3 revision | Role |
+| Repo | F6/F7 revision | Role |
 |---|---|---|
-| `WeftFS` | `74c136e` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `6571308` | Rust codec v1 |
-| `WeftCodec-Go` | `83c2b6a` | independent Go codec |
-| `WeftFS-Go` | `7693ad4` | independent Go store + FUSE |
+| `WeftFS` | `91409dd` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `c632aa1` | Rust codec v1 |
+| `WeftCodec-Go` | `6778f65` | independent Go codec |
+| `WeftFS-Go` | `73a6719` | independent Go store + FUSE |
 
 All work is on `staging`. `main` holds the P0 foundation only. The research
 directory and `AGENTS.md` are gitignored, per operator directive.
@@ -38,23 +44,64 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   and trailing CRC32C, checked lengths, reserved-bit rejection.
 - Domain-separated BLAKE3, minimal LEB128, canonical WCB with encoded-key map
   ordering and non-canonical rejection.
-- RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED; chunked RAW/ZSTD;
-  `read_range` decodes only intersecting chunks.
+- RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR, TOKEN_SEQUENCE;
+  chunked RAW/ZSTD; `read_range` decodes only intersecting chunks.
 - Resolver + frame-DAG decoding with cycle detection and depth/fetch/decoded
   bounds; WFA1 self-contained archives.
 - WeftQL parser, normalization, canonical selector bytes, SelectorId.
 - CLI (`encode`, `decode`, `inspect --json`, `verify`, `archive`, `selector`,
-  `conformance`).
-- **87 tests pass** in the Rust court. Frozen vectors: 29 codec, 20 WCB,
-  22 selector.
+  `conformance`), including `--mode tensor` and `--mode tokens`.
+- **110 tests pass** in the Rust court. Frozen vectors: 49 codec (including 20
+  AI-mode valid/reject vectors), 20 WCB, 22 selector, 16 context, 10 causal,
+  and 36 adversarial.
 
 ### WeftCodec-Go — implemented, independent
 
 - Native Go implementation of the same v1 bytes (no cgo, no Rust calls).
-- **44 tests pass**, including Rust-vector replay and malformed-input classes.
+- **57 top-level tests pass**, including Rust-vector replay and malformed-input
+  classes; `go vet` and a CGO-disabled build pass.
 - Cross-language gates pass in both directions for RAW, ZSTD, REFERENCE, DELTA,
-  DICTIONARY, chunked, and STRUCTURED. RAW/REFERENCE/DELTA/STRUCTURED frames are
-  byte-identical; ZSTD/DICTIONARY are decode-equivalent by spec.
+  DICTIONARY, chunked, STRUCTURED, TENSOR, and TOKENS. RAW/REFERENCE/DELTA/
+  STRUCTURED/TENSOR/TOKENS frames are byte-identical; ZSTD/DICTIONARY are
+  decode-equivalent by spec.
+
+### F6 — AI codec modes (implemented)
+
+- `TENSOR` (mode 6): exact little-endian row-major payload plus a canonical WCB
+  descriptor (`weft.tensor.v1`) carrying dtype, shape, layout, endianness,
+  element count, payload bytes, and a `weft/tensor/payload/v1` hash binding.
+  Supported dtypes: `f16`, `bf16`, `f32`, `f64`, `i8`, `u8`, `i16`, `i32`,
+  `i64`. Checked shape arithmetic; scalar and zero-element tensors; rank ≤ 8.
+- `TOKEN_SEQUENCE` (mode 7): canonical WCB descriptor (`weft.tokens.v1`) and a
+  deterministic `u64-zigzag-delta-leb128` payload: first id absolute, later ids
+  wrapping 64-bit signed zigzag deltas, minimal LEB128, exact count and
+  trailing-byte checks.
+- Both modes: `decoded_len` is the payload length and `content_hash` is
+  `H(weft/chunk/v1, payload)`; the descriptor binds the payload under its own
+  domain. Frame `domain=0`, no dependencies, no chunks.
+- **Not implemented and not allocated a wire value:** blocked/column-major/
+  sharded/quantized layouts, activation/gradient streams, embedding/KV-cache
+  pages, attention masks, vocabulary-artifact binding, weight-delta descriptors,
+  and semantic/structured deltas. They are `specified, not implemented` in
+  `spec/WEFT-AI-CODEC.md` §4.
+- Cross-language: Rust→Go and Go→Rust decode gates pass; TENSOR and TOKENS
+  frames are byte-identical. Historical `017_unknown_mode` (mode 6 reserved) is
+  retained byte-for-byte and marked superseded by mode 8's reject vector.
+
+### F7 — AI corpus and cost graph (implemented, synthetic)
+
+- Committed deterministic corpus `bench/corpora/ai-v1/`: 60 files, 1,939,911
+  source bytes, 1,516,737 visible bytes; prompts, JSON/text tool outputs,
+  near-duplicate agent intermediates, 12 typed tensors, 8 token sequences, and
+  near-duplicate checkpoint-like blobs. License CC0-1.0, synthetic provenance,
+  per-file SHA-256 manifest.
+- Receipt `bench/receipts/ai-corpus-20261103T220113Z.json` + cost graph JSON/CSV
+  beside it. Analysis, every loss, and caveats in `bench/RESULTS-ai-v1.md`.
+- Measured physical bytes: `zstd_forced` 575,808; `weft_auto` 575,713;
+  `cdc_zstd` 603,094 (+4.74%); `weft_context` 176,564 (−69.34% vs forced zstd).
+  COLD chain p95 269,625 ns vs 30,126 ns for `weft_auto`. Typed TENSOR/TOKENS
+  modes were evaluated for all 20 typed objects and chosen 0 times; descriptor
+  overhead 272–288 bytes. No superiority claim.
 
 ### WeftFS (Rust) — implemented core + FUSE (with documented limitations)
 
