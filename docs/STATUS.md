@@ -16,10 +16,10 @@ gaps are in `bench/RESULTS-v1.md`. The F2 receipt is
 
 | Repo | Staging HEAD | Role |
 |---|---|---|
-| `WeftFS` | `92754d1` (+ this receipt commit) | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftFS` | `7917b80` | program home, Rust store + FUSE, specs, ADRs, courts |
 | `WeftCodec` | `6571308` | Rust codec v1 |
 | `WeftCodec-Go` | `83c2b6a` | independent Go codec |
-| `WeftFS-Go` | `ac0b409` | independent Go store + FUSE |
+| `WeftFS-Go` | `46c4405` | independent Go store + FUSE |
 
 All work is on `staging`. `main` holds the P0 foundation only. The research
 directory and `AGENTS.md` are gitignored, per operator directive.
