@@ -457,6 +457,24 @@ No sample was deleted. The two receipts remain in `bench/receipts/`.
   rejects unknown court kinds and cannot disable the memory/swap/pids/CPU
   limits.
 
+## 9.1 Independent rerun (separate agent run, same court)
+
+A second full pass was executed after the first receipts were committed:
+
+| Harness | New receipt | Medians compared | Median abs delta | Max abs delta |
+|---|---|---:|---:|---:|
+| Codec | `bench-codec-20261103T181634Z.json` | 162 | 2.0% | 26.6% |
+| Store | `bench-store-20261103T181706Z.json` | 33 | 1.4% | 46.2% |
+| Filesystem | `bench-fs-20261103T182520Z.json` | 75 | 0.9% | 100.0% (sub-ms tmpfs p50) |
+
+The codec and store medians reproduced closely. The largest store delta was a
+small-value relation-query/ingest measurement; the filesystem max delta is on a
+sub-millisecond tmpfs p50 where absolute noise is tens of microseconds. The
+rerun does not change the conclusions in §7: the context-conditioned modes lose
+on whole-pair accounting for the isolated near-duplicate corpus, relation
+queries are linear, and whole-file rewrite limits random-write IOPS. All three
+new receipts and logs are committed alongside the originals.
+
 ## 10. What is not claimed
 
 Nothing here is a general speedup claim, an operational-readiness statement,

@@ -1,0 +1,1115 @@
++ trap cleanup EXIT
+++ uname -r
++ log 'fs bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3'
++ printf '%s\n' 'fs bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3'
+fs bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3
++ fio --version
+++ uname -a
++ echo 'uname=Linux 9deb9a3ac44b 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux'
+++ nproc
++ echo nproc=16
+++ awk '-F: ' '/model name/ {print $2; exit}' /proc/cpuinfo
++ echo 'cpu=AMD Ryzen 7 9800X3D 8-Core Processor'
+++ awk '/MemTotal/ {print $2\" kB\"; exit}' /proc/meminfo
+awk: 1: unexpected character '\'
+awk: line 1: runaway string constant " kB\"; exi ...
++ echo memory=
++ echo court_image=weft/bench-court:1
++ echo court_image_id=sha256:165bafbe79ff54a41fae8db8b524a3183956e3e43e3211d01823680bba1403cd
++ echo court_memory=3g
++ echo court_cpus=4
++ echo court_pids=1024
++ echo docker_client=29.1.5
++ echo docker_server=29.9.2
++ echo revision_weftfs=16ab90475a7015dbeec0ffaf70fee4ad4514b103
++ echo revision_weftfs_go=09abca73a1a60a43423c116c40b2eea6ce6f776c
++ echo revision_weftcodec=a60d9f55bc38e209c6e0cbef2e04ac7b9eb7d1fe
++ echo revision_weftcodec_go=b2beeab4b0da0401006984214dcfd6602be795a5
++ record_cmd 'cargo build --release --features fuse --bin weftfs --example bench_fs_receipt'
++ printf '%s\n' 'cargo build --release --features fuse --bin weftfs --example bench_fs_receipt'
++ cargo build --release --features fuse --bin weftfs --example bench_fs_receipt
+    Finished `release` profile [optimized] target(s) in 0.01s
++ TARGET=/work/.docker-cache/target-rust/release
++ RUSTFS=/work/.docker-cache/target-rust/release/weftfs
++ RECEIPTGEN=/work/.docker-cache/target-rust/release/examples/bench_fs_receipt
++ '[' -x /work/.docker-cache/target-rust/release/weftfs ']'
++ '[' -x /work/.docker-cache/target-rust/release/examples/bench_fs_receipt ']'
++ record_cmd '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fsbench/bin/go-weftfs ./cmd/weftfs)'
++ printf '%s\n' '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fsbench/bin/go-weftfs ./cmd/weftfs)'
++ GO_STATUS=ok
++ GOFS=/work/.docker-cache/fsbench/bin/go-weftfs
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 init'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 init'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fsbench/rust-store /mnt/weft-fuse/rust rust --foreground
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fsbench/rust-store mnt=/mnt/weft-fuse/rust name=rust extra=--foreground
++ mkdir -p /mnt/weft-fuse/rust
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/rust --foreground'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/rust --foreground'
++ '[' -n --foreground ']'
++ local pid=1616
++ MOUNT_PIDS+=("$pid")
++ local tries=0
++ mountpoint -q /mnt/weft-fuse/rust
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fsbench/rust-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/rust --foreground
++ kill -0 1616
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /mnt/weft-fuse/rust
++ sleep 0.2
++ return 0
++ echo target=rust
++ echo store=/work/.docker-cache/fsbench/rust-store
++ echo mountpoint=/mnt/weft-fuse/rust
++ findmnt -T /mnt/weft-fuse/rust -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /mnt/weft-fuse/rust ' /proc/self/mountinfo
++ GO_MNT_ACTIVE=0
++ '[' ok = ok ']'
++ /work/.docker-cache/fsbench/bin/go-weftfs --store /work/.docker-cache/fsbench/go-store --fixed-timestamp-ns 1767225600000000000 init
++ start_mount /work/.docker-cache/fsbench/bin/go-weftfs /work/.docker-cache/fsbench/go-store /mnt/weft-fuse/go go
++ local cli=/work/.docker-cache/fsbench/bin/go-weftfs store=/work/.docker-cache/fsbench/go-store mnt=/mnt/weft-fuse/go name=go extra=
++ mkdir -p /mnt/weft-fuse/go
++ record_cmd '/work/.docker-cache/fsbench/bin/go-weftfs --store /work/.docker-cache/fsbench/go-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/go '
++ printf '%s\n' '/work/.docker-cache/fsbench/bin/go-weftfs --store /work/.docker-cache/fsbench/go-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/go '
++ '[' -n '' ']'
++ local pid=1632
++ MOUNT_PIDS+=("$pid")
++ local tries=0
++ mountpoint -q /mnt/weft-fuse/go
++ /work/.docker-cache/fsbench/bin/go-weftfs --store /work/.docker-cache/fsbench/go-store --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /mnt/weft-fuse/go
++ kill -0 1632
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /mnt/weft-fuse/go
++ sleep 0.2
++ return 0
++ GO_MNT_ACTIVE=1
++ '[' 1 = 1 ']'
++ echo target=go
++ echo store=/work/.docker-cache/fsbench/go-store
++ echo mountpoint=/mnt/weft-fuse/go
++ findmnt -T /mnt/weft-fuse/go -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /mnt/weft-fuse/go ' /proc/self/mountinfo
++ printf 'go_status=%s\n' ok
++ echo target=tmpfs
++ echo mountpoint=/mnt/weft-bench/tmpfs-ref
++ findmnt -T /mnt/weft-bench/tmpfs-ref -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ WORKLOADS=(seq-write-1m seq-read-1m rand-read-4k rand-write-4k fsync-write-4k)
+++ seq 1 3
++ for rep in $(seq 1 "$REPS")
++ reset_target /mnt/weft-fuse/rust
++ local dir=/mnt/weft-fuse/rust
++ rm -f /mnt/weft-fuse/rust/seqw.dat /mnt/weft-fuse/rust/randw.dat /mnt/weft-fuse/rust/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/rust/read8m.dat bs=1M count=8 conv=fsync status=none
++ reset_target /mnt/weft-bench/tmpfs-ref
++ local dir=/mnt/weft-bench/tmpfs-ref
++ rm -f /mnt/weft-bench/tmpfs-ref/seqw.dat /mnt/weft-bench/tmpfs-ref/randw.dat /mnt/weft-bench/tmpfs-ref/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-bench/tmpfs-ref/read8m.dat bs=1M count=8 conv=fsync status=none
++ '[' 1 = 1 ']'
++ reset_target /mnt/weft-fuse/go
++ local dir=/mnt/weft-fuse/go
++ rm -f /mnt/weft-fuse/go/seqw.dat /mnt/weft-fuse/go/randw.dat /mnt/weft-fuse/go/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/go/read8m.dat bs=1M count=8 conv=fsync status=none
++ workload_index=0
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-write-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json
++ run_fio go /mnt/weft-fuse/go seq-write-1m /work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-write-1m--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json
++ run_fio rust /mnt/weft-fuse/rust seq-write-1m /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r1.json ']'
++ workload_index=1
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json
++ run_fio rust /mnt/weft-fuse/rust seq-read-1m /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json
++ run_fio go /mnt/weft-fuse/go seq-read-1m /work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-read-1m--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-read-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r1.json ']'
++ workload_index=2
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-read-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json
++ run_fio go /mnt/weft-fuse/go rand-read-4k /work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-read-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json
++ run_fio rust /mnt/weft-fuse/rust rand-read-4k /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r1.json ']'
++ workload_index=3
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json
++ run_fio rust /mnt/weft-fuse/rust rand-write-4k /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json
++ run_fio go /mnt/weft-fuse/go rand-write-4k /work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-write-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-write-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r1.json ']'
++ workload_index=4
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref fsync-write-4k /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json
++ run_fio go /mnt/weft-fuse/go fsync-write-4k /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json
++ local target=go dir=/mnt/weft-fuse/go workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r1.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json
++ run_fio rust /mnt/weft-fuse/rust fsync-write-4k /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r1.json ']'
++ workload_index=5
++ log 'fs bench: repetition 1/3 complete'
++ printf '%s\n' 'fs bench: repetition 1/3 complete'
+fs bench: repetition 1/3 complete
++ for rep in $(seq 1 "$REPS")
++ reset_target /mnt/weft-fuse/rust
++ local dir=/mnt/weft-fuse/rust
++ rm -f /mnt/weft-fuse/rust/seqw.dat /mnt/weft-fuse/rust/randw.dat /mnt/weft-fuse/rust/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/rust/read8m.dat bs=1M count=8 conv=fsync status=none
++ reset_target /mnt/weft-bench/tmpfs-ref
++ local dir=/mnt/weft-bench/tmpfs-ref
++ rm -f /mnt/weft-bench/tmpfs-ref/seqw.dat /mnt/weft-bench/tmpfs-ref/randw.dat /mnt/weft-bench/tmpfs-ref/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-bench/tmpfs-ref/read8m.dat bs=1M count=8 conv=fsync status=none
++ '[' 1 = 1 ']'
++ reset_target /mnt/weft-fuse/go
++ local dir=/mnt/weft-fuse/go
++ rm -f /mnt/weft-fuse/go/seqw.dat /mnt/weft-fuse/go/randw.dat /mnt/weft-fuse/go/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/go/read8m.dat bs=1M count=8 conv=fsync status=none
++ workload_index=0
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json
++ run_fio rust /mnt/weft-fuse/rust seq-write-1m /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json
++ run_fio go /mnt/weft-fuse/go seq-write-1m /work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-write-1m--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-write-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r2.json ']'
++ workload_index=1
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-read-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json
++ run_fio go /mnt/weft-fuse/go seq-read-1m /work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-read-1m--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json
++ run_fio rust /mnt/weft-fuse/rust seq-read-1m /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r2.json ']'
++ workload_index=2
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json
++ run_fio rust /mnt/weft-fuse/rust rand-read-4k /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json
++ run_fio go /mnt/weft-fuse/go rand-read-4k /work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-read-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-read-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r2.json ']'
++ workload_index=3
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-write-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json
++ run_fio go /mnt/weft-fuse/go rand-write-4k /work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-write-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json
++ run_fio rust /mnt/weft-fuse/rust rand-write-4k /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r2.json ']'
++ workload_index=4
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json
++ run_fio rust /mnt/weft-fuse/rust fsync-write-4k /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json
++ run_fio go /mnt/weft-fuse/go fsync-write-4k /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json
++ local target=go dir=/mnt/weft-fuse/go workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r2.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref fsync-write-4k /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r2.json ']'
++ workload_index=5
++ log 'fs bench: repetition 2/3 complete'
++ printf '%s\n' 'fs bench: repetition 2/3 complete'
+fs bench: repetition 2/3 complete
++ for rep in $(seq 1 "$REPS")
++ reset_target /mnt/weft-fuse/rust
++ local dir=/mnt/weft-fuse/rust
++ rm -f /mnt/weft-fuse/rust/seqw.dat /mnt/weft-fuse/rust/randw.dat /mnt/weft-fuse/rust/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/rust/read8m.dat bs=1M count=8 conv=fsync status=none
++ reset_target /mnt/weft-bench/tmpfs-ref
++ local dir=/mnt/weft-bench/tmpfs-ref
++ rm -f /mnt/weft-bench/tmpfs-ref/seqw.dat /mnt/weft-bench/tmpfs-ref/randw.dat /mnt/weft-bench/tmpfs-ref/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-bench/tmpfs-ref/read8m.dat bs=1M count=8 conv=fsync status=none
++ '[' 1 = 1 ']'
++ reset_target /mnt/weft-fuse/go
++ local dir=/mnt/weft-fuse/go
++ rm -f /mnt/weft-fuse/go/seqw.dat /mnt/weft-fuse/go/randw.dat /mnt/weft-fuse/go/fsyncw.dat
++ dd if=/dev/zero of=/mnt/weft-fuse/go/read8m.dat bs=1M count=8 conv=fsync status=none
++ workload_index=0
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-write-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-write-1m--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json
++ run_fio go /mnt/weft-fuse/go seq-write-1m /work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/go --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-write-1m--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json
++ run_fio rust /mnt/weft-fuse/rust seq-write-1m /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-write-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=8M
++ file=seqw.dat
++ record_cmd 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-write-1m --directory=/mnt/weft-fuse/rust --filename=seqw.dat --rw=write --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-write-1m--r3.json ']'
++ workload_index=1
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json
++ run_fio rust /mnt/weft-fuse/rust seq-read-1m /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--seq-read-1m--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json
++ run_fio go /mnt/weft-fuse/go seq-read-1m /work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json
++ local target=go dir=/mnt/weft-fuse/go workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--seq-read-1m--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref seq-read-1m /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=seq-read-1m raw=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=read
++ bs=1M
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=seq-read-1m --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=read --bs=1M --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--seq-read-1m--r3.json ']'
++ workload_index=2
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-read-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-read-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json
++ run_fio go /mnt/weft-fuse/go rand-read-4k /work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/go --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-read-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json
++ run_fio rust /mnt/weft-fuse/rust rand-read-4k /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-read-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randread
++ bs=4k
++ size=8M
++ file=read8m.dat
++ record_cmd 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-read-4k --directory=/mnt/weft-fuse/rust --filename=read8m.dat --rw=randread --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-read-4k--r3.json ']'
++ workload_index=3
++ for workload in "${WORKLOADS[@]}"
++ '[' 0 -eq 0 ']'
++ order=(rust tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go tmpfs)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json
++ run_fio rust /mnt/weft-fuse/rust rand-write-4k /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/rust --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--rand-write-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json
++ run_fio go /mnt/weft-fuse/go rand-write-4k /work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json
++ local target=go dir=/mnt/weft-fuse/go workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-fuse/go --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--rand-write-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref rand-write-4k /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=rand-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=8M
++ file=randw.dat
++ record_cmd 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ printf '%s\n' 'fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99 '
++ fio --name=rand-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=randw.dat --rw=randwrite --bs=4k --size=8M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json --eta=never --percentile_list=50:95:99
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--rand-write-4k--r3.json ']'
++ workload_index=4
++ for workload in "${WORKLOADS[@]}"
++ '[' 1 -eq 0 ']'
++ order=(tmpfs rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs go rust)
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-bench/tmpfs-ref
++ raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json
++ run_fio tmpfs /mnt/weft-bench/tmpfs-ref fsync-write-4k /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-ref workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-bench/tmpfs-ref --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/tmpfs--fsync-write-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/go
++ raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json
++ run_fio go /mnt/weft-fuse/go fsync-write-4k /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json
++ local target=go dir=/mnt/weft-fuse/go workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/go --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/go--fsync-write-4k--r3.json ']'
++ for target in "${order[@]}"
++ case "$target" in
++ dir=/mnt/weft-fuse/rust
++ raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json
++ run_fio rust /mnt/weft-fuse/rust fsync-write-4k /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json
++ local target=rust dir=/mnt/weft-fuse/rust workload=fsync-write-4k raw=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json
++ local rw bs size file
++ fsync=()
++ local -a fsync
++ case "$workload" in
++ rw=write
++ bs=4k
++ size=1M
++ file=fsyncw.dat
++ fsync=(--fsync=1)
++ record_cmd 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ printf '%s\n' 'fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1'
++ fio --name=fsync-write-4k --directory=/mnt/weft-fuse/rust --filename=fsyncw.dat --rw=write --bs=4k --size=1M --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json --eta=never --percentile_list=50:95:99 --fsync=1
++ '[' '!' -s /work/.docker-cache/fsbench/raw/rust--fsync-write-4k--r3.json ']'
++ workload_index=5
++ log 'fs bench: repetition 3/3 complete'
++ printf '%s\n' 'fs bench: repetition 3/3 complete'
+fs bench: repetition 3/3 complete
++ /work/.docker-cache/target-rust/release/examples/bench_fs_receipt --raw-dir /work/.docker-cache/fsbench/raw --out /work/bench/receipts/bench-fs-20261103T182520Z.json
+wrote /work/bench/receipts/bench-fs-20261103T182520Z.json
++ for mnt in "$RUST_MNT" "$GO_MNT"
++ mountpoint -q /mnt/weft-fuse/rust
++ fusermount3 -u /mnt/weft-fuse/rust
++ for mnt in "$RUST_MNT" "$GO_MNT"
++ mountpoint -q /mnt/weft-fuse/go
++ fusermount3 -u /mnt/weft-fuse/go
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1616
++ wait 1616
++ true
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1632
++ true
++ wait 1632
++ echo 'fs receipt: /work/bench/receipts/bench-fs-20261103T182520Z.json'
+fs receipt: /work/bench/receipts/bench-fs-20261103T182520Z.json
++ echo 'raw log: /work/bench/receipts/bench-fs-20261103T182520Z.log'
+raw log: /work/bench/receipts/bench-fs-20261103T182520Z.log
++ sha256sum /work/bench/receipts/bench-fs-20261103T182520Z.json /work/bench/receipts/bench-fs-20261103T182520Z.log
+24f44a43223db81a35499a5ebc4f4f97cf07f53ead167cadecc255e09c2b9808  /work/bench/receipts/bench-fs-20261103T182520Z.json
+8467366d1acdbb11f96cc40c08cb17df11423fa8ab2af0f11d36745f7789c4d2  /work/bench/receipts/bench-fs-20261103T182520Z.log
++ cleanup
++ set +e
++ for mnt in "$RUST_MNT" "$GO_MNT"
++ mountpoint -q /mnt/weft-fuse/rust
++ for mnt in "$RUST_MNT" "$GO_MNT"
++ mountpoint -q /mnt/weft-fuse/go
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1616
++ true
++ wait 1616
++ true
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1632
++ true
++ wait 1632
++ for mnt in "$RUST_MNT" "$GO_MNT" "$TMPFS_REF"
++ mountpoint -q /mnt/weft-fuse/rust
++ mountpoint -q /mnt/weft-fuse/rust
++ find /mnt/weft-fuse/rust -mindepth 1 -delete
++ for mnt in "$RUST_MNT" "$GO_MNT" "$TMPFS_REF"
++ mountpoint -q /mnt/weft-fuse/go
++ mountpoint -q /mnt/weft-fuse/go
++ find /mnt/weft-fuse/go -mindepth 1 -delete
++ for mnt in "$RUST_MNT" "$GO_MNT" "$TMPFS_REF"
++ mountpoint -q /mnt/weft-bench/tmpfs-ref
++ mountpoint -q /mnt/weft-bench/tmpfs-ref
++ find /mnt/weft-bench/tmpfs-ref -mindepth 1 -delete
