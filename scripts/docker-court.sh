@@ -2,7 +2,11 @@
 # WeftFS OOM-protected Docker court.
 #
 # Usage:
-#   scripts/docker-court.sh <rust|go|fuse|bench> "<shell command>"
+#   scripts/docker-court.sh <rust|go|fuse|bench|tla|vm> "<shell command>"
+#
+# `tla` runs TLC only. `vm` additionally gets /dev/kvm when the host exposes
+# it (QEMU falls back to TCG inside the guest runner when it is absent); every
+# hard limit below is unchanged.
 #
 # Every container is hard-limited: memory == swap, pids, cpus, bounded /tmp,
 # no-new-privileges, and a unique name for deterministic cleanup.
@@ -19,8 +23,8 @@ shift
 cmd="$*"
 
 case "$kind" in
-  rust|go|fuse|bench) ;;
-  *) echo "unknown court '$kind' (expected rust|go|fuse|bench)" >&2; exit 64 ;;
+  rust|go|fuse|bench|tla|vm) ;;
+  *) echo "unknown court '$kind' (expected rust|go|fuse|bench|tla|vm)" >&2; exit 64 ;;
 esac
 
 # Hard limits. Environment override is allowed for *smaller* values only.
@@ -48,6 +52,7 @@ mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,go-tmp,target-r
 # The court runs as uid 0 with cap-drop=ALL (no CAP_DAC_OVERRIDE). Host-owned
 # cache directories must therefore be writable by any uid; source files are
 # never widened. This keeps all compiler/cache writes inside .docker-cache.
+mkdir -p "$cache_root"/{powerloss,tla}
 chmod -R a+rwX "$cache_root" 2>/dev/null || true
 # Receipts are written by the court (uid 0 with cap-drop=ALL, so no DAC
 # override). Make the receipts directory writable by any uid exactly like the
@@ -129,6 +134,15 @@ if [[ "$kind" == "fuse" || "$kind" == "bench" ]]; then
     --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev
     --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev
   )
+fi
+
+# Virtualisation court: KVM is the only addition. The QEMU power-loss runner
+# detects a missing/unusable /dev/kvm and records a TCG fallback in its receipt;
+# no host file is written by the guest except the court's own cache/receipts.
+if [[ "$kind" == "vm" ]]; then
+  if [[ -e /dev/kvm ]]; then
+    common+=(--device /dev/kvm)
+  fi
 fi
 
 # Bound in-container scratch and compiler concurrency as a second line of defense.

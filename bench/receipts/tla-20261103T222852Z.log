@@ -1,0 +1,210 @@
+== TLA court ==
+kernel: Linux 1fbb976a9269 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 x86_64 x86_64 GNU/Linux
+image: weft/tla-court:1 (sha256:d8bf98d41168b39de8a1fd8ccc027f864cb0273d74d07182d0d6b697331a86bf)
+limits: memory=3g swap=3g cpus=4 pids=1024
+java: Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+tla2tools: v1.7.4 sha256=936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+== TLC WeftCommit ==
+== TLC WeftCommitBuggy ==
+===== WeftCommit (corrected) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 128 and seed -2848576981371951178 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 54] (Linux 7.3.1-1-cachyos amd64, Eclipse Adoptium 17.0.20.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.O0Tbor/WeftCommit.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommit
+Starting... (2026-11-03 22:28:52)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-03 22:28:52.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.7E-16
+615 states generated, 591 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 68.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-03 22:28:52)
+
+===== WeftCommitBuggy (deliberately flawed) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 117 and seed -8592269534511733350 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 87] (Linux 7.3.1-1-cachyos amd64, Eclipse Adoptium 17.0.20.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.O0Tbor/WeftCommitBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommitBuggy
+Starting... (2026-11-03 22:28:53)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-03 22:28:53.
+Error: Invariant NoPartial is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>
+/\ phase = "objects"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>
+/\ phase = "objectsSynced"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>
+/\ phase = "commitWritten"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 6: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 2
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 7: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 1
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 8: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+State 9: <ReplayStep line 216, col 3 to line 225, col 76 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 2
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = TRUE
+/\ applied = {<<1, 1>>}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+32 states generated, 29 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-03 22:28:53)

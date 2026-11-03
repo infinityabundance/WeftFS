@@ -1,0 +1,78 @@
+{
+  "schema": "weftfs.tla.receipt/1",
+  "generated_at": "2026-11-03T22:28:53Z",
+  "run": {
+    "started_at": "2026-11-03T22:28:52Z",
+    "finished_at": "2026-11-03T22:28:53Z",
+    "duration_ms": 1000
+  },
+  "environment": {
+    "court": "weft/tla-court:1",
+    "image_id": "sha256:d8bf98d41168b39de8a1fd8ccc027f864cb0273d74d07182d0d6b697331a86bf",
+    "kernel": "Linux 1fbb976a9269 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 x86_64 x86_64 GNU/Linux",
+    "java": "Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC",
+    "tla_version": "v1.7.4",
+    "tla2tools_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "unknown"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "unknown"
+    }
+  ],
+  "models": {
+    "corrected": {
+      "module": "WeftCommit",
+      "spec": "verification/tla/WeftCommit.tla",
+      "config": "verification/tla/WeftCommit.cfg",
+      "constants": {
+        "MaxGen": 8
+      },
+      "invariants": [
+        "TypeOK",
+        "NoPartial",
+        "HighestValid",
+        "NoLostDependency",
+        "Durability",
+        "ReturnedObjectsDurable",
+        "ReplayIdempotent"
+      ],
+      "result": "pass",
+      "states_generated": 615,
+      "distinct_states_found": 591,
+      "search_depth": 68,
+      "output_tail": "Semantic processing of module WeftCommit\nStarting... (2026-11-03 22:28:52)\nComputing initial states...\nFinished computing initial states: 1 distinct state generated at 2026-11-03 22:28:52.\nModel checking completed. No error has been found.\n  Estimates of the probability that TLC did not check all reachable states\n  because two distinct states had the same fingerprint:\n  calculated (optimistic):  val = 7.7E-16\n615 states generated, 591 distinct states found, 0 states left on queue.\nThe depth of the complete state graph search is 68.\nThe average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).\nFinished in 00s at (2026-11-03 22:28:52)"
+    },
+    "flawed": {
+      "module": "WeftCommitBuggy",
+      "spec": "verification/tla/WeftCommitBuggy.tla",
+      "config": "verification/tla/WeftCommitBuggy.cfg",
+      "constants": {
+        "MaxGen": 3
+      },
+      "injection": "recovery trusts the highest commit file, ignoring superblock visibility and CRC",
+      "result": "expected-violation",
+      "violated_invariant": "NoPartial",
+      "states_generated": 32,
+      "distinct_states_found": 29,
+      "search_depth": 9,
+      "counterexample": "Error: The behavior up to this point is:\nState 1: <Initial predicate>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objects\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objectsSynced\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>\n/\\ phase = \"commitWritten\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"torn\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}"
+    }
+  },
+  "evidence": {
+    "log": "bench/receipts/tla-20261103T222852Z.log",
+    "log_sha256": "c9bb63dda3d0fb0ce90832005a98cb1c4d99ab50b9832eb1a9f5c67bc6c556ce"
+  },
+  "scope": {
+    "model_checked": "bounded TLC run of the abstract state machine only",
+    "not_checked": "Rust/Go code refinement, checkpoints, GC, capabilities, physical media"
+  }
+}
