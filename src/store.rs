@@ -1364,15 +1364,21 @@ impl Store {
 
     /// All saved contexts, sorted by name. Fails closed on a malformed entry.
     pub fn list_contexts(&self) -> Result<Vec<SavedContext>> {
+        self.list_contexts_at(&self.state)
+    }
+
+    /// Saved contexts in an explicit state (a snapshot mount reads a pinned
+    /// state, not the live one).
+    pub fn list_contexts_at(&self, state: &State) -> Result<Vec<SavedContext>> {
         let mut out = Vec::new();
-        for relation in self.state.relations.values() {
+        for relation in state.relations.values() {
             if !is_saved_context(relation) {
                 continue;
             }
             let RelationTarget::Value(Value::Str(name)) = &relation.target else {
                 return Err(Error::corrupt("saved_context target is not text"));
             };
-            out.push(self.context_from_relation(name, relation)?);
+            out.push(Self::context_from_relation(name, relation)?);
         }
         out.sort_by(|a, b| a.name.as_bytes().cmp(b.name.as_bytes()));
         Ok(out)
@@ -1380,7 +1386,12 @@ impl Store {
 
     /// Load a saved context selector by name.
     pub fn load_context(&self, name: &str) -> Result<Selector> {
-        let existing = self.context_relations(name)?;
+        self.load_context_at(&self.state, name)
+    }
+
+    /// Load a saved context selector from an explicit state.
+    pub fn load_context_at(&self, state: &State, name: &str) -> Result<Selector> {
+        let existing = Self::context_relations_at(state, name)?;
         let relation = match existing.as_slice() {
             [relation] => relation,
             [] => return Err(Error::not_found("no such saved context")),
@@ -1390,7 +1401,7 @@ impl Store {
                 ))
             }
         };
-        let saved = self.context_from_relation(name, relation)?;
+        let saved = Self::context_from_relation(name, relation)?;
         let bytes = hex::decode(&saved.selector_hex)
             .map_err(|_| Error::corrupt("saved context selector is not hex"))?;
         let selector = Selector::from_canonical_bytes(&bytes, &Limits::default())?;
@@ -1403,8 +1414,12 @@ impl Store {
     }
 
     fn context_relations(&self, name: &str) -> Result<Vec<&RelationRecord>> {
+        Self::context_relations_at(&self.state, name)
+    }
+
+    fn context_relations_at<'a>(state: &'a State, name: &str) -> Result<Vec<&'a RelationRecord>> {
         let mut out = Vec::new();
-        for relation in self.state.relations.values() {
+        for relation in state.relations.values() {
             if !is_saved_context(relation) {
                 continue;
             }
@@ -1420,7 +1435,7 @@ impl Store {
         Ok(out)
     }
 
-    fn context_from_relation(&self, name: &str, relation: &RelationRecord) -> Result<SavedContext> {
+    fn context_from_relation(name: &str, relation: &RelationRecord) -> Result<SavedContext> {
         let selector_hex = match relation.attrs.get(SAVED_CONTEXT_SELECTOR_ATTR) {
             Some(Value::Str(text)) => text.clone(),
             _ => {
@@ -1562,20 +1577,24 @@ impl Store {
     /// capacity (it grows with its host filesystem), so free counters are `0`
     /// and `blocks` is the state's used size. Documented in `docs/fuse-status.md`.
     pub fn statfs(&self) -> StatFs {
+        Self::statfs_at(&self.state)
+    }
+
+    /// [`Store::statfs`] for an explicit state (a snapshot mount).
+    pub fn statfs_at(state: &State) -> StatFs {
         const BLOCK: u64 = 4_096;
         let mut content_bytes: u64 = 0;
-        for record in self.state.objects.values() {
+        for record in state.objects.values() {
             content_bytes = content_bytes.saturating_add(record.size);
         }
         // One metadata block per object plus the content blocks.
-        let blocks =
-            content_bytes.saturating_add(BLOCK - 1) / BLOCK + self.state.objects.len() as u64;
+        let blocks = content_bytes.saturating_add(BLOCK - 1) / BLOCK + state.objects.len() as u64;
         StatFs {
             block_size: BLOCK,
             blocks,
             blocks_free: 0,
             blocks_available: 0,
-            files: self.state.objects.len() as u64,
+            files: state.objects.len() as u64,
             files_free: 0,
             max_name_len: crate::state::MAX_NAME_BYTES as u64,
         }
@@ -1691,6 +1710,20 @@ impl Store {
         limits: &weftcodec::Limits,
     ) -> Result<crate::evaluate::Resolution> {
         crate::evaluate::resolve(self, selector, snapshot, principal, limits)
+    }
+
+    /// Evaluate a selector against an explicit state pinned by the caller
+    /// (`snapshot` is the view identity recorded in the result). Used by the
+    /// FUSE frontend so a snapshot mount does not replay per lookup.
+    pub fn resolve_state(
+        &self,
+        selector: &weftcodec::selector::Selector,
+        snapshot: Hash32,
+        state: &State,
+        principal: &Principal,
+        limits: &weftcodec::Limits,
+    ) -> Result<crate::evaluate::Resolution> {
+        crate::evaluate::resolve_state(selector, snapshot, state, principal, limits)
     }
 
     /// Resolve exactly one object, rejecting zero (`NotFound`) and many

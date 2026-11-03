@@ -50,7 +50,10 @@ pub fn effective_mode(object: &ObjectRecord, principal: &Principal) -> u64 {
 }
 
 /// The ACL predicate. Denies on a malformed `weft.acl.read` value (fail closed).
-fn acl_allows(object: &ObjectRecord, principal: &Principal) -> bool {
+///
+/// This is the part of authorization the kernel cannot evaluate itself, so the
+/// FUSE frontend applies it in addition to `default_permissions`.
+pub fn acl_allows(object: &ObjectRecord, principal: &Principal) -> bool {
     match object.attrs.get(ATTR_ACL_READ) {
         None => true,
         Some(Value::Array(items)) => items

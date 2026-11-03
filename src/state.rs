@@ -679,6 +679,33 @@ impl State {
         Some(path)
     }
 
+    /// POSIX link count: entries naming a non-directory, and
+    /// `2 + subdirectories` for a directory. Derived from this state only.
+    pub fn nlink(&self, id: Hash32) -> u64 {
+        match self.objects.get(&id) {
+            Some(record) if record.kind == ObjectKind::Dir => {
+                let subdirs = self
+                    .entries
+                    .values()
+                    .filter(|entry| entry.parent == id)
+                    .filter(|entry| {
+                        self.objects
+                            .get(&entry.target)
+                            .map(|object| object.kind == ObjectKind::Dir)
+                            .unwrap_or(false)
+                    })
+                    .count();
+                2 + subdirs as u64
+            }
+            Some(_) => self
+                .entries
+                .values()
+                .filter(|entry| entry.target == id)
+                .count() as u64,
+            None => 0,
+        }
+    }
+
     /// True if `node` is `ancestor` or a descendant of it.
     pub fn is_within(&self, ancestor: Hash32, node: Hash32) -> bool {
         let mut current = node;

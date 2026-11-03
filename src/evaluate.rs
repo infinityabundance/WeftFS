@@ -97,6 +97,25 @@ pub(crate) fn resolve(
         owned_state = store.state_at(snapshot_id)?;
         &owned_state
     };
+    resolve_state(selector, snapshot_id, state, principal, limits)
+}
+
+/// Evaluate a selector against an explicit replayed state (used by the FUSE
+/// frontend for a mounted snapshot, avoiding a replay per lookup).
+pub(crate) fn resolve_state(
+    selector: &Selector,
+    snapshot_id: Hash32,
+    state: &State,
+    principal: &Principal,
+    limits: &weftcodec::Limits,
+) -> Result<Resolution> {
+    if selector.namespace != crate::state::DEFAULT_NAMESPACE {
+        return Err(Error::namespace_mismatch(format!(
+            "selector namespace `{}` is not `{}`",
+            selector.namespace,
+            crate::state::DEFAULT_NAMESPACE
+        )));
+    }
     let root = state
         .objects
         .get(&State::ROOT_ID)

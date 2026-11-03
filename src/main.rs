@@ -182,6 +182,25 @@ enum Command {
     },
     /// Force a checkpoint commit.
     Checkpoint,
+    /// Mount the store over FUSE (requires the `fuse` feature).
+    #[cfg(feature = "fuse")]
+    Mount {
+        /// Existing empty directory to mount on.
+        #[arg(long, value_name = "DIR")]
+        mountpoint: PathBuf,
+        /// Stay in the foreground (the only mode in v1).
+        #[arg(long)]
+        foreground: bool,
+        /// Allow users other than the mounting user.
+        #[arg(long = "allow-other")]
+        allow_other: bool,
+        /// Mount a named snapshot (or commit hex) read-only.
+        #[arg(long)]
+        snapshot: Option<String>,
+        /// Mount the current state read-only.
+        #[arg(long = "read-only")]
+        read_only: bool,
+    },
     /// Build the deterministic handoff fixture.
     ConformanceStore {
         #[arg(long)]
@@ -793,6 +812,43 @@ fn run(cli: Cli) -> Result<()> {
                 println!("generation={}", store.generation());
                 Ok(())
             }
+        }
+        #[cfg(feature = "fuse")]
+        Command::Mount {
+            mountpoint,
+            foreground,
+            allow_other,
+            snapshot,
+            read_only,
+        } => {
+            // v1 does not daemonize: the process always stays in the foreground
+            // so SIGINT/SIGTERM can trigger a clean unmount.
+            let _ = foreground;
+            let read_only = read_only || snapshot.is_some();
+            let mode = if read_only {
+                OpenMode::ReadOnly
+            } else {
+                OpenMode::ReadWrite
+            };
+            let store = Store::open(&store, mode)?;
+            let (snapshot_commit, snapshot_state) = match snapshot {
+                Some(name) => {
+                    let commit = lookup_snapshot(&store, &name)?;
+                    let state = store.state_at(commit)?;
+                    (Some(commit), Some(state))
+                }
+                None => (None, None),
+            };
+            weftfs::fuse::run(
+                store,
+                mountpoint,
+                weftfs::fuse::MountOptions {
+                    allow_other,
+                    read_only,
+                    snapshot: snapshot_commit,
+                    snapshot_state,
+                },
+            )
         }
         Command::ConformanceStore {
             out,
