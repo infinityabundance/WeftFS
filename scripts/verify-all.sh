@@ -51,6 +51,21 @@ run_court rust "codec_cross_rust_decode" \
 run_court go "codec_cross_compare" \
   "cd WeftCodec-Go && bash hack/cross.sh compare"
 
+# Specification export drift: every subproject spec/ copy must equal parent spec/.
+run_court rust "spec_drift" \
+  "bash scripts/check-spec-drift.sh"
+
+# Context Root cross-language gate: identical IDs and URIs, and each language
+# canonicalizes the other's descriptor URIs.
+run_court rust "context_cross_rust_gen" \
+  "cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-gen"
+run_court go "context_cross_go_gen" \
+  "cd WeftCodec-Go && bash hack/context-cross.sh go-build && bash hack/context-cross.sh go-gen && bash hack/context-cross.sh go-parse-rust"
+run_court rust "context_cross_rust_parse" \
+  "cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-parse-go"
+run_court go "context_cross_compare" \
+  "cd WeftCodec-Go && bash hack/context-cross.sh compare"
+
 {
   echo "{"
   echo "  \"kind\": \"correctness-verification\","
