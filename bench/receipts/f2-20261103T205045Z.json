@@ -3,10 +3,26 @@
   "generated_at_utc": "2026-11-03T20:50:45Z",
   "phase": "F2",
   "revisions": {
-    "WeftFS": "92754d113087a7f99bd70d7165a96a90c30f1ea0",
-    "WeftFS-Go": "ac0b4094587ff44dc754ec86c5290ef0c73885d0",
+    "WeftFS": "35152b86cc2a65ad3b9c48f8c9ce61e7bbf2d29c",
+    "WeftFS-Go": "46c4405e3301470c2bcf71853e53b8fff28b8dfd",
     "WeftCodec": "6571308223e1d7066a4a369fe5cf2c4efa36488a",
     "WeftCodec-Go": "83c2b6af0e9cb8726ac3c5f2bf73e486585715e1"
+  },
+  "court_run_revisions": {
+    "full_suite": {
+      "WeftFS": "92754d113087a7f99bd70d7165a96a90c30f1ea0",
+      "WeftFS-Go": "ac0b4094587ff44dc754ec86c5290ef0c73885d0"
+    },
+    "post_change_targeted_rerun": {
+      "WeftFS": "35152b86cc2a65ad3b9c48f8c9ce61e7bbf2d29c",
+      "WeftFS-Go": "46c4405e3301470c2bcf71853e53b8fff28b8dfd",
+      "change": "context create --causal now records the computed transitive closure",
+      "commands": [
+        "cargo test --features fuse --test context --test cli",
+        "cargo build --release --features fuse --locked --bin weftfs && cd /work/WeftFS-Go && go test -race ./..."
+      ],
+      "result": "pass"
+    }
   },
   "environment": {
     "court_runner": "scripts/docker-court.sh",
