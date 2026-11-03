@@ -178,6 +178,21 @@ impl Mount {
         fs::read_to_string(&self.stdout).unwrap_or_default()
     }
 
+    /// Full diagnostic snapshot for a failing operation.
+    pub fn diagnostics(&mut self) -> String {
+        let status = match self.child.try_wait() {
+            Ok(Some(status)) => format!("exited {status}"),
+            Ok(None) => "running".to_owned(),
+            Err(err) => format!("wait error {err}"),
+        };
+        format!(
+            "daemon {status}; mounted={}; stdout:\n{}\nstderr:\n{}",
+            is_mounted(&self.mountpoint),
+            self.stdout_text(),
+            self.stderr_text()
+        )
+    }
+
     pub fn pid(&self) -> u32 {
         self.pid
     }

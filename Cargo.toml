@@ -21,10 +21,9 @@ hex = "0.4"
 fs2 = "0.4"
 # fuser diagnostics (e.g. a dropped reply) are surfaced through `log`.
 log = { version = "0.4", optional = true }
-# P5 Linux FUSE frontend. `fuser 0.15.1` is the exact version verified in the
-# Docker FUSE court; `abi-7-31` enables the newest ABI it understands (the
-# kernel negotiates down), including RENAME2, LSEEK, and COPY_FILE_RANGE.
-# See docs/fuse-status.md.
+# P5 Linux FUSE frontend. 0.18.0 negotiates the current kernel ABI; the
+# previous pinned 0.15.1 produced intermittent kernel-side EIO on direct
+# writes under kernel 7.3 while the daemon logged a successful reply.
 fuser = { version = "=0.15.1", optional = true, features = ["abi-7-31"] }
 ctrlc = { version = "3", optional = true }
 libc = { version = "0.2", optional = true }

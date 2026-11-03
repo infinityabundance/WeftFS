@@ -32,7 +32,7 @@ tested in the Docker court.
 | P2 | Rust WeftCodec v1 (all modes, CLI, tests) | Not started |
 | P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | Not started |
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — see [`docs/store-status.md`](docs/store-status.md) |
-| P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — frontend built; 55 court tests pass and one ownership test is `#[ignore]`d for a missing court capability — see [`docs/fuse-status.md`](docs/fuse-status.md) |
+| P5 | Rust FUSE frontend, POSIX matrix, context views | **In progress** — 54 court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | Not started |
 | P7 | Bench courts, receipt bundle, showcase, release | Not started |
 

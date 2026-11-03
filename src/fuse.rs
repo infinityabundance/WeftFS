@@ -994,12 +994,9 @@ impl Filesystem for WeftFuse {
     fn init(
         &mut self,
         _req: &Request<'_>,
-        _config: &mut KernelConfig,
+        config: &mut KernelConfig,
     ) -> std::result::Result<(), libc::c_int> {
-        // Leave the kernel-negotiated max_write/max_read defaults in place:
-        // raising max_write without also raising the page array limits was
-        // observed to produce EIO under concurrent direct read/write in the
-        // court. The defaults are honest and bounded.
+        let _ = config;
         Ok(())
     }
 
@@ -1484,6 +1481,10 @@ impl Filesystem for WeftFuse {
                 pinned_content,
             },
         );
+        // Read-only handles use direct I/O so one read is served from one
+        // immutable content root, never a mixture of two versions. Writable
+        // handles use write-through (no writeback cache is negotiated).
+        // Writable mmap is not supported; see docs/fuse-status.md.
         reply.opened(fh, if write_intent { 0 } else { FOPEN_DIRECT_IO });
     }
 
@@ -2160,8 +2161,8 @@ impl Filesystem for WeftFuse {
                 pinned_content: false,
             },
         );
-        // `create` handles are writable: they use the kernel's write-through
-        // path (no writeback cache is negotiated), not direct I/O.
+        // A writable create handle uses the same write-through mode as other
+        // writable handles; read-only handles use direct I/O.
         reply.created(&TTL, &attr, generation, fh, 0);
     }
 
