@@ -2,9 +2,11 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261104T022254Z.json` (all eighteen courts `pass`,
+`bench/receipts/verify-20261104T100531Z.json` (all eighteen courts `pass`,
 including quantized cross-decode, generated-type drift, Buck2 CAS, and agent
-memory). Earlier `verify-20261103T220311Z`,
+memory), at WeftFS `c72255d`, WeftCodec `474fc33`, WeftCodec-Go `c3f30e8`,
+WeftFS-Go `33743f0`. The preceding receipt `verify-20261104T022254Z.json` is
+retained as history. Earlier `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
 as history. The
 twelve-step showcase receipt is

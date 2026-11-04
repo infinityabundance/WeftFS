@@ -1,0 +1,152 @@
+{
+  "action": {
+    "action_type": "compile_object",
+    "toolchain": "rust-1.85.0",
+    "inputs": [
+      {
+        "path": "src/input.txt",
+        "digest": "sha256:154a8dccbf4276edd87bd96e878258cb0a3068a4e7168173a714d0b9b12653b6",
+        "bytes": 21
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "name": "same action context -\u003e same Context Root",
+      "pass": true,
+      "detail": "c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575 == c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575"
+    },
+    {
+      "name": "different toolchain -\u003e different Context Root",
+      "pass": true,
+      "detail": "c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575 != 4aa7ff73f92cbcb103ea9adbd33721f7e13c6b3835f52e41d876f959c42430e8"
+    },
+    {
+      "name": "different input -\u003e different Context Root",
+      "pass": true,
+      "detail": "c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575 != 6372ce5c3852789ff8de79555dd65898a50858a117edfb7bfba64aa5d0481410"
+    },
+    {
+      "name": "first store is new",
+      "pass": true,
+      "detail": "existed=false"
+    },
+    {
+      "name": "second store is a hit",
+      "pass": true,
+      "detail": "existed=true"
+    },
+    {
+      "name": "same key returns identical record digest",
+      "pass": true,
+      "detail": "sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582 == sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582"
+    },
+    {
+      "name": "fetch materializes exact bytes",
+      "pass": true,
+      "detail": "50 bytes, digest sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582"
+    },
+    {
+      "name": "fetch digest matches stored output",
+      "pass": true,
+      "detail": "sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582"
+    },
+    {
+      "name": "different toolchain misses",
+      "pass": true,
+      "detail": "action cache miss"
+    },
+    {
+      "name": "different input misses",
+      "pass": true,
+      "detail": "action cache miss"
+    },
+    {
+      "name": "query by action type finds one record",
+      "pass": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "query by toolchain finds one record",
+      "pass": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "query by absent toolchain finds none",
+      "pass": true,
+      "detail": "count=0"
+    },
+    {
+      "name": "query by input digest finds one record",
+      "pass": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "verify re-derives every key and blob",
+      "pass": true,
+      "detail": "records=1"
+    }
+  ],
+  "fetch": {
+    "bytes": 50,
+    "digest": "sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582",
+    "materialized": "/work/.docker-cache/buck2/run-20261104T100615Z/cas/work/fetch/out/object.bin",
+    "same_bytes": true
+  },
+  "key": {
+    "context_root_id": "c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575",
+    "uri": "weft://buck2/c/c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575",
+    "action_digest": "6dd57698b7c26fcfa205dc683894adcb3a5a19e128a2cd9f86260596974e2697",
+    "selector_id": "0e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09",
+    "context_canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064108030506736368656d610510776566742e73656c6563746f722e763105096e616d65737061636505056275636b32050970726564696361746507010504747275650508736e617073686f7406206dd57698b7c26fcfa205dc683894adcb3a5a19e128a2cd9f86260596974e269705096e616d65737061636505056275636b32050b73656c6563746f725f696406200e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09"
+  },
+  "key_with_other_input": {
+    "context_root_id": "6372ce5c3852789ff8de79555dd65898a50858a117edfb7bfba64aa5d0481410",
+    "uri": "weft://buck2/c/6372ce5c3852789ff8de79555dd65898a50858a117edfb7bfba64aa5d0481410",
+    "action_digest": "451adfa6452b64a7c1290f8e34abf69a2477651cab34ecfc68508634a8634710",
+    "selector_id": "0e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09",
+    "context_canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064108030506736368656d610510776566742e73656c6563746f722e763105096e616d65737061636505056275636b32050970726564696361746507010504747275650508736e617073686f740620451adfa6452b64a7c1290f8e34abf69a2477651cab34ecfc68508634a863471005096e616d65737061636505056275636b32050b73656c6563746f725f696406200e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09"
+  },
+  "key_with_other_toolchain": {
+    "context_root_id": "4aa7ff73f92cbcb103ea9adbd33721f7e13c6b3835f52e41d876f959c42430e8",
+    "uri": "weft://buck2/c/4aa7ff73f92cbcb103ea9adbd33721f7e13c6b3835f52e41d876f959c42430e8",
+    "action_digest": "a670919ac0b80d19b50ae171dcd0642ca55b935aa62f6184344d2939042c3de2",
+    "selector_id": "0e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09",
+    "context_canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064108030506736368656d610510776566742e73656c6563746f722e763105096e616d65737061636505056275636b32050970726564696361746507010504747275650508736e617073686f740620a670919ac0b80d19b50ae171dcd0642ca55b935aa62f6184344d2939042c3de205096e616d65737061636505056275636b32050b73656c6563746f725f696406200e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09"
+  },
+  "kind": "buck2-cas-prototype",
+  "prototype": "local CAS service + Buck2-compatible key/digest mapping; not a Buck2 plugin, not REAPI gRPC",
+  "query": {
+    "by_absent_toolchain": 0,
+    "by_action_type": 1,
+    "by_other_input": 1,
+    "by_toolchain": 1
+  },
+  "record": {
+    "schema": "weft.buck2.action-cache.v1",
+    "action_type": "compile_object",
+    "toolchain": "rust-1.85.0",
+    "inputs": [
+      {
+        "path": "src/input.txt",
+        "digest": "sha256:154a8dccbf4276edd87bd96e878258cb0a3068a4e7168173a714d0b9b12653b6",
+        "bytes": 21
+      }
+    ],
+    "output_path": "out/object.bin",
+    "output_digest": "sha256:f5f875f33d48d272d0024dda66e711bcc2ee16ee4c15c5714fb941b8bd336582",
+    "output_bytes": 50,
+    "context_root_id": "c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575",
+    "uri": "weft://buck2/c/c1305eb4cbf1466b12291cc93115fdb06ae6ba6174ccbd4bd7566f081cb54575",
+    "action_digest": "6dd57698b7c26fcfa205dc683894adcb3a5a19e128a2cd9f86260596974e2697",
+    "selector_id": "0e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09",
+    "context_canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064108030506736368656d610510776566742e73656c6563746f722e763105096e616d65737061636505056275636b32050970726564696361746507010504747275650508736e617073686f7406206dd57698b7c26fcfa205dc683894adcb3a5a19e128a2cd9f86260596974e269705096e616d65737061636505056275636b32050b73656c6563746f725f696406200e2c8fb820bf055525393d8c5248069c66e5bb6a530927d3c9e3f6505acf3a09"
+  },
+  "result": {
+    "pass": true,
+    "total": 15
+  },
+  "root": "/work/.docker-cache/buck2/run-20261104T100615Z/cas",
+  "schema": "weft.buck2-cas.receipt/1",
+  "timestamp_utc": "2026-11-04T10:06:15Z"
+}
