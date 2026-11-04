@@ -305,6 +305,17 @@ impl Store {
 
     /// Open an existing store.
     pub fn open(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
+        Self::open_impl(path, mode, false)
+    }
+
+    /// Benchmark-only: open through the original full commit-directory scan so
+    /// the fast path's cost can be measured against it.
+    #[doc(hidden)]
+    pub fn open_full_scan_for_bench(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
+        Self::open_impl(path, mode, true)
+    }
+
+    fn open_impl(path: impl AsRef<Path>, mode: OpenMode, full_scan: bool) -> Result<Store> {
         let root = path.as_ref().to_path_buf();
         let format = fs::read_to_string(root.join("FORMAT"))
             .map_err(|err| Error::corrupt(format!("cannot read FORMAT: {err}")))?;
@@ -333,15 +344,20 @@ impl Store {
             clean_stale_tmp(&root, DEFAULT_GC_GRACE_SECS)?;
         }
 
-        let recovery = recovery::recover(&root)?;
-        let highest_file_generation = recovery::scan_commit_files(&root)?
-            .keys()
-            .copied()
-            .max()
-            .unwrap_or(0);
+        // Read-only opens use the directory-free fast path. Writable opens
+        // must observe the highest commit generation so `next_generation`
+        // never reuses a rejected generation; they still bound commit decodes
+        // to the checkpoint window.
+        let recovery = if full_scan {
+            recovery::recover_full_scan(&root)?
+        } else if mode == OpenMode::ReadWrite {
+            recovery::recover_for_write(&root)?
+        } else {
+            recovery::recover(&root)?
+        };
         let next_generation = recovery
             .generation
-            .max(highest_file_generation)
+            .max(recovery.highest_file_generation)
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
         Ok(Store {

@@ -1,0 +1,90 @@
+{
+  "checkpoint_interval": 256,
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "3cccd8b62210a352b37658da6a0ac41c6379c5be",
+    "revision_weftfs": "7becc3e077549de8b199319b9b329be533f7f569"
+  },
+  "fast": {
+    "commit_file_reads": [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18
+    ],
+    "median_ms": 71.58413150000001,
+    "p95_ms": 73.21221,
+    "path": "Store::open (generation-addressed bounded replay)",
+    "wall_ms": [
+      73.184779,
+      73.21221,
+      73.181353,
+      71.491228,
+      72.681379,
+      71.677035,
+      70.303319,
+      69.946302,
+      71.438629,
+      70.404358
+    ]
+  },
+  "full": {
+    "commit_file_reads": [
+      10001,
+      10001,
+      10001,
+      10001,
+      10001,
+      10001,
+      10001,
+      10001,
+      10001,
+      10001
+    ],
+    "median_ms": 3789.142069,
+    "p95_ms": 3891.998906,
+    "path": "Store::open_full_scan_for_bench (full commit-directory replay)",
+    "wall_ms": [
+      3788.1922750000003,
+      3776.039431,
+      3832.974204,
+      3891.998906,
+      3762.824343,
+      3808.6482340000002,
+      3777.2885779999997,
+      3819.21953,
+      3790.0918629999996,
+      3786.474268
+    ]
+  },
+  "generations": 10000,
+  "kind": "bounded-open-bench",
+  "label": "Local synthetic store on the host page cache inside the Docker court; not a device, fleet, power-loss, or production claim.",
+  "notes": [
+    "The store is built once, sequentially, in this process under the court's /tmp tmpfs (1 GiB) and is read from the host page cache.",
+    "The full path is the pre-optimisation behaviour: it scans the commit directory and decodes every commit file. The removed duplicate directory scan in Store::open is not timed separately.",
+    "Commit-file reads are counted by the process-wide recovery::commit_file_reads() counter, incremented once per load_commit_file call.",
+    "The fast path is ReadOnly and therefore directory-free: it starts from the highest published superblock generation and walks parent links down to the nearest verified checkpoint.",
+    "No device-level, fsync, power-loss, fleet, or production claim is made."
+  ],
+  "objects": 10000,
+  "peak_rss_kib": 74960,
+  "samples": 10,
+  "schema": "weft-open-bench-v1",
+  "state_match": true,
+  "work_dir": "/tmp/weft-open-bench"
+}
