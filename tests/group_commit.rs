@@ -33,6 +33,7 @@ fn opts() -> Options {
         gc_grace_secs: 0,
         // Fixed clock: version ids and mtimes are stable across the two stores.
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
+        ..Options::default()
     }
 }
 

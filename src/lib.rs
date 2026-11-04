@@ -28,6 +28,7 @@ pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
 pub mod recovery;
+pub mod representation;
 pub mod state;
 pub mod store;
 pub mod timeparse;
@@ -40,5 +41,6 @@ pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
-    GcReport, LineageEntry, OpenMode, Options, SavedContext, SetAttr, StatFs, Store, VerifyReport,
+    GcReport, LineageEntry, OpenMode, Options, RepresentationMode, SavedContext, SetAttr, StatFs,
+    Store, VerifyReport,
 };

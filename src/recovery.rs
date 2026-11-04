@@ -574,19 +574,63 @@ pub fn validate_catalog(root: &Path, state: &State) -> Result<()> {
                 record.id, record.size, manifest.size
             )));
         }
-        for chunk in &manifest.chunks {
-            let path = object_path(root, chunk.hash);
+        let mut seen = BTreeSet::new();
+        validate_manifest_tree(root, record.content, 0, &mut seen)?;
+    }
+    Ok(())
+}
+
+/// Check that every physical blob a manifest needs is present with the right
+/// length. Codec representations are walked through frames and dependencies.
+fn validate_manifest_tree(
+    root: &Path,
+    manifest_id: Hash32,
+    depth: usize,
+    seen: &mut BTreeSet<Hash32>,
+) -> Result<()> {
+    if depth > crate::representation::MAX_CODEC_DEPENDENCY_DEPTH {
+        return Err(Error::corrupt(format!(
+            "manifest {manifest_id} exceeds the codec dependency depth bound"
+        )));
+    }
+    if !seen.insert(manifest_id) {
+        return Err(Error::corrupt(format!(
+            "manifest {manifest_id} participates in a cycle"
+        )));
+    }
+    let manifest = read_manifest(root, manifest_id)?;
+    if let Some(rep) = &manifest.representation {
+        if rep.kind == crate::format::RepresentationKind::Codec {
+            let frame = rep
+                .frame
+                .ok_or_else(|| Error::corrupt("codec manifest has no frame id"))?;
+            let path = manifest_path(root, frame);
             let metadata = fs::metadata(&path).map_err(|err| {
-                Error::corrupt(format!("missing chunk {}: {err}", path.display()))
+                Error::corrupt(format!("missing codec frame {}: {err}", path.display()))
             })?;
-            if metadata.len() != chunk.len {
+            if !metadata.is_file() {
                 return Err(Error::corrupt(format!(
-                    "chunk {} is {} bytes, manifest says {}",
-                    path.display(),
-                    metadata.len(),
-                    chunk.len
+                    "codec frame {} is not a regular file",
+                    path.display()
                 )));
             }
+            for dependency in &rep.dependencies {
+                validate_manifest_tree(root, *dependency, depth + 1, seen)?;
+            }
+            return Ok(());
+        }
+    }
+    for chunk in &manifest.chunks {
+        let path = object_path(root, chunk.hash);
+        let metadata = fs::metadata(&path)
+            .map_err(|err| Error::corrupt(format!("missing chunk {}: {err}", path.display())))?;
+        if metadata.len() != chunk.len {
+            return Err(Error::corrupt(format!(
+                "chunk {} is {} bytes, manifest says {}",
+                path.display(),
+                metadata.len(),
+                chunk.len
+            )));
         }
     }
     Ok(())

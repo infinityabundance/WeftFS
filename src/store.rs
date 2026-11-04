@@ -15,6 +15,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use fs2::FileExt as Fs2FileExt;
 use weftcodec::context::CausalClosure;
+use weftcodec::dependency::MapResolver;
+use weftcodec::frame::{Frame, Mode};
 use weftcodec::selector::Selector;
 use weftcodec::wcb::Value;
 use weftcodec::Limits;
@@ -22,12 +24,13 @@ use weftcodec::Limits;
 use crate::auth::Principal;
 use crate::error::{Error, Result};
 use crate::format::{
-    encode_commit_file, encode_state, ChunkRef, Commit, Manifest, SuperblockSlot, FORMAT_CONTENTS,
-    SLOT_BYTES, SUPERBLOCK_BYTES,
+    encode_commit_file, encode_state, ChunkRef, Commit, Manifest, Representation,
+    RepresentationKind, SuperblockSlot, FORMAT_CONTENTS, SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
 use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY};
 use crate::recovery::{self, BlobKind};
+use crate::representation::{self, MAX_CODEC_DEPENDENCY_DEPTH};
 use crate::state::{
     derive_entry_id, derive_version_id, derive_version_id_with_identity, validate_name_bytes,
     validate_snapshot_name, EntryRecord, ObjectKind, ObjectRecord, Op, RelationKind,
@@ -43,6 +46,10 @@ pub const DEFAULT_CHUNK_SIZE: u64 = 65_536;
 pub const DEFAULT_CHECKPOINT_INTERVAL: u64 = 256;
 /// Default GC grace period (seconds).
 pub const DEFAULT_GC_GRACE_SECS: u64 = 3_600;
+/// Default threshold below which `CodecAuto` leaves a file on the raw path.
+pub const DEFAULT_CODEC_MIN_BYTES: u64 = 4_096;
+/// Default margin by which a DELTA frame must beat a ZSTD frame, in percent.
+pub const DEFAULT_CODEC_DELTA_MARGIN_PERCENT: u8 = 10;
 /// Maximum name length of an extended attribute, in bytes (Linux `XATTR_NAME_MAX`
 /// is 255; the stored key adds the `xattr.` prefix).
 pub const MAX_XATTR_NAME_BYTES: usize = 255;
@@ -59,6 +66,24 @@ pub enum OpenMode {
     ReadOnly,
 }
 
+/// How the writer physically represents file content.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RepresentationMode {
+    /// Frozen v1 chunk manifests. The default for every existing store,
+    /// fixture, test, and handoff.
+    Raw,
+    /// Experimental: encode large files as WeftCodec frames (and DELTA when a
+    /// causal base exists), falling back to a v2 raw manifest when the frame
+    /// would not be smaller. Rust-only for now.
+    CodecAuto,
+}
+
+impl Default for RepresentationMode {
+    fn default() -> Self {
+        RepresentationMode::Raw
+    }
+}
+
 /// Store options.
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -69,6 +94,14 @@ pub struct Options {
     pub gc_grace_secs: u64,
     /// Test/fixture clock override: every generated mtime and commit timestamp.
     pub fixed_timestamp_ns: Option<i64>,
+    /// Physical representation policy. `Raw` (the default) writes the frozen
+    /// v1 manifest; `CodecAuto` is experimental, opt-in, and Rust-only.
+    pub representation: RepresentationMode,
+    /// `CodecAuto` leaves files smaller than this on the raw path.
+    pub codec_min_bytes: u64,
+    /// A DELTA frame must be at least this percent smaller than the ZSTD frame
+    /// to be selected. `0` disables the margin (any strictly smaller DELTA wins).
+    pub codec_delta_margin_percent: u8,
 }
 
 impl Default for Options {
@@ -80,6 +113,9 @@ impl Default for Options {
             checkpoint_interval: DEFAULT_CHECKPOINT_INTERVAL,
             gc_grace_secs: DEFAULT_GC_GRACE_SECS,
             fixed_timestamp_ns: None,
+            representation: RepresentationMode::Raw,
+            codec_min_bytes: DEFAULT_CODEC_MIN_BYTES,
+            codec_delta_margin_percent: DEFAULT_CODEC_DELTA_MARGIN_PERCENT,
         }
     }
 }
@@ -131,6 +167,8 @@ pub struct VerifyReport {
     pub checked_chunks: u64,
     pub checked_context_roots: u64,
     pub checked_causal: u64,
+    /// Codec representations fully decoded and re-hashed by `verify --full`.
+    pub checked_representations: u64,
     pub checked_capabilities: u64,
     pub rejected_generations: Vec<u64>,
     pub problems: Vec<VerifyProblem>,
@@ -674,7 +712,7 @@ impl Store {
                 if manifest.size != record.size {
                     return Err(Error::corrupt("object size disagrees with manifest"));
                 }
-                self.read_manifest_bytes(&manifest, 0, manifest.size, true)
+                self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)
             }
         }
     }
@@ -700,7 +738,7 @@ impl Store {
                         if manifest.size != record.size {
                             return Err(Error::corrupt("object size disagrees with manifest"));
                         }
-                        self.read_manifest_bytes(&manifest, 0, manifest.size, true)
+                        self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)
                     }
                 }
             }
@@ -717,7 +755,7 @@ impl Store {
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
-        self.read_manifest_bytes(&manifest, offset, length, false)
+        self.read_manifest_bytes(&manifest, record.content, offset, length, false)
     }
 
     /// Read a byte range directly from a content root (manifest id). Safe for
@@ -725,10 +763,49 @@ impl Store {
     pub fn read_content(&self, content_root: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
         let manifest = recovery::read_manifest(&self.root, content_root)?;
         let whole = offset == 0 && length >= manifest.size;
-        self.read_manifest_bytes(&manifest, offset, length, whole)
+        self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
     }
 
     fn read_manifest_bytes(
+        &self,
+        manifest: &Manifest,
+        content_root: Hash32,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+    ) -> Result<Vec<u8>> {
+        let mut seen = vec![content_root];
+        self.read_manifest_bytes_inner(manifest, offset, length, verify_whole, 0, &mut seen)
+    }
+
+    fn read_manifest_bytes_inner(
+        &self,
+        manifest: &Manifest,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        depth: usize,
+        seen: &mut Vec<Hash32>,
+    ) -> Result<Vec<u8>> {
+        match &manifest.representation {
+            None => self.read_raw_manifest_bytes(manifest, offset, length, verify_whole),
+            Some(rep) if rep.kind == RepresentationKind::Raw => {
+                self.read_raw_manifest_bytes(manifest, offset, length, verify_whole)
+            }
+            Some(rep) => self.read_codec_manifest_bytes(
+                manifest,
+                rep,
+                offset,
+                length,
+                verify_whole,
+                depth,
+                seen,
+            ),
+        }
+    }
+
+    /// The frozen v1 (and v2 `kind:"raw"`) assembly path.
+    fn read_raw_manifest_bytes(
         &self,
         manifest: &Manifest,
         offset: u64,
@@ -771,6 +848,174 @@ impl Store {
             if digest != manifest.content_hash {
                 return Err(Error::corrupt("whole-content hash mismatch"));
             }
+        }
+        Ok(out)
+    }
+
+    /// Decode a v2 `kind:"codec"` representation.
+    ///
+    /// The frame blob is fetched and parsed with default codec limits. Its
+    /// payload mode must match the manifest's informational `strategy`; its
+    /// decoded length must match the manifest size; and every dependency is
+    /// materialised from its content root (recursively, bounded depth, cycle
+    /// checked) and verified against the frame's dependency table. A missing,
+    /// unreadable, or mismatched dependency returns `Corrupt`; no partial or
+    /// approximate bytes are ever returned.
+    #[allow(clippy::too_many_arguments)]
+    fn read_codec_manifest_bytes(
+        &self,
+        manifest: &Manifest,
+        rep: &Representation,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        depth: usize,
+        seen: &mut Vec<Hash32>,
+    ) -> Result<Vec<u8>> {
+        if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+            return Err(Error::corrupt(format!(
+                "codec representation dependency depth exceeds {MAX_CODEC_DEPENDENCY_DEPTH}"
+            )));
+        }
+        let frame_id = rep
+            .frame
+            .ok_or_else(|| Error::corrupt("codec representation has no frame id"))?;
+        if rep.decoded_size != manifest.size {
+            return Err(Error::corrupt(
+                "codec representation decoded_size disagrees with manifest size",
+            ));
+        }
+        let frame_bytes = recovery::read_blob_verified(
+            &self.root,
+            BlobKind::Manifest,
+            frame_id,
+            identity::MANIFEST_DOMAIN,
+        )?;
+        let limits = Limits::default();
+        let frame = Frame::parse(&frame_bytes, &limits)?;
+        let expected_mode = match rep.strategy.as_str() {
+            "zstd" => Mode::Zstd,
+            "delta" => Mode::Delta,
+            "reference" => Mode::Reference,
+            other => {
+                return Err(Error::corrupt(format!(
+                    "codec representation has unknown strategy `{other}`"
+                )))
+            }
+        };
+        if frame.header.mode != expected_mode {
+            return Err(Error::corrupt(format!(
+                "representation strategy `{}` disagrees with frame mode `{}`",
+                rep.strategy,
+                frame.header.mode.as_str()
+            )));
+        }
+        if frame.header.decoded_len != manifest.size {
+            return Err(Error::corrupt(format!(
+                "frame decoded_len {} disagrees with manifest size {}",
+                frame.header.decoded_len, manifest.size
+            )));
+        }
+        if frame.dependencies.len() != rep.dependencies.len() {
+            return Err(Error::corrupt(
+                "representation dependency count disagrees with the frame",
+            ));
+        }
+
+        let mut resolver = MapResolver::new();
+        for (index, dependency) in frame.dependencies.iter().enumerate() {
+            let dep_root = rep.dependencies[index];
+            if seen.contains(&dep_root) {
+                return Err(Error::corrupt("codec representation dependency cycle"));
+            }
+            let dep_manifest = recovery::read_manifest(&self.root, dep_root)?;
+            seen.push(dep_root);
+            let bytes = self.read_manifest_bytes_inner(
+                &dep_manifest,
+                0,
+                dep_manifest.size,
+                true,
+                depth + 1,
+                seen,
+            )?;
+            seen.pop();
+            if bytes.len() as u64 != dependency.decoded_len {
+                return Err(Error::corrupt(format!(
+                    "dependency {dep_root} has length {} but the frame declares {}",
+                    bytes.len(),
+                    dependency.decoded_len
+                )));
+            }
+            if identity::content_hash(&bytes) != dependency.hash {
+                return Err(Error::corrupt(format!(
+                    "dependency {dep_root} content hash disagrees with the frame"
+                )));
+            }
+            resolver.insert(dependency.hash, bytes);
+        }
+
+        if offset >= manifest.size {
+            return Ok(Vec::new());
+        }
+        let wanted = (manifest.size - offset).min(length);
+        let end = offset
+            .checked_add(wanted)
+            .ok_or_else(|| Error::corrupt("range end overflow"))?;
+        let out =
+            if frame.header.is_chunked() && matches!(frame.header.mode, Mode::Raw | Mode::Zstd) {
+                self.read_codec_chunk_range(&frame, offset, end)?
+            } else {
+                // DELTA/REFERENCE and unchunked frames need the whole plaintext to
+                // decode; the codec verifies the whole-content hash in the process.
+                let plaintext = weftcodec::modes::decode_bytes(&frame_bytes, &resolver, &limits)?;
+                let start = usize::try_from(offset)
+                    .map_err(|_| Error::limit_exceeded("range offset does not fit usize"))?;
+                let stop = usize::try_from(end)
+                    .map_err(|_| Error::limit_exceeded("range end does not fit usize"))?;
+                plaintext[start..stop].to_vec()
+            };
+        if out.len() as u64 != wanted {
+            return Err(Error::corrupt(
+                "codec range read produced an unexpected length",
+            ));
+        }
+        if verify_whole && offset == 0 && end == manifest.size {
+            if identity::content_hash(&out) != manifest.content_hash {
+                return Err(Error::corrupt("whole-content hash mismatch"));
+            }
+        }
+        Ok(out)
+    }
+
+    /// Decode only the frame chunks intersecting `[offset, end)`.
+    fn read_codec_chunk_range(&self, frame: &Frame<'_>, offset: u64, end: u64) -> Result<Vec<u8>> {
+        let mut out = Vec::with_capacity(usize::try_from(end - offset).unwrap_or(0));
+        let mut chunk_start: u64 = 0;
+        for index in 0..frame.chunks.len() {
+            let chunk_len = u64::from(frame.chunks[index].decoded_len);
+            let chunk_end = chunk_start
+                .checked_add(chunk_len)
+                .ok_or_else(|| Error::corrupt("codec chunk extent overflow"))?;
+            if chunk_end <= offset {
+                chunk_start = chunk_end;
+                continue;
+            }
+            if chunk_start >= end {
+                break;
+            }
+            representation::note_codec_chunk_decode();
+            let decoded = weftcodec::modes::decode_chunk(frame, index)?;
+            let from = offset.max(chunk_start) - chunk_start;
+            let to = end.min(chunk_end) - chunk_start;
+            let from = usize::try_from(from)
+                .map_err(|_| Error::limit_exceeded("range slice does not fit usize"))?;
+            let to = usize::try_from(to)
+                .map_err(|_| Error::limit_exceeded("range slice does not fit usize"))?;
+            if to > decoded.len() || from > to {
+                return Err(Error::corrupt("codec chunk decoded extent is inconsistent"));
+            }
+            out.extend_from_slice(&decoded[from..to]);
+            chunk_start = chunk_end;
         }
         Ok(out)
     }
@@ -832,7 +1077,11 @@ impl Store {
         if bytes.len() as u64 > MAX_FILE_BYTES {
             return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
         }
-        let (manifest_id, _content_hash, size) = self.store_file_content(bytes)?;
+        let base = self.delta_base(causal)?;
+        let (manifest_id, _content_hash, size) = self.store_file_content_with_base(
+            bytes,
+            base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
+        )?;
         let object_id = identity::object_id_from_seed(seed);
         if self.state.objects.contains_key(&object_id) {
             return Err(Error::exists("object id already exists"));
@@ -933,6 +1182,39 @@ impl Store {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
         let new_size = end.max(old.size);
+        let old_is_codec = old_manifest
+            .representation
+            .as_ref()
+            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .unwrap_or(false);
+        // CodecAuto, or writing back to a store whose current version is a v2
+        // codec representation, materialises the whole object once. This keeps
+        // the experimental path simple; the frozen Raw mode still uses the
+        // chunk-granular COW path below.
+        if self.options.representation == RepresentationMode::CodecAuto || old_is_codec {
+            let old_bytes =
+                self.read_manifest_bytes(&old_manifest, old.content, 0, old_manifest.size, true)?;
+            let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+            buffer[..old_bytes.len()].copy_from_slice(&old_bytes);
+            buffer[offset as usize..end as usize].copy_from_slice(bytes);
+            // A new explicit causal parent wins; otherwise an existing
+            // causal-exact object keeps using its recorded parents as bases.
+            let parent_versions: Vec<Hash32> = if causal.is_empty() {
+                crate::state::object_causal_closure(&old)?
+                    .map(|closure| closure.parents)
+                    .unwrap_or_default()
+            } else {
+                causal.to_vec()
+            };
+            let base = self.delta_base(&parent_versions)?;
+            let (manifest_id, _content, _size) = self.store_content_bytes(
+                &buffer,
+                self.options.chunk_size,
+                base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
+                self.options.representation == RepresentationMode::CodecAuto,
+            )?;
+            return self.publish_file_version(id, old, manifest_id, new_size, causal);
+        }
         let (manifest_id, _content, _size) =
             self.store_file_range(&old_manifest, offset, bytes, new_size)?;
         self.publish_file_version(id, old, manifest_id, new_size, causal)
@@ -2448,6 +2730,18 @@ impl Store {
         match recovery::recover(&self.root) {
             Ok(recovered) => {
                 report.rejected_generations = recovered.rejected.clone();
+                // A rejected generation means recovery could not validate that
+                // commit's state. Surface the rejection reason itself (for
+                // example a missing codec dependency) instead of only the
+                // resulting generation gap.
+                for note in &recovered.notes {
+                    if note.contains("rejected:") {
+                        report.problems.push(VerifyProblem {
+                            class: "Corrupt".to_owned(),
+                            detail: note.clone(),
+                        });
+                    }
+                }
                 if recovered.generation < max_visible {
                     report.problems.push(VerifyProblem {
                         class: "Corrupt".to_owned(),
@@ -2746,6 +3040,39 @@ impl Store {
                             detail: format!("object {} size disagrees with manifest", record.id),
                         });
                     }
+                    if manifest
+                        .representation
+                        .as_ref()
+                        .map(|rep| rep.kind == RepresentationKind::Codec)
+                        .unwrap_or(false)
+                    {
+                        if full {
+                            let frame = match manifest.representation.as_ref().and_then(|r| r.frame)
+                            {
+                                Some(hash) => hash.to_hex(),
+                                None => "<none>".to_owned(),
+                            };
+                            let mut seen = vec![record.content];
+                            match self.read_manifest_bytes_inner(
+                                &manifest,
+                                0,
+                                manifest.size,
+                                true,
+                                0,
+                                &mut seen,
+                            ) {
+                                Ok(_) => report.checked_representations += 1,
+                                Err(err) => report.problems.push(VerifyProblem {
+                                    class: err.class_name().to_owned(),
+                                    detail: format!(
+                                        "codec representation for object {} manifest {} frame {}: {err}",
+                                        record.id, record.content, frame
+                                    ),
+                                }),
+                            }
+                        }
+                        continue;
+                    }
                     if full {
                         let mut assembled =
                             Vec::with_capacity(usize::try_from(manifest.size).unwrap_or(0));
@@ -2891,17 +3218,16 @@ impl Store {
         // record has already been removed from state.
         let pinned_contents: Vec<Hash32> = self.content_pins.keys().copied().collect();
         for content in pinned_contents {
-            marked_manifests.insert(content);
-            match recovery::read_manifest(&self.root, content) {
-                Ok(manifest) => {
-                    for chunk in &manifest.chunks {
-                        marked_chunks.insert(chunk.hash);
-                    }
-                }
-                Err(err) => report
-                    .problems
-                    .push(format!("pinned content {content} is unreadable: {err}")),
-            }
+            let mut seen = BTreeSet::new();
+            mark_manifest_tree(
+                &self.root,
+                content,
+                &mut marked_manifests,
+                &mut marked_chunks,
+                &mut report.problems,
+                0,
+                &mut seen,
+            );
         }
 
         report.marked_manifests = marked_manifests.len() as u64;
@@ -3316,14 +3642,91 @@ impl Store {
     /// content (`create_file*`), `truncate`, and the whole-file bench baseline.
     /// Range writes go through `Store::store_file_range` instead.
     fn store_file_content(&self, bytes: &[u8]) -> Result<(Hash32, Hash32, u64)> {
+        self.store_file_content_with_base(bytes, None)
+    }
+
+    fn store_file_content_with_base(
+        &self,
+        bytes: &[u8],
+        base: Option<(Hash32, &[u8])>,
+    ) -> Result<(Hash32, Hash32, u64)> {
+        self.store_content_bytes(
+            bytes,
+            self.options.chunk_size,
+            base,
+            self.options.representation == RepresentationMode::CodecAuto,
+        )
+    }
+
+    /// Store a whole content buffer under an explicit chunk size.
+    ///
+    /// `codec_auto == false` is the frozen Raw path and produces exactly the
+    /// pre-representation v1 manifest bytes. `codec_auto == true` may store a
+    /// v2 codec representation or a v2 `kind:"raw"` fallback.
+    fn store_content_bytes(
+        &self,
+        bytes: &[u8],
+        chunk_size: u64,
+        base: Option<(Hash32, &[u8])>,
+        codec_auto: bool,
+    ) -> Result<(Hash32, Hash32, u64)> {
         if bytes.len() as u64 > MAX_FILE_BYTES {
             return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
         }
-        let chunk_size = self.options.chunk_size;
         if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
             return Err(Error::invalid_argument("chunk size is out of range"));
         }
         let content_hash = identity::content_hash(bytes);
+        if codec_auto {
+            if bytes.len() as u64 >= self.options.codec_min_bytes {
+                if let Some((frame_bytes, representation)) =
+                    self.try_codec_representation(bytes, chunk_size, base)?
+                {
+                    let frame_id = self.store_blob(
+                        BlobKind::Manifest,
+                        identity::MANIFEST_DOMAIN,
+                        &frame_bytes,
+                    )?;
+                    let representation = Representation {
+                        frame: Some(frame_id),
+                        ..representation
+                    };
+                    return self.store_manifest(Manifest {
+                        size: bytes.len() as u64,
+                        chunk_size,
+                        chunks: Vec::new(),
+                        content_hash,
+                        representation: Some(representation),
+                    });
+                }
+            }
+            // CodecAuto always writes a v2 manifest, even when it falls back to
+            // the raw chunk layout.
+            let manifest = self.build_raw_manifest(bytes, chunk_size, content_hash)?;
+            let manifest = Manifest {
+                representation: Some(Representation {
+                    kind: RepresentationKind::Raw,
+                    frame: None,
+                    dependencies: Vec::new(),
+                    strategy: "raw".to_owned(),
+                    decoded_size: bytes.len() as u64,
+                }),
+                ..manifest
+            };
+            return self.store_manifest(manifest);
+        }
+        let manifest = self.build_raw_manifest(bytes, chunk_size, content_hash)?;
+        self.store_manifest(manifest)
+    }
+
+    /// Write the chunk blobs for a raw layout and return a v1-shaped manifest
+    /// value (with no representation).
+    fn build_raw_manifest(
+        &self,
+        bytes: &[u8],
+        chunk_size: u64,
+        content_hash: Hash32,
+    ) -> Result<Manifest> {
         let mut chunks = Vec::new();
         let step = usize::try_from(chunk_size)
             .map_err(|_| Error::limit_exceeded("chunk size does not fit usize"))?;
@@ -3334,12 +3737,18 @@ impl Store {
                 len: chunk.len() as u64,
             });
         }
-        let manifest = Manifest {
+        Ok(Manifest {
             size: bytes.len() as u64,
             chunk_size,
             chunks,
             content_hash,
-        };
+            representation: None,
+        })
+    }
+
+    fn store_manifest(&self, manifest: Manifest) -> Result<(Hash32, Hash32, u64)> {
+        let size = manifest.size;
+        let content_hash = manifest.content_hash;
         let wcb = manifest.encode()?;
         if wcb.len() as u64 > crate::format::MAX_CHUNK_SIZE * 64 {
             return Err(Error::limit_exceeded(
@@ -3347,7 +3756,87 @@ impl Store {
             ));
         }
         let manifest_id = self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &wcb)?;
-        Ok((manifest_id, content_hash, bytes.len() as u64))
+        Ok((manifest_id, content_hash, size))
+    }
+
+    /// Try to build a codec representation. Returns `None` when no encoding is
+    /// available or when the chosen frame would not be strictly smaller than
+    /// the raw chunk bytes (in which case the caller falls back to v2 raw).
+    fn try_codec_representation(
+        &self,
+        bytes: &[u8],
+        chunk_size: u64,
+        base: Option<(Hash32, &[u8])>,
+    ) -> Result<Option<(Vec<u8>, Representation)>> {
+        let limits = Limits::default();
+        let codec_chunk = representation::codec_chunk_size(chunk_size);
+        let codec_chunk_usize = usize::try_from(codec_chunk)
+            .map_err(|_| Error::limit_exceeded("codec chunk size does not fit usize"))?;
+        let zstd = weftcodec::modes::encode_zstd(
+            bytes,
+            representation::CODEC_ZSTD_LEVEL,
+            Some(codec_chunk_usize),
+            &limits,
+        )
+        .ok();
+        let mut chosen: Option<(Vec<u8>, String, Vec<Hash32>)> =
+            zstd.map(|frame| (frame, "zstd".to_owned(), Vec::new()));
+
+        if let Some((base_root, base_bytes)) = base {
+            if let Ok(delta) = weftcodec::modes::encode_delta(bytes, base_bytes, &limits) {
+                let margin = u64::from(self.options.codec_delta_margin_percent.min(90));
+                let wins = match &chosen {
+                    Some((zstd_frame, _, _)) => {
+                        (delta.len() as u64) * 100
+                            <= (zstd_frame.len() as u64) * (100u64.saturating_sub(margin))
+                    }
+                    // No zstd frame: still require the delta to beat raw bytes.
+                    None => delta.len() < bytes.len(),
+                };
+                if wins {
+                    chosen = Some((delta, "delta".to_owned(), vec![base_root]));
+                }
+            }
+        }
+
+        let Some((frame, strategy, dependencies)) = chosen else {
+            return Ok(None);
+        };
+        if frame.len() >= bytes.len() {
+            return Ok(None);
+        }
+        Ok(Some((
+            frame,
+            Representation {
+                kind: RepresentationKind::Codec,
+                frame: None,
+                dependencies,
+                strategy,
+                decoded_size: bytes.len() as u64,
+            },
+        )))
+    }
+
+    /// Resolve the first causal parent to a live file version and return
+    /// `(content root, plaintext bytes)` for use as a DELTA base.
+    fn delta_base(&self, causal: &[Hash32]) -> Result<Option<(Hash32, Vec<u8>)>> {
+        if self.options.representation != RepresentationMode::CodecAuto || causal.is_empty() {
+            return Ok(None);
+        }
+        for parent in causal {
+            for record in self.state.objects.values() {
+                if record.kind != ObjectKind::File || record.version != *parent {
+                    continue;
+                }
+                match self.read_content(record.content, 0, record.size) {
+                    Ok(bytes) => return Ok(Some((record.content, bytes))),
+                    // A base that cannot be materialised is not usable; the
+                    // writer falls back to ZSTD rather than failing the write.
+                    Err(_) => continue,
+                }
+            }
+        }
+        Ok(None)
     }
 
     /// Publish a new manifest for a range write, reusing every untouched chunk
@@ -3486,6 +3975,7 @@ impl Store {
             chunk_size,
             chunks,
             content_hash,
+            representation: None,
         };
         let wcb = manifest.encode()?;
         if wcb.len() as u64 > crate::format::MAX_CHUNK_SIZE * 64 {
@@ -3643,6 +4133,11 @@ fn validate_options(options: &Options) -> Result<()> {
             "checkpoint_interval must be at most 1,000,000",
         ));
     }
+    if options.codec_delta_margin_percent > 90 {
+        return Err(Error::invalid_argument(
+            "codec_delta_margin_percent must be at most 90",
+        ));
+    }
     Ok(())
 }
 
@@ -3780,18 +4275,67 @@ fn mark_state(
         if record.kind != ObjectKind::File {
             continue;
         }
-        manifests.insert(record.content);
-        match recovery::read_manifest(root, record.content) {
-            Ok(manifest) => {
-                for chunk in manifest.chunks {
-                    chunks.insert(chunk.hash);
+        let mut seen = BTreeSet::new();
+        mark_manifest_tree(
+            root,
+            record.content,
+            manifests,
+            chunks,
+            problems,
+            0,
+            &mut seen,
+        );
+    }
+}
+
+/// Mark a manifest and everything it physically references: raw chunks, the
+/// codec frame blob, and (transitively, bounded) dependency content roots.
+fn mark_manifest_tree(
+    root: &Path,
+    manifest_id: Hash32,
+    manifests: &mut BTreeSet<Hash32>,
+    chunks: &mut BTreeSet<Hash32>,
+    problems: &mut Vec<String>,
+    depth: usize,
+    seen: &mut BTreeSet<Hash32>,
+) {
+    if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+        problems.push(format!(
+            "manifest {manifest_id} exceeds the codec dependency depth bound"
+        ));
+        return;
+    }
+    if !seen.insert(manifest_id) {
+        problems.push(format!("manifest {manifest_id} participates in a cycle"));
+        return;
+    }
+    manifests.insert(manifest_id);
+    match recovery::read_manifest(root, manifest_id) {
+        Ok(manifest) => {
+            if let Some(rep) = &manifest.representation {
+                if rep.kind == RepresentationKind::Codec {
+                    if let Some(frame) = rep.frame {
+                        manifests.insert(frame);
+                    }
+                    for dependency in &rep.dependencies {
+                        mark_manifest_tree(
+                            root,
+                            *dependency,
+                            manifests,
+                            chunks,
+                            problems,
+                            depth + 1,
+                            seen,
+                        );
+                    }
+                    return;
                 }
             }
-            Err(err) => problems.push(format!(
-                "cannot read manifest {} for object {}: {err}",
-                record.content, record.id
-            )),
+            for chunk in manifest.chunks {
+                chunks.insert(chunk.hash);
+            }
         }
+        Err(err) => problems.push(format!("cannot read manifest {manifest_id}: {err}")),
     }
 }
 

@@ -187,6 +187,7 @@ fn run_size(size: usize, work_dir: &Path, out: &mut Vec<Value>) -> Result<(), St
         checkpoint_interval: CHECKPOINT_INTERVAL,
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(FIXED_TIMESTAMP_NS),
+        ..Options::default()
     };
     let ingest_start = Instant::now();
     let (init_ns, mut store) = timed(|| Store::init(&path, options.clone())).pipe_result()?;

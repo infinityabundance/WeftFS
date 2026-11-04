@@ -1,0 +1,130 @@
+{
+  "cases": [
+    {
+      "case": "text-raw",
+      "create_v1_ms": 227.560123,
+      "delta_dependency": null,
+      "encode_ms": 227.560123,
+      "full_decode_ms_median": 2.394003,
+      "label": "raw v1 chunks",
+      "range_4k_decode_ms_median": 0.046417,
+      "representation": {
+        "dependencies": [],
+        "frame_bytes": 0,
+        "kind": "raw",
+        "manifest_bytes": 6642,
+        "physical_bytes": 8395250,
+        "schema": "weft.manifest.v1",
+        "strategy": "raw"
+      },
+      "store_total_physical_bytes": 4069874,
+      "store_verified_after_run": true
+    },
+    {
+      "case": "text-codec-zstd",
+      "create_v1_ms": 12.841389999999999,
+      "delta_dependency": null,
+      "encode_ms": 12.841389999999999,
+      "full_decode_ms_median": 2.924903,
+      "label": "CodecAuto ZSTD frame",
+      "range_4k_decode_ms_median": 0.031609000000000005,
+      "representation": {
+        "dependencies": [],
+        "frame_bytes": 16615,
+        "kind": "codec",
+        "manifest_bytes": 238,
+        "physical_bytes": 16853,
+        "schema": "weftfs.manifest.v2",
+        "strategy": "zstd"
+      },
+      "store_total_physical_bytes": 16853,
+      "store_verified_after_run": true
+    },
+    {
+      "case": "neardup-raw",
+      "create_v1_ms": 435.663432,
+      "delta_dependency": [],
+      "encode_ms": 388.59565299999997,
+      "full_decode_ms_median": 2.4971759999999996,
+      "label": "raw v1 chunks (v2 write)",
+      "range_4k_decode_ms_median": 0.049112,
+      "representation": {
+        "dependencies": [],
+        "frame_bytes": 0,
+        "kind": "raw",
+        "manifest_bytes": 6642,
+        "physical_bytes": 8395250,
+        "schema": "weft.manifest.v1",
+        "strategy": "raw"
+      },
+      "store_total_physical_bytes": 16790500,
+      "store_verified_after_run": true
+    },
+    {
+      "case": "neardup-codec-zstd",
+      "create_v1_ms": 432.217538,
+      "delta_dependency": [],
+      "encode_ms": 396.080507,
+      "full_decode_ms_median": 2.451982,
+      "label": "CodecAuto without a causal base (ZSTD attempted; falls back to v2 raw when not smaller)",
+      "range_4k_decode_ms_median": 0.054461,
+      "representation": {
+        "dependencies": [],
+        "frame_bytes": 0,
+        "kind": "raw",
+        "manifest_bytes": 6731,
+        "physical_bytes": 8395339,
+        "schema": "weftfs.manifest.v2",
+        "strategy": "raw"
+      },
+      "store_total_physical_bytes": 16790678,
+      "store_verified_after_run": true
+    },
+    {
+      "case": "neardup-codec-delta",
+      "create_v1_ms": 433.170514,
+      "delta_dependency": [
+        "b52b8d1e4844e5eaeafb118a1a34cc4e67112d28362b3801d31a2c87a6e9524b"
+      ],
+      "encode_ms": 86.005631,
+      "full_decode_ms_median": 6.9423330000000005,
+      "label": "CodecAuto DELTA frame (v2 write against causal v1)",
+      "range_4k_decode_ms_median": 6.171035,
+      "representation": {
+        "dependencies": [
+          "b52b8d1e4844e5eaeafb118a1a34cc4e67112d28362b3801d31a2c87a6e9524b"
+        ],
+        "frame_bytes": 1153424,
+        "kind": "codec",
+        "manifest_bytes": 273,
+        "physical_bytes": 1153697,
+        "schema": "weftfs.manifest.v2",
+        "strategy": "delta"
+      },
+      "store_total_physical_bytes": 9549152,
+      "store_verified_after_run": true
+    }
+  ],
+  "court": {
+    "cpus": "4",
+    "image": "weft/rust-court:1",
+    "image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g",
+    "pids_limit": "1024"
+  },
+  "label": "synthetic Rust-store representation benchmark; host page cache inside a Docker court; Rust only; not a device, fleet, Go-parity, or production claim",
+  "receipt_timestamp_utc": "2026-11-04T09:34:37Z",
+  "revision": "3c65accf2ea67a2cfe03e1bd8850cd3d13690c78",
+  "revision_note": "revision is the git HEAD of the tree used for the run; working_tree_dirty records whether the representation change itself was uncommitted",
+  "working_tree_dirty": true,
+  "workload": {
+    "chunk_size_bytes": 65536,
+    "file_size_bytes": 8388608,
+    "neardup": "deterministic pseudo-random bytes with 1% changed at stride 100",
+    "physical_bytes_note": "representation.physical_bytes counts the manifest plus chunk lengths (or frame bytes); store_total_physical_bytes counts unique blobs on disk after deduplication",
+    "range_bytes": 4096,
+    "repetitions": 5,
+    "text": "deterministic repeated sentence"
+  }
+}

@@ -23,6 +23,7 @@ fn opts(chunk_size: u64) -> Options {
         checkpoint_interval: 256,
         gc_grace_secs: 0,
         fixed_timestamp_ns: None,
+        ..Options::default()
     }
 }
 

@@ -161,6 +161,70 @@ Tests map to the P4 requirements as follows:
 
 ---
 
+## 2a. Experimental codec-backed representations (`CodecAuto`)
+
+**Status: experimental, opt-in, Rust-only.** `Options.representation` defaults to
+`RepresentationMode::Raw`. With `Raw` — the mode used by every existing fixture,
+test, FUSE mount, and handoff — the writer emits the frozen v1 manifest and the
+on-disk bytes are unchanged. `CodecAuto` must be selected explicitly (tests and
+the bench example do so through `Options`; the CLI does not expose it yet).
+
+A v2 manifest (`weftfs.manifest.v2`; `weft.manifest.v2` is also accepted on
+read) has the v1 fields plus a canonical WCB `representation` map:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `kind` | text | `raw` or `codec` |
+| `frame` | bytes32 or null | manifest-domain blob id of the WFT1 frame (null for raw) |
+| `dependencies` | array of bytes32 | content roots (manifest ids) of bases needed to decode |
+| `strategy` | text | `raw`, `zstd`, `delta`, or `reference`; cross-checked against the frame header |
+| `decoded_size` | u64 | must equal the manifest `size` |
+
+A v1 manifest must not contain `representation`; a v2 manifest must contain it.
+Unknown schemas are `UnsupportedVersion`. A v2 `kind:"raw"` manifest uses the
+same chunk layout as v1 and decodes identically. A v2 `kind:"codec"` manifest
+has an empty `chunks` array: the logical bytes live in the frame blob.
+
+Writer policy (`store_file_content`, the create path, and `write_file_causal`):
+
+- Files below `codec_min_bytes` (default 4096) stay on the raw path. In
+  `CodecAuto` the fallback manifest is v2 `kind:"raw"`; in `Raw` it is v1.
+- Otherwise the writer tries ZSTD (`weftcodec::modes::encode_zstd`) with the
+  store chunk size clamped to 4 KiB–64 KiB, and DELTA
+  (`weftcodec::modes::encode_delta`) when a causal parent
+  (`weft.causal.parents`) resolves to a live file version. DELTA is selected
+  only when it is at least `codec_delta_margin_percent` (default 10) smaller
+  than the ZSTD frame. The base's **content root** is recorded in
+  `dependencies`.
+- If no frame is strictly smaller than the raw chunk bytes, the writer falls
+  back to the raw layout. Frames are stored as `BlobKind::Manifest` blobs under
+  `manifests/<ab>/<hex>` (domain `weft/manifest/v1`); the v2 manifest is stored
+  the same way. The choice is explicit and consistent.
+
+Reader policy: v1 and v2 `kind:"raw"` use the existing chunk path;
+`kind:"codec"` fetches and parses the frame with `Limits::default()`, requires
+the frame's declared payload mode to match `strategy`, materialises each
+dependency from its content root and verifies its length and
+`H("weft/chunk/v1", bytes)`, then decodes. Chunked ZSTD/RAW ranges decode only
+the intersecting chunks (the writer chooses a chunk size, so a 4 KiB range does
+not decode the whole object). Dependency depth is bounded at 8 and a visited
+set rejects cycles. Missing, unreadable, or mismatched dependencies fail closed
+with `Corrupt`; no partial or approximate bytes are returned.
+
+GC marks a codec manifest's frame and its dependency content roots
+(transitively, bounded), so deleting an object does not silently break a live
+dependent that names it. `gc --apply` reclaims the dependency once no root
+references it. `verify --full` decodes and re-hashes every codec representation
+and names the object, manifest, and frame on failure.
+
+The Go store has no v2 parser and is expected to reject `weftfs.manifest.v2`
+(fail closed with its unknown-schema/unsupported-version class). The Rust→Go
+handoff court therefore remains on the default `Raw` path until Go parity
+lands. The v2 path is not part of the frozen v1 format and is not claimed
+compatible or interoperable.
+
+---
+
 ## 3. Format interpretations and spec notes
 
 These are deliberate, documented decisions where the prose admits more than one
@@ -170,6 +234,9 @@ reading. They are part of the Go handoff contract.
    `"weft.manifest.v1"`. The P4 task text also mentions `"weftfs.manifest.v1"`.
    The writer follows the normative spec (`weft.manifest.v1`); the reader
    accepts both spellings and the distinction is only a compatibility courtesy.
+   The experimental representation schema is written as
+   `"weftfs.manifest.v2"` and `"weft.manifest.v2"` is also accepted on read
+   (see §2a). Neither v2 spelling is part of the frozen v1 contract.
 2. **`ObjectRecord.content`.** For regular files this field is the **manifest**
    hash (`ManifestId`), so a reader can locate `manifests/<ab>/<hex>`. The
    whole-file `H("weft/chunk/v1", plaintext)` digest is stored inside the

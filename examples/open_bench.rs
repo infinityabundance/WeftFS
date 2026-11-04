@@ -33,6 +33,7 @@ fn options() -> Options {
         checkpoint_interval: CHECKPOINT_INTERVAL,
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_767_225_600_000_000_000), // 2026-01-01T00:00:00Z
+        ..Options::default()
     }
 }
 

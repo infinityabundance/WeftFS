@@ -31,6 +31,15 @@ pub const FORMAT_MINOR: u16 = 0;
 pub const COMMIT_SCHEMA: &str = "weftfs.commit.v1";
 /// File manifest schema string (see `WEFT-MODEL.md` §2.3).
 pub const MANIFEST_SCHEMA: &str = "weft.manifest.v1";
+/// Legacy v1 spelling accepted on read (see `docs/store-status.md` §3.1).
+pub const MANIFEST_SCHEMA_V1_LEGACY: &str = "weftfs.manifest.v1";
+/// Representation manifest schema string (experimental, opt-in).
+///
+/// This is the spelling requested by the representation-manifest design. The
+/// reader also accepts `weft.manifest.v2` for symmetry with the v1 spelling.
+pub const MANIFEST_SCHEMA_V2: &str = "weftfs.manifest.v2";
+/// Alternative v2 spelling accepted on read.
+pub const MANIFEST_SCHEMA_V2_ALT: &str = "weft.manifest.v2";
 /// Checkpoint state manifest schema string.
 pub const STATE_SCHEMA: &str = "weftfs.state.v1";
 
@@ -241,24 +250,178 @@ pub struct ChunkRef {
     pub len: u64,
 }
 
+/// How the manifest's logical content is physically represented.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RepresentationKind {
+    /// The logical bytes are the concatenated chunk blobs (`chunks`).
+    Raw,
+    /// The logical bytes are decoded from a WeftCodec WFT1 frame blob.
+    Codec,
+}
+
+impl RepresentationKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RepresentationKind::Raw => "raw",
+            RepresentationKind::Codec => "codec",
+        }
+    }
+
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "raw" => Ok(RepresentationKind::Raw),
+            "codec" => Ok(RepresentationKind::Codec),
+            other => Err(Error::malformed(format!(
+                "unknown representation kind `{other}`"
+            ))),
+        }
+    }
+}
+
+/// Physical representation descriptor carried by a v2 manifest.
+///
+/// `frame` is a manifest-domain blob id: the blob under `manifests/<ab>/<hex>`
+/// whose bytes are the complete WFT1 frame. `dependencies` are the **content
+/// roots** (manifest ids) of the base files a decoder needs, in the frame's
+/// dependency-table order. `strategy` is informational and is cross-checked
+/// against the frame header's payload mode on every decode.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Representation {
+    pub kind: RepresentationKind,
+    pub frame: Option<Hash32>,
+    pub dependencies: Vec<Hash32>,
+    pub strategy: String,
+    pub decoded_size: u64,
+}
+
+impl Representation {
+    const KEYS: &'static [&'static str] =
+        &["kind", "frame", "dependencies", "strategy", "decoded_size"];
+
+    pub fn to_value(&self) -> Value {
+        let dependencies = self
+            .dependencies
+            .iter()
+            .map(|hash| wu::hash_value(*hash))
+            .collect();
+        wu::map([
+            ("kind", Value::Str(self.kind.as_str().to_owned())),
+            ("frame", wu::opt_hash_value(self.frame)),
+            ("dependencies", Value::Array(dependencies)),
+            ("strategy", Value::Str(self.strategy.clone())),
+            ("decoded_size", Value::U64(self.decoded_size)),
+        ])
+    }
+
+    pub fn from_wcb(value: &Value) -> Result<Self> {
+        let map = wu::as_map(value)?;
+        wu::check_keys(map, Self::KEYS)?;
+        let kind = RepresentationKind::parse(&wu::get_text(map, "kind")?)?;
+        let frame = wu::get_opt_hash(map, "frame")?;
+        let mut dependencies = Vec::new();
+        for item in wu::get_array(map, "dependencies")? {
+            let bytes = match item {
+                Value::Bytes(bytes) => bytes,
+                _ => {
+                    return Err(Error::malformed(
+                        "representation dependency must be bytes32",
+                    ))
+                }
+            };
+            dependencies.push(Hash32::from_slice(bytes).map_err(Error::from)?);
+        }
+        let strategy = wu::get_text(map, "strategy")?;
+        let decoded_size = wu::get_u64(map, "decoded_size")?;
+        match kind {
+            RepresentationKind::Raw => {
+                if frame.is_some() {
+                    return Err(Error::malformed("raw representation must not name a frame"));
+                }
+                if !dependencies.is_empty() {
+                    return Err(Error::malformed(
+                        "raw representation must not have dependencies",
+                    ));
+                }
+                if strategy != "raw" {
+                    return Err(Error::malformed(
+                        "raw representation strategy must be `raw`",
+                    ));
+                }
+            }
+            RepresentationKind::Codec => {
+                match frame {
+                    Some(hash) if hash != Hash32::ZERO => {}
+                    _ => {
+                        return Err(Error::malformed(
+                            "codec representation requires a non-zero frame id",
+                        ))
+                    }
+                }
+                match strategy.as_str() {
+                    "zstd" => {
+                        if !dependencies.is_empty() {
+                            return Err(Error::malformed(
+                                "zstd representation must not have dependencies",
+                            ));
+                        }
+                    }
+                    "delta" | "reference" => {
+                        if dependencies.len() != 1 {
+                            return Err(Error::malformed(
+                                "delta/reference representation requires exactly one dependency",
+                            ));
+                        }
+                    }
+                    other => {
+                        return Err(Error::malformed(format!(
+                            "unknown codec strategy `{other}`"
+                        )))
+                    }
+                }
+            }
+        }
+        Ok(Representation {
+            kind,
+            frame,
+            dependencies,
+            strategy,
+            decoded_size,
+        })
+    }
+}
+
 /// A file content manifest (`WEFT-MODEL.md` §2.3).
+///
+/// `representation` is `None` for the frozen v1 schema (written whenever the
+/// store is in `RepresentationMode::Raw`) and `Some` for the experimental v2
+/// representation schema. A v1 manifest must never contain a representation
+/// key; a v2 manifest must always contain one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Manifest {
     pub size: u64,
     pub chunk_size: u64,
     pub chunks: Vec<ChunkRef>,
     pub content_hash: Hash32,
+    pub representation: Option<Representation>,
 }
 
 /// Largest accepted chunk size in v1 (defensive bound; v1 writes 64 KiB).
 pub const MAX_CHUNK_SIZE: u64 = 16 * 1024 * 1024;
 
 impl Manifest {
-    const KEYS: &'static [&'static str] =
+    const KEYS_V1: &'static [&'static str] =
         &["schema", "size", "chunk_size", "chunks", "content_hash"];
+    const KEYS_V2: &'static [&'static str] = &[
+        "schema",
+        "size",
+        "chunk_size",
+        "chunks",
+        "content_hash",
+        "representation",
+    ];
 
     pub fn to_value(&self) -> Value {
-        let chunks = self
+        let chunks: Vec<Value> = self
             .chunks
             .iter()
             .map(|chunk| {
@@ -268,13 +431,24 @@ impl Manifest {
                 ])
             })
             .collect();
-        wu::map([
-            ("schema", Value::Str(MANIFEST_SCHEMA.to_owned())),
-            ("size", Value::U64(self.size)),
-            ("chunk_size", Value::U64(self.chunk_size)),
-            ("chunks", Value::Array(chunks)),
-            ("content_hash", wu::hash_value(self.content_hash)),
-        ])
+        match &self.representation {
+            // The frozen v1 map: byte-for-byte the pre-representation writer.
+            None => wu::map([
+                ("schema", Value::Str(MANIFEST_SCHEMA.to_owned())),
+                ("size", Value::U64(self.size)),
+                ("chunk_size", Value::U64(self.chunk_size)),
+                ("chunks", Value::Array(chunks)),
+                ("content_hash", wu::hash_value(self.content_hash)),
+            ]),
+            Some(representation) => wu::map([
+                ("schema", Value::Str(MANIFEST_SCHEMA_V2.to_owned())),
+                ("size", Value::U64(self.size)),
+                ("chunk_size", Value::U64(self.chunk_size)),
+                ("chunks", Value::Array(chunks)),
+                ("content_hash", wu::hash_value(self.content_hash)),
+                ("representation", representation.to_value()),
+            ]),
+        }
     }
 
     pub fn encode(&self) -> Result<Vec<u8>> {
@@ -287,22 +461,36 @@ impl Manifest {
 
     pub fn from_wcb(value: &Value) -> Result<Self> {
         let map = wu::as_map(value)?;
-        wu::check_keys(map, Self::KEYS)?;
         let schema = wu::get_text(map, "schema")?;
-        // The normative spec writes `weft.manifest.v1`. The older
-        // `weftfs.manifest.v1` spelling is accepted on read for compatibility
-        // with early notes; the writer emits the spec spelling. See
-        // docs/store-status.md.
-        if schema != MANIFEST_SCHEMA && schema != "weftfs.manifest.v1" {
-            return Err(Error::unknown_schema(format!(
-                "manifest schema `{schema}` is not `{MANIFEST_SCHEMA}`"
-            )));
-        }
+        // The normative v1 writer emits `weft.manifest.v1`; the older
+        // `weftfs.manifest.v1` spelling is accepted on read. The experimental
+        // v2 representation schema is `weftfs.manifest.v2`, with
+        // `weft.manifest.v2` accepted for symmetry. Any other schema fails
+        // with `UnsupportedVersion`. See docs/store-status.md §3.1.
+        let (v2, keys): (bool, &[&str]) = match schema.as_str() {
+            MANIFEST_SCHEMA | MANIFEST_SCHEMA_V1_LEGACY => (false, Self::KEYS_V1),
+            MANIFEST_SCHEMA_V2 | MANIFEST_SCHEMA_V2_ALT => (true, Self::KEYS_V2),
+            other => {
+                return Err(Error::unsupported_version(format!(
+                    "manifest schema `{other}` is not a supported v1/v2 schema"
+                )))
+            }
+        };
+        wu::check_keys(map, keys)?;
         let size = wu::get_u64(map, "size")?;
         let chunk_size = wu::get_u64(map, "chunk_size")?;
         if chunk_size == 0 || chunk_size > MAX_CHUNK_SIZE {
             return Err(Error::malformed("manifest chunk_size is out of range"));
         }
+        let representation = if v2 {
+            Some(Representation::from_wcb(wu::field(map, "representation")?)?)
+        } else {
+            None
+        };
+        let codec = representation
+            .as_ref()
+            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .unwrap_or(false);
         let mut chunks = Vec::new();
         let mut total: u64 = 0;
         for item in wu::get_array(map, "chunks")? {
@@ -323,32 +511,51 @@ impl Manifest {
                 len,
             });
         }
-        if total != size {
-            return Err(Error::corrupt(format!(
-                "manifest chunk lengths sum to {total}, declared size is {size}"
-            )));
-        }
-        if size == 0 && !chunks.is_empty() {
-            return Err(Error::corrupt("empty file manifest must have no chunks"));
-        }
-        if size > 0 && chunks.is_empty() {
-            return Err(Error::corrupt("non-empty file manifest has no chunks"));
-        }
-        for (index, chunk) in chunks.iter().enumerate() {
-            let is_last = index + 1 == chunks.len();
-            if !is_last && chunk.len != chunk_size {
-                return Err(Error::corrupt("non-final chunk is not full"));
+        if codec {
+            // A codec representation carries its chunks inside the frame; any
+            // chunk entries here would be a second, conflicting physical layout.
+            if !chunks.is_empty() {
+                return Err(Error::corrupt(
+                    "codec manifest must not list chunk references",
+                ));
+            }
+        } else {
+            if total != size {
+                return Err(Error::corrupt(format!(
+                    "manifest chunk lengths sum to {total}, declared size is {size}"
+                )));
+            }
+            if size == 0 && !chunks.is_empty() {
+                return Err(Error::corrupt("empty file manifest must have no chunks"));
+            }
+            if size > 0 && chunks.is_empty() {
+                return Err(Error::corrupt("non-empty file manifest has no chunks"));
+            }
+            for (index, chunk) in chunks.iter().enumerate() {
+                let is_last = index + 1 == chunks.len();
+                if !is_last && chunk.len != chunk_size {
+                    return Err(Error::corrupt("non-final chunk is not full"));
+                }
             }
         }
         let content_hash = wu::get_hash(map, "content_hash")?;
         if size == 0 && content_hash != identity::content_hash(b"") {
             return Err(Error::corrupt("empty manifest content hash mismatch"));
         }
+        if let Some(representation) = &representation {
+            if representation.decoded_size != size {
+                return Err(Error::corrupt(format!(
+                    "representation decoded_size {} differs from manifest size {size}",
+                    representation.decoded_size
+                )));
+            }
+        }
         Ok(Manifest {
             size,
             chunk_size,
             chunks,
             content_hash,
+            representation,
         })
     }
 }

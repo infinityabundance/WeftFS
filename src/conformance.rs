@@ -73,6 +73,7 @@ pub fn build_fixture_store(path: &Path) -> Result<FixtureSummary> {
         checkpoint_interval: 256,
         gc_grace_secs: 3_600,
         fixed_timestamp_ns: Some(FIXTURE_TIMESTAMP_NS),
+        ..Options::default()
     };
     let mut store = Store::init(path, options)?;
 

@@ -437,6 +437,7 @@ fn run(cli: Cli) -> Result<()> {
                 checkpoint_interval,
                 gc_grace_secs,
                 fixed_timestamp_ns,
+                ..Options::default()
             };
             let store = Store::init(&store, options)?;
             if json {

@@ -33,6 +33,7 @@ fn opts(interval: u64) -> Options {
         checkpoint_interval: interval,
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
+        ..Options::default()
     }
 }
 
