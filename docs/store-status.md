@@ -189,8 +189,27 @@ Tests map to the P4 requirements as follows:
 **Status: experimental, opt-in, Rust-only.** `Options.representation` defaults to
 `RepresentationMode::Raw`. With `Raw` — the mode used by every existing fixture,
 test, FUSE mount, and handoff — the writer emits the frozen v1 manifest and the
-on-disk bytes are unchanged. `CodecAuto` must be selected explicitly (tests and
-the bench example do so through `Options`; the CLI does not expose it yet).
+on-disk bytes are unchanged. `CodecAuto` must be selected explicitly.
+
+The CLI exposes the policy as global flags (accepted before or after the
+subcommand, so they also work as mount flags):
+
+```sh
+weftfs --store DIR --representation codec-auto create /big.bin --file big.bin
+weftfs --store DIR --representation codec-auto --codec-min-bytes 65536 verify --full
+weftfs --store DIR mount --mountpoint MNT --representation codec-auto
+```
+
+`--representation` accepts `raw` (the default) or `codec-auto`; any other value
+is `InvalidArgument`. `--codec-min-bytes` defaults to
+`DEFAULT_CODEC_MIN_BYTES` (4096) and rejects non-integers with
+`InvalidArgument`. The flags are resolved once into `Options` where
+`open_with_options` is called, so every write verb (including writes through a
+FUSE mount) uses the same policy. Read-only verbs accept and ignore the flags
+(the policy affects only new writes). The policy is per invocation and is not
+stored in the superblock; `info --json` reports the active invocation policy as
+`representation` and `codec_min_bytes`. A plain invocation and a plain mount
+remain `raw`, byte-identical to the frozen fixture.
 
 A v2 manifest (`weft.manifest.v2`, one spelling, no alias) has the v1 fields
 plus a canonical WCB `representation` map:
@@ -242,9 +261,10 @@ and names the object, manifest, and frame on failure.
 
 The Go store has no v2 parser and is expected to reject `weft.manifest.v2`
 (fail closed with its unknown-schema/unsupported-version class). The Rust→Go
-handoff court therefore remains on the default `Raw` path until Go parity
-lands. The v2 path is not part of the frozen v1 format and is not claimed
-compatible or interoperable.
+handoff court therefore still uses the default `Raw` path (`--representation raw`)
+and continues to compare byte-identical v1 fixtures; the Go store does not
+understand stores written by `--representation codec-auto`. The v2 path is not
+part of the frozen v1 format and is not claimed compatible or interoperable.
 
 ---
 

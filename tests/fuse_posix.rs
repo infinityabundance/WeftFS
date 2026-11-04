@@ -16,6 +16,17 @@ use std::path::Path;
 
 use fuse_common::{cstring, Fixture, Mount};
 
+/// A deterministic, highly compressible payload of exactly `len` bytes.
+fn compressible_payload(len: usize) -> Vec<u8> {
+    let pattern = b"weftfs experimental codec representation payload\n";
+    let mut data = Vec::with_capacity(len);
+    while data.len() < len {
+        let take = (len - data.len()).min(pattern.len());
+        data.extend_from_slice(&pattern[..take]);
+    }
+    data
+}
+
 const RENAME_NOREPLACE: libc::c_uint = 1;
 const RENAME_EXCHANGE: libc::c_uint = 2;
 
@@ -734,4 +745,65 @@ fn permissions_with_allow_other() {
         "mountpoint must be traversable: {}",
         String::from_utf8_lossy(&listing.stderr)
     );
+}
+
+#[test]
+fn mount_codec_auto_writes_v2_codec_manifest() {
+    // The daemon receives the same global policy flags the CLI uses; clap
+    // global args are accepted after the `mount` subcommand, so the shared
+    // harness passes them through its existing `flags` slice unchanged.
+    let os = std::ffi::OsStr::new;
+    let fx = Fixture::new();
+    let data = compressible_payload(256 * 1024);
+    {
+        let _mount = fx.mount(&["--representation", "codec-auto"]);
+        let path = fx.path("big.bin");
+        fs::write(&path, &data).expect("write through the codec-auto mount");
+        assert_eq!(
+            fs::read(&path).expect("read back through the mount"),
+            data,
+            "FUSE round-trip changed the bytes"
+        );
+    }
+
+    // After unmount, verify with the same policy; `--full` must decode the
+    // codec representation, not merely hash the manifest.
+    let verify_output = fx.weft_ok(&[
+        os("--representation"),
+        os("codec-auto"),
+        os("--json"),
+        os("verify"),
+        os("--full"),
+    ]);
+    let verify: serde_json::Value = serde_json::from_str(&verify_output).expect("verify JSON");
+    assert_eq!(verify["ok"], true, "verify: {verify}");
+    assert!(
+        verify["checked_representations"].as_u64().unwrap() >= 1,
+        "verify did not decode a representation: {verify}"
+    );
+
+    let stat_output = fx.weft_ok(&[os("--json"), os("stat"), os("/big.bin")]);
+    let stat: serde_json::Value = serde_json::from_str(&stat_output).expect("stat JSON");
+    let content_id = stat["content_id"].as_str().expect("content_id");
+    let hash = weftfs::Hash32::from_hex(content_id).expect("content id hex");
+    let manifest_path = weftfs::recovery::manifest_path(&fx.store, hash);
+    let manifest = fs::read(&manifest_path)
+        .unwrap_or_else(|err| panic!("read {}: {err}", manifest_path.display()));
+    let text = String::from_utf8_lossy(&manifest);
+    assert!(
+        text.contains("weft.manifest.v2"),
+        "mount write did not produce a v2 manifest"
+    );
+    let value = weftcodec::wcb::decode_default(&manifest).expect("decode manifest WCB");
+    let decoded = weftfs::format::Manifest::from_wcb(&value).expect("parse v2 manifest");
+    let representation = decoded
+        .representation
+        .as_ref()
+        .expect("v2 manifest carries a representation");
+    assert_eq!(
+        representation.kind,
+        weftfs::format::RepresentationKind::Codec,
+        "mount write fell back to a raw representation"
+    );
+    assert!(representation.frame.is_some(), "codec frame id is missing");
 }

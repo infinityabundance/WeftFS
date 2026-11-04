@@ -23,7 +23,9 @@ use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::identity::Hash32;
 use weftfs::state::{object_causal_closure, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE};
-use weftfs::store::{OpenMode, Options, SetAttr, Store};
+use weftfs::store::{
+    OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
+};
 use weftfs::wcb_util::value_to_json;
 
 #[derive(Parser)]
@@ -38,6 +40,24 @@ struct Cli {
     /// Fixture clock override for every generated mtime and commit timestamp.
     #[arg(long, global = true, value_name = "NS")]
     fixed_timestamp_ns: Option<i64>,
+    /// Physical representation for newly written file content: `raw` (frozen
+    /// v1 manifests) or `codec-auto` (experimental, Rust-only). Also accepted
+    /// by `mount`; read-only commands accept and ignore it.
+    #[arg(
+        long,
+        global = true,
+        value_name = "raw|codec-auto",
+        default_value = "raw"
+    )]
+    representation: String,
+    /// `codec-auto` leaves files smaller than this on the raw path.
+    #[arg(
+        long = "codec-min-bytes",
+        global = true,
+        value_name = "N",
+        allow_hyphen_values = true
+    )]
+    codec_min_bytes: Option<String>,
     #[command(subcommand)]
     command: Command,
 }
@@ -404,13 +424,62 @@ fn main() {
     }
 }
 
+/// Resolved store-open policy from the global CLI flags. Applied wherever
+/// `Options` is constructed, so every verb that opens the store for writing
+/// sees the same representation policy; read-only verbs simply never write.
+#[derive(Clone, Copy, Debug)]
+struct OpenPolicy {
+    fixed_timestamp_ns: Option<i64>,
+    representation: RepresentationMode,
+    codec_min_bytes: u64,
+}
+
+impl OpenPolicy {
+    fn options(self) -> Options {
+        Options {
+            fixed_timestamp_ns: self.fixed_timestamp_ns,
+            representation: self.representation,
+            codec_min_bytes: self.codec_min_bytes,
+            ..Options::default()
+        }
+    }
+}
+
+fn parse_representation(text: &str) -> Result<RepresentationMode> {
+    match text {
+        "raw" => Ok(RepresentationMode::Raw),
+        "codec-auto" => Ok(RepresentationMode::CodecAuto),
+        other => Err(Error::invalid_argument(format!(
+            "--representation must be `raw` or `codec-auto` (got `{other}`)"
+        ))),
+    }
+}
+
+fn parse_codec_min_bytes(text: Option<&str>) -> Result<u64> {
+    match text {
+        None => Ok(DEFAULT_CODEC_MIN_BYTES),
+        Some(text) => text.parse::<u64>().map_err(|_| {
+            Error::invalid_argument(format!(
+                "--codec-min-bytes must be a non-negative integer (got `{text}`)"
+            ))
+        }),
+    }
+}
+
 fn run(cli: Cli) -> Result<()> {
     let Cli {
         store,
         json,
         fixed_timestamp_ns,
+        representation,
+        codec_min_bytes,
         command,
     } = cli;
+    let policy = OpenPolicy {
+        fixed_timestamp_ns,
+        representation: parse_representation(&representation)?,
+        codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
+    };
     let needs_store = !matches!(command, Command::ConformanceStore { .. });
     let store = match store {
         Some(path) => path,
@@ -436,7 +505,9 @@ fn run(cli: Cli) -> Result<()> {
                 chunk_size,
                 checkpoint_interval,
                 gc_grace_secs,
-                fixed_timestamp_ns,
+                fixed_timestamp_ns: policy.fixed_timestamp_ns,
+                representation: policy.representation,
+                codec_min_bytes: policy.codec_min_bytes,
                 ..Options::default()
             };
             let store = Store::init(&store, options)?;
@@ -452,7 +523,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Info | Command::Open => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let state = store.current_state();
             if json {
                 print_json(&json!({
@@ -463,6 +534,8 @@ fn run(cli: Cli) -> Result<()> {
                     "entries": state.entries.len(),
                     "relations": state.relations.len(),
                     "snapshots": state.snapshots.len(),
+                    "representation": policy.representation.as_str(),
+                    "codec_min_bytes": policy.codec_min_bytes,
                     "rejected_generations": store.rejected_generations(),
                     "recovery_notes": store.recovery_notes(),
                 }))
@@ -474,6 +547,8 @@ fn run(cli: Cli) -> Result<()> {
                 println!("entries={}", state.entries.len());
                 println!("relations={}", state.relations.len());
                 println!("snapshots={}", state.snapshots.len());
+                println!("representation={}", policy.representation.as_str());
+                println!("codec_min_bytes={}", policy.codec_min_bytes);
                 for generation in store.rejected_generations() {
                     println!("rejected_generation={generation}");
                 }
@@ -502,7 +577,7 @@ fn run(cli: Cli) -> Result<()> {
             let attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints, &attr_u64_lists)?;
             let mode = parse_mode(&mode)?;
             let causal = parse_causal_entries(causal.as_deref())?;
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             let id = if causal.is_empty() {
@@ -565,7 +640,7 @@ fn run(cli: Cli) -> Result<()> {
         } => {
             let bytes = read_input(text, input_file)?;
             let causal = parse_causal_entries(causal.as_deref())?;
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let id = store.resolve_path(&path)?;
             let version = store.write_file_causal(id, offset, &bytes, &causal)?;
             if json {
@@ -580,7 +655,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Cat { path, offset, len } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
             let bytes = if offset == 0 && len.is_none() {
                 store.read_object(id)?
@@ -601,7 +676,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Ls { path } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
             let entries = store.list_dir(id)?;
             if json {
@@ -625,7 +700,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Stat { path } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
             let record = store.object_meta(id)?;
             if json {
@@ -647,7 +722,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Unlink { path } => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             store.unlink(parent_id, &name)?;
@@ -658,7 +733,7 @@ fn run(cli: Cli) -> Result<()> {
             )
         }
         Command::Rename { from, to } => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let (old_parent, old_name) = split_path(&from)?;
             let (new_parent, new_name) = split_path(&to)?;
             let old_parent_id = store.resolve_path(&old_parent)?;
@@ -671,7 +746,7 @@ fn run(cli: Cli) -> Result<()> {
             )
         }
         Command::Link { target, path } => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let target_id = resolve_object(&store, &target)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
@@ -691,7 +766,7 @@ fn run(cli: Cli) -> Result<()> {
         } => {
             let (default_uid, default_gid) = current_ids();
             let mode = parse_mode(&mode)?;
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             let id = match seed {
@@ -725,7 +800,7 @@ fn run(cli: Cli) -> Result<()> {
             gid,
         } => {
             let (default_uid, default_gid) = current_ids();
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let (parent, name) = split_path(&path)?;
             let parent_id = store.resolve_path(&parent)?;
             let id = store.symlink(
@@ -753,7 +828,7 @@ fn run(cli: Cli) -> Result<()> {
             attr_ints,
             attr_u64_lists,
         } => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let id = store.resolve_path(&path)?;
             let attrs = if attrs.is_empty()
                 && attr_bytes.is_empty()
@@ -784,7 +859,7 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
-        Command::Relation { command } => run_relation(&store, json, fixed_timestamp_ns, command),
+        Command::Relation { command } => run_relation(&store, json, policy, command),
         Command::Query {
             weftql,
             snapshot,
@@ -793,7 +868,7 @@ fn run(cli: Cli) -> Result<()> {
             groups,
             require_one,
         } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let parsed = selector::parse(&weftql)?;
             let pinned = match snapshot.as_deref() {
                 Some(spec) => Some(lookup_snapshot(&store, spec)?),
@@ -903,7 +978,7 @@ fn run(cli: Cli) -> Result<()> {
         }
         Command::Snapshot { command } => match command {
             SnapshotCommand::Create { name } => {
-                let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
                 let pinned = store.snapshot_create(&name)?;
                 if json {
                     print_json(&json!({
@@ -917,7 +992,7 @@ fn run(cli: Cli) -> Result<()> {
                 }
             }
             SnapshotCommand::List => {
-                let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+                let store = open_store(&store, OpenMode::ReadOnly, policy)?;
                 let snapshots = store.snapshot_list();
                 if json {
                     let map: BTreeMap<String, String> = snapshots
@@ -934,7 +1009,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         },
         Command::Pin { target, snapshot } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = resolve_object(&store, &target)?;
             let pinned = match snapshot.as_deref() {
                 Some(spec) => Some(lookup_snapshot(&store, spec)?),
@@ -959,7 +1034,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Verify { full } => {
-            let store = open_store(&store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let report = store.verify(full)?;
             if json {
                 let problems: Vec<_> = report
@@ -978,6 +1053,7 @@ fn run(cli: Cli) -> Result<()> {
                     "checked_chunks": report.checked_chunks,
                     "checked_context_roots": report.checked_context_roots,
                     "checked_causal": report.checked_causal,
+                    "checked_representations": report.checked_representations,
                     "checked_capabilities": report.checked_capabilities,
                     "rejected_generations": report.rejected_generations,
                     "problems": problems,
@@ -992,6 +1068,7 @@ fn run(cli: Cli) -> Result<()> {
                 println!("checked_chunks={}", report.checked_chunks);
                 println!("checked_context_roots={}", report.checked_context_roots);
                 println!("checked_causal={}", report.checked_causal);
+                println!("checked_representations={}", report.checked_representations);
                 println!("checked_capabilities={}", report.checked_capabilities);
                 for problem in &report.problems {
                     println!("problem={}: {}", problem.class, problem.detail);
@@ -1000,7 +1077,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Gc { apply, grace_secs } => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             if let Some(grace) = grace_secs {
                 let mut options = store.options().clone();
                 options.gc_grace_secs = grace;
@@ -1036,7 +1113,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Checkpoint => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
             let head = store.checkpoint()?;
             if json {
                 print_json(&json!({
@@ -1049,9 +1126,9 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
-        Command::Context { command } => run_context(&store, json, fixed_timestamp_ns, command),
-        Command::Causal { command } => run_causal(&store, json, fixed_timestamp_ns, command),
-        Command::Uri { command } => run_uri(&store, json, fixed_timestamp_ns, command),
+        Command::Context { command } => run_context(&store, json, policy, command),
+        Command::Causal { command } => run_causal(&store, json, policy, command),
+        Command::Uri { command } => run_uri(&store, json, policy, command),
         #[cfg(feature = "fuse")]
         Command::Mount {
             mountpoint,
@@ -1082,7 +1159,7 @@ fn run(cli: Cli) -> Result<()> {
             } else {
                 OpenMode::ReadWrite
             };
-            let store = open_store(&store, mode, fixed_timestamp_ns)?;
+            let store = open_store(&store, mode, policy)?;
 
             let limits = weftcodec::Limits::default();
             let (context_mount, snapshot_commit, snapshot_state) = match context {
@@ -1157,31 +1234,18 @@ fn run(cli: Cli) -> Result<()> {
             out,
             contexts,
             source_revisions,
-        } => run_export_bundle(
-            &store,
-            &out,
-            &contexts,
-            &source_revisions,
-            fixed_timestamp_ns,
-            json,
-        ),
+        } => run_export_bundle(&store, &out, &contexts, &source_revisions, policy, json),
     }
 }
 
-fn open_store(
-    path: &std::path::Path,
-    mode: OpenMode,
-    fixed_timestamp_ns: Option<i64>,
-) -> Result<Store> {
-    let mut options = Options::default();
-    options.fixed_timestamp_ns = fixed_timestamp_ns;
-    Store::open_with_options(path, mode, options)
+fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Result<Store> {
+    Store::open_with_options(path, mode, policy.options())
 }
 
 fn run_relation(
     store: &PathBuf,
     json: bool,
-    fixed_timestamp_ns: Option<i64>,
+    policy: OpenPolicy,
     command: RelationCommand,
 ) -> Result<()> {
     match command {
@@ -1194,7 +1258,7 @@ fn run_relation(
             provenance,
             attrs,
         } => {
-            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
             let subject_id = resolve_object(&store, &subject)?;
             let provided = [object.is_some(), value.is_some(), value_int.is_some()]
                 .iter()
@@ -1241,7 +1305,7 @@ fn run_relation(
             }
         }
         RelationCommand::List { subject, predicate } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let subject_id = match subject {
                 Some(spec) => Some(resolve_object(&store, &spec)?),
                 None => None,
@@ -1313,7 +1377,7 @@ fn run_relation(
             }
         }
         RelationCommand::Delete { relation_id } => {
-            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
             let id = Hash32::from_hex(&relation_id)?;
             store.relation_delete(id)?;
             success(
@@ -1416,7 +1480,7 @@ fn context_root_json(stored: &weftfs::StoredContextRoot) -> Result<serde_json::V
 fn run_context(
     store: &PathBuf,
     json: bool,
-    fixed_timestamp_ns: Option<i64>,
+    policy: OpenPolicy,
     command: ContextCommand,
 ) -> Result<()> {
     match command {
@@ -1432,7 +1496,7 @@ fn run_context(
             max_work,
             replace,
         } => {
-            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
             let source = read_selector_source(&selector)?;
             let parsed = selector::parse(&source)?;
             let snapshot_id = lookup_snapshot(&store, &snapshot)?;
@@ -1477,7 +1541,7 @@ fn run_context(
             }
         }
         ContextCommand::List => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let contexts = store.list_context_roots()?;
             if json {
                 let items: Vec<_> = contexts
@@ -1493,7 +1557,7 @@ fn run_context(
             }
         }
         ContextCommand::Show { target } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let stored = store.load_context_root(&target)?;
             if json {
                 print_json(&context_root_json(&stored)?)
@@ -1521,7 +1585,7 @@ fn run_context(
             gid,
             groups,
         } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let capability = read_capability(&capability_file)?;
             let (default_uid, default_gid) = current_ids();
             let principal = Principal::new(
@@ -1620,7 +1684,7 @@ fn run_context(
             groups,
             require_one,
         } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let capability = read_capability(&capability_file)?;
             let (default_uid, default_gid) = current_ids();
             let principal = Principal::new(
@@ -1681,7 +1745,7 @@ fn run_context(
             }
         }
         ContextCommand::Uri { target } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let stored = store.load_context_root(&target)?;
             if json {
                 print_json(&json!({
@@ -1694,7 +1758,7 @@ fn run_context(
             }
         }
         ContextCommand::Delete { name } => {
-            let mut store = open_store(store, OpenMode::ReadWrite, fixed_timestamp_ns)?;
+            let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
             store.delete_context_root(&name)?;
             success(
                 json,
@@ -1724,12 +1788,12 @@ fn find_object_by_identity(store: &Store, target: &str) -> Result<weftfs::Object
 fn run_causal(
     store: &PathBuf,
     json: bool,
-    fixed_timestamp_ns: Option<i64>,
+    policy: OpenPolicy,
     command: CausalCommand,
 ) -> Result<()> {
     match command {
         CausalCommand::Show { target } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let record = find_object_by_identity(&store, &target)?;
             let closure = object_causal_closure(&record)?;
             let mode = identity_mode_of(&record);
@@ -1767,12 +1831,7 @@ fn run_causal(
     }
 }
 
-fn run_uri(
-    store: &PathBuf,
-    json: bool,
-    fixed_timestamp_ns: Option<i64>,
-    command: UriCommand,
-) -> Result<()> {
+fn run_uri(store: &PathBuf, json: bool, policy: OpenPolicy, command: UriCommand) -> Result<()> {
     match command {
         UriCommand::Canonicalize { uri } => {
             let limits = weftcodec::Limits::default();
@@ -1793,7 +1852,7 @@ fn run_uri(
             }
         }
         UriCommand::Show { target } => {
-            let store = open_store(store, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let stored = store.load_context_root(&target)?;
             if json {
                 print_json(&json!({
@@ -2024,10 +2083,10 @@ fn run_export_bundle(
     out: &PathBuf,
     contexts: &[String],
     source_revisions: &[String],
-    fixed_timestamp_ns: Option<i64>,
+    policy: OpenPolicy,
     json: bool,
 ) -> Result<()> {
-    let store = open_store(store_path, OpenMode::ReadOnly, fixed_timestamp_ns)?;
+    let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
     let limits = weftcodec::Limits::default();
     let principal = Principal::root();
     let now = store.clock_now_ns();

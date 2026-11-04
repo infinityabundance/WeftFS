@@ -103,6 +103,16 @@ impl Default for RepresentationMode {
     }
 }
 
+impl RepresentationMode {
+    /// Canonical CLI spelling (`raw` or `codec-auto`).
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RepresentationMode::Raw => "raw",
+            RepresentationMode::CodecAuto => "codec-auto",
+        }
+    }
+}
+
 /// Store options.
 #[derive(Clone, Debug)]
 pub struct Options {

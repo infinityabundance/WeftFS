@@ -379,6 +379,174 @@ fn first_generation(store: &std::path::Path) -> u64 {
     value["generation"].as_u64().unwrap()
 }
 
+/// A deterministic, highly compressible payload of exactly `len` bytes.
+fn compressible(len: usize) -> Vec<u8> {
+    let pattern = b"weftfs experimental codec representation payload\n";
+    let mut data = Vec::with_capacity(len);
+    while data.len() < len {
+        let take = (len - data.len()).min(pattern.len());
+        data.extend_from_slice(&pattern[..take]);
+    }
+    data
+}
+
+/// Read the manifest blob a `stat` `content_id` names.
+fn manifest_bytes(store: &std::path::Path, content_id: &str) -> Vec<u8> {
+    let hash = weftfs::Hash32::from_hex(content_id).expect("content id hex");
+    let path = weftfs::recovery::manifest_path(store, hash);
+    fs::read(&path).unwrap_or_else(|err| panic!("read manifest {}: {err}", path.display()))
+}
+
+#[test]
+fn cli_codec_auto_representation_is_opt_in_and_exact() {
+    let dir = tempdir().unwrap();
+    let input = dir.path().join("big.bin");
+    let data = compressible(256 * 1024);
+    fs::write(&input, &data).unwrap();
+
+    // CodecAuto writes a v2 codec manifest for a large compressible file.
+    let store = dir.path().join("codec-store");
+    ok(&store, &["init"]);
+    ok(
+        &store,
+        &[
+            "--representation",
+            "codec-auto",
+            "create",
+            "/big.txt",
+            "--file",
+            input.to_str().unwrap(),
+        ],
+    );
+    let stat = json(&store, &["--json", "stat", "/big.txt"]);
+    assert_eq!(stat["size"], data.len());
+    let content_id = stat["content_id"].as_str().unwrap().to_owned();
+    let manifest = manifest_bytes(&store, &content_id);
+    let text = String::from_utf8_lossy(&manifest);
+    assert!(
+        text.contains("weft.manifest.v2"),
+        "expected a v2 manifest, got {} bytes without the schema string",
+        manifest.len()
+    );
+    assert!(!text.contains("weft.manifest.v1"));
+
+    // The stored frame must be strictly smaller than the raw input.
+    let value = weftcodec::wcb::decode_default(&manifest).expect("decode manifest WCB");
+    let decoded = weftfs::format::Manifest::from_wcb(&value).expect("parse v2 manifest");
+    let representation = decoded
+        .representation
+        .as_ref()
+        .expect("v2 manifest carries a representation");
+    assert_eq!(
+        representation.kind,
+        weftfs::format::RepresentationKind::Codec
+    );
+    let frame = representation.frame.expect("codec frame id");
+    let frame_bytes = fs::metadata(weftfs::recovery::manifest_path(&store, frame))
+        .expect("frame blob")
+        .len();
+    assert!(
+        frame_bytes < data.len() as u64,
+        "frame ({frame_bytes} B) is not smaller than the raw input ({} B)",
+        data.len()
+    );
+
+    // `cat` returns the exact logical bytes.
+    let output = ok(
+        &store,
+        &["--representation", "codec-auto", "cat", "/big.txt"],
+    );
+    assert_eq!(output.stdout, data);
+
+    // `info` reports the active invocation policy; the default reports raw.
+    let info = json(
+        &store,
+        &["--representation", "codec-auto", "--json", "info"],
+    );
+    assert_eq!(info["representation"], "codec-auto");
+    assert_eq!(
+        info["codec_min_bytes"],
+        weftfs::store::DEFAULT_CODEC_MIN_BYTES
+    );
+    let default_info = json(&store, &["--json", "info"]);
+    assert_eq!(default_info["representation"], "raw");
+
+    // `verify --full` decodes the representation, not just the manifest.
+    let verify = json(
+        &store,
+        &[
+            "--representation",
+            "codec-auto",
+            "--json",
+            "verify",
+            "--full",
+        ],
+    );
+    assert_eq!(verify["ok"], true, "verify: {verify}");
+    assert!(
+        verify["checked_representations"].as_u64().unwrap() >= 1,
+        "verify did not decode a representation: {verify}"
+    );
+
+    // The default (raw) path still writes the frozen v1 manifest.
+    let raw_store = dir.path().join("raw-store");
+    ok(&raw_store, &["init"]);
+    ok(
+        &raw_store,
+        &["create", "/big.txt", "--file", input.to_str().unwrap()],
+    );
+    let raw_stat = json(&raw_store, &["--json", "stat", "/big.txt"]);
+    let raw_content = raw_stat["content_id"].as_str().unwrap().to_owned();
+    let raw_manifest = manifest_bytes(&raw_store, &raw_content);
+    let raw_text = String::from_utf8_lossy(&raw_manifest);
+    assert!(raw_text.contains("weft.manifest.v1"));
+    assert!(!raw_text.contains("weft.manifest.v2"));
+    let raw_verify = json(&raw_store, &["--json", "verify", "--full"]);
+    assert_eq!(raw_verify["ok"], true, "raw verify: {raw_verify}");
+}
+
+#[test]
+fn cli_rejects_unknown_representation_and_bad_min_bytes() {
+    let dir = tempdir().unwrap();
+    let store = dir.path().join("store");
+    ok(&store, &["init"]);
+
+    let output = run(
+        &store,
+        &["--representation", "bogus", "create", "/x", "--text", "x"],
+    );
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("InvalidArgument:"), "stderr: {stderr}");
+    assert!(stderr.contains("--representation"), "stderr: {stderr}");
+    assert!(stderr.contains("bogus"), "stderr: {stderr}");
+
+    let output = run(
+        &store,
+        &[
+            "--codec-min-bytes",
+            "not-a-number",
+            "create",
+            "/y",
+            "--text",
+            "y",
+        ],
+    );
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("InvalidArgument:"), "stderr: {stderr}");
+    assert!(stderr.contains("--codec-min-bytes"), "stderr: {stderr}");
+
+    let output = run(
+        &store,
+        &["--codec-min-bytes", "-1", "create", "/z", "--text", "z"],
+    );
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("InvalidArgument:"), "stderr: {stderr}");
+    assert!(stderr.contains("--codec-min-bytes"), "stderr: {stderr}");
+}
+
 #[test]
 fn cli_conformance_store_needs_no_store_flag() {
     let dir = tempdir().unwrap();

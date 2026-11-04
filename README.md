@@ -94,6 +94,17 @@ cargo add weftfs@0.3.0
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the
 transactional store plus FUSE frontend (the `fuse` feature enables mounting).
 
+### Experimental codec representation (opt-in)
+
+The default `raw` policy writes the frozen v1 manifests. The experimental,
+Rust-only `codec-auto` policy is selected with `--representation codec-auto`
+and `--codec-min-bytes N` (default 4096); both are global flags and are also
+accepted after `mount`, e.g. `weftfs --store DIR mount --mountpoint MNT
+--representation codec-auto`. Read-only verbs accept and ignore them, and
+`info --json` reports the active policy. `codec-auto` writes `weft.manifest.v2`,
+which the Go store rejects; the Rust↔Go handoff court stays on `raw`. Defaults
+and fixtures are unchanged.
+
 ## Testing: Docker only
 
 All builds and tests execute inside minimal official images. The host runs
