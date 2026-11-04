@@ -133,6 +133,31 @@ fn posix_basic_matrix() {
 }
 
 #[test]
+fn extent_cow_partial_write_through_mount() {
+    // The daemon forwards every FUSE `write` to `Store::write_file`, which is
+    // now chunk-granular COW. Drive a partial overwrite of a multi-chunk file
+    // through the real mount and read the whole file back.
+    let fx = Fixture::new();
+    let _mount = fx.mount(&[]);
+
+    let file = fx.path("cow.bin");
+    let original: Vec<u8> = (0..256 * 1024).map(|index| (index % 251) as u8).collect();
+    fs::write(&file, &original).unwrap();
+
+    let at = 100 * 1024 + 123; // inside chunk 1 with 64 KiB chunking
+    let mut handle = OpenOptions::new().write(true).open(&file).unwrap();
+    handle.seek(SeekFrom::Start(at as u64)).unwrap();
+    handle.write_all(b"extent-cow").unwrap();
+    handle.sync_all().unwrap();
+    drop(handle);
+
+    let mut expected = original.clone();
+    expected[at..at + 10].copy_from_slice(b"extent-cow");
+    assert_eq!(fs::read(&file).unwrap(), expected);
+    assert_eq!(fs::metadata(&file).unwrap().len(), original.len() as u64);
+}
+
+#[test]
 fn sparse_writes_large_files_ranges_and_open_unlinked() {
     let fx = Fixture::new();
     let _mount = fx.mount(&[]);

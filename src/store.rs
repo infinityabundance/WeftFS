@@ -824,6 +824,17 @@ impl Store {
 
     /// Replace a byte range and optionally set `causal_exact` ancestry.
     ///
+    /// This is chunk-granular copy-on-write: only chunks whose bytes actually
+    /// change are re-encoded and stored. Chunks that the write does not touch
+    /// keep their old references verbatim, and their blobs are not rewritten.
+    /// The frozen v1 whole-file ContentId still needs one digest pass over the
+    /// file; see `Store::store_file_range` for the exact cost model.
+    ///
+    /// A zero-length write is a POSIX no-op: it returns the current version id
+    /// and publishes no commit. (The previous whole-file implementation would
+    /// grow a zero-filled gap when `offset > EOF`; that corner is deliberately
+    /// dropped because a zero-byte write must not change a regular file.)
+    ///
     /// An empty `causal` slice preserves an existing `causal_exact` closure
     /// (identity mode is sticky) and keeps `bytes_only` objects byte-identical
     /// to the frozen v1 identity.
@@ -838,6 +849,47 @@ impl Store {
         let old = self.object_meta(id)?;
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("write_file requires a file object"));
+        }
+        if bytes.is_empty() {
+            return Ok(old.version);
+        }
+        let end = offset
+            .checked_add(bytes.len() as u64)
+            .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
+        if end > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+        }
+        let old_manifest = recovery::read_manifest(&self.root, old.content)?;
+        if old_manifest.size != old.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        let new_size = end.max(old.size);
+        let (manifest_id, _content, _size) =
+            self.store_file_range(&old_manifest, offset, bytes, new_size)?;
+        self.publish_file_version(id, old, manifest_id, new_size, causal)
+    }
+
+    /// Bench/test-only reproduction of the pre-COW write path.
+    ///
+    /// It reads the whole object, splices the range in memory, and re-stores
+    /// every chunk through `Store::store_file_content` (which re-reads each
+    /// existing blob to verify it). Exposed under `#[doc(hidden)]` solely so
+    /// `examples/extent_cow_bench.rs` can measure the honest baseline in the
+    /// same process. Not part of the supported API and not used by the
+    /// filesystem.
+    #[doc(hidden)]
+    pub fn write_file_whole_file_for_bench(
+        &mut self,
+        id: Hash32,
+        offset: u64,
+        bytes: &[u8],
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument(
+                "write_file_whole_file_for_bench requires a file object",
+            ));
         }
         let end = offset
             .checked_add(bytes.len() as u64)
@@ -854,6 +906,20 @@ impl Store {
         buffer[..current.len()].copy_from_slice(&current);
         buffer[offset as usize..end as usize].copy_from_slice(bytes);
         let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
+        self.publish_file_version(id, old, manifest_id, new_size, &[])
+    }
+
+    /// Derive the new version, preserve the identity mode / causal closure, and
+    /// publish one atomic commit. Shared by the COW write path and the
+    /// whole-file baseline.
+    fn publish_file_version(
+        &mut self,
+        id: Hash32,
+        old: ObjectRecord,
+        manifest_id: Hash32,
+        new_size: u64,
+        causal: &[Hash32],
+    ) -> Result<Hash32> {
         let (attrs, identity_mode, causal_hash, closure) = if causal.is_empty() {
             let (mode, hash) = crate::state::identity_from_attrs(&old)?;
             (old.attrs.clone(), mode, hash, None)
@@ -2898,6 +2964,9 @@ impl Store {
         Ok(hash)
     }
 
+    /// Encode and store a complete in-memory buffer. Used for initial file
+    /// content (`create_file*`), `truncate`, and the whole-file bench baseline.
+    /// Range writes go through `Store::store_file_range` instead.
     fn store_file_content(&self, bytes: &[u8]) -> Result<(Hash32, Hash32, u64)> {
         if bytes.len() as u64 > MAX_FILE_BYTES {
             return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
@@ -2931,6 +3000,153 @@ impl Store {
         }
         let manifest_id = self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &wcb)?;
         Ok((manifest_id, content_hash, bytes.len() as u64))
+    }
+
+    /// Publish a new manifest for a range write, reusing every untouched chunk
+    /// reference verbatim.
+    ///
+    /// `new_size` must satisfy `new_size >= old_manifest.size` and
+    /// `offset + bytes.len() <= new_size`; the caller has already applied the
+    /// v1 size bound. The byte range replaces the old content at `offset` and
+    /// any gap between the old EOF and `offset` is zero-filled.
+    ///
+    /// Only chunks intersecting `[offset, offset + len)` (plus the old tail and
+    /// any gap chunks when the write extends EOF) are reconstructed. A
+    /// reconstructed chunk is stored only if its bytes differ from the old
+    /// chunk; otherwise the old reference is reused. Unchanged chunks are
+    /// never read for materialisation and never re-written.
+    ///
+    /// Cost model: physical writes and peak memory are O(changed chunks +
+    /// chunk_size). The digest is the exception: the frozen v1 identity is a
+    /// single whole-file `ContentId = H("weft/chunk/v1", file_bytes)`, so it
+    /// can only be produced by streaming the whole file. That pass is O(file
+    /// size) by construction; it is done with one chunk-sized buffer at a time
+    /// so memory never becomes O(file size). It cannot be replaced by a Merkle
+    /// root without breaking v1 identity.
+    pub(crate) fn store_file_range(
+        &self,
+        old_manifest: &Manifest,
+        offset: u64,
+        bytes: &[u8],
+        new_size: u64,
+    ) -> Result<(Hash32, Hash32, u64)> {
+        let chunk_size = old_manifest.chunk_size;
+        if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
+            return Err(Error::invalid_argument("chunk size is out of range"));
+        }
+        let end = offset
+            .checked_add(bytes.len() as u64)
+            .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
+        if new_size > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+        }
+        if end > new_size || new_size < old_manifest.size {
+            return Err(Error::invalid_argument(
+                "range write exceeds the target file size",
+            ));
+        }
+        let declared = old_manifest
+            .chunks
+            .iter()
+            .try_fold(0u64, |acc, chunk| acc.checked_add(chunk.len))
+            .ok_or_else(|| Error::corrupt("manifest size overflows"))?;
+        if declared != old_manifest.size {
+            return Err(Error::corrupt(
+                "manifest chunk lengths disagree with its size",
+            ));
+        }
+
+        let chunk_count = (new_size + chunk_size - 1) / chunk_size;
+        let mut chunks: Vec<ChunkRef> = Vec::with_capacity(
+            usize::try_from(chunk_count)
+                .map_err(|_| Error::limit_exceeded("chunk count does not fit usize"))?,
+        );
+        for index in 0..chunk_count {
+            let chunk_start = index * chunk_size;
+            let chunk_end = (chunk_start + chunk_size).min(new_size);
+            let old_ref = old_manifest.chunks.get(index as usize);
+            let touches_write = chunk_start < end && offset < chunk_end;
+            if let Some(old_ref) = old_ref {
+                if chunk_end <= old_manifest.size && !touches_write {
+                    // Unchanged chunk: reuse the old reference verbatim. Its
+                    // blob is neither read nor re-written here.
+                    chunks.push(old_ref.clone());
+                    continue;
+                }
+            }
+            // Reconstruct this chunk from the old bytes (if any), the written
+            // range, and zeros for any gap past the old EOF.
+            let mut assembled = vec![0u8; usize::try_from(chunk_end - chunk_start).unwrap_or(0)];
+            let mut old_bytes: Option<Vec<u8>> = None;
+            if let Some(old_ref) = old_ref {
+                let keep = usize::try_from(old_ref.len.min(chunk_end - chunk_start)).unwrap_or(0);
+                if keep > 0 {
+                    let stored = recovery::read_blob_verified(
+                        &self.root,
+                        BlobKind::Object,
+                        old_ref.hash,
+                        identity::CHUNK_DOMAIN,
+                    )?;
+                    if stored.len() as u64 != old_ref.len {
+                        return Err(Error::corrupt("chunk length disagrees with manifest"));
+                    }
+                    assembled[..keep].copy_from_slice(&stored[..keep]);
+                    old_bytes = Some(stored);
+                }
+            }
+            let write_start = offset.max(chunk_start);
+            let write_end = end.min(chunk_end);
+            if write_start < write_end {
+                let dst_start = usize::try_from(write_start - chunk_start).unwrap_or(0);
+                let dst_end = usize::try_from(write_end - chunk_start).unwrap_or(0);
+                let src_start = usize::try_from(write_start - offset).unwrap_or(0);
+                let src_end = usize::try_from(write_end - offset).unwrap_or(0);
+                assembled[dst_start..dst_end].copy_from_slice(&bytes[src_start..src_end]);
+            }
+            if let (Some(old_ref), Some(old_bytes)) = (old_ref, old_bytes.as_deref()) {
+                // A write that reproduces the old bytes must not add a blob.
+                if old_ref.len == chunk_end - chunk_start && assembled == old_bytes {
+                    chunks.push(old_ref.clone());
+                    continue;
+                }
+            }
+            let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &assembled)?;
+            chunks.push(ChunkRef {
+                hash,
+                len: assembled.len() as u64,
+            });
+        }
+
+        // Stream the new content in chunk order into the frozen v1 whole-file
+        // digest. Peak memory is one chunk, never the whole file.
+        let mut hasher = identity::content_hash_hasher();
+        for chunk in &chunks {
+            let data = recovery::read_blob_verified(
+                &self.root,
+                BlobKind::Object,
+                chunk.hash,
+                identity::CHUNK_DOMAIN,
+            )?;
+            if data.len() as u64 != chunk.len {
+                return Err(Error::corrupt("chunk length disagrees with manifest"));
+            }
+            hasher.update(&data);
+        }
+        let content_hash = identity::finish_content_hash(hasher);
+        let manifest = Manifest {
+            size: new_size,
+            chunk_size,
+            chunks,
+            content_hash,
+        };
+        let wcb = manifest.encode()?;
+        if wcb.len() as u64 > crate::format::MAX_CHUNK_SIZE * 64 {
+            return Err(Error::limit_exceeded(
+                "manifest encoding is implausibly large",
+            ));
+        }
+        let manifest_id = self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &wcb)?;
+        Ok((manifest_id, content_hash, new_size))
     }
 
     /// Content-addressed, crash-safe blob write: `tmp/` → fsync → rename →

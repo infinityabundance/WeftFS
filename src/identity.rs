@@ -45,6 +45,25 @@ pub fn content_hash(bytes: &[u8]) -> Hash32 {
     h(CHUNK_DOMAIN, bytes)
 }
 
+/// Start a streaming computation of the same digest as [`content_hash`].
+///
+/// The v1 identity is frozen: `ContentId = BLAKE3(u32le(|domain|) || domain
+/// || whole_file_bytes)`. Feeding the file in bounded pieces produces the
+/// identical digest without materialising the file in memory. The hash pass
+/// itself remains O(file size) by construction.
+pub(crate) fn content_hash_hasher() -> blake3::Hasher {
+    let len = u32::try_from(CHUNK_DOMAIN.len()).unwrap_or(u32::MAX);
+    let mut hasher = blake3::Hasher::new();
+    hasher.update(&len.to_le_bytes());
+    hasher.update(CHUNK_DOMAIN.as_bytes());
+    hasher
+}
+
+/// Finish a [`content_hash_hasher`] computation.
+pub(crate) fn finish_content_hash(hasher: blake3::Hasher) -> Hash32 {
+    Hash32::from_bytes(*hasher.finalize().as_bytes())
+}
+
 /// `ManifestId = H("weft/manifest/v1", WCB(manifest))`, used for file
 /// manifests and for checkpoint state manifests.
 pub fn manifest_id(wcb_bytes: &[u8]) -> Hash32 {

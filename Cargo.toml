@@ -27,6 +27,9 @@ path = "src/main.rs"
 
 [dependencies]
 weftcodec = { version = "0.3.0", path = "WeftCodec" }
+# Streaming BLAKE3 for the frozen v1 whole-file ContentId. `weftcodec` already
+# depends on this exact crate, so no new network fetch is introduced.
+blake3 = "1"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
