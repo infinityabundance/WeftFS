@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
-use std::io::Write;
+use std::io::{ErrorKind, Read, Write};
 use std::os::unix::fs::{FileExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -38,8 +38,27 @@ use crate::state::{
     SAVED_CONTEXT_SELECTOR_ATTR, XATTR_PREFIX,
 };
 
-/// Maximum current file size for `write_file`/`truncate` (256 MiB).
-pub const MAX_FILE_BYTES: u64 = 256 * 1024 * 1024;
+/// Maximum logical file size accepted by every create/write/append path.
+///
+/// 1 TiB is a deliberate format/resource bound, not a product preference. A
+/// v1 manifest carries one `ChunkRef` per `chunk_size` bytes; at the default
+/// 64 KiB chunk size a full 1 TiB file still encodes to a manifest below the
+/// `MAX_CHUNK_SIZE * 64` defensive cap enforced by [`Store::store_manifest`].
+/// The bound is enforced with `LimitExceeded` on create, buffered write,
+/// range write, append, truncate, zero/collapse/insert, and on every streaming
+/// chunk while it is read.
+pub const MAX_FILE_BYTES: u64 = 1024 * 1024 * 1024 * 1024;
+/// Maximum number of chunk references in one manifest (16 Mi, i.e. exactly
+/// the 1 TiB file bound at the default 64 KiB chunk size). A smaller
+/// configured `chunk_size` reaches this resource limit first and fails with
+/// `LimitExceeded`; it bounds the in-memory and encoded manifest rather than
+/// silently growing with file size.
+pub const MAX_CHUNKS_PER_FILE: u64 = 16_777_216;
+/// Streaming source reads are performed in units of at least this many bytes
+/// (rounded up to a multiple of the manifest chunk size, and never below one
+/// chunk). This bounds the streaming reader/writer buffer independently of
+/// file size.
+pub const STREAM_IO_BYTES: usize = 1024 * 1024;
 /// Default chunk size.
 pub const DEFAULT_CHUNK_SIZE: u64 = 65_536;
 /// Default checkpoint interval (commits).
@@ -816,7 +835,8 @@ impl Store {
             return Ok(Vec::new());
         }
         let end = offset.saturating_add(length).min(manifest.size);
-        let mut out = Vec::with_capacity(usize::try_from(end - offset).unwrap_or(0));
+        let capacity = checked_usize(end - offset, "range length")?;
+        let mut out = Vec::with_capacity(capacity);
         let mut cursor: u64 = 0;
         for chunk in &manifest.chunks {
             let chunk_start = cursor;
@@ -836,9 +856,11 @@ impl Store {
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
-            let local_start = offset.saturating_sub(chunk_start);
-            let local_end = (end - chunk_start).min(chunk.len);
-            out.extend_from_slice(&bytes[local_start as usize..local_end as usize]);
+            let local_start =
+                checked_usize(offset.saturating_sub(chunk_start), "chunk-local read start")?;
+            let local_end =
+                checked_usize((end - chunk_start).min(chunk.len), "chunk-local read end")?;
+            out.extend_from_slice(&bytes[local_start..local_end]);
         }
         if out.len() as u64 != end - offset {
             return Err(Error::corrupt("assembled range length mismatch"));
@@ -989,7 +1011,7 @@ impl Store {
 
     /// Decode only the frame chunks intersecting `[offset, end)`.
     fn read_codec_chunk_range(&self, frame: &Frame<'_>, offset: u64, end: u64) -> Result<Vec<u8>> {
-        let mut out = Vec::with_capacity(usize::try_from(end - offset).unwrap_or(0));
+        let mut out = Vec::with_capacity(checked_usize(end - offset, "codec range length")?);
         let mut chunk_start: u64 = 0;
         for index in 0..frame.chunks.len() {
             let chunk_len = u64::from(frame.chunks[index].decoded_len);
@@ -1075,13 +1097,180 @@ impl Store {
         self.require_free_name(parent, name)?;
         check_mode(mode)?;
         if bytes.len() as u64 > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let base = self.delta_base(causal)?;
-        let (manifest_id, _content_hash, size) = self.store_file_content_with_base(
+        let (manifest_id, content_hash, size) = self.store_file_content_with_base(
             bytes,
             base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
         )?;
+        self.commit_created_file(
+            parent,
+            name,
+            seed,
+            manifest_id,
+            content_hash,
+            size,
+            mode,
+            uid,
+            gid,
+            attrs,
+            causal,
+        )
+    }
+
+    /// Create a regular file from a streaming reader without buffering it.
+    ///
+    /// The source is read in bounded units (`max(STREAM_IO_BYTES, chunk_size)`,
+    /// rounded up to a chunk multiple). Each `chunk_size` slice is stored as a
+    /// content-addressed object blob and fed to the frozen v1 whole-content
+    /// hasher, so peak memory is O(io buffer + chunk count + chunk size), not
+    /// O(file size). Exactly one durable commit is published with the same
+    /// records, version derivation, attributes, and causal handling as
+    /// [`Store::create_file`].
+    ///
+    /// `Options.representation = Raw` writes a frozen v1 chunk manifest. With
+    /// `CodecAuto`, a stream that ends inside the bounded preamble
+    /// (`max(codec_min_bytes, chunk_size)`, capped at 16 MiB) is buffered and
+    /// uses the existing codec path; a larger stream is written as a v2
+    /// `kind:"raw"` chunk manifest. Streaming ZSTD/DELTA is deliberately not
+    /// implemented (see `docs/store-status.md`).
+    ///
+    /// A read error or a size-bound violation publishes nothing: the commit
+    /// chain and all four state maps are unchanged. Chunk blobs already written
+    /// are unreferenced, `verify` still passes, and `gc` reclaims them.
+    pub fn create_file_streaming<R: Read>(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        reader: R,
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, Value>,
+    ) -> Result<Hash32> {
+        let seed = identity::os_random_32()?;
+        self.create_file_streaming_seeded(parent, name, reader, mode, uid, gid, attrs, &seed)
+    }
+
+    /// [`Store::create_file_streaming`] with an explicit ObjectId seed.
+    #[allow(clippy::too_many_arguments)]
+    pub fn create_file_streaming_seeded<R: Read>(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        reader: R,
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, Value>,
+        seed: &[u8],
+    ) -> Result<Hash32> {
+        self.create_file_streaming_seeded_causal(
+            parent,
+            name,
+            reader,
+            mode,
+            uid,
+            gid,
+            attrs,
+            seed,
+            &[],
+        )
+    }
+
+    /// [`Store::create_file_streaming`] with an ObjectId seed and causal
+    /// ancestry. An empty `causal` preserves the frozen `bytes_only` identity.
+    #[allow(clippy::too_many_arguments)]
+    pub fn create_file_streaming_seeded_causal<R: Read>(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        mut reader: R,
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, Value>,
+        seed: &[u8],
+        causal: &[Hash32],
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        self.require_dir(parent)?;
+        validate_name_bytes(name)?;
+        self.require_free_name(parent, name)?;
+        check_mode(mode)?;
+        let chunk_size = self.options.chunk_size;
+        validate_chunk_size(chunk_size)?;
+
+        let (manifest_id, content_hash, size) = match self.options.representation {
+            RepresentationMode::Raw => {
+                let (chunks, size, content_hash) =
+                    self.stream_raw_chunks(&mut reader, chunk_size, Vec::new())?;
+                self.store_streamed_manifest(chunk_size, chunks, size, content_hash, false)?
+            }
+            RepresentationMode::CodecAuto => {
+                let preamble_limit =
+                    stream_preamble_limit(self.options.codec_min_bytes, chunk_size)?;
+                let mut preamble = vec![0u8; preamble_limit];
+                let filled = read_fill(&mut reader, &mut preamble)?;
+                preamble.truncate(filled);
+                if filled < preamble_limit {
+                    // The whole file fits in the bounded preamble: use the
+                    // existing buffered codec path unchanged.
+                    let base = self.delta_base(causal)?;
+                    self.store_content_bytes(
+                        &preamble,
+                        chunk_size,
+                        base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
+                        true,
+                    )?
+                } else {
+                    // Larger stream: keep the preamble (a chunk multiple) and
+                    // continue streaming into a v2 `kind:"raw"` manifest.
+                    // Codec-backed streaming is not implemented; buffering the
+                    // file to reach the codec encoder would violate the memory
+                    // goal, and a streaming DELTA/ZSTD writer does not exist.
+                    let (chunks, size, content_hash) =
+                        self.stream_raw_chunks(&mut reader, chunk_size, preamble)?;
+                    self.store_streamed_manifest(chunk_size, chunks, size, content_hash, true)?
+                }
+            }
+        };
+        self.commit_created_file(
+            parent,
+            name,
+            seed,
+            manifest_id,
+            content_hash,
+            size,
+            mode,
+            uid,
+            gid,
+            attrs,
+            causal,
+        )
+    }
+
+    /// Build the object/entry/tip records for a newly created file and publish
+    /// exactly one commit. Shared by the buffered and streaming create paths so
+    /// both produce byte-identical state transitions.
+    #[allow(clippy::too_many_arguments)]
+    fn commit_created_file(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        seed: &[u8],
+        manifest_id: Hash32,
+        _content_hash: Hash32,
+        size: u64,
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, Value>,
+        causal: &[Hash32],
+    ) -> Result<Hash32> {
         let object_id = identity::object_id_from_seed(seed);
         if self.state.objects.contains_key(&object_id) {
             return Err(Error::exists("object id already exists"));
@@ -1175,7 +1364,9 @@ impl Store {
             .checked_add(bytes.len() as u64)
             .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
         if end > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let old_manifest = recovery::read_manifest(&self.root, old.content)?;
         if old_manifest.size != old.size {
@@ -1194,9 +1385,11 @@ impl Store {
         if self.options.representation == RepresentationMode::CodecAuto || old_is_codec {
             let old_bytes =
                 self.read_manifest_bytes(&old_manifest, old.content, 0, old_manifest.size, true)?;
-            let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+            let offset_usize = checked_usize(offset, "write offset")?;
+            let end_usize = checked_usize(end, "write end")?;
+            let mut buffer = vec![0u8; checked_usize(new_size, "file size")?];
             buffer[..old_bytes.len()].copy_from_slice(&old_bytes);
-            buffer[offset as usize..end as usize].copy_from_slice(bytes);
+            buffer[offset_usize..end_usize].copy_from_slice(bytes);
             // A new explicit causal parent wins; otherwise an existing
             // causal-exact object keeps using its recorded parents as bases.
             let parent_versions: Vec<Hash32> = if causal.is_empty() {
@@ -1218,6 +1411,196 @@ impl Store {
         let (manifest_id, _content, _size) =
             self.store_file_range(&old_manifest, offset, bytes, new_size)?;
         self.publish_file_version(id, old, manifest_id, new_size, causal)
+    }
+
+    /// Append a reader to an existing file without buffering the file.
+    ///
+    /// The file's existing full chunks are reused verbatim; when the current
+    /// size is not chunk-aligned, the old tail is combined with the first new
+    /// bytes. New bytes are stored one chunk at a time. Exactly one commit is
+    /// published with the same version/identity rules as [`Store::write_file`].
+    /// A zero-byte append is a POSIX no-op: it returns the current version and
+    /// publishes nothing.
+    ///
+    /// The frozen v1 `ContentId` covers the whole file, so the existing chunks
+    /// are re-read to feed the streaming hasher; peak memory is one I/O buffer
+    /// plus the chunk list, never the file bytes. Appending to a codec-backed
+    /// (`CodecAuto` v2 `kind:"codec"`) object is not implemented and fails
+    /// with `InvalidArgument` rather than silently materialising the file.
+    pub fn append_file_streaming<R: Read>(&mut self, id: Hash32, mut reader: R) -> Result<Hash32> {
+        self.require_writable()?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument(
+                "append_file_streaming requires a file object",
+            ));
+        }
+        let old_manifest = recovery::read_manifest(&self.root, old.content)?;
+        if old_manifest.size != old.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        if old_manifest
+            .representation
+            .as_ref()
+            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .unwrap_or(false)
+        {
+            return Err(Error::invalid_argument(
+                "streaming append to a codec-backed object is not implemented",
+            ));
+        }
+        let chunk_size = old_manifest.chunk_size;
+        validate_chunk_size(chunk_size)?;
+        let step = checked_usize(chunk_size, "chunk size")?;
+        let declared = old_manifest
+            .chunks
+            .iter()
+            .try_fold(0u64, |acc, chunk| acc.checked_add(chunk.len))
+            .ok_or_else(|| Error::corrupt("manifest size overflows"))?;
+        if declared != old_manifest.size {
+            return Err(Error::corrupt(
+                "manifest chunk lengths disagree with its size",
+            ));
+        }
+        let full_chunks = old.size / chunk_size;
+        let tail_len = old.size % chunk_size;
+        let expected_chunks = full_chunks + u64::from(tail_len != 0);
+        if old_manifest.chunks.len() as u64 != expected_chunks {
+            return Err(Error::corrupt(
+                "manifest chunk count disagrees with its size",
+            ));
+        }
+        if expected_chunks > MAX_CHUNKS_PER_FILE {
+            return Err(Error::limit_exceeded(format!(
+                "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+            )));
+        }
+
+        let mut chunks: Vec<ChunkRef> = Vec::new();
+        let mut hasher = identity::content_hash_hasher();
+        for index in 0..full_chunks {
+            let reference = old_manifest
+                .chunks
+                .get(checked_usize(index, "chunk index")?)
+                .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
+            let bytes = recovery::read_blob_verified(
+                &self.root,
+                BlobKind::Object,
+                reference.hash,
+                identity::CHUNK_DOMAIN,
+            )?;
+            if bytes.len() as u64 != reference.len {
+                return Err(Error::corrupt("chunk length disagrees with manifest"));
+            }
+            hasher.update(&bytes);
+            chunks.push(reference.clone());
+        }
+
+        let mut pending: Vec<u8> = Vec::new();
+        if tail_len != 0 {
+            let reference = old_manifest
+                .chunks
+                .get(checked_usize(full_chunks, "chunk index")?)
+                .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
+            let bytes = recovery::read_blob_verified(
+                &self.root,
+                BlobKind::Object,
+                reference.hash,
+                identity::CHUNK_DOMAIN,
+            )?;
+            if bytes.len() as u64 != reference.len {
+                return Err(Error::corrupt("chunk length disagrees with manifest"));
+            }
+            pending.extend_from_slice(&bytes);
+        }
+
+        let io_len = stream_io_len(step)?;
+        let mut buffer = vec![0u8; io_len];
+        let mut added: u64 = 0;
+        loop {
+            let filled = read_fill(&mut reader, &mut buffer)?;
+            if filled == 0 {
+                break;
+            }
+            added = added
+                .checked_add(filled as u64)
+                .ok_or_else(|| Error::limit_exceeded("append size overflows"))?;
+            let new_size = old
+                .size
+                .checked_add(added)
+                .ok_or_else(|| Error::limit_exceeded("append size overflows"))?;
+            if new_size > MAX_FILE_BYTES {
+                return Err(Error::limit_exceeded(format!(
+                    "file exceeds the {MAX_FILE_BYTES}-byte bound"
+                )));
+            }
+            let mut consumed = 0usize;
+            if !pending.is_empty() {
+                let take = (step - pending.len()).min(filled);
+                pending.extend_from_slice(&buffer[..take]);
+                consumed = take;
+                if pending.len() == step {
+                    hasher.update(&pending);
+                    let hash =
+                        self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &pending)?;
+                    push_chunk_ref(&mut chunks, hash, pending.len() as u64)?;
+                    pending.clear();
+                }
+            }
+            // `consumed` is now chunk-aligned relative to the new data because
+            // `pending.len() + consumed` is a multiple of `step`.
+            let data = &buffer[consumed..filled];
+            let full = data.len() / step * step;
+            let mut offset = 0usize;
+            while offset < full {
+                let part = &data[offset..offset + step];
+                hasher.update(part);
+                let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
+                push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
+                offset += step;
+            }
+            if offset < data.len() {
+                pending.extend_from_slice(&data[offset..]);
+            }
+            if filled < io_len {
+                break;
+            }
+        }
+        if !pending.is_empty() {
+            hasher.update(&pending);
+            let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &pending)?;
+            push_chunk_ref(&mut chunks, hash, pending.len() as u64)?;
+        }
+        if added == 0 {
+            return Ok(old.version);
+        }
+        let new_size = old.size + added;
+        if new_size > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
+        }
+        let content_hash = identity::finish_content_hash(hasher);
+        debug_assert!(chunks.iter().map(|chunk| chunk.len).sum::<u64>() == new_size);
+        let representation = if self.options.representation == RepresentationMode::CodecAuto {
+            Some(Representation {
+                kind: RepresentationKind::Raw,
+                frame: None,
+                dependencies: Vec::new(),
+                strategy: "raw".to_owned(),
+                decoded_size: new_size,
+            })
+        } else {
+            None
+        };
+        let (manifest_id, _content, _size) = self.store_manifest(Manifest {
+            size: new_size,
+            chunk_size,
+            chunks,
+            content_hash,
+            representation,
+        })?;
+        self.publish_file_version(id, old, manifest_id, new_size, &[])
     }
 
     /// Bench/test-only reproduction of the pre-COW write path.
@@ -1246,16 +1629,20 @@ impl Store {
             .checked_add(bytes.len() as u64)
             .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
         if end > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let current = self.read_object(id)?;
         if current.len() as u64 != old.size {
             return Err(Error::corrupt("file size changed while writing"));
         }
         let new_size = end.max(old.size);
-        let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+        let offset_usize = checked_usize(offset, "write offset")?;
+        let end_usize = checked_usize(end, "write end")?;
+        let mut buffer = vec![0u8; checked_usize(new_size, "file size")?];
         buffer[..current.len()].copy_from_slice(&current);
-        buffer[offset as usize..end as usize].copy_from_slice(bytes);
+        buffer[offset_usize..end_usize].copy_from_slice(bytes);
         let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
         self.publish_file_version(id, old, manifest_id, new_size, &[])
     }
@@ -1337,7 +1724,9 @@ impl Store {
             return Err(Error::invalid_argument("zero range requires a file object"));
         }
         if extend && end > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let new_size = if extend { old.size.max(end) } else { old.size };
         let zero_end = end.min(new_size);
@@ -1348,9 +1737,11 @@ impl Store {
         if current.len() as u64 != old.size {
             return Err(Error::corrupt("file size changed while zeroing"));
         }
-        let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+        let offset_usize = checked_usize(offset, "zero range offset")?;
+        let zero_end_usize = checked_usize(zero_end, "zero range end")?;
+        let mut buffer = vec![0u8; checked_usize(new_size, "file size")?];
         buffer[..current.len()].copy_from_slice(&current);
-        buffer[offset as usize..zero_end as usize].fill(0);
+        buffer[offset_usize..zero_end_usize].fill(0);
         self.commit_file_buffer(id, old, &buffer)
     }
 
@@ -1371,9 +1762,11 @@ impl Store {
         if current.len() as u64 != old.size {
             return Err(Error::corrupt("file size changed while collapsing"));
         }
-        let mut buffer = Vec::with_capacity(usize::try_from(old.size - length).unwrap_or(0));
-        buffer.extend_from_slice(&current[..offset as usize]);
-        buffer.extend_from_slice(&current[(offset + length) as usize..]);
+        let offset_usize = checked_usize(offset, "collapse offset")?;
+        let resume_usize = checked_usize(offset + length, "collapse resume")?;
+        let mut buffer = Vec::with_capacity(checked_usize(old.size - length, "collapsed size")?);
+        buffer.extend_from_slice(&current[..offset_usize]);
+        buffer.extend_from_slice(&current[resume_usize..]);
         self.commit_file_buffer(id, old, &buffer)
     }
 
@@ -1393,17 +1786,21 @@ impl Store {
         let new_size = old
             .size
             .checked_add(length)
-            .ok_or_else(|| Error::limit_exceeded("file exceeds the 256 MiB v1 bound"))?;
+            .ok_or_else(|| Error::limit_exceeded("file size overflows"))?;
         if new_size > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let current = self.read_object(id)?;
         if current.len() as u64 != old.size {
             return Err(Error::corrupt("file size changed while inserting"));
         }
-        let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
-        buffer[..offset as usize].copy_from_slice(&current[..offset as usize]);
-        buffer[(offset + length) as usize..].copy_from_slice(&current[offset as usize..]);
+        let offset_usize = checked_usize(offset, "insert offset")?;
+        let resume_usize = checked_usize(offset + length, "insert resume")?;
+        let mut buffer = vec![0u8; checked_usize(new_size, "file size")?];
+        buffer[..offset_usize].copy_from_slice(&current[..offset_usize]);
+        buffer[resume_usize..].copy_from_slice(&current[offset_usize..]);
         self.commit_file_buffer(id, old, &buffer)
     }
 
@@ -1450,14 +1847,16 @@ impl Store {
     pub fn truncate(&mut self, id: Hash32, size: u64) -> Result<Hash32> {
         self.require_writable()?;
         if size > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         let old = self.object_meta(id)?;
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("truncate requires a file object"));
         }
         let current = self.read_object(id)?;
-        let mut buffer = vec![0u8; usize::try_from(size).unwrap_or(0)];
+        let mut buffer = vec![0u8; checked_usize(size, "file size")?];
         let copy = current.len().min(buffer.len());
         buffer[..copy].copy_from_slice(&current[..copy]);
         let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
@@ -3074,8 +3473,11 @@ impl Store {
                         continue;
                     }
                     if full {
-                        let mut assembled =
-                            Vec::with_capacity(usize::try_from(manifest.size).unwrap_or(0));
+                        // Stream chunks through the frozen v1 hasher instead of
+                        // assembling the whole file. Verification must stay
+                        // bounded for objects near MAX_FILE_BYTES.
+                        let mut hasher = identity::content_hash_hasher();
+                        let mut total: u64 = 0;
                         for chunk in &manifest.chunks {
                             report.checked_chunks += 1;
                             match recovery::read_blob_verified(
@@ -3094,7 +3496,8 @@ impl Store {
                                             ),
                                         });
                                     }
-                                    assembled.extend_from_slice(&bytes);
+                                    total = total.saturating_add(bytes.len() as u64);
+                                    hasher.update(&bytes);
                                 }
                                 Err(err) => report.problems.push(VerifyProblem {
                                     class: err.class_name().to_owned(),
@@ -3102,8 +3505,8 @@ impl Store {
                                 }),
                             }
                         }
-                        if assembled.len() as u64 == manifest.size
-                            && identity::content_hash(&assembled) != manifest.content_hash
+                        if total == manifest.size
+                            && identity::finish_content_hash(hasher) != manifest.content_hash
                         {
                             report.problems.push(VerifyProblem {
                                 class: "Corrupt".to_owned(),
@@ -3638,6 +4041,104 @@ impl Store {
         Ok(hash)
     }
 
+    /// Stream `reader` into content-addressed chunk blobs and hash the same
+    /// bytes incrementally with the frozen v1 whole-content hasher.
+    ///
+    /// `prefix` must already contain whole chunks (it is the buffered codec
+    /// preamble). The I/O buffer is at least `STREAM_IO_BYTES` and a multiple
+    /// of the chunk size, so every emitted chunk is exactly `chunk_size` bytes
+    /// except the final one. Neither the prefix nor the I/O buffer is retained
+    /// after return; peak memory is O(io buffer + chunk refs).
+    fn stream_raw_chunks<R: Read>(
+        &self,
+        reader: &mut R,
+        chunk_size: u64,
+        prefix: Vec<u8>,
+    ) -> Result<(Vec<ChunkRef>, u64, Hash32)> {
+        validate_chunk_size(chunk_size)?;
+        let step = checked_usize(chunk_size, "chunk size")?;
+        if !prefix.is_empty() && prefix.len() % step != 0 {
+            return Err(Error::invalid_argument(
+                "streaming prefix is not chunk-aligned",
+            ));
+        }
+        let mut chunks: Vec<ChunkRef> = Vec::new();
+        let mut hasher = identity::content_hash_hasher();
+        let mut total: u64 = 0;
+
+        if !prefix.is_empty() {
+            total = u64::try_from(prefix.len())
+                .map_err(|_| Error::limit_exceeded("prefix length does not fit u64"))?;
+            if total > MAX_FILE_BYTES {
+                return Err(Error::limit_exceeded(format!(
+                    "file exceeds the {MAX_FILE_BYTES}-byte bound"
+                )));
+            }
+            hasher.update(&prefix);
+            for part in prefix.chunks(step) {
+                let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
+                push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
+            }
+        }
+
+        let io_len = stream_io_len(step)?;
+        let mut buffer = vec![0u8; io_len];
+        loop {
+            let filled = read_fill(reader, &mut buffer)?;
+            if filled == 0 {
+                break;
+            }
+            total = total
+                .checked_add(filled as u64)
+                .ok_or_else(|| Error::limit_exceeded("file size overflows"))?;
+            if total > MAX_FILE_BYTES {
+                return Err(Error::limit_exceeded(format!(
+                    "file exceeds the {MAX_FILE_BYTES}-byte bound"
+                )));
+            }
+            hasher.update(&buffer[..filled]);
+            for part in buffer[..filled].chunks(step) {
+                let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
+                push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
+            }
+            if filled < io_len {
+                break;
+            }
+        }
+        Ok((chunks, total, identity::finish_content_hash(hasher)))
+    }
+
+    /// Store a manifest assembled by the streaming paths. `v2_raw` selects the
+    /// experimental v2 `kind:"raw"` representation used by `CodecAuto`;
+    /// otherwise the frozen v1 manifest is written byte-for-byte.
+    fn store_streamed_manifest(
+        &self,
+        chunk_size: u64,
+        chunks: Vec<ChunkRef>,
+        size: u64,
+        content_hash: Hash32,
+        v2_raw: bool,
+    ) -> Result<(Hash32, Hash32, u64)> {
+        let representation = if v2_raw {
+            Some(Representation {
+                kind: RepresentationKind::Raw,
+                frame: None,
+                dependencies: Vec::new(),
+                strategy: "raw".to_owned(),
+                decoded_size: size,
+            })
+        } else {
+            None
+        };
+        self.store_manifest(Manifest {
+            size,
+            chunk_size,
+            chunks,
+            content_hash,
+            representation,
+        })
+    }
+
     /// Encode and store a complete in-memory buffer. Used for initial file
     /// content (`create_file*`), `truncate`, and the whole-file bench baseline.
     /// Range writes go through `Store::store_file_range` instead.
@@ -3671,7 +4172,9 @@ impl Store {
         codec_auto: bool,
     ) -> Result<(Hash32, Hash32, u64)> {
         if bytes.len() as u64 > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
             return Err(Error::invalid_argument("chunk size is out of range"));
@@ -3732,10 +4235,7 @@ impl Store {
             .map_err(|_| Error::limit_exceeded("chunk size does not fit usize"))?;
         for chunk in bytes.chunks(step) {
             let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, chunk)?;
-            chunks.push(ChunkRef {
-                hash,
-                len: chunk.len() as u64,
-            });
+            push_chunk_ref(&mut chunks, hash, chunk.len() as u64)?;
         }
         Ok(Manifest {
             size: bytes.len() as u64,
@@ -3875,7 +4375,9 @@ impl Store {
             .checked_add(bytes.len() as u64)
             .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
         if new_size > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
         }
         if end > new_size || new_size < old_manifest.size {
             return Err(Error::invalid_argument(
@@ -3894,6 +4396,11 @@ impl Store {
         }
 
         let chunk_count = (new_size + chunk_size - 1) / chunk_size;
+        if chunk_count > MAX_CHUNKS_PER_FILE {
+            return Err(Error::limit_exceeded(format!(
+                "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+            )));
+        }
         let mut chunks: Vec<ChunkRef> = Vec::with_capacity(
             usize::try_from(chunk_count)
                 .map_err(|_| Error::limit_exceeded("chunk count does not fit usize"))?,
@@ -3901,7 +4408,9 @@ impl Store {
         for index in 0..chunk_count {
             let chunk_start = index * chunk_size;
             let chunk_end = (chunk_start + chunk_size).min(new_size);
-            let old_ref = old_manifest.chunks.get(index as usize);
+            let old_ref = old_manifest
+                .chunks
+                .get(checked_usize(index, "chunk index")?);
             let touches_write = chunk_start < end && offset < chunk_end;
             if let Some(old_ref) = old_ref {
                 if chunk_end <= old_manifest.size && !touches_write {
@@ -3913,10 +4422,13 @@ impl Store {
             }
             // Reconstruct this chunk from the old bytes (if any), the written
             // range, and zeros for any gap past the old EOF.
-            let mut assembled = vec![0u8; usize::try_from(chunk_end - chunk_start).unwrap_or(0)];
+            let mut assembled = vec![0u8; checked_usize(chunk_end - chunk_start, "chunk length")?];
             let mut old_bytes: Option<Vec<u8>> = None;
             if let Some(old_ref) = old_ref {
-                let keep = usize::try_from(old_ref.len.min(chunk_end - chunk_start)).unwrap_or(0);
+                let keep = checked_usize(
+                    old_ref.len.min(chunk_end - chunk_start),
+                    "chunk keep length",
+                )?;
                 if keep > 0 {
                     let stored = recovery::read_blob_verified(
                         &self.root,
@@ -3934,10 +4446,10 @@ impl Store {
             let write_start = offset.max(chunk_start);
             let write_end = end.min(chunk_end);
             if write_start < write_end {
-                let dst_start = usize::try_from(write_start - chunk_start).unwrap_or(0);
-                let dst_end = usize::try_from(write_end - chunk_start).unwrap_or(0);
-                let src_start = usize::try_from(write_start - offset).unwrap_or(0);
-                let src_end = usize::try_from(write_end - offset).unwrap_or(0);
+                let dst_start = checked_usize(write_start - chunk_start, "chunk write start")?;
+                let dst_end = checked_usize(write_end - chunk_start, "chunk write end")?;
+                let src_start = checked_usize(write_start - offset, "range write start")?;
+                let src_end = checked_usize(write_end - offset, "range write end")?;
                 assembled[dst_start..dst_end].copy_from_slice(&bytes[src_start..src_end]);
             }
             if let (Some(old_ref), Some(old_bytes)) = (old_ref, old_bytes.as_deref()) {
@@ -3948,10 +4460,7 @@ impl Store {
                 }
             }
             let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &assembled)?;
-            chunks.push(ChunkRef {
-                hash,
-                len: assembled.len() as u64,
-            });
+            push_chunk_ref(&mut chunks, hash, assembled.len() as u64)?;
         }
 
         // Stream the new content in chunk order into the frozen v1 whole-file
@@ -4087,6 +4596,77 @@ impl Store {
 
 fn cleanup_tmp(path: &Path) {
     let _ = fs::remove_file(path);
+}
+
+/// Checked `u64 -> usize` conversion for offsets, lengths, counts, and sizes.
+/// A value that does not fit the platform address space is `LimitExceeded`,
+/// never a silent truncation.
+fn checked_usize(value: u64, what: &str) -> Result<usize> {
+    usize::try_from(value)
+        .map_err(|_| Error::limit_exceeded(format!("{what} ({value}) does not fit usize")))
+}
+
+fn validate_chunk_size(chunk_size: u64) -> Result<()> {
+    if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
+        return Err(Error::invalid_argument("chunk size is out of range"));
+    }
+    Ok(())
+}
+
+/// Enforce the per-manifest chunk-count resource bound before a push, so a
+/// pathological configured chunk size cannot grow an O(file size) chunk list.
+fn push_chunk_ref(chunks: &mut Vec<ChunkRef>, hash: Hash32, len: u64) -> Result<()> {
+    if chunks.len() as u64 >= MAX_CHUNKS_PER_FILE {
+        return Err(Error::limit_exceeded(format!(
+            "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+        )));
+    }
+    chunks.push(ChunkRef { hash, len });
+    Ok(())
+}
+
+/// Source-read size for streaming paths: at least [`STREAM_IO_BYTES`], rounded
+/// up to a whole number of chunks so manifest chunk boundaries stay aligned.
+fn stream_io_len(step: usize) -> Result<usize> {
+    let target = STREAM_IO_BYTES.max(step);
+    let chunks_per_read = target.div_ceil(step);
+    chunks_per_read
+        .checked_mul(step)
+        .ok_or_else(|| Error::limit_exceeded("stream I/O buffer size overflows usize"))
+}
+
+/// Bounded buffer used to decide whether a `CodecAuto` stream is small enough
+/// for the existing whole-buffer codec path. The limit is the larger of the
+/// configured threshold and one chunk, rounded up to a chunk multiple, and
+/// capped at the format's maximum chunk size (16 MiB). A stream that does not
+/// end inside this buffer is written as a v2 `kind:"raw"` manifest.
+fn stream_preamble_limit(codec_min_bytes: u64, chunk_size: u64) -> Result<usize> {
+    validate_chunk_size(chunk_size)?;
+    let step = checked_usize(chunk_size, "chunk size")?;
+    let bounded = codec_min_bytes
+        .max(chunk_size)
+        .min(crate::format::MAX_CHUNK_SIZE);
+    let bounded = checked_usize(bounded, "stream preamble limit")?;
+    bounded
+        .div_ceil(step)
+        .checked_mul(step)
+        .ok_or_else(|| Error::limit_exceeded("stream preamble size overflows usize"))
+}
+
+/// Fill `buf` from `reader` until it is full or the reader reports EOF.
+/// Interrupted reads are retried; any other error becomes an `Io` error, which
+/// the streaming mutation paths propagate before publishing a commit.
+fn read_fill<R: Read>(reader: &mut R, buf: &mut [u8]) -> Result<usize> {
+    let mut filled = 0usize;
+    while filled < buf.len() {
+        match reader.read(&mut buf[filled..]) {
+            Ok(0) => break,
+            Ok(n) => filled += n,
+            Err(err) if err.kind() == ErrorKind::Interrupted => continue,
+            Err(err) => return Err(Error::io(format!("stream read failed: {err}"))),
+        }
+    }
+    Ok(filled)
 }
 
 /// `saved_context` relations have exactly this shape (`WEFT-MODEL.md` §2.5):

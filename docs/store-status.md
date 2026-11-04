@@ -99,11 +99,34 @@ Tests map to the P4 requirements as follows:
   Materialization verifies chunk hashes and, for a full object read, the
   whole-content hash. A hash/length mismatch fails closed.
 - Mutations, each exactly one atomic commit: `create_file`, `write_file`
-  (256 MiB current-size bound, zero-filled gap), `truncate`, `unlink`,
-  `rename` (delete+insert, replacement of non-directories), `link` (no
+  (current-size bound `MAX_FILE_BYTES` = 1 TiB, zero-filled gap), `truncate`,
+  `unlink`, `rename` (delete+insert, replacement of non-directories), `link` (no
   directories), `mkdir`, `symlink` (target in `attrs["weft.symlink.target"]` as
   bytes), `setattr`, `relation_add` (idempotent by RelationId),
   `relation_delete`, `snapshot_create`, `checkpoint`.
+- **Streaming create/append.** `create_file_streaming` (plus `_seeded` and
+  `_seeded_causal`) reads a generic `Read` source in bounded units
+  (`max(1 MiB, chunk_size)`, rounded up to a chunk multiple), stores each chunk
+  as an object blob, and feeds the same bytes to the frozen v1 streaming hasher.
+  `append_file_streaming` reuses the existing full chunks verbatim, combines the
+  old tail when the file is not chunk-aligned, and stores the new bytes one
+  chunk at a time. Both publish exactly one ordinary commit and use the same
+  object/entry/tip records, version derivation, attrs, and causal rules as the
+  buffered paths. Read errors and the size bound fail before publication; the
+  generation and all state maps are unchanged, unreferenced blobs are left for
+  `gc`, and `verify` passes. Peak memory is O(I/O buffer + chunk count + chunk
+  size), not O(file size). A manifest is capped at `MAX_CHUNKS_PER_FILE`
+  (16 Mi references, exactly 1 TiB at the default 64 KiB chunk size), so a
+  pathologically small configured chunk size fails with `LimitExceeded`
+  instead of growing an O(file size) chunk list. `Raw` writes the frozen v1
+  manifest; `CodecAuto` buffers only a stream that ends inside a 16 MiB-capped
+  preamble, otherwise it writes a v2 `kind:"raw"` chunk manifest. Streaming
+  ZSTD/DELTA is not
+  implemented: the codec encoders take a whole in-memory buffer, so using them
+  would reintroduce O(file size) memory. `write_file` itself is unchanged and
+  still materialises the file; `read_range` reads only intersecting chunks,
+  while `read_object` materialises the whole file and is therefore limited by
+  available memory.
 - **Group commit** (`Store::group`): a closure runs the ordinary mutation
   methods and the store publishes **one** commit containing every buffered op,
   in application order, when the closure returns `Ok`; the generation advances
@@ -358,9 +381,15 @@ reading. They are part of the Go handoff contract.
    they return; `verify --full` hashes all chunks and whole-file content.
    A latent silent bit flip in an unread chunk is therefore not detected at
    open.
-2. **`write_file` materializes the file.** The 256 MiB bound keeps memory
-   bounded, but a write reads the whole file, allocates the new size, and
-   re-chunks it. Large-file streaming is future work.
+2. **`write_file` materializes the file.** The raised 1 TiB bound no longer
+   keeps memory bounded for a buffered write: `write_file`, `truncate`,
+   `zero_range`, `collapse_range`, and `insert_range` still read the whole file
+   and allocate the new size. Use `create_file_streaming` /
+   `append_file_streaming` for large content. The whole-file `ContentId` still
+   costs one O(size) digest pass even on the streaming append path; range
+   reads are chunk-bounded, but `read_object` returns the whole file and is
+   memory-limited by design. The Go store still enforces its 256 MiB
+   `MaxFileBytes`, so files above that bound are Rust-only until Go parity.
 3. **Checkpoint cost.** A checkpoint manifest contains the whole state; a
    checkpoint commit is O(state). The default interval of 256 is a
    replay-cost/memory tradeoff not yet measured.

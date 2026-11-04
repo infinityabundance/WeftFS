@@ -1,0 +1,52 @@
+{
+  "buffered": {
+    "generation": 2,
+    "mode": "buffered",
+    "peak_rss_kib": 269072,
+    "rchar_bytes": 129,
+    "read_sample_ok": true,
+    "size_bytes": 268435456,
+    "verify_basic_ok": true,
+    "wall_ms": 138.36136499999998,
+    "wchar_bytes": 268649181
+  },
+  "court": {
+    "image": "weft/rust-court:1",
+    "image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "kernel": "7.3.1-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "pids": "1024"
+    }
+  },
+  "label": "tmpfs (court /tmp, 1 GiB), synthetic splitmix64 generator, single host, Rust court; not a device, filesystem-mount, or production-workload claim",
+  "non_claims": [
+    "Codec-backed streaming (ZSTD/DELTA) is not implemented; large CodecAuto streams use a v2 raw chunk manifest.",
+    "read_object still materialises the whole file; range reads are chunk-bounded.",
+    "Wall time includes this store's per-chunk blob fsync/rename publication on tmpfs."
+  ],
+  "peak_rss_ratio": 39.78001182732111,
+  "receipt_timestamp_utc": "20261104T094742Z",
+  "revision": "9202347bb561eb6d9a92b611eeefe99610182274",
+  "revision_note": "measured on the streaming-change working tree whose base revision is this value; the commit that adds these files is the next HEAD",
+  "schema": "weft.streaming-create.v1",
+  "streaming": {
+    "generation": 2,
+    "mode": "stream",
+    "peak_rss_kib": 6764,
+    "rchar_bytes": 129,
+    "read_sample_ok": true,
+    "size_bytes": 268435456,
+    "verify_basic_ok": true,
+    "wall_ms": 190.704457,
+    "wchar_bytes": 268649181
+  },
+  "wchar_ratio": 1.0,
+  "workload": {
+    "chunk_size_bytes": 65536,
+    "file_size_bytes": 268435456,
+    "generator": "splitmix64 words, 1 MiB block salt, every chunk distinct",
+    "mode": "one fresh store per child; no fsync tuning; wall time around the create call only"
+  }
+}
