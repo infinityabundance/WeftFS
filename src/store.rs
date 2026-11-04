@@ -199,6 +199,34 @@ fn make_dir(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Restore one journalled state key: re-insert the previous value, or remove
+/// the key when it did not exist before the staged op.
+fn restore<K: Ord, V>(map: &mut BTreeMap<K, V>, key: K, previous: Option<V>) {
+    match previous {
+        Some(value) => {
+            map.insert(key, value);
+        }
+        None => {
+            map.remove(&key);
+        }
+    }
+}
+
+/// Undo record for one in-memory state key touched by a staged group op.
+///
+/// Group commit applies each mutation to the live [`State`] immediately so
+/// reads inside the closure observe their own writes. Rolling a group back
+/// therefore needs a cheap journal instead of a whole-`State` clone: one
+/// record per touched key, holding the value that was there before the op.
+#[derive(Debug)]
+enum Undo {
+    Object(Hash32, Option<ObjectRecord>),
+    Entry(Hash32, Option<EntryRecord>),
+    Relation(Hash32, Option<RelationRecord>),
+    Snapshot(String, Option<Hash32>),
+    Tip(Hash32, Option<Hash32>),
+}
+
 /// The open store.
 pub struct Store {
     root: PathBuf,
@@ -214,6 +242,15 @@ pub struct Store {
     next_generation: u64,
     rejected: Vec<u64>,
     notes: Vec<String>,
+    /// Non-zero while [`Store::group`] has a closure open. Mutation methods
+    /// buffer their ops instead of publishing, and `group` refuses to nest.
+    group_depth: u32,
+    /// Ops buffered by the open group, in the exact order they were applied.
+    pending_ops: Vec<Op>,
+    /// Undo journal for the open group (see [`Undo`]).
+    group_undo: Vec<Undo>,
+    /// A `checkpoint()` request raised inside the group.
+    group_force_checkpoint: bool,
     /// In-memory open-handle pins by object id. Consulted by `unlink` (an
     /// unlinked object record survives while pinned) and by GC (pinned content
     /// is never swept). Pins are process-local and do not survive a crash.
@@ -294,6 +331,10 @@ impl Store {
             next_generation: 2,
             rejected: Vec::new(),
             notes: Vec::new(),
+            group_depth: 0,
+            pending_ops: Vec::new(),
+            group_undo: Vec::new(),
+            group_force_checkpoint: false,
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
@@ -371,6 +412,10 @@ impl Store {
             next_generation,
             rejected: recovery.rejected,
             notes: recovery.notes,
+            group_depth: 0,
+            pending_ops: Vec::new(),
+            group_undo: Vec::new(),
+            group_force_checkpoint: false,
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
@@ -444,6 +489,14 @@ impl Store {
     /// `DEFAULT_INDEX_CAPACITY` entries and evicts oldest-first. The index is
     /// only used to narrow candidates; `eval_expr` is still authoritative.
     pub(crate) fn state_index(&self, snapshot: Hash32, state: &State) -> Arc<StateIndex> {
+        // Inside a group the state changes while `head` does not, so a cached
+        // index keyed by the commit hash can no longer be validated by
+        // `matches_state` alone (an attribute-only edit keeps every count and
+        // the generation unchanged). Rebuild per call instead of serving a
+        // stale candidate set; the index may only ever over-approximate.
+        if self.group_depth != 0 {
+            return Arc::new(StateIndex::build(state));
+        }
         let mut cache = self
             .index_cache
             .lock()
@@ -2084,9 +2137,116 @@ impl Store {
 
     /// Force a checkpoint commit (state manifest describing the state after
     /// this commit's empty op list).
+    ///
+    /// Inside [`Store::group`] this only marks the group commit for a
+    /// checkpoint state manifest and returns the current (pre-group) head;
+    /// nothing is published until the group closes.
     pub fn checkpoint(&mut self) -> Result<Hash32> {
         self.require_writable()?;
         self.commit_ops(Vec::new(), true)
+    }
+
+    /// Group commit: run `f` with this store and publish **one** durable commit
+    /// containing every mutation it performed, in application order.
+    ///
+    /// # Contract
+    ///
+    /// * Inside `f`, every mutation method (`create_file*`, `mkdir*`,
+    ///   `symlink*`, `write_file*`, `truncate`, `zero_range`, `collapse_range`,
+    ///   `insert_range`, `unlink`, `rmdir`, `rename*`, `link`,
+    ///   `setattr`, `set_xattr`/`remove_xattr`,
+    ///   `relation_add`/`relation_delete`, `save_context*`,
+    ///   `save_context_root`, `snapshot_create`, …) works
+    ///   unchanged: validation, name checks, `MAX_FILE_BYTES`, chunk-size
+    ///   checks and causal handling are exactly the single-mutation ones.
+    /// * Reads inside `f` (including `read_range`, `read_object`, `list_dir`,
+    ///   `object_meta`, selector queries and `state_at(head)`) see the mutations
+    ///   already made, because each buffered op is applied to the live
+    ///   in-memory state immediately.
+    ///   Version ids, `mtime_ns` and the fixed fixture clock use the existing
+    ///   helpers and do not change.
+    /// * A mutation that fails inside `f` fails exactly as it would on its own
+    ///   and leaves no partial op batch applied.
+    /// * On `Ok`, the accumulated ops become the content of exactly one commit;
+    ///   the generation increases by exactly 1 and the commit hash is returned
+    ///   with the closure value. Buffered per-mutation commit hashes are not
+    ///   meaningful (the helpers return the current head); the group hash is.
+    /// * On `Err`, **nothing** is published: the commit-chain generation, the
+    ///   head, and the in-memory state (objects, entries, relations, snapshots,
+    ///   tips) are byte-identical to the state before `group`. Content chunks,
+    ///   manifests and causal blobs written before the failure may remain as
+    ///   unreferenced blobs; `verify` still passes and `gc` reclaims them.
+    /// * A group with no buffered ops publishes nothing and returns the current
+    ///   head unchanged.
+    /// * Nested groups are `InvalidArgument`, never flattened into the outer
+    ///   group.
+    /// * `OpenMode::ReadOnly` stores refuse `group` with `ReadOnly`.
+    /// * `gc` (the only operation that physically deletes blobs) is
+    ///   `InvalidArgument` inside a group, because a later rollback would leave
+    ///   state referencing deleted blobs.
+    ///
+    /// # Durability
+    ///
+    /// A group is durable only when this call returns `Ok`: the single commit
+    /// is written and superblock-published at the end of `f`, so a crash at any
+    /// point inside the closure leaves the previous generation exactly as it
+    /// was before the group — the same rule the single-mutation path has. A
+    /// crash during publication is the ordinary commit crash set: either the
+    /// old generation or the whole new generation, never a partial one.
+    /// Snapshots taken inside a group pin the generation that was head when the
+    /// group started (a commit cannot pin itself without a cycle).
+    ///
+    /// # Panics
+    ///
+    /// A panic inside `f` is propagated after the in-memory state is rolled back
+    /// to the pre-group value; nothing is published.
+    pub fn group<F, T>(&mut self, f: F) -> Result<(T, Hash32)>
+    where
+        F: FnOnce(&mut Store) -> Result<T>,
+    {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "group commit cannot be nested inside another group",
+            ));
+        }
+        self.group_depth = 1;
+        self.pending_ops.clear();
+        self.group_undo.clear();
+        self.group_force_checkpoint = false;
+
+        // Roll back on panic as well as on `Err`, so a panicking closure cannot
+        // leave the live state ahead of the published commit chain.
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(&mut *self)));
+        let value = match outcome {
+            Ok(Ok(value)) => value,
+            Ok(Err(err)) => {
+                self.abort_group();
+                return Err(err);
+            }
+            Err(panic) => {
+                self.abort_group();
+                std::panic::resume_unwind(panic);
+            }
+        };
+
+        let ops = std::mem::take(&mut self.pending_ops);
+        let undo = std::mem::take(&mut self.group_undo);
+        let force_checkpoint = std::mem::replace(&mut self.group_force_checkpoint, false);
+        self.group_depth = 0;
+
+        if ops.is_empty() {
+            return Ok((value, self.head));
+        }
+        match self.publish_staged(ops, force_checkpoint) {
+            Ok(hash) => Ok((value, hash)),
+            Err(err) => {
+                // Nothing is published on an error return, so the in-memory
+                // state must go back to the pre-group value.
+                self.rollback(&undo);
+                Err(err)
+            }
+        }
     }
 
     // ---- selector resolution --------------------------------------------
@@ -2640,6 +2800,13 @@ impl Store {
     /// is older than `gc_grace_secs` (zero disables the age gate).
     pub fn gc(&mut self, apply: bool) -> Result<GcReport> {
         self.require_writable()?;
+        if self.group_depth != 0 {
+            // GC physically deletes blobs; a later group rollback would leave
+            // the restored state pointing at deleted content.
+            return Err(Error::invalid_argument(
+                "gc cannot run inside a group commit",
+            ));
+        }
         let mut report = GcReport {
             applied: apply,
             ..GcReport::default()
@@ -2895,6 +3062,16 @@ impl Store {
 
     fn commit_ops(&mut self, ops: Vec<Op>, force_checkpoint: bool) -> Result<Hash32> {
         self.require_writable()?;
+        if self.group_depth != 0 {
+            if force_checkpoint {
+                self.group_force_checkpoint = true;
+            }
+            self.stage_ops(ops)?;
+            // Nothing is published until the group closes, so no commit hash
+            // exists yet. Callers inside a group must use the hash `group`
+            // returns; this value is the pre-group head.
+            return Ok(self.head);
+        }
         let new_generation = self.next_generation;
         let timestamp = self.now_ns();
         let mut next_state = self.state.clone();
@@ -2929,6 +3106,161 @@ impl Store {
         self.next_generation = new_generation
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        Ok(hash)
+    }
+
+    /// Apply one mutation's ops to the live state and buffer them for the open
+    /// group.
+    ///
+    /// The ops are applied one at a time so read-your-writes works from the
+    /// next statement in the closure; the batch is still all-or-nothing because
+    /// every touched key is journalled first and unwound if any op rejects it.
+    fn stage_ops(&mut self, ops: Vec<Op>) -> Result<()> {
+        let mark = self.group_undo.len();
+        for op in &ops {
+            self.journal(op);
+        }
+        for op in &ops {
+            if let Err(err) = self.state.apply_op(op) {
+                self.rollback_from(mark);
+                return Err(err);
+            }
+        }
+        self.pending_ops.extend(ops);
+        Ok(())
+    }
+
+    /// Record the pre-op value of every state key `op` can touch.
+    fn journal(&mut self, op: &Op) {
+        match op {
+            Op::PutObject(record) => self.group_undo.push(Undo::Object(
+                record.id,
+                self.state.objects.get(&record.id).cloned(),
+            )),
+            Op::DeleteObject(id) => {
+                self.group_undo
+                    .push(Undo::Object(*id, self.state.objects.get(id).cloned()));
+                // `DeleteObject` also drops the tip for the object.
+                self.group_undo
+                    .push(Undo::Tip(*id, self.state.tips.get(id).copied()));
+            }
+            Op::PutEntry(record) => self.group_undo.push(Undo::Entry(
+                record.id,
+                self.state.entries.get(&record.id).cloned(),
+            )),
+            Op::DelEntry(id) => self
+                .group_undo
+                .push(Undo::Entry(*id, self.state.entries.get(id).cloned())),
+            Op::PutRelation(record) => self.group_undo.push(Undo::Relation(
+                record.id,
+                self.state.relations.get(&record.id).cloned(),
+            )),
+            Op::DelRelation(id) => self
+                .group_undo
+                .push(Undo::Relation(*id, self.state.relations.get(id).cloned())),
+            Op::SetSnapshot { name, .. } => self.group_undo.push(Undo::Snapshot(
+                name.clone(),
+                self.state.snapshots.get(name).copied(),
+            )),
+            Op::SetTip { object, .. } => self
+                .group_undo
+                .push(Undo::Tip(*object, self.state.tips.get(object).copied())),
+        }
+    }
+
+    /// Discard the open group without publishing and restore the pre-group
+    /// in-memory state.
+    fn abort_group(&mut self) {
+        let undo = std::mem::take(&mut self.group_undo);
+        self.rollback(&undo);
+        self.pending_ops.clear();
+        self.group_force_checkpoint = false;
+        self.group_depth = 0;
+    }
+
+    /// Unwind a whole undo journal (newest entry first).
+    fn rollback(&mut self, undo: &[Undo]) {
+        for entry in undo.iter().rev() {
+            match entry {
+                Undo::Object(id, previous) => {
+                    restore(&mut self.state.objects, *id, previous.clone())
+                }
+                Undo::Entry(id, previous) => {
+                    restore(&mut self.state.entries, *id, previous.clone())
+                }
+                Undo::Relation(id, previous) => {
+                    restore(&mut self.state.relations, *id, previous.clone())
+                }
+                Undo::Snapshot(name, previous) => {
+                    restore(&mut self.state.snapshots, name.clone(), *previous)
+                }
+                Undo::Tip(id, previous) => restore(&mut self.state.tips, *id, *previous),
+            }
+        }
+    }
+
+    /// Unwind journal entries recorded after `mark` and forget them.
+    fn rollback_from(&mut self, mark: usize) {
+        let undo: Vec<Undo> = self.group_undo.drain(mark..).collect();
+        self.rollback(&undo);
+    }
+
+    /// Publish the buffered ops as exactly one commit. The live state already
+    /// contains every op, so unlike [`Store::commit_ops`] nothing is replayed.
+    fn publish_staged(&mut self, ops: Vec<Op>, force_checkpoint: bool) -> Result<Hash32> {
+        let new_generation = self.next_generation;
+        let next_generation = new_generation
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        let previous_state_generation = self.state.generation;
+        self.state.generation = new_generation;
+        match self.try_publish_staged(new_generation, ops, force_checkpoint) {
+            Ok(hash) => {
+                self.next_generation = next_generation;
+                Ok(hash)
+            }
+            Err(err) => {
+                self.state.generation = previous_state_generation;
+                // A commit file may already exist for `new_generation`, so that
+                // number is never reused even when nothing was published.
+                self.next_generation = next_generation;
+                Err(err)
+            }
+        }
+    }
+
+    fn try_publish_staged(
+        &mut self,
+        new_generation: u64,
+        ops: Vec<Op>,
+        force_checkpoint: bool,
+    ) -> Result<Hash32> {
+        let timestamp = self.now_ns();
+        let interval = self.options.checkpoint_interval;
+        let wants_checkpoint = force_checkpoint || (interval > 0 && new_generation % interval == 0);
+        let checkpoint = if wants_checkpoint {
+            let bytes = encode_state(&self.state, new_generation)?;
+            Some(self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &bytes)?)
+        } else {
+            None
+        };
+
+        // Every content blob and checkpoint manifest is durable here. Nothing
+        // is visible until the superblock slot below is written, so a fault at
+        // this point still leaves the previous generation whole.
+        crash_point("after_objects");
+
+        let commit = Commit {
+            generation: new_generation,
+            parent: Some(self.head),
+            timestamp_ns: timestamp,
+            ops,
+            checkpoint,
+        };
+        let hash = self.publish_commit(&commit)?;
+
+        self.head = hash;
+        self.generation = new_generation;
         Ok(hash)
     }
 

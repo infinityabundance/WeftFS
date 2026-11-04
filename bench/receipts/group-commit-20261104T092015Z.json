@@ -1,0 +1,74 @@
+{
+  "correctness": {
+    "generation_increase_per_group": 1,
+    "objects_read_back": 1000,
+    "verify_full": "ok on every run"
+  },
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "cpus": "4",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g",
+    "pids_limit": "1024",
+    "storage": "tmpfs at TMPDIR=/tmp (court 1 GiB tmpfs mount)"
+  },
+  "generated_unix_secs": 1793784015,
+  "generated_utc": "2026-11-04T09:20:15Z",
+  "generations": {
+    "creates_individual": 1000,
+    "creates_one_group": 1,
+    "writes_one_group": 1
+  },
+  "label": "local tmpfs synthetic workload (TMPDIR=/tmp in the rust Docker court); store API timing only, not a device, FUSE, or fleet claim",
+  "package_version": "0.3.0",
+  "profile": "release",
+  "results": {
+    "create_speedup": 4.083553413131997,
+    "creates_individual": {
+      "max_ms": 94.504569,
+      "median_ms": 89.872089,
+      "samples_ms": [
+        89.23817700000001,
+        89.676905,
+        90.249303,
+        94.504569,
+        89.872089
+      ]
+    },
+    "creates_one_group": {
+      "max_ms": 22.263431,
+      "median_ms": 22.008305,
+      "samples_ms": [
+        22.008305,
+        21.11565,
+        21.741157,
+        22.263431,
+        22.083626
+      ]
+    },
+    "writes_one_group": {
+      "max_ms": 22.645864000000003,
+      "median_ms": 21.856051,
+      "samples_ms": [
+        21.845330999999998,
+        21.856051,
+        22.645864000000003,
+        21.64633,
+        21.901166
+      ]
+    }
+  },
+  "revision": "78e4d14fa113e3559e5ff51dd2dbf4b1683c6373",
+  "schema": "weftfs.group-commit-bench.v1",
+  "workload": {
+    "checkpoint_interval": 256,
+    "chunk_size": 65536,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "iterations": 5,
+    "objects": 1000,
+    "payload_bytes": 32,
+    "statistic": "median wall-clock milliseconds over 5 runs; each run uses a fresh store"
+  }
+}

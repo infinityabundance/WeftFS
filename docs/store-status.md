@@ -104,6 +104,30 @@ Tests map to the P4 requirements as follows:
   directories), `mkdir`, `symlink` (target in `attrs["weft.symlink.target"]` as
   bytes), `setattr`, `relation_add` (idempotent by RelationId),
   `relation_delete`, `snapshot_create`, `checkpoint`.
+- **Group commit** (`Store::group`): a closure runs the ordinary mutation
+  methods and the store publishes **one** commit containing every buffered op,
+  in application order, when the closure returns `Ok`; the generation advances
+  by exactly one. Ops are applied to the live in-memory state as they are made,
+  so reads inside the closure see earlier writes in the same group; per-op
+  validation, bounds, timestamps and version derivation are the
+  single-mutation ones. On closure error nothing is published: the commit
+  chain, head, and in-memory records (objects, entries, relations, snapshots,
+  tips) are exactly as before. Content chunks, manifests and causal blobs
+  written before the failure remain unreferenced; `verify` still passes and
+  `gc` reclaims them. Nested groups, and `gc` inside a group, are
+  `InvalidArgument`; a read-only store is `ReadOnly`. A group with no buffered
+  ops publishes nothing. Snapshots created inside a group pin the generation
+  that was head when the group opened.
+- **Group durability.** A group is durable only when `Store::group` returns
+  `Ok`, at the one publication the group performs: commit file written and
+  fsynced, `commits/` fsynced, superblock slot written and fsynced, root
+  fsynced — the same sequence a single mutation uses. A crash at any point
+  inside the closure leaves the previous generation exactly as it was before
+  the group; a crash during publication is the ordinary commit crash set (old
+  generation, or the whole new generation, never a partial state).
+  `tests/group_commit.rs` injects a child-process fault at `after_objects`,
+  `after_commit_file`, and `after_superblock_write` for one group of five
+  creates and asserts exactly those outcomes.
 - Explicit ObjectId seeds: `create_file_seeded`, `mkdir_seeded`,
   `symlink_seeded`; random seeds come from `/dev/urandom` (fail closed).
 - Selector evaluation with `weftcodec::selector`: namespace check, authorized
