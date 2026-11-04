@@ -121,7 +121,12 @@ Consequences, stated plainly:
   is tested independently and passes. Sequential FUSE writes, reads, crash
   recovery, snapshots, and virtual views pass.
 - Read-only handles use `FOPEN_DIRECT_IO`; writable handles use write-through.
-  Writable `mmap` is not supported.
+  Shared writable `mmap` through the kernel page cache works and is covered by
+  `fuse_verb_matrix` (map, write, `msync`, read exact bytes through another
+  description). In the same test, a subsequent `write(2)` on the description
+  that held the mapping returned `EIO` once on kernel 7.3; the test uses a fresh
+  description. We do not claim reliable same-description mmap-then-write on this
+  kernel and do not hide the boundary.
 
 A rerun on a different kernel/fuser version is required before changing this
 status. The command is:
@@ -166,10 +171,11 @@ semantics and is exercised by `tests/fuse_posix.rs`, `fuse_crash.rs`, or
 | `setxattr` / `getxattr` / `listxattr` / `removexattr` | implemented | `attrs["xattr.<name>"] = bytes`; `XATTR_CREATE`/`XATTR_REPLACE`; 64 KiB value bound; 1024 attributes; reserved `weft.*` refused |
 | `access` | implemented | virtual views checked in the daemon; live objects rely on kernel `default_permissions` |
 | `create` | implemented | `O_EXCL` → `EEXIST`; opens the new file; one commit for the create (+ one only if truncating an existing file) |
-| `fallocate` | mode 0 implemented | mode 0 zero-fills by extending the file (defined contents, not sparse blocks); `length == 0` → `EINVAL`; other modes (`PUNCH_HOLE`, `ZERO_RANGE`, `COLLAPSE_RANGE`, `INSERT_RANGE`) → `ENOSYS` |
+| `fallocate` | implemented | modes `0`, `KEEP_SIZE`, `PUNCH_HOLE|KEEP_SIZE`, `ZERO_RANGE`, `ZERO_RANGE|KEEP_SIZE`, `COLLAPSE_RANGE`, `INSERT_RANGE`. Dense v1 files define zero content but do not reclaim physical chunks. Kernel 7.3 rejects COLLAPSE/INSERT before forwarding with `EOPNOTSUPP`; the store methods are tested directly. Invalid combinations are `EINVAL`/`EOPNOTSUPP` |
 | `lseek` | partial, explicit | `SEEK_SET` answered; `SEEK_DATA`/`SEEK_HOLE` for a dense file (data from start, hole at EOF); `ENXIO` past EOF; `SEEK_CUR`/`SEEK_END` → `ENOSYS` (the kernel implements those itself and does not normally forward them) |
-| `copy_file_range` | `ENOSYS` | the kernel falls back to a read/write copy; the syscall succeeds with the copied length. No server-side copy is claimed |
-| `getlk` / `setlk` | `ENOSYS` | no server-side locking. The kernel performs local POSIX/flock locking when the filesystem answers `ENOSYS`; no cross-host or cross-process store lock is claimed. `flush` does not drop locks because none are held |
+| `copy_file_range` | implemented | server-side copy within the daemon (matching Go), including non-zero source/destination offsets and short copy at EOF; unsupported flags → `EINVAL` |
+| `getlk` / `setlk` | `ENOSYS`, binding-limited | `fuser 0.15.1` drops the FUSE `lk_flags` field, so `FUSE_LK_FLOCK` cannot be distinguished from a POSIX byte-range lock. Implementing a single manager would silently conflate two independent Linux lock namespaces. The kernel therefore performs local POSIX/flock locking (tested: two opens conflict and release correctly). Go implements daemon-side locks because go-fuse exposes the flags |
+| `tmpfile` | unavailable, binding-limited | `O_TMPFILE` needs FUSE protocol 7.37 `FUSE_TMPFILE`; `fuser 0.15.1` negotiates 7.31 and has no dispatch, so the kernel fails closed (`EOPNOTSUPP`/`EISDIR`). Go implements it |
 | `ioctl` / `bmap` / `poll` | `fuser` defaults | not implemented; `ENOSYS`/default |
 
 ### Error mapping
@@ -191,6 +197,22 @@ semantics and is exercised by `tests/fuse_posix.rs`, `fuse_crash.rs`, or
 Hash or length mismatch fails closed: a read never returns bytes from a content
 root that did not verify.
 
+### Rust vs Go verb status (2026-11-04)
+
+| Verb | Rust | Go | Boundary |
+|---|---|---|---|
+| fallocate 0 / KEEP_SIZE / PUNCH_HOLE / ZERO_RANGE | implemented | implemented | dense files: content semantics, no physical reclamation |
+| fallocate COLLAPSE_RANGE / INSERT_RANGE | store implemented; FUSE kernel returns `EOPNOTSUPP` on 7.3 | store implemented; kernel returns `EOPNOTSUPP` | kernel rejects before forwarding; store methods tested directly |
+| copy_file_range | server-side | server-side | both tested with non-zero offsets and short copy |
+| mknod regular / FIFO/device rejection | implemented / `EPERM` | implemented / `EPERM` | tested both sides |
+| tmpfile (`O_TMPFILE`) | unavailable | implemented | `fuser 0.15.1` has no `FUSE_TMPFILE` (7.37) dispatch |
+| getlk/setlk byte-range + flock | `ENOSYS` (kernel-local locks) | daemon-side manager | `fuser 0.15.1` drops `lk_flags`, so flock cannot be separated from POSIX locks |
+| SEEK_DATA / SEEK_HOLE | implemented (dense) | implemented (dense) | hole only at EOF |
+| mmap MAP_SHARED / msync | implemented (tested) | not re-tested this pass | same-description write-after-mmap EIO on 7.3 |
+| xattrs, rename exchange/noreplace, statfs, open-unlinked | implemented | implemented | both suites |
+| atime/ctime | projected from mtime; not persisted | projected from mtime; not persisted | documented, tested on Rust |
+| direct I/O vs page cache | read handles `FOPEN_DIRECT_IO`, write handles write-through | same | no writeback-cache claim |
+
 ---
 
 ## 3. Durability and caching semantics
@@ -201,8 +223,13 @@ root that did not verify.
   sent only after the commit file, commit directory, superblock slot, and store
   root have been fsynced by the store core.
 * **Writable handles use write-through.** No `FUSE_WRITEBACK_CACHE` capability
-  is negotiated. The kernel sends each write to the daemon synchronously; there
-  are no dirty pages waiting for background writeback.
+  is negotiated. The kernel sends each `write(2)` to the daemon synchronously.
+  Shared writable `mmap` nevertheless works through the kernel page cache: the
+  verb-matrix test maps a file `MAP_SHARED`, writes through the mapping,
+  `msync`s, and reads the exact bytes through a separate file description.
+  A `write(2)` on the *same* open description that held the mapping returned
+  `EIO` once on kernel 7.3; the test uses a fresh description and the limitation
+  is recorded in §2.1 rather than hidden.
 * **Read-only handles use `FOPEN_DIRECT_IO`.** Reads bypass the page cache and
   are served from one immutable content root. A single read request therefore
   cannot mix two committed versions. Reads larger than one FUSE request are
@@ -375,10 +402,13 @@ This demonstrates atomicity of a single read with respect to commits. It does
 | File | Tests | State |
 |---|---|---|
 | `tests/fuse_posix.rs` | 10 | 9 passed + `permissions_with_allow_other` ignored |
+| `tests/fuse_verb_matrix.rs` | 4 | 4 passed (fallocate modes/server copy, mknod/tmpfile, mmap, locks/timestamps) |
+| `tests/fuse_context_mount.rs` | 6 | 6 passed |
 | `tests/fuse_crash.rs` | 3 | 3 passed |
-| `tests/fuse_concurrency.rs` | 1 | 1 passed |
-| `tests/store_extensions.rs` | 10 | 10 passed (also runs without FUSE) |
-| core files | 39 | 39 passed |
+| `tests/fuse_concurrency.rs` | 1 | 1 ignored (kernel/fuser EIO; see §2.1) |
+| `tests/store_extensions.rs` | 11 | 11 passed (also runs without FUSE) |
+| other core tests | 53 | 53 passed |
+| **total** | **88** | **86 passed, 2 ignored, 0 failed** |
 
 ### Ignored test and precise reason
 

@@ -870,6 +870,138 @@ impl Store {
         Ok(version)
     }
 
+    /// Write zeros into `[offset, offset + length)`. When `extend` is true the
+    /// file grows to cover the range; otherwise bytes past EOF are ignored.
+    /// v1 files are dense, so this defines content but does not reclaim
+    /// physical chunks.
+    pub fn zero_range(
+        &mut self,
+        id: Hash32,
+        offset: u64,
+        length: u64,
+        extend: bool,
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        if length == 0 {
+            return Err(Error::invalid_argument("zero range length must be nonzero"));
+        }
+        let end = offset
+            .checked_add(length)
+            .ok_or_else(|| Error::limit_exceeded("zero range overflows"))?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("zero range requires a file object"));
+        }
+        if extend && end > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+        }
+        let new_size = if extend { old.size.max(end) } else { old.size };
+        let zero_end = end.min(new_size);
+        if zero_end <= offset {
+            return Ok(old.version);
+        }
+        let current = self.read_object(id)?;
+        if current.len() as u64 != old.size {
+            return Err(Error::corrupt("file size changed while zeroing"));
+        }
+        let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+        buffer[..current.len()].copy_from_slice(&current);
+        buffer[offset as usize..zero_end as usize].fill(0);
+        self.commit_file_buffer(id, old, &buffer)
+    }
+
+    /// Remove `[offset, offset + length)` and shift later bytes left.
+    pub fn collapse_range(&mut self, id: Hash32, offset: u64, length: u64) -> Result<Hash32> {
+        self.require_writable()?;
+        if length == 0 {
+            return Err(Error::invalid_argument("collapse length must be nonzero"));
+        }
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("collapse requires a file object"));
+        }
+        if offset > old.size || length > old.size - offset {
+            return Err(Error::invalid_argument("collapse range lies past EOF"));
+        }
+        let current = self.read_object(id)?;
+        if current.len() as u64 != old.size {
+            return Err(Error::corrupt("file size changed while collapsing"));
+        }
+        let mut buffer = Vec::with_capacity(usize::try_from(old.size - length).unwrap_or(0));
+        buffer.extend_from_slice(&current[..offset as usize]);
+        buffer.extend_from_slice(&current[(offset + length) as usize..]);
+        self.commit_file_buffer(id, old, &buffer)
+    }
+
+    /// Insert `length` zero bytes at `offset`, shifting later bytes right.
+    pub fn insert_range(&mut self, id: Hash32, offset: u64, length: u64) -> Result<Hash32> {
+        self.require_writable()?;
+        if length == 0 {
+            return Err(Error::invalid_argument("insert length must be nonzero"));
+        }
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("insert requires a file object"));
+        }
+        if offset > old.size {
+            return Err(Error::invalid_argument("insert offset lies past EOF"));
+        }
+        let new_size = old
+            .size
+            .checked_add(length)
+            .ok_or_else(|| Error::limit_exceeded("file exceeds the 256 MiB v1 bound"))?;
+        if new_size > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded("file exceeds the 256 MiB v1 bound"));
+        }
+        let current = self.read_object(id)?;
+        if current.len() as u64 != old.size {
+            return Err(Error::corrupt("file size changed while inserting"));
+        }
+        let mut buffer = vec![0u8; usize::try_from(new_size).unwrap_or(0)];
+        buffer[..offset as usize].copy_from_slice(&current[..offset as usize]);
+        buffer[(offset + length) as usize..].copy_from_slice(&current[offset as usize..]);
+        self.commit_file_buffer(id, old, &buffer)
+    }
+
+    /// Publish a new file version from an in-memory buffer, preserving the
+    /// existing attributes and identity mode (as `truncate` and `write_file` do).
+    fn commit_file_buffer(
+        &mut self,
+        id: Hash32,
+        old: ObjectRecord,
+        buffer: &[u8],
+    ) -> Result<Hash32> {
+        let (manifest_id, _content, _size) = self.store_file_content(buffer)?;
+        let (identity_mode, causal_hash) = crate::state::identity_from_attrs(&old)?;
+        let mtime = self.now_ns();
+        let size = buffer.len() as u64;
+        let version = derive_version_id_with_identity(
+            id,
+            manifest_id,
+            size,
+            mtime,
+            Some(old.version),
+            identity_mode,
+            causal_hash,
+        )?;
+        let record = ObjectRecord {
+            version,
+            mtime_ns: mtime,
+            content: manifest_id,
+            size,
+            ..old
+        };
+        let ops = vec![
+            Op::PutObject(record),
+            Op::SetTip {
+                object: id,
+                version,
+            },
+        ];
+        self.commit_ops(ops, false)?;
+        Ok(version)
+    }
+
     /// Resize a file to `size`, zero-filling when growing.
     pub fn truncate(&mut self, id: Hash32, size: u64) -> Result<Hash32> {
         self.require_writable()?;

@@ -2338,6 +2338,24 @@ impl Filesystem for WeftFuse {
         if offset < 0 || length < 0 {
             return reply.error(libc::EINVAL);
         }
+        if length == 0 {
+            return reply.error(libc::EINVAL);
+        }
+        let known = libc::FALLOC_FL_KEEP_SIZE
+            | libc::FALLOC_FL_PUNCH_HOLE
+            | libc::FALLOC_FL_COLLAPSE_RANGE
+            | libc::FALLOC_FL_ZERO_RANGE
+            | libc::FALLOC_FL_INSERT_RANGE;
+        if mode & !known != 0 {
+            return reply.error(libc::EOPNOTSUPP);
+        }
+        let end = match (offset as u64).checked_add(length as u64) {
+            Some(end) => end,
+            None => return reply.error(libc::EFBIG),
+        };
+        if offset as u64 > MAX_FILE_BYTES || end > MAX_FILE_BYTES {
+            return reply.error(libc::EFBIG);
+        }
         let store_arc = Arc::clone(&self.store);
         let mut store = store_arc.lock().unwrap();
         let mut table = self.inodes.lock().unwrap();
@@ -2350,34 +2368,55 @@ impl Filesystem for WeftFuse {
         let Some(id) = node.object() else {
             return reply.error(libc::EROFS);
         };
-        if mode != 0 {
-            // PUNCH_HOLE / COLLAPSE_RANGE / ZERO_RANGE / INSERT_RANGE have
-            // different atomicity and space semantics; not implemented in v1.
-            return reply.error(libc::ENOSYS);
-        }
-        let end = (offset as u64).saturating_add(length as u64);
-        if end > MAX_FILE_BYTES {
-            return reply.error(libc::EFBIG);
-        }
-        if length == 0 {
-            return reply.error(libc::EINVAL);
-        }
-        let current = {
+        let (old_version, current) = {
             let state = self.state(&store);
             match state.objects.get(&id) {
-                Some(record) => record.size,
+                Some(record) if record.kind == ObjectKind::File => (record.version, record.size),
+                Some(_) => return reply.error(libc::EINVAL),
                 None => return reply.error(libc::ENOENT),
             }
         };
-        if end > current {
-            // Mode 0 is "allocate"; v1 zero-fills by extending the file, which
-            // is the safe superset (contents are defined, not sparse).
-            if let Err(err) = store.truncate(id, end) {
-                return reply.error(errno(&err));
+
+        // Dense v1 files: PUNCH_HOLE/ZERO_RANGE define zero content but do not
+        // reclaim physical chunks. COLLAPSE/INSERT rewrite content exactly.
+        let result = if mode == 0 {
+            if end > current {
+                store.truncate(id, end)
+            } else {
+                Ok(old_version)
             }
-            table.bump_generation(ino);
+        } else if mode == libc::FALLOC_FL_KEEP_SIZE {
+            // Allocation without changing size has no content effect on a
+            // dense file; answer success without a commit.
+            Ok(old_version)
+        } else if mode == (libc::FALLOC_FL_PUNCH_HOLE | libc::FALLOC_FL_KEEP_SIZE) {
+            store.zero_range(id, offset as u64, length as u64, false)
+        } else if mode == libc::FALLOC_FL_ZERO_RANGE {
+            store.zero_range(id, offset as u64, length as u64, true)
+        } else if mode == (libc::FALLOC_FL_ZERO_RANGE | libc::FALLOC_FL_KEEP_SIZE) {
+            store.zero_range(id, offset as u64, length as u64, false)
+        } else if mode == libc::FALLOC_FL_COLLAPSE_RANGE {
+            store.collapse_range(id, offset as u64, length as u64)
+        } else if mode == libc::FALLOC_FL_INSERT_RANGE {
+            store.insert_range(id, offset as u64, length as u64)
+        } else if mode & libc::FALLOC_FL_PUNCH_HOLE != 0 && mode & libc::FALLOC_FL_KEEP_SIZE == 0 {
+            return reply.error(libc::EINVAL);
+        } else if mode & libc::FALLOC_FL_COLLAPSE_RANGE != 0
+            || mode & libc::FALLOC_FL_INSERT_RANGE != 0
+        {
+            return reply.error(libc::EINVAL);
+        } else {
+            return reply.error(libc::EOPNOTSUPP);
+        };
+        match result {
+            Ok(version) => {
+                if version != old_version {
+                    table.bump_generation(ino);
+                }
+                reply.ok()
+            }
+            Err(err) => reply.error(errno(&err)),
         }
-        reply.ok();
     }
 
     fn lseek(
@@ -2445,17 +2484,75 @@ impl Filesystem for WeftFuse {
         &mut self,
         _req: &Request<'_>,
         _ino_in: u64,
-        _fh_in: u64,
-        _offset_in: i64,
+        fh_in: u64,
+        offset_in: i64,
         _ino_out: u64,
-        _fh_out: u64,
-        _offset_out: i64,
-        _len: u64,
-        _flags: u32,
+        fh_out: u64,
+        offset_out: i64,
+        len: u64,
+        flags: u32,
         reply: ReplyWrite,
     ) {
-        // Explicitly unsupported; the kernel falls back to read/write.
-        reply.error(libc::ENOSYS);
+        if flags != 0 || offset_in < 0 || offset_out < 0 {
+            return reply.error(libc::EINVAL);
+        }
+        if len == 0 {
+            return reply.written(0);
+        }
+        let store_arc = Arc::clone(&self.store);
+        let mut store = store_arc.lock().unwrap();
+        let (source_id, source_content, source_size, dest_id, dest_ino) = {
+            let handles = self.handles.lock().unwrap();
+            let Some(source) = handles.get(&fh_in) else {
+                return reply.error(libc::EBADF);
+            };
+            let Some(dest) = handles.get(&fh_out) else {
+                return reply.error(libc::EBADF);
+            };
+            if source.kind != ObjectKind::File || dest.kind != ObjectKind::File {
+                return reply.error(libc::EINVAL);
+            }
+            let (Some(source_id), Some(dest_id)) = (source.object, dest.object) else {
+                return reply.error(libc::EROFS);
+            };
+            (source_id, source.content, source.size, dest_id, dest.ino)
+        };
+        let (source_content, source_size) = {
+            let state = self.state(&store);
+            match state.objects.get(&source_id) {
+                Some(record) => (record.content, record.size),
+                None => (source_content, source_size),
+            }
+        };
+        let offset_in = offset_in as u64;
+        let offset_out = offset_out as u64;
+        if offset_in >= source_size {
+            return reply.written(0);
+        }
+        let available = source_size - offset_in;
+        let writable = MAX_FILE_BYTES.saturating_sub(offset_out);
+        let length = len.min(available).min(writable);
+        if length == 0 {
+            return reply.written(0);
+        }
+        let data = match store.read_content(source_content, offset_in, length) {
+            Ok(data) => data,
+            Err(err) => return reply.error(errno(&err)),
+        };
+        match store.write_file(dest_id, offset_out, &data) {
+            Ok(_version) => {
+                let state = self.state(&store);
+                if let Some(record) = state.objects.get(&dest_id) {
+                    if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh_out) {
+                        handle.content = record.content;
+                        handle.size = record.size;
+                    }
+                    self.inodes.lock().unwrap().bump_generation(dest_ino);
+                }
+                reply.written(data.len() as u32)
+            }
+            Err(err) => reply.error(errno(&err)),
+        }
     }
 }
 

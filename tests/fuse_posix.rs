@@ -394,9 +394,9 @@ fn lseek_fallocate_and_copy_file_range() {
     assert_eq!(&bytes[..10], b"0123456789");
     assert!(bytes[10..].iter().all(|byte| *byte == 0));
 
-    // The FUSE copy_file_range op answers ENOSYS. The kernel then falls back to
-    // a read/write copy, so the syscall itself succeeds with the copied length:
-    // no server-side copy is performed or claimed.
+    // copy_file_range is handled by the daemon in the Rust frontend (matching
+    // the Go frontend). The syscall returns the copied length and the exact
+    // bytes; the dedicated verb matrix also checks non-zero in/out offsets.
     let source = File::open(&file).unwrap();
     let target = OpenOptions::new()
         .write(true)

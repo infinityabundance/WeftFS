@@ -569,3 +569,45 @@ fn orphan_object_records_left_by_a_crash_are_removed_by_gc_apply() {
     let store = Store::open(dir.path(), OpenMode::ReadOnly).unwrap();
     assert!(!store.current_state().objects.contains_key(&file));
 }
+
+#[test]
+fn file_range_zero_collapse_and_insert() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = State::ROOT_ID;
+
+    let zero = store
+        .create_file(root, b"zero", b"ABCDEFGH", 0o644, 0, 0, BTreeMap::new())
+        .unwrap();
+    store.zero_range(zero, 2, 3, false).unwrap();
+    assert_eq!(store.read_object(zero).unwrap(), b"AB\0\0\0FGH");
+    assert_eq!(store.object_meta(zero).unwrap().size, 8);
+    store.zero_range(zero, 8, 4, true).unwrap();
+    assert_eq!(store.read_object(zero).unwrap(), b"AB\0\0\0FGH\0\0\0\0");
+
+    let collapse = store
+        .create_file(root, b"collapse", b"ABCDEFGH", 0o644, 0, 0, BTreeMap::new())
+        .unwrap();
+    store.collapse_range(collapse, 2, 2).unwrap();
+    assert_eq!(store.read_object(collapse).unwrap(), b"ABEFGH");
+
+    let insert = store
+        .create_file(root, b"insert", b"ABCDEFGH", 0o644, 0, 0, BTreeMap::new())
+        .unwrap();
+    store.insert_range(insert, 2, 2).unwrap();
+    assert_eq!(store.read_object(insert).unwrap(), b"AB\0\0CDEFGH");
+
+    // Invalid bounds are rejected with the store's argument class.
+    assert_eq!(
+        store.collapse_range(insert, 5, 10).unwrap_err().class(),
+        Class::InvalidArgument
+    );
+    assert_eq!(
+        store.insert_range(insert, 100, 1).unwrap_err().class(),
+        Class::InvalidArgument
+    );
+    assert_eq!(
+        store.zero_range(insert, 0, 0, false).unwrap_err().class(),
+        Class::InvalidArgument
+    );
+}
