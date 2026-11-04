@@ -402,6 +402,27 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   write-batching change has been made (each mutation still pays its durable
   commit).
 
+- **Streaming I/O and the file bound.** `create_file_streaming*` and
+  `append_file_streaming` read the source in 1 MiB steps, compute the frozen
+  content hash incrementally, and commit once. A 256 MiB streaming create uses
+  ~7 MiB peak RSS versus ~263 MiB for the buffered path (190.7 ms vs 138.4 ms;
+  receipt `bench/receipts/streaming-20261104T094742Z.json`). `MAX_FILE_BYTES`
+  is now a 1 TiB defensive bound plus `MAX_CHUNKS_PER_FILE = 16,777,216`; every
+  offset/size conversion is checked and returns `LimitExceeded` rather than
+  truncating. A 512 MiB file is created and fully verified in the court at
+  ~15 MiB peak RSS (`tests/streaming.rs`). Go matches both constants with no
+  format change (`WeftFS-Go` `b6408fe`).
+- **Effective large-file limit (honest):** the manifest is a WCB array, so the
+  codec's `max_array_items` decode limit caps readable chunk counts far below
+  1 TiB (at 64 KiB chunks, ~200k chunks ≈ 12.8 GiB for the default 1,000,000
+  item limit). Neither implementation truncates; both fail closed with
+  `LimitExceeded`. Raising that ceiling requires a chunk-table format change
+  (the codec already has a chunk table for frames) and is future work.
+- **Not claimed:** codec-backed streaming (`CodecAuto` above
+  `codec_min_bytes` writes a v2 raw manifest) and streaming arbitrary-offset
+  writes (append is the streaming write form; range writes remain
+  chunk-materialising).
+
 ### Contextual indexes for selector resolution (implemented 2026-11-04, in-memory)
 
 - **What it is:** `src/index.rs` `StateIndex` indexes attribute presence and
