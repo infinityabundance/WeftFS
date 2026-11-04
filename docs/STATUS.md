@@ -407,6 +407,15 @@ identical and pushed in all four repositories).
   **18** commit files, versus 3,789.1 ms / 3,892.0 ms reading 10,001 for the
   forced full path. Receipt
   `bench/receipts/fast-open-20261104T090945Z.json`.
+- **Go parity for bounded open (2026-11-04).** WeftFS-Go `store/recovery.go` now
+  implements the same generation-addressed walk with the full scan as the
+  authoritative fallback; a read-only open never enumerates the commit
+  directory and a writable open enumerates once for `next_generation`.
+  Measured on a 100,000-generation store, interval 256 (go court, tmpfs,
+  synthetic): bounded open median 2.80 ms / 162 commit reads, forced full scan
+  2155.65 ms / 100,001 reads, identical recovered states. Receipt
+  `bench/receipts/go-fast-open-20261104T190732Z.json`; courts
+  `store/fast_open_test.go` (4 tests).
 - **Semantics made explicit.** A bounded open records the note `bounded replay
   resumed from the checkpoint at generation N; commit files below it were not
   enumerated`, and `spec/WEFT-MODEL.md` now requires that note plus the
@@ -839,17 +848,22 @@ operations; `verify --full` after unmount; writer/reader manifest equality).
 Operations cover create/write/read/truncate/append/rename/rename-over/link/
 unlink/mkdir/rmdir/symlink/readlink/xattr/fsync/open-unlinked.
 
-The size asymmetry is deliberate and is a real product finding. The Go store's
-`Open` (`store.CommitIndex` → `LoadStateAt`) parses every commit file and has no
-bounded open: three consecutive probes measured 18.65–19.07 s to mount a store
-with 287,759 commits, while Rust mounted the same store in 305 ms. The harness's
-mount wait is a fixed 15 s (300 × 50 ms), so Go-reader runs are capped at
-240,000 requested (~133k commits, ~9 s mount) while Rust-reader runs use
-640,000. The retained failing receipt
-`bench/receipts/posix-torture-20261104T153125Z.json` is the 520,000-request
-rust→go attempt that completed 242,422 operations and then exceeded the 15 s
-wait at 287,759 commits; its step store is not kept. No product code, assertion,
-or harness default was changed.
+The size asymmetry is deliberate and is a real product finding from the run
+itself. At that revision the Go store's `Open` (`store.CommitIndex` →
+`LoadStateAt`) parsed every commit file and had no bounded open: three
+consecutive probes measured 18.65–19.07 s to mount a store with 287,759 commits,
+while Rust mounted the same store in 305 ms. The harness's mount wait is a fixed
+15 s (300 × 50 ms), so Go-reader runs are capped at 240,000 requested (~133k
+commits, ~9 s mount) while Rust-reader runs use 640,000. The retained failing
+receipt `bench/receipts/posix-torture-20261104T153125Z.json` is the
+520,000-request rust→go attempt that completed 242,422 operations and then
+exceeded the 15 s wait at 287,759 commits; its step store is not kept. No product
+code, assertion, or harness default was changed. **Update 2026-11-04:** Go now
+implements the same bounded replay (`WeftFS-Go` `1461c04`,
+`bench/receipts/go-fast-open-20261104T190732Z.json`: 100,000 generations open in
+2.80 ms / 162 commit reads versus 2155.65 ms / 100,001 reads full-scan). The
+numbers above were measured before that change and the court sizes were left
+unchanged, so they remain a record of the old path, not of current behaviour.
 
 Caveat (unchanged): this is a self-written fsx-style harness in a single-host
 Docker court, not `pjdfstest`/`fsstress` (not installed in the court; no
@@ -1091,12 +1105,18 @@ multi-writer, physical rig).
    `indexes/<ab>/<commit>.idx` segments (see §F2 above); the portable format does
    not require them and Go still rebuilds per state. Segments are not
    snapshot-incremental on either side.
-5. **Go bounded open / bounded commit index.** Go `Store.Open`
-   (`CommitIndex` → `LoadStateAt`) parses every commit file; measured
-   18.65–19.07 s to open 287,759 commits, versus 305 ms for Rust on the same
-   store. This is why the POSIX court above sizes rust→go runs at 240,000
-   requested and go→rust runs at 640,000 (the harness mount wait is a fixed
-   15 s). **1,000,000 completed operations is met** (1,202,560 across
+5. **Go bounded open — closed 2026-11-04.** Go `Store.Open` now uses the
+   Rust-reference generation-addressed bounded replay in `store/recovery.go`,
+   with the authoritative full scan as the fallback; on a 100,000-generation
+   store the read-only open is 2.80 ms median / 162 commit reads versus
+   2155.65 ms / 100,001 reads on the forced full scan
+   (`bench/receipts/go-fast-open-20261104T190732Z.json`, synthetic tmpfs,
+   single host, states identical). The earlier measurement (18.65–19.07 s to
+   open 287,759 commits versus 305 ms Rust) is the old full-scan path; the
+   POSIX court above therefore still sizes rust→go runs at 240,000 requested
+   and go→rust runs at 640,000 (fixed 15 s harness mount wait). Bounded commit
+   index is not implemented and is not claimed. **1,000,000 completed
+   operations is met** (1,202,560 across
    `bench/receipts/posix-torture-20261104T162109Z.json`,
    `…T172156Z`, `…T182537Z`); the earlier 1,000,002-request run
    (`…T142424Z`, 453,432 completed) and the 13,694-operation run

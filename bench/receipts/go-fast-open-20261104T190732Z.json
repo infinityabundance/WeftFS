@@ -1,0 +1,82 @@
+{
+  "checkpoint_interval": 256,
+  "chunk_size": 1024,
+  "entries": 8,
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/go-court:1",
+    "court_image_id": "sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "go_maxprocs": 4,
+    "go_version": "go1.23.12",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftfs_go": "1461c04f88688895dc08f504bdbd06f28fcfa4e8",
+    "revision_weftfs_parent": "8c112de296a677694ed19b98a9e96c72574e6b64"
+  },
+  "fast": {
+    "commit_file_reads": [
+      162,
+      162,
+      162,
+      162,
+      162
+    ],
+    "median_ms": 2.797829,
+    "p95_ms": 4.137208,
+    "path": "store.Open(ReadOnly) - generation-addressed bounded replay",
+    "wall_ms": [
+      2.797829,
+      2.686752,
+      2.719102,
+      4.137208,
+      3.478119
+    ]
+  },
+  "full": {
+    "commit_file_reads": [
+      100001,
+      100001,
+      100001,
+      100001,
+      100001
+    ],
+    "median_ms": 2155.654019,
+    "p95_ms": 2181.768168,
+    "path": "store.OpenFullScanForBench(ReadOnly) - full commit-directory replay",
+    "wall_ms": [
+      2093.3354,
+      2155.654019,
+      2174.517812,
+      2181.768168,
+      2148.184848
+    ]
+  },
+  "generations": 100000,
+  "kind": "go-bounded-open-bench",
+  "label": "Local synthetic store on the Docker court's /tmp tmpfs; single host, synthetic fixture, not a device, fleet, power-loss, or production claim.",
+  "notes": [
+    "The store is built once, sequentially, in this process under /tmp (tmpfs, 1 GiB) and is read from the page cache.",
+    "The object payload is identical for every generation, so content blobs and manifests deduplicate; the commit chain and replay work are real (one commit file per generation).",
+    "Commit-file reads are counted by store.CommitFileReads(), incremented once per LoadCommitFile call.",
+    "The fast path is ReadOnly and directory-free: it starts at the highest published superblock generation and walks parent links down to the nearest verified checkpoint.",
+    "The full path is the pre-optimisation behaviour: it enumerates the commit directory and decodes every commit file.",
+    "Fast-path recovery notes for this store: [bounded replay resumed from the checkpoint at generation 99840; commit files below it were not enumerated]",
+    "Store bytes are apparent and filesystem-allocated (stat blocks*512); tmpfs rounds every file up to a page.",
+    "No device-level, fsync, power-loss, fleet, or production claim is made."
+  ],
+  "objects": 9,
+  "peak_rss_kib": 243484,
+  "recovered_generation": 100000,
+  "relations": 1,
+  "samples": 5,
+  "schema": "weft-go-open-bench-v1",
+  "snapshots": 1,
+  "state_match": true,
+  "store_allocated_bytes": 411287552,
+  "store_apparent_bytes": 47585212,
+  "tips": 9,
+  "work_dir": "/tmp/weft-go-open-bench"
+}
