@@ -1221,3 +1221,41 @@ multi-writer, physical rig).
 11. **Real-time aging.** Prerequisite: the simulated-timestamp agent-memory demo
     (`bench/receipts/agent-memory-20261104T022512Z.json`, 7/7). Months of
     wall-clock retention were not measured.
+
+    ## 2026-11-04 — A2: KV_CACHE (12) and ACTIVATION_STREAM (13)
+
+    Two page-addressed AI modes are implemented in Rust and Go with byte-identical
+    frames and bounded lazy page/chunk reads.
+
+    - **Mode 12 `KV_CACHE`** (`weft.ai.kv_cache.v1`): one frame per page; exact
+      descriptor (`model`, `layer`, `session`, `page_index`, `page_count`,
+      `seq_start`, `seq_end`, dtype, head geometry, shape, `page_bytes`,
+      `plane_codec`, `payload_len`). Payload is canonical row-major element bytes
+      split into 2 (bf16/fp16) or 4 (fp32) Huffman-coded byte planes. Pages have no
+      dependencies and no cross-page state; `KvPageSet` decodes exactly one page at
+      a time and its counter is the independence evidence.
+    - **Mode 13 `ACTIVATION_STREAM`** (`weft.ai.activation_stream.v1`): one frame
+      per activation/gradient chunk with `digest_root = H("weft/tensor/values/v1",
+      elements)`. `assemble_stream` rejects duplicate/missing indices, orders by
+      `chunk_index`, verifies every digest, and returns
+      `H("weft/ai/stream/v1", WCB({stream,step,rank,world,chunk_count,digest_roots}))`.
+      `append_chunk` never decodes a previous chunk; the writer's decoded counter
+      proves it.
+    - **Vectors:** `conformance/v1/kv-cache/` and `conformance/v1/activation-stream/`
+      are byte-identical in both codec repos: 3 valid + 8 rejects per mode
+      (22 files). Reserved-mode vector moved to mode 14; the mode-12 vector is
+      retained and marked `superseded_by`.
+    - **Cross gate:** `WeftCodec-Go/hack/cross.sh compare` reports
+      `YES byte-identical` for `kv_cache_p0`, `kv_cache_p1`, `activation_c0`, and
+      `activation_c1`, and all existing modes still pass both directions.
+    - **Bench:** `bench/receipts/kv-activation-20261104T220008Z.json`. Synthetic
+      single-host rust court: 16 MiB KV (16 pages of 1 MiB bf16) encode median
+      3.18 ms/page, whole-set decode 129.5 ms, single-page decode 8.88 ms; 64 MiB
+      activation (64 chunks of 1 MiB bf16) encode median 2.99 ms/chunk, whole-set
+      decode 580.9 ms, assembly 612.6 ms, single-chunk decode 9.01 ms.
+    - **Tests:** Rust `cargo test --all-targets` and Go `go test ./...` in the
+      Docker courts; new Rust integration tests cover bit-exact NaN/denormal/
+      signed-zero round-trips, page-7-of-8 independence, chunk independence,
+      append counters, shuffled/duplicate/missing assembly, and range reads.
+    - **Residual:** Huffman planes are not seekable, so a range read decodes one
+      page/chunk and slices it; mode allocation is now 13, reserving 14+.

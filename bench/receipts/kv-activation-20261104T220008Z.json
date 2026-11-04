@@ -1,0 +1,56 @@
+{
+  "activation_stream": {
+    "assemble_ms_median": 612.626685,
+    "chunk_bytes": 1048576,
+    "chunks": 64,
+    "decode_all_chunks_per_second": 110.173423952214,
+    "decode_all_ms_median": 580.902342,
+    "decode_single_chunk_ms_median": 9.011476,
+    "dtype": "bf16",
+    "element_bytes": 67108864,
+    "encode_ms_median": 2.9861519999999997,
+    "frame_bytes": 67164992,
+    "payload_bytes": 67141632
+  },
+  "court": {
+    "cpus": "4",
+    "docker_server": "29.9.2",
+    "image": "weft/rust-court:1",
+    "image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "kv_cache": {
+    "decode_all_ms_median": 129.48072200000001,
+    "decode_all_pages_per_second": 123.57051886071503,
+    "decode_single_page_ms_median": 8.875202,
+    "dtype": "bf16",
+    "element_bytes": 16777216,
+    "encode_ms_median": 3.182728,
+    "frame_bytes": 16791311,
+    "page_bytes": 1048576,
+    "pages": 16,
+    "payload_bytes": 16785408
+  },
+  "label": "synthetic, single host",
+  "limits": {
+    "max_decoded_bytes": 4294967296,
+    "max_frame_bytes": 1073741824,
+    "max_structured_items": 1000000,
+    "max_tensor_elements": 4294967296,
+    "max_tensor_rank": 8
+  },
+  "notes": [
+    "single-chunk decode is one decode_activation_chunk call; whole-set decode decodes all 64 chunks and drops the output",
+    "assembly additionally verifies every chunk digest, concatenates the elements, and computes the stream root",
+    "Huffman planes are not seekable, so a range read decodes exactly one page/chunk and slices it"
+  ],
+  "revision": {
+    "weftcodec": "15901018cbde30fe7a90037b5fd51e0c47265692",
+    "weftcodec_go": "53dcd5db8b5555c7e7bef1e4c4e9d006f1261b17",
+    "weftfs": "81c34e3c5a5d648f79eba74be4ed7c2281a0b4d3"
+  },
+  "schema": "weft.bench.kv-activation.v1",
+  "timestamp": "20261104T220008Z"
+}
