@@ -686,6 +686,11 @@ impl Store {
             return Ok(0);
         }
         let index = StateIndex::build(state).with_commit(commit);
+        if !index.complete() {
+            // Persisting an incomplete index would later be loaded as exact and
+            // could under-select. Keep it in memory only; the commit stands.
+            return Ok(0);
+        }
         let bytes = index.encode_file()?;
         if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(

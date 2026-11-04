@@ -306,6 +306,8 @@ fn main() {
             "visible_objects": ids.iter().enumerate().filter(|(index, _)| index % 7 != 0).count(),
         },
         "index": {
+            "format": "WFX2",
+            "version": 1,
             "file_bytes": index_bytes,
             "file": path.display().to_string(),
             "commit": head.to_hex(),

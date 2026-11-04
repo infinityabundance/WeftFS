@@ -20,7 +20,7 @@
 //! All keys and payloads are owned, so a `StateIndex` can outlive the `State`
 //! it was built from and be cached against the snapshot that produced it.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
+use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 
 use weftcodec::selector::Field;
@@ -29,17 +29,32 @@ use weftcodec::wcb::{self, Value};
 use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
 use crate::state::{RelationKind, RelationTarget, State};
-use crate::wcb_util as wu;
 
 /// Number of replayed states whose derived index is retained by a store.
 pub(crate) const DEFAULT_INDEX_CAPACITY: usize = 8;
 
-/// Advisory on-disk index file magic: `WFX1`.
-pub(crate) const INDEX_FILE_MAGIC: &[u8; 4] = b"WFX1";
-/// Domain for the BLAKE3 integrity digest over the canonical index WCB.
-pub(crate) const INDEX_DOMAIN: &str = "weft/index/v1";
-/// Canonical schema string for a persisted per-commit index.
-pub(crate) const INDEX_SCHEMA: &str = "weftfs.index.v1";
+/// The superseded canonical-WCB index magic. WFX1 files are advisory and are
+/// discarded (rebuilt from state), never interpreted by this version.
+pub(crate) const INDEX_MAGIC_V1: &[u8; 4] = b"WFX1";
+/// Compact binary index magic.
+pub(crate) const INDEX_MAGIC_V2: &[u8; 4] = b"WFX2";
+/// WFX2 layout version.
+pub(crate) const INDEX_VERSION_V2: u32 = 1;
+/// Domain for the integrity digest over every preceding WFX2 byte.
+pub(crate) const INDEX_V2_DOMAIN: &str = "weft/index/v2";
+/// `magic(4) + version(4) + commit(32) + generation/object/relation/entry(32)`.
+const INDEX_V2_HEADER_BYTES: usize = 72;
+/// Trailing BLAKE3 digest length.
+const INDEX_DIGEST_BYTES: usize = 32;
+/// Relation-target tags used by the sorted `relations_from` section.
+const TARGET_OBJECT: u8 = 0;
+const TARGET_NULL: u8 = 1;
+const TARGET_BOOL: u8 = 2;
+const TARGET_U64: u8 = 3;
+const TARGET_I64: u8 = 4;
+const TARGET_TIMESTAMP: u8 = 5;
+const TARGET_STR: u8 = 6;
+const TARGET_BYTES: u8 = 7;
 /// Hard cap on one index file. Larger files are never written or loaded; the
 /// index is advisory, so the caller falls back to rebuilding from state.
 pub(crate) const MAX_INDEX_FILE_BYTES: u64 = 256 * 1024 * 1024;
@@ -155,302 +170,184 @@ impl StateIndex {
         self
     }
 
-    /// Canonical WCB value for the persisted form (`weftfs.index.v1`).
+    /// Encode the compact advisory file (WFX2).
     ///
-    /// Array elements are sorted so the same state always produces identical
-    /// bytes: attribute names, `(name, comparison key)` pairs, relation
-    /// `(subject, predicate)` pairs, object-id sets, and relation edges.
-    pub(crate) fn to_value(&self) -> Value {
-        let mut attrs: Vec<(&String, &BTreeSet<Hash32>)> = self.objects_with_attr.iter().collect();
-        attrs.sort_by(|a, b| a.0.cmp(b.0));
-        let attrs = Value::Map(
-            attrs
-                .into_iter()
-                .map(|(name, ids)| (name.clone(), hash_set_value(ids)))
-                .collect::<BTreeMap<String, Value>>(),
-        );
+    /// Sections are written once, sorted, so a load is a sequential read plus
+    /// map insertion. Cross-language index parity is not claimed; the payload
+    /// is internal and rebuildable, not a frozen store format.
+    pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+        // A WFX2 segment is only written when every scalar attribute value was
+        // encodable; the loaded index is therefore always `complete`. An
+        // incomplete index must never be persisted and later treated as exact.
+        if !self.complete {
+            return Err(Error::invalid_argument(
+                "an incomplete selector index cannot be persisted",
+            ));
+        }
+        let mut out = Vec::with_capacity(INDEX_V2_HEADER_BYTES + 1024);
+        out.extend_from_slice(INDEX_MAGIC_V2);
+        out.extend_from_slice(&INDEX_VERSION_V2.to_le_bytes());
+        out.extend_from_slice(self.commit.as_bytes());
+        push_u64(&mut out, self.generation);
+        push_u64(&mut out, self.object_count as u64);
+        push_u64(&mut out, self.relation_count as u64);
+        push_u64(&mut out, self.entry_count as u64);
+
+        let mut names: Vec<&String> = self.objects_with_attr.keys().collect();
+        names.sort();
+        push_u32(&mut out, names.len() as u64)?;
+        for name in names {
+            push_str(&mut out, name)?;
+            push_ids(&mut out, &self.objects_with_attr[name])?;
+        }
 
         let mut attr_eq: Vec<(&(String, Vec<u8>), &BTreeSet<Hash32>)> =
             self.objects_by_attr_eq.iter().collect();
         attr_eq.sort_by(|a, b| a.0 .0.cmp(&b.0 .0).then_with(|| a.0 .1.cmp(&b.0 .1)));
-        let attr_eq = Value::Array(
-            attr_eq
-                .into_iter()
-                .map(|((name, key), ids)| {
-                    wu::map([
-                        ("name", Value::Str(name.clone())),
-                        ("key", Value::Bytes(key.clone())),
-                        ("objects", hash_set_value(ids)),
-                    ])
-                })
-                .collect(),
-        );
+        push_u32(&mut out, attr_eq.len() as u64)?;
+        for ((name, key), ids) in attr_eq {
+            push_str(&mut out, name)?;
+            push_bytes(&mut out, key)?;
+            push_ids(&mut out, ids)?;
+        }
 
-        let mut relations: Vec<(&(Hash32, String), &Vec<IndexedRelation>)> =
-            self.relations_from.iter().collect();
-        relations.sort_by(|a, b| a.0 .0.cmp(&b.0 .0).then_with(|| a.0 .1.cmp(&b.0 .1)));
-        let relations_from = Value::Array(
-            relations
-                .into_iter()
-                .map(|((subject, predicate), edges)| {
-                    let mut edges: Vec<&IndexedRelation> = edges.iter().collect();
-                    edges.sort_by_cached_key(|edge| edge_sort_key(edge));
-                    wu::map([
-                        ("subject", wu::hash_value(*subject)),
-                        ("predicate", Value::Str(predicate.clone())),
-                        (
-                            "edges",
-                            Value::Array(edges.iter().map(|e| relation_to_value(e)).collect()),
-                        ),
-                    ])
-                })
-                .collect(),
-        );
+        // Flatten every edge and sort by (subject, predicate, target key).
+        let mut edges: Vec<(Hash32, &String, Vec<u8>)> = Vec::new();
+        for ((subject, predicate), list) in &self.relations_from {
+            for edge in list {
+                edges.push((*subject, predicate, target_bytes(edge)?));
+            }
+        }
+        edges.sort_by(|a, b| {
+            a.0.cmp(&b.0)
+                .then_with(|| a.1.cmp(b.1))
+                .then_with(|| a.2.cmp(&b.2))
+        });
+        push_u32(&mut out, edges.len() as u64)?;
+        for (subject, predicate, target) in edges {
+            out.extend_from_slice(subject.as_bytes());
+            push_str(&mut out, predicate)?;
+            out.extend_from_slice(&target);
+        }
 
-        let mut tags: Vec<(&String, &BTreeSet<Hash32>)> = self.tags.iter().collect();
-        tags.sort_by(|a, b| a.0.cmp(b.0));
-        let tags = Value::Map(
-            tags.into_iter()
-                .map(|(tag, ids)| (tag.clone(), hash_set_value(ids)))
-                .collect::<BTreeMap<String, Value>>(),
-        );
+        let mut tags: Vec<&String> = self.tags.keys().collect();
+        tags.sort();
+        push_u32(&mut out, tags.len() as u64)?;
+        for tag in tags {
+            push_str(&mut out, tag)?;
+            push_ids(&mut out, &self.tags[tag])?;
+        }
 
-        wu::map([
-            ("schema", Value::Str(INDEX_SCHEMA.to_owned())),
-            ("commit", wu::hash_value(self.commit)),
-            ("generation", Value::U64(self.generation)),
-            ("object_count", Value::U64(self.object_count as u64)),
-            ("relation_count", Value::U64(self.relation_count as u64)),
-            ("entry_count", Value::U64(self.entry_count as u64)),
-            ("complete", Value::Bool(self.complete)),
-            ("attrs", attrs),
-            ("attr_eq", attr_eq),
-            ("relations_from", relations_from),
-            ("tags", tags),
-        ])
-    }
-
-    /// Encode the advisory file:
-    /// `WFX1 || u64le len || canonical WCB || BLAKE3(weft/index/v1, WCB)`.
-    pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
-        let wcb_bytes = wu::encode(&self.to_value())?;
-        let total = 4usize
-            .checked_add(8)
-            .and_then(|n| n.checked_add(wcb_bytes.len()))
-            .and_then(|n| n.checked_add(32))
+        let total = out
+            .len()
+            .checked_add(INDEX_DIGEST_BYTES)
             .ok_or_else(|| Error::limit_exceeded("index file size overflows usize"))?;
         if total as u64 > MAX_INDEX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "index file is {total} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap"
             )));
         }
-        let len = u64::try_from(wcb_bytes.len())
-            .map_err(|_| Error::limit_exceeded("index encoding exceeds u64 length"))?;
-        let digest = identity::h(INDEX_DOMAIN, &wcb_bytes);
-        let mut out = Vec::with_capacity(4 + 8 + wcb_bytes.len() + 32);
-        out.extend_from_slice(INDEX_FILE_MAGIC);
-        out.extend_from_slice(&len.to_le_bytes());
-        out.extend_from_slice(&wcb_bytes);
+        let digest = identity::h(INDEX_V2_DOMAIN, &out);
         out.extend_from_slice(digest.as_bytes());
         Ok(out)
     }
 
-    /// Decode an advisory file, checking magic, exact length, integrity
-    /// digest, schema, and canonical re-encoding. Any failure is `Err`; the
-    /// caller ignores the index and rebuilds from state.
+    /// Decode a WFX2 advisory file. Any failure is `Err`; the caller ignores
+    /// the index and rebuilds from state. WFX1 files are deliberately
+    /// discarded (their canonical-WCB decode was slower than rebuilding).
     pub(crate) fn decode_file(bytes: &[u8]) -> Result<StateIndex> {
-        if bytes.len() < 4 + 8 + 32 {
+        if bytes.len() < INDEX_V2_HEADER_BYTES + INDEX_DIGEST_BYTES {
             return Err(Error::corrupt("index file is truncated"));
         }
-        if &bytes[0..4] != INDEX_FILE_MAGIC {
+        if &bytes[0..4] == INDEX_MAGIC_V1 {
+            return Err(Error::unsupported_version(
+                "WFX1 index segment is advisory and superseded; rebuilding",
+            ));
+        }
+        if &bytes[0..4] != INDEX_MAGIC_V2 {
             return Err(Error::malformed("bad index file magic"));
         }
-        let len = u64::from_le_bytes(bytes[4..12].try_into().expect("8 bytes"));
-        if len > MAX_INDEX_FILE_BYTES {
+        if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
-                "index declares {len} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap"
-            )));
-        }
-        let len = usize::try_from(len)
-            .map_err(|_| Error::limit_exceeded("index length exceeds usize"))?;
-        let expected = 12usize
-            .checked_add(len)
-            .and_then(|n| n.checked_add(32))
-            .ok_or_else(|| Error::malformed("index length overflows"))?;
-        if expected as u64 > MAX_INDEX_FILE_BYTES {
-            return Err(Error::limit_exceeded(format!(
-                "index file is {expected} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap"
-            )));
-        }
-        if expected != bytes.len() {
-            return Err(Error::corrupt(format!(
-                "index file length {} does not match declared {expected}",
+                "index file is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
                 bytes.len()
             )));
         }
-        let wcb_bytes = &bytes[12..12 + len];
-        let stored = &bytes[12 + len..];
-        let digest = identity::h(INDEX_DOMAIN, wcb_bytes);
-        if stored != digest.as_bytes() {
+        let (body, trailer) = bytes.split_at(bytes.len() - INDEX_DIGEST_BYTES);
+        let digest = identity::h(INDEX_V2_DOMAIN, body);
+        if trailer != digest.as_bytes() {
             return Err(Error::corrupt("index integrity digest mismatch"));
         }
-        let value = wu::decode(wcb_bytes)?;
-        // `from_value` enforces the canonical array order for every
-        // order-sensitive field; the WCB decoder already rejects non-minimal
-        // varints, unsorted/duplicate map keys, and trailing bytes.
-        StateIndex::from_value(value)
-    }
-
-    /// Consume the decoded WCB tree, moving strings/byte vectors into the
-    /// index maps instead of cloning them.
-    fn from_value(value: Value) -> Result<StateIndex> {
-        let mut map = match value {
-            Value::Map(map) => map,
-            _ => return Err(Error::malformed("index root must be a WCB map")),
-        };
-        wu::check_keys(
-            &map,
-            &[
-                "schema",
-                "commit",
-                "generation",
-                "object_count",
-                "relation_count",
-                "entry_count",
-                "complete",
-                "attrs",
-                "attr_eq",
-                "relations_from",
-                "tags",
-            ],
-        )?;
-        let schema = take_text(&mut map, "schema")?;
-        if schema != INDEX_SCHEMA {
-            return Err(Error::unknown_schema(format!(
-                "index schema `{schema}` is not `{INDEX_SCHEMA}`"
+        let mut reader = IndexReader::new(body);
+        let magic = reader.take(4)?;
+        if magic != INDEX_MAGIC_V2 {
+            return Err(Error::malformed("bad index file magic"));
+        }
+        let version = reader.u32()?;
+        if version != INDEX_VERSION_V2 {
+            return Err(Error::unsupported_version(format!(
+                "index version {version} is not {INDEX_VERSION_V2}"
             )));
         }
-        let commit = take_hash(&mut map, "commit")?;
-        let generation = take_u64(&mut map, "generation")?;
-        let object_count = usize_of(take_u64(&mut map, "object_count")?, "object count")?;
-        let relation_count = usize_of(take_u64(&mut map, "relation_count")?, "relation count")?;
-        let entry_count = usize_of(take_u64(&mut map, "entry_count")?, "entry count")?;
-        let complete = match map.remove("complete") {
-            Some(Value::Bool(flag)) => flag,
-            Some(_) => return Err(Error::malformed("key `complete` must be bool")),
-            None => return Err(Error::malformed("missing map key `complete`")),
-        };
+        let commit = reader.hash32()?;
+        let generation = reader.u64()?;
+        let object_count = usize_of(reader.u64()?, "object count")?;
+        let relation_count = usize_of(reader.u64()?, "relation count")?;
+        let entry_count = usize_of(reader.u64()?, "entry count")?;
 
-        let attrs = match map.remove("attrs") {
-            Some(Value::Map(attrs)) => attrs,
-            Some(_) => return Err(Error::malformed("key `attrs` must be a map")),
-            None => return Err(Error::malformed("missing map key `attrs`")),
-        };
-        let mut objects_with_attr = HashMap::with_capacity(attrs.len());
-        for (name, ids) in attrs {
-            objects_with_attr.insert(name, hash_set_from_value(ids)?);
-        }
+        let objects_with_attr = read_named_sets(&mut reader, 8)?;
 
-        let attr_eq = match map.remove("attr_eq") {
-            Some(Value::Array(items)) => items,
-            Some(_) => return Err(Error::malformed("key `attr_eq` must be an array")),
-            None => return Err(Error::malformed("missing map key `attr_eq`")),
-        };
-        let mut objects_by_attr_eq = HashMap::with_capacity(attr_eq.len());
-        let mut previous_attr: Option<(String, Vec<u8>)> = None;
-        for item in attr_eq {
-            let mut entry = match item {
-                Value::Map(entry) => entry,
-                _ => return Err(Error::malformed("attr_eq entry must be a WCB map")),
-            };
-            wu::check_keys(&entry, &["name", "key", "objects"])?;
-            let name = take_text(&mut entry, "name")?;
-            let key = take_bytes(&mut entry, "key")?;
-            if let Some((previous_name, previous_key)) = &previous_attr {
-                if (previous_name.as_str(), previous_key.as_slice())
-                    >= (name.as_str(), key.as_slice())
-                {
-                    return Err(Error::non_canonical(
-                        "index attr_eq entries are not strictly sorted",
-                    ));
-                }
-            }
-            previous_attr = Some((name.clone(), key.clone()));
-            let ids = match entry.remove("objects") {
-                Some(value) => hash_set_from_value(value)?,
-                None => return Err(Error::malformed("missing map key `objects`")),
-            };
-            if objects_by_attr_eq
-                .insert((name.clone(), key), ids)
-                .is_some()
-            {
-                return Err(Error::malformed(format!(
-                    "duplicate attr_eq entry for `{name}`"
-                )));
+        let attr_eq_count = reader.bounded_count(12)?;
+        let mut objects_by_attr_eq = HashMap::with_capacity(attr_eq_count);
+        for _ in 0..attr_eq_count {
+            let name = reader.string()?;
+            let key = reader.bytes()?.to_vec();
+            let ids = reader.id_set()?;
+            if objects_by_attr_eq.insert((name, key), ids).is_some() {
+                return Err(Error::corrupt("duplicate attr_eq entry in index"));
             }
         }
 
-        let relations = match map.remove("relations_from") {
-            Some(Value::Array(items)) => items,
-            Some(_) => return Err(Error::malformed("key `relations_from` must be an array")),
-            None => return Err(Error::malformed("missing map key `relations_from`")),
-        };
+        let edge_count = reader.bounded_count(37)?;
         let mut relations_from: HashMap<(Hash32, String), Vec<IndexedRelation>> =
-            HashMap::with_capacity(relations.len());
-        let mut previous_relation: Option<(Hash32, String)> = None;
-        for item in relations {
-            let mut entry = match item {
-                Value::Map(entry) => entry,
-                _ => return Err(Error::malformed("relations_from entry must be a WCB map")),
-            };
-            wu::check_keys(&entry, &["subject", "predicate", "edges"])?;
-            let subject = take_hash(&mut entry, "subject")?;
-            let predicate = take_text(&mut entry, "predicate")?;
-            if let Some((previous_subject, previous_predicate)) = &previous_relation {
-                if (*previous_subject, previous_predicate.as_str()) >= (subject, predicate.as_str())
-                {
-                    return Err(Error::non_canonical(
-                        "index relations_from entries are not strictly sorted",
-                    ));
+            HashMap::with_capacity(edge_count);
+        let mut current_key: Option<(Hash32, String)> = None;
+        let mut current_edges: Vec<IndexedRelation> = Vec::new();
+        for _ in 0..edge_count {
+            let subject = reader.hash32()?;
+            let predicate = reader.string()?;
+            let (kind, target) = read_target(&mut reader)?;
+            let edge = IndexedRelation { kind, target };
+            let same = match &current_key {
+                Some((current_subject, current_predicate)) => {
+                    *current_subject == subject && current_predicate == &predicate
                 }
-            }
-            previous_relation = Some((subject, predicate.clone()));
-            let edges = match entry.remove("edges") {
-                Some(Value::Array(edges)) => edges,
-                Some(_) => return Err(Error::malformed("key `edges` must be an array")),
-                None => return Err(Error::malformed("missing map key `edges`")),
+                None => false,
             };
-            let mut out = Vec::with_capacity(edges.len());
-            let mut previous_edge: Option<Vec<u8>> = None;
-            for edge in edges {
-                let indexed = relation_from_value(edge)?;
-                let key = edge_sort_key(&indexed);
-                if let Some(previous) = &previous_edge {
-                    if *previous > key {
-                        return Err(Error::non_canonical("index relation edges are not sorted"));
+            if same {
+                current_edges.push(edge);
+            } else {
+                if let Some(key) = current_key.take() {
+                    if relations_from
+                        .insert(key, std::mem::take(&mut current_edges))
+                        .is_some()
+                    {
+                        return Err(Error::corrupt("duplicate relations_from entry in index"));
                     }
                 }
-                previous_edge = Some(key);
-                out.push(indexed);
+                current_key = Some((subject, predicate));
+                current_edges.push(edge);
             }
-            if relations_from
-                .insert((subject, predicate.clone()), out)
-                .is_some()
-            {
-                return Err(Error::malformed(format!(
-                    "duplicate relations_from entry for `{predicate}`"
-                )));
+        }
+        if let Some(key) = current_key.take() {
+            if relations_from.insert(key, current_edges).is_some() {
+                return Err(Error::corrupt("duplicate relations_from entry in index"));
             }
         }
 
-        let tags = match map.remove("tags") {
-            Some(Value::Map(tags)) => tags,
-            Some(_) => return Err(Error::malformed("key `tags` must be a map")),
-            None => return Err(Error::malformed("missing map key `tags`")),
-        };
-        let mut tags_out = HashMap::with_capacity(tags.len());
-        for (tag, ids) in tags {
-            tags_out.insert(tag, hash_set_from_value(ids)?);
+        let tags = read_named_sets(&mut reader, 8)?;
+        if reader.remaining() != 0 {
+            return Err(Error::corrupt("trailing bytes after index sections"));
         }
 
         Ok(StateIndex {
@@ -459,11 +356,11 @@ impl StateIndex {
             object_count,
             relation_count,
             entry_count,
-            complete,
+            complete: true,
             objects_by_attr_eq,
             objects_with_attr,
             relations_from,
-            tags: tags_out,
+            tags,
         })
     }
 
@@ -518,126 +415,224 @@ pub(crate) fn eq_key(value: &Value) -> Option<Vec<u8>> {
     wcb::encode_default(&normalized).ok()
 }
 
-fn hash_set_value(ids: &BTreeSet<Hash32>) -> Value {
-    Value::Array(ids.iter().map(|id| wu::hash_value(*id)).collect())
+fn push_u32(out: &mut Vec<u8>, value: u64) -> Result<()> {
+    let value =
+        u32::try_from(value).map_err(|_| Error::limit_exceeded("index count exceeds u32"))?;
+    out.extend_from_slice(&value.to_le_bytes());
+    Ok(())
 }
 
-fn take_text(map: &mut BTreeMap<String, Value>, key: &str) -> Result<String> {
-    match map.remove(key) {
-        Some(Value::Str(text)) => Ok(text),
-        Some(_) => Err(Error::malformed(format!("key `{key}` must be text"))),
-        None => Err(Error::malformed(format!("missing map key `{key}`"))),
+fn push_u64(out: &mut Vec<u8>, value: u64) {
+    out.extend_from_slice(&value.to_le_bytes());
+}
+
+fn push_bytes(out: &mut Vec<u8>, bytes: &[u8]) -> Result<()> {
+    push_u32(out, bytes.len() as u64)?;
+    out.extend_from_slice(bytes);
+    Ok(())
+}
+
+fn push_str(out: &mut Vec<u8>, text: &str) -> Result<()> {
+    push_bytes(out, text.as_bytes())
+}
+
+fn push_ids(out: &mut Vec<u8>, ids: &BTreeSet<Hash32>) -> Result<()> {
+    push_u32(out, ids.len() as u64)?;
+    for id in ids {
+        out.extend_from_slice(id.as_bytes());
     }
+    Ok(())
 }
 
-fn take_u64(map: &mut BTreeMap<String, Value>, key: &str) -> Result<u64> {
-    match map.remove(key) {
-        Some(Value::U64(value)) => Ok(value),
-        Some(_) => Err(Error::malformed(format!("key `{key}` must be u64"))),
-        None => Err(Error::malformed(format!("missing map key `{key}`"))),
-    }
-}
-
-fn take_bytes(map: &mut BTreeMap<String, Value>, key: &str) -> Result<Vec<u8>> {
-    match map.remove(key) {
-        Some(Value::Bytes(bytes)) => Ok(bytes),
-        Some(_) => Err(Error::malformed(format!("key `{key}` must be bytes"))),
-        None => Err(Error::malformed(format!("missing map key `{key}`"))),
-    }
-}
-
-fn take_hash(map: &mut BTreeMap<String, Value>, key: &str) -> Result<Hash32> {
-    Hash32::from_slice(&take_bytes(map, key)?).map_err(Error::from)
-}
-
-fn hash_set_from_value(value: Value) -> Result<BTreeSet<Hash32>> {
-    let items = match value {
-        Value::Array(items) => items,
-        _ => return Err(Error::malformed("index object-id set must be an array")),
-    };
-    let mut ids = BTreeSet::new();
-    let mut previous: Option<Hash32> = None;
-    for item in items {
-        let hash = match item {
-            Value::Bytes(bytes) => Hash32::from_slice(&bytes).map_err(Error::from)?,
-            _ => return Err(Error::malformed("index object id must be bytes32")),
-        };
-        if let Some(previous) = previous {
-            if hash <= previous {
-                return Err(Error::non_canonical(
-                    "index object-id set is not strictly sorted",
-                ));
-            }
-        }
-        previous = Some(hash);
-        ids.insert(hash);
-    }
-    Ok(ids)
-}
-
-/// Deterministic edge order used by both the encoder and the decoder. Object
-/// targets sort before value targets.
-fn edge_sort_key(edge: &IndexedRelation) -> Vec<u8> {
+/// `target kind || target payload`, used as the sort key and written verbatim.
+fn target_bytes(edge: &IndexedRelation) -> Result<Vec<u8>> {
+    let mut out = Vec::new();
     match &edge.target {
         RelationTarget::Object(hash) => {
-            let mut key = Vec::with_capacity(1 + 32);
-            key.push(0);
-            key.extend_from_slice(hash.as_bytes());
-            key
+            out.push(TARGET_OBJECT);
+            out.extend_from_slice(hash.as_bytes());
         }
-        RelationTarget::Value(value) => {
-            let mut key = Vec::with_capacity(1 + 16);
-            key.push(1);
-            key.extend_from_slice(&wu::encode(value).unwrap_or_default());
-            key
+        RelationTarget::Value(value) => match value {
+            Value::Null => out.push(TARGET_NULL),
+            Value::Bool(flag) => {
+                out.push(TARGET_BOOL);
+                out.push(u8::from(*flag));
+            }
+            Value::U64(number) => {
+                out.push(TARGET_U64);
+                push_u64(&mut out, *number);
+            }
+            Value::I64(number) => {
+                out.push(TARGET_I64);
+                push_u64(&mut out, *number as u64);
+            }
+            Value::Timestamp(number) => {
+                out.push(TARGET_TIMESTAMP);
+                push_u64(&mut out, *number as u64);
+            }
+            Value::Str(text) => {
+                out.push(TARGET_STR);
+                push_str(&mut out, text)?;
+            }
+            Value::Bytes(bytes) => {
+                out.push(TARGET_BYTES);
+                push_bytes(&mut out, bytes)?;
+            }
+            Value::Array(_) | Value::Map(_) => {
+                return Err(Error::malformed(
+                    "index relation value target must be a scalar",
+                ))
+            }
+        },
+    }
+    Ok(out)
+}
+
+fn read_named_sets(
+    reader: &mut IndexReader<'_>,
+    min_element_bytes: usize,
+) -> Result<HashMap<String, BTreeSet<Hash32>>> {
+    let count = reader.bounded_count(min_element_bytes)?;
+    let mut map = HashMap::with_capacity(count);
+    for _ in 0..count {
+        let name = reader.string()?;
+        let ids = reader.id_set()?;
+        if map.insert(name, ids).is_some() {
+            return Err(Error::corrupt("duplicate named set in index"));
         }
+    }
+    Ok(map)
+}
+
+fn read_target(reader: &mut IndexReader<'_>) -> Result<(RelationKind, RelationTarget)> {
+    let tag = reader.u8()?;
+    match tag {
+        TARGET_OBJECT => Ok((
+            RelationKind::Object,
+            RelationTarget::Object(reader.hash32()?),
+        )),
+        TARGET_NULL => Ok((RelationKind::Value, RelationTarget::Value(Value::Null))),
+        TARGET_BOOL => {
+            let flag = reader.u8()?;
+            if flag > 1 {
+                return Err(Error::malformed("index boolean target is not 0/1"));
+            }
+            Ok((
+                RelationKind::Value,
+                RelationTarget::Value(Value::Bool(flag == 1)),
+            ))
+        }
+        TARGET_U64 => Ok((
+            RelationKind::Value,
+            RelationTarget::Value(Value::U64(reader.u64()?)),
+        )),
+        TARGET_I64 => Ok((
+            RelationKind::Value,
+            RelationTarget::Value(Value::I64(reader.u64()? as i64)),
+        )),
+        TARGET_TIMESTAMP => Ok((
+            RelationKind::Value,
+            RelationTarget::Value(Value::Timestamp(reader.u64()? as i64)),
+        )),
+        TARGET_STR => Ok((
+            RelationKind::Value,
+            RelationTarget::Value(Value::Str(reader.string()?)),
+        )),
+        TARGET_BYTES => Ok((
+            RelationKind::Value,
+            RelationTarget::Value(Value::Bytes(reader.bytes()?.to_vec())),
+        )),
+        other => Err(Error::malformed(format!(
+            "unknown index relation target tag {other}"
+        ))),
     }
 }
 
-fn relation_to_value(edge: &IndexedRelation) -> Value {
-    match &edge.target {
-        RelationTarget::Object(hash) => wu::map([
-            ("kind", Value::Str(RelationKind::Object.as_str().to_owned())),
-            ("object", wu::hash_value(*hash)),
-        ]),
-        RelationTarget::Value(value) => wu::map([
-            ("kind", Value::Str(RelationKind::Value.as_str().to_owned())),
-            ("value", value.clone()),
-        ]),
-    }
+/// Bounds-checked little-endian reader over the WFX2 body (digest excluded).
+struct IndexReader<'a> {
+    bytes: &'a [u8],
+    pos: usize,
 }
 
-fn relation_from_value(value: Value) -> Result<IndexedRelation> {
-    let mut map = match value {
-        Value::Map(map) => map,
-        _ => return Err(Error::malformed("index relation edge must be a WCB map")),
-    };
-    let kind = RelationKind::parse(&take_text(&mut map, "kind")?)?;
-    match kind {
-        RelationKind::Object => {
-            let target = take_hash(&mut map, "object")?;
-            if !map.is_empty() {
-                return Err(Error::malformed("unexpected key in object relation edge"));
-            }
-            Ok(IndexedRelation {
-                kind,
-                target: RelationTarget::Object(target),
-            })
+impl<'a> IndexReader<'a> {
+    fn new(bytes: &'a [u8]) -> IndexReader<'a> {
+        IndexReader { bytes, pos: 0 }
+    }
+
+    fn remaining(&self) -> usize {
+        self.bytes.len() - self.pos
+    }
+
+    fn take(&mut self, len: usize) -> Result<&'a [u8]> {
+        let end = self
+            .pos
+            .checked_add(len)
+            .ok_or_else(|| Error::corrupt("index section length overflows"))?;
+        if end > self.bytes.len() {
+            return Err(Error::corrupt("index section is truncated"));
         }
-        RelationKind::Value => {
-            let target = match map.remove("value") {
-                Some(value) => value,
-                None => return Err(Error::malformed("missing map key `value`")),
-            };
-            if !map.is_empty() {
-                return Err(Error::malformed("unexpected key in value relation edge"));
-            }
-            wu::validate_scalar(&target)?;
-            Ok(IndexedRelation {
-                kind,
-                target: RelationTarget::Value(target),
-            })
+        let slice = &self.bytes[self.pos..end];
+        self.pos = end;
+        Ok(slice)
+    }
+
+    fn u8(&mut self) -> Result<u8> {
+        Ok(self.take(1)?[0])
+    }
+
+    fn u32(&mut self) -> Result<u32> {
+        Ok(u32::from_le_bytes(
+            self.take(4)?.try_into().expect("4 bytes"),
+        ))
+    }
+
+    fn u64(&mut self) -> Result<u64> {
+        Ok(u64::from_le_bytes(
+            self.take(8)?.try_into().expect("8 bytes"),
+        ))
+    }
+
+    fn hash32(&mut self) -> Result<Hash32> {
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(self.take(32)?);
+        Ok(Hash32::from_bytes(bytes))
+    }
+
+    fn bytes(&mut self) -> Result<&'a [u8]> {
+        let len = self.u32()? as usize;
+        self.take(len)
+    }
+
+    fn string(&mut self) -> Result<String> {
+        let bytes = self.bytes()?;
+        String::from_utf8(bytes.to_vec())
+            .map_err(|_| Error::malformed("index text is not valid UTF-8"))
+    }
+
+    /// Read a section count after proving the remaining bytes can hold that
+    /// many minimum-size elements. Prevents a corrupt count from allocating.
+    fn bounded_count(&mut self, min_element_bytes: usize) -> Result<usize> {
+        let count = self.u32()? as usize;
+        if min_element_bytes != 0 && count > self.remaining() / min_element_bytes {
+            return Err(Error::corrupt(
+                "index section count exceeds the remaining bytes",
+            ));
         }
+        Ok(count)
+    }
+
+    fn id_set(&mut self) -> Result<BTreeSet<Hash32>> {
+        let count = self.u32()? as usize;
+        if count > self.remaining() / 32 {
+            return Err(Error::corrupt(
+                "index object-id set count exceeds the remaining bytes",
+            ));
+        }
+        let mut ids = Vec::with_capacity(count);
+        for _ in 0..count {
+            ids.push(self.hash32()?);
+        }
+        Ok(ids.into_iter().collect())
     }
 }
 

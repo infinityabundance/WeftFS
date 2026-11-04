@@ -75,18 +75,24 @@ Tests map to the P4 requirements as follows:
   `manifests/<ab>/<hex>`, `refs/snapshots/<name>`, `refs/tags/`, `tmp/`.
 - **Advisory selector-index segments** (Rust-only, not part of the portable
   format): `indexes/<ab>/<commit>.idx`, written after a commit publishes the
-  new head. Bytes are `WFX1 || u64le length || canonical WCB ||
-  BLAKE3("weft/index/v1", WCB)`; the WCB has schema `weftfs.index.v1` and carries
-  `commit`, `generation`, `object_count`, `relation_count`, `entry_count`,
-  `complete`, `attrs`, `attr_eq`, `relations_from`, and `tags`. A reader uses a
-  segment only when the commit key, generation, all three counts, the integrity
-  digest, and canonical re-encoding all agree with the replayed state. Missing,
-  stale, truncated, or tampered segments are ignored and reported in
-  `Store::index_stats()`, then the index is rebuilt from state. `FORMAT`, the
-  superblock, commit records, manifests, and checkpoint states are unchanged;
-  correctness never depends on an index file. GC deletes `.idx` files whose
-  commit is not the current head, a snapshot commit, or a commit carrying a
-  checkpoint; `verify` ignores them.
+  new head. Bytes are WFX2: magic, u32le version, `commit[32]`, u64le
+  `generation`/`object_count`/`relation_count`/`entry_count`, then fixed-order
+  sections with u32 counts and fixed-width elements — `with_attr` (name +
+  sorted object ids), `attr_eq` (name + canonical value key + sorted ids),
+  `relations_from` (subject + predicate + target kind/payload, flattened and
+  sorted), `tags` (name + sorted subjects) — and a trailing
+  `BLAKE3("weft/index/v2", preceding bytes)`. Arrays are sorted once at write
+  time; load is a sequential read plus pre-sized map insertion. A reader uses a
+  segment only when magic/version, exact section bounds, the integrity digest,
+  the commit key, the generation, and all three counts agree with the replayed
+  state. Missing, stale, truncated, tampered, or superseded WFX1 segments are
+  ignored and reported in `Store::index_stats()`, then the index is rebuilt
+  from state (WFX1 is not interpreted; new writes are WFX2 only). Complete
+  indexes only are persisted, so a loaded index is exact for its commit.
+  `FORMAT`, the superblock, commit records, manifests, and checkpoint states
+  are unchanged; correctness never depends on an index file. GC deletes `.idx`
+  files whose commit is not the current head, a snapshot commit, or a commit
+  carrying a checkpoint; `verify` ignores them.
 - Superblock exactly per `WEFT-MODEL.md` §2.1 (magic `WFSB`, 1.0, generation,
   commit hash, commit WCB length, timestamp, CRC over `[0,64)`, zero padding).
   Store open validates magic/version/CRC/generation/padding.

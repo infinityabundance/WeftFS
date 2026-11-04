@@ -20,8 +20,10 @@ use weftfs::identity::Hash32;
 use weftfs::state::RelationTarget;
 use weftfs::store::{OpenMode, Options, Store};
 
-const INDEX_MAGIC: &[u8; 4] = b"WFX1";
-const INDEX_DOMAIN: &str = "weft/index/v1";
+const INDEX_MAGIC_V2: &[u8; 4] = b"WFX2";
+const INDEX_V2_DOMAIN: &str = "weft/index/v2";
+/// magic(4) + version(4) + commit(32) + four u64 fields(32).
+const INDEX_HEADER_BYTES: usize = 72;
 
 struct Fixture {
     store: Store,
@@ -236,32 +238,26 @@ fn check_matrix(
     checked
 }
 
-fn read_index_value(path: &Path) -> Value {
+fn assert_index_header(path: &Path) {
     let bytes = fs::read(path).expect("read index");
-    assert_eq!(&bytes[0..4], INDEX_MAGIC, "index magic");
-    let len = u64::from_le_bytes(bytes[4..12].try_into().unwrap()) as usize;
-    weftcodec::wcb::decode_default(&bytes[12..12 + len]).expect("decode index WCB")
+    assert_eq!(&bytes[0..4], INDEX_MAGIC_V2, "index magic");
+    assert_eq!(
+        u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
+        1,
+        "index version"
+    );
+    assert!(bytes.len() > INDEX_HEADER_BYTES + 32);
 }
 
-fn write_index_value(path: &Path, value: &Value) {
-    let wcb = weftcodec::wcb::encode_default(value).expect("encode index WCB");
-    let digest = weftfs::identity::h(INDEX_DOMAIN, &wcb);
-    let mut out = Vec::with_capacity(4 + 8 + wcb.len() + 32);
-    out.extend_from_slice(INDEX_MAGIC);
-    out.extend_from_slice(&(wcb.len() as u64).to_le_bytes());
-    out.extend_from_slice(&wcb);
-    out.extend_from_slice(digest.as_bytes());
-    fs::write(path, out).expect("write index");
-}
-
-fn mutate_index(path: &Path, mutate: impl FnOnce(&mut BTreeMap<String, Value>)) {
-    let mut value = read_index_value(path);
-    let map = match &mut value {
-        Value::Map(map) => map,
-        other => panic!("index root must be a map, got {other:?}"),
-    };
-    mutate(map);
-    write_index_value(path, &value);
+/// Rewrite header bytes and recompute the trailing digest, so the corruption
+/// reaches the semantic checks instead of failing the integrity check.
+fn rewrite_index(path: &Path, mutate: impl FnOnce(&mut Vec<u8>)) {
+    let mut bytes = fs::read(path).expect("read index");
+    mutate(&mut bytes);
+    let body_len = bytes.len() - 32;
+    let digest = weftfs::identity::h(INDEX_V2_DOMAIN, &bytes[..body_len]);
+    bytes[body_len..].copy_from_slice(digest.as_bytes());
+    fs::write(path, bytes).expect("write index");
 }
 
 #[test]
@@ -373,7 +369,8 @@ fn corrupt_index_rebuilds_and_results_are_unchanged() {
         Generation,
         Commit,
         ObjectCount,
-        Schema,
+        Version,
+        LegacyWFX1,
     }
 
     let cases = [
@@ -382,7 +379,8 @@ fn corrupt_index_rebuilds_and_results_are_unchanged() {
         (Corruption::Generation, "wrong generation"),
         (Corruption::Commit, "wrong commit key"),
         (Corruption::ObjectCount, "wrong object_count"),
-        (Corruption::Schema, "unknown schema"),
+        (Corruption::Version, "unknown version"),
+        (Corruption::LegacyWFX1, "superseded WFX1 magic"),
     ];
 
     for (case, label) in cases {
@@ -390,6 +388,7 @@ fn corrupt_index_rebuilds_and_results_are_unchanged() {
         let head = fixture.store.head();
         let path = index_path(fixture.store.root(), head);
         assert!(path.exists(), "{label}: index must exist before corruption");
+        assert_index_header(&path);
 
         match case {
             Corruption::Truncate => {
@@ -398,31 +397,30 @@ fn corrupt_index_rebuilds_and_results_are_unchanged() {
             }
             Corruption::FlipPayloadByte => {
                 let mut bytes = fs::read(&path).unwrap();
-                // Offset 12 starts the canonical WCB; flip a payload byte and
-                // leave the wrapper intact so the integrity digest must catch it.
-                let offset = 12 + (bytes.len() - 12 - 32) / 2;
+                // Leave the header/trailer intact so only the digest can catch
+                // this flip.
+                let offset = INDEX_HEADER_BYTES + (bytes.len() - INDEX_HEADER_BYTES - 32) / 2;
                 bytes[offset] ^= 0x01;
                 fs::write(&path, &bytes).unwrap();
             }
-            Corruption::Generation => mutate_index(&path, |map| {
-                map.insert("generation".to_owned(), Value::U64(0));
+            Corruption::Generation => rewrite_index(&path, |bytes| {
+                bytes[40..48].copy_from_slice(&0u64.to_le_bytes());
             }),
-            Corruption::Commit => mutate_index(&path, |map| {
-                map.insert("commit".to_owned(), Value::Bytes(vec![0xAB; 32]));
+            Corruption::Commit => rewrite_index(&path, |bytes| {
+                bytes[8..40].fill(0xAB);
             }),
-            Corruption::ObjectCount => mutate_index(&path, |map| {
-                let current = match map.get("object_count") {
-                    Some(Value::U64(value)) => *value,
-                    _ => panic!("{label}: missing object_count"),
-                };
-                map.insert("object_count".to_owned(), Value::U64(current + 1));
+            Corruption::ObjectCount => rewrite_index(&path, |bytes| {
+                let current = u64::from_le_bytes(bytes[48..56].try_into().unwrap());
+                bytes[48..56].copy_from_slice(&(current + 1).to_le_bytes());
             }),
-            Corruption::Schema => mutate_index(&path, |map| {
-                map.insert(
-                    "schema".to_owned(),
-                    Value::Str("weftfs.index.v99".to_owned()),
-                );
+            Corruption::Version => rewrite_index(&path, |bytes| {
+                bytes[4..8].copy_from_slice(&99u32.to_le_bytes());
             }),
+            Corruption::LegacyWFX1 => {
+                let mut bytes = fs::read(&path).unwrap();
+                bytes[0..4].copy_from_slice(b"WFX1");
+                fs::write(&path, bytes).unwrap();
+            }
         }
 
         let root = fixture.store.root().to_path_buf();

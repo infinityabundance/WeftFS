@@ -462,14 +462,18 @@ identical and pushed in all four repositories).
 - **Cache:** bounded 8-entry LRU keyed by the snapshot commit hash that produced
   the state; the guard fails closed with `Corrupt` if the index does not
   describe the state (never a silent under-selection).
-- **Persistence:** `indexes/<ab>/<commit>.idx` holds a canonical-WCB
-  `weftfs.index.v1` segment (`WFX1 || u64le length || WCB || BLAKE3("weft/index/v1",
-  WCB)`) written atomically after a commit publishes. The segment is advisory:
-  the read path accepts it only when the commit key, generation, object/relation/
-  entry counts, integrity digest, and canonical re-encoding agree with the
-  replayed state. Any failure records a reject in `Store::index_stats()` and
-  rebuilds from state, so query results are unchanged. Read-only opens never
-  write segments; GC deletes segments not named by the head, a snapshot, or a
+- **Persistence:** `indexes/<ab>/<commit>.idx` holds a compact binary WFX2
+  segment (magic/version, commit, generation, three counts, sorted fixed-width
+  sections, trailing `BLAKE3("weft/index/v2", preceding bytes)`) written
+  atomically after a commit publishes. Arrays are sorted once at write time;
+  load does one sequential read, bounds-checked slicing, and pre-sized map
+  insertion. The segment is advisory: the read path accepts it only when
+  magic/version, exact lengths, digest, commit key, generation, and
+  object/relation/entry counts agree with the replayed state. Any failure
+  records a reject in `Store::index_stats()` and rebuilds from state, so query
+  results are unchanged. WFX1 segments are not interpreted; they are discarded
+  and rebuilt. Only complete indexes are persisted. Read-only opens never write
+  segments; GC deletes segments not named by the head, a snapshot, or a
   checkpoint commit; `verify` ignores them. See `tests/index_persistence.rs`.
 - **Measured:** synthetic in-memory state, 10,000 objects + 10,000 relations,
   100 queries per kind, release, medians. Relation 132.795 ms → 0.689 ms warm
@@ -477,14 +481,15 @@ identical and pushed in all four repositories).
   1.640 ms → 1.239 ms warm. Receipt
   `bench/receipts/index-bench-20261104T085157Z.json`; labelled as a resolver-only
   synthetic measurement, not disk/FUSE/end-to-end.
-- **Persistence measurement** (`bench/receipts/index-persist-20261104T140435Z.json`):
+- **Persistence measurement** (`bench/receipts/index-persist-20261104T141248Z.json`):
   10,000 objects / 10,000 relations, release, synthetic/tmpfs. Cold build
-  9.69 ms; write including build 19.52 ms; segment 3,065,209 B; peak RSS
-  171,616 KiB. First relation query after a fresh reopen is 19.05 ms from the
-  segment vs 14.17 ms rebuilding (tag 21.11 vs 12.96 ms). Canonical-WCB decode
-  currently costs more than the in-memory rebuild at this scale; the segment is
-  kept for restart survival and as the base for future compact/incremental
-  segments, and is not claimed as a first-query speedup.
+  9.83 ms; write including build 12.00 ms; WFX2 segment 2,423,650 B; peak RSS
+  171,756 KiB. First relation query after a fresh reopen is 4.70 ms from the
+  segment vs 12.44 ms rebuilding (tag 6.23 vs 14.21 ms). The superseded WFX1
+  measurement (`index-persist-20261104T140435Z.json`, 3,065,209 B) was slower
+  than rebuilding (19.05 vs 14.17 ms relation; 21.11 vs 12.96 ms tag); its
+  canonical-WCB decode was the cost. WFX2 is retained for restart survival and
+  is now measured as a first-query win.
 - **Not claimed:** segments are per-commit full snapshots, not
   snapshot-incremental; the write path builds the whole index after each commit.
   GC retention is exact-commit membership, not graph reachability. Go has no
