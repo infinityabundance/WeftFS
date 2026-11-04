@@ -163,7 +163,7 @@ fn describe_representation(store: &Store, id: weftfs::Hash32) -> Value {
                 "frame_bytes": frame_bytes,
                 "manifest_bytes": manifest_bytes,
                 "dependencies": rep.dependencies.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
-                "schema": "weftfs.manifest.v2",
+                "schema": "weft.manifest.v2",
             })
         }
         Some(_) => json!({
@@ -173,7 +173,7 @@ fn describe_representation(store: &Store, id: weftfs::Hash32) -> Value {
             "frame_bytes": 0,
             "manifest_bytes": manifest_bytes,
             "dependencies": Vec::<String>::new(),
-            "schema": "weftfs.manifest.v2",
+            "schema": "weft.manifest.v2",
         }),
         None => json!({
             "kind": "raw",

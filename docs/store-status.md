@@ -169,8 +169,8 @@ test, FUSE mount, and handoff — the writer emits the frozen v1 manifest and th
 on-disk bytes are unchanged. `CodecAuto` must be selected explicitly (tests and
 the bench example do so through `Options`; the CLI does not expose it yet).
 
-A v2 manifest (`weftfs.manifest.v2`; `weft.manifest.v2` is also accepted on
-read) has the v1 fields plus a canonical WCB `representation` map:
+A v2 manifest (`weft.manifest.v2`, one spelling, no alias) has the v1 fields
+plus a canonical WCB `representation` map:
 
 | Key | Type | Meaning |
 |---|---|---|
@@ -217,7 +217,7 @@ dependent that names it. `gc --apply` reclaims the dependency once no root
 references it. `verify --full` decodes and re-hashes every codec representation
 and names the object, manifest, and frame on failure.
 
-The Go store has no v2 parser and is expected to reject `weftfs.manifest.v2`
+The Go store has no v2 parser and is expected to reject `weft.manifest.v2`
 (fail closed with its unknown-schema/unsupported-version class). The Rust→Go
 handoff court therefore remains on the default `Raw` path until Go parity
 lands. The v2 path is not part of the frozen v1 format and is not claimed
@@ -234,9 +234,9 @@ reading. They are part of the Go handoff contract.
    `"weft.manifest.v1"`. The P4 task text also mentions `"weftfs.manifest.v1"`.
    The writer follows the normative spec (`weft.manifest.v1`); the reader
    accepts both spellings and the distinction is only a compatibility courtesy.
-   The experimental representation schema is written as
-   `"weftfs.manifest.v2"` and `"weft.manifest.v2"` is also accepted on read
-   (see §2a). Neither v2 spelling is part of the frozen v1 contract.
+   The experimental representation schema is written and read as
+   `"weft.manifest.v2"` with no alias (see §2a). It is not part of the frozen
+   v1 contract.
 2. **`ObjectRecord.content`.** For regular files this field is the **manifest**
    hash (`ManifestId`), so a reader can locate `manifests/<ab>/<hex>`. The
    whole-file `H("weft/chunk/v1", plaintext)` digest is stored inside the

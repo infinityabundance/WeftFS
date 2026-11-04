@@ -1,4 +1,4 @@
-//! Experimental codec-backed representation manifests (`weftfs.manifest.v2`).
+//! Experimental codec-backed representation manifests (`weft.manifest.v2`).
 //!
 //! These tests exercise the opt-in `RepresentationMode::CodecAuto` path and
 //! prove that the default `Raw` path still emits the frozen v1 manifest bytes.

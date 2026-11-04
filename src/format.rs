@@ -33,13 +33,11 @@ pub const COMMIT_SCHEMA: &str = "weftfs.commit.v1";
 pub const MANIFEST_SCHEMA: &str = "weft.manifest.v1";
 /// Legacy v1 spelling accepted on read (see `docs/store-status.md` §3.1).
 pub const MANIFEST_SCHEMA_V1_LEGACY: &str = "weftfs.manifest.v1";
-/// Representation manifest schema string (experimental, opt-in).
-///
-/// This is the spelling requested by the representation-manifest design. The
-/// reader also accepts `weft.manifest.v2` for symmetry with the v1 spelling.
-pub const MANIFEST_SCHEMA_V2: &str = "weftfs.manifest.v2";
-/// Alternative v2 spelling accepted on read.
-pub const MANIFEST_SCHEMA_V2_ALT: &str = "weft.manifest.v2";
+
+/// Experimental v2 representation manifest. The schema string follows the
+/// normative `weft.` spelling used by the frozen v1 writer; there is exactly
+/// one v2 spelling, and no alias.
+pub const MANIFEST_SCHEMA_V2: &str = "weft.manifest.v2";
 /// Checkpoint state manifest schema string.
 pub const STATE_SCHEMA: &str = "weftfs.state.v1";
 
@@ -464,12 +462,12 @@ impl Manifest {
         let schema = wu::get_text(map, "schema")?;
         // The normative v1 writer emits `weft.manifest.v1`; the older
         // `weftfs.manifest.v1` spelling is accepted on read. The experimental
-        // v2 representation schema is `weftfs.manifest.v2`, with
-        // `weft.manifest.v2` accepted for symmetry. Any other schema fails
-        // with `UnsupportedVersion`. See docs/store-status.md §3.1.
+        // v2 representation schema is `weft.manifest.v2`, with no alias. Any
+        // other schema fails with `UnsupportedVersion`. See
+        // docs/store-status.md §3.1.
         let (v2, keys): (bool, &[&str]) = match schema.as_str() {
             MANIFEST_SCHEMA | MANIFEST_SCHEMA_V1_LEGACY => (false, Self::KEYS_V1),
-            MANIFEST_SCHEMA_V2 | MANIFEST_SCHEMA_V2_ALT => (true, Self::KEYS_V2),
+            MANIFEST_SCHEMA_V2 => (true, Self::KEYS_V2),
             other => {
                 return Err(Error::unsupported_version(format!(
                     "manifest schema `{other}` is not a supported v1/v2 schema"

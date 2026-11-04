@@ -329,6 +329,42 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
   Golden causal vectors are `conformance/context/v1/causal_versions.json`.
 
+### Codec-backed representation manifests (implemented 2026-11-04, opt-in, Rust-only)
+
+- **What it is:** a `weft.manifest.v2` representation manifest can store an
+  object's bytes as a WFT1 frame (`kind:"codec"`) instead of raw chunks, with
+  `strategy` (`zstd`/`delta`/`reference`), a `frame` blob, and a
+  `dependencies` list of base content roots. v2 also permits `kind:"raw"`.
+  The frozen `weft.manifest.v1` is unchanged and remains the default.
+- **Selection:** `Options.representation = RepresentationMode::CodecAuto` plus
+  `codec_min_bytes` (default 4096). The writer picks DELTA against the causal
+  parent's content root only when it beats independent ZSTD by the configured
+  margin; otherwise it falls back to a v2 raw manifest. There is exactly one
+  v2 schema spelling (`weft.manifest.v2`); unknown schemas fail closed.
+- **Read path:** range reads decode only intersecting codec chunks
+  (`weftcodec::stream::read_range`), verify the frame's payload mode against
+  `strategy`, bound dependency depth (8) and reject cycles, and verify the
+  frozen whole-content hash on full reads. Missing/unreadable/mismatched
+  dependencies fail closed; no partial or approximate reconstruction.
+- **Retention:** GC treats representation dependencies as roots, so a retained
+  dependent keeps its base; `verify --full` decodes representations and
+  re-hashes them.
+- **Measured** (8 MiB synthetic, release, rust court, host page cache; receipt
+  `bench/receipts/representation-20261104T093437Z.json`): repetitive text
+  8,395,250 B raw → 16,853 B ZSTD, encode 227.56 ms → 12.84 ms; near-duplicate
+  8 MiB pair 8,395,250 B independent → 1,153,697 B DELTA, at the cost of
+  full-object DELTA range reads (6.17 ms vs 0.05 ms raw). Incompressible
+  near-duplicates correctly fell back to raw.
+- **Byte-identity evidence:** with `Raw` (the default) the committed
+  `conformance/store/v1` fixture still rebuilds to generation 11 and head
+  `8959c65b…e1d81`, and `tests/representation.rs` asserts the v1 manifest
+  layout, keys, and byte-identical manifests across two Raw stores.
+- **Not claimed:** this is experimental and **Rust-only**. The Go store has no
+  v2 parser and fails closed on such a manifest; the Rust→Go handoff court
+  still runs on the Raw path. Cross-language v2 parity, a planner that
+  chooses representations globally, and compaction/migration of existing
+  objects are future work. Bench numbers are synthetic, not production data.
+
 ### Storage-path performance: extent COW and bounded open (implemented 2026-11-04)
 
 - **Extent-level COW range writes.** `Store::write_file`/`write_file_causal` no

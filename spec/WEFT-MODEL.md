@@ -159,6 +159,42 @@ Manifest identity is the manifest hash; whole-content identity is
 `H("weft/chunk/v1", plaintext)` and MUST be verified after assembly. Empty files
 have zero chunks and content hash of the empty byte string.
 
+### 2.3.1 Representation manifests (experimental, opt-in)
+
+A store MAY persist a file through a **representation manifest**, schema
+`"weft.manifest.v2"` (one spelling, no alias), which has the v1 fields plus a
+canonical WCB `representation` map:
+
+```
+{
+  "kind": "raw" | "codec",
+  "frame": bytes32 | null,        # WFT1 frame blob for codec
+  "dependencies": [bytes32, ...], # base content roots (manifest ids)
+  "strategy": "raw" | "zstd" | "delta" | "reference",
+  "decoded_size": u64            # MUST equal size
+}
+```
+
+Rules:
+
+- A v1 manifest MUST NOT contain `representation`; a v2 manifest MUST.
+  `kind:"raw"` is a v2 manifest whose `chunks` are the physical layout.
+  `kind:"codec"` stores bytes only inside the named frame and has no chunks.
+- `strategy` MUST equal the decoded frame's payload mode; a mismatch is
+  `Corrupt`. The frame is validated with the codec's own limits.
+- `dependencies` are content roots (manifest ids). Decoding a dependent MUST
+  fail closed if a dependency is missing, unreadable, or cyclic; dependency
+  depth MUST be bounded (default 8). No approximate or partial reconstruction
+  is permitted.
+- `content_hash` remains the frozen whole-content digest
+  `H("weft/chunk/v1", plaintext)` and MUST verify over the decoded bytes.
+- Retention MUST follow dependencies: a GC that keeps a dependent MUST keep
+  its transitive dependency closure, or refuse the deletion.
+- Writers MUST select this representation explicitly. Absent that selection,
+  the v1 chunked manifest is written and remains byte-identical.
+- v2 is **experimental**; an implementation that does not understand it MUST
+  reject the store/manifest (`UnsupportedVersion`) rather than guess.
+
 ### 2.3.1 Derived identities
 
 ```

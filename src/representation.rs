@@ -1,6 +1,6 @@
 //! Experimental codec-backed representation support.
 //!
-//! A `weftfs.manifest.v2` manifest can name a WFT1 frame blob as the physical
+//! A `weft.manifest.v2` manifest can name a WFT1 frame blob as the physical
 //! representation of a file's logical bytes. This module holds the policy
 //! constants shared by the writer, reader, GC, and verify paths, plus a
 //! test-visible counter of chunk decodes so a test can prove a range read does
