@@ -79,8 +79,35 @@ mode-10 frames, decode equivalence, and identical roots for all three sets.
 Vectors are `conformance/v1/sharded/001`–`003` (valid) and `101`–`108`
 (rejects), byte-identical in both repositories. The historical
 `017_unknown_mode_reserved10` vector is superseded by
-`017_unknown_mode_reserved11`. Receipt:
+`017_unknown_mode_reserved11`; that vector is now itself superseded by
+`017_unknown_mode_reserved12` because mode 11 is allocated (below). Receipt:
 `bench/receipts/tensor-sharded-20261104T211555Z.json`.
+
+**WEIGHT_DELTA (mode 11), 2026-11-04.** Both codecs now implement an exact,
+dependency-linked tensor delta (`spec/WEFT-AI-CODEC.md` §12). A frame carries a
+canonical `weft.ai.weight_delta.v1` descriptor (`bf16`, `fp16`, `fp32`, `q8_0`,
+`q4_0`; shape, element count, word bits, base frame hash, `op: "mod-sub"`, plane
+count/coder, `delta_root`, and stored payload length) and one
+`huffman-canonical-v1` stream per byte plane. The base is a single dependency
+frame; decoding resolves it through the caller's resolver (DAG depth/cycle/
+missing/hash rules apply) and, when the base frame bytes are available, checks
+its own dtype and shape. All arithmetic is on unsigned words, so every bit
+pattern (NaNs, denormals, signed zeros, infinities) reconstructs exactly. A
+4 MiB bf16 base/target pair differing in 1% of elements produces a 533,110-byte
+delta frame versus 4,194,410 independent zstd-3 bytes (3,649,949 at zstd-19);
+the two Huffman planes are 265,022 + 267,643 bytes of 2,097,152 raw bytes each;
+encode median 12.86 ms, decode median 16.99 ms; reconstruction and the logical
+tensor root match the original. Evidence: `cargo test --all-targets` 161 passed
+/ 0 failed / 0 ignored; `go test ./...` all packages pass (103 top-level tests);
+`WeftCodec-Go/hack/cross.sh compare` reports `PASS identical
+weight_delta_bf16`, `weight_delta_fp32`, `weight_delta_q8` and decode
+equivalence in both directions. Vectors are
+`conformance/v1/weight-delta/001`–`003` (including an all-zero delta) and
+`101`–`108` (base dtype mismatch, base shape mismatch, unknown op, word-bits
+inconsistency, delta-root mismatch, payload-length mismatch, missing base,
+dependency cycle), byte-identical in both repositories. Receipt:
+`bench/receipts/weight-delta-20261104T214337Z.json` (synthetic, single host,
+Docker court).
 
 ## 1. Repositories and revisions
 
@@ -1171,10 +1198,11 @@ multi-writer, physical rig).
    (`posix-torture-20261103T213317Z.json`) remain history.
    `pjdfstest`/`fsstress` are not installed in the court and no substitute run
    is claimed.
-6. **Remaining AI codec modes:** float-aware, weight-delta, KV-cache,
-   activation/gradient, and semantic-delta. Mode 10 `TENSOR_SHARDED` now covers
-   sharded/per-block quantized storage (WEFT-AI-CODEC §11).
-   Prerequisite: modes 6–10 byte-identical across Rust and Go
+6. **Remaining AI codec modes:** float-aware, KV-cache, activation/gradient,
+   and semantic-delta. Mode 10 `TENSOR_SHARDED` covers sharded/per-block
+   quantized storage (WEFT-AI-CODEC §11) and mode 11 `WEIGHT_DELTA` covers
+   dtype/shape-checked exact weight deltas (§12).
+   Prerequisite: modes 6–11 byte-identical across Rust and Go
    (`WeftCodec-Go/hack/cross.sh`) and the `specified, not implemented` list in
    `spec/WEFT-AI-CODEC.md` §6. No wire value exists for the remaining modes.
 7. **Layout-independent tensor identity.** Implemented for the identity,
