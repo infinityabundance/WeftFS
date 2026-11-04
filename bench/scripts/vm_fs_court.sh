@@ -72,13 +72,13 @@ say "fio: $(fio --version)"
 say "mkfs.xfs: $(mkfs.xfs -V 2>&1 || echo unavailable)"
 
 # ---- root filesystem ------------------------------------------------------
-mkdir -p "$rootfs"/{bin,sbin,usr/bin,usr/sbin,proc,sys,dev,tmp,etc,lib,lib64,run,results,data,data/mnt,data/fio}
+mkdir -p "$rootfs"/{bin,sbin,usr/bin,usr/sbin,proc,sys,dev,tmp,etc,etc/zfs,lib,lib64,run,results,data,data/mnt,data/fio}
 cp /bin/busybox "$rootfs/bin/busybox"
 chmod 755 "$rootfs/bin/busybox"
 for applet in sh ash mount umount mkdir cat echo sed grep head tail dd wc cut \
               sha256sum sync poweroff reboot dmesg sleep mknod printf chmod \
               ln ls true false ps kill env insmod modprobe seq rm cp mv tee \
-              nproc df du find xargs awk; do
+              nproc df du find xargs awk truncate; do
   ln -sf /bin/busybox "$rootfs/bin/$applet"
 done
 ln -sf /proc/mounts "$rootfs/etc/mtab"
@@ -96,6 +96,10 @@ copy_binary() {
 }
 copy_binary /usr/bin/fio "$rootfs/usr/bin/fio"
 copy_binary "$bin/weftfs" "$rootfs/usr/bin/weftfs"
+if [ -x /usr/sbin/zpool ] && [ -x /usr/sbin/zfs ]; then
+  copy_binary /usr/sbin/zpool "$rootfs/usr/sbin/zpool"
+  copy_binary /usr/sbin/zfs "$rootfs/usr/sbin/zfs"
+fi
 cp "$bin/go-weftfs" "$rootfs/usr/bin/go-weftfs"
 chmod 755 "$rootfs/usr/bin/go-weftfs"
 if [ -x /usr/bin/fusermount3 ]; then
@@ -107,7 +111,9 @@ fi
   cp -L /lib64/ld-linux-x86-64.so.2 "$rootfs/lib64/ld-linux-x86-64.so.2"
 }
 
-# Only the modules this guest needs: fuse, xfs, and their crc32c dependency.
+# Only the modules this guest needs: fuse, xfs, zfs (OpenZFS via DKMS), and
+# their dependencies. modules.dep is copied so the guest's busybox modprobe
+# can resolve the zfs module stack without running depmod in the guest.
 for rel in \
   kernel/fs/fuse/fuse.ko \
   kernel/fs/xfs/xfs.ko \
@@ -119,6 +125,15 @@ for rel in \
     cp "$modules/$rel" "$rootfs/lib/modules/$krel/$rel"
   fi
 done
+if [ -d "$modules/updates/dkms" ]; then
+  mkdir -p "$rootfs/lib/modules/$krel/updates/dkms"
+  cp "$modules/updates/dkms/"*.ko "$rootfs/lib/modules/$krel/updates/dkms/" 2>/dev/null || true
+  for meta in modules.dep modules.dep.bin modules.alias modules.alias.bin \
+              modules.builtin modules.builtin.bin modules.order modules.symbols \
+              modules.symbols.bin; do
+    [ -e "$modules/$meta" ] && cp "$modules/$meta" "$rootfs/lib/modules/$krel/$meta"
+  done
+fi
 cp bench/guest/fs-init.sh "$rootfs/sbin/init"
 chmod 755 "$rootfs/sbin/init"
 
@@ -140,12 +155,14 @@ if command -v mkfs.xfs >/dev/null 2>&1; then
 fi
 say "ext4 base: $base_ext4; xfs base: $base_xfs (ok=$xfs_ok)"
 
-zfs_status="not attempted"
-if command -v zfs >/dev/null 2>&1 || command -v mkfs.zfs >/dev/null 2>&1; then
-  zfs_status="tools present but not run by this court"
+zfs_ok=0
+if command -v zpool >/dev/null 2>&1 && [ -e "$modules/updates/dkms/zfs.ko" ]; then
+  zfs_ok=1
+  zfs_status="available: OpenZFS $(modinfo -k "$krel" -F version zfs 2>/dev/null || echo unknown) built by DKMS for $krel; real pool in the guest, file-backed vdev (whole-disk vdev needs udev partition nodes that the minimal guest does not run)"
 else
-  zfs_status="unavailable (zfs/mkfs.zfs not installed in the vm court image)"
+  zfs_status="unavailable: zpool/zfs tools or the DKMS zfs.ko for $krel are missing in the vm court image"
 fi
+say "zfs: $zfs_status"
 
 # ---- QEMU -----------------------------------------------------------------
 accel="tcg"
@@ -181,6 +198,15 @@ for target in ${targets//,/ }; do
         continue
       fi
       base="$base_xfs"
+      ;;
+    zfs)
+      if [ "$zfs_ok" != "1" ]; then
+        say "BLOCKER zfs: zpool or the DKMS zfs.ko is unavailable; no ZFS baseline run"
+        target_exit[$target]=255
+        echo "$target none 255" >> "$work/targets.txt"
+        continue
+      fi
+      base="$base_ext4"
       ;;
     *) say "unknown target $target"; target_exit[$target]=255; echo "$target none 255" >> "$work/targets.txt"; continue ;;
   esac

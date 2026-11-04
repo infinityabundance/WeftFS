@@ -1,0 +1,91 @@
+{
+  "schema": "weft-fs-cold-bench-v1",
+  "kind": "cold-cache-concurrent-fio",
+  "generated_at_unix": 1793756811,
+  "environment": {
+    "host": {
+      "kernel": "7.3.1-1-cachyos",
+      "uname": {
+        "system": "Linux",
+        "node": "1878d589fbcc",
+        "release": "7.3.1-1-cachyos",
+        "version": "#1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000",
+        "machine": "x86_64",
+        "processor": ""
+      },
+      "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "nproc": 16,
+      "mem_total_kib": 131565228,
+      "court_image": "weft/vm-court:1",
+      "court_image_id": "sha256:2643213821fb65b5c4fd98e9e2a45c95ac60c8717b4540cfd5e10208406bbabb",
+      "court_memory": "3g",
+      "court_cpus": "4",
+      "court_pids": "1024",
+      "revision_weftfs": "6d90390da15cff0c37c826fe986a632d4c5c70e9",
+      "revision_weftfs_go": "d4171345f88d7467d2b1ecc992935c89b3926838",
+      "revision_weftcodec": "ef609b2c8e819da19cb4e8106c316aad90c01d5f"
+    },
+    "tools": {
+      "qemu": "QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)",
+      "fio": "fio-3.33",
+      "mkfs_xfs": "mkfs.xfs version 6.1.0",
+      "guest_kernel": "Linux (none) 6.1.0-54-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16) x86_64 GNU/Linux"
+    },
+    "xfs_available": true,
+    "zfs": "available: OpenZFS 2.1.11-1+deb12u1 built by DKMS for 6.1.0-54-amd64; real pool in the guest, file-backed vdev (whole-disk vdev needs udev partition nodes that the minimal guest does not run)"
+  },
+  "method": {
+    "cold": "guest runs `sync; echo 3 > /proc/sys/vm/drop_caches` immediately before the run",
+    "warm": "the next run on the same files, with no cache drop",
+    "io": "fio psync, direct=0 (buffered), group_reporting, percentile_list=50:95:99",
+    "data_disk": "raw virtio-blk, QEMU cache=none",
+    "results_disk": "raw ext4 virtio-blk, extracted with debugfs; no loop mount",
+    "root": "read-only ext4 image built in the vm court",
+    "reps": 1,
+    "target_timeout_s": 1800,
+    "numjobs": [
+      1,
+      4,
+      16
+    ],
+    "seq_size": "8M per job",
+    "rand_size": "512k per job",
+    "fsync_size": "64k per job, fsync every write",
+    "vms": "QEMU -smp 4 -m 1536M; the host court is limited to 4 CPUs and 3 GiB",
+    "weftfs": "Rust and Go WeftFS are mounted over FUSE inside the guest; store and mount live on the ext4 data disk",
+    "zero_buffers": "fio write buffers default to zeros; WeftFS chunk dedup can therefore reduce stored bytes. This receipt measures latency/IOPS, not storage amplification.",
+    "not_claimed": "No physical power loss, no host page-cache drop, no ZFS run, and no dedicated graph database."
+  },
+  "targets": {
+    "zfs": {
+      "target": "zfs",
+      "extracted_dir": "/work/.docker-cache/vm-fs/20261104T014649Z/extracted/zfs",
+      "status_lines": [
+        "target=zfs",
+        "kernel=Linux (none) 6.1.0-54-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16) x86_64 GNU/Linux",
+        "nproc=4",
+        "memtotal=MemTotal:        1497520 kB",
+        "cmdline=root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.target=zfs weft.reps=1",
+        "zfs_module=loaded",
+        "zfs_device=ok",
+        "mount=ext4-backing-ok",
+        "cannot mount '/tank': failed to create mountpoint: Read-only file system",
+        "blocker=zpool_create_failed",
+        "done"
+      ],
+      "commands": [],
+      "serial_log": "/work/.docker-cache/vm-fs/20261104T014649Z/extracted/zfs/serial.log",
+      "accel": "kvm",
+      "exit_code": 0,
+      "fio_runs": 0
+    }
+  },
+  "results": [],
+  "blockers": [
+    {
+      "target": "zfs",
+      "blocker": "zpool_create_failed",
+      "detail": "target=zfs\nkernel=Linux (none) 6.1.0-54-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16) x86_64 GNU/Linux\nnproc=4\nmemtotal=MemTotal:        1497520 kB\ncmdline=root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.target=zfs weft.reps=1\nzfs_module=loaded\nzfs_device=ok\nmount=ext4-backing-ok\ncannot mount '/tank': failed to create mountpoint: Read-only file system\nblocker=zpool_create_failed\ndone\n"
+    }
+  ]
+}

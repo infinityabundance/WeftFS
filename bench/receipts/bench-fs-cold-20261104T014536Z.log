@@ -1,0 +1,24 @@
+cold-cache fio court: image=weft/vm-court:1 kernel=7.3.1-1-cachyos
+targets=zfs reps=1 timeout_s=1800
+building Rust WeftFS (fuse)
+   Compiling weftcodec v0.1.0 (/work/WeftCodec)
+   Compiling weftfs v0.1.0 (/work)
+    Finished `release` profile [optimized] target(s) in 9.64s
+building Go WeftFS (CGO disabled)
+guest kernel: /boot/vmlinuz-6.1.0-54-amd64 (6.1.0-54-amd64)
+guest initramfs: /boot/initrd.img-6.1.0-54-amd64
+qemu: QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)
+fio: fio-3.33
+mkfs.xfs: mkfs.xfs version 6.1.0
+root image: /work/.docker-cache/vm-fs/20261104T014536Z/root.img (805306368 bytes)
+ext4 base: /work/.docker-cache/vm-fs/20261104T014536Z/data-ext4.img; xfs base: /work/.docker-cache/vm-fs/20261104T014536Z/data-xfs.img (ok=1)
+zfs: available: OpenZFS 2.1.11-1+deb12u1 built by DKMS for 6.1.0-54-amd64; real pool target in the guest
+accel=kvm cpu=host smp=4 guest_mem=1536M
+== target zfs ==
+extracted results for zfs to /work/.docker-cache/vm-fs/20261104T014536Z/extracted/zfs
+target zfs exit=0 accel=kvm
+wrote /work/bench/receipts/bench-fs-cold-20261104T014536Z.json
+cold fs receipt: /work/bench/receipts/bench-fs-cold-20261104T014536Z.json
+raw log: /work/bench/receipts/bench-fs-cold-20261104T014536Z.log
+6c7f5823d88838f27834557bafdbbc6be7be545061d36db4339c9ea2753f5e7f  /work/bench/receipts/bench-fs-cold-20261104T014536Z.json
+30ab2a703060cc4cc897b1861730d489ceb44c8e70368bb65197dfe90697384a  /work/bench/receipts/bench-fs-cold-20261104T014536Z.log

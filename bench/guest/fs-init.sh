@@ -14,8 +14,10 @@ set -x
 mount -t proc proc /proc 2>/dev/null || true
 mount -t sysfs sys /sys 2>/dev/null || true
 mount -t devtmpfs dev /dev 2>/dev/null || true
-mkdir -p /results /data /data/mnt /data/fio /tmp
+mkdir -p /results /data /data/mnt /data/fio /tmp /run /etc/zfs
 mount -t tmpfs tmpfs /tmp 2>/dev/null || true
+mount -t tmpfs tmpfs /run 2>/dev/null || true
+mount -t tmpfs tmpfs /etc/zfs 2>/dev/null || true
 ln -sf /proc/mounts /etc/mtab 2>/dev/null || true
 
 TARGET="$(sed -n 's/.*weft.target=\([^ ]*\).*/\1/p' /proc/cmdline)"
@@ -111,6 +113,40 @@ case "$TARGET" in
       run_matrix /data/fio
     else
       say "blocker=mount_${TARGET}_failed"
+    fi
+    ;;
+  zfs)
+    loadmods
+    modprobe zfs 2>>"$STATUS" || insmod "$MOD/updates/dkms/zfs.ko" 2>>"$STATUS"
+    if awk '$1 == "zfs" {found=1} END {exit !found}' /proc/modules; then
+      say "zfs_module=loaded"
+    else
+      say "blocker=zfs_module_failed"
+    fi
+    minor="$(awk '$2 == "zfs" {print $1}' /proc/misc 2>/dev/null | head -n 1)"
+    if [ -n "$minor" ] && [ ! -c /dev/zfs ]; then
+      mknod /dev/zfs c 10 "$minor" 2>>"$STATUS" || true
+    fi
+    if [ -c /dev/zfs ]; then say "zfs_device=ok"; else say "blocker=zfs_device_missing"; fi
+    # A whole-disk vdev makes zpool create wait for a /dev/vdb1 partition node
+    # that only udev would create; the minimal guest runs no udev. A file-backed
+    # vdev is a real ZFS pool vdev and avoids inventing a partition node. The
+    # ext4 data disk is the backing layer; this is recorded as a caveat.
+    if mount -t ext4 -o rw /dev/vdb /data; then
+      say "mount=ext4-backing-ok"
+      truncate -s 6G /data/zfs-vdev.img
+      if zpool create -f -m /data/tank -O compression=off tank /data/zfs-vdev.img >>"$STATUS" 2>&1; then
+        zfs create tank/fio >>"$STATUS" 2>&1 || say "blocker=zfs_dataset_failed"
+        say "mount=zfs-ok"
+        zpool status >> "$STATUS" 2>&1
+        zfs list >> "$STATUS" 2>&1
+        run_matrix /data/tank/fio
+        zpool export tank >>"$STATUS" 2>&1 || true
+      else
+        say "blocker=zpool_create_failed"
+      fi
+    else
+      say "blocker=mount_ext4_backing_failed"
     fi
     ;;
   rust|go)

@@ -15,15 +15,26 @@ ENV PATH=/usr/local/go/bin:$PATH \
 
 RUN mkdir -p /cargo
 
-RUN apt-get update \
+RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' \
+      /etc/apt/sources.list.d/debian.sources \
+ && apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates build-essential pkg-config \
       qemu-system-x86 qemu-utils \
       busybox-static e2fsprogs cpio gzip xz-utils zstd \
-      linux-image-amd64 initramfs-tools kmod \
+      linux-image-amd64 linux-headers-amd64 initramfs-tools kmod \
+      zfsutils-linux zfs-dkms \
       fio xfsprogs libfuse3-dev fuse3 python3 \
       jq util-linux coreutils procps \
  && rm -rf /var/lib/apt/lists/*
+
+# Build the OpenZFS module for the Debian guest kernel at image-build time so
+# the cold-cache fio court can run a real ZFS target in the guest. The module
+# is built by DKMS; no module is loaded on the host.
+RUN KREL="$(ls -1 /lib/modules | sort -V | tail -n 1)" \
+ && depmod -a "$KREL" \
+ && ls -l "/lib/modules/$KREL/updates/dkms/" \
+ && modinfo -k "$KREL" zfs | head -5
 
 # Debian's initramfs includes virtio-blk and ext4 (MODULES=most). It is built
 # here so the court does not depend on the host's /boot or module tree.
