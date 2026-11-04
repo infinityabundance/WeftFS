@@ -807,17 +807,35 @@ into `scripts/verify-all.sh`; `verify-20261104T132330Z.json` passes all 19
 courts including `fuzz_diff`.
 
 **B4 — randomized POSIX torture (6/6 pass).**
-`bench/receipts/posix-torture-20261103T213317Z.json`. Seeds 1–3, both
-directions (Rust write/Go read and Go write/Rust read), 2,251–2,342 completed
-operations per run (13,694 total) over create/write/read/truncate/append/
-rename/rename-over/link/unlink/mkdir/rmdir/symlink/readlink/xattr/fsync/
-open-unlinked. Every operation was checked for bytes, size, mode, nlink,
-symlink target, and xattrs; a full-tree check ran every 100 operations. After
-unmount the other implementation ran `verify --full`, remounted, and matched an
-exact manifest including names, types, modes, uid/gid, nlink, mtime, content
-sha256, symlink targets, and xattrs. This is a self-written fsx-style harness,
-not `pjdfstest`/`fsstress` (not installed in the court; no substitute run is
-claimed).
+`bench/receipts/posix-torture-20261104T142424Z.json` is the 1,000,002-request
+court. Seeds 1–3, both directions (Rust write/Go read and Go write/Rust read),
+166,667 operations requested per run. Completed: 78,109 (seed 1), 70,702
+(seed 2), 77,905 (seed 3) per direction, **453,432 total**; 546,570 were
+skipped by design. Wall 3,767,789 ms (62 min 48 s), **120.34 completed
+ops/s**; the receipt's full-run duration is 3,768,000 ms including build and
+mount setup. Each final tree had 97 entries and the writer and reader manifest
+SHA-256 were identical in all six runs (seed 1
+`26f6e4dca0958bf5124472f31d43a9b2bb36a56840c235861c41e91902e5811a`, seed 2
+`9dc3d65453ef08f57c4f3a18298f1620cb55f15061b0f63538bf8fe8266b74e8`, seed 3
+`b6e3b8fd6ebcad17173d9e3e3a693b5d2b6d2e6de9c5b4b8156c1f4f40296c8f`). Operations
+cover create/write/read/truncate/append/rename/rename-over/link/unlink/mkdir/
+rmdir/symlink/readlink/xattr/fsync/open-unlinked. Every operation was checked
+for bytes, size, mode, nlink, symlink target, and xattrs; a full-tree check ran
+every 100 operations. After unmount the other implementation ran `verify
+--full`, remounted, and matched an exact manifest including names, types,
+modes, uid/gid, nlink, mtime, content sha256, symlink targets, and xattrs.
+**1,000,000 completed operations was not reached.** The harness bounds its
+model at ~97 entries, so 54.7% of requested operations are skipped by design at
+steady state; reaching 1,000,000 completed would need roughly 2.21 M requested
+operations (~2 h 19 min at the measured rate), beyond the 166,667-per-run
+command used here. This is a self-written fsx-style harness, not
+`pjdfstest`/`fsstress` (not installed in the court; no substitute run is
+claimed), and it is a single-host court, not a fleet claim. The earlier
+13,694-operation run (`bench/receipts/posix-torture-20261103T213317Z.json`,
+2,251–2,342 completed per run, same seeds and directions) is retained as
+history; the harness now accepts `WEFT_POSIX_OPS`, `WEFT_POSIX_OPS_MINIMUM`,
+`WEFT_POSIX_SEEDS`, and `WEFT_POSIX_ONLY` with unchanged defaults (3,200 /
+2,000 / all seeds / all six configurations).
 
 **B2 — crash-consistency torture (100,000/100,000 pass).**
 `bench/receipts/crash-torture-20261104T104233Z.json` (18 MB; log and TSV stored
@@ -1049,8 +1067,13 @@ multi-writer, physical rig).
    `indexes/<ab>/<commit>.idx` segments (see §F2 above); the portable format does
    not require them and Go still rebuilds per state. Segments are not
    snapshot-incremental on either side.
-5. **1,000,000-operation POSIX torture.** Prerequisite: the fsx-style court at
-   13,694 operations (`bench/receipts/posix-torture-20261103T213317Z.json`).
+5. **1,000,000 *completed*-operation POSIX torture.** The 1,000,002-request
+   court (`bench/receipts/posix-torture-20261104T142424Z.json`) completed
+   453,432 operations; the other 546,570 were skipped by design because the
+   harness model saturates at ~97 entries. Reaching 1,000,000 completed needs
+   ~2.21 M requested operations (~2 h 19 min at 120.34 completed ops/s). The
+   earlier 13,694-operation run
+   (`bench/receipts/posix-torture-20261103T213317Z.json`) remains history.
    `pjdfstest`/`fsstress` are not installed in the court and no substitute run
    is claimed.
 6. **Remaining AI codec modes:** float-aware, sharded/quantized-layout,
