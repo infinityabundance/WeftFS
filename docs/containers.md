@@ -66,3 +66,16 @@ weftfs = "0.4.0"
 FUSE frontend (the `fuse` feature enables mounting). See
 `docs/RELEASE-v0.4.0.md`. Image tags and crate versions carry no extra claim
 beyond the `bench/receipts/verify-*.json` for the same source revision.
+
+Publishing is repeatable and runs inside the same hard-limited rust court:
+
+```sh
+scripts/publish-crates.sh --dry-run   # verify packaging, publish nothing
+scripts/publish-crates.sh             # weftcodec, wait for the index, weftfs
+```
+
+The script reads `~/.cargo/credentials.toml`, copies it to `.docker-cache/`
+with mode 0644 only for the run, mounts it read-only at
+`/cargo/credentials.toml`, and deletes the copy on exit. The token is never
+written into the repository, printed, or committed. `weftfs` is published only
+after `weftcodec` at the same version is visible in the crates.io index.
