@@ -1,0 +1,3453 @@
+{
+  "schema": "weft-fs-cold-bench-v1",
+  "kind": "cold-cache-concurrent-fio",
+  "generated_at_unix": 1793756837,
+  "environment": {
+    "host": {
+      "kernel": "7.3.1-1-cachyos",
+      "uname": {
+        "system": "Linux",
+        "node": "ac299970a5db",
+        "release": "7.3.1-1-cachyos",
+        "version": "#1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000",
+        "machine": "x86_64",
+        "processor": ""
+      },
+      "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "nproc": 16,
+      "mem_total_kib": 131565228,
+      "court_image": "weft/vm-court:1",
+      "court_image_id": "sha256:2643213821fb65b5c4fd98e9e2a45c95ac60c8717b4540cfd5e10208406bbabb",
+      "court_memory": "3g",
+      "court_cpus": "4",
+      "court_pids": "1024",
+      "revision_weftfs": "6d90390da15cff0c37c826fe986a632d4c5c70e9",
+      "revision_weftfs_go": "d4171345f88d7467d2b1ecc992935c89b3926838",
+      "revision_weftcodec": "ef609b2c8e819da19cb4e8106c316aad90c01d5f"
+    },
+    "tools": {
+      "qemu": "QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)",
+      "fio": "fio-3.33",
+      "mkfs_xfs": "mkfs.xfs version 6.1.0",
+      "guest_kernel": "Linux (none) 6.1.0-54-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16) x86_64 GNU/Linux"
+    },
+    "xfs_available": true,
+    "zfs": "available: OpenZFS 2.1.11-1+deb12u1 built by DKMS for 6.1.0-54-amd64; real pool in the guest, file-backed vdev (whole-disk vdev needs udev partition nodes that the minimal guest does not run)"
+  },
+  "method": {
+    "cold": "guest runs `sync; echo 3 > /proc/sys/vm/drop_caches` immediately before the run",
+    "warm": "the next run on the same files, with no cache drop",
+    "io": "fio psync, direct=0 (buffered), group_reporting, percentile_list=50:95:99",
+    "data_disk": "raw virtio-blk, QEMU cache=none",
+    "results_disk": "raw ext4 virtio-blk, extracted with debugfs; no loop mount",
+    "root": "read-only ext4 image built in the vm court",
+    "reps": 1,
+    "target_timeout_s": 1800,
+    "numjobs": [
+      1,
+      4,
+      16
+    ],
+    "seq_size": "8M per job",
+    "rand_size": "512k per job",
+    "fsync_size": "64k per job, fsync every write",
+    "vms": "QEMU -smp 4 -m 1536M; the host court is limited to 4 CPUs and 3 GiB",
+    "weftfs": "Rust and Go WeftFS are mounted over FUSE inside the guest; store and mount live on the ext4 data disk",
+    "zero_buffers": "fio write buffers default to zeros; WeftFS chunk dedup can therefore reduce stored bytes. This receipt measures latency/IOPS, not storage amplification.",
+    "not_claimed": "No physical power loss, no host page-cache drop, no ZFS run, and no dedicated graph database."
+  },
+  "targets": {
+    "zfs": {
+      "target": "zfs",
+      "extracted_dir": "/work/.docker-cache/vm-fs/20261104T014700Z/extracted/zfs",
+      "status_lines": [
+        "target=zfs",
+        "kernel=Linux (none) 6.1.0-54-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16) x86_64 GNU/Linux",
+        "nproc=4",
+        "memtotal=MemTotal:        1497520 kB",
+        "cmdline=root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.target=zfs weft.reps=1",
+        "zfs_module=loaded",
+        "zfs_device=ok",
+        "mount=ext4-backing-ok",
+        "mount=zfs-ok",
+        "  pool: tank",
+        " state: ONLINE",
+        "config:",
+        "\tNAME                  STATE     READ WRITE CKSUM",
+        "\ttank                  ONLINE       0     0     0",
+        "\t  /data/zfs-vdev.img  ONLINE       0     0     0",
+        "errors: No known data errors",
+        "NAME       USED  AVAIL     REFER  MOUNTPOINT",
+        "tank       146K  5.33G       24K  /data/tank",
+        "tank/fio    24K  5.33G       24K  /data/tank/fio",
+        "done"
+      ],
+      "commands": [
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj1--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj1--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj4--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj4--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj16--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-write-1m --directory=/data/tank/fio --rw=write --bs=1M --size=8M --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-write-1m--nj16--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqw_$jobnum.dat  --end_fsync=1",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj1--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj1--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj4--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj4--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj16--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=seq-read-1m --directory=/data/tank/fio --rw=read --bs=1M --size=8M --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--seq-read-1m--nj16--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=seqr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj1--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj1--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj4--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj4--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj16--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-read-4k --directory=/data/tank/fio --rw=randread --bs=4k --size=512k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-read-4k--nj16--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randr_$jobnum.dat  ",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj1--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj1--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj4--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj4--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj16--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=rand-write-4k --directory=/data/tank/fio --rw=randwrite --bs=4k --size=512k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--rand-write-4k--nj16--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=randw_$jobnum.dat  --end_fsync=1",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj1--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 ",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=1 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj1--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 ",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj4--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 ",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=4 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj4--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 ",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj16--cold-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 ",
+        "fio --name=fsync-write-4k --directory=/data/tank/fio --rw=write --bs=4k --size=64k --numjobs=16 --ioengine=psync --direct=0 --group_reporting --output-format=json --output=/results/zfs--fsync-write-4k--nj16--warm-r1.json --eta=never --percentile_list=50:95:99 --filename_format=fsyncw_$jobnum.dat --fsync=1 "
+      ],
+      "serial_log": "/work/.docker-cache/vm-fs/20261104T014700Z/extracted/zfs/serial.log",
+      "accel": "kvm",
+      "exit_code": 0,
+      "fio_runs": 30
+    }
+  },
+  "results": [
+    {
+      "target": "zfs",
+      "workload": "fsync-write-4k",
+      "numjobs": 1,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 135.59322,
+          "bw_bytes": 555389,
+          "bw_kib_s": 542,
+          "runtime_ms": 117,
+          "clat_p50_ns": 8896,
+          "clat_p95_ns": 129536,
+          "clat_p99_ns": 129536,
+          "clat_mean_ns": 16304.5,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 7045120,
+          "sync_p95_ns": 21102592,
+          "sync_p99_ns": 21102592,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj1--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 340.425532,
+          "bw_bytes": 1394382,
+          "bw_kib_s": 1361,
+          "runtime_ms": 46,
+          "clat_p50_ns": 7968,
+          "clat_p95_ns": 16064,
+          "clat_p99_ns": 16064,
+          "clat_mean_ns": 8484.875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 2834432,
+          "sync_p95_ns": 3915776,
+          "sync_p99_ns": 3915776,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj1--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 135.59322,
+          "min": 135.59322,
+          "p95": 135.59322,
+          "max": 135.59322,
+          "raw": [
+            135.59322
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 555389,
+          "min": 555389,
+          "p95": 555389,
+          "max": 555389,
+          "raw": [
+            555389
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 8896,
+          "min": 8896,
+          "p95": 8896,
+          "max": 8896,
+          "raw": [
+            8896
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 129536,
+          "min": 129536,
+          "p95": 129536,
+          "max": 129536,
+          "raw": [
+            129536
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 129536,
+          "min": 129536,
+          "p95": 129536,
+          "max": 129536,
+          "raw": [
+            129536
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 7045120,
+          "min": 7045120,
+          "p95": 7045120,
+          "max": 7045120,
+          "raw": [
+            7045120
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 21102592,
+          "min": 21102592,
+          "p95": 21102592,
+          "max": 21102592,
+          "raw": [
+            21102592
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 21102592,
+          "min": 21102592,
+          "p95": 21102592,
+          "max": 21102592,
+          "raw": [
+            21102592
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 340.425532,
+          "min": 340.425532,
+          "p95": 340.425532,
+          "max": 340.425532,
+          "raw": [
+            340.425532
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1394382,
+          "min": 1394382,
+          "p95": 1394382,
+          "max": 1394382,
+          "raw": [
+            1394382
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 7968,
+          "min": 7968,
+          "p95": 7968,
+          "max": 7968,
+          "raw": [
+            7968
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 16064,
+          "min": 16064,
+          "p95": 16064,
+          "max": 16064,
+          "raw": [
+            16064
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 16064,
+          "min": 16064,
+          "p95": 16064,
+          "max": 16064,
+          "raw": [
+            16064
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 2834432,
+          "min": 2834432,
+          "p95": 2834432,
+          "max": 2834432,
+          "raw": [
+            2834432
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 3915776,
+          "min": 3915776,
+          "p95": 3915776,
+          "max": 3915776,
+          "raw": [
+            3915776
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 3915776,
+          "min": 3915776,
+          "p95": 3915776,
+          "max": 3915776,
+          "raw": [
+            3915776
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "fsync-write-4k",
+      "numjobs": 4,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 820.512821,
+          "bw_bytes": 3360820,
+          "bw_kib_s": 3282,
+          "runtime_ms": 304,
+          "clat_p50_ns": 8768,
+          "clat_p95_ns": 25728,
+          "clat_p99_ns": 113152,
+          "clat_mean_ns": 12016.3125,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 4882432,
+          "sync_p95_ns": 7045120,
+          "sync_p99_ns": 7110656,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj4--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 864.864865,
+          "bw_bytes": 3542486,
+          "bw_kib_s": 3459,
+          "runtime_ms": 290,
+          "clat_p50_ns": 8640,
+          "clat_p95_ns": 11968,
+          "clat_p99_ns": 20864,
+          "clat_mean_ns": 8867.0,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 4882432,
+          "sync_p95_ns": 5079040,
+          "sync_p99_ns": 5537792,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj4--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 820.512821,
+          "min": 820.512821,
+          "p95": 820.512821,
+          "max": 820.512821,
+          "raw": [
+            820.512821
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 3360820,
+          "min": 3360820,
+          "p95": 3360820,
+          "max": 3360820,
+          "raw": [
+            3360820
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 8768,
+          "min": 8768,
+          "p95": 8768,
+          "max": 8768,
+          "raw": [
+            8768
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 25728,
+          "min": 25728,
+          "p95": 25728,
+          "max": 25728,
+          "raw": [
+            25728
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 113152,
+          "min": 113152,
+          "p95": 113152,
+          "max": 113152,
+          "raw": [
+            113152
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 4882432,
+          "min": 4882432,
+          "p95": 4882432,
+          "max": 4882432,
+          "raw": [
+            4882432
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 7045120,
+          "min": 7045120,
+          "p95": 7045120,
+          "max": 7045120,
+          "raw": [
+            7045120
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 7110656,
+          "min": 7110656,
+          "p95": 7110656,
+          "max": 7110656,
+          "raw": [
+            7110656
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 864.864865,
+          "min": 864.864865,
+          "p95": 864.864865,
+          "max": 864.864865,
+          "raw": [
+            864.864865
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 3542486,
+          "min": 3542486,
+          "p95": 3542486,
+          "max": 3542486,
+          "raw": [
+            3542486
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 8640,
+          "min": 8640,
+          "p95": 8640,
+          "max": 8640,
+          "raw": [
+            8640
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 11968,
+          "min": 11968,
+          "p95": 11968,
+          "max": 11968,
+          "raw": [
+            11968
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 20864,
+          "min": 20864,
+          "p95": 20864,
+          "max": 20864,
+          "raw": [
+            20864
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 4882432,
+          "min": 4882432,
+          "p95": 4882432,
+          "max": 4882432,
+          "raw": [
+            4882432
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 5079040,
+          "min": 5079040,
+          "p95": 5079040,
+          "max": 5079040,
+          "raw": [
+            5079040
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 5537792,
+          "min": 5537792,
+          "p95": 5537792,
+          "max": 5537792,
+          "raw": [
+            5537792
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "fsync-write-4k",
+      "numjobs": 16,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 3282.051282,
+          "bw_bytes": 13443282,
+          "bw_kib_s": 13128,
+          "runtime_ms": 1216,
+          "clat_p50_ns": 7520,
+          "clat_p95_ns": 10176,
+          "clat_p99_ns": 19840,
+          "clat_mean_ns": 7524.558594,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 4816896,
+          "sync_p95_ns": 7045120,
+          "sync_p99_ns": 7045120,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj16--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 2151.260504,
+          "bw_bytes": 8811563,
+          "bw_kib_s": 8605,
+          "runtime_ms": 1861,
+          "clat_p50_ns": 7776,
+          "clat_p95_ns": 9664,
+          "clat_p99_ns": 18048,
+          "clat_mean_ns": 7321.742188,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": 7700480,
+          "sync_p95_ns": 10158080,
+          "sync_p99_ns": 11206656,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--fsync-write-4k--nj16--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 3282.051282,
+          "min": 3282.051282,
+          "p95": 3282.051282,
+          "max": 3282.051282,
+          "raw": [
+            3282.051282
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 13443282,
+          "min": 13443282,
+          "p95": 13443282,
+          "max": 13443282,
+          "raw": [
+            13443282
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 7520,
+          "min": 7520,
+          "p95": 7520,
+          "max": 7520,
+          "raw": [
+            7520
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 10176,
+          "min": 10176,
+          "p95": 10176,
+          "max": 10176,
+          "raw": [
+            10176
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 19840,
+          "min": 19840,
+          "p95": 19840,
+          "max": 19840,
+          "raw": [
+            19840
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 4816896,
+          "min": 4816896,
+          "p95": 4816896,
+          "max": 4816896,
+          "raw": [
+            4816896
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 7045120,
+          "min": 7045120,
+          "p95": 7045120,
+          "max": 7045120,
+          "raw": [
+            7045120
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 7045120,
+          "min": 7045120,
+          "p95": 7045120,
+          "max": 7045120,
+          "raw": [
+            7045120
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 2151.260504,
+          "min": 2151.260504,
+          "p95": 2151.260504,
+          "max": 2151.260504,
+          "raw": [
+            2151.260504
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 8811563,
+          "min": 8811563,
+          "p95": 8811563,
+          "max": 8811563,
+          "raw": [
+            8811563
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 7776,
+          "min": 7776,
+          "p95": 7776,
+          "max": 7776,
+          "raw": [
+            7776
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 9664,
+          "min": 9664,
+          "p95": 9664,
+          "max": 9664,
+          "raw": [
+            9664
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 18048,
+          "min": 18048,
+          "p95": 18048,
+          "max": 18048,
+          "raw": [
+            18048
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": {
+          "samples": 1,
+          "median": 7700480,
+          "min": 7700480,
+          "p95": 7700480,
+          "max": 7700480,
+          "raw": [
+            7700480
+          ]
+        },
+        "sync_p95_ns": {
+          "samples": 1,
+          "median": 10158080,
+          "min": 10158080,
+          "p95": 10158080,
+          "max": 10158080,
+          "raw": [
+            10158080
+          ]
+        },
+        "sync_p99_ns": {
+          "samples": 1,
+          "median": 11206656,
+          "min": 11206656,
+          "p95": 11206656,
+          "max": 11206656,
+          "raw": [
+            11206656
+          ]
+        },
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-read-4k",
+      "numjobs": 1,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 128000.0,
+          "bw_bytes": 524288000,
+          "bw_kib_s": 512000,
+          "runtime_ms": 0,
+          "clat_p50_ns": 892,
+          "clat_p95_ns": 1096,
+          "clat_p99_ns": 1416,
+          "clat_mean_ns": 1025.25,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj1--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 128000.0,
+          "bw_bytes": 524288000,
+          "bw_kib_s": 512000,
+          "runtime_ms": 0,
+          "clat_p50_ns": 916,
+          "clat_p95_ns": 1272,
+          "clat_p99_ns": 18304,
+          "clat_mean_ns": 1333.007813,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj1--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 128000.0,
+          "min": 128000.0,
+          "p95": 128000.0,
+          "max": 128000.0,
+          "raw": [
+            128000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 524288000,
+          "min": 524288000,
+          "p95": 524288000,
+          "max": 524288000,
+          "raw": [
+            524288000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 892,
+          "min": 892,
+          "p95": 892,
+          "max": 892,
+          "raw": [
+            892
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 1096,
+          "min": 1096,
+          "p95": 1096,
+          "max": 1096,
+          "raw": [
+            1096
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 1416,
+          "min": 1416,
+          "p95": 1416,
+          "max": 1416,
+          "raw": [
+            1416
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 128000.0,
+          "min": 128000.0,
+          "p95": 128000.0,
+          "max": 128000.0,
+          "raw": [
+            128000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 524288000,
+          "min": 524288000,
+          "p95": 524288000,
+          "max": 524288000,
+          "raw": [
+            524288000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 916,
+          "min": 916,
+          "p95": 916,
+          "max": 916,
+          "raw": [
+            916
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 1272,
+          "min": 1272,
+          "p95": 1272,
+          "max": 1272,
+          "raw": [
+            1272
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 18304,
+          "min": 18304,
+          "p95": 18304,
+          "max": 18304,
+          "raw": [
+            18304
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-read-4k",
+      "numjobs": 4,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 39384.615385,
+          "bw_bytes": 161319384,
+          "bw_kib_s": 157538,
+          "runtime_ms": 36,
+          "clat_p50_ns": 892,
+          "clat_p95_ns": 4384,
+          "clat_p99_ns": 309248,
+          "clat_mean_ns": 73603.826172,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj4--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 512000.0,
+          "bw_bytes": 2097152000,
+          "bw_kib_s": 2048000,
+          "runtime_ms": 0,
+          "clat_p50_ns": 1032,
+          "clat_p95_ns": 1608,
+          "clat_p99_ns": 13632,
+          "clat_mean_ns": 1365.296875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj4--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 39384.615385,
+          "min": 39384.615385,
+          "p95": 39384.615385,
+          "max": 39384.615385,
+          "raw": [
+            39384.615385
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 161319384,
+          "min": 161319384,
+          "p95": 161319384,
+          "max": 161319384,
+          "raw": [
+            161319384
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 892,
+          "min": 892,
+          "p95": 892,
+          "max": 892,
+          "raw": [
+            892
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 4384,
+          "min": 4384,
+          "p95": 4384,
+          "max": 4384,
+          "raw": [
+            4384
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 309248,
+          "min": 309248,
+          "p95": 309248,
+          "max": 309248,
+          "raw": [
+            309248
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 512000.0,
+          "min": 512000.0,
+          "p95": 512000.0,
+          "max": 512000.0,
+          "raw": [
+            512000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 2097152000,
+          "min": 2097152000,
+          "p95": 2097152000,
+          "max": 2097152000,
+          "raw": [
+            2097152000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 1032,
+          "min": 1032,
+          "p95": 1032,
+          "max": 1032,
+          "raw": [
+            1032
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 1608,
+          "min": 1608,
+          "p95": 1608,
+          "max": 1608,
+          "raw": [
+            1608
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 13632,
+          "min": 13632,
+          "p95": 13632,
+          "max": 13632,
+          "raw": [
+            13632
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-read-4k",
+      "numjobs": 16,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 682666.666667,
+          "bw_bytes": 2796202666,
+          "bw_kib_s": 2730666,
+          "runtime_ms": 23,
+          "clat_p50_ns": 916,
+          "clat_p95_ns": 6432,
+          "clat_p99_ns": 585728,
+          "clat_mean_ns": 14036.07373,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj16--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 1024000.0,
+          "bw_bytes": 4194304000,
+          "bw_kib_s": 4096000,
+          "runtime_ms": 6,
+          "clat_p50_ns": 956,
+          "clat_p95_ns": 3824,
+          "clat_p99_ns": 15296,
+          "clat_mean_ns": 1510.952637,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-read-4k--nj16--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 682666.666667,
+          "min": 682666.666667,
+          "p95": 682666.666667,
+          "max": 682666.666667,
+          "raw": [
+            682666.666667
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 2796202666,
+          "min": 2796202666,
+          "p95": 2796202666,
+          "max": 2796202666,
+          "raw": [
+            2796202666
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 916,
+          "min": 916,
+          "p95": 916,
+          "max": 916,
+          "raw": [
+            916
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 6432,
+          "min": 6432,
+          "p95": 6432,
+          "max": 6432,
+          "raw": [
+            6432
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 585728,
+          "min": 585728,
+          "p95": 585728,
+          "max": 585728,
+          "raw": [
+            585728
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1024000.0,
+          "min": 1024000.0,
+          "p95": 1024000.0,
+          "max": 1024000.0,
+          "raw": [
+            1024000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 4194304000,
+          "min": 4194304000,
+          "p95": 4194304000,
+          "max": 4194304000,
+          "raw": [
+            4194304000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 956,
+          "min": 956,
+          "p95": 956,
+          "max": 956,
+          "raw": [
+            956
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 3824,
+          "min": 3824,
+          "p95": 3824,
+          "max": 3824,
+          "raw": [
+            3824
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 15296,
+          "min": 15296,
+          "p95": 15296,
+          "max": 15296,
+          "raw": [
+            15296
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-write-4k",
+      "numjobs": 1,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 3200.0,
+          "bw_bytes": 13107200,
+          "bw_kib_s": 12800,
+          "runtime_ms": 39,
+          "clat_p50_ns": 1944,
+          "clat_p95_ns": 2288,
+          "clat_p99_ns": 11072,
+          "clat_mean_ns": 2336.203125,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-write-4k--nj1--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 1969.230769,
+          "bw_bytes": 8065969,
+          "bw_kib_s": 7876,
+          "runtime_ms": 64,
+          "clat_p50_ns": 2096,
+          "clat_p95_ns": 10560,
+          "clat_p99_ns": 12864,
+          "clat_mean_ns": 2876.921875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-write-4k--nj1--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 3200.0,
+          "min": 3200.0,
+          "p95": 3200.0,
+          "max": 3200.0,
+          "raw": [
+            3200.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 13107200,
+          "min": 13107200,
+          "p95": 13107200,
+          "max": 13107200,
+          "raw": [
+            13107200
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 1944,
+          "min": 1944,
+          "p95": 1944,
+          "max": 1944,
+          "raw": [
+            1944
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2288,
+          "min": 2288,
+          "p95": 2288,
+          "max": 2288,
+          "raw": [
+            2288
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 11072,
+          "min": 11072,
+          "p95": 11072,
+          "max": 11072,
+          "raw": [
+            11072
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1969.230769,
+          "min": 1969.230769,
+          "p95": 1969.230769,
+          "max": 1969.230769,
+          "raw": [
+            1969.230769
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 8065969,
+          "min": 8065969,
+          "p95": 8065969,
+          "max": 8065969,
+          "raw": [
+            8065969
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 2096,
+          "min": 2096,
+          "p95": 2096,
+          "max": 2096,
+          "raw": [
+            2096
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 10560,
+          "min": 10560,
+          "p95": 10560,
+          "max": 10560,
+          "raw": [
+            10560
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 12864,
+          "min": 12864,
+          "p95": 12864,
+          "max": 12864,
+          "raw": [
+            12864
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-write-4k",
+      "numjobs": 4,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 3764.705882,
+          "bw_bytes": 15420235,
+          "bw_kib_s": 15058,
+          "runtime_ms": 452,
+          "clat_p50_ns": 2064,
+          "clat_p95_ns": 2864,
+          "clat_p99_ns": 19072,
+          "clat_mean_ns": 2559.003906,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.221239,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-write-4k--nj4--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 3390.728477,
+          "bw_bytes": 13888423,
+          "bw_kib_s": 13562,
+          "runtime_ms": 495,
+          "clat_p50_ns": 2160,
+          "clat_p95_ns": 2800,
+          "clat_p99_ns": 3504,
+          "clat_mean_ns": 2377.371094,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.20202,
+          "file": "zfs--rand-write-4k--nj4--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 3764.705882,
+          "min": 3764.705882,
+          "p95": 3764.705882,
+          "max": 3764.705882,
+          "raw": [
+            3764.705882
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 15420235,
+          "min": 15420235,
+          "p95": 15420235,
+          "max": 15420235,
+          "raw": [
+            15420235
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 2064,
+          "min": 2064,
+          "p95": 2064,
+          "max": 2064,
+          "raw": [
+            2064
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2864,
+          "min": 2864,
+          "p95": 2864,
+          "max": 2864,
+          "raw": [
+            2864
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 19072,
+          "min": 19072,
+          "p95": 19072,
+          "max": 19072,
+          "raw": [
+            19072
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.221239,
+          "min": 0.221239,
+          "p95": 0.221239,
+          "max": 0.221239,
+          "raw": [
+            0.221239
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 3390.728477,
+          "min": 3390.728477,
+          "p95": 3390.728477,
+          "max": 3390.728477,
+          "raw": [
+            3390.728477
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 13888423,
+          "min": 13888423,
+          "p95": 13888423,
+          "max": 13888423,
+          "raw": [
+            13888423
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 2160,
+          "min": 2160,
+          "p95": 2160,
+          "max": 2160,
+          "raw": [
+            2160
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2800,
+          "min": 2800,
+          "p95": 2800,
+          "max": 2800,
+          "raw": [
+            2800
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 3504,
+          "min": 3504,
+          "p95": 3504,
+          "max": 3504,
+          "raw": [
+            3504
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.20202,
+          "min": 0.20202,
+          "p95": 0.20202,
+          "max": 0.20202,
+          "raw": [
+            0.20202
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "rand-write-4k",
+      "numjobs": 16,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 7160.839161,
+          "bw_bytes": 29330797,
+          "bw_kib_s": 28643,
+          "runtime_ms": 4378,
+          "clat_p50_ns": 1816,
+          "clat_p95_ns": 2864,
+          "clat_p99_ns": 14784,
+          "clat_mean_ns": 3856.204102,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.068524,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--rand-write-4k--nj16--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 8569.037657,
+          "bw_bytes": 35098778,
+          "bw_kib_s": 34276,
+          "runtime_ms": 3487,
+          "clat_p50_ns": 2024,
+          "clat_p95_ns": 2608,
+          "clat_p99_ns": 6624,
+          "clat_mean_ns": 2189.864258,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.028678,
+          "sys_cpu_pct": 0.086034,
+          "file": "zfs--rand-write-4k--nj16--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 7160.839161,
+          "min": 7160.839161,
+          "p95": 7160.839161,
+          "max": 7160.839161,
+          "raw": [
+            7160.839161
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 29330797,
+          "min": 29330797,
+          "p95": 29330797,
+          "max": 29330797,
+          "raw": [
+            29330797
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 1816,
+          "min": 1816,
+          "p95": 1816,
+          "max": 1816,
+          "raw": [
+            1816
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2864,
+          "min": 2864,
+          "p95": 2864,
+          "max": 2864,
+          "raw": [
+            2864
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 14784,
+          "min": 14784,
+          "p95": 14784,
+          "max": 14784,
+          "raw": [
+            14784
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.068524,
+          "min": 0.068524,
+          "p95": 0.068524,
+          "max": 0.068524,
+          "raw": [
+            0.068524
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 8569.037657,
+          "min": 8569.037657,
+          "p95": 8569.037657,
+          "max": 8569.037657,
+          "raw": [
+            8569.037657
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 35098778,
+          "min": 35098778,
+          "p95": 35098778,
+          "max": 35098778,
+          "raw": [
+            35098778
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 2024,
+          "min": 2024,
+          "p95": 2024,
+          "max": 2024,
+          "raw": [
+            2024
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2608,
+          "min": 2608,
+          "p95": 2608,
+          "max": 2608,
+          "raw": [
+            2608
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 6624,
+          "min": 6624,
+          "p95": 6624,
+          "max": 6624,
+          "raw": [
+            6624
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.028678,
+          "min": 0.028678,
+          "p95": 0.028678,
+          "max": 0.028678,
+          "raw": [
+            0.028678
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.086034,
+          "min": 0.086034,
+          "p95": 0.086034,
+          "max": 0.086034,
+          "raw": [
+            0.086034
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-read-1m",
+      "numjobs": 1,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 8000.0,
+          "bw_bytes": 8388608000,
+          "bw_kib_s": 8192000,
+          "runtime_ms": 0,
+          "clat_p50_ns": 31616,
+          "clat_p95_ns": 226304,
+          "clat_p99_ns": 226304,
+          "clat_mean_ns": 56655.625,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-read-1m--nj1--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 8000.0,
+          "bw_bytes": 8388608000,
+          "bw_kib_s": 8192000,
+          "runtime_ms": 0,
+          "clat_p50_ns": 29056,
+          "clat_p95_ns": 199680,
+          "clat_p99_ns": 199680,
+          "clat_mean_ns": 50551.125,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-read-1m--nj1--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 8000.0,
+          "min": 8000.0,
+          "p95": 8000.0,
+          "max": 8000.0,
+          "raw": [
+            8000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 8388608000,
+          "min": 8388608000,
+          "p95": 8388608000,
+          "max": 8388608000,
+          "raw": [
+            8388608000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 31616,
+          "min": 31616,
+          "p95": 31616,
+          "max": 31616,
+          "raw": [
+            31616
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 226304,
+          "min": 226304,
+          "p95": 226304,
+          "max": 226304,
+          "raw": [
+            226304
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 226304,
+          "min": 226304,
+          "p95": 226304,
+          "max": 226304,
+          "raw": [
+            226304
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 8000.0,
+          "min": 8000.0,
+          "p95": 8000.0,
+          "max": 8000.0,
+          "raw": [
+            8000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 8388608000,
+          "min": 8388608000,
+          "p95": 8388608000,
+          "max": 8388608000,
+          "raw": [
+            8388608000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 29056,
+          "min": 29056,
+          "p95": 29056,
+          "max": 29056,
+          "raw": [
+            29056
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 199680,
+          "min": 199680,
+          "p95": 199680,
+          "max": 199680,
+          "raw": [
+            199680
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 199680,
+          "min": 199680,
+          "p95": 199680,
+          "max": 199680,
+          "raw": [
+            199680
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-read-1m",
+      "numjobs": 4,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 4000.0,
+          "bw_bytes": 4194304000,
+          "bw_kib_s": 4096000,
+          "runtime_ms": 19,
+          "clat_p50_ns": 444416,
+          "clat_p95_ns": 2441216,
+          "clat_p99_ns": 3686400,
+          "clat_mean_ns": 632331.0,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 10.526316,
+          "sys_cpu_pct": 5.263158,
+          "file": "zfs--seq-read-1m--nj4--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 16000.0,
+          "bw_bytes": 16777216000,
+          "bw_kib_s": 16384000,
+          "runtime_ms": 4,
+          "clat_p50_ns": 152576,
+          "clat_p95_ns": 432128,
+          "clat_p99_ns": 448512,
+          "clat_mean_ns": 185212.21875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-read-1m--nj4--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 4000.0,
+          "min": 4000.0,
+          "p95": 4000.0,
+          "max": 4000.0,
+          "raw": [
+            4000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 4194304000,
+          "min": 4194304000,
+          "p95": 4194304000,
+          "max": 4194304000,
+          "raw": [
+            4194304000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 444416,
+          "min": 444416,
+          "p95": 444416,
+          "max": 444416,
+          "raw": [
+            444416
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 2441216,
+          "min": 2441216,
+          "p95": 2441216,
+          "max": 2441216,
+          "raw": [
+            2441216
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 3686400,
+          "min": 3686400,
+          "p95": 3686400,
+          "max": 3686400,
+          "raw": [
+            3686400
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 10.526316,
+          "min": 10.526316,
+          "p95": 10.526316,
+          "max": 10.526316,
+          "raw": [
+            10.526316
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 5.263158,
+          "min": 5.263158,
+          "p95": 5.263158,
+          "max": 5.263158,
+          "raw": [
+            5.263158
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 16000.0,
+          "min": 16000.0,
+          "p95": 16000.0,
+          "max": 16000.0,
+          "raw": [
+            16000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 16777216000,
+          "min": 16777216000,
+          "p95": 16777216000,
+          "max": 16777216000,
+          "raw": [
+            16777216000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 152576,
+          "min": 152576,
+          "p95": 152576,
+          "max": 152576,
+          "raw": [
+            152576
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 432128,
+          "min": 432128,
+          "p95": 432128,
+          "max": 432128,
+          "raw": [
+            432128
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 448512,
+          "min": 448512,
+          "p95": 448512,
+          "max": 448512,
+          "raw": [
+            448512
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-read-1m",
+      "numjobs": 16,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 1560.97561,
+          "bw_bytes": 1636801560,
+          "bw_kib_s": 1598439,
+          "runtime_ms": 1181,
+          "clat_p50_ns": 3555328,
+          "clat_p95_ns": 34340864,
+          "clat_p99_ns": 63176704,
+          "clat_mean_ns": 9231827.679688,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.762066,
+          "sys_cpu_pct": 0.508044,
+          "file": "zfs--seq-read-1m--nj16--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "read",
+          "error": 0,
+          "iops": 6400.0,
+          "bw_bytes": 6710886400,
+          "bw_kib_s": 6553600,
+          "runtime_ms": 227,
+          "clat_p50_ns": 1662976,
+          "clat_p95_ns": 4046848,
+          "clat_p99_ns": 6717440,
+          "clat_mean_ns": 1786397.710938,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 4.845815,
+          "sys_cpu_pct": 2.202643,
+          "file": "zfs--seq-read-1m--nj16--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1560.97561,
+          "min": 1560.97561,
+          "p95": 1560.97561,
+          "max": 1560.97561,
+          "raw": [
+            1560.97561
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1636801560,
+          "min": 1636801560,
+          "p95": 1636801560,
+          "max": 1636801560,
+          "raw": [
+            1636801560
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 3555328,
+          "min": 3555328,
+          "p95": 3555328,
+          "max": 3555328,
+          "raw": [
+            3555328
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 34340864,
+          "min": 34340864,
+          "p95": 34340864,
+          "max": 34340864,
+          "raw": [
+            34340864
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 63176704,
+          "min": 63176704,
+          "p95": 63176704,
+          "max": 63176704,
+          "raw": [
+            63176704
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.762066,
+          "min": 0.762066,
+          "p95": 0.762066,
+          "max": 0.762066,
+          "raw": [
+            0.762066
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.508044,
+          "min": 0.508044,
+          "p95": 0.508044,
+          "max": 0.508044,
+          "raw": [
+            0.508044
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 6400.0,
+          "min": 6400.0,
+          "p95": 6400.0,
+          "max": 6400.0,
+          "raw": [
+            6400.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 6710886400,
+          "min": 6710886400,
+          "p95": 6710886400,
+          "max": 6710886400,
+          "raw": [
+            6710886400
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 1662976,
+          "min": 1662976,
+          "p95": 1662976,
+          "max": 1662976,
+          "raw": [
+            1662976
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 4046848,
+          "min": 4046848,
+          "p95": 4046848,
+          "max": 4046848,
+          "raw": [
+            4046848
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 6717440,
+          "min": 6717440,
+          "p95": 6717440,
+          "max": 6717440,
+          "raw": [
+            6717440
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 4.845815,
+          "min": 4.845815,
+          "p95": 4.845815,
+          "max": 4.845815,
+          "raw": [
+            4.845815
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 2.202643,
+          "min": 2.202643,
+          "p95": 2.202643,
+          "max": 2.202643,
+          "raw": [
+            2.202643
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-write-1m",
+      "numjobs": 1,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 1000.0,
+          "bw_bytes": 1048576000,
+          "bw_kib_s": 1024000,
+          "runtime_ms": 7,
+          "clat_p50_ns": 57600,
+          "clat_p95_ns": 100864,
+          "clat_p99_ns": 100864,
+          "clat_mean_ns": 72238.375,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 14.285714,
+          "file": "zfs--seq-write-1m--nj1--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 1000.0,
+          "bw_bytes": 1048576000,
+          "bw_kib_s": 1024000,
+          "runtime_ms": 7,
+          "clat_p50_ns": 45312,
+          "clat_p95_ns": 84480,
+          "clat_p99_ns": 84480,
+          "clat_mean_ns": 58490.125,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.0,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-write-1m--nj1--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1000.0,
+          "min": 1000.0,
+          "p95": 1000.0,
+          "max": 1000.0,
+          "raw": [
+            1000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1048576000,
+          "min": 1048576000,
+          "p95": 1048576000,
+          "max": 1048576000,
+          "raw": [
+            1048576000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 57600,
+          "min": 57600,
+          "p95": 57600,
+          "max": 57600,
+          "raw": [
+            57600
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 100864,
+          "min": 100864,
+          "p95": 100864,
+          "max": 100864,
+          "raw": [
+            100864
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 100864,
+          "min": 100864,
+          "p95": 100864,
+          "max": 100864,
+          "raw": [
+            100864
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 14.285714,
+          "min": 14.285714,
+          "p95": 14.285714,
+          "max": 14.285714,
+          "raw": [
+            14.285714
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1000.0,
+          "min": 1000.0,
+          "p95": 1000.0,
+          "max": 1000.0,
+          "raw": [
+            1000.0
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1048576000,
+          "min": 1048576000,
+          "p95": 1048576000,
+          "max": 1048576000,
+          "raw": [
+            1048576000
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 45312,
+          "min": 45312,
+          "p95": 45312,
+          "max": 45312,
+          "raw": [
+            45312
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 84480,
+          "min": 84480,
+          "p95": 84480,
+          "max": 84480,
+          "raw": [
+            84480
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 84480,
+          "min": 84480,
+          "p95": 84480,
+          "max": 84480,
+          "raw": [
+            84480
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-write-1m",
+      "numjobs": 4,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 1103.448276,
+          "bw_bytes": 1157049379,
+          "bw_kib_s": 1129931,
+          "runtime_ms": 109,
+          "clat_p50_ns": 175104,
+          "clat_p95_ns": 15400960,
+          "clat_p99_ns": 15400960,
+          "clat_mean_ns": 2042574.0,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 3.669725,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-write-1m--nj4--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 1066.666667,
+          "bw_bytes": 1118481066,
+          "bw_kib_s": 1092266,
+          "runtime_ms": 88,
+          "clat_p50_ns": 171008,
+          "clat_p95_ns": 1433600,
+          "clat_p99_ns": 21626880,
+          "clat_mean_ns": 951391.1875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 4.545455,
+          "sys_cpu_pct": 0.0,
+          "file": "zfs--seq-write-1m--nj4--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1103.448276,
+          "min": 1103.448276,
+          "p95": 1103.448276,
+          "max": 1103.448276,
+          "raw": [
+            1103.448276
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1157049379,
+          "min": 1157049379,
+          "p95": 1157049379,
+          "max": 1157049379,
+          "raw": [
+            1157049379
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 175104,
+          "min": 175104,
+          "p95": 175104,
+          "max": 175104,
+          "raw": [
+            175104
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 15400960,
+          "min": 15400960,
+          "p95": 15400960,
+          "max": 15400960,
+          "raw": [
+            15400960
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 15400960,
+          "min": 15400960,
+          "p95": 15400960,
+          "max": 15400960,
+          "raw": [
+            15400960
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 3.669725,
+          "min": 3.669725,
+          "p95": 3.669725,
+          "max": 3.669725,
+          "raw": [
+            3.669725
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 1066.666667,
+          "min": 1066.666667,
+          "p95": 1066.666667,
+          "max": 1066.666667,
+          "raw": [
+            1066.666667
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 1118481066,
+          "min": 1118481066,
+          "p95": 1118481066,
+          "max": 1118481066,
+          "raw": [
+            1118481066
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 171008,
+          "min": 171008,
+          "p95": 171008,
+          "max": 171008,
+          "raw": [
+            171008
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 1433600,
+          "min": 1433600,
+          "p95": 1433600,
+          "max": 1433600,
+          "raw": [
+            1433600
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 21626880,
+          "min": 21626880,
+          "p95": 21626880,
+          "max": 21626880,
+          "raw": [
+            21626880
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 4.545455,
+          "min": 4.545455,
+          "p95": 4.545455,
+          "max": 4.545455,
+          "raw": [
+            4.545455
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.0,
+          "min": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "raw": [
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "target": "zfs",
+      "workload": "seq-write-1m",
+      "numjobs": 16,
+      "cold_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 47.041529,
+          "bw_bytes": 49326618,
+          "bw_kib_s": 48170,
+          "runtime_ms": 31190,
+          "clat_p50_ns": 195584,
+          "clat_p95_ns": 775946240,
+          "clat_p99_ns": 775946240,
+          "clat_mean_ns": 116487487.945312,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.044886,
+          "sys_cpu_pct": 0.022443,
+          "file": "zfs--seq-write-1m--nj16--cold-r1.json",
+          "rep": 1
+        }
+      ],
+      "warm_runs": [
+        {
+          "fio_version": "fio-3.33",
+          "direction": "write",
+          "error": 0,
+          "iops": 54.935622,
+          "bw_bytes": 57604175,
+          "bw_kib_s": 56254,
+          "runtime_ms": 33581,
+          "clat_p50_ns": 733184,
+          "clat_p95_ns": 4554752,
+          "clat_p99_ns": 5537792,
+          "clat_mean_ns": 1604945.171875,
+          "lat_p50_ns": null,
+          "lat_p95_ns": null,
+          "lat_p99_ns": null,
+          "sync_p50_ns": null,
+          "sync_p95_ns": null,
+          "sync_p99_ns": null,
+          "usr_cpu_pct": 0.023823,
+          "sys_cpu_pct": 0.047646,
+          "file": "zfs--seq-write-1m--nj16--warm-r1.json",
+          "rep": 1
+        }
+      ],
+      "cold_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 47.041529,
+          "min": 47.041529,
+          "p95": 47.041529,
+          "max": 47.041529,
+          "raw": [
+            47.041529
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 49326618,
+          "min": 49326618,
+          "p95": 49326618,
+          "max": 49326618,
+          "raw": [
+            49326618
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 195584,
+          "min": 195584,
+          "p95": 195584,
+          "max": 195584,
+          "raw": [
+            195584
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 775946240,
+          "min": 775946240,
+          "p95": 775946240,
+          "max": 775946240,
+          "raw": [
+            775946240
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 775946240,
+          "min": 775946240,
+          "p95": 775946240,
+          "max": 775946240,
+          "raw": [
+            775946240
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.044886,
+          "min": 0.044886,
+          "p95": 0.044886,
+          "max": 0.044886,
+          "raw": [
+            0.044886
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.022443,
+          "min": 0.022443,
+          "p95": 0.022443,
+          "max": 0.022443,
+          "raw": [
+            0.022443
+          ]
+        }
+      },
+      "warm_summary": {
+        "iops": {
+          "samples": 1,
+          "median": 54.935622,
+          "min": 54.935622,
+          "p95": 54.935622,
+          "max": 54.935622,
+          "raw": [
+            54.935622
+          ]
+        },
+        "bw_bytes": {
+          "samples": 1,
+          "median": 57604175,
+          "min": 57604175,
+          "p95": 57604175,
+          "max": 57604175,
+          "raw": [
+            57604175
+          ]
+        },
+        "clat_p50_ns": {
+          "samples": 1,
+          "median": 733184,
+          "min": 733184,
+          "p95": 733184,
+          "max": 733184,
+          "raw": [
+            733184
+          ]
+        },
+        "clat_p95_ns": {
+          "samples": 1,
+          "median": 4554752,
+          "min": 4554752,
+          "p95": 4554752,
+          "max": 4554752,
+          "raw": [
+            4554752
+          ]
+        },
+        "clat_p99_ns": {
+          "samples": 1,
+          "median": 5537792,
+          "min": 5537792,
+          "p95": 5537792,
+          "max": 5537792,
+          "raw": [
+            5537792
+          ]
+        },
+        "lat_p50_ns": null,
+        "lat_p95_ns": null,
+        "lat_p99_ns": null,
+        "sync_p50_ns": null,
+        "sync_p95_ns": null,
+        "sync_p99_ns": null,
+        "usr_cpu_pct": {
+          "samples": 1,
+          "median": 0.023823,
+          "min": 0.023823,
+          "p95": 0.023823,
+          "max": 0.023823,
+          "raw": [
+            0.023823
+          ]
+        },
+        "sys_cpu_pct": {
+          "samples": 1,
+          "median": 0.047646,
+          "min": 0.047646,
+          "p95": 0.047646,
+          "max": 0.047646,
+          "raw": [
+            0.047646
+          ]
+        }
+      }
+    }
+  ],
+  "blockers": []
+}

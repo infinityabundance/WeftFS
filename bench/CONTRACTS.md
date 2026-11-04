@@ -218,32 +218,38 @@ scripts/docker-court.sh fuse "bash bench/scripts/posix_torture.sh"
   content sha256, symlink targets, xattrs).
 - Receipt: `bench/receipts/posix-torture-20261103T213317Z.json` (6/6 pass).
 - Not claimed: `pjdfstest`/`fsstress` (not installed in the court; no substitute
-  run is claimed), mmap, byte-range locking, mknod, fallocate,
-  copy_file_range, SEEK_DATA, or atime/ctime equality.
+  run is claimed). mmap, byte-range locking, mknod, fallocate, copy_file_range,
+  SEEK_DATA, and the timestamp surface are covered separately by
+  `tests/fuse_verb_matrix.rs` on Rust; Go covers the same verbs in
+  `WeftFS-Go/fusefs/verbs_test.go` (except the documented kernel COLLAPSE/
+  INSERT pre-forward rejection). Rust `O_TMPFILE` and daemon-side flock are
+  FUSE-binding blocked and tested as boundaries.
 
 ### B2 — crash-consistency torture
 
 ```sh
 scripts/docker-court.sh fuse "bash bench/scripts/crash_torture.sh"
-# documented 10,000-iteration command (not run; see projection):
 scripts/docker-court.sh fuse "WEFT_CRASH_ITERATIONS=10000 bash bench/scripts/crash_torture.sh"
 ```
 
-- 1,000 iterations alternating Rust/Go writers and readers through the
-  existing `WEFT_CRASH_PHASE` hook, cycling `after_objects`,
-  `after_commit_file`, and `after_superblock_write`.
+- The harness uses a fresh three-generation store per iteration (default), a
+  pre-generated payload pool, and a clean fast path for `verify --full`; the
+  old-or-new/partial and phase-specific assertions are unchanged.
+  `WEFT_CRASH_FRESH_STORE=0` retains the historical growing-store mode.
+- 10,000 iterations alternating Rust/Go writers and readers through
+  `WEFT_CRASH_PHASE`, cycling `after_objects`, `after_commit_file`, and
+  `after_superblock_write`.
 - After every crash the other implementation runs `verify --full`; only the
   documented “commit file above the highest published superblock generation”
   note is accepted as a non-clean result. `/f` must be exactly the old whole
   file or the new whole file, and `/` must contain exactly `f`.
-- Observed: old 667, new 333, partial/missing 0; verify clean 667,
-  unpublished-tail 333, bad 0; phases 334/333/333. Duration 350,541 ms
-  (2.9 iterations/s).
-- Receipt: `bench/receipts/crash-torture-20261103T213446Z.json` (1/1 pass).
-- Not claimed: physical power loss, cache drops, torn sectors, or a 10,000-
-  iteration run. Linear projection from the measured rate is 3,505 s
-  (≈58.4 min); the actual cost grows because `verify --full` rescans a growing
-  commit chain every iteration.
+- Observed: 10,000 completed, old 6,667, new 3,333, partial/missing 0;
+  verify clean 6,667, unpublished-tail 3,333, bad 0; phases 3,334/3,333/3,333.
+  Duration 507,885 ms (**19.7 iterations/s**).
+- Receipts: `bench/receipts/crash-torture-20261104T013521Z.json` (10,000/10,000)
+  and the historical `crash-torture-20261103T213446Z.json` (1,000 at 2.9/s).
+- Not claimed: physical power loss, cache drops, or torn sectors. This is a
+  process-fault proxy. The QEMU VM power-cut proxy is a separate court.
 
 ### B3 — one-command receipt bundle
 
@@ -336,7 +342,20 @@ Commands:
 ```sh
 scripts/powerloss_court.sh
 scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=none bash scripts/powerloss_court.sh"
+scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=unsafe bash scripts/powerloss_court.sh"
 ```
+
+### Lying-fsync device model (`cache=unsafe`)
+
+QEMU `cache=unsafe` accepts guest flush requests and does not honour them. The
+30-iteration run (`bench/receipts/powerloss-20261104T014805Z.json`) passed
+30/30 with 27 old, 3 new, 0 partial, 0 durability failures, 0 Rust/Go
+disagreements, and unsynced-control loss 30/30. **No data loss was observed.**
+The reason is stated rather than hidden: SIGKILL removes the guest page cache
+and QEMU state, but the host page cache holding QEMU's already-written image
+data survives, so a lying guest-visible flush does not cause loss under a
+process kill. This is a **lying-fsync device model**, not physical media power
+loss and not real disk firmware that lies.
 
 Published evidence: `bench/receipts/powerloss-20261103T224453Z.json` — 30/30
 pass, 28 old + 2 new, 0 partial, 0 durability failures, 0 Rust/Go

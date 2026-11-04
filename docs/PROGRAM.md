@@ -20,7 +20,7 @@ evidence.
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
 | B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | **implemented** — 36 vectors, 36/36 class-identical, `bench/receipts/decoder-bombs-20261103T213314Z.json`; curated corpus, not fuzzing |
-| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 1,000 process-fault iterations** — `bench/receipts/crash-torture-20261103T213446Z.json`; 10,000 command supported but not run (measured 2.9 it/s, ~58.4 min linear projection). F9 adds a QEMU VM power-cut proxy: 30/30 iterations, 0 partial, 0 durability failures (`bench/receipts/powerloss-20261103T224453Z.json`). Physical power loss remains **not done**. |
+| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 10,000 process-fault iterations** — `bench/receipts/crash-torture-20261104T013521Z.json`: 10,000/10,000 pass, 6,667 old + 3,333 new, 0 partial, 0 failures, 19.7 it/s. The earlier 1,000-iteration receipt is retained. F9 adds a QEMU VM power-cut proxy: 30/30 (`cache=none`) and 30/30 under a lying-fsync `cache=unsafe` device model, 0 partial, 0 durability failures (`powerloss-20261103T224453Z.json`, `powerloss-20261104T014805Z.json`). Physical power loss remains **not done**. |
 | B3 | One-command receipt bundle: Dockerfile hash, corpus hash, environment, raw output, dmesg, sha256; rerunnable by a stranger | receipts (exist) | **implemented** — `scripts/package-receipts.sh` + independent `scripts/verify-receipts.sh`; dmesg unavailable without CAP_SYSLOG |
 | B4 | POSIX conformance court: `fsx`-style randomized ops, `fsstress`/`pjdfstest` where available, Rust and Go, green matrix | FUSE frontends | **implemented** — self-written fsx-style court, 6/6 runs, 13,694 ops, `bench/receipts/posix-torture-20261103T213317Z.json`; `pjdfstest`/`fsstress` not available and not substituted |
 
@@ -30,8 +30,8 @@ evidence.
 |---|---|---|---|
 | C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — `bench/receipts/ai-corpus-20261103T220113Z.json`; no Meta/production data; relation-conditioned physical bytes 176,564 vs forced-zstd 575,808 on ai-v1 |
 | C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | **implemented** — cost graph JSON/CSV beside the receipt; analysis and every loss in `bench/RESULTS-ai-v1.md` |
-| C3 | POSIX matrix results with reproducible commands | B4 | partial |
-| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. ZFS and RAPL/`perf` energy are blocked/unavailable; no winner claim. |
+| C3 | POSIX matrix results with reproducible commands | B4 | **implemented** — Rust matrix in `docs/fuse-status.md` with Rust/Go status and exact boundaries; `tests/fuse_verb_matrix.rs` (fallocate modes, server-side copy, mknod/FIFO rejection, O_TMPFILE boundary, mmap, locks, timestamps) passes in the FUSE court. Rust `O_TMPFILE`/flock are binding-limited; Go implements both. |
+| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. 2026-11-04 adds a real ZFS guest baseline (`bench-fs-cold-20261104T014727Z.json`; file-backed vdev, ARC caveat) and perf hardware counters (`perf-counters-20261104T015026Z.json`). RAPL/joule energy remains unavailable; no winner claim. |
 
 ## D. Hooks
 
@@ -68,8 +68,8 @@ evidence.
 5. **F4 — Replay bundle:** export/import, A2, one-command rerun from Go.
    **Implemented** (2026-11-03) as part of F3.
 6. **F5 — Proof courts:** B1/B2/B3/B4, receipts. **Implemented** (2026-11-03);
-   B2 is 1,000 process-fault iterations, not physical power loss, and 10,000
-   was not run.
+   B2 ran 10,000 process-fault iterations on 2026-11-04 (0 failures, 19.7 it/s),
+   not physical power loss.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode, cross-language, vectors for every implemented mode. **Implemented**
    (2026-11-03): `TENSOR` (6) and `TOKEN_SEQUENCE` (7); semantic delta and all
@@ -92,9 +92,10 @@ evidence.
     `ReplayIdempotent`) and includes a deliberately flawed model with a TLC
     counterexample; `scripts/powerloss_court.sh` runs a QEMU VM power-cut proxy
     with Rust and Go verification (30/30 published iterations, 0 partial, 0
-    durability failures). Still outstanding: checkpoints/GC/capability/
-    selector/multi-writer models, a refinement proof, physical power loss, and
-    the remaining release/CI items.
+    durability failures) and a `cache=unsafe` lying-fsync device model (30/30,
+    0 partial, 0 durability failures; not physical media power loss). Still
+    outstanding: checkpoints/GC/capability/selector/multi-writer models, a
+    refinement proof, physical power loss, and the remaining release/CI items.
 
 ## Non-negotiables
 

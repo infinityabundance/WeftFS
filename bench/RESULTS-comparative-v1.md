@@ -363,8 +363,19 @@ extracted with `debugfs` (no loop mount, no extra capability).
   Cold-cache penalty is visible and published.
 - ext4 versus XFS: XFS wins random writes and `fsync` at `numjobs=16` in this
   guest; ext4 wins some cold read tails. No general ranking is claimed.
-- **ZFS:** not installed (`zfs`/`mkfs.zfs` absent); no ZFS run and no
-  comparison. This is a precise blocker, not a silent substitution.
+- **ZFS (2026-11-04):** a real ZFS target now runs in the same QEMU guest
+  (`bench/receipts/bench-fs-cold-20261104T014727Z.json`, ext4/XFS/ZFS, one
+  repetition per cell). OpenZFS 2.1.11-1+deb12u1 is built by DKMS for guest
+  kernel 6.1.0-54-amd64; `zfs.ko` loads, `/dev/zfs` is created, and a real pool
+  is created. The minimal guest runs no udev, so a whole-disk vdev could not
+  create its `/dev/vdb1` node; the pool uses a file-backed vdev on the ext4
+  data disk. That extra backing layer is a published caveat, not hidden.
+  `numjobs=1` cold medians: seq-write-1m 888.9 IOPS (ext4 1,142.9, XFS
+  1,142.9); fsync-write-4k 372.1 IOPS (ext4 363.6, XFS 444.4); rand-read-4k
+  128,000 IOPS vs ext4/XFS 9,846 — the ZFS read number is **ARC-served** and is
+  not a cold-disk comparison, because `drop_caches` does not drop the ZFS ARC.
+  At `numjobs=16`: ZFS rand-read-4k 512,000 (ARC), seq-write-1m 1,113, and
+  fsync-write-4k 3,282 IOPS. No ZFS ranking or superiority claim is made.
 - **Btrfs:** not requested and not run.
 - The Rust and Go mounts do not have identical options (`allow_other` vs
   `max_read=131072`); both are buffered FUSE mounts, but this is not a
@@ -379,22 +390,35 @@ extracted with `debugfs` (no loop mount, no extra capability).
 
 ## 6. Energy and CPU
 
-`bench/receipts/energy-probe-20261103T225547Z.json` records the attempt inside
-the bench court:
+`bench/receipts/energy-probe-20261103T225547Z.json` recorded the first attempt
+inside the bench court:
 
-- `perf` is **not installed**; `perf stat -e cycles,instructions,task-clock`
-  could not run. `kernel.perf_event_paranoid=2` is recorded.
+- `perf` is **not installed** in the bench image; `perf stat -e
+  cycles,instructions,task-clock` could not run. `kernel.perf_event_paranoid=2`
+  is recorded.
 - `/sys/class/powercap/intel-rapl`, `intel-rapl:0`, and `intel-rapl:0:0`
   exist, but no `energy_uj` file is readable; `readable_energy_files=0`.
 - cgroup `cpu.stat`, `cpu.max`, and `memory.current` are readable.
 
-Therefore the supported metric is CPU user and system time per process from
-`wait4` rusage, plus wall time and max RSS. **No joule, watt, package-power, or
-energy-efficiency number is reported or inferred.** CPU time is not energy.
-`perf` counters are also not claimed; the matched codec receipt records CPU
-time, not cycles or instructions. The fio receipt records fio's guest
-`usr_cpu`/`sys_cpu` percentages as reported by `fio`, which are CPU
-utilization, not energy.
+`bench/receipts/perf-counters-20261104T015026Z.json` closes the `perf` part:
+Debian `linux-perf 6.1.190-1` is installed inside the ephemeral bench court
+(no host package is changed), and `perf stat` records cycles, instructions,
+branches, branch-misses, cache references/misses, context switches, and page
+faults for RAW and ZSTD encode/decode, three repetitions each; all 96 counter
+rows completed. These are hardware counters, **not energy**.
+
+RAPL remains blocked. Inside the bench court `/sys/class/powercap` exists but
+no `energy_uj` file is visible: `/sys/devices/virtual/powercap` is masked or
+empty in Docker. On the host the RAPL files are mode `0400` root-only and the
+unprivileged host session cannot read `sudo` without a password. In the QEMU
+guest `/sys/class/powercap` is present but `energy_uj` files = 0 and no `perf`
+binary exists. The exact commands are in the receipt and its log. Therefore no
+joule, watt, package-power, or energy-efficiency number is reported.
+
+Therefore the supported metric remains CPU user and system time per process
+from `wait4` rusage, plus wall time and max RSS. **CPU time and perf counters
+are not energy.** The fio receipt records fio's guest `usr_cpu`/`sys_cpu`
+percentages as reported by `fio`, which are CPU utilization, not energy.
 
 Scoped CPU observations from the matched codec court: Rust encode CPU total is
 2.71 ms (`raw`), 7.37 ms (`zstd`), 37.54 ms (`delta`), 2.57 ms
@@ -426,9 +450,13 @@ Tail metrics at high concurrency are reported as unstable, not as a result.
 ## 8. Explicit gaps and what is not claimed
 
 - No physical power-loss, host page-cache loss, torn-sector, or device
-  write-cache-loss test. The VM power-cut court remains a QEMU proxy.
-- No ZFS baseline (not installed) and no Btrfs run.
-- No `perf` counters, RAPL energy, or external power meter.
+  write-cache-loss test. The VM power-cut court remains a QEMU proxy; its
+  `cache=unsafe` mode is a lying-fsync device model, not physical media.
+- ZFS is a real pool in the guest but uses a file-backed vdev (no udev in the
+  minimal guest); its reads benefit from the ZFS ARC that `drop_caches` does
+  not clear. No Btrfs run.
+- No RAPL energy or external power meter. Perf hardware counters are reported
+  separately and are not energy.
 - No direct-I/O filesystem run and no same-inode concurrent direct I/O.
 - No metadata-storm, open-unlinked, hardlink, symlink, or xattr throughput run
   in this comparative pass.
@@ -460,6 +488,12 @@ Tail metrics at high concurrency are reported as unstable, not as a result.
 - Cold fio targets: `WEFT_FS_COLD_TARGETS`; repetitions:
   `WEFT_FS_COLD_REPS`; per-target timeout: `WEFT_FS_COLD_TIMEOUT`.
   Raw fio JSON stays under `.docker-cache/vm-fs/<UTC>/extracted/`; the receipt
-  records each file name and every command line.
+  records each file name and every command line. The ZFS run command is
+  `scripts/docker-court.sh vm "WEFT_FS_COLD_TARGETS=ext4,xfs,zfs WEFT_FS_COLD_REPS=1 bash bench/scripts/vm_fs_court.sh"`;
+  the vm image is built from `docker/vm.Dockerfile`, which installs OpenZFS via
+  DKMS for the Debian guest kernel.
+- Perf/energy probe: `scripts/docker-court.sh bench "bash bench/scripts/run_perf_counters.sh"`.
+  It installs `linux-perf`/`jq` inside the ephemeral bench court when absent and
+  records the exact package versions; no host package is changed.
 - The vm court image must be rebuilt if `docker/vm.Dockerfile` changes; the
   image id in the receipt identifies the exact image used.

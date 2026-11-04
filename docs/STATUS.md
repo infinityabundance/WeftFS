@@ -1,4 +1,4 @@
-# Implementation status — 2026-11-03
+# Implementation status — 2026-11-04
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
@@ -31,10 +31,16 @@ byte-identical in both directions). The F7 final receipt is
 it; analysis, losses, and caveats are in `bench/RESULTS-ai-v1.md`.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
-`bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`) and
-`bench/receipts/powerloss-20261103T224652Z.json` (10/10, `cache=writeback`).
-The abstraction mapping, assumptions, and limitations are in
-`verification/README.md`.
+`bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`),
+`bench/receipts/powerloss-20261103T224652Z.json` (10/10, `cache=writeback`), and
+`bench/receipts/powerloss-20261104T014805Z.json` (30/30, `cache=unsafe`,
+lying-fsync device model). The B2 10,000-iteration receipt is
+`bench/receipts/crash-torture-20261104T013521Z.json`. The counter/energy probe is
+`bench/receipts/perf-counters-20261104T015026Z.json` (perf counters available;
+RAPL energy still unreadable). The real ZFS guest baseline is
+`bench/receipts/bench-fs-cold-20261104T014727Z.json` (ext4/XFS/ZFS, one
+repetition per cell). The abstraction mapping, assumptions, and limitations
+are in `verification/README.md`.
 
 ## 1. Repositories and revisions
 
@@ -125,24 +131,29 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   evaluation with POSIX + `weft.acl.read` authorization; ambiguity errors.
 - FUSE: lookup/getattr/setattr/open/create/read/write/flush/fsync/release,
   readdir(+plus), mkdir/rmdir/unlink/rename(+NOREPLACE/EXCHANGE)/link/symlink/
-  readlink, xattrs, statfs, access, fallocate(mode 0), O_APPEND/O_TRUNC,
-  sparse writes, open-unlinked, snapshot mounts, `/.weft/id/<hex>`, saved
-  context views.
+  readlink, xattrs, statfs, access, mknod(regular; FIFO/device `EPERM`),
+  fallocate(0/KEEP_SIZE/PUNCH_HOLE/ZERO_RANGE/COLLAPSE/INSERT),
+  copy_file_range(server-side), lseek(SEEK_DATA/SEEK_HOLE), O_APPEND/O_TRUNC/
+  O_EXCL, sparse writes, open-unlinked, snapshot mounts, `/.weft/id/<hex>`,
+  saved context views. Explicit binding boundaries: Rust `O_TMPFILE` and
+  daemon-side flock/POSIX locks are unavailable in fuser 0.15.1.
 - Deterministic store fixture `conformance/store/v1/` (head
   `8959c65b...`) with `EXPECTED.json`.
-- **42 core tests pass** (CLI 4, crash proxy 3, recovery 11, store core 11,
-  extensions 10, bounded recovery 3). `tests/bounded_recovery.rs` enumerates
-  every one of generations 3–5 corrupted in three ways (empty, half, bit flip)
-  and every superblock-slot corruption, asserting the previous whole state and
-  replay idempotence. This is bounded enumeration, **not** TLA+/Alloy model
-  checking.
-- **54 FUSE tests pass, 0 fail, 2 ignored**:
+- **64 core tests pass** (lib 7, CLI 6, crash proxy 3, recovery 11, store core
+  11, extensions 11, bounded recovery 3, context 12). `tests/bounded_recovery.rs`
+  enumerates every one of generations 3–5 corrupted in three ways (empty, half,
+  bit flip) and every superblock-slot corruption, asserting the previous whole
+  state and replay idempotence. This is bounded enumeration, **not** TLA+/Alloy
+  model checking.
+- **86 FUSE-feature tests pass, 0 fail, 2 ignored** (fuse 22, core 64):
   - ownership test needs `CAP_SETUID` (court has only `CAP_SYS_ADMIN`);
   - same-inode concurrent direct read/write can return `EIO` on kernel 7.3
     with fuser 0.15.1. The daemon logs successful replies and the failing
     request never arrives; rate depends on timing. This is documented, with
     the exact reproducer, in `docs/fuse-status.md`. Store-level atomicity is
-    tested separately.
+    tested separately. A same-description write after shared `mmap` also
+    returned `EIO` once; shared mmap/write/msync/read passes with a fresh
+    description.
 
 ### WeftFS-Go — implemented with documented gaps
 
@@ -397,13 +408,33 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - Cold-cache concurrent fio: `bench-fs-cold-20261103T232216Z.json` (stability
   run `T233740Z`). QEMU guest with a genuine guest
   `sync; echo 3 > /proc/sys/vm/drop_caches` cold run, `numjobs` 1/4/16,
-  ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. ZFS
-  is recorded as unavailable (not installed). The Rust and Go mounts differ in
-  `allow_other`/`max_read` defaults; that is published as a limitation.
-- Energy/counter probe: `energy-probe-20261103T225547Z.json`. `perf` is not
-  installed and no readable RAPL `energy_uj` exists in the bench court;
-  CPU user/sys from `wait4` rusage is the supported metric. CPU time is not
-  called energy. No joule/watt/cycles claim is made.
+  ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. The
+  Rust and Go mounts differ in `allow_other`/`max_read` defaults; that is
+  published as a limitation.
+- ZFS baseline (2026-11-04): `bench-fs-cold-20261104T014727Z.json` runs
+  ext4/XFS/ZFS in one guest court, one repetition per cell. OpenZFS
+  2.1.11-1+deb12u1 was built by DKMS for the guest kernel 6.1.0-54-amd64; the
+  guest loaded `zfs.ko`, created `/dev/zfs`, and created a real pool with a
+  file-backed vdev (the minimal guest runs no udev, so a whole-disk vdev could
+  not create its `/dev/vdb1` node). The ext4 data disk is the backing layer; the
+  pool is real ZFS but not a whole-disk vdev. ZFS cold reads are **not** cold in
+  the same sense: `drop_caches` does not drop the ZFS ARC. Scoped medians
+  (`numjobs=1`, cold): seq-write-1m 888.9 IOPS (ext4 1,142.9, XFS 1,142.9),
+  fsync-write-4k 372.1 IOPS (ext4 363.6, XFS 444.4), rand-read-4k 128,000
+  (ARC-served; ext4/XFS 9,846, not comparable). At `numjobs=16`, ZFS
+  rand-read-4k is 512,000 IOPS (ARC) and seq-write-1m 1,113 IOPS. No ZFS
+  superiority claim is made.
+- Energy/counter probe: `energy-probe-20261103T225547Z.json` recorded that
+  `perf` was not installed and no readable RAPL `energy_uj` existed. The
+  2026-11-04 probe `perf-counters-20261104T015026Z.json` installs Debian
+  `linux-perf 6.1.190-1` inside the ephemeral bench court and records
+  cycles/instructions/branches/branch-misses/cache/context-switch/page-fault
+  counters for RAW/ZSTD encode and decode (3 repetitions, all runs complete).
+  RAPL is still unavailable: `/sys/class/powercap` exists but no `energy_uj`
+  file is visible inside Docker (`/sys/devices/virtual/powercap` is masked).
+  The VM guest reports `powercap present`, `energy_uj files 0`, `perf absent`.
+  CPU time and perf counters are **not** called energy; no joule/watt number is
+  reported.
 - Analysis: `bench/RESULTS-comparative-v1.md` contains the exact commands,
   environments, revisions, tables, every loss, stability deltas, and explicit
   limits. Scoped examples: SQLite point lookups are ~1.2–1.8 µs warm at 10,000
@@ -446,17 +477,19 @@ sha256, symlink targets, and xattrs. This is a self-written fsx-style harness,
 not `pjdfstest`/`fsstress` (not installed in the court; no substitute run is
 claimed).
 
-**B2 — crash-consistency torture (1/1 pass).**
-`bench/receipts/crash-torture-20261103T213446Z.json`. 1,000 iterations through
-`WEFT_CRASH_PHASE`, alternating Rust/Go writers and readers. Every crash was
-followed by the other implementation's `verify --full` (accepting only the
-documented unpublished-tail note), an exact `/f` byte check, and an exact `/`
-listing. Observed old 667, new 333, partial/missing 0; verify clean 667,
-unpublished-tail 333, bad 0; phases 334/333/333; 350,541 ms at 2.9 it/s. This
-is a **process-fault proxy**, not physical power loss. The documented 10,000-
-iteration command is supported; linear projection is 3,505 s (~58.4 min), and
-the actual cost is higher because `verify --full` rescans a growing commit
-chain each iteration.
+**B2 — crash-consistency torture (10,000/10,000 pass).**
+`bench/receipts/crash-torture-20261104T013521Z.json`. The harness now uses a
+fresh three-generation store per iteration, a pre-generated payload pool, and a
+clean fast path for `verify --full`; the old-or-new/partial and phase-specific
+assertions are unchanged (`WEFT_CRASH_FRESH_STORE=0` retains the historical
+growing-store mode). Result: 10,000 iterations, 10,000 completed, 0 failures,
+0 bad verify states; observed old 6,667 / new 3,333 / partial or missing 0;
+verify clean 6,667 / accepted unpublished-tail 3,333; phases 3,334/3,333/3,333;
+507,885 ms, **19.7 iterations/s**. Alternating Rust/Go writers and readers; every
+crash followed by the other implementation's `verify --full`, exact `/f` byte
+check, and exact `/` listing. This remains a **process-fault proxy**, not
+physical power loss. The earlier 1,000-iteration receipt
+`crash-torture-20261103T213446Z.json` (2.9 it/s) is retained as history.
 
 **B3 — receipt bundle.** `scripts/package-receipts.sh` writes
 `bench/bundles/receipts-<stamp>.tar.zst` with manifest, checksums, revisions,
@@ -507,10 +540,22 @@ allows only the documented `above the highest published superblock generation`
 note or an unparseable commit file strictly above the recovered generation;
 all other verifier problems fail the iteration.
 
-**Claim boundary.** This is a QEMU VM power-cut proxy, not physical media power
-loss, host page-cache loss, or an fsync that lies. The TLA+ model is checked;
-the implementation is not verified, and there is no refinement proof. See
-`verification/README.md` for the exact mapping, assumptions, and remaining
+**Lying-fsync device model (2026-11-04).** `POWERLOSS_CACHE_MODE=unsafe` uses
+QEMU's `cache=unsafe`, which accepts guest flush requests and does not honour
+them. The same SIGKILL/reboot/verify matrix ran 30 iterations
+(`bench/receipts/powerloss-20261104T014805Z.json`): 30/30 pass, 27 old, 3 new,
+0 partial, 0 durability failures, 0 Rust/Go disagreements, unsynced-control
+loss 30/30. **No data loss was observed.** That is the honest result and it has
+an exact explanation: SIGKILL of QEMU discards the guest page cache and QEMU
+state, but the host page cache holding QEMU's already-written image data is not
+removed, so a lying guest-visible flush does not create loss under a process
+kill. The mode is labelled a **lying-fsync device model**, not physical media
+power loss; real disk-firmware lying and host power loss remain untested.
+
+**Claim boundary.** This is a QEMU VM power-cut proxy plus a lying-fsync device
+model, not physical media power loss or host page-cache loss. The TLA+ model is
+checked; the implementation is not verified, and there is no refinement proof.
+See `verification/README.md` for the exact mapping, assumptions, and remaining
 gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 
 ## 3. Evidence discipline
@@ -543,11 +588,13 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 
 1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
    SQLite, ext4/XFS cold-cache, concurrent-fio, and matched Go/Rust codec gaps
-   (`bench/RESULTS-comparative-v1.md`). Still open: physical power loss and
-   host/device cache loss, ZFS (not installed) and Btrfs, `perf`/RAPL energy,
-   direct-I/O and same-inode direct I/O, metadata storms, AI-corpus external
-   baselines, 10^5–10^6-object scaling, and a library-vs-library codec court.
-   See `bench/RESULTS-v1.md` §8 and `bench/RESULTS-comparative-v1.md` §8.
+   (`bench/RESULTS-comparative-v1.md`). The 2026-11-04 pass adds a real ZFS
+   guest baseline (`bench-fs-cold-20261104T014727Z.json`; file-backed vdev, ARC
+   caveat) and perf hardware counters (`perf-counters-20261104T015026Z.json`).
+   Still open: physical power loss and host/device cache loss, a whole-disk ZFS
+   vdev and Btrfs, RAPL/joule energy, direct-I/O, metadata storms, AI-corpus
+   external baselines, 10^5–10^6-object scaling, and a library-vs-library codec
+   court. See `bench/RESULTS-v1.md` §8 and `bench/RESULTS-comparative-v1.md` §8.
 2. **Formal model coverage beyond the commit/recovery abstraction.** The F9 TLA+
    model checks bounded commit/recovery safety, durability, and replay
    idempotence, but not checkpoints, GC, capability filtering, selector
@@ -555,21 +602,28 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 3. **Showcase re-run at a later revision.** The committed receipt is evidence
    for the exact revision it records; re-running after code changes requires a
    new receipt, not an inference from the old one.
-4. **WeftFS-Go verb edge cases** remain: physical-space `PUNCH_HOLE`,
-   kernel-forwarded COLLAPSE/INSERT (store code exists; 7.3.1 rejects before
-   forwarding), `ioctl`, and cross-daemon/host lock coordination. Online GC is
-   implemented and opt-in.
+4. **FUSE binding limits in Rust.** `fuser 0.15.1` has no `FUSE_TMPFILE`
+   dispatch (7.37) and drops `lk_flags`, so Rust cannot express `O_TMPFILE` or
+   distinguish flock from POSIX byte-range locks; both are explicit boundaries
+   tested in `tests/fuse_verb_matrix.rs`, with kernel-local locking as the
+   fallback. Go implements both. COLLAPSE/INSERT store code exists in both, but
+   kernel 7.3 rejects those flags before forwarding. `ioctl` and cross-daemon
+   lock coordination remain absent.
 5. **Same-inode concurrent direct FUSE I/O** on kernel 7.3: blocked on the
-   kernel/fuser EIO interaction; no workaround is claimed.
-6. **Physical power-loss court** (real media/device write-cache loss) and
-   host page-cache loss; the F9 QEMU VM proxy is not physical. Remote/object-
-   storage backend also remains unimplemented and unclaimed.
+   kernel/fuser EIO interaction; no workaround is claimed. A same-description
+   write after a shared `mmap` also returned EIO once; the matrix test uses a
+   fresh description. Shared mmap itself (map, write, `msync`, exact read) passes.
+6. **Physical power-loss court** (real media/device write-cache loss), host
+   page-cache loss, and real disk firmware that lies about flushes; the F9 QEMU
+   VM proxy and its `cache=unsafe` lying-fsync device model are not physical.
+   Remote/object-storage backend also remains unimplemented and unclaimed.
 7. **Encryption, multi-writer, distributed consistency**; explicitly out of
    scope for v1 claims.
 8. **Streaming codec API for files larger than memory**; chunked/range APIs are
    real, but the CLI materializes whole inputs within limits.
-9. **atime/ctime persistence**, `mmap` writeback, and device/FIFO/socket
-   nodes; not implemented. `mknod` regular files and `tmpfile` are implemented.
+9. **atime/ctime persistence**, device/FIFO/socket nodes, and Rust `O_TMPFILE`;
+   not implemented. `mknod` regular files and FIFO/device rejection are
+   implemented and tested in both frontends; Go implements `tmpfile`.
 10. **Spec-to-Go export automation in CI**; `scripts/export-spec.sh` exists but
     no CI workflow pins the export.
 11. **F3 time travel is correctness-only.** There is no io_uring, EKBLOOM, or
@@ -590,10 +644,10 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 ## 5. Next work queue (dependency order)
 
 1. Close the remaining P7 gaps in `bench/RESULTS-comparative-v1.md` §8:
-   physical power loss, ZFS/Btrfs, `perf`/RAPL energy, direct I/O, metadata
-   storms, AI-corpus external baselines, 10^5–10^6-object scaling, and a
-   library-vs-library codec court. Then add the eight-component economic
-   profile.
+   physical power loss, a whole-disk ZFS vdev/Btrfs, RAPL/joule energy,
+   direct I/O, metadata storms, AI-corpus external baselines, 10^5–10^6-object
+   scaling, and a library-vs-library codec court. Then add the eight-component
+   economic profile.
 2. Extend the TLA+ model to checkpoints, GC reachability, capability
    filtering, and multi-writer refusal; add a refinement mapping to the Rust
    and Go state machines. The current F9 model covers commit/recovery only.
