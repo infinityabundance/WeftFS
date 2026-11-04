@@ -806,34 +806,58 @@ fuzzing and not a substitute for the curated B1 decoder-bomb vectors. Wired
 into `scripts/verify-all.sh`; `verify-20261104T132330Z.json` passes all 19
 courts including `fuzz_diff`.
 
-**B4 — randomized POSIX torture (6/6 pass).**
-`bench/receipts/posix-torture-20261104T142424Z.json` is the 1,000,002-request
-court. Seeds 1–3, both directions (Rust write/Go read and Go write/Rust read),
-166,667 operations requested per run. Completed: 78,109 (seed 1), 70,702
-(seed 2), 77,905 (seed 3) per direction, **453,432 total**; 546,570 were
-skipped by design. Wall 3,767,789 ms (62 min 48 s), **120.34 completed
-ops/s**; the receipt's full-run duration is 3,768,000 ms including build and
-mount setup. Each final tree had 97 entries and the writer and reader manifest
-SHA-256 were identical in all six runs (seed 1
-`26f6e4dca0958bf5124472f31d43a9b2bb36a56840c235861c41e91902e5811a`, seed 2
-`9dc3d65453ef08f57c4f3a18298f1620cb55f15061b0f63538bf8fe8266b74e8`, seed 3
-`b6e3b8fd6ebcad17173d9e3e3a693b5d2b6d2e6de9c5b4b8156c1f4f40296c8f`). Operations
-cover create/write/read/truncate/append/rename/rename-over/link/unlink/mkdir/
-rmdir/symlink/readlink/xattr/fsync/open-unlinked. Every operation was checked
-for bytes, size, mode, nlink, symlink target, and xattrs; a full-tree check ran
-every 100 operations. After unmount the other implementation ran `verify
---full`, remounted, and matched an exact manifest including names, types,
-modes, uid/gid, nlink, mtime, content sha256, symlink targets, and xattrs.
-**1,000,000 completed operations was not reached.** The harness bounds its
-model at ~97 entries, so 54.7% of requested operations are skipped by design at
-steady state; reaching 1,000,000 completed would need roughly 2.21 M requested
-operations (~2 h 19 min at the measured rate), beyond the 166,667-per-run
-command used here. This is a self-written fsx-style harness, not
-`pjdfstest`/`fsstress` (not installed in the court; no substitute run is
-claimed), and it is a single-host court, not a fleet claim. The earlier
-13,694-operation run (`bench/receipts/posix-torture-20261103T213317Z.json`,
-2,251–2,342 completed per run, same seeds and directions) is retained as
-history; the harness now accepts `WEFT_POSIX_OPS`, `WEFT_POSIX_OPS_MINIMUM`,
+**B4 — randomized POSIX torture (6/6 pass; 1,202,560 completed operations).**
+Three FUSE-court invocations at WeftFS `42c82f7` and WeftFS-Go `d7d8d06`, same
+`weft/fuse-court:1` image, all six writer/reader configurations (seeds 1–3 ×
+both directions): **2,640,000 requested / 1,202,560 completed / 1,437,440
+skipped by design**, 9,315,108 ms of torture wall (2 h 35 min 15 s), **129.10
+completed ops/s** (283.4 requested ops/s).
+
+| Seed | Direction | Requested | Completed | Skipped | Entries | Manifest SHA-256 (writer = reader) |
+|---|---|---:|---:|---:|---:|---|
+| 1 | rust→go | 240,000 | 112,098 | 127,902 | 96 | `5a5c73ea32f98d7a3995d76b535758217a9e9889fde29739aebd51128ff244bf` |
+| 1 | go→rust | 640,000 | 298,004 | 341,996 | 97 | `05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af` |
+| 2 | rust→go | 240,000 | 112,386 | 127,614 | 97 | `dc82c98d33d46158d08abd8c510eb3a9d8a354d73b642b3001f25e44e9b798d0` |
+| 2 | go→rust | 640,000 | 270,201 | 369,799 | 96 | `1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679` |
+| 3 | rust→go | 240,000 | 112,025 | 127,975 | 97 | `3f16185c83686d80edb64d365195f179b9247ac5b114186bcbb6a4f6e616d1da` |
+| 3 | go→rust | 640,000 | 297,846 | 342,154 | 97 | `81422cb2944b6ca2963319365ba06885b657565da371b62ae0bd8a0a315fa299` |
+
+The three receipts are `bench/receipts/posix-torture-20261104T162109Z.json`
+(rust→go, seeds 1–3: 336,509 completed of 720,000 requested, 3,638,847 ms),
+`bench/receipts/posix-torture-20261104T172156Z.json` (go→rust, seeds 1–2:
+568,205 completed of 1,280,000 requested, 3,807,418 ms), and
+`bench/receipts/posix-torture-20261104T182537Z.json` (go→rust, seed 3:
+297,846 completed of 640,000 requested, 1,868,843 ms), each with its raw `.log`
+and `.results.tsv` beside it. Totals were recomputed independently from the six
+raw per-run result JSON files and the six manifest files, not from the harness
+summary: in every run `completed + skipped = requested`, `op_counts` sums to the
+requested count, every manifest SHA-256 was recomputed from its entries and
+equals both recorded digests, and all six reader mounts reproduced the writer's
+exact manifest. Every configuration passed all assertions (per-operation bytes,
+size, mode, nlink, symlink target, xattrs; a full-tree check every 100
+operations; `verify --full` after unmount; writer/reader manifest equality).
+Operations cover create/write/read/truncate/append/rename/rename-over/link/
+unlink/mkdir/rmdir/symlink/readlink/xattr/fsync/open-unlinked.
+
+The size asymmetry is deliberate and is a real product finding. The Go store's
+`Open` (`store.CommitIndex` → `LoadStateAt`) parses every commit file and has no
+bounded open: three consecutive probes measured 18.65–19.07 s to mount a store
+with 287,759 commits, while Rust mounted the same store in 305 ms. The harness's
+mount wait is a fixed 15 s (300 × 50 ms), so Go-reader runs are capped at
+240,000 requested (~133k commits, ~9 s mount) while Rust-reader runs use
+640,000. The retained failing receipt
+`bench/receipts/posix-torture-20261104T153125Z.json` is the 520,000-request
+rust→go attempt that completed 242,422 operations and then exceeded the 15 s
+wait at 287,759 commits; its step store is not kept. No product code, assertion,
+or harness default was changed.
+
+Caveat (unchanged): this is a self-written fsx-style harness in a single-host
+Docker court, not `pjdfstest`/`fsstress` (not installed in the court; no
+substitute run is claimed), and it is not a fleet claim. The earlier
+1,000,002-request run (`bench/receipts/posix-torture-20261104T142424Z.json`,
+453,432 completed) and the 13,694-operation run
+(`bench/receipts/posix-torture-20261103T213317Z.json`) are retained as history;
+the harness still accepts `WEFT_POSIX_OPS`, `WEFT_POSIX_OPS_MINIMUM`,
 `WEFT_POSIX_SEEDS`, and `WEFT_POSIX_ONLY` with unchanged defaults (3,200 /
 2,000 / all seeds / all six configurations).
 
@@ -1067,13 +1091,16 @@ multi-writer, physical rig).
    `indexes/<ab>/<commit>.idx` segments (see §F2 above); the portable format does
    not require them and Go still rebuilds per state. Segments are not
    snapshot-incremental on either side.
-5. **1,000,000 *completed*-operation POSIX torture.** The 1,000,002-request
-   court (`bench/receipts/posix-torture-20261104T142424Z.json`) completed
-   453,432 operations; the other 546,570 were skipped by design because the
-   harness model saturates at ~97 entries. Reaching 1,000,000 completed needs
-   ~2.21 M requested operations (~2 h 19 min at 120.34 completed ops/s). The
-   earlier 13,694-operation run
-   (`bench/receipts/posix-torture-20261103T213317Z.json`) remains history.
+5. **Go bounded open / bounded commit index.** Go `Store.Open`
+   (`CommitIndex` → `LoadStateAt`) parses every commit file; measured
+   18.65–19.07 s to open 287,759 commits, versus 305 ms for Rust on the same
+   store. This is why the POSIX court above sizes rust→go runs at 240,000
+   requested and go→rust runs at 640,000 (the harness mount wait is a fixed
+   15 s). **1,000,000 completed operations is met** (1,202,560 across
+   `bench/receipts/posix-torture-20261104T162109Z.json`,
+   `…T172156Z`, `…T182537Z`); the earlier 1,000,002-request run
+   (`…T142424Z`, 453,432 completed) and the 13,694-operation run
+   (`posix-torture-20261103T213317Z.json`) remain history.
    `pjdfstest`/`fsstress` are not installed in the court and no substitute run
    is claimed.
 6. **Remaining AI codec modes:** float-aware, sharded/quantized-layout,

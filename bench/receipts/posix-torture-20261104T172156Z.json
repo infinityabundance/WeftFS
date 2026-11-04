@@ -1,0 +1,350 @@
+{
+  "schema": "weftfs.posix-torture.receipt/1",
+  "generated_at": "2026-11-04T17:21:56Z",
+  "label": "self-written fsx-style randomized POSIX harness in a single-host Docker court (six writer/reader configurations); not pjdfstest, not fsstress, and not a fleet claim",
+  "run": {
+    "started_at": "2026-11-04T17:21:56Z",
+    "finished_at": "2026-11-04T18:25:24Z",
+    "duration_ms": 3808000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "metrics": {
+    "ops.configurations": "2",
+    "ops.invocation": "2",
+    "ops.minimum_per_run": "2000",
+    "ops.per_second": "149.24",
+    "ops.requested_per_run": "640000",
+    "ops.runs_executed": "1/go-rust,2/go-rust",
+    "ops.torture_wall_ms": "3807418",
+    "ops.total_completed": "568205",
+    "ops.total_skipped": "711795",
+    "run.go-to-rust-1.manifest_entries": "97",
+    "run.go-to-rust-1.manifest_match": "true",
+    "run.go-to-rust-1.manifest_sha256": "05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af",
+    "run.go-to-rust-1.ops_completed": "298004",
+    "run.go-to-rust-1.ops_skipped": "341996",
+    "run.go-to-rust-1.reader": "rust",
+    "run.go-to-rust-1.seed": "1",
+    "run.go-to-rust-1.writer": "go",
+    "run.go-to-rust-2.manifest_entries": "96",
+    "run.go-to-rust-2.manifest_match": "true",
+    "run.go-to-rust-2.manifest_sha256": "1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679",
+    "run.go-to-rust-2.ops_completed": "270201",
+    "run.go-to-rust-2.ops_skipped": "369799",
+    "run.go-to-rust-2.reader": "rust",
+    "run.go-to-rust-2.seed": "2",
+    "run.go-to-rust-2.writer": "go"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "42c82f7ec0bfee4b0695d5312368e2b72bbd2225"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "d7d8d0690384885813fcceecf44cb594929d589c"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "01a6245d64afa4ca0d68f9f573b06c0a3647888c"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "7fde3deb21aef9cf3f2cf5ba22509f1a408b529f"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "seed-1-go-rust",
+      "title": "seed 1: go writes, rust verifies and remounts",
+      "status": "pass",
+      "notes": "writer=go reader=rust ops=298004 entries=97 manifest_match=true",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-go-to-rust-1 --fixed-timestamp-ns 1767225600000000000 init",
+        "go mount /work/.docker-cache/f3-demos/stores/posix-go-to-rust-1 -> /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-1-w",
+        "/work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-1-w --impl go --seed 1 --ops 640000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/manifest-go-to-rust-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/run-go-to-rust-1.json",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-go-to-rust-1 --json verify --full",
+        "rust mount /work/.docker-cache/f3-demos/stores/posix-go-to-rust-1 -> /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-1-r",
+        "/work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-1-r --impl rust --seed 1 --verify-only --manifest /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/manifest-go-to-rust-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/verify-go-to-rust-1.json"
+      ],
+      "assertions": [
+        {
+          "name": "init-go-to-rust-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 result present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 completed ops",
+          "expected": ">= 2000",
+          "actual": "298004",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 manifest is non-empty",
+          "expected": "different from 97",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-1 manifest present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "verify-go-to-rust-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-go-to-rust-1 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-1 result present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-1 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-1 failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-1 manifest digest",
+          "expected": "05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af",
+          "actual": "05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "run-go-to-rust-1",
+          "content": "{\n  \"schema\": \"weftfs.posix-torture.run/1\",\n  \"impl\": \"go\",\n  \"seed\": 1,\n  \"ops_requested\": 640000,\n  \"ops_completed\": 298004,\n  \"ops_skipped\": 341996,\n  \"op_counts\": {\n    \"append\": 40000,\n    \"create\": 40000,\n    \"fsync\": 40000,\n    \"link\": 40000,\n    \"mkdir\": 40000,\n    \"open_unlinked\": 40000,\n    \"read\": 40000,\n    \"readlink\": 40000,\n    \"rename\": 40000,\n    \"rename_over\": 40000,\n    \"rmdir\": 40000,\n    \"symlink\": 40000,\n    \"truncate\": 40000,\n    \"unlink\": 40000,\n    \"write\": 40000,\n    \"xattr\": 40000\n  },\n  \"failures\": [],\n  \"manifest_path\": \"/work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/manifest-go-to-rust-1.json\",\n  \"manifest_sha256\": \"05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af\",\n  \"manifest_entries\": 97,\n  \"verify_only\": false,\n  \"duration_ms\": 2049747,\n  \"ok\": true\n}\n"
+        },
+        {
+          "label": "verify-go-to-rust-1",
+          "content": "{\n  \"checked_capabilities\": 0,\n  \"checked_causal\": 0,\n  \"checked_chunks\": 1,\n  \"checked_commits\": 353947,\n  \"checked_context_roots\": 0,\n  \"checked_manifests\": 1383,\n  \"checked_objects\": 1,\n  \"checked_representations\": 0,\n  \"commit\": \"99202f4bd69de02289ccda92668b75e4753316bf64bd05901cf2c106e531f93c\",\n  \"full\": true,\n  \"generation\": 353947,\n  \"ok\": true,\n  \"problems\": [],\n  \"rejected_generations\": []\n}\n"
+        },
+        {
+          "label": "verify-only-go-to-rust-1",
+          "content": "{\n  \"schema\": \"weftfs.posix-torture.run/1\",\n  \"impl\": \"rust\",\n  \"seed\": 0,\n  \"ops_requested\": 0,\n  \"ops_completed\": 0,\n  \"ops_skipped\": 0,\n  \"op_counts\": {},\n  \"failures\": [],\n  \"manifest_path\": \"/work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/manifest-go-to-rust-1.json\",\n  \"manifest_sha256\": \"05b5b5b82f5b1882584e71b2f5c2606cf922dd6de099d1b6ab3a61468b2332af\",\n  \"manifest_entries\": 97,\n  \"verify_only\": true,\n  \"duration_ms\": 12,\n  \"ok\": true\n}\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "manifest-go-to-rust-1",
+          "path": ".docker-cache/f3-demos/steps/7-20261104T172156Z/seed-1-go-rust/manifest-go-to-rust-1.json",
+          "sha256": "7f00b27d0dde29c4ff45c47850518aa490ff85b93174e99888d942eccbf8b93b"
+        }
+      ]
+    },
+    {
+      "id": "seed-2-go-rust",
+      "title": "seed 2: go writes, rust verifies and remounts",
+      "status": "pass",
+      "notes": "writer=go reader=rust ops=270201 entries=96 manifest_match=true",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-go-to-rust-2 --fixed-timestamp-ns 1767225600000000000 init",
+        "go mount /work/.docker-cache/f3-demos/stores/posix-go-to-rust-2 -> /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-2-w",
+        "/work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-2-w --impl go --seed 2 --ops 640000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/manifest-go-to-rust-2.json --result /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/run-go-to-rust-2.json",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-go-to-rust-2 --json verify --full",
+        "rust mount /work/.docker-cache/f3-demos/stores/posix-go-to-rust-2 -> /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-2-r",
+        "/work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T172156Z-go-to-rust-2-r --impl rust --seed 2 --verify-only --manifest /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/manifest-go-to-rust-2.json --result /work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/verify-go-to-rust-2.json"
+      ],
+      "assertions": [
+        {
+          "name": "init-go-to-rust-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 result present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 completed ops",
+          "expected": ">= 2000",
+          "actual": "270201",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 manifest is non-empty",
+          "expected": "different from 96",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-go-to-rust-2 manifest present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "verify-go-to-rust-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-go-to-rust-2 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-2 result present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-2 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-2 failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-only-go-to-rust-2 manifest digest",
+          "expected": "1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679",
+          "actual": "1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "run-go-to-rust-2",
+          "content": "{\n  \"schema\": \"weftfs.posix-torture.run/1\",\n  \"impl\": \"go\",\n  \"seed\": 2,\n  \"ops_requested\": 640000,\n  \"ops_completed\": 270201,\n  \"ops_skipped\": 369799,\n  \"op_counts\": {\n    \"append\": 40000,\n    \"create\": 40000,\n    \"fsync\": 40000,\n    \"link\": 40000,\n    \"mkdir\": 40000,\n    \"open_unlinked\": 40000,\n    \"read\": 40000,\n    \"readlink\": 40000,\n    \"rename\": 40000,\n    \"rename_over\": 40000,\n    \"rmdir\": 40000,\n    \"symlink\": 40000,\n    \"truncate\": 40000,\n    \"unlink\": 40000,\n    \"write\": 40000,\n    \"xattr\": 40000\n  },\n  \"failures\": [],\n  \"manifest_path\": \"/work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/manifest-go-to-rust-2.json\",\n  \"manifest_sha256\": \"1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679\",\n  \"manifest_entries\": 96,\n  \"verify_only\": false,\n  \"duration_ms\": 1537504,\n  \"ok\": true\n}\n"
+        },
+        {
+          "label": "verify-go-to-rust-2",
+          "content": "{\n  \"checked_capabilities\": 0,\n  \"checked_causal\": 0,\n  \"checked_chunks\": 0,\n  \"checked_commits\": 331057,\n  \"checked_context_roots\": 0,\n  \"checked_manifests\": 1293,\n  \"checked_objects\": 0,\n  \"checked_representations\": 0,\n  \"commit\": \"10eb1b7e185bf29b5d63d5fa7894e9782dead8e7c404ced868eb915b738ee96b\",\n  \"full\": true,\n  \"generation\": 331057,\n  \"ok\": true,\n  \"problems\": [],\n  \"rejected_generations\": []\n}\n"
+        },
+        {
+          "label": "verify-only-go-to-rust-2",
+          "content": "{\n  \"schema\": \"weftfs.posix-torture.run/1\",\n  \"impl\": \"rust\",\n  \"seed\": 0,\n  \"ops_requested\": 0,\n  \"ops_completed\": 0,\n  \"ops_skipped\": 0,\n  \"op_counts\": {},\n  \"failures\": [],\n  \"manifest_path\": \"/work/.docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/manifest-go-to-rust-2.json\",\n  \"manifest_sha256\": \"1aa7fa3c7d6a843075b9f01e1e4d04383d69c0f3eab65301680beefb2c52f679\",\n  \"manifest_entries\": 96,\n  \"verify_only\": true,\n  \"duration_ms\": 12,\n  \"ok\": true\n}\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "manifest-go-to-rust-2",
+          "path": ".docker-cache/f3-demos/steps/7-20261104T172156Z/seed-2-go-rust/manifest-go-to-rust-2.json",
+          "sha256": "961e26c2dbf2fc4aeb2107db79a42edd791f014c38942ba2c18f7492d7ae1fd4"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "invocation 2: ran 2 configuration(s): 1/go-rust,2/go-rust",
+    "totals: completed=568205 skipped=711795 requested=1280000 wall_ms=3807418 ops_per_second=149.24",
+    "randomized POSIX operation court; not pjdfstest/fsstress (those tools are not installed in the court and no substitute run is claimed)",
+    "operations: create write read truncate append rename rename-over link unlink mkdir rmdir symlink readlink xattr fsync open-unlinked",
+    "per-operation verification covers bytes, size, mode, nlink, symlink target, and user xattrs; periodic full-tree verification every 100 operations",
+    "cross-implementation final state is compared on names, types, modes, uid/gid, nlink, mtime, content sha256, symlink targets, and xattrs"
+  ],
+  "summary": {
+    "total": 2,
+    "pass": 2,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

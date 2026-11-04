@@ -1,0 +1,197 @@
+===== BUILD =====
+receipt: /work/bench/receipts/posix-torture-20261104T162109Z.json
+
+===== STEP seed-1-rust-go: seed 1: rust writes, go verifies and remounts =====
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[seed-1-rust-go]: rust mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-1-w
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-1-w --impl rust --seed 1 --ops 240000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-1-rust-go/manifest-rust-to-go-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-1-rust-go/run-rust-to-go-1.json
+torture rust-to-go-1: ops_completed=112098 skipped=127902 entries=96 manifest=5a5c73ea32f98d7a3995d76b535758217a9e9889fde29739aebd51128ff244bf
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 133064,
+  "Commit": [
+    132,
+    2,
+    10,
+    5,
+    181,
+    31,
+    225,
+    197,
+    113,
+    59,
+    196,
+    74,
+    1,
+    1,
+    26,
+    64,
+    96,
+    233,
+    43,
+    126,
+    242,
+    138,
+    120,
+    141,
+    162,
+    93,
+    43,
+    169,
+    107,
+    109,
+    74,
+    186
+  ],
+  "CheckedCommits": 133064,
+  "CheckedObjects": 0,
+  "CheckedManifests": 519,
+  "CheckedChunks": 0,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedRepresentations": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[seed-1-rust-go]: go mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-1-r
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-1-r --impl go --seed 1 --verify-only --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-1-rust-go/manifest-rust-to-go-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-1-rust-go/verify-rust-to-go-1.json
+verify-only rust-to-go-1: entries=96 digest=5a5c73ea32f98d7a3995d76b535758217a9e9889fde29739aebd51128ff244bf match=true
+----- STEP seed-1-rust-go: pass writer=rust reader=go ops=112098 entries=96 manifest_match=true
+
+===== STEP seed-2-rust-go: seed 2: rust writes, go verifies and remounts =====
+CMD[seed-2-rust-go]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-2 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[seed-2-rust-go]: rust mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-2 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-2-w
+CMD[seed-2-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-2-w --impl rust --seed 2 --ops 240000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-2-rust-go/manifest-rust-to-go-2.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-2-rust-go/run-rust-to-go-2.json
+torture rust-to-go-2: ops_completed=112386 skipped=127614 entries=97 manifest=dc82c98d33d46158d08abd8c510eb3a9d8a354d73b642b3001f25e44e9b798d0
+CMD[seed-2-rust-go]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-2 --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 133489,
+  "Commit": [
+    197,
+    163,
+    73,
+    245,
+    107,
+    90,
+    191,
+    18,
+    140,
+    66,
+    251,
+    252,
+    235,
+    19,
+    90,
+    183,
+    136,
+    243,
+    4,
+    101,
+    203,
+    65,
+    164,
+    247,
+    144,
+    95,
+    4,
+    25,
+    170,
+    72,
+    24,
+    25
+  ],
+  "CheckedCommits": 133489,
+  "CheckedObjects": 1,
+  "CheckedManifests": 522,
+  "CheckedChunks": 1,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedRepresentations": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[seed-2-rust-go]: go mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-2 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-2-r
+CMD[seed-2-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-2-r --impl go --seed 2 --verify-only --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-2-rust-go/manifest-rust-to-go-2.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-2-rust-go/verify-rust-to-go-2.json
+verify-only rust-to-go-2: entries=97 digest=dc82c98d33d46158d08abd8c510eb3a9d8a354d73b642b3001f25e44e9b798d0 match=true
+----- STEP seed-2-rust-go: pass writer=rust reader=go ops=112386 entries=97 manifest_match=true
+
+===== STEP seed-3-rust-go: seed 3: rust writes, go verifies and remounts =====
+CMD[seed-3-rust-go]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-3 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[seed-3-rust-go]: rust mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-3 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-3-w
+CMD[seed-3-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-3-w --impl rust --seed 3 --ops 240000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-3-rust-go/manifest-rust-to-go-3.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-3-rust-go/run-rust-to-go-3.json
+torture rust-to-go-3: ops_completed=112025 skipped=127975 entries=97 manifest=3f16185c83686d80edb64d365195f179b9247ac5b114186bcbb6a4f6e616d1da
+CMD[seed-3-rust-go]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-3 --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 132948,
+  "Commit": [
+    248,
+    100,
+    232,
+    199,
+    158,
+    190,
+    245,
+    137,
+    106,
+    221,
+    130,
+    53,
+    127,
+    36,
+    90,
+    151,
+    218,
+    212,
+    187,
+    149,
+    151,
+    122,
+    169,
+    65,
+    105,
+    103,
+    142,
+    85,
+    41,
+    136,
+    240,
+    204
+  ],
+  "CheckedCommits": 132948,
+  "CheckedObjects": 1,
+  "CheckedManifests": 520,
+  "CheckedChunks": 1,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedRepresentations": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[seed-3-rust-go]: go mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-3 -> /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-3-r
+CMD[seed-3-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T162109Z-rust-to-go-3-r --impl go --seed 3 --verify-only --manifest /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-3-rust-go/manifest-rust-to-go-3.json --result /work/.docker-cache/f3-demos/steps/7-20261104T162109Z/seed-3-rust-go/verify-rust-to-go-3.json
+verify-only rust-to-go-3: entries=97 digest=3f16185c83686d80edb64d365195f179b9247ac5b114186bcbb6a4f6e616d1da match=true
+----- STEP seed-3-rust-go: pass writer=rust reader=go ops=112025 entries=97 manifest_match=true
+NOTE: invocation 1: ran 3 configuration(s): 1/rust-go,2/rust-go,3/rust-go
+NOTE: totals: completed=336509 skipped=383491 requested=720000 wall_ms=3638847 ops_per_second=92.48
+NOTE: randomized POSIX operation court; not pjdfstest/fsstress (those tools are not installed in the court and no substitute run is claimed)
+NOTE: operations: create write read truncate append rename rename-over link unlink mkdir rmdir symlink readlink xattr fsync open-unlinked
+NOTE: per-operation verification covers bytes, size, mode, nlink, symlink target, and user xattrs; periodic full-tree verification every 100 operations
+NOTE: cross-implementation final state is compared on names, types, modes, uid/gid, nlink, mtime, content sha256, symlink targets, and xattrs
+summary: pass=3 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/posix-torture-20261104T162109Z.json
+raw log: /work/bench/receipts/posix-torture-20261104T162109Z.log

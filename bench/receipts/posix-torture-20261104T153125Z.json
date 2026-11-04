@@ -1,0 +1,157 @@
+{
+  "schema": "weftfs.posix-torture.receipt/1",
+  "generated_at": "2026-11-04T15:31:25Z",
+  "run": {
+    "started_at": "2026-11-04T15:31:25Z",
+    "finished_at": "2026-11-04T16:16:30Z",
+    "duration_ms": 2705000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "42c82f7ec0bfee4b0695d5312368e2b72bbd2225"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "d7d8d0690384885813fcceecf44cb594929d589c"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "01a6245d64afa4ca0d68f9f573b06c0a3647888c"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "7fde3deb21aef9cf3f2cf5ba22509f1a408b529f"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "seed-1-rust-go",
+      "title": "seed 1: rust writes, go verifies and remounts",
+      "status": "fail",
+      "notes": "unexpected shell error at line 209",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --fixed-timestamp-ns 1767225600000000000 init",
+        "rust mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 -> /mnt/weft-fuse/posix-7-20261104T153125Z-rust-to-go-1-w",
+        "/work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T153125Z-rust-to-go-1-w --impl rust --seed 1 --ops 520000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/manifest-rust-to-go-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/run-rust-to-go-1.json",
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --json verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "init-rust-to-go-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 result present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 completed ops",
+          "expected": ">= 2000",
+          "actual": "242422",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 manifest is non-empty",
+          "expected": "different from 97",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "torture-rust-to-go-1 manifest present",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "verify-rust-to-go-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-rust-to-go-1 ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "unexpected shell error at line 209",
+          "expected": "no shell error",
+          "actual": "error",
+          "pass": false
+        }
+      ],
+      "outputs": [
+        {
+          "label": "run-rust-to-go-1",
+          "content": "{\n  \"schema\": \"weftfs.posix-torture.run/1\",\n  \"impl\": \"rust\",\n  \"seed\": 1,\n  \"ops_requested\": 520000,\n  \"ops_completed\": 242422,\n  \"ops_skipped\": 277578,\n  \"op_counts\": {\n    \"append\": 32500,\n    \"create\": 32500,\n    \"fsync\": 32500,\n    \"link\": 32500,\n    \"mkdir\": 32500,\n    \"open_unlinked\": 32500,\n    \"read\": 32500,\n    \"readlink\": 32500,\n    \"rename\": 32500,\n    \"rename_over\": 32500,\n    \"rmdir\": 32500,\n    \"symlink\": 32500,\n    \"truncate\": 32500,\n    \"unlink\": 32500,\n    \"write\": 32500,\n    \"xattr\": 32500\n  },\n  \"failures\": [],\n  \"manifest_path\": \"/work/.docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/manifest-rust-to-go-1.json\",\n  \"manifest_sha256\": \"8cdec8b66db2a5ba76184caba4843aa2d6b41e31cf72fe8a37260a6fcff46ff6\",\n  \"manifest_entries\": 97,\n  \"verify_only\": false,\n  \"duration_ms\": 2583173,\n  \"ok\": true\n}\n"
+        },
+        {
+          "label": "verify-rust-to-go-1",
+          "content": "{\n  \"OK\": true,\n  \"Full\": true,\n  \"Generation\": 287759,\n  \"Commit\": [\n    155,\n    254,\n    246,\n    249,\n    1,\n    236,\n    132,\n    227,\n    197,\n    47,\n    118,\n    22,\n    134,\n    66,\n    4,\n    188,\n    205,\n    69,\n    224,\n    19,\n    164,\n    189,\n    175,\n    105,\n    188,\n    243,\n    166,\n    182,\n    10,\n    228,\n    158,\n    47\n  ],\n  \"CheckedCommits\": 287759,\n  \"CheckedObjects\": 1,\n  \"CheckedManifests\": 1125,\n  \"CheckedChunks\": 1,\n  \"CheckedContextRoots\": 0,\n  \"CheckedCausal\": 0,\n  \"CheckedRepresentations\": 0,\n  \"CheckedCapabilities\": 0,\n  \"RejectedGenerations\": [],\n  \"Problems\": null\n}\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "manifest-rust-to-go-1",
+          "path": ".docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/manifest-rust-to-go-1.json",
+          "sha256": "0db5fe7c041f0576159488d009abab62ed63e2acda226d2cd22f5adfeb4eac75"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "pass": 0,
+    "fail": 1,
+    "blocked": 0,
+    "all_pass": false
+  }
+}

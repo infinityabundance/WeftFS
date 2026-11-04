@@ -1,0 +1,66 @@
+===== BUILD =====
+receipt: /work/bench/receipts/posix-torture-20261104T153125Z.json
+
+===== STEP seed-1-rust-go: seed 1: rust writes, go verifies and remounts =====
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[seed-1-rust-go]: rust mount /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 -> /mnt/weft-fuse/posix-7-20261104T153125Z-rust-to-go-1-w
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/posix_torture --mount /mnt/weft-fuse/posix-7-20261104T153125Z-rust-to-go-1-w --impl rust --seed 1 --ops 520000 --manifest /work/.docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/manifest-rust-to-go-1.json --result /work/.docker-cache/f3-demos/steps/7-20261104T153125Z/seed-1-rust-go/run-rust-to-go-1.json
+torture rust-to-go-1: ops_completed=242422 skipped=277578 entries=97 manifest=8cdec8b66db2a5ba76184caba4843aa2d6b41e31cf72fe8a37260a6fcff46ff6
+CMD[seed-1-rust-go]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/stores/posix-rust-to-go-1 --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 287759,
+  "Commit": [
+    155,
+    254,
+    246,
+    249,
+    1,
+    236,
+    132,
+    227,
+    197,
+    47,
+    118,
+    22,
+    134,
+    66,
+    4,
+    188,
+    205,
+    69,
+    224,
+    19,
+    164,
+    189,
+    175,
+    105,
+    188,
+    243,
+    166,
+    182,
+    10,
+    228,
+    158,
+    47
+  ],
+  "CheckedCommits": 287759,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1125,
+  "CheckedChunks": 1,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedRepresentations": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+mount failed at /mnt/weft-fuse/posix-7-20261104T153125Z-rust-to-go-1-r; daemon log:
+ASSERT FAIL [seed-1-rust-go] unexpected shell error at line 209: expected=<no shell error> actual=<error>
+----- STEP seed-1-rust-go: fail unexpected shell error at line 209
+summary: pass=0 fail=1 blocked=0 all_pass=false
+receipt: /work/bench/receipts/posix-torture-20261104T153125Z.json
+raw log: /work/bench/receipts/posix-torture-20261104T153125Z.log
