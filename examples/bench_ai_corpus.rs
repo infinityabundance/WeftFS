@@ -21,8 +21,13 @@
 //! ```sh
 //! scripts/docker-court.sh bench "bash bench/scripts/run_ai_corpus_bench.sh"
 //! ```
+//!
+//! `--only cdc` runs the CDC strategy alone (the default full run is
+//! unchanged), and `WEFT_CDC_AVG_KIB` sets its average chunk size (default 8).
+//! `--cdc-sweep <kib,kib,...>` measures CDC at several average sizes in one
+//! court run and writes a sweep receipt.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -109,6 +114,9 @@ struct Args {
     csv: PathBuf,
     graph: PathBuf,
     iterations: usize,
+    only: String,
+    cdc_params: CdcParams,
+    cdc_sweep: Option<Vec<f64>>,
 }
 
 fn main() {
@@ -125,6 +133,8 @@ fn parse_args() -> Args {
     let mut csv = PathBuf::from("bench/receipts/ai-cost-graph.csv");
     let mut graph = PathBuf::from("bench/receipts/ai-cost-graph.json");
     let mut iterations = 7usize;
+    let mut only = "all".to_owned();
+    let mut cdc_sweep: Option<Vec<f64>> = None;
     let argv: Vec<String> = env::args().skip(1).collect();
     let mut index = 0;
     while index < argv.len() {
@@ -149,6 +159,22 @@ fn parse_args() -> Args {
                 index += 1;
                 iterations = argv[index].parse().unwrap_or(7).max(1);
             }
+            "--only" => {
+                index += 1;
+                if index >= argv.len() {
+                    eprintln!("--only needs a value: all|cdc|zstd");
+                    std::process::exit(64);
+                }
+                only = argv[index].clone();
+            }
+            "--cdc-sweep" => {
+                index += 1;
+                if index >= argv.len() {
+                    eprintln!("--cdc-sweep needs a comma-separated list of average sizes in KiB");
+                    std::process::exit(64);
+                }
+                cdc_sweep = Some(parse_kib_list(&argv[index]));
+            }
             other => {
                 eprintln!("unknown argument {other}");
                 std::process::exit(64);
@@ -156,13 +182,63 @@ fn parse_args() -> Args {
         }
         index += 1;
     }
+    if !matches!(only.as_str(), "all" | "cdc" | "zstd") {
+        eprintln!("--only expects all|cdc|zstd, got {only:?}");
+        std::process::exit(64);
+    }
+    let avg_kib = match env::var("WEFT_CDC_AVG_KIB") {
+        Ok(raw) => match raw.trim().parse::<f64>() {
+            Ok(value) => value,
+            Err(_) => {
+                eprintln!("WEFT_CDC_AVG_KIB={raw:?} is not a number of KiB");
+                std::process::exit(64);
+            }
+        },
+        Err(env::VarError::NotPresent) => 8.0,
+        Err(err) => {
+            eprintln!("WEFT_CDC_AVG_KIB: {err}");
+            std::process::exit(64);
+        }
+    };
+    let cdc_params = match CdcParams::from_avg_kib(avg_kib) {
+        Ok(params) => params,
+        Err(err) => {
+            eprintln!("WEFT_CDC_AVG_KIB={avg_kib}: {err}");
+            std::process::exit(64);
+        }
+    };
     Args {
         corpus,
         out,
         csv,
         graph,
         iterations,
+        only,
+        cdc_params,
+        cdc_sweep,
     }
+}
+
+fn parse_kib_list(raw: &str) -> Vec<f64> {
+    let mut out = Vec::new();
+    for part in raw.split(',') {
+        let part = part.trim();
+        if part.is_empty() {
+            continue;
+        }
+        match part.parse::<f64>() {
+            Ok(value) => out.push(value),
+            Err(_) => {
+                eprintln!("--cdc-sweep: {part:?} is not a number of KiB");
+                std::process::exit(64);
+            }
+        }
+    }
+    if out.is_empty() {
+        eprintln!("--cdc-sweep needs at least one average chunk size");
+        std::process::exit(64);
+    }
+    out
 }
 
 fn run(args: &Args) -> Result<(), String> {
@@ -253,6 +329,31 @@ fn run(args: &Args) -> Result<(), String> {
         }
     }
 
+    let manifest_sha = sha256_file(&manifest_path).unwrap_or_else(|| "unavailable".to_owned());
+    let corpus_meta = json!({
+        "path": args.corpus.display().to_string(),
+        "schema": &manifest.schema,
+        "name": &manifest.corpus,
+        "license": &manifest.license,
+        "provenance": &manifest.provenance,
+        "generator": &manifest.generator,
+        "seed": &manifest.seed,
+        "manifest_sha256": manifest_sha,
+        "manifest_bytes": manifest_bytes.len(),
+        "totals": {
+            "files": manifest.totals.files,
+            "source_bytes": manifest.totals.source_bytes,
+            "visible_bytes": manifest.totals.visible_bytes,
+        },
+        "verified_lengths": true,
+    });
+
+    // Sweep mode measures CDC at several average chunk sizes and needs no
+    // WeftCodec planner work at all.
+    if let Some(sweep) = &args.cdc_sweep {
+        return run_cdc_sweep(args, &entries, &expected, &corpus_meta, sweep);
+    }
+
     // A resolver containing every plaintext lets DELTA/DICTIONARY frames
     // decode with their dependency already materialized (the warm path).
     let mut plaintext_resolver = MapResolver::new();
@@ -260,102 +361,128 @@ fn run(args: &Args) -> Result<(), String> {
         plaintext_resolver.insert_bytes(bytes.clone());
     }
 
-    let level = 3;
-    let auto_plans = plan_weft(&entries, &expected, &kinds, false, level, &limits)?;
-    let context_planning = plan_weft_context(&entries, &expected, &kinds, level, &limits)?;
-    let context_plans = &context_planning.plans;
-    let depths = compute_depths(&entries);
+    let run_weft = args.only == "all";
+    let run_zstd = args.only == "all" || args.only == "zstd";
+    let run_cdc = args.only == "all" || args.only == "cdc";
 
-    let zstd = measure_zstd_forced(
-        &entries,
-        &expected,
-        &plaintext_resolver,
-        level,
-        &limits,
-        args.iterations,
-    )?;
-    let auto = measure_weft(
-        "weft_auto",
-        &entries,
-        &auto_plans,
-        &expected,
-        &depths,
-        false,
-        &plaintext_resolver,
-        &limits,
-        args.iterations,
-    )?;
-    let context = measure_weft(
-        "weft_context",
-        &entries,
-        context_plans,
-        &expected,
-        &depths,
-        true,
-        &plaintext_resolver,
-        &limits,
-        args.iterations,
-    )?;
-    let cdc = measure_cdc(&entries, &expected, args.iterations)?;
-    let typed_candidates = typed_mode_report(&entries, &expected, &kinds, &auto_plans, &limits)?;
+    let level = 3;
+    let mut auto_plans: Vec<Plan> = Vec::new();
+    let mut context_plans: Vec<Plan> = Vec::new();
+    let mut depths: HashMap<String, usize> = HashMap::new();
+    let mut planner_policy = Json::Null;
+    let mut planner_rejections = Json::Null;
+    if run_weft {
+        auto_plans = plan_weft(&entries, &expected, &kinds, false, level, &limits)?;
+        let context_planning = plan_weft_context(&entries, &expected, &kinds, level, &limits)?;
+        planner_policy = context_planning.policy;
+        planner_rejections = Json::Array(context_planning.rejections);
+        context_plans = context_planning.plans;
+        depths = compute_depths(&entries);
+    }
+
+    let zstd = if run_zstd {
+        Some(measure_zstd_forced(
+            &entries,
+            &expected,
+            &plaintext_resolver,
+            level,
+            &limits,
+            args.iterations,
+        )?)
+    } else {
+        None
+    };
+    let auto = if run_weft {
+        Some(measure_weft(
+            "weft_auto",
+            &entries,
+            &auto_plans,
+            &expected,
+            &depths,
+            false,
+            &plaintext_resolver,
+            &limits,
+            args.iterations,
+        )?)
+    } else {
+        None
+    };
+    let context = if run_weft {
+        Some(measure_weft(
+            "weft_context",
+            &entries,
+            &context_plans,
+            &expected,
+            &depths,
+            true,
+            &plaintext_resolver,
+            &limits,
+            args.iterations,
+        )?)
+    } else {
+        None
+    };
+    let cdc = if run_cdc {
+        Some(measure_cdc(
+            &entries,
+            &expected,
+            args.iterations,
+            &args.cdc_params,
+        )?)
+    } else {
+        None
+    };
+    let typed_candidates = if run_weft {
+        typed_mode_report(&entries, &expected, &kinds, &auto_plans, &limits)?
+    } else {
+        Json::Null
+    };
 
     let mut cost_rows: Vec<Json> = Vec::new();
-    for strategy in [&zstd, &auto, &context] {
+    for strategy in [zstd.as_ref(), auto.as_ref(), context.as_ref()]
+        .into_iter()
+        .flatten()
+    {
         for row in &strategy.records {
             cost_rows.push(row.clone());
         }
         cost_rows.push(strategy.aggregate.clone());
     }
-    for row in &cdc.records {
-        cost_rows.push(row.clone());
+    if let Some(cdc) = &cdc {
+        for row in &cdc.records {
+            cost_rows.push(row.clone());
+        }
+        cost_rows.push(cdc.aggregate.clone());
     }
-    cost_rows.push(cdc.aggregate.clone());
 
-    let manifest_sha = sha256_file(&manifest_path).unwrap_or_else(|| "unavailable".to_owned());
+    let mut strategies = serde_json::Map::new();
+    if let Some(strategy) = &zstd {
+        strategies.insert("zstd_forced".to_owned(), strategy.receipt.clone());
+    }
+    if let Some(strategy) = &cdc {
+        strategies.insert("cdc_zstd".to_owned(), strategy.receipt.clone());
+    }
+    if let Some(strategy) = &auto {
+        strategies.insert("weft_auto".to_owned(), strategy.receipt.clone());
+    }
+    if let Some(strategy) = &context {
+        strategies.insert("weft_context".to_owned(), strategy.receipt.clone());
+    }
+
     let receipt = json!({
         "kind": "ai-corpus-cost",
         "schema": "weft.ai-cost.v1",
         "timestamp_utc": utc_stamp(),
+        "run_mode": args.only,
+        "cdc_parameters": args.cdc_params.to_json(),
         "environment": environment(),
-        "revisions": {
-            "WeftFS": env::var("WEFT_REPO_WEFTFS").ok(),
-            "WeftCodec": env::var("WEFT_REPO_WEFTCODEC").ok(),
-            "WeftCodec-Go": env::var("WEFT_REPO_WEFTCODEC_GO").ok(),
-            "WeftFS-Go": env::var("WEFT_REPO_WEFTFS_GO").ok(),
-            "court_image": env::var("WEFT_COURT_IMAGE").ok(),
-            "court_image_id": env::var("WEFT_COURT_IMAGE_ID").ok(),
-            "court_memory": env::var("WEFT_COURT_MEMORY").ok(),
-            "court_cpus": env::var("WEFT_COURT_CPUS").ok(),
-            "court_pids": env::var("WEFT_COURT_PIDS").ok(),
-            "kernel": env::var("WEFT_COURT_KERNEL").ok(),
-        },
-        "corpus": {
-            "path": args.corpus.display().to_string(),
-            "schema": manifest.schema,
-            "name": manifest.corpus,
-            "license": manifest.license,
-            "provenance": manifest.provenance,
-            "generator": manifest.generator,
-            "seed": manifest.seed,
-            "manifest_sha256": manifest_sha,
-            "manifest_bytes": manifest_bytes.len(),
-            "totals": {
-                "files": manifest.totals.files,
-                "source_bytes": manifest.totals.source_bytes,
-                "visible_bytes": manifest.totals.visible_bytes,
-            },
-            "verified_lengths": true,
-        },
+        "revisions": court_revisions(),
+        "corpus": corpus_meta,
         "iterations": args.iterations,
         "typed_mode_candidates": typed_candidates,
-        "planner_policy": context_planning.policy,
-        "planner_rejections": context_planning.rejections,
-        "strategies": {
-            "zstd_forced": zstd.receipt,
-            "cdc_zstd": cdc.receipt,
-            "weft_auto": auto.receipt,
-            "weft_context": context.receipt,
-        },
+        "planner_policy": planner_policy,
+        "planner_rejections": planner_rejections,
+        "strategies": strategies,
         "cost_graph": {
             "axes": ["visible_bytes", "physical_bytes", "read_latency_ns", "dependency_depth"],
             "rows": cost_rows,
@@ -365,7 +492,7 @@ fn run(args: &Args) -> Result<(), String> {
             "`physical_bytes` counts every stored frame/chunk/index/manifest once for the whole corpus; `pair_bytes` sums marginal + base plaintext per dependent object and therefore may double-count shared bases. Pair losses are reported raw and are not hidden.",
             "`weft_context` uses a whole-pair-aware planner: a DELTA/DICTIONARY/REFERENCE candidate is selected only when the base is shared (>=2 direct dependents) or retained (a declared chain root), or when marginal frame + base plaintext is strictly smaller than the best context-free frame. `planner_cost` records the objective value; `planner_rejections` records every contextual candidate that lost for cost reasons.",
             "`read_latency_ns` is the median of verified decodes; `historical_read_ns` uses the cold dependency-DAG path when the object has a relation chain, otherwise the warm path.",
-            "CDC is content-only and relation-agnostic. WeftCodec context bases come only from declared typed relations in the manifest.",
+            "CDC is content-only and relation-agnostic. WeftCodec context bases come only from declared typed relations in the manifest. `cdc_parameters` records the average/min/max chunk sizes and the gear mask actually used.",
             "No winner or superiority claim is made. See bench/RESULTS-ai-v1.md for the analysis and every loss.",
         ],
     });
@@ -387,6 +514,21 @@ fn run(args: &Args) -> Result<(), String> {
         args.csv.display()
     );
     Ok(())
+}
+
+fn court_revisions() -> Json {
+    json!({
+        "WeftFS": env::var("WEFT_REPO_WEFTFS").ok(),
+        "WeftCodec": env::var("WEFT_REPO_WEFTCODEC").ok(),
+        "WeftCodec-Go": env::var("WEFT_REPO_WEFTCODEC_GO").ok(),
+        "WeftFS-Go": env::var("WEFT_REPO_WEFTFS_GO").ok(),
+        "court_image": env::var("WEFT_COURT_IMAGE").ok(),
+        "court_image_id": env::var("WEFT_COURT_IMAGE_ID").ok(),
+        "court_memory": env::var("WEFT_COURT_MEMORY").ok(),
+        "court_cpus": env::var("WEFT_COURT_CPUS").ok(),
+        "court_pids": env::var("WEFT_COURT_PIDS").ok(),
+        "kernel": env::var("WEFT_COURT_KERNEL").ok(),
+    })
 }
 
 struct Plan {
@@ -1071,23 +1213,96 @@ struct CdcResult {
     receipt: Json,
 }
 
+/// Gear-hash content-defined chunking parameters.
+///
+/// Defaults reproduce the original harness constants exactly: average 8 KiB
+/// (`mask = 2^13 - 1`), min `avg/4` = 2 KiB, max `avg*4` = 32 KiB.
+#[derive(Debug, Clone, Copy)]
+struct CdcParams {
+    avg_kib_requested: f64,
+    avg_bytes_requested: u64,
+    avg_bytes_effective: u64,
+    mask_bits: u32,
+    min_bytes: usize,
+    max_bytes: usize,
+}
+
+impl CdcParams {
+    fn from_avg_kib(avg_kib: f64) -> Result<Self, String> {
+        if !avg_kib.is_finite() || avg_kib <= 0.0 {
+            return Err(format!(
+                "average chunk size {avg_kib} KiB is not a positive finite number"
+            ));
+        }
+        let avg_bytes_requested = (avg_kib * 1024.0).round();
+        if !(256.0..=16_777_216.0).contains(&avg_bytes_requested) {
+            return Err(format!(
+                "average chunk size {avg_kib} KiB resolves to {avg_bytes_requested} B; must be 256 B..=16 MiB"
+            ));
+        }
+        let avg_bytes_requested = avg_bytes_requested as u64;
+        // The gear mask encodes an average as a power of two. Non-power-of-two
+        // requests round to the nearest power of two; `avg_bytes_effective`
+        // records what was actually used.
+        let mask_bits = (avg_bytes_requested as f64).log2().round().clamp(2.0, 24.0) as u32;
+        let avg_bytes_effective = 1u64 << mask_bits;
+        let min_bytes = usize::try_from((avg_bytes_requested / 4).max(64))
+            .map_err(|_| "min chunk size does not fit usize".to_owned())?;
+        let max_bytes = usize::try_from(avg_bytes_requested * 4)
+            .map_err(|_| "max chunk size does not fit usize".to_owned())?;
+        Ok(Self {
+            avg_kib_requested: avg_kib,
+            avg_bytes_requested,
+            avg_bytes_effective,
+            mask_bits,
+            min_bytes,
+            max_bytes,
+        })
+    }
+
+    fn mask(&self) -> u64 {
+        (1u64 << self.mask_bits) - 1
+    }
+
+    fn to_json(&self) -> Json {
+        json!({
+            "source": "WEFT_CDC_AVG_KIB",
+            "avg_kib_requested": self.avg_kib_requested,
+            "avg_bytes_requested": self.avg_bytes_requested,
+            "avg_bytes_effective": self.avg_bytes_effective,
+            "mask_bits": self.mask_bits,
+            "mask": self.mask(),
+            "min_bytes": self.min_bytes,
+            "max_bytes": self.max_bytes,
+            "min_rule": "max(avg/4, 64 B)",
+            "max_rule": "avg*4",
+        })
+    }
+}
+
 fn measure_cdc(
     entries: &[Entry],
     expected: &HashMap<String, Vec<u8>>,
     iterations: usize,
+    params: &CdcParams,
 ) -> Result<CdcResult, String> {
     let table = gear_table();
     let mut unique: HashMap<Hash32, usize> = HashMap::new();
     let mut compressed: Vec<Vec<u8>> = Vec::new();
     let mut per_file: Vec<(String, Vec<usize>, Vec<u32>)> = Vec::new();
     let mut compressed_total = 0u64;
+    let mut unique_raw_total = 0u64;
+    let mut total_raw = 0u64;
+    let mut marginal_compressed_total = 0u64;
 
     for entry in entries {
         let bytes = &expected[&entry.path];
-        let chunks = cdc_chunks(bytes, &table);
+        let chunks = cdc_chunks(bytes, &table, params);
         let mut refs = Vec::with_capacity(chunks.len());
         let mut lens = Vec::with_capacity(chunks.len());
         for (start, end) in chunks {
+            let raw_len = (end - start) as u64;
+            total_raw += raw_len;
             let chunk = &bytes[start..end];
             let hash = hash_domain(DOMAIN_CHUNK, chunk);
             lens.push((end - start) as u32);
@@ -1098,6 +1313,7 @@ fn measure_cdc(
                     .map_err(|e| format!("{}: zstd chunk: {e}", entry.path))?;
                 let index = compressed.len();
                 compressed_total += packed.len() as u64;
+                unique_raw_total += raw_len;
                 compressed.push(packed);
                 unique.insert(hash, index);
                 index
@@ -1107,6 +1323,7 @@ fn measure_cdc(
         per_file.push((entry.path.clone(), refs, lens));
     }
     let unique_count = compressed.len() as u64;
+    let total_chunks: u64 = per_file.iter().map(|(_, refs, _)| refs.len() as u64).sum();
     let chunk_index_bytes = unique_count * 48;
     let mut file_table_bytes = 0u64;
     let mut file_manifest_bytes = 0u64;
@@ -1132,6 +1349,7 @@ fn measure_cdc(
         let manifest = 32 * refs.len() as u64 + 8 + 2 + entry.path.len() as u64;
         file_table_bytes += 32 + 8 + 2 + entry.path.len() as u64;
         file_manifest_bytes += manifest;
+        marginal_compressed_total += marginal;
 
         // Verified decode: decompress every chunk and concatenate.
         let mut samples = Vec::with_capacity(iterations);
@@ -1189,17 +1407,35 @@ fn measure_cdc(
         0,
         &latencies,
     );
+    let (pairs, pair_aggregate) = cdc_pair_diagnostics(entries, &per_file);
+    let chunking = params.to_json();
+    let description = format!(
+        "Gear-hash content-defined chunking (min {} B, average {} B via WEFT_CDC_AVG_KIB, max {} B), global dedup by H(weft/chunk/v1), zstd level 3 per unique chunk.",
+        params.min_bytes, params.avg_bytes_effective, params.max_bytes
+    );
     Ok(CdcResult {
         aggregate: aggregate.clone(),
         receipt: json!({
             "strategy": "cdc_zstd",
-            "description": "Gear-hash content-defined chunking (min 2 KiB, avg 8 KiB, max 32 KiB), global dedup by H(weft/chunk/v1), zstd level 3 per unique chunk.",
+            "description": description,
+            "chunking": chunking,
+            "total_chunks": total_chunks,
+            "total_raw_bytes": total_raw,
+            "unique_raw_bytes": unique_raw_total,
+            "dedup_saved_raw_bytes": total_raw - unique_raw_total,
+            "marginal_compressed_bytes": marginal_compressed_total,
+            "dedup_saved_compressed_bytes": marginal_compressed_total - compressed_total,
             "unique_chunks": unique_count,
             "unique_compressed_bytes": compressed_total,
             "chunk_index_bytes": chunk_index_bytes,
             "file_manifest_bytes": file_manifest_bytes,
             "file_table_bytes": file_table_bytes,
+            "index_overhead_bytes": chunk_index_bytes + file_manifest_bytes + file_table_bytes,
             "physical_bytes": physical,
+            "pair_diagnostics": {
+                "pairs": pairs,
+                "aggregate": pair_aggregate,
+            },
             "records": &records,
             "aggregate": aggregate,
             "losses": losses,
@@ -1208,17 +1444,297 @@ fn measure_cdc(
     })
 }
 
-fn cdc_chunks(data: &[u8], table: &[u64; 256]) -> Vec<(usize, usize)> {
-    const MIN: usize = 2048;
-    const MAX: usize = 32768;
-    const MASK: u64 = (1 << 13) - 1; // average 8 KiB
+/// Per near-duplicate pair (declared `derived_from` / `revised_from`), measure
+/// the two competing explanations for CDC's loss:
+///
+/// - boundary reproducibility: chunk starts shared at the *same absolute
+///   offset*;
+/// - content reuse: dependent chunks whose bytes (identified by the chunk
+///   hash used for global dedup) also occur in the base.
+///
+/// Content reuse needs no offset agreement, so a chunk that survives an edit
+/// shift still counts. `matched_shifted_chunks` isolates exactly that case.
+fn cdc_pair_diagnostics(
+    entries: &[Entry],
+    per_file: &[(String, Vec<usize>, Vec<u32>)],
+) -> (Vec<Json>, Json) {
+    struct View<'a> {
+        starts: Vec<usize>,
+        refs: &'a [usize],
+        lens: &'a [u32],
+        bytes: u64,
+    }
+
+    let mut views: HashMap<&str, View> = HashMap::new();
+    for (path, refs, lens) in per_file {
+        let mut starts = Vec::with_capacity(lens.len());
+        let mut cursor = 0usize;
+        for len in lens.iter() {
+            starts.push(cursor);
+            cursor += *len as usize;
+        }
+        views.insert(
+            path.as_str(),
+            View {
+                starts,
+                refs: refs.as_slice(),
+                lens: lens.as_slice(),
+                bytes: cursor as u64,
+            },
+        );
+    }
+
+    let mut pairs = Vec::new();
+    let mut dep_chunks_total = 0u64;
+    let mut matched_chunks_total = 0u64;
+    let mut dep_bytes_total = 0u64;
+    let mut matched_bytes_total = 0u64;
+    let mut dep_boundaries_total = 0u64;
+    let mut shared_boundaries_total = 0u64;
+    let mut union_boundaries_total = 0u64;
+    let mut matched_same_offset_total = 0u64;
+    let mut matched_shifted_total = 0u64;
+
+    for entry in entries {
+        let Some(relation) = &entry.relation else {
+            continue;
+        };
+        if relation.predicate != "derived_from" && relation.predicate != "revised_from" {
+            continue;
+        }
+        let Some(dep) = views.get(entry.path.as_str()) else {
+            continue;
+        };
+        let Some(base) = views.get(relation.target.as_str()) else {
+            continue;
+        };
+
+        // Interior chunk starts: every chunk start except offset 0. The two
+        // files can differ in length, so the final end offset is not a
+        // boundary candidate.
+        let base_starts: HashSet<usize> = base.starts.iter().skip(1).copied().collect();
+        let dep_starts: Vec<usize> = dep.starts.iter().skip(1).copied().collect();
+        let shared = dep_starts
+            .iter()
+            .filter(|offset| base_starts.contains(offset))
+            .count() as u64;
+        let union = (dep_starts.len() as u64) + (base_starts.len() as u64) - shared;
+
+        let base_refs: HashSet<usize> = base.refs.iter().copied().collect();
+        let base_offset_ref: HashMap<usize, usize> = base
+            .starts
+            .iter()
+            .copied()
+            .zip(base.refs.iter().copied())
+            .collect();
+        let mut matched_chunks = 0u64;
+        let mut matched_bytes = 0u64;
+        let mut matched_same_offset = 0u64;
+        let mut dep_bytes = 0u64;
+        for (index, (reference, len)) in dep.refs.iter().zip(dep.lens.iter()).enumerate() {
+            dep_bytes += *len as u64;
+            if base_refs.contains(reference) {
+                matched_chunks += 1;
+                matched_bytes += *len as u64;
+                if base_offset_ref.get(&dep.starts[index]) == Some(reference) {
+                    matched_same_offset += 1;
+                }
+            }
+        }
+        let dep_chunks = dep.refs.len() as u64;
+        let matched_shifted = matched_chunks - matched_same_offset;
+
+        pairs.push(json!({
+            "path": entry.path,
+            "base_path": relation.target,
+            "predicate": relation.predicate,
+            "kind": entry.kind,
+            "dep_bytes": dep_bytes,
+            "base_bytes": base.bytes,
+            "dep_chunks": dep_chunks,
+            "base_chunks": base.refs.len(),
+            "dep_boundaries": dep_starts.len(),
+            "base_boundaries": base_starts.len(),
+            "shared_boundaries": shared,
+            "boundary_shared_fraction": if union == 0 { 1.0 } else { shared as f64 / union as f64 },
+            "dep_boundary_match_fraction": if dep_starts.is_empty() {
+                1.0
+            } else {
+                shared as f64 / dep_starts.len() as f64
+            },
+            "content_matched_chunks": matched_chunks,
+            "content_reuse_fraction_by_count": if dep_chunks == 0 {
+                0.0
+            } else {
+                matched_chunks as f64 / dep_chunks as f64
+            },
+            "content_matched_bytes": matched_bytes,
+            "content_reuse_fraction_by_bytes": if dep_bytes == 0 {
+                0.0
+            } else {
+                matched_bytes as f64 / dep_bytes as f64
+            },
+            "unmatched_bytes": dep_bytes - matched_bytes,
+            "content_matched_same_offset_chunks": matched_same_offset,
+            "content_matched_shifted_chunks": matched_shifted,
+        }));
+
+        dep_chunks_total += dep_chunks;
+        matched_chunks_total += matched_chunks;
+        dep_bytes_total += dep_bytes;
+        matched_bytes_total += matched_bytes;
+        dep_boundaries_total += dep_starts.len() as u64;
+        shared_boundaries_total += shared;
+        union_boundaries_total += union;
+        matched_same_offset_total += matched_same_offset;
+        matched_shifted_total += matched_shifted;
+    }
+
+    let aggregate = json!({
+        "pairs": pairs.len(),
+        "dep_chunks": dep_chunks_total,
+        "content_matched_chunks": matched_chunks_total,
+        "content_reuse_fraction_by_count": ratio(matched_chunks_total, dep_chunks_total),
+        "dep_bytes": dep_bytes_total,
+        "content_matched_bytes": matched_bytes_total,
+        "content_reuse_fraction_by_bytes": ratio(matched_bytes_total, dep_bytes_total),
+        "unmatched_bytes": dep_bytes_total - matched_bytes_total,
+        "dep_boundaries": dep_boundaries_total,
+        "shared_boundaries": shared_boundaries_total,
+        "union_boundaries": union_boundaries_total,
+        "boundary_shared_fraction": ratio(shared_boundaries_total, union_boundaries_total),
+        "dep_boundary_match_fraction": ratio(shared_boundaries_total, dep_boundaries_total),
+        "content_matched_same_offset_chunks": matched_same_offset_total,
+        "content_matched_shifted_chunks": matched_shifted_total,
+    });
+    (pairs, aggregate)
+}
+
+fn ratio(numerator: u64, denominator: u64) -> f64 {
+    if denominator == 0 {
+        0.0
+    } else {
+        numerator as f64 / denominator as f64
+    }
+}
+
+fn run_cdc_sweep(
+    args: &Args,
+    entries: &[Entry],
+    expected: &HashMap<String, Vec<u8>>,
+    corpus_meta: &Json,
+    sweep: &[f64],
+) -> Result<(), String> {
+    let limits = Limits::default();
+    let level = 3;
+    let mut resolver = MapResolver::new();
+    for bytes in expected.values() {
+        resolver.insert_bytes(bytes.clone());
+    }
+
+    // The forced-zstd comparator is measured in this same run so every delta
+    // in the sweep has an identical denominator.
+    let zstd = measure_zstd_forced(
+        entries,
+        expected,
+        &resolver,
+        level,
+        &limits,
+        args.iterations,
+    )?;
+    let zstd_physical = zstd.aggregate["physical_bytes"].as_u64().unwrap_or(0);
+    let zstd_frame_bytes = zstd.aggregate["frame_bytes"].clone();
+
+    let mut configurations = Vec::new();
+    for avg_kib in sweep {
+        let params = CdcParams::from_avg_kib(*avg_kib)?;
+        let cdc = measure_cdc(entries, expected, args.iterations, &params)?;
+        let physical = cdc.receipt["physical_bytes"].as_u64().unwrap_or(0);
+        let index_overhead = [
+            "chunk_index_bytes",
+            "file_manifest_bytes",
+            "file_table_bytes",
+        ]
+        .iter()
+        .filter_map(|key| cdc.receipt[*key].as_u64())
+        .sum::<u64>();
+        let unique_chunks = cdc.receipt["unique_chunks"].as_u64().unwrap_or(0);
+        let unique_compressed_bytes = cdc.receipt["unique_compressed_bytes"].as_u64().unwrap_or(0);
+        let unique_raw_bytes = cdc.receipt["unique_raw_bytes"].as_u64().unwrap_or(0);
+        let marginal_compressed_bytes = cdc.receipt["marginal_compressed_bytes"]
+            .as_u64()
+            .unwrap_or(0);
+        let pair_aggregate = cdc.receipt["pair_diagnostics"]["aggregate"].clone();
+        let delta = if zstd_physical == 0 {
+            0.0
+        } else {
+            (physical as f64 - zstd_physical as f64) / zstd_physical as f64
+        };
+        configurations.push(json!({
+            "avg_chunk_kib_requested": avg_kib,
+            "unique_chunks": unique_chunks,
+            "unique_compressed_bytes": unique_compressed_bytes,
+            "unique_raw_bytes": unique_raw_bytes,
+            "marginal_compressed_bytes": marginal_compressed_bytes,
+            "index_overhead_bytes": index_overhead,
+            "physical_bytes": physical,
+            "delta_vs_zstd_forced_fraction": delta,
+            "pair_aggregate": pair_aggregate,
+            "cdc": cdc.receipt,
+        }));
+    }
+
+    let receipt = json!({
+        "kind": "ai-corpus-cdc-sweep",
+        "schema": "weft.ai-cdc-sweep.v1",
+        "label": "Synthetic ai-v1 corpus, single host, OOM-bounded bench court. This is a chunk-size sensitivity measurement of the harness CDC construction, not a compression, throughput, or superiority claim for any product path.",
+        "timestamp_utc": utc_stamp(),
+        "environment": environment(),
+        "revisions": court_revisions(),
+        "corpus": corpus_meta,
+        "iterations": args.iterations,
+        "sweep_avg_kib": sweep,
+        "simulated_court_limits": {
+            "memory": env::var("WEFT_COURT_MEMORY").ok(),
+            "memory_swap": env::var("WEFT_COURT_MEMORY").ok(),
+            "cpus": env::var("WEFT_COURT_CPUS").ok(),
+            "pids": env::var("WEFT_COURT_PIDS").ok(),
+            "tmpfs_tmp": "1g",
+            "cap_drop": "ALL",
+            "no_new_privileges": true,
+        },
+        "comparator": {
+            "strategy": "zstd_forced",
+            "physical_bytes": zstd_physical,
+            "frame_bytes": zstd_frame_bytes,
+            "receipt": zstd.receipt,
+        },
+        "configurations": configurations,
+        "notes": [
+            "`boundary_shared_fraction` counts chunk starts shared at identical absolute offsets (Jaccard over interior boundaries of each pair).",
+            "`content_reuse_fraction_by_bytes` counts dependent-pair chunk bytes whose chunk hash also occurs in the base; it does not require matching offsets, so it measures content-defined reuse directly.",
+            "`content_matched_shifted_chunks` counts matched chunks whose absolute start offset differs from the base's, which isolates offset tolerance.",
+            "Pairs are the 20 manifest-declared derived_from/revised_from relations. No pair was selected or discarded after measurement.",
+            "The corpus and all other strategies are unchanged from bench/RESULTS-ai-v1.md.",
+        ],
+    });
+
+    write_json(&args.out, &receipt)?;
+    println!("wrote {}", args.out.display());
+    Ok(())
+}
+
+fn cdc_chunks(data: &[u8], table: &[u64; 256], params: &CdcParams) -> Vec<(usize, usize)> {
+    let min = params.min_bytes;
+    let max = params.max_bytes;
+    let mask = params.mask();
     let mut out = Vec::new();
     let mut start = 0usize;
     let mut hash = 0u64;
     for (index, byte) in data.iter().enumerate() {
         hash = (hash << 1).wrapping_add(table[*byte as usize]);
         let len = index + 1 - start;
-        if len >= MIN && ((hash & MASK) == 0 || len >= MAX) {
+        if len >= min && ((hash & mask) == 0 || len >= max) {
             out.push((start, index + 1));
             start = index + 1;
             hash = 0;

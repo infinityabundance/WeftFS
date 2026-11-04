@@ -18,6 +18,10 @@ conclusion. The corpus is synthetic and contains no Meta or production data.
 | `bench/receipts/ai-cost-graph-20261103T220113Z.csv` | `4ddf788040e247ff0d3ae6a5235281054b0fec181c5cc0fbc0d3f285cf6fc44f` | Historical CSV |
 | `bench/receipts/ai-corpus-20261103T220113Z.log` | `6f7fb342240f3931abb64861d4de4fdd89bf18f8d9280ecd30c75c1dfdea427d` | Historical raw court log |
 | `bench/corpora/ai-v1/MANIFEST.json` | `f88e5dfcc7ffad772f905018ed22b2cc0904894725e9b3760ee6c826b5c5af83` | Per-file sha256, sizes, typed metadata, relations, license |
+| `bench/receipts/ai-corpus-cdc-sweep-20261104T192956Z.json` | `b477cb87fb05979dfe859a2cb85f49caca696e5cb556222ed59ead2b1a7ad187` | **Current** CDC average-chunk-size sweep (8/4/2/1/0.5 KiB) with pair boundary and content-reuse fractions (§9) |
+| `bench/receipts/ai-corpus-cdc-sweep-20261104T192956Z.log` | `9b01878af068f17db9a545c1f98ea11a03bbb4d40195da4077c6b3bdc8a03510` | Raw court log for the sweep |
+| `bench/receipts/ai-corpus-cdc-sweep-20261104T192902Z.json` | `35485a89311c286417dea85a7c42f76143011fcd0e48893210be5ed8f00dbaf5` | Pre-final sweep run; identical physical-byte totals, lacks the raw/marginal accounting fields (superseded) |
+| `bench/receipts/ai-corpus-cdc-sweep-20261104T192902Z.log` | `792bc4f47a9d3e1ce631f4c3e1f38cb3920192fec15c0b323a3baca003a3ce6f` | Raw court log for the pre-final sweep |
 
 A second run on the same corpus and code (`ai-corpus-20261103T215948Z.json`)
 produced **identical physical-byte totals** and latency medians within 2.1%
@@ -143,7 +147,7 @@ accepted only after a byte-for-byte decode check against the expected plaintext.
 | Strategy | What it does | Relation use |
 |---|---|---|
 | `zstd_forced` | WeftCodec mode ZSTD for every object, level 3 | none |
-| `cdc_zstd` | gear-hash content-defined chunking (min 2 KiB, avg 8 KiB, max 32 KiB), global dedup by `H("weft/chunk/v1")`, zstd level 3 per unique chunk | none (content-only) |
+| `cdc_zstd` | gear-hash content-defined chunking (default min 2 KiB, avg 8 KiB, max 32 KiB; `WEFT_CDC_AVG_KIB` overrides the average, §9.1), global dedup by `H("weft/chunk/v1")`, zstd level 3 per unique chunk | none (content-only) |
 | `weft_auto` | WeftCodec `auto` over RAW, ZSTD, and typed TENSOR/TOKENS candidates | none |
 | `weft_context` | `weft_auto` plus DELTA, DICTIONARY, and REFERENCE against bases named by declared typed relations | `derived_from`, `revised_from` |
 
@@ -196,8 +200,9 @@ What these numbers mean, and do not mean:
 - `cdc_zstd` is **worse** than forced zstd by 4.74% physical bytes here. Its
   chunk index (7,008 bytes), per-file manifests (6,895 bytes), and file table
   (3,791 bytes) outweigh the dedup it finds: 146 unique chunks for 1.52 MB
-  visible. Content-defined dedup is not free, and this corpus does not have
-  byte-identical large chunks across files.
+  visible. Content-defined dedup is not free; §9 measures why it finds so little
+  (edit density per chunk, not boundary failure) and how a 512 B–2 KiB sweep
+  changes neither that conclusion nor the sign of the result.
 - CDC has the lowest median read latency (1,683 ns) because chunks are small
   and independent; `weft_context` has the highest p95 (269,625 ns, 8.95× the
   `weft_auto` p95) because a deep delta chain re-decodes every ancestor.
@@ -253,20 +258,120 @@ The chain tail is the p95 driver. A consumer that needs the tail object must
 pay the ancestor decodes unless it caches them; the receipt records both warm
 and cold numbers so the tradeoff is visible.
 
-## 9. CDC details and why it lost
+## 9. CDC details, chunk-size sweep, and why it lost
 
-- Chunking: gear hash, min 2 KiB, average 8 KiB (`mask = 2^13 − 1`), max 32 KiB.
-- 146 unique chunks, 585,400 compressed unique bytes.
-- Index overhead: 7,008 (unique chunk index) + 6,895 (file chunk manifests) +
-  3,791 (file table) = 17,694 bytes.
-- Total physical: 603,094 bytes, 4.74% above forced zstd.
-- Dedup found almost nothing because the synthetic near-duplicates are
-  **localized edits**, not identical chunks; the revisions shift byte offsets,
-  so the content-defined boundaries rarely reproduce identical chunk spans.
+> **Superseded sentence (retained for the record):** "Dedup found almost
+> nothing because the synthetic near-duplicates are **localized edits**, not
+> identical chunks; the revisions shift byte offsets, so the content-defined
+> boundaries rarely reproduce identical chunk spans." Both mechanisms in that
+> sentence are contradicted by measurement: boundaries mostly *do* reproduce,
+> and the revisions never shift offsets before EOF (every edit is a same-length
+> in-place overwrite; each revision appends only at the end). The measured
+> explanation replaces it below (2026-11-04).
 
-This is a real negative result for content-only dedup on this corpus. A
-different average chunk size or a delta-aware dedup layer might change it; that
-was not measured and is not claimed.
+Default chunking: gear hash, min 2 KiB, average 8 KiB (`mask = 2^13 − 1`), max
+32 KiB. Default run: 146 unique chunks, 585,400 compressed unique bytes,
+17,694 bytes of index/manifest overhead, 603,094 physical bytes, **+4.74%**
+over forced zstd. That negative result stands; the *reason* in the original
+sentence did not.
+
+### 9.1 Sweep: average chunk size 8 KiB → 512 B
+
+Exact command (bench court, unchanged hard limits):
+
+```sh
+scripts/docker-court.sh bench "bash bench/scripts/run_ai_corpus_cdc_sweep.sh"
+# one configuration only (cheap, no WeftCodec planners):
+scripts/docker-court.sh rust "WEFT_CDC_AVG_KIB=2 cargo run --release \
+  --example bench_ai_corpus -- --corpus bench/corpora/ai-v1 --only cdc \
+  --out /tmp/cdc-2k.json"
+```
+
+`WEFT_CDC_AVG_KIB` (default 8) sets the average; min = `max(avg/4, 64 B)` and
+max = `avg*4` are derived from it and recorded in the receipt's
+`chunking` metadata. Corpus, zstd level, decode verification, and every other
+strategy are untouched; the forced-zstd comparator (575,808 physical bytes) is
+measured in the same sweep run. 512 B is included and is not noisy: physical
+byte accounting has no timing component, and two independent sweep runs
+produced identical totals (`ai-corpus-cdc-sweep-20261104T192902Z` and
+`20261104T192956Z`).
+
+"Effective mean" is actual chunked bytes ÷ actual chunks; gear cutoffs on this
+non-uniform data yield chunks larger than the nominal average.
+
+| Avg requested | Effective mean | Total chunks | Unique chunks | Unique raw B | Marginal compressed B | Unique compressed B | Index B | **Physical B** | vs `zstd_forced` | Boundary match | Content reuse (bytes) | Content reuse (chunks) |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 8 KiB (baseline) | 9,661 | 157 | 146 | 1,471,681 | 594,500 | 585,400 | 17,694 | **603,094** | +4.74% | 86.7% | 3.75% | 11.2% |
+| 4 KiB | 7,121 | 213 | 200 | 1,446,232 | 603,801 | 590,766 | 22,078 | **612,844** | +6.43% | 85.0% | 5.88% | 9.4% |
+| 2 KiB | 3,960 | 383 | 343 | 1,368,549 | 630,325 | 598,143 | 34,382 | **632,525** | +9.85% | 86.5% | 12.35% | 15.2% |
+| 1 KiB | 1,927 | 787 | 645 | 1,250,035 | 678,798 | 601,343 | 61,806 | **663,149** | +15.17% | 88.6% | 22.22% | 24.5% |
+| 512 B (exploratory) | 689 | 2,203 | 1,142 | 1,101,850 | 854,792 | 614,651 | 130,974 | **745,625** | +29.49% | 92.8% | 33.89% | 60.2% |
+
+Metric definitions (per pair; 20 pairs = the manifest's `derived_from`/
+`revised_from` relations; nothing selected or discarded after measurement):
+
+- **Boundary match**: shared interior chunk starts at *identical absolute
+  offsets*, Jaccard over the pair's boundaries (aggregated over pair sums).
+- **Content reuse**: dependent chunk bytes whose chunk hash also occurs in the
+  base. It is hash-based and therefore offset-insensitive: a chunk that
+  survives a shift still counts. `content_matched_shifted_chunks` is 0 at every
+  size, consistent with the corpus having no mid-file insertions/deletions.
+
+Content reuse by bytes, per kind (same five sizes):
+
+| Kind | 8 KiB | 4 KiB | 2 KiB | 1 KiB | 512 B |
+|---|---:|---:|---:|---:|---:|
+| `agent_intermediate` (7×32 B edits per revision) | 11.4% | 17.9% | 36.8% | 62.8% | **90.7%** |
+| `checkpoint` (~1 edit per 333 B) | 0.0% | 0.0% | 0.4% | 2.4% | **6.0%** |
+| `tool_output` (one 15 B edit) | 0.0% | 0.0% | 0.0% | 0.0% | **16.6%** |
+| `prompt` | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% |
+
+The two `prompt` pairs declare `revised_from` but the generator writes an
+independent prompt rather than editing the target, so their 0% is a fixture
+property, not evidence about CDC.
+
+### 9.2 Measured explanation
+
+The **edit-density hypothesis is the supported one**; the offset-shift
+explanation is refuted.
+
+1. **Boundaries reproduce.** 86.7% of interior chunk starts already coincide at
+the 8 KiB baseline (agent pairs: 32/32, checkpoints: 40/46), and the fraction
+stays high at every smaller size. A gear boundary is decided by roughly the last
+64 bytes of hash state, so an edit only moves a boundary if it lands in that
+window; at these edit densities most boundaries survive.
+2. **Offsets do not shift.** Every edit is a same-length in-place overwrite and
+each revision appends only at EOF, so no matched chunk sits at a different
+absolute offset: 0 of 11 matched chunks at 8 KiB, 0 of 1,057 at 512 B. "The
+revisions shift byte offsets" is simply not true of this corpus.
+3. **Edit density decides reuse.** Whether a chunk is reusable is whether it
+contains an edit. Checkpoints carry ~1 edit per 333 B, so even a 512 B chunk
+averages ~1.5 edits; agent revisions carry 7 discrete 32 B edits per 49 KiB, so
+a 512 B chunk averages ~0.07. The measured 512 B reuse follows that ratio
+almost exactly: agent 93.1% of chunks / 90.7% of bytes reused, checkpoints
+18.1% / 6.0%.
+
+Smaller chunks therefore do what the reviewer predicted: unmatched
+pair bytes fall from 1,154,963 to 793,324 and dedup savings rise from 9,100 to
+240,141 compressed bytes. **But CDC's total physical bytes still rise
+monotonically** (603,094 → 745,625, +29.49% over forced zstd) because (a) zstd
+compresses 512–700 B chunks far worse per byte (marginal compressed bytes
+594,500 → 854,792, +43.8% while the unique set only grows +5.0%) and (b) the
+48-byte unique-chunk index plus 32-byte-per-reference manifests grow with chunk
+count, 17,694 → 130,974 bytes.
+
+**Corrected conclusion.** CDC loses on this corpus not because content-defined
+boundaries fail to reproduce across edits — they mostly do — but because the
+edits are dense per chunk (most notably the checkpoints' ~1 edit per 333 B), so
+most chunk *contents* are genuinely unique; shrinking chunks raises content
+reuse from 3.75% to 33.89% of pair bytes yet costs more in per-chunk compression
+and index bytes than dedup saves, so the storage-optimal tested size remains the
+largest, and even that loses to forced zstd by 4.74%.
+
+This remains a real negative result for content-only dedup on this corpus. A
+delta-aware layer still might change it; that is not measured here and is not
+claimed. The sweep measures the harness's CDC construction, not the WeftCodec
+product path.
 
 ## 10. Caveats and non-claims
 
