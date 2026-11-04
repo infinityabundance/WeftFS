@@ -477,7 +477,16 @@ repositories; `v0.3.0` tags exist in each. The research directory and
 - **Concurrent mounts:** read-only opens take no writer lock in either
   implementation. A FUSE integration test mounts three different roots at once
   and then commits through a normal writer; the writer succeeds and the pinned
-  mount does not observe the later commit.
+  mount does not observe the later commit. The scaled court spawns **100 FUSE
+  daemons concurrently** (50 Rust, 50 Go) over 100 genuinely distinct Context
+  Roots — 50 `by:task`, 25 `by:model`, and 25 `derived_from` views over 200
+  corpus objects, 25 model objects, 10 grounding docs, and 599 typed relations.
+  All 100 mounted; 425 file reads matched their declared SHA-256, one
+  representative `weftfs cat` per mount matched the store bytes, all 100
+  listing digests were distinct, and 0 daemons survived unmount. Mount latency
+  under that contention was p50 31.6 s / p95 32.5 s / max 32.6 s; wall to
+  100-mounted-and-verified was 100.0 s; daemon RSS sum 1.62 GiB and cgroup peak
+  1.56 GiB, inside the unchanged 3 GiB court limit.
 - **Ambiguity:** `require_one` now re-evaluates without pagination and lists
   every competing ObjectId in the `Ambiguous` message. `context materialize
   --require-one` checks cardinality before any filesystem work and leaves no
@@ -507,6 +516,18 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   - `bench/receipts/time-travel-20261103T210633Z.json` (4/4) — 100 versions,
     snapshots 1/50/100 mounted together, exact historical bytes after a live
     rename/retag.
+  - `bench/receipts/context-mounts-20261104T125344Z.json` (5/5) — scaled
+    `WEFT_CONTEXT_MOUNTS=100`: 100 concurrent mounts, 425/425 file checks,
+    100/100 distinct listing digests, 100/100 clean unmounts, 0 survivors;
+    determinism `context-mounts-20261104T125344Z.determinism.txt` =
+    `semantic_match=true`.
+  - `bench/receipts/time-travel-20261104T125947Z.json` (6/6) — scaled
+    `WEFT_TIME_TRAVEL_VERSIONS=10000`: 10,000 sequential versions, 101
+    snapshots, 10 mounted at once (`s1`, `s1100` … `s10000`), 164.1 s ingest
+    (60.9 versions/s), reopen p50 6 ms, mount p50 2.28 s, verification 77 ms,
+    all snapshots byte-identical after a later write and live rename;
+    determinism `time-travel-20261104T125947Z.determinism.txt` =
+    `semantic_match=true`.
   - `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4) — bundle
     sha256 `940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2`,
     17 store entries, 2 contexts, 3 context files, 2 resolved identities, zero
@@ -520,10 +541,15 @@ repositories; `v0.3.0` tags exist in each. The research directory and
 - **Not claimed:** io_uring, EKBLOOM, or any acceleration. Time travel is
   correctness-only. The SHA-256 value in the demos is a declared attribute and
   a byte-identity check; the normative content root is the store's BLAKE3
-  ContentId, which `verify --full` re-checks. Each receipt records its exact
-  revisions: the context-mount, ambiguity, and time-travel runs used WeftFS
-  `f3d1bc1` / WeftFS-Go `acf6df6`; the replay run used WeftFS `bcedd26` /
-  WeftFS-Go `7693ad4` (the replay-verifier path fix).
+  ContentId, which `verify --full` re-checks (the scaled modes run it before
+  mounting). The scaled receipts are labelled single-host Docker FUSE court,
+  synthetic deterministic fixtures, local court bind-mount store, court limits
+  3 GiB / 4 CPUs / 1,024 pids, and **not a fleet claim**. The 100-mount latency
+  includes CPU contention among 100 daemons on 4 vCPUs; it is not a per-mount
+  steady-state cost. Each receipt records its exact revisions: the context
+  mount, ambiguity, and time-travel default runs used WeftFS `f3d1bc1` /
+  WeftFS-Go `acf6df6`; the replay run used WeftFS `bcedd26` / WeftFS-Go
+  `7693ad4`; the scaled runs used WeftFS `6316fd4` / WeftFS-Go `fce700a`.
 
 ### Twelve-step showcase — implemented, all twelve pass
 

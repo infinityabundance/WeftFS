@@ -1,0 +1,588 @@
+{
+  "schema": "weftfs.context-mounts.receipt/1",
+  "generated_at": "2026-11-04T12:36:20Z",
+  "run": {
+    "started_at": "2026-11-04T12:36:20Z",
+    "finished_at": "2026-11-04T12:36:21Z",
+    "duration_ms": 1000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "6316fd4b046b51151cff938c8a3a9067fac338a1"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "fce700a4140e453e4ea23dfc019f285c25a73492"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "d17249f2538d5950e9d1f6906bf7560b11f13ac6"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "8b8ec0ad2a30e03b7d7555d5633ad436b2759f48"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "store",
+      "title": "Deterministic store, typed relations, two snapshots, three Context Roots",
+      "status": "pass",
+      "notes": "alpha=ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447 beta=516f46bfee5d14c2357a9b615d3765f0f870d82dd9fc30b518b58ff9e1b969a8 content=3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3; contexts=079afd3fac29295a3033f76635d179a0c0434cc57f24af5da97a97a980966db2,b535da223c0111e0798ec95502834f6ed3e427212a4a0e03ad7b6c6209268e2d",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 mkdir /agents --seed dir-agents",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 mkdir /prompts --seed dir-prompts",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 mkdir /models --seed dir-models",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 create /agents/alpha.bin --text shared agent output v1\n --seed alpha-out-v1 --attr task=agent-42 --attr model=llama-4@ver_19 --attr sha256=08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 create /prompts/prompt.txt --text you are agent-42\n --seed prompt-v1 --attr sha256=fbd3602525016f756d190c84b85a2517d7a4b635cc61d939a2e04ae56f22c4c0",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 create /models/llama-4.bin --text llama-4 ver_19 delta\n --seed model-v1 --attr sha256=02ac9e4e6bf4874dc0e3f841be65c52cb0e8d833f31f6657daef05c88d40a40c",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225600000000000 snapshot create s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 create /agents/beta.bin --text shared agent output v1\n --seed beta-out-v1 --attr task=agent-42 --attr model=other-model --attr sha256=08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 snapshot create s2",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 stat /agents/alpha.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 stat /agents/beta.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 stat /prompts/prompt.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 stat /models/llama-4.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 relation add --subject ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447 --predicate task --value agent-42",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 relation add --subject ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447 --predicate model --value llama-4@ver_19",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 relation add --subject ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447 --predicate generated_by --object b2e306fb37a79bc0ab94dba6da862f94dcf24857490f87faf5c790c7a8848b2a",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 relation add --subject 516f46bfee5d14c2357a9b615d3765f0f870d82dd9fc30b518b58ff9e1b969a8 --predicate derived_from --object ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225660000000000 relation add --subject 516f46bfee5d14c2357a9b615d3765f0f870d82dd9fc30b518b58ff9e1b969a8 --predicate prompted_by --object 784e09b53e51f3ff4b74e2bb20574413d09e296a768ff10f53bf29687a00fcea",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 relation list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 context create --name by:task=agent-42 --selector select attrs.task == \"agent-42\" --snapshot s2",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 context create --name by:model=llama-4@ver_19 --selector select attrs.model == \"llama-4@ver_19\" --snapshot s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225660000000000 context list"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-agents exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-prompts exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-models exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-prompt exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-s1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-beta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-s2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-beta exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-prompt exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "two byte-identical objects have distinct ObjectIds",
+          "expected": "different from 516f46bfee5d14c2357a9b615d3765f0f870d82dd9fc30b518b58ff9e1b969a8",
+          "actual": "ab45859a91a21b0a62ce74c3d26a08772f7aaafca0668afd11d5c1ba63594447",
+          "pass": true
+        },
+        {
+          "name": "two byte-identical objects share one ContentId",
+          "expected": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "actual": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "pass": true
+        },
+        {
+          "name": "rel-task exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-generated exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-derived exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-prompted exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "five typed relations recorded",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        },
+        {
+          "name": "ctx-task exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "two stored Context Roots plus none hidden",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": [
+        {
+          "kind": "store-FORMAT",
+          "path": ".docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z/FORMAT",
+          "sha256": "ffeb5334366dd5df92008c5fa5559e5da019178fe2917115b28f97fdea4ba686"
+        }
+      ]
+    },
+    {
+      "id": "mounts",
+      "title": "Three simultaneous mounts: Rust context, Go context, Go time root",
+      "status": "pass",
+      "notes": "task=2 model=1 time=3",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z -> /mnt/weft-fuse/f3-7-20261104T123620Z-task --context by:task=agent-42",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z -> /mnt/weft-fuse/f3-7-20261104T123620Z-model --context by:model=llama-4@ver_19",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z -> /mnt/weft-fuse/f3-7-20261104T123620Z-time --at 2026-01-01T00:00:00Z",
+        "ls /mnt/weft-fuse/f3-7-20261104T123620Z-task",
+        "ls /mnt/weft-fuse/f3-7-20261104T123620Z-model",
+        "ls /mnt/weft-fuse/f3-7-20261104T123620Z-time"
+      ],
+      "assertions": [
+        {
+          "name": "by:task lists all authorized results",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "by:model lists exactly its authorized result",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "the two context listings differ",
+          "expected": "different from fbd83dc90121995aa992b612b2953f9be8f4f9730714854e2fede38134c11f91",
+          "actual": "48e219af4118b56a79cccf29d471ce76fd927eb87c4d7edc861d5efc5dddb489",
+          "pass": true
+        },
+        {
+          "name": "the time root listing differs from by:task",
+          "expected": "different from b8476b8b6af5d8f2d7b462977d85144541066111da06342e25916ed2340ec66a",
+          "actual": "be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "ls-task",
+          "content": "alpha.bin--ab45859a\nbeta.bin--516f46bf\n"
+        },
+        {
+          "label": "ls-model",
+          "content": "alpha.bin--ab45859a\n"
+        },
+        {
+          "label": "ls-time",
+          "content": "agents\nmodels\nprompts\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "verify-bytes",
+      "title": "Every listed file matches its declared content root and SHA-256",
+      "status": "pass",
+      "notes": "all listed SHA-256 values match stored attrs; one manifest 3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 context resolve by:task=agent-42",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 stat /agents/beta.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 stat /agents/alpha.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 context resolve by:model=llama-4@ver_19",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 stat /agents/alpha.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --json --fixed-timestamp-ns 1767225600000000000 stat /agents/alpha.bin"
+      ],
+      "assertions": [
+        {
+          "name": "resolve-task exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-task-0 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "task/beta.bin--516f46bf sha256",
+          "expected": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "actual": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "pass": true
+        },
+        {
+          "name": "task result 0 content id matches stat",
+          "expected": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "actual": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "pass": true
+        },
+        {
+          "name": "stat-task-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "task/alpha.bin--ab45859a sha256",
+          "expected": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "actual": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "pass": true
+        },
+        {
+          "name": "task result 1 content id matches stat",
+          "expected": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "actual": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "pass": true
+        },
+        {
+          "name": "resolve-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-model-0 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "model/alpha.bin--ab45859a sha256",
+          "expected": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "actual": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "pass": true
+        },
+        {
+          "name": "model result 0 content id matches stat",
+          "expected": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "actual": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "pass": true
+        },
+        {
+          "name": "stat-time-alpha exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "time/agents/alpha.bin sha256",
+          "expected": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "actual": "08cdfa1dabe0e6b4e7721bde9d44de0fc6fee397649f324559fea1daf278c203",
+          "pass": true
+        },
+        {
+          "name": "time root has no TS2 object",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "time/prompts/prompt.txt sha256",
+          "expected": "fbd3602525016f756d190c84b85a2517d7a4b635cc61d939a2e04ae56f22c4c0",
+          "actual": "fbd3602525016f756d190c84b85a2517d7a4b635cc61d939a2e04ae56f22c4c0",
+          "pass": true
+        },
+        {
+          "name": "alpha is selected by by:task",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "alpha is selected by by:model",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "one manifest file backs both contexts",
+          "expected": "present",
+          "actual": "present",
+          "pass": true
+        },
+        {
+          "name": "both mounts read one content hash",
+          "expected": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "actual": "3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": [
+        {
+          "kind": "shared-manifest",
+          "path": ".docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z/manifests/3b/3b982236312efffcdc320497e7201986f8057e4472254f4725905c34e05849c3",
+          "sha256": "14bbc986ab6fc4ee99f07ed3f17a6fc24f58bc9e86a26ffa3f5a778d9490d76e"
+        }
+      ]
+    },
+    {
+      "id": "read-only",
+      "title": "Every mount is read-only and rejects mutation",
+      "status": "pass",
+      "notes": "EROFS on every mount",
+      "commands": [
+        "bash -c printf x > '/mnt/weft-fuse/f3-7-20261104T123620Z-task/forbidden.txt'",
+        "mkdir /mnt/weft-fuse/f3-7-20261104T123620Z-task/forbidden-dir",
+        "bash -c printf x > '/mnt/weft-fuse/f3-7-20261104T123620Z-model/forbidden.txt'",
+        "mkdir /mnt/weft-fuse/f3-7-20261104T123620Z-model/forbidden-dir",
+        "bash -c printf x > '/mnt/weft-fuse/f3-7-20261104T123620Z-time/forbidden.txt'",
+        "mkdir /mnt/weft-fuse/f3-7-20261104T123620Z-time/forbidden-dir"
+      ],
+      "assertions": [
+        {
+          "name": "write denied task",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "mkdir denied task",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "write denied model",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "mkdir denied model",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "write denied time",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "mkdir denied time",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "no file was created by the denied writes",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "concurrency",
+      "title": "A writer can commit while three read-only mounts are live",
+      "status": "pass",
+      "notes": "writer lock was not held by the mounts",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261104T123620Z --fixed-timestamp-ns 1767225720000000000 create /agents/live.txt --text live\\n --seed live-v1"
+      ],
+      "assertions": [
+        {
+          "name": "live-write exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "live writer committed",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "pinned mount does not follow the live writer",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "listing-digests",
+      "title": "Record per-mount listing digests",
+      "status": "pass",
+      "notes": "digests task=be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104 model=c575becf7b73b516b36ff2dff9547a36b66345d8db6e526e9a3d4f733dfd4647 time=b8476b8b6af5d8f2d7b462977d85144541066111da06342e25916ed2340ec66a",
+      "commands": [],
+      "assertions": [
+        {
+          "name": "by:task listing digest",
+          "expected": "be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104",
+          "actual": "be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104",
+          "pass": true
+        },
+        {
+          "name": "by:model listing digest",
+          "expected": "c575becf7b73b516b36ff2dff9547a36b66345d8db6e526e9a3d4f733dfd4647",
+          "actual": "c575becf7b73b516b36ff2dff9547a36b66345d8db6e526e9a3d4f733dfd4647",
+          "pass": true
+        },
+        {
+          "name": "time listing digest",
+          "expected": "b8476b8b6af5d8f2d7b462977d85144541066111da06342e25916ed2340ec66a",
+          "actual": "b8476b8b6af5d8f2d7b462977d85144541066111da06342e25916ed2340ec66a",
+          "pass": true
+        },
+        {
+          "name": "context listing digests differ",
+          "expected": "different from c575becf7b73b516b36ff2dff9547a36b66345d8db6e526e9a3d4f733dfd4647",
+          "actual": "be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104",
+          "pass": true
+        },
+        {
+          "name": "time listing digest differs",
+          "expected": "different from be1c742d1d234034912a0b892a7fe9f0d9a8d66458ffd110085873f7c3310104",
+          "actual": "b8476b8b6af5d8f2d7b462977d85144541066111da06342e25916ed2340ec66a",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "pass": 6,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

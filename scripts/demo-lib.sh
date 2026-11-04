@@ -22,6 +22,9 @@ RUSTFS="$BIN/weftfs"
 GOFS="$BIN/go-weftfs"
 JSONQ="$BIN/jsonq"
 RECEIPTGEN="$BIN/receiptgen"
+DEMOCMP="$BIN/democmp"
+MOUNT_PID_LAST=""
+MOUNT_LOG_LAST=""
 
 TS1=1767225600000000000          # 2026-01-01T00:00:00Z
 TS2=1767225660000000000          # 2026-01-01T00:01:00Z
@@ -41,6 +44,8 @@ FINALIZED=0
 FINAL_ALL_PASS=false
 MOUNT_PATHS=()
 MOUNT_PIDS=()
+MOUNT_PID_LAST=""
+MOUNT_LOG_LAST=""
 RUN_OUT=""
 RUN_ERR=""
 RUN_STATUS=0
@@ -160,15 +165,18 @@ cleanup_mounts() {
   MOUNT_PATHS=(); MOUNT_PIDS=()
 }
 wait_mount() {
-  local mount="$1" tries=0
-  while [ "$tries" -lt 300 ]; do
+  local mount="$1" tries=0 interval="${2:-0.05}" limit="${3:-300}"
+  while [ "$tries" -lt "$limit" ]; do
     mountpoint -q "$mount" 2>/dev/null && return 0
-    sleep 0.05; tries=$((tries + 1))
+    sleep "$interval"; tries=$((tries + 1))
   done
   return 1
 }
-# start_mount <rust|go> <store> <mount> [mount flags...]
-start_mount() {
+# start_mount_async <rust|go> <store> <mount> [mount flags...]
+# Spawns the foreground daemon and records its pid in MOUNT_PID_LAST.
+# The caller waits with wait_mount (or a bulk poll) so concurrent mounts can
+# overlap. At least one daemon must exist per mount; this never retries.
+start_mount_async() {
   local impl="$1" store="$2" mount="$3"; shift 3
   mkdir -p "$mount"
   MOUNT_PATHS+=("$mount")
@@ -183,13 +191,20 @@ start_mount() {
       ;;
     *) echo "unknown mount implementation $impl" >&2; return 1 ;;
   esac
-  local pid=$!
-  MOUNT_PIDS+=("$pid")
+  MOUNT_PID_LAST=$!
+  MOUNT_PIDS+=("$MOUNT_PID_LAST")
+  MOUNT_LOG_LAST="$logfile"
+  record_cmd "$impl mount $store -> $mount $*"
+}
+# start_mount <rust|go> <store> <mount> [mount flags...]
+start_mount() {
+  local mount="$3"
+  start_mount_async "$@" || return 1
   if ! wait_mount "$mount"; then
-    log "mount failed at $mount; daemon log:"; cat "$logfile" >&2 || true
+    log "mount failed at $mount; daemon log:"; cat "$MOUNT_LOG_LAST" >&2 || true
     return 1
   fi
-  record_cmd "$impl mount $store -> $mount $*"
+  return 0
 }
 stop_mount() {
   local mount="$1"
@@ -206,12 +221,50 @@ listing_digest() {
   ( cd "$mount" && find . -mindepth 1 -not -path './.weft*' -printf '%y %p\n' | LC_ALL=C sort | sha256sum | awk '{print $1}' )
 }
 
+# ---- timing and measurement helpers ---------------------------------------
+now_ns() { date +%s%N; }
+# percentile_file <file-of-numbers> <p>  -> nearest-rank percentile
+percentile_file() {
+  sort -n "$1" 2>/dev/null | awk -v p="$2" '{v[NR]=$1} END {
+    if (NR == 0) { print "n/a"; exit }
+    idx = int(p * NR / 100 + 0.999999)
+    if (idx < 1) idx = 1
+    if (idx > NR) idx = NR
+    printf "%d", v[idx]
+  }'
+}
+max_file() { sort -n "$1" 2>/dev/null | tail -1; [ -s "$1" ] || printf 'n/a'; }
+mean_file() {
+  awk '{s+=$1; n++} END {if (n == 0) print "n/a"; else printf "%.2f", s/n}' "$1" 2>/dev/null
+}
+sample_free_mb() { free -m 2>/dev/null | awk '/^Mem:/ {print $3}' || true; }
+# cgroup peak in bytes when the runtime exposes it; "unavailable" otherwise.
+cgroup_peak_bytes() {
+  local path
+  for path in /sys/fs/cgroup/memory.peak \
+              /sys/fs/cgroup/memory/memory.max_usage_in_bytes \
+              /sys/fs/cgroup/memory/memory.peak; do
+    if [ -r "$path" ]; then cat "$path"; return 0; fi
+  done
+  printf 'unavailable'
+}
+sum_rss_kb() {
+  local total=0 pid rss
+  for pid in "$@"; do
+    [ -r "/proc/$pid/status" ] || continue
+    rss="$(awk '/^VmRSS:/ {print $2}' "/proc/$pid/status" 2>/dev/null)"
+    total=$((total + ${rss:-0}))
+  done
+  printf '%s' "$total"
+}
+
 build_tools() {
   log "===== BUILD ====="
   ( cd "$ROOT" && cargo build --quiet --features fuse --bin weftfs )
   ( cd "$ROOT/WeftFS-Go" && CGO_ENABLED=0 go build -o "$GOFS" ./cmd/weftfs )
   ( cd /tmp && GO111MODULE=off go build -o "$JSONQ" "$ROOT/scripts/showcase/jsonq.go" )
   ( cd /tmp && GO111MODULE=off go build -o "$RECEIPTGEN" "$ROOT/scripts/showcase/receiptgen.go" )
+  ( cd /tmp && GO111MODULE=off go build -o "$DEMOCMP" "$ROOT/scripts/showcase/democmp.go" )
   cp "$TARGET_DEBUG/weftfs" "$RUSTFS"
   [ -x "$RUSTFS" ] && [ -x "$GOFS" ] && [ -x "$JSONQ" ] && [ -x "$RECEIPTGEN" ]
 }
@@ -231,6 +284,15 @@ demo_finalize() {
     cp "$RESULTS" "$RECEIPTS/$BASE.results.tsv"
     FINAL_ALL_PASS="$("$JSONQ" "$RECEIPT" summary.all_pass 2>/dev/null || echo false)"
     log "summary: pass=$("$JSONQ" "$RECEIPT" summary.pass 2>/dev/null || echo 0) fail=$("$JSONQ" "$RECEIPT" summary.fail 2>/dev/null || echo 0) blocked=$("$JSONQ" "$RECEIPT" summary.blocked 2>/dev/null || echo 0) all_pass=$FINAL_ALL_PASS"
+    if [ -n "${WEFT_DEMO_COMPARE_WITH:-}" ] && [ -f "$WEFT_DEMO_COMPARE_WITH" ] && [ -x "$DEMOCMP" ]; then
+      if "$DEMOCMP" "$WEFT_DEMO_COMPARE_WITH" "$RECEIPT" \
+          > "$RECEIPTS/$BASE.determinism.txt" 2>&1; then
+        log "determinism: semantic_match=true"
+      else
+        log "determinism: semantic_match=false (see $RECEIPTS/$BASE.determinism.txt)"
+      fi
+      cat "$RECEIPTS/$BASE.determinism.txt" >&2
+    fi
   else
     log "ERROR: receipt generator missing; no receipt written"
   fi

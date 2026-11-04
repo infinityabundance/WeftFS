@@ -1,0 +1,615 @@
+{
+  "schema": "weftfs.time-travel.receipt/1",
+  "generated_at": "2026-11-04T12:59:47Z",
+  "label": "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; 10/10 snapshot mounts verified; not a fleet claim",
+  "run": {
+    "started_at": "2026-11-04T12:59:47Z",
+    "finished_at": "2026-11-04T13:02:35Z",
+    "duration_ms": 168000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "metrics": {
+    "cgroup_peak_bytes": "513540096",
+    "daemon_rss_kb": "216524",
+    "daemons_surviving": "0",
+    "free_mb_after": "76267",
+    "free_mb_before": "76096",
+    "ingest_ms": "164127",
+    "ingest_versions_per_sec": "60.93",
+    "mount_and_verify_ms": "2399",
+    "mount_latency_max_ms": "2293",
+    "mount_latency_p50_ms": "2275",
+    "mount_latency_p95_ms": "2293",
+    "mount_lifetime_ms": "2621",
+    "reopen_max_ms": "6",
+    "reopen_mean_ms": "5.95",
+    "reopen_p50_ms": "6",
+    "reopen_p95_ms": "6",
+    "snapshot_every": "100",
+    "snapshot_mount_failures": "0",
+    "snapshot_selection": "s1 s1100 s2200 s3300 s4400 s5500 s6600 s7700 s8800 s10000 ",
+    "snapshots_mounted": "10",
+    "snapshots_verified": "10",
+    "store_bytes": "9444188",
+    "verify_ms": "77",
+    "versions": "10000",
+    "versions_completed": "10000"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "6316fd4b046b51151cff938c8a3a9067fac338a1"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "fce700a4140e453e4ea23dfc019f285c25a73492"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "d17249f2538d5950e9d1f6906bf7560b11f13ac6"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "8b8ec0ad2a30e03b7d7555d5633ad436b2759f48"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "versions",
+      "title": "10000 sequential versions of one path, a snapshot every 100 versions",
+      "status": "pass",
+      "notes": "versions=10000 snapshots=101",
+      "commands": [
+        "weftfs create /history.txt --text <version-1 + fixed padding> --seed history-v1",
+        "weftfs write /history.txt --text <version-n + fixed padding> (9999 times)",
+        "weftfs snapshot create s<n> for n in 1,100,..,10000",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 snapshot list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 info",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235600000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "every requested version was written",
+          "expected": "10000",
+          "actual": "10000",
+          "pass": true
+        },
+        {
+          "name": "snap-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot count",
+          "expected": "101",
+          "actual": "101",
+          "pass": true
+        },
+        {
+          "name": "info exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-full exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "info",
+          "content": "{\n  \"codec_min_bytes\": 4096,\n  \"entries\": 1,\n  \"format\": \"weftfs-store 1\",\n  \"generation\": 10102,\n  \"objects\": 2,\n  \"recovery_notes\": [\n    \"bounded replay resumed from the checkpoint at generation 9984; commit files below it were not enumerated\"\n  ],\n  \"rejected_generations\": [],\n  \"relations\": 0,\n  \"representation\": \"raw\",\n  \"snapshot_root\": \"892dbcc2922b054b3aec50c3316eac9d00dd02031593431a7789c5d3883c02a3\",\n  \"snapshots\": 101\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "reopen",
+      "title": "CLI reopen + stat timing at the head",
+      "status": "pass",
+      "notes": "reopens=20 failures=0",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 stat /history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "reopen failures",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-head exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "mount-snapshots",
+      "title": "10 snapshots mounted simultaneously (Rust + Go)",
+      "status": "pass",
+      "notes": "mounted=10 failed=0",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-0 --snapshot s1",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-1 --snapshot s1100",
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-2 --snapshot s2200",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-3 --snapshot s3300",
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-4 --snapshot s4400",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-5 --snapshot s5500",
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-6 --snapshot s6600",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-7 --snapshot s7700",
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-8 --snapshot s8800",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-9 --snapshot s10000"
+      ],
+      "assertions": [
+        {
+          "name": "all selected snapshots mounted",
+          "expected": "10",
+          "actual": "10",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "verify-snapshots",
+      "title": "Exact historical bytes for every mounted snapshot",
+      "status": "pass",
+      "notes": "verified=10 mismatches=0",
+      "commands": [
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-0/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-1/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-2/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-3/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-4/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-5/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-6/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-7/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-8/history.txt",
+        "cat /mnt/weft-fuse/f3t-7-20261104T125947Z-9/history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "snapshot s1 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1100 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1100 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s2200 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s2200 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s3300 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s3300 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s4400 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s4400 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s5500 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s5500 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s6600 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s6600 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s7700 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s7700 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s8800 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s8800 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "snapshot s10000 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s10000 listing digest",
+          "expected": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "actual": "8750dd8edc7105a42fb00f2985ea81e926b239833dbc6865e7f1a0e467ac7e16",
+          "pass": true
+        },
+        {
+          "name": "verified snapshots",
+          "expected": "10",
+          "actual": "10",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "read-s1",
+          "content": "version-1\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s1100",
+          "content": "version-1100\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s2200",
+          "content": "version-2200\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s3300",
+          "content": "version-3300\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s4400",
+          "content": "version-4400\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s5500",
+          "content": "version-5500\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s6600",
+          "content": "version-6600\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s7700",
+          "content": "version-7700\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s8800",
+          "content": "version-8800\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "read-s10000",
+          "content": "version-10000\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "rename-retag-live",
+      "title": "Live rename, retag, and later write leave every mounted snapshot unchanged",
+      "status": "pass",
+      "notes": "re-read=10 mismatches=0",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235601000000000 stat /history.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235601000000000 rename /history.txt /history-renamed.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235601000000000 relation add --subject bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d --predicate tagged_as --value retagged-after-snapshot",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 write /history-renamed.txt --text version-10001\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 cat /history-renamed.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 cat /history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "stat-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "live ObjectId unchanged before rename",
+          "expected": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "actual": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "pass": true
+        },
+        {
+          "name": "rename-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "retag-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-later exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "cat-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "live renamed path reads the later bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "cat-old-path exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "live old path is gone",
+          "expected": "contains <NotFound>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1100 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s1100 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s2200 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s2200 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s3300 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s3300 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s4400 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s4400 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s5500 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s5500 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s6600 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s6600 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s7700 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s7700 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s8800 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s8800 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshot s10000 unchanged after live mutation",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot s10000 does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "snapshots re-read after mutation",
+          "expected": "10",
+          "actual": "10",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "unmount",
+      "title": "Unmount every snapshot and prove no daemon survives",
+      "status": "pass",
+      "notes": "unmounted=10 survivors=0",
+      "commands": [],
+      "assertions": [
+        {
+          "name": "clean unmounts",
+          "expected": "10",
+          "actual": "10",
+          "pass": true
+        },
+        {
+          "name": "daemons surviving unmount",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "no io_uring/EKBLOOM acceleration: not implemented; time travel is correctness-only in this stage",
+    "bounded replay decodes at most the checkpoint interval above the newest checkpoint; the measured reopen is the whole CLI process, not an in-process handle only"
+  ],
+  "summary": {
+    "total": 6,
+    "pass": 6,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

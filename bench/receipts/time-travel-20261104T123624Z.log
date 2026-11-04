@@ -1,0 +1,405 @@
+===== BUILD =====
+receipt: /work/bench/receipts/time-travel-20261104T123624Z.json
+NOTE: no io_uring/EKBLOOM acceleration: not implemented; time travel is correctness-only in this stage
+
+===== STEP versions: 100 committed versions of one path with snapshots at 1, 50, 100 =====
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225601000000000 create /history.txt --text version-1
+ --seed history-v1
+bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --json --fixed-timestamp-ns 1767225601000000000 stat /history.txt
+{
+  "attrs": {},
+  "content_id": "a75eb95e77a9754f113ad811653e1b16a1e5fe34a7d0eac2dffc333c59c8867d",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225601000000000,
+  "object_id": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+  "size": 10,
+  "uid": 0,
+  "version_id": "db2bc7e9a9ce088379b16cba512f3cc25e5248812d0657378327e613536b5698"
+}
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225601000000000 snapshot create v1
+ec1efbc0f040ee588cf78168ed2372827f4ea627732b89f11c46d06d5c76d589
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225602000000000 write /history.txt --text version-2
+
+6fe7ec8cb08f56f7d106eb4b379c7375214575880323a9f9280cd2b2c0a5e12b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225603000000000 write /history.txt --text version-3
+
+20b588c60ebb5fe83d1acf3a9be8cf92db13dc559f0d1d3b714817dbf4dc0879
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225604000000000 write /history.txt --text version-4
+
+99079e0ce4cfede39d91dd1059d64cf01a6a6ef80dc237ff91a868da347dd63c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225605000000000 write /history.txt --text version-5
+
+3a33e4fd702ae8bfa8b9ac36bfbefe7d9080159f5a926d1c84161981f9cf0ea5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225606000000000 write /history.txt --text version-6
+
+a124ca75621e68b11f03ebdba73f305d3faef75a3970db7516e260c59f617a87
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225607000000000 write /history.txt --text version-7
+
+03a86e74672cd250b33779c2a9c56402d079c03929ceb1df14b30f17619dc13a
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225608000000000 write /history.txt --text version-8
+
+4522782cf930f2a6219b7bd59d89a6523105657fd406e02f735b48c85cc07d83
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225609000000000 write /history.txt --text version-9
+
+3342ff55d06b7abc96889686445591618a5a7c7eb91654fc90a8a4dcd6e74ffa
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225610000000000 write /history.txt --text version-10
+
+45b408c94dd7584586b43bd823e380d9391eb9ec7fc88d3dc919ca221215bc61
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225611000000000 write /history.txt --text version-11
+
+685debd7e022607e03524f71edf9ce727223e2953991257a3338633d62a39323
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225612000000000 write /history.txt --text version-12
+
+69824c2364b4f7caa8150bc59721b241c08e9944657fdc0693529c421f1b1863
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225613000000000 write /history.txt --text version-13
+
+4d256ed9e5cfac2b138fd6e80c6d697ead54e06b0c6ed991d82bb4be686ba1f5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225614000000000 write /history.txt --text version-14
+
+a349b96e8e82783550fa0538d8705cf8bdf0815eec645ad8066ff27440fc003c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225615000000000 write /history.txt --text version-15
+
+4b292bd6f3a9b3e080b445a483a849aa6ad3f41d5e232fb707936eb12397f6bb
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225616000000000 write /history.txt --text version-16
+
+84754e207edea04495a229954e3c0f72a1ce588398a99d3af55c8879dacb1c25
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225617000000000 write /history.txt --text version-17
+
+a29ebd6dae8246e9e8222a63446192e8d6dacebf0573a42f5c9b7dc58f3d92cd
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225618000000000 write /history.txt --text version-18
+
+80caeda5865e16331fac6d583cf31a63a2e46a822c89df69cdf6546ca8bd8f00
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225619000000000 write /history.txt --text version-19
+
+b60d9e19f3dd41815035680b49d20193d1657ce0379b939ac11826bc8a74ad18
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225620000000000 write /history.txt --text version-20
+
+5a2a5ec7a20e7c58cc4d580abe31200b976bb0a932241f74220f0b5ff265dd3a
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225621000000000 write /history.txt --text version-21
+
+8ea11e779d2fb8a7bef82b102c1f2d9867703636b381ee146556adb3ffc27854
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225622000000000 write /history.txt --text version-22
+
+9aef8934ac49e792b17522145e286aa3c76e69569012ff88eb691fa8f4fc23b2
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225623000000000 write /history.txt --text version-23
+
+d3cabbce30eab7f480b570a186ea3bb7db07e534d389cd65f121de1907a0b96d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225624000000000 write /history.txt --text version-24
+
+72b0f675059c596958fc5a689a4ae1d94b297efa4ad10cdb1fae59f3cdc7467c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225625000000000 write /history.txt --text version-25
+
+c41db05d07c5ba6247aabe1ca703b4c81fe0ca056b232b9ebf75f1cb3f5e391c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225626000000000 write /history.txt --text version-26
+
+69c725cb1fde9f170f65aa80e77eba3f7d07f90c89a161b72c3ce4281e7e9c38
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225627000000000 write /history.txt --text version-27
+
+829b71abad4584e65d5e227e68e849bb9aa95c67b7d719573842b06f97367995
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225628000000000 write /history.txt --text version-28
+
+8a5d374ea25f5571076564d6a98ae3bb13265a33533b76c54524058a7b5375d6
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225629000000000 write /history.txt --text version-29
+
+6f13992a0f380348c55621eaf42e3a4ddace0eafee79fc5baec453c4b9be4f9e
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225630000000000 write /history.txt --text version-30
+
+9caa7cd7696e78f20c753b3b003e32dbbd0627af0c0a590170a8716493b459d6
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225631000000000 write /history.txt --text version-31
+
+21749d5fee52b275f6cf34256285f32106c8dbe819d2001970765e4e49e772a2
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225632000000000 write /history.txt --text version-32
+
+4de46f4bd55d306bd0c7466901ad5bd3fc2e4ff082164940563a6b04056f31de
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225633000000000 write /history.txt --text version-33
+
+3f35114c89a9f0af7ce4331cf4f7797dc9b09e9c1abda7207d91fdc0eddf88c5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225634000000000 write /history.txt --text version-34
+
+0c277b1f04d268a47735492b9e6aa3366072e6fcd9e74d37400fd84f77c16fce
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225635000000000 write /history.txt --text version-35
+
+672c2152f7386eeb86229be046336598b54642f30077e07b17333dfb01320a15
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225636000000000 write /history.txt --text version-36
+
+2411a643694b2c493f124c4a0afb4e11d8e6f14918ae902c6f0c65aee5572c68
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225637000000000 write /history.txt --text version-37
+
+8f05d88bfa09f5bdffe17bbe5e828408637649a74a6d1c58fbd2b394d2de6840
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225638000000000 write /history.txt --text version-38
+
+0b2feeff68a8595870c27b588c72d041ad41f84b78b1a1e9a8330bc89b5010d2
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225639000000000 write /history.txt --text version-39
+
+0947acd965a253a2c8a10c85d637483345bcae9f8e436b5d0f6836c7c247e5cd
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225640000000000 write /history.txt --text version-40
+
+3d38b926f1ca619630d8a0a5ec938bcd839c7adf9028494324f33796bc7594b7
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225641000000000 write /history.txt --text version-41
+
+c8bc3d53e88facddce6a8bf8c85d5a1c2c9a32ed06be16a0a60c27a4e4a45a4d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225642000000000 write /history.txt --text version-42
+
+8ee7f46d42bc12ba8efe11d4054bb382fb7e7dcdb0a97c5309d2e113ab1c793b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225643000000000 write /history.txt --text version-43
+
+c567687e7b444566ee247cb607f3e1dce1005702b7628cd3a1dfb11a2276cae9
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225644000000000 write /history.txt --text version-44
+
+a3750f44bdc97ea7137d80ec78e9f62c09ea9ef653a5b5604a262f3b3e7c3af8
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225645000000000 write /history.txt --text version-45
+
+49bff7852958013d29557bdc61639f0d55e82c439b1741323191a4624fde2e0b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225646000000000 write /history.txt --text version-46
+
+d0b66906ae5386b626a037f3484a4dbab6345606c6bf6f7fa2c6017219d3eaeb
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225647000000000 write /history.txt --text version-47
+
+652923b94c0844f985c521d7c20cc528991f45bea3b091d23b64718aa6f393e3
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225648000000000 write /history.txt --text version-48
+
+f5bab885d95e8e8ac7d43228d154b49eb1d4b90c64899b5f48ae75f0497de3d2
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225649000000000 write /history.txt --text version-49
+
+257d068895676a7dd6bdb5bd680f335d937832a5c3d6f2beff00e75029a7a089
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225650000000000 write /history.txt --text version-50
+
+0eb00d454632bc8734b53eb1d45911c919402c74c3de6d7fea9d7dcd72026c0d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225650000000000 snapshot create v50
+23d3279bc75bb83ada2d684e3b7442d1a90f0d934cb95ca541c49501d740ef9d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225651000000000 write /history.txt --text version-51
+
+5d95e65171194ef8d2a1b78543e7b13520cd65466a0e4d4db2caecd22e7d6eec
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225652000000000 write /history.txt --text version-52
+
+9e2c9ac2eae141e1bebd60b5b84f21fcc7e5e34933827105a0fa8a5e7d4cb8a6
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225653000000000 write /history.txt --text version-53
+
+c23e803634fbcc612a6af8a7708989064c0e924a1701f90f3cbc5a5c9821e413
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225654000000000 write /history.txt --text version-54
+
+884d5573a2e10b8445fd941e72e99a429900ea5984b839b0fd7868ca8ea446cd
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225655000000000 write /history.txt --text version-55
+
+005a577e76ac6aa7913cfe4c879f45e79ff1490c8fbc92a88d2818a2897c0a81
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225656000000000 write /history.txt --text version-56
+
+09b2424714f6f62f9d15476c772e25fddfe06d19988a3b64e2731aa5cdf86ea3
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225657000000000 write /history.txt --text version-57
+
+4c39cb8a2e4326d05e3cb70c86c97ceea0bf33c28fcc128e3a4e3994cba7b378
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225658000000000 write /history.txt --text version-58
+
+1ceeedca74c1793b1438f23999d9e20234b9bc8c84f347e66c06d3b483f385ab
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225659000000000 write /history.txt --text version-59
+
+47187d9552d6c3243396897799c8619e39e1610b03f166e9b93fcf83847e5747
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225660000000000 write /history.txt --text version-60
+
+30487e078c2545b82c8d2cee8122dfd46b4a4a5c0eb8aac7123e74c3f4c365d5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225661000000000 write /history.txt --text version-61
+
+9bba138be6728074ebadcebca09655d04d9ff2bc70d98dd0046ec58296e8b4f6
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225662000000000 write /history.txt --text version-62
+
+91254bde8b92be0bee67d4be8693e05945af2a3c61edf78fcc3afd7b3cbf6674
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225663000000000 write /history.txt --text version-63
+
+e8a2f6929b133ace65f62e57a091d4a0db59ab24c3d5cc033b710b1917b3fa89
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225664000000000 write /history.txt --text version-64
+
+3b82891bc0e27810c12b13ac5974edb053bd34afbd9c0c87ddbf3de2dcbd34db
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225665000000000 write /history.txt --text version-65
+
+007b8367f6398a506c1620734a2ee2f68c0ebbed33bbae5edebc7d159c35b338
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225666000000000 write /history.txt --text version-66
+
+f15ef99838ccfa7f13263be5ad395615eb3dde1ac057bc0ed910aa16bc984a3d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225667000000000 write /history.txt --text version-67
+
+979c1668878d24c4b0e58458093371e8bd1885f377cb290d471d53a13b607791
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225668000000000 write /history.txt --text version-68
+
+ea37f5c61aeed38949fb02e4ff305b73d223303a54888d6ab685272062789145
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225669000000000 write /history.txt --text version-69
+
+d46b0f0167164feb3febfcfcd8f82bb6f6f5fe3b4e875e64e563c7f4ff143a0b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225670000000000 write /history.txt --text version-70
+
+d14ca38fd2fc1fa38ff0328689bdbf2abbf41e09f65ad2299395fb1d1d06526e
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225671000000000 write /history.txt --text version-71
+
+b1ecd324935f0461419b5e50bbf9389c172c6b00c9518526822b4b65c7c6691f
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225672000000000 write /history.txt --text version-72
+
+27b5cae73e0ba8de5a422e4f830675c260239faaddbee314739630f62c11963e
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225673000000000 write /history.txt --text version-73
+
+75b9cf4cb4af0d7c5e1ea8374292afbf95515b256d0938dde0d79cdf02c90d27
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225674000000000 write /history.txt --text version-74
+
+622f7773d32b450a73c09c5ea6893d99ec2fe7fe67c7709692bdef6fc6ead28b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225675000000000 write /history.txt --text version-75
+
+80516699e375394b688f65b63c89ac8f71df81579abc59fa50ed7243c5b22184
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225676000000000 write /history.txt --text version-76
+
+edd490aab5f7dfd23f2bbc9b623ca9f48b3de7b709ff45da896aa4302945babe
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225677000000000 write /history.txt --text version-77
+
+d313597fd1ddedda89e2e2c164623261a7d76d1120e3276e6fbdf5444064ec03
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225678000000000 write /history.txt --text version-78
+
+537fe36d106b9b3eef047004e06062287619f657ba3fdb3a4d5ba70a75117628
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225679000000000 write /history.txt --text version-79
+
+22d7f724e832a2ce97c8338666d147cf5842cf53569a7587173724e8ccc97903
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225680000000000 write /history.txt --text version-80
+
+f96cf9bb3b88a618057f5606a1726a82950f752e6fdb35f53d313a0e93d10d5f
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225681000000000 write /history.txt --text version-81
+
+41e6e30a6621af568158bb9f33e1cf08607ddea9458821f16cdd77c71238b059
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225682000000000 write /history.txt --text version-82
+
+fe2ee3e057878e7c3afcbf2dac191b0d8d21b7f71bb0b5c0c02069df787e62ef
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225683000000000 write /history.txt --text version-83
+
+8e9f72f1803055e8f1f51cc8c4a5f255450565fe3bf022c802ab6c18858f8558
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225684000000000 write /history.txt --text version-84
+
+c501cb5d1abd456325afafc9b9bf3979023855c2299076f2b64f2792e232313a
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225685000000000 write /history.txt --text version-85
+
+c0559b495b77f4ce31294f102a8f016028ccadfc09b1613968656f085499aa2c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225686000000000 write /history.txt --text version-86
+
+c37d9ffd2394513ecd341414482a31a868b98207121e241e44ac45f465db02d3
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225687000000000 write /history.txt --text version-87
+
+8dcd0fc7819d0b5d62ffaa9e90b9b51157614a9a88fe5374262f62c923a66892
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225688000000000 write /history.txt --text version-88
+
+1769d2b9f2e5d58aa6b12150b66934c3166546b3030dd62966088bc7b4504d58
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225689000000000 write /history.txt --text version-89
+
+dfffda4131c618b326c69fe2144313fb279cfe45afa3760d332838e6613cc22c
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225690000000000 write /history.txt --text version-90
+
+bd616320e74d77b288ec59b27bbdf0916147f6a123bfe3e5512e1839e0678627
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225691000000000 write /history.txt --text version-91
+
+1331ca67950c6180ec1cdbd8fb95e2eceb9e270b1f5ee3438c916da9555107fe
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225692000000000 write /history.txt --text version-92
+
+e31bd5ebadd42deee6a5471dcb6e48cc263dfe918078ce18f62b2a7e54cb2753
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225693000000000 write /history.txt --text version-93
+
+a1e6f448e2b706bcaa31429e79f54bffe42c448a6671aa4d68a684b8277cfa54
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225694000000000 write /history.txt --text version-94
+
+93e101cc07cc20f1fcbdfb79f7720c2c24b85a9b29cdbcada48115315e6d3218
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225695000000000 write /history.txt --text version-95
+
+783bf1f3fdbd52c9d58cada02a3139f44f93d819756e1eac6c6d8250b07e18b4
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225696000000000 write /history.txt --text version-96
+
+227c9b4ffbbac09e2ded6a4bfe2b8102caec98cc2447b52afd8b5add2f4ba0f9
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225697000000000 write /history.txt --text version-97
+
+3831caee56715639494d3105ba8b78e6f4a7f37d4af2aa28f5bba2032e824e9f
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225698000000000 write /history.txt --text version-98
+
+8a5d311c00c4f3babc47e0a8218c5f2018bfffcea3506093742d2b0124c64b62
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225699000000000 write /history.txt --text version-99
+
+f4f04bab02e897ab69b06ee8c2d333867ac645f8f3568ad522705f6b581eec82
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225700000000000 write /history.txt --text version-100
+
+dc354ec83b126824ccdf326915e31eb070281ea21d32a5d3347d6b397ee7d587
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225700000000000 snapshot create v100
+9cdd7ec037580a97afbe198749928f666e0fa83f2d698805a6b5a1a2e41da29b
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --json --fixed-timestamp-ns 1767225700000000000 snapshot list
+{
+  "snapshots": {
+    "v1": "ec1efbc0f040ee588cf78168ed2372827f4ea627732b89f11c46d06d5c76d589",
+    "v100": "9cdd7ec037580a97afbe198749928f666e0fa83f2d698805a6b5a1a2e41da29b",
+    "v50": "23d3279bc75bb83ada2d684e3b7442d1a90f0d934cb95ca541c49501d740ef9d"
+  }
+}
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --json --fixed-timestamp-ns 1767225700000000000 info
+{
+  "codec_min_bytes": 4096,
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 104,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "representation": "raw",
+  "snapshot_root": "053d99935b42709afdcbfe26299177e6e044059d97afb96239f0d6d837de328c",
+  "snapshots": 3
+}
+----- STEP versions: pass object=bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d snapshots=v1,v50,v100
+
+===== STEP mount-snapshots: Three snapshots mounted simultaneously (Rust + Go) =====
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z -> /mnt/weft-fuse/f3-7-20261104T123624Z-v1 --snapshot v1
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z -> /mnt/weft-fuse/f3-7-20261104T123624Z-v50 --snapshot v50
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z -> /mnt/weft-fuse/f3-7-20261104T123624Z-v100 --snapshot v100
+CMD[mount-snapshots]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v1/history.txt
+CMD[mount-snapshots]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v50/history.txt
+CMD[mount-snapshots]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v100/history.txt
+----- STEP mount-snapshots: pass each mount serves its pinned snapshot exactly
+
+===== STEP rename-retag-live: Rename and retag the live path; historical mounts stay pinned =====
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --json --fixed-timestamp-ns 1767225701000000000 stat /history.txt
+{
+  "attrs": {},
+  "content_id": "5fff92e3180c6381a79ad9e90f87adc3ac2aabb3174b7b3b63929c807d3f54e5",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225700000000000,
+  "object_id": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+  "size": 12,
+  "uid": 0,
+  "version_id": "dc354ec83b126824ccdf326915e31eb070281ea21d32a5d3347d6b397ee7d587"
+}
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225701000000000 rename /history.txt /history-renamed.txt
+renamed /history.txt -> /history-renamed.txt
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --fixed-timestamp-ns 1767225701000000000 relation add --subject bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d --predicate tagged_as --value retagged-after-snapshot
+912043b3b5b63bd0807960f7eaf77fc17530c754ea07d7c09657665aa5b28001
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z --json --fixed-timestamp-ns 1767225701000000000 stat /history-renamed.txt
+{
+  "attrs": {},
+  "content_id": "5fff92e3180c6381a79ad9e90f87adc3ac2aabb3174b7b3b63929c807d3f54e5",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225700000000000,
+  "object_id": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+  "size": 12,
+  "uid": 0,
+  "version_id": "dc354ec83b126824ccdf326915e31eb070281ea21d32a5d3347d6b397ee7d587"
+}
+CMD[rename-retag-live]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v1/history.txt (after live rename/retag)
+CMD[rename-retag-live]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v50/history.txt (after live rename/retag)
+CMD[rename-retag-live]: cat /mnt/weft-fuse/f3-7-20261104T123624Z-v100/history.txt (after live rename/retag)
+----- STEP rename-retag-live: pass historical reads unchanged after live rename/retag
+
+===== STEP live-view: The live store reflects the rename; historical snapshots do not =====
+CMD[live-view]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z cat /history-renamed.txt
+version-100
+CMD[live-view]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T123624Z cat /history.txt
+NotFound: no such directory entry
+----- STEP live-view: pass live rename applied; snapshots unchanged
+summary: pass=4 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/time-travel-20261104T123624Z.json
+raw log: /work/bench/receipts/time-travel-20261104T123624Z.log

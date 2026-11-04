@@ -84,10 +84,14 @@ type Summary struct {
 }
 
 type Receipt struct {
-	Schema       string            `json:"schema"`
-	GeneratedAt  string            `json:"generated_at"`
+	Schema      string `json:"schema"`
+	GeneratedAt string `json:"generated_at"`
+	// Label states the scope of the measurement (single host, synthetic
+	// fixtures, not a fleet claim). Optional so older receipts are unchanged.
+	Label        string            `json:"label,omitempty"`
 	Run          Run               `json:"run"`
 	Environment  map[string]string `json:"environment"`
+	Metrics      map[string]string `json:"metrics,omitempty"`
 	Repositories []Repository      `json:"repositories"`
 	Fixtures     []Fixture         `json:"fixtures"`
 	Steps        []Step            `json:"steps"`
@@ -136,6 +140,13 @@ func main() {
 			switch {
 			case key == "generated_at":
 				receipt.GeneratedAt = value
+			case key == "label":
+				receipt.Label = value
+			case strings.HasPrefix(key, "metric."):
+				if receipt.Metrics == nil {
+					receipt.Metrics = map[string]string{}
+				}
+				receipt.Metrics[strings.TrimPrefix(key, "metric.")] = value
 			case key == "run.started_at":
 				receipt.Run.StartedAt = value
 			case key == "run.finished_at":

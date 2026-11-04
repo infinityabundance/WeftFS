@@ -36,7 +36,7 @@ tested in the Docker court.
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
 | P7 | Bench courts, receipt bundle, showcase, release | **Released v0.3.0; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio` comparative suites all exist. Latest full verification: `bench/receipts/verify-20261104T022254Z.json` (18/18). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md) and [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md); no headline performance claim is made. See [`docs/RELEASE-v0.3.0.md`](docs/RELEASE-v0.3.0.md). |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
-| F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; ≥3 concurrent read-only mounts; ambiguity fails closed and lists every ObjectId; 100-version time-travel demo; Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4), `replay-bundle-20261103T210824Z.json` (4/4). Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
+| F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; default 3-mount demo plus **100 concurrent read-only context mounts** (50 `by:task`, 25 `by:model`, 25 `derived_from` roots; 425 file checks, 100/100 distinct listing digests); ambiguity fails closed and lists every ObjectId; default 100-version plus **10,000-version time travel** (101 snapshots, 10 mounted at once, later live write/rename leaves every snapshot byte-identical); Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6, default), `context-mounts-20261104T125344Z.json` (5/5, 100 mounts, `semantic_match=true`), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4, default), `time-travel-20261104T125947Z.json` (6/6, 10,000 versions, `semantic_match=true`), `replay-bundle-20261103T210824Z.json` (4/4). Single-host court, synthetic fixtures; not a fleet claim. Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
 | F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **100,000/100,000 crash iterations at 19.2 it/s** (66,667 old / 33,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T104233Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
 | F6 | AI codec v1: exact tensor + token modes, cross-language | **Implemented (subset)** — `TENSOR` (6, row-major little-endian, nine dtypes) and `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128) with canonical WCB descriptors, limits, 20 new vectors, rejects, CLI, and byte-identical Rust↔Go frames. Blocked/column-major/sharded/quantized layouts, activation/gradient streams, KV-cache pages, masks, weight-delta descriptors, and semantic deltas are `specified, not implemented` with no wire value. See `spec/WEFT-AI-CODEC.md`. |
 | F7 | AI corpus + cost graph (C1/C2) | **Implemented (synthetic)** — 60-file deterministic `bench/corpora/ai-v1` (CC0-1.0, 1.94 MB source / 1.52 MB visible), four strategies with whole-object accounting, cold dependency-DAG latency, and depth. Receipt `ai-corpus-20261103T220113Z.json`; results, every loss, and caveats in [`bench/RESULTS-ai-v1.md`](bench/RESULTS-ai-v1.md). No Meta/production data and no superiority claim. |
@@ -160,8 +160,10 @@ writes a schema-versioned receipt plus a raw log:
 
 ```sh
 scripts/docker-court.sh fuse "bash scripts/demo-context-mounts.sh"
+scripts/docker-court.sh fuse "WEFT_CONTEXT_MOUNTS=100 bash scripts/demo-context-mounts.sh"
 scripts/docker-court.sh fuse "bash scripts/demo-ambiguity.sh"
 scripts/docker-court.sh fuse "bash scripts/demo-time-travel.sh"
+scripts/docker-court.sh fuse "WEFT_TIME_TRAVEL_VERSIONS=10000 bash scripts/demo-time-travel.sh"
 scripts/docker-court.sh fuse "bash scripts/demo-replay-bundle.sh"
 ```
 
@@ -180,17 +182,31 @@ scripts/docker-court.sh fuse "bash scripts/demo-replay-bundle.sh"
 - **Time travel** creates 100 versions of one path, snapshots versions 1, 50,
   and 100, mounts all three at once (Rust + Go), verifies exact bytes, then
   renames and retags the live path and re-reads every mounted snapshot
-  unchanged.
+  unchanged. The scaled mode (`WEFT_TIME_TRAVEL_VERSIONS=10000`) writes 10,000
+  versions with a snapshot every 100, mounts ten evenly spaced snapshots
+  (`s1`, `s1100` … `s10000`), and repeats the immutability check after a later
+  write to the renamed live path.
+- **Scaled context mounts** (`WEFT_CONTEXT_MOUNTS=100`) build 200 corpus
+  objects, 25 models, 10 grounding docs, 599 typed relations and exactly 100
+  distinct Context Roots, spawn all 100 FUSE daemons before awaiting any of
+  them, then check every mounted listing digest, every one of 425 mounted
+  files against its declared SHA-256, and a representative `weftfs cat` byte
+  comparison per mount. The receipt records per-mount latency p50/p95/max,
+  wall time to mounted-and-verified, daemon RSS, cgroup peak, and the number
+  of surviving daemons after unmount.
 - **Replay bundle** writes `bench/bundles/weft-receipt.tar.zst` from Rust and
   verifies it with Go only: extract, `verify --full`, resolve and materialize
   every Context Root, then re-hash every store entry and output file against
   `manifest.json`. The receipt records the bundle SHA-256 and the one-command
   reproduction.
 
-A second Context-mount run is compared with the first using
-`scripts/showcase/democmp.go`; the result is
-`bench/receipts/context-mounts-determinism.txt` (semantic fields identical,
-run ids and wall-clock fields excluded).
+A second run of either scale is compared with the first using
+`scripts/showcase/democmp.go` by setting
+`WEFT_DEMO_COMPARE_WITH=/work/bench/receipts/<first>.json`; the demo writes
+`<second>.determinism.txt` (semantic fields identical, run ids and wall-clock
+fields excluded). The scaled receipts also carry a top-level `label` stating
+single-host court, synthetic fixtures, local store, and that this is not a
+fleet claim.
 
 ## F5 proof courts
 

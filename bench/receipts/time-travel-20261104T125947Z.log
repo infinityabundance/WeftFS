@@ -1,0 +1,226 @@
+===== BUILD =====
+receipt: /work/bench/receipts/time-travel-20261104T125947Z.json
+NOTE: no io_uring/EKBLOOM acceleration: not implemented; time travel is correctness-only in this stage
+
+===== STEP versions: 10000 sequential versions of one path, a snapshot every 100 versions =====
+CMD[versions]: weftfs create /history.txt --text <version-1 + fixed padding> --seed history-v1
+CMD[versions]: weftfs write /history.txt --text <version-n + fixed padding> (9999 times)
+CMD[versions]: weftfs snapshot create s<n> for n in 1,100,..,10000
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 snapshot list
+{
+  "snapshots": {
+    "s1": "a2eba0ed3f08ea7a3e096acac95110426b755ad86a26abb4afae629b2b35410e",
+    "s100": "40e9695a1e3cb5633454b4d37b7353587c00c55e978530dcf4a6f4ebe54ed256",
+    "s1000": "9b7005174eb1bea731e64b2d1ff606672c8bc4d8bbfb86400d138982c36f1343",
+    "s10000": "d7ba0cb067b2089bc47636f51cbb2adfd290f115104b5324f51e9aa1fd0e7d97",
+    "s1100": "72203a140ccc7e3e24f5fb1271fdb857d2dc85ad61956975f484dfdc621c5893",
+    "s1200": "81f0c6d711649433a7d04aab4dca44b44a6618a0bc2468e92da5a6b8fe48f012",
+    "s1300": "f5866da5f4ddea24f0be3eab2ff8c3a04f11485ef0dafe71ba41e4904470c2cf",
+    "s1400": "85afd75aee42011928323f644819d9778bc5261421dc82bf19892f7ede671dc2",
+    "s1500": "e5d14e3e62d33d81134f833aad467c4b22e232fa00ab1ceef9d3cb8a03ad41f4",
+    "s1600": "a1a27e7a07693526e728ae650e9533cd129ad562039f02e781b680be056952a2",
+    "s1700": "2c0fa2eaa76f934b8504ff2e7fc1634324dc8c93408c5db58c04151443c63dc6",
+    "s1800": "2881b99bd3efc931dccffbea5e8f7e7141783591955049425d01b356a2146594",
+    "s1900": "47093c88c3dfd99d922b0e40541e04bcaba0001acbd6831391e761fdc3e25e76",
+    "s200": "66663a3a5578f52d6d74254b6e230e1989189434d6718d1fdc73d252c1ce5fb2",
+    "s2000": "de45a27553fa2e2b69cb8edb080fba90df9b817e6d9f71ee3fc9498bf2db716d",
+    "s2100": "d4a969624c30e237812782b10a6494281a9c8af3488f6541d0f547184a2376af",
+    "s2200": "0294f817aa5dc45695699a6516eafb2a1d3aeec35eddc30aa809ef26f34aa475",
+    "s2300": "59efa1ef6a6aa4ef22658a2e3a0cb719ed3e39cd9c7792f71e8a6cb1c342b4fd",
+    "s2400": "35c4ecdfc569a424123d7d858ffbb302f4fdba0ac7f442879033e2cbea1cb7b1",
+    "s2500": "ff12e1c5c136681b9418219457ed3db37c586a8861a9feea3ff4b943b0e1c147",
+    "s2600": "db63f148cdba0104f37ada78850554ff8ef6e1ae65a451bd6022ed63abaf4831",
+    "s2700": "50e0b32ea309cc0ffa107cd63fdae08ca9851611a23d0f8b1a2c14af9bf2f3af",
+    "s2800": "0e05b87a1aee969b961ba78443dd629c35dbcf722f3ecde15dc62f1745a4f31c",
+    "s2900": "c2db6acbf0e32c9adf3abddbb4f31fa81715214c053b3845b49aa5baa81c70ed",
+    "s300": "70195dc1c7a55c7463c7bbd01132dd561f70d6956b855d5dd5bf203a3708a497",
+    "s3000": "6db38bfed1ee876dc578e00aa0baa9d5230fb5944498c0c948556bddd2a579d5",
+    "s3100": "96341041047609bfdd831e30983d9bfb806601594f821b5e1519013f834bce01",
+    "s3200": "85037f3886e68440ef2806e968447fb559ecbd714c567ccab6c320744ee0315d",
+    "s3300": "b27c7102787c7ba5f1708212d0d300da79c5ec462528c38600174d7c0b73af79",
+    "s3400": "2204e13fb2da7d743b26987e4bb939e1807c46a1c190e9e2a28d069375bbfb7e",
+    "s3500": "2559a883d16ddf19881db2ddc011360d5c20389fdf4441c9b21d8b4b2faa16dc",
+    "s3600": "142bcb4325c1f9a7b342bd9321d17a9e028aedd1d6fad99a9e7b76e84b0e2b47",
+    "s3700": "98fdb124d1898a6aae694fa82a6105b58998ce81c52bb3965ba06ac1d35e0b52",
+    "s3800": "21479f0079f04747a6898419f04d1287a81f099a0b479459cb65b1133661dc66",
+    "s3900": "701c7b44cc99e1e068eafa7f348da2c74cd4f38bb955ea092578144bb9c2cb7d",
+    "s400": "727ff3c9df8f419226ba878a8f1601b57d8db4e3da5e789ac6c3e9ebf6bc74ae",
+    "s4000": "5d4a65c4af21cb928023e8771d469e318def0b770fa8c06fb4a9807e6bf26499",
+    "s4100": "03bcd88ee5d1f19bd41bee3540a4dfc096880d7cc219dc87c4a578d4719ac888",
+    "s4200": "2f1ca71665b0648f208fa50b6049b19bbe5fa6cf43504f52466f0de00229ee83",
+    "s4300": "d3d68e3c9ac7efffd4cbb6869ba6a69aba1b14ea25b9d60b68398fb4af7c3185",
+    "s4400": "16e458feedd5878c6c5afe9fff36dc92708c510e4bf16c0612ddbb056dad1ff9",
+    "s4500": "7213091028b59b5289495b07585dd40ea102a6b0bdc5f3b283933ea7d23ef89a",
+    "s4600": "3d7b3d4cab300f8afeae189050a74e2ef76fceaba3f251f1e818ef8ad249d899",
+    "s4700": "9b6595d51e4908854e7f3854362a157b7e06dc13584697e2d227a2c1529e434d",
+    "s4800": "bf610801113782871eb18e0e58444c85380a3a172a0fba80445d2e610d09d3ff",
+    "s4900": "2d2bdb7cd0ecaee4c24e8105d7f3ce4668ec00899f706e79264a913e73546892",
+    "s500": "b14fe184002965bca8d4698fc375f4eef1ae991efcc8fd7ecd728bcf088f9bdc",
+    "s5000": "dbd240344f038f3af4d0d4281e7cae496cb45ded3f0718ca4f9bb50991c8a508",
+    "s5100": "77a4462f3303866a712fb8b2d9fc8907772c85a66ab95e29eb0f593050bbee76",
+    "s5200": "97e82f6e7af84f3b091f35d9a24fdb55182b6d8eafabb48bdc9119dc1e418eb8",
+    "s5300": "d642be9aec884fbc951d1055286ddc7a445f3f07bc3d4e4d037c6805fec9c84f",
+    "s5400": "848c5b01b9e3d7d61309bf762c82b4a6aeaccfb0a01c90dd6a8dea90efc22306",
+    "s5500": "8abef99f9478327795ff36be5d5d59786216046b322e1f595e00b1781f20ae44",
+    "s5600": "98e76d3cd38f6500784f6fc195f9dd143f79baae8506b8a0bfe154ff9a572c2a",
+    "s5700": "36eca2e51687e4981918af964df29de06285432183aa5209b8c18b228d4dfead",
+    "s5800": "98f41ef8f02ff0013da41e7bcbc13b42360a0e5cb280730d9e06b7447aec2e75",
+    "s5900": "855cabb0d2fabf983987990425615c0763b614a79c65c996ff0a3ea8e8440d7e",
+    "s600": "fdda45e2374c9db6c1c9ced1db23713a58b6cd7ae8d42b5f5199fb1b02239585",
+    "s6000": "ce1cabde47e908325d7e0aef800da285b5b0cb3ba3353482c58b49b8ec353357",
+    "s6100": "bd9caf46a21797b242fd3e81f8856f35a94fbd484fb67b32064b785bc2026846",
+    "s6200": "359eb5571df2fdd53eb650cacc1874262662c77f1918f26099cec40066cdc812",
+    "s6300": "4938f86c6b7f5bfceaf426e6e617e5c494a68cfc724b5a7deb7f527b77726fda",
+    "s6400": "6d64e8dbe0d720a404acc953f8b1d1264c01215261e928e035dd930596a360e2",
+    "s6500": "2b384e8c8b32543c711a62e0fd19ab5d1b615ee460300ee0571df037fe036f75",
+    "s6600": "de44bfda4e48aa4bda25e105a487cfd0d516eb6d13cb705188acb786eb28cb68",
+    "s6700": "14a71b19fb60548886e24d99170519479c81cf6ee306956361eedc208656afcc",
+    "s6800": "044187b4908cf7fe7b8c95199f7c529a2e4eb29939874fe30ff0b24e31580501",
+    "s6900": "c03dd155763e655689d95cd8885105320794ced16e33c0cf180c497d611fcdaa",
+    "s700": "b55a243081057ed9a6a344f5de2cdd039a23f64d400e5ccbedc5aacd03a622f3",
+    "s7000": "791f0c64765a1a7bef711a868c6af6d9ef6f013c5804def3ec776fc93257263b",
+    "s7100": "b9502642f3274bc1e3dee18b32551946c41c6b6e92ca1fca8c683c64a138e1fd",
+    "s7200": "edea8003bdf9cf07c0f95b2ceaa3bf40810cc1a39ef776d497520e9502c9878d",
+    "s7300": "f9d0a26771f6f32382377cd10a64c0a576adfd437ebf335042f837fb4ff31301",
+    "s7400": "624a0e470225b2b461cab9db326fbb9ef171325e54b83b23a95f3b9267ed8ef5",
+    "s7500": "c80954f7d2a3d1b5d051a5d26ff074c76bc9bc381d07d65147ed6084c29bd31b",
+    "s7600": "7bd66927653362b6a58755d51d2587ff1060d22e00ef76199146190f0911bb95",
+    "s7700": "6ec0befbc04ce620933b126d908652e167f9f8d542dbf37e9cae0bb280453a3c",
+    "s7800": "c3f8b25da54ab1468824ca957a810c1a8419ce66bfa57be139c7b80babee2534",
+    "s7900": "d9ab9e56e93f769f4e304677010536f8c5b9558155b062c7348d97716431ab4c",
+    "s800": "9ed97bc4ebda1f592f895cd2f867a1842128117b874a772c1b3867a240f4fe77",
+    "s8000": "e3f42f90b71c78499bd576f04c543b82abbdf58e2245ca890767edec74bfbd62",
+    "s8100": "cf97bdf4da9c287ab481bf6d41c37b411f033e5762d5868b4098c1d7dda77192",
+    "s8200": "cfa44a76db91d3297b100f741cdb59cbb455c1150fd0347acfbaae602202f10f",
+    "s8300": "2907db62254d22f975bb8d2a924de70fd8a4480f7659021bd235924748a833c3",
+    "s8400": "51de5fda56586c919950175b339b9f586b32678131fa91f68404497635ccebf6",
+    "s8500": "d162a69d3242c3b2f0ee28f835eccf1a6c5a942aa4b49797c1d7a345530ecd83",
+    "s8600": "a0f381f661692e08bb3fb3fbb139cf11a356cfe7a31ae4d5124da2f00719a0ff",
+    "s8700": "641ac9b2fbc8858ae61e7b8b3118b256f3f2b4cf4a47e4875ebc51079e55d41e",
+    "s8800": "09f251e70d2d6ac3062edbf75b8cbade112bd9fddad0f6eae927062311c281e9",
+    "s8900": "ccb99bcadd8322fd6d760197531ea0be8e9c37e6895c7778a6106ad97b63d184",
+    "s900": "11ebdc150d3061afd8cfb4fa92dca52ccfcd1e4a3d33d69ccff48b1489a40a9a",
+    "s9000": "096404906a41c633bf46cd93bff0b60bf8b12dfec6cbdac9b1c189bb9c3aef91",
+    "s9100": "c571d6351e5e8aa3ec3627590bce9e222516adaea4b815493d69d7db7c4ba102",
+    "s9200": "df3730fbc0a4f140731bac9bb773740aaf4663071d7f5f09765d72497b5156af",
+    "s9300": "74b38145e71cd8274468b08c815b2503051adfe12c8e537329e805b920b60741",
+    "s9400": "6106c9fadd03457397baffca7113619c58fb71fbd2b57ddecd511641290167de",
+    "s9500": "1ce3ba71b375ad5c501097fb78f2c9fe1d0c08462969b9cb5f6bede04dcf139d",
+    "s9600": "b748c5ed10d016435a3fc264874a8058a32b9078a678e59f8c3a66e104fc0e54",
+    "s9700": "eeed7758f96b5af833ba0618e0a4cd573501825ab0970e5790f43baf3d136cc8",
+    "s9800": "b8c8785690624e9dbb909c80fadd8b050daa8809d86cbe225d511cafcb923bca",
+    "s9900": "d86db75a6ea48083569d1566be471b5f8b1e1726904887b67cab23a3949cf060"
+  }
+}
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 info
+{
+  "codec_min_bytes": 4096,
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 10102,
+  "objects": 2,
+  "recovery_notes": [
+    "bounded replay resumed from the checkpoint at generation 9984; commit files below it were not enumerated"
+  ],
+  "rejected_generations": [],
+  "relations": 0,
+  "representation": "raw",
+  "snapshot_root": "892dbcc2922b054b3aec50c3316eac9d00dd02031593431a7789c5d3883c02a3",
+  "snapshots": 101
+}
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235600000000000 verify --full
+ok=true
+full=true
+generation=10102
+checked_commits=10102
+checked_objects=1
+checked_manifests=40
+checked_chunks=1
+checked_context_roots=0
+checked_causal=0
+checked_representations=0
+checked_capabilities=0
+----- STEP versions: pass versions=10000 snapshots=101
+
+===== STEP reopen: CLI reopen + stat timing at the head =====
+CMD[reopen]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235600000000000 stat /history.txt
+{
+  "attrs": {},
+  "content_id": "688f5fb7b8a777b87814ec67517fa6cfcdfb2d3bb8d5d7e0fc0a76bab4fbc6df",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767235600000000000,
+  "object_id": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+  "size": 71,
+  "uid": 0,
+  "version_id": "0ae0fc9972db33b1758159a05490ab1eba683cf57b4f60d69d246a946a416069"
+}
+NOTE: bounded replay decodes at most the checkpoint interval above the newest checkpoint; the measured reopen is the whole CLI process, not an in-process handle only
+----- STEP reopen: pass reopens=20 failures=0
+
+===== STEP mount-snapshots: 10 snapshots mounted simultaneously (Rust + Go) =====
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-0 --snapshot s1
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-1 --snapshot s1100
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-2 --snapshot s2200
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-3 --snapshot s3300
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-4 --snapshot s4400
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-5 --snapshot s5500
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-6 --snapshot s6600
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-7 --snapshot s7700
+CMD[mount-snapshots]: rust mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-8 --snapshot s8800
+CMD[mount-snapshots]: go mount /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 -> /mnt/weft-fuse/f3t-7-20261104T125947Z-9 --snapshot s10000
+----- STEP mount-snapshots: pass mounted=10 failed=0
+
+===== STEP verify-snapshots: Exact historical bytes for every mounted snapshot =====
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-0/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-1/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-2/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-3/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-4/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-5/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-6/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-7/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-8/history.txt
+CMD[verify-snapshots]: cat /mnt/weft-fuse/f3t-7-20261104T125947Z-9/history.txt
+----- STEP verify-snapshots: pass verified=10 mismatches=0
+
+===== STEP rename-retag-live: Live rename, retag, and later write leave every mounted snapshot unchanged =====
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --json --fixed-timestamp-ns 1767235601000000000 stat /history.txt
+{
+  "attrs": {},
+  "content_id": "688f5fb7b8a777b87814ec67517fa6cfcdfb2d3bb8d5d7e0fc0a76bab4fbc6df",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767235600000000000,
+  "object_id": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+  "size": 71,
+  "uid": 0,
+  "version_id": "0ae0fc9972db33b1758159a05490ab1eba683cf57b4f60d69d246a946a416069"
+}
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235601000000000 rename /history.txt /history-renamed.txt
+renamed /history.txt -> /history-renamed.txt
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235601000000000 relation add --subject bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d --predicate tagged_as --value retagged-after-snapshot
+912043b3b5b63bd0807960f7eaf77fc17530c754ea07d7c09657665aa5b28001
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 write /history-renamed.txt --text version-10001
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+7ddd9a9081eae4d351458ac7e00738590bbc9463b65c49fd084e71904c71c4a6
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 cat /history-renamed.txt
+version-10001
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+CMD[rename-retag-live]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-7-20261104T125947Z-v10000 --fixed-timestamp-ns 1767235602000000000 cat /history.txt
+NotFound: no such directory entry
+----- STEP rename-retag-live: pass re-read=10 mismatches=0
+
+===== STEP unmount: Unmount every snapshot and prove no daemon survives =====
+----- STEP unmount: pass unmounted=10 survivors=0
+summary: pass=6 fail=0 blocked=0 all_pass=true
+determinism: semantic_match=true
+semantic_match=true
+receipt: /work/bench/receipts/time-travel-20261104T125947Z.json
+raw log: /work/bench/receipts/time-travel-20261104T125947Z.log
