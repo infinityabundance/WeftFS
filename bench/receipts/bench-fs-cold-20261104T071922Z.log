@@ -1,0 +1,32 @@
+cold-cache fio court: image=weft/vm-court:1 kernel=7.3.1-1-cachyos
+targets=ext4,xfs,btrfs,zfs-whole reps=1 timeout_s=1800
+building Rust WeftFS (fuse)
+    Finished `release` profile [optimized] target(s) in 0.01s
+building Go WeftFS (CGO disabled)
+guest kernel: /boot/vmlinuz-6.1.0-54-amd64 (6.1.0-54-amd64)
+guest initramfs: /boot/initrd.img-6.1.0-54-amd64
+qemu: QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)
+fio: fio-3.33
+mkfs.xfs: mkfs.xfs version 6.1.0
+root image: /work/.docker-cache/vm-fs/20261104T071922Z/root.img (805306368 bytes)
+ext4 base: /work/.docker-cache/vm-fs/20261104T071922Z/data-ext4.img; xfs base: /work/.docker-cache/vm-fs/20261104T071922Z/data-xfs.img (ok=1); btrfs base: /work/.docker-cache/vm-fs/20261104T071922Z/data-btrfs.img (ok=1); zfs whole-disk base: /work/.docker-cache/vm-fs/20261104T071922Z/data-zfswhole.img
+zfs: available: OpenZFS 2.1.11-1+deb12u1 built by DKMS for 6.1.0-54-amd64; zfs-whole passes the raw /dev/vdb block device straight to zpool with no partition, loop device, or file-backed vdev; zfs (legacy) keeps its separately labelled file-backed vdev
+btrfs: available: mkfs.btrfs mkfs.btrfs, part of btrfs-progs v6.2 on the host; guest mounts a real Btrfs filesystem on /dev/vdb
+accel=kvm cpu=host smp=4 guest_mem=1536M
+== target ext4 ==
+extracted results for ext4 to /work/.docker-cache/vm-fs/20261104T071922Z/extracted/ext4
+target ext4 exit=0 accel=kvm
+== target xfs ==
+extracted results for xfs to /work/.docker-cache/vm-fs/20261104T071922Z/extracted/xfs
+target xfs exit=0 accel=kvm
+== target btrfs ==
+extracted results for btrfs to /work/.docker-cache/vm-fs/20261104T071922Z/extracted/btrfs
+target btrfs exit=0 accel=kvm
+== target zfs-whole ==
+extracted results for zfs-whole to /work/.docker-cache/vm-fs/20261104T071922Z/extracted/zfs-whole
+target zfs-whole exit=0 accel=kvm
+wrote /work/bench/receipts/bench-fs-cold-20261104T071922Z.json
+cold fs receipt: /work/bench/receipts/bench-fs-cold-20261104T071922Z.json
+raw log: /work/bench/receipts/bench-fs-cold-20261104T071922Z.log
+9c37322722ee466d61fa49a747e11f52d318f94137d0623e936421cdcab614df  /work/bench/receipts/bench-fs-cold-20261104T071922Z.json
+777abc76e84418a5c3fa614fecbb1aab398ff72d4aede3ded68abfb2819fb070  /work/bench/receipts/bench-fs-cold-20261104T071922Z.log

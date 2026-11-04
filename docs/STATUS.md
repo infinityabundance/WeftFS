@@ -42,15 +42,15 @@ model pass; flawed model counterexample). The F9 power-loss receipts are
 `bench/receipts/powerloss-20261103T224652Z.json` (10/10, `cache=writeback`), and
 `bench/receipts/powerloss-20261104T014805Z.json` (30/30, `cache=unsafe`,
 lying-fsync device model). The block-layer lying-disk matrix is
-`bench/receipts/blkdebug-20261104T071235Z.json` (30 iterations; dm-flakey
+`bench/receipts/blkdebug-20261104T072008Z.json` (30 iterations; dm-flakey
 silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5;
 blkdebug write/flush error 10/10 blocked at ext4 mount). The host-cache probe is
-`bench/receipts/hostcache-probe-20261104T071612Z.json` (global drop refused:
+`bench/receipts/hostcache-probe-20261104T072314Z.json` (global drop refused:
 `Read-only file system`). The B2 10,000-iteration receipt is
 `bench/receipts/crash-torture-20261104T013521Z.json`. The counter/energy probe is
 `bench/receipts/perf-counters-20261104T015026Z.json` (perf counters available;
 RAPL energy still unreadable). The whole-disk ZFS/Btrfs fio run is
-`bench/receipts/bench-fs-cold-20261104T070121Z.json` (ext4/XFS/Btrfs/ZFS,
+`bench/receipts/bench-fs-cold-20261104T071922Z.json` (ext4/XFS/Btrfs/ZFS,
 `zfs-whole` uses raw `/dev/vdb`; one repetition per cell). The earlier
 file-backed ZFS run `bench-fs-cold-20261104T014727Z.json` is retained and
 separately labelled. The abstraction mapping, assumptions, and limitations are
@@ -473,7 +473,7 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   Rust and Go mounts differ in `allow_other`/`max_read` defaults; that is
   published as a limitation.
 - Whole-disk ZFS and Btrfs (2026-11-04):
-  `bench-fs-cold-20261104T070121Z.json` runs ext4/XFS/Btrfs/`zfs-whole` in one
+  `bench-fs-cold-20261104T071922Z.json` runs ext4/XFS/Btrfs/`zfs-whole` in one
   guest court, one repetition per cell, 30 fio runs per target. For `zfs-whole`
   the guest passed the raw `/dev/vdb` block device to `zpool create -f -m
   /data/tank tank /dev/vdb`; `zpool status -P` shows the GPT partition
@@ -483,30 +483,31 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   `cannot label 'vdb': failed to detect device partitions on '/dev/vdb1': 19`.
   OpenZFS 2.1.11-1+deb12u1 (DKMS, kernel 6.1.0-54-amd64); Btrfs uses
   btrfs-progs 6.2 on the host and the guest `btrfs.ko`. Scoped `numjobs=1` cold
-  medians: seq-write-1m ext4 1,142.9, XFS 1,142.9, Btrfs 1,000.0, ZFS 1,333.3;
-  fsync-write-4k ext4 410.3, XFS 444.4, Btrfs 484.8, ZFS 842.1; rand-read-4k
-  ext4 9,846.2, XFS 9,142.9, Btrfs 8,533.3, ZFS 128,000 (ARC-served). At
-  `numjobs=16` fsync-write-4k: ext4 3,368.4, XFS 1,841.7, Btrfs 927.5, ZFS
-  6,243.9. ZFS reads are **not cold**: `drop_caches` does not evict the ARC. No
+  medians: seq-write-1m ext4 1,142.9, XFS 1,142.9, Btrfs 1,142.9, ZFS 1,333.3;
+  fsync-write-4k ext4 410.3, XFS 390.2, Btrfs 457.1, ZFS 800.0; rand-read-4k
+  ext4 9,846.2, XFS 9,846.2, Btrfs 8,533.3, ZFS 128,000 (ARC-served). At
+  `numjobs=16` fsync-write-4k: ext4 3,160.5, XFS 1,855.1, Btrfs 911.0, ZFS
+  6,736.8. ZFS reads are **not cold**: `drop_caches` does not evict the ARC;
   ranking or superiority claim is made. The earlier file-backed ZFS run
   `bench-fs-cold-20261104T014727Z.json` is retained as a separate, labelled
   result, not as the whole-disk claim.
-- Block-layer lying-disk matrix (2026-11-04): `bench/receipts/blkdebug-20261104T071235Z.json`,
+- Block-layer lying-disk matrix (2026-11-04): `bench/receipts/blkdebug-20261104T072008Z.json`,
   30 iterations, 5 per mode, in the vm court. `dm-flakey drop_writes` (2 s up,
   then silent drop) lost acknowledged commits in 5/5 iterations: recovered
-  generations 89/89/87/87/87 versus last returned 307/198/335/295/252
-  (218/109/248/208/165 commits lost), 0 partial, both implementations agreed,
+  generations 87/89/89/88/89 versus last returned 319/218/334/292/246
+  (232/129/245/204/157 commits lost), 0 partial, both implementations agreed,
   `verify --full` clean. `dm-flakey error_writes` failed the first post-window
-  write in 5/5, recovered exactly the last returned generation, 0 loss,
-  0 partial. QEMU `snapshot=on` total write drop recovered generation 2 in 5/5
-  and lost all acknowledged commits. QEMU blkdebug write-error and flush-error
-  were attempted and are **blocked at ext4 mount** in 10/10: the first injected
-  write is the mount superblock at block 0, then `JBD2: recovery failed` /
-  `EXT4-fs (vdb): error loading journal`, and the guest never reaches
-  `GUEST_WRITING`. No result is invented for those two modes. This is a
-  block-layer lying-disk model, not physical media power loss.
+  write in 5/5, recovered exactly the last returned generation (88/79/8/7/6),
+  0 loss, 0 partial. QEMU `snapshot=on` total write drop recovered generation 2
+  in 5/5 and lost all acknowledged commits (last returned 52/77/205/182/128).
+  QEMU blkdebug write-error and flush-error were attempted and are **blocked at
+  ext4 mount** in 10/10: the first injected write is the mount superblock at
+  block 0, then `JBD2: recovery failed` / `EXT4-fs (vdb): error loading
+  journal`, and the guest never reaches `GUEST_WRITING`. No result is invented
+  for those two modes. This is a block-layer lying-disk model, not physical
+  media power loss.
 - Host page-cache attempt (2026-11-04):
-  `bench/receipts/hostcache-probe-20261104T071612Z.json`. The unprivileged court
+  `bench/receipts/hostcache-probe-20261104T072314Z.json`. The unprivileged court
   (`CapEff=0`) cannot write `/proc/sys/vm/drop_caches`: mode `200`, exact
   refusal `Read-only file system`; no host cache was dropped. A per-file
   `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file succeeded and
@@ -648,10 +649,10 @@ block-layer fault with the same SIGKILL/reboot/Rust+Go verification. Modes are
 `snapshot=on`), and two blkdebug attempts. `dm-flakey` is created inside the
 guest over `/dev/vdb` with a 2 s up interval so mount completes, then a 1 h down
 interval; `drop_writes` silently discards writes while returning success, and
-`error_writes` returns EIO. In `bench/receipts/blkdebug-20261104T071235Z.json`:
-control 4 old + 1 new; dm-flakey-drop 5/5 lost (218/109/248/208/165
-acknowledged commits lost, recovered 89/89/87/87/87); dm-flakey-error 5/5 old,
-5/5 COMMIT_FAIL, 0 loss; write-drop-all 5/5 recovered generation 2 and lost all
+`error_writes` returns EIO. In `bench/receipts/blkdebug-20261104T072008Z.json`:
+control 5 old; dm-flakey-drop 5/5 lost (232/129/245/204/157 acknowledged
+commits lost, recovered 87/89/89/88/89); dm-flakey-error 5/5 old, 5/5
+COMMIT_FAIL, 0 loss; write-drop-all 5/5 recovered generation 2 and lost all
 acknowledged commits; 0 partial in all completed modes. blkdebug write-error
 and flush-error are 10/10 **blocked**, not passed: blkdebug arms at open, so the
 first injected write is ext4's mount superblock (`I/O error, dev vdb, sector 0`,
@@ -662,7 +663,7 @@ writes, so there is no silent selective write-drop primitive. `dm-flakey` is
 the arm-after-mount equivalent used for the data results.
 
 **Host page-cache probe (2026-11-04).**
-`bench/receipts/hostcache-probe-20261104T071612Z.json` records that the
+`bench/receipts/hostcache-probe-20261104T072314Z.json` records that the
 unprivileged court (`CapEff=0`) cannot write `/proc/sys/vm/drop_caches` (mode
 `200`, exact refusal `Read-only file system`), so no host cache was dropped. A
 per-file `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file
@@ -710,9 +711,9 @@ multi-writer, physical rig).
 1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
    SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec, and now
    whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). The 2026-11-04
-   pass adds `bench-fs-cold-20261104T070121Z.json` (whole-disk `zfs-whole` on raw
-   `/dev/vdb` plus Btrfs), `blkdebug-20261104T071235Z.json` (dm-flakey lying-disk
-   matrix; blkdebug mount blocker), and `hostcache-probe-20261104T071612Z.json`
+   pass adds `bench-fs-cold-20261104T071922Z.json` (whole-disk `zfs-whole` on raw
+   `/dev/vdb` plus Btrfs), `blkdebug-20261104T072008Z.json` (dm-flakey lying-disk
+   matrix; blkdebug mount blocker), and `hostcache-probe-20261104T072314Z.json`
    (global cache drop refused). Still open: physical media power loss, host/
    device cache loss, RAPL/joule energy, direct-I/O, metadata storms, AI-corpus
    external baselines, 10^5–10^6-object scaling, and a library-vs-library codec

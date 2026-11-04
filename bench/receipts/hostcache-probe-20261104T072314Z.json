@@ -1,0 +1,43 @@
+{
+  "schema": "weftfs.hostcache-probe/1",
+  "generated_at": "2026-11-04T07:23:14Z",
+  "available": false,
+  "global_drop_caches": {
+    "path": "/proc/sys/vm/drop_caches",
+    "exists": true,
+    "mode": "200",
+    "writable_by_container": false,
+    "attempt_exit_code": 1,
+    "error": "scripts/hostcache_probe.sh: line 51: /proc/sys/vm/drop_caches: Read-only file system "
+  },
+  "per_file_fadvise_dontneed": {
+    "attempted": true,
+    "succeeded": true,
+    "scope": "one 4 MiB scratch file under the court bind mount; only that file clean pages are eligible"
+  },
+  "guest_data_cache_model": {
+    "powerloss_and_blkdebug_courts": "QEMU cache=none for the data disk; cache=none opens the image with O_DIRECT, so guest data does not occupy the host page cache",
+    "writeback_paths": "cache=writeback appears in some control/labelled runs, but the host page cache was not dropped"
+  },
+  "blocker": "global host page-cache drop is not permitted in the unprivileged court; the kernel refuses the write and no host cache is dropped",
+  "environment": {
+    "court": "weft/vm-court:1",
+    "image_id": "sha256:4eb658e6992dfbc2b5b528dfc748a1ea2956ea7d1d23498539537730e0275dc9",
+    "host_kernel": "Linux 2f465b936251 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux",
+    "uid": "0",
+    "cap_eff": "0000000000000000",
+    "limit_memory": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024"
+  },
+  "not_claimed": [
+    "host page-cache loss",
+    "physical media power loss",
+    "global cache drop",
+    "device write-cache loss"
+  ],
+  "evidence": {
+    "raw_log": "bench/receipts/hostcache-probe-20261104T072314Z.log",
+    "raw_log_sha256": "2e81edabd77596f97a667ab41378dda9626c2f0b978f662a96c68da57004f6ca"
+  }
+}

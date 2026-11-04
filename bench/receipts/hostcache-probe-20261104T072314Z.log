@@ -1,0 +1,10 @@
+== host page-cache loss probe ==
+started: 2026-11-04T07:23:14Z
+court: weft/vm-court:1 (sha256:4eb658e6992dfbc2b5b528dfc748a1ea2956ea7d1d23498539537730e0275dc9)
+uid=0 gid=0
+limits: memory=3g cpus=4 pids=1024
+drop_caches: exists=1 mode=200 writable=0 attempt_rc=1 error=scripts/hostcache_probe.sh: line 51: /proc/sys/vm/drop_caches: Read-only file system 
+fadvise_dontneed=ok bytes=4194304
+posix_fadvise(DONTNEED) on /work/.docker-cache/hostcache-probe/20261104T072314Z/fadvise-scratch.bin: ok=1
+receipt: bench/receipts/hostcache-probe-20261104T072314Z.json
+HOSTCACHE_PROBE_DONE

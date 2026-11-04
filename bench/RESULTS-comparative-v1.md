@@ -395,7 +395,7 @@ with QEMU `cache=none`; the results disk is a small ext4 image extracted with
 
 ### 5.4 Whole-disk ZFS and Btrfs (2026-11-04)
 
-Receipt: `bench/receipts/bench-fs-cold-20261104T070121Z.json`. One repetition
+Receipt: `bench/receipts/bench-fs-cold-20261104T071922Z.json`. One repetition
 per cell, `numjobs` 1/4/16, the same `fio` matrix, data disk raw virtio-blk with
 `cache=none`. Targets: ext4, XFS, Btrfs, `zfs-whole`. All 30 fio runs per target
 completed. Guest kernel 6.1.0-54-amd64; OpenZFS 2.1.11-1+deb12u1 (DKMS);
@@ -421,44 +421,44 @@ recorded in the guest status. No file-backed vdev is used for this target.
 
 | Target | Workload | nj | Cold IOPS | Warm IOPS |
 |---|---|---:|---:|---:|
-| ext4 | seq-write-1m | 1 | 1,142.9 | 1,000.0 |
+| ext4 | seq-write-1m | 1 | 1,142.9 | 1,142.9 |
 | XFS | seq-write-1m | 1 | 1,142.9 | 1,333.3 |
-| Btrfs | seq-write-1m | 1 | 1,000.0 | 800.0 |
+| Btrfs | seq-write-1m | 1 | 1,142.9 | 1,000.0 |
 | ZFS whole-disk | seq-write-1m | 1 | 1,333.3 | 1,333.3 |
-| ext4 | fsync-write-4k | 1 | 410.3 | 571.4 |
-| XFS | fsync-write-4k | 1 | 444.4 | 941.2 |
-| Btrfs | fsync-write-4k | 1 | 484.8 | 457.1 |
-| ZFS whole-disk | fsync-write-4k | 1 | 842.1 | 842.1 |
+| ext4 | fsync-write-4k | 1 | 410.3 | 640.0 |
+| XFS | fsync-write-4k | 1 | 390.2 | 941.2 |
+| Btrfs | fsync-write-4k | 1 | 457.1 | 484.8 |
+| ZFS whole-disk | fsync-write-4k | 1 | 800.0 | 842.1 |
 | ext4 | rand-read-4k | 1 | 9,846.2 | 9,846.2 |
-| XFS | rand-read-4k | 1 | 9,142.9 | 9,142.9 |
+| XFS | rand-read-4k | 1 | 9,846.2 | 9,846.2 |
 | Btrfs | rand-read-4k | 1 | 8,533.3 | 8,533.3 |
 | ZFS whole-disk | rand-read-4k | 1 | 128,000.0 | 128,000.0 |
-| ext4 | rand-write-4k | 1 | 42,666.7 | 25,600.0 |
-| XFS | rand-write-4k | 1 | 42,666.7 | 42,666.7 |
-| Btrfs | rand-write-4k | 1 | 42,666.7 | 42,666.7 |
-| ZFS whole-disk | rand-write-4k | 1 | 64,000.0 | 64,000.0 |
-| ext4 | fsync-write-4k | 16 | 3,368.4 | 3,282.1 |
-| XFS | fsync-write-4k | 16 | 1,841.7 | 2,438.1 |
-| Btrfs | fsync-write-4k | 16 | 927.5 | 914.3 |
-| ZFS whole-disk | fsync-write-4k | 16 | 6,243.9 | 6,243.9 |
+| ext4 | rand-write-4k | 1 | 42,666.7 | 32,000.0 |
+| XFS | rand-write-4k | 1 | 42,666.7 | 64,000.0 |
+| Btrfs | rand-write-4k | 1 | 42,666.7 | 32,000.0 |
+| ZFS whole-disk | rand-write-4k | 1 | 42,666.7 | 42,666.7 |
+| ext4 | fsync-write-4k | 16 | 3,160.5 | 3,368.4 |
+| XFS | fsync-write-4k | 16 | 1,855.1 | 2,169.5 |
+| Btrfs | fsync-write-4k | 16 | 911.0 | 977.1 |
+| ZFS whole-disk | fsync-write-4k | 16 | 6,736.8 | 6,243.9 |
 | ext4 | rand-read-4k | 16 | 157,538.5 | 157,538.5 |
-| XFS | rand-read-4k | 16 | 146,285.7 | 136,533.3 |
-| Btrfs | rand-read-4k | 16 | 120,470.6 | 128,000.0 |
-| ZFS whole-disk | rand-read-4k | 16 | 682,666.7 | 682,666.7 |
+| XFS | rand-read-4k | 16 | 146,285.7 | 146,285.7 |
+| Btrfs | rand-read-4k | 16 | 107,789.5 | 120,470.6 |
+| ZFS whole-disk | rand-read-4k | 16 | 682,666.7 | 2,048,000.0 |
 
 **Losses and caveats, stated plainly:**
 
-- ZFS random reads are **ARC-served** and are not a cold-disk comparison. The
-  cold and warm medians are identical for rand-read-4k because
-  `drop_caches` does not evict the ARC. No ZFS read or overall ranking is
-  claimed.
+- ZFS random reads are **ARC-served** and are not a cold-disk comparison. At
+  `numjobs=1` cold and warm are both 128,000 because `drop_caches` does not
+  evict the ARC; at `numjobs=16` cold is 682,666.7 and warm is 2,048,000. No
+  ZFS read or overall ranking is claimed.
 - ZFS was created without an explicit `-O compression=off`; OpenZFS's
   zero-block elimination can therefore affect all-zero fio writes. This is a
   property of the target configuration, not a comparative claim.
-- Btrfs fsync-write at `numjobs=16` is 927.5 IOPS versus ext4 3,368.4 and XFS
-  1,841.7. Btrfs is not the fastest or slowest on every workload; no ranking is
+- Btrfs fsync-write at `numjobs=16` is 911.0 IOPS versus ext4 3,160.5 and XFS
+  1,855.1. Btrfs is not the fastest or slowest on every workload; no ranking is
   claimed.
-- ZFS's 6,243.9 fsync-write IOPS at `numjobs=16` is the observed pool/ZIL
+- ZFS's 6,736.8 fsync-write IOPS at `numjobs=16` is the observed pool/ZIL
   behaviour in this guest; it is not evidence of physical-media durability and
   is not compared to a power-loss test.
 - One repetition per cell is enough for scoped medians, not for trustworthy
@@ -470,7 +470,7 @@ recorded in the guest status. No file-backed vdev is used for this target.
 
 ### 5.5 Block-layer lying-disk model (dm-flakey and blkdebug, 2026-11-04)
 
-Receipt: `bench/receipts/blkdebug-20261104T071235Z.json`. `scripts/blkdebug_court.sh`
+Receipt: `bench/receipts/blkdebug-20261104T072008Z.json`. `scripts/blkdebug_court.sh`
 runs in the vm court, prepares one clean store base image, copies it per
 iteration, boots the guest with a block-layer fault, waits for a returned
 commit, sleeps a seeded delay, `SIGKILL`s QEMU, reboots, and verifies with Rust
@@ -478,7 +478,7 @@ and Go against the exact expected whole generation. 30 iterations: 5 per mode.
 
 | Mode | Iterations | old | new | lost | partial | fault observed |
 |---|---:|---:|---:|---:|---:|---:|
-| control (no fault) | 5 | 4 | 1 | 0 | 0 | 0 |
+| control (no fault) | 5 | 5 | 0 | 0 | 0 | 0 |
 | dm-flakey silent write drop | 5 | 0 | 0 | 5 | 0 | 5 (by loss) |
 | dm-flakey write EIO | 5 | 5 | 0 | 0 | 0 | 5 (COMMIT_FAIL) |
 | QEMU snapshot total write drop | 5 | 0 | 0 | 5 | 0 | 5 (by loss) |
@@ -488,8 +488,8 @@ and Go against the exact expected whole generation. 30 iterations: 5 per mode.
 - **dm-flakey silent write drop** is the lying-disk result. The guest creates
   `flakey /dev/vdb 0 2 3600 1 drop_writes`; the 2-second up interval covers
   ext4 mount, then writes are acknowledged and silently discarded. Every
-  iteration lost acknowledged commits: recovered generation 89/89/87/87/87 vs
-  last returned 307/198/335/295/252, i.e. 218/109/248/208/165 commits lost.
+  iteration lost acknowledged commits: recovered generation 87/89/89/88/89 vs
+  last returned 319/218/334/292/246, i.e. 232/129/245/204/157 commits lost.
   Both implementations recovered the same generation with `verify --full`
   clean and read the exact expected bytes. **0 partial states.** This is the
   expected consequence of a disk that lies about writes, not a WeftFS
@@ -497,12 +497,13 @@ and Go against the exact expected whole generation. 30 iterations: 5 per mode.
 - **dm-flakey write EIO** failed the first write after the 2-second up
   interval every time. The store returned a failed commit (one `COMMIT_FAIL`
   per iteration), recovered generation equalled the last returned generation
-  (89/87/89/89/87), `verify --full` was clean, and no acknowledged commit was
-  lost. This is fail-closed behaviour at the filesystem/block boundary.
+  in all five (88/79/8/7/6), `verify --full` was clean, and no acknowledged
+  commit was lost. This is fail-closed behaviour at the filesystem/block
+  boundary.
 - **QEMU snapshot total write drop** (`snapshot=on`) acknowledged tens to
   hundreds of commits into a volatile overlay that `SIGKILL` discarded. Every
   iteration recovered generation 2, the prepared base, and lost all
-  acknowledged commits (last returned 66/79/193/179/132). 0 partial. This is
+  acknowledged commits (last returned 52/77/205/182/128). 0 partial. This is
   a total write-drop model, not selective media loss.
 - **blkdebug write-error and flush-error are blocked, not passed.** QEMU 7.2
   blkdebug arms at device open, so the first injected write is ext4's mount
@@ -521,7 +522,7 @@ and Go against the exact expected whole generation. 30 iterations: 5 per mode.
 
 ### 5.6 Host page-cache loss attempt
 
-Receipt: `bench/receipts/hostcache-probe-20261104T071612Z.json`, run in the vm
+Receipt: `bench/receipts/hostcache-probe-20261104T072314Z.json`, run in the vm
 court with the usual `--cap-drop=ALL` and no added capabilities.
 
 - `/proc/sys/vm/drop_caches` exists (mode `200`) but the container cannot write

@@ -262,13 +262,13 @@ durability result, unsynced-control result, and raw serial logs.
 `scripts/blkdebug_court.sh` reuses `verification/powerloss/guest-init.sh` but
 prepares one clean ext4 store base, copies it per iteration, and installs a
 block-layer fault before the SIGKILL/reboot/Rust+Go verification. It ran 30
-iterations (5 per mode) in receipt `bench/receipts/blkdebug-20261104T071235Z.json`:
+iterations (5 per mode) in receipt `bench/receipts/blkdebug-20261104T072008Z.json`:
 
 | Mode | Result |
 |---|---|
-| control, no fault | 4 old, 1 new, 0 partial |
-| `dm-flakey` `drop_writes` (2 s up, 1 h down) | 5/5 lost acknowledged commits (218/109/248/208/165); 0 partial; both implementations agreed and read the exact expected bytes |
-| `dm-flakey` `error_writes` | 5/5 old, one `COMMIT_FAIL` each, 0 loss, 0 partial |
+| control, no fault | 5 old, 0 new, 0 partial |
+| `dm-flakey` `drop_writes` (2 s up, 1 h down) | 5/5 lost acknowledged commits (232/129/245/204/157); 0 partial; both implementations agreed and read the exact expected bytes |
+| `dm-flakey` `error_writes` | 5/5 old, one `COMMIT_FAIL` each, recovered exactly the last returned generation (88/79/8/7/6), 0 loss, 0 partial |
 | QEMU `snapshot=on` total write drop | 5/5 recovered generation 2, all acknowledged commits lost, 0 partial |
 | blkdebug `write_aio` EIO | 5/5 blocked at ext4 mount |
 | blkdebug `flush_to_os` EIO | 5/5 blocked at ext4 mount |
@@ -294,7 +294,7 @@ scripts/docker-court.sh vm "BLKDEBUG_MODES=control,dm-flakey-drop BLKDEBUG_ITERA
 ### 2.7 Host page-cache probe (2026-11-04)
 
 `scripts/hostcache_probe.sh` runs in the vm court with `cap-drop=ALL` and records
-`bench/receipts/hostcache-probe-20261104T071612Z.json`. `/proc/sys/vm/drop_caches`
+`bench/receipts/hostcache-probe-20261104T072314Z.json`. `/proc/sys/vm/drop_caches`
 exists (mode `200`) but the container cannot write it: `CapEff=0000000000000000`
 and the exact refusal is `Read-only file system`. **No host cache was dropped.**
 A per-file `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file under
