@@ -19,6 +19,7 @@ import (
 	"crypto/sha256"
 	"flag"
 	"fmt"
+	"go/format"
 	"os"
 	"path/filepath"
 	"strings"
@@ -346,7 +347,11 @@ func renderGo(s *schema) []byte {
 	}
 	fmt.Fprintln(&b, "\t}")
 	fmt.Fprintln(&b, "}")
-	return b.Bytes()
+	formatted, err := format.Source(b.Bytes())
+	if err != nil {
+		fail("generated Go does not parse: %v", err)
+	}
+	return formatted
 }
 
 func main() {
