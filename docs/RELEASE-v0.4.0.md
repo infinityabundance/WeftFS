@@ -42,7 +42,7 @@ weftfs = "0.4.0"
   both codecs: an empty zstd payload is invalid; a zstd header's declared
   content size must equal `decoded_len`; the actual decoded length must match.
   Re-run: **0 mismatches, 0 panics**, 172,294 accepted, peak RSS 6.3 MiB /
-  205.9 MiB. Two new byte-identical reject vectors. The failing receipt is
+  139.9 MiB. Two new byte-identical reject vectors. The failing receipt is
   retained.
 
 ## Measured storage path (all published with commands and receipts)
@@ -118,7 +118,7 @@ losslessly as `.zst`), `context-mounts-20261104T125344Z.json`,
 
 ## Verification
 
-`scripts/verify-all.sh` passes **19/19 courts** at `verify-20261104T103447Z`,
+`scripts/verify-all.sh` passes **19/19 courts** at `verify-20261104T132330Z`,
 including spec drift (27 comparisons), generated types, codec cross-decode in
 both directions, context cross-language gates, the new fuzz differential, Buck2
 CAS, and agent memory. Rust: 328 passed, 2 ignored (the documented CAP_SETUID

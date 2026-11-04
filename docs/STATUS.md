@@ -2,7 +2,7 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261104T103447Z.json` (all nineteen courts `pass`,
+`bench/receipts/verify-20261104T132330Z.json` (all nineteen courts `pass`,
 including spec drift with 27 comparisons, generated-type drift, quantized
 cross-decode, context cross-language gates, Buck2 CAS, agent memory, and the new
 `fuzz_diff` court), at WeftFS `82518e5`, WeftCodec `beb88cf`, WeftCodec-Go
@@ -67,19 +67,16 @@ in `verification/README.md`.
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `82518e5` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `beb88cf` | Rust codec v1 |
-| `WeftCodec-Go` | `6f535ea` | independent Go codec |
-| `WeftFS-Go` | `33743f0` | independent Go store + FUSE |
+| `WeftFS` | `fb5dbd5` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `ba68f42` | Rust codec v1 |
+| `WeftCodec-Go` | `7fde3de` | independent Go codec |
+| `WeftFS-Go` | `fce700a` | independent Go store + FUSE |
 
-These are the revisions pinned by the latest full verification receipt; later
-commits (documentation, tests, packaging) may be ahead of them without a new
-full receipt. Version 0.4.0 is committed on `staging` in the parent and
-WeftCodec. At the time of writing, `staging == main` and pushed for WeftCodec-Go
-and WeftFS-Go; the parent and WeftCodec `staging` commits for 0.4.0 are local
-and ahead of their `main`/`origin/staging`. **No `v0.4.0` tag exists in any of
-the four local clones** (the newest tag is `v0.3.0`), so no tag claim is made.
-The research directory and `AGENTS.md` are gitignored, per operator directive.
+These are the revisions pinned by the latest full verification receipt.
+The current release is **v0.4.0** (`docs/RELEASE-v0.4.0.md`); the tag, the
+per-repo GitHub releases, the four GHCR images, and the two crates are cut
+from the `staging` and `main` commits listed above (both branches are kept
+identical and pushed in all four repositories).
 
 ## 2. What is implemented and tested
 
@@ -732,8 +729,8 @@ structured-item, selector-depth/operand, and archive-entry bounds); defaults
 remain the normative spec values.
 
 **B5 — deterministic differential fuzz (1,000,000 inputs; 0 mismatches).**
-`bench/receipts/fuzz-diff-20261104T103431Z.json` (direct run) and
-`bench/receipts/fuzz-diff-20261104T103623Z.json` (inside `verify-all`). A shared
+`bench/receipts/fuzz-diff-20261104T132310Z.json` (direct run) and
+`bench/receipts/fuzz-diff-20261104T132413Z.json` (inside `verify-all`). A shared
 seed corpus of 44 valid WFT1 frames (RAW, ZSTD, REFERENCE, DELTA, DICTIONARY,
 STRUCTURED, TENSOR, TOKEN_SEQUENCE, QUANTIZED_TENSOR, chunked) lives in
 `conformance/fuzz/v1/seeds.txt`. Identical xorshift64* generators in Rust
@@ -776,7 +773,7 @@ Go Corrupt on a zstd frame declaring content size 2 while yielding 0 bytes, 93
 Rust Corrupt / Go ok on an empty zstd body with `decoded_len = 0`) is retained
 as the evidence that motivated the rule. The court is not coverage-guided
 fuzzing and not a substitute for the curated B1 decoder-bomb vectors. Wired
-into `scripts/verify-all.sh`; `verify-20261104T103447Z.json` passes all 19
+into `scripts/verify-all.sh`; `verify-20261104T132330Z.json` passes all 19
 courts including `fuzz_diff`.
 
 **B4 — randomized POSIX torture (6/6 pass).**
@@ -913,7 +910,7 @@ multi-writer, physical rig).
   bounded `/tmp`, `no-new-privileges`, and `cap-drop=ALL` (FUSE adds only
   `/dev/fuse` and `CAP_SYS_ADMIN`).
 - `scripts/verify-all.sh` re-ran all nineteen courts and produced
-  `bench/receipts/verify-20261104T103447Z.json` with revisions, host, command
+  `bench/receipts/verify-20261104T132330Z.json` with revisions, host, command
   log, and per-court results.
 - The P7 benchmark court ran codec, store, and filesystem benchmarks under the
   same hard limits. Every receipt contains raw samples, environment, and

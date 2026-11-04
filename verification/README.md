@@ -321,14 +321,20 @@ dependency, self-cycle, reserved mode bytes, `decoded_len = u64::MAX`, bad chunk
 extent, wrong content hash, unknown critical flag, non-canonical STRUCTURED),
 and 1/8 clean seeds. Both decoders run with `Limits::default()`.
 
-Receipts: `bench/receipts/fuzz-diff-20261104T103431Z.json` (direct run) and
-`bench/receipts/fuzz-diff-20261104T103623Z.json` (inside `verify-all`). Result:
+Receipts: `bench/receipts/fuzz-diff-20261104T132310Z.json` (direct run) and
+`bench/receipts/fuzz-diff-20261104T132413Z.json` (inside `verify-all`). Result:
 1,000,000 result lines per implementation, **0 mismatches**, **0 panics**,
 172,294 accepted, identical class distributions, corpus hash
 `4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5` matched
-before comparison, peak RSS 6.3 MiB (Rust) / 205.9 MiB (Go). The court is
+before comparison, peak RSS 6.3 MiB (Rust) / 139.9 MiB (Go). The court is
 CPU-only synthetic differential testing, **not coverage-guided fuzzing** and not
 a proof of absence.
+
+Two failing receipts are retained on purpose:
+`fuzz-diff-20261104T102754Z.json` (544 mismatches, the finding below) and
+`fuzz-diff-20261104T132236Z.json` (0 mismatches but Go peak RSS 272,048 KiB
+against the 256 MiB guard before the driver pinned a 192 MiB soft memory limit;
+139,960 KiB after). Neither is edited or deleted.
 
 ### 3.2 The 544-mismatch finding and its resolution
 
@@ -371,8 +377,8 @@ receipt is evidence that the rule was needed, not a currently failing court.
 | `tests/bounded_recovery.rs` | test-only bounded corruption enumeration (not model checking) |
 | `bench/receipts/crash-torture-*.json` | process-fault crash proxy, explicitly not physical power loss |
 | `bench/receipts/crash-torture-20261104T104233Z.json` / `.log.zst` / `.results.tsv.zst` | 100,000/100,000 iterations, 66,667 old + 33,333 new, 0 partial, 0 bad, 19.2 it/s; process-fault proxy, not physical |
-| `bench/receipts/fuzz-diff-20261104T103431Z.json`, `fuzz-diff-20261104T103623Z.json` | 1,000,000 deterministic inputs, 0 mismatches, 0 panics, 172,294 accepted; synthetic, not coverage-guided; peak RSS 6.3/205.9 MiB |
+| `bench/receipts/fuzz-diff-20261104T132310Z.json`, `fuzz-diff-20261104T132413Z.json` | 1,000,000 deterministic inputs, 0 mismatches, 0 panics, 172,294 accepted; synthetic, not coverage-guided; peak RSS 6.3/139.9 MiB |
 | `bench/receipts/fuzz-diff-20261104T102754Z.json` | retained failing run: 544 zstd strictness mismatches (451 + 93), motivating the shared normative rule |
 | `bench/receipts/context-mounts-20261104T125344Z.json` / `.determinism.txt` | 100 concurrent mounts, 425/425 SHA-256 matches, 100/100 distinct listings, 0 survivors; single-host synthetic store |
 | `bench/receipts/time-travel-20261104T125947Z.json` / `.determinism.txt` | 10,000 versions, 101 snapshots, 10 concurrent mounts, byte-exact across live rename + retag; correctness only |
-| `bench/receipts/verify-20261104T103447Z.json` | 19/19 courts pass, including `fuzz_diff`, spec drift (27 comparisons), and generated types |
+| `bench/receipts/verify-20261104T132330Z.json` | 19/19 courts pass, including `fuzz_diff`, spec drift (27 comparisons), and generated types |
