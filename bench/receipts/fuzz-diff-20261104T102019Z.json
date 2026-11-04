@@ -1,0 +1,59 @@
+{
+  "kind": "differential-fuzz",
+  "label": "CPU-only, synthetic inputs, not coverage-guided",
+  "timestamp_utc": "20261104T102019Z",
+  "generator": {
+    "prng": "xorshift64*",
+    "seed": "0x9E3779B97F4A7C15",
+    "multiplier": "0x2545F4914F6CDD1D",
+    "corpus_hash": "blake3-256 of LE64(len(input)) || input for each input in order",
+    "max_input_bytes": 4096,
+    "random_input_len": "0..2048",
+    "mutation_count": "1..8",
+    "seeds": "conformance/fuzz/v1/seeds.txt"
+  },
+  "n": 1000000,
+  "corpus_hash": {
+    "rust": "b8d48cfb35ac362c53d3f193a8d217fa5c145eb6d15aa5e60aeae83c76019dfe",
+    "go": "b8d48cfb35ac362c53d3f193a8d217fa5c145eb6d15aa5e60aeae83c76019dfe",
+    "match": true
+  },
+  "revisions": {
+    "WeftFS": "347ce42fa7f7fdc1ff9ef55afeb219adb3b95ec6",
+    "WeftCodec": "c80ed7ba02b3c66b92af93edcdd8757a04fc2d2f",
+    "WeftCodec-Go": "995b1c69d037d691c9f8b238a7dafc7a93f0106d",
+    "WeftFS-Go": "33743f03ab343f500d2c22171b1ca36849463859"
+  },
+  "court": {
+    "kernel": "7.3.1-1-cachyos",
+    "rust_image": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "go_image": "sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab",
+    "memory_limit": "3g",
+    "swap_limit": "3g",
+    "pids_limit": 1024,
+    "cpus": 4
+  },
+  "rust": {
+    "elapsed_ms": 1101,
+    "peak_rss_kib": 3668,
+    "result_lines": 1000000,
+    "panics": 0,
+    "classes": {"ok":120,"Corrupt":181667,"UnsupportedVersion":6924,"Malformed":811289}
+  },
+  "go": {
+    "elapsed_ms": 1567,
+    "peak_rss_kib": 9884,
+    "result_lines": 1000000,
+    "panics": 0,
+    "classes": {"ok":120,"Corrupt":181667,"UnsupportedVersion":6924,"Malformed":811289}
+  },
+  "comparison": {
+    "compared_lines": 1000000,
+    "mismatches": 0,
+    "first_mismatches": []
+  },
+  "total_elapsed_ms": 4000,
+  "errors": "",
+  "result": "pass",
+  "reasons": ""
+}

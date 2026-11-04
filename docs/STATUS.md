@@ -692,6 +692,29 @@ Limits are configurable through the ten requested `decode` flags (plus
 structured-item, selector-depth/operand, and archive-entry bounds); defaults
 remain the normative spec values.
 
+**B5 — deterministic differential fuzz (1,000,000/1,000,000 pass).**
+`bench/receipts/fuzz-diff-20261104T102019Z.json`. A shared seed corpus of 44
+valid WFT1 frames (RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR,
+TOKEN_SEQUENCE, QUANTIZED_TENSOR, chunked) lives in
+`conformance/fuzz/v1/seeds.txt`. Identical xorshift64* generators in Rust
+(`WeftCodec/examples/fuzz_differential.rs`) and Go
+(`WeftCodec-Go/cmd/fuzzdiff`) produce 1,000,000 inputs: half mutated seeds
+(1–8 bit-flip/byte-replace/insert/delete/truncate operations, 4 KiB bound),
+half pure random bytes of length 0–2048. Both decoders ran with
+`Limits::default()` inside the unchanged hard-limited courts; corpus hash
+`b8d48cfb35ac362c53d3f193a8d217fa5c145eb6d15aa5e60aeae83c76019dfe`
+(BLAKE3-256 over `LE64(len) || input` per input) matched before comparison.
+Result lines: 1,000,000 each, 0 mismatches, 0 panics. Class distribution was
+identical on both sides: ok 120, Corrupt 181,667, UnsupportedVersion 6,924,
+Malformed 811,289. Peak RSS was 3,668 KiB (Rust) and 9,884 KiB (Go); elapsed
+1,101 ms and 1,567 ms. The 120 accepts are unmutated (no-op mutation) seeds;
+because every frame carries header/trailer checksums, almost all mutations are
+rejected before deep decoding, so this court is a large structural differential
+and panic/Memory court, **not** coverage-guided fuzzing and not a substitute for
+the curated B1 decoder-bomb vectors. Wired into `scripts/verify-all.sh` as
+`fuzz_diff`; the full 19-court verification receipt was not regenerated as part
+of this change.
+
 **B4 — randomized POSIX torture (6/6 pass).**
 `bench/receipts/posix-torture-20261103T213317Z.json`. Seeds 1–3, both
 directions (Rust write/Go read and Go write/Rust read), 2,251–2,342 completed

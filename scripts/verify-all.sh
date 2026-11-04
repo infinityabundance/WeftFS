@@ -80,6 +80,21 @@ run_court rust "context_cross_rust_parse" \
 run_court go "context_cross_compare" \
   "cd WeftCodec-Go && bash hack/context-cross.sh compare"
 
+# Deterministic cross-language differential fuzz: 1,000,000 generated/mutated
+# inputs through both decoders, identical classes and content roots, no panics,
+# peak RSS <= 256 MiB. The gate orchestrates its own two courts, so it is
+# invoked directly instead of through run_court; it completes in seconds with
+# the release harnesses and writes its own receipt.
+echo "=== fuzz_diff ===" | tee -a "$log"
+if scripts/fuzz-diff.sh >>"$log" 2>&1; then
+  echo "fuzz_diff=pass" >> "$results"
+  echo "PASS fuzz_diff"
+else
+  echo "fuzz_diff=fail" >> "$results"
+  echo "FAIL fuzz_diff"
+  status=1
+fi
+
 {
   echo "{"
   echo "  \"kind\": \"correctness-verification\","
