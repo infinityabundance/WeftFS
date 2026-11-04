@@ -692,28 +692,40 @@ Limits are configurable through the ten requested `decode` flags (plus
 structured-item, selector-depth/operand, and archive-entry bounds); defaults
 remain the normative spec values.
 
-**B5 — deterministic differential fuzz (1,000,000/1,000,000 pass).**
-`bench/receipts/fuzz-diff-20261104T102019Z.json`. A shared seed corpus of 44
+**B5 — deterministic differential fuzz (1,000,000 inputs; 544 zstd divergences found).**
+`bench/receipts/fuzz-diff-20261104T102754Z.json`. A shared seed corpus of 44
 valid WFT1 frames (RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR,
 TOKEN_SEQUENCE, QUANTIZED_TENSOR, chunked) lives in
 `conformance/fuzz/v1/seeds.txt`. Identical xorshift64* generators in Rust
 (`WeftCodec/examples/fuzz_differential.rs`) and Go
-(`WeftCodec-Go/cmd/fuzzdiff`) produce 1,000,000 inputs: half mutated seeds
-(1–8 bit-flip/byte-replace/insert/delete/truncate operations, 4 KiB bound),
-half pure random bytes of length 0–2048. Both decoders ran with
-`Limits::default()` inside the unchanged hard-limited courts; corpus hash
-`b8d48cfb35ac362c53d3f193a8d217fa5c145eb6d15aa5e60aeae83c76019dfe`
+(`WeftCodec-Go/cmd/fuzzdiff`) produce 1,000,000 inputs with a fixed split:
+1/8 raw random bytes (0–2048), 1/8 un-repaired seed mutations (1–8 legacy
+operations), 4/8 repaired body/table mutations (1–4 operations with `body_len`,
+header CRC32C, and trailer CRC32C recomputed; content hash deliberately left
+stale), 1/8 semantic faults (missing/lying/denying dependency, self-cycle
+REFERENCE through the DAG entry point, mode bytes 9/127/128/255,
+`decoded_len = u64::MAX`, bad chunk extent, wrong content hash, unknown
+critical flag, non-canonical STRUCTURED body), and 1/8 clean seeds. Both
+decoders ran with `Limits::default()` inside the unchanged hard-limited courts;
+corpus hash `4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5`
 (BLAKE3-256 over `LE64(len) || input` per input) matched before comparison.
-Result lines: 1,000,000 each, 0 mismatches, 0 panics. Class distribution was
-identical on both sides: ok 120, Corrupt 181,667, UnsupportedVersion 6,924,
-Malformed 811,289. Peak RSS was 3,668 KiB (Rust) and 9,884 KiB (Go); elapsed
-1,101 ms and 1,567 ms. The 120 accepts are unmutated (no-op mutation) seeds;
-because every frame carries header/trailer checksums, almost all mutations are
-rejected before deep decoding, so this court is a large structural differential
-and panic/Memory court, **not** coverage-guided fuzzing and not a substitute for
-the curated B1 decoder-bomb vectors. Wired into `scripts/verify-all.sh` as
-`fuzz_diff`; the full 19-court verification receipt was not regenerated as part
-of this change.
+Result lines: 1,000,000 each, 0 panics, **544 mismatches** (451 Rust `ok` / Go
+`Corrupt`, 93 Rust `Corrupt` / Go `ok`), all confined to zstd edge cases: Rust
+accepts a zstd frame declaring content size 2 that yields 0 bytes while Go
+rejects it, and Go accepts an empty zstd body with `decoded_len = 0` while Rust
+rejects it. First mismatch: index 614, input prefix `5746543101000004`, Rust
+`ok 9959…71cb`, Go `Corrupt`. Classes are otherwise identical: Rust ok 172,745,
+Corrupt 174,564; Go ok 172,387, Corrupt 174,922; both Malformed 466,432,
+NonCanonical 67,975, DependencyMissing 35,987, LimitExceeded 16,900,
+DependencyMismatch 14,081, UnsupportedMode 12,608, UnsupportedFeature 12,347,
+DependencyCycle 12,349, DependencyDenied 12,313, UnsupportedVersion 1,699.
+Peak RSS was 17,600 KiB (Rust) and 140,708 KiB (Go); elapsed 1,273 ms and
+1,987 ms. The court therefore **fails its zero-mismatch bar** and is retained as
+the evidence for a real cross-language zstd divergence, not papered over. It is
+not coverage-guided fuzzing and not a substitute for the curated B1
+decoder-bomb vectors. Wired into `scripts/verify-all.sh` as `fuzz_diff`;
+the full 19-court verification receipt was not regenerated as part of this
+change.
 
 **B4 — randomized POSIX torture (6/6 pass).**
 `bench/receipts/posix-torture-20261103T213317Z.json`. Seeds 1–3, both

@@ -39,6 +39,16 @@ scripts/fuzz-diff.sh          # N = 1,000,000
 scripts/fuzz-diff.sh 1000000  # explicit
 ```
 
+## Deterministic split (N = 1,000,000)
+
+| Selector (`below(8)`) | Share | Input |
+|---|---:|---|
+| 0 | 1/8 | raw random bytes, length 0–2048 |
+| 1 | 1/8 | un-repaired seed mutation (1–8 legacy operations) |
+| 2–5 | 4/8 | repaired body/table mutation (1–4 operations), header and trailer CRC32C recomputed |
+| 6 | 1/8 | semantic fault: missing/lying/denying dependency, self-cycle REFERENCE via DAG, wrong mode byte, `decoded_len = u64::MAX`, bad chunk extent, wrong content hash, unknown critical flag, non-canonical STRUCTURED body |
+| 7 | 1/8 | clean seed (successful-decode / content-root path) |
+
 The generator, corpus hash framing, and per-input line format are documented
 verbatim in both runners:
 

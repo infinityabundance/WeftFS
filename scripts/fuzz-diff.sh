@@ -153,7 +153,7 @@ if [[ -n "$rust_hash" && "$rust_hash" == "$go_hash" ]]; then
   hash_ok=1
   paste "$fuzz_dir/rust.rows" "$fuzz_dir/go.rows" | awk -F '\t' '
     function show(tag) {
-      printf "example\t%s\t%s\t%s\t%s\t%s\t%s\n", tag, $1, $2, $3, $4, $5, $6
+      printf "example\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", tag, $1, $2, $3, $4, $5, $6
     }
     {
       total++
@@ -228,8 +228,15 @@ cat > "$receipt" <<EOF
     "multiplier": "0x2545F4914F6CDD1D",
     "corpus_hash": "blake3-256 of LE64(len(input)) || input for each input in order",
     "max_input_bytes": 4096,
-    "random_input_len": "0..2048",
-    "mutation_count": "1..8",
+    "splits": {
+      "raw_random": "1/8",
+      "unrepaired_mutation": "1/8",
+      "repaired_mutation": "4/8",
+      "semantic_fault": "1/8",
+      "clean_seed": "1/8"
+    },
+    "repaired_mutation": "1..4 body/table mutations; body_len, header_crc32c, and frame_crc32c recomputed; content_hash deliberately not repaired",
+    "semantic_faults": "missing/lying/denying dependency, self-cycle REFERENCE via DAG, mode byte 9/127/128/255, decoded_len=u64::MAX, chunk extent past body, wrong content hash, unknown critical flag, non-canonical STRUCTURED body",
     "seeds": "conformance/fuzz/v1/seeds.txt"
   },
   "n": $n,
