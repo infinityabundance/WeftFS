@@ -299,11 +299,16 @@ a reader MUST validate the named commit by replay. Names are UTF-8 without
 ## 3. Operations and state transitions
 
 - `create(parent, name, bytes)`: allocate ObjectId, write chunks, put_object,
-  put_entry, set_tip, commit.
-- `write(path, offset, bytes)`: read current content, apply bounded splice in
-  memory (v1 bound: 256 MiB per file for random writes; larger writes must be
-  streaming append or truncate), create a new VersionId, update content root,
-  commit. Old versions remain readable through snapshots.
+  put_entry, set_tip, commit. Implementations SHOULD also provide a streaming
+  form that reads the source in bounded memory and commits once.
+- `write(path, offset, bytes)`: read the current manifest, materialise only the
+  intersecting chunks, store new chunks for changed regions, reuse unchanged
+  chunk references verbatim, create a new VersionId, update content root,
+  commit. Old versions remain readable through snapshots. The defensive file
+  bound is 1 TiB; the effective bound for a chunked file is also the manifest
+  decode limit (`max_array_items` chunks), which at the default 64 KiB chunk
+  size is far below 1 TiB. Implementations MUST fail with `LimitExceeded`
+  rather than truncate.
 - `truncate`, `unlink` (delete entry; object remains while referenced by a
   snapshot or open handle), `rename` (delete + insert entry atomically in one
   commit), `link`, `mkdir`, `rmdir`, `symlink`, `setattr`, `xattr`.
