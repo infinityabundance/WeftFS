@@ -20,6 +20,7 @@
 # This is a process-fault proxy, not physical power loss. The court does not
 # cut power, drop write caches, or simulate torn sectors.
 set -Eeuo pipefail
+ulimit -c 0 2>/dev/null || true
 
 ROOT=/work
 source "$ROOT/scripts/demo-lib.sh"
@@ -36,6 +37,19 @@ if [ "$ITERATIONS" -lt 1 ]; then
   exit 64
 fi
 
+# Store mode. The original harness reused one growing store, so every
+# iteration's `verify --full` rescanned every earlier commit and object
+# (O(n^2), measured 2.9 it/s at 1,000 iterations). A fresh store per iteration
+# keeps the checked state at three generations and makes 10,000 iterations
+# practical without weakening any assertion: the old/new/partial and
+# phase-specific checks are unchanged. Set WEFT_CRASH_FRESH_STORE=0 to run the
+# historical accumulating-store variant.
+FRESH_STORE="${WEFT_CRASH_FRESH_STORE:-1}"
+case "$FRESH_STORE" in
+  0|1) ;;
+  *) echo "WEFT_CRASH_FRESH_STORE must be 0 or 1" >&2; exit 64 ;;
+esac
+
 S="$STORES/crash-$RUN_ID"
 NDJSON="$SCRATCH/crash-$RUN_ID.iterations.ndjson"
 rm -rf "$S"
@@ -45,10 +59,26 @@ step_begin "crash-$ITERATIONS" \
   "$ITERATIONS alternating Rust/Go crash iterations (process-fault proxy)"
 : > "$NDJSON"
 
-run_ok "init" "$RUSTFS" --store "$S" --fixed-timestamp-ns "$TS1" init --chunk-size 256
+if [ "$FRESH_STORE" = 0 ]; then
+  run_ok "init" "$RUSTFS" --store "$S" --fixed-timestamp-ns "$TS1" init --chunk-size 256
+fi
 
-OLD="$STEP_DIR/old.bin"
-NEW="$STEP_DIR/new.bin"
+# Pre-generate a bounded pool of old/new payloads once. The historical harness
+# rebuilt two files with head/tr on every iteration; that is pure overhead.
+TEMPLATE_COUNT=64
+OLD_FILES=()
+NEW_FILES=()
+for ((t = 0; t < TEMPLATE_COUNT; t++)); do
+  old_len=$((1024 + t * 8))
+  new_len=$((2048 + t * 8))
+  old_file="$STEP_DIR/old-$t.bin"
+  new_file="$STEP_DIR/new-$t.bin"
+  { printf 'OLD-%06d-' "$t"; head -c "$old_len" /dev/zero | tr '\0' 'o'; } > "$old_file"
+  { printf 'NEW-%06d-' "$t"; head -c "$new_len" /dev/zero | tr '\0' 'n'; } > "$new_file"
+  OLD_FILES+=("$old_file")
+  NEW_FILES+=("$new_file")
+done
+
 OBSERVED="$STEP_DIR/observed.bin"
 ERR="$STEP_DIR/error.txt"
 LS="$STEP_DIR/ls.txt"
@@ -74,18 +104,21 @@ record_iteration() {
 
 # verify_reader <impl> <store>
 # Sets VERIFY_STATE to clean | unpublished | bad. Only the documented
-# unpublished-tail note is accepted as a non-clean verify result.
+# unpublished-tail note is accepted as a non-clean verify result. The clean
+# fast path uses the process exit status plus a literal `true` key check; the
+# JSON parser is invoked only when the verifier reports a problem.
 verify_reader() {
-  local impl="$1" store="$2" key count_key detail_path count index bad detail
+  local impl="$1" store="$2" key count_key detail_path count index bad detail status true_pat
   if [ "$impl" = rust ]; then
-    run_any "verify" "$RUSTFS" --store "$store" --json verify --full
-    key=ok; count_key=problems#len; detail_path=problems
+    status=0
+    "$RUSTFS" --store "$store" --json verify --full >"$VERIFY_OUT" 2>"$ERR" || status=$?
+    key=ok; count_key=problems#len; detail_path=problems; true_pat='"ok": true'
   else
-    run_any "verify" "$GOFS" --store "$store" --json verify --full
-    key=OK; count_key=Problems#len; detail_path=Problems
+    status=0
+    "$GOFS" --store "$store" --json verify --full >"$VERIFY_OUT" 2>"$ERR" || status=$?
+    key=OK; count_key=Problems#len; detail_path=Problems; true_pat='"OK": true'
   fi
-  cp "$RUN_OUT" "$VERIFY_OUT" 2>/dev/null || true
-  if [ "$(jsonq "$VERIFY_OUT" "$key" 2>/dev/null || echo missing)" = true ]; then
+  if [ "$status" -eq 0 ] && grep -qF "$true_pat" "$VERIFY_OUT"; then
     VERIFY_STATE=clean
     return 0
   fi
@@ -127,17 +160,28 @@ for ((i = 0; i < ITERATIONS; i++)); do
     writer=go; reader=rust; WRITER_CLI="$GOFS"; READER_CLI="$RUSTFS"
   fi
 
-  old_len=$((1024 + i % 512))
-  new_len=$((2048 + i % 512))
-  { printf 'OLD-%06d-' "$i"; head -c "$old_len" /dev/zero | tr '\0' 'o'; } > "$OLD"
-  { printf 'NEW-%06d-' "$i"; head -c "$new_len" /dev/zero | tr '\0' 'n'; } > "$NEW"
+  OLD="${OLD_FILES[$((i % TEMPLATE_COUNT))]}"
+  NEW="${NEW_FILES[$((i % TEMPLATE_COUNT))]}"
 
   outcome=pass
   observed=missing
   verify=bad
 
-  # Install the known old state. unlink is ignored when /f is absent.
-  "$READER_CLI" --store "$S" unlink /f >/dev/null 2>"$ERR" || true
+  if [ "$FRESH_STORE" = 1 ]; then
+    rm -rf "$S"
+    mkdir -p "$S"
+    if ! "$RUSTFS" --store "$S" --fixed-timestamp-ns "$TS1" init --chunk-size 256 \
+        >/dev/null 2>"$ERR"; then
+      outcome=fail
+      FAILURES=$((FAILURES + 1))
+      record_iteration "$i" "$phase" "$writer" "$reader" "$expected" "init-failed" "bad" "$outcome"
+      log "iteration $i init failed: $(cat "$ERR")"
+      break
+    fi
+  else
+    # Install the known old state. unlink is ignored when /f is absent.
+    "$READER_CLI" --store "$S" unlink /f >/dev/null 2>"$ERR" || true
+  fi
   if ! "$READER_CLI" --store "$S" create /f --file "$OLD" >/dev/null 2>"$ERR"; then
     outcome=fail
     FAILURES=$((FAILURES + 1))
@@ -146,9 +190,11 @@ for ((i = 0; i < ITERATIONS; i++)); do
     break
   fi
 
-  # Crash the writer at the selected publication boundary.
-  if WEFT_CRASH_PHASE="$phase" "$WRITER_CLI" --store "$S" write /f --offset 0 --file "$NEW" \
-      >/dev/null 2>"$ERR"; then
+  # Crash the writer at the selected publication boundary. The subshell keeps
+  # the shell's "Aborted/Killed" job diagnostic out of the 10k-iteration log.
+  if (
+    WEFT_CRASH_PHASE="$phase" "$WRITER_CLI" --store "$S" write /f --offset 0 --file "$NEW"
+  ) >/dev/null 2>"$ERR"; then
     outcome=fail
     FAILURES=$((FAILURES + 1))
     record_iteration "$i" "$phase" "$writer" "$reader" "$expected" "writer-survived" "bad" "$outcome"
@@ -215,11 +261,13 @@ record_assert "after_superblock_write sees new state" "$PHASE_SUPERBLOCK" "$NEW_
 record_assert "pre-superblock phases see old state" "$((PHASE_OBJECTS + PHASE_COMMIT))" "$OLD_COUNT" \
   "$([ "$OLD_COUNT" = "$((PHASE_OBJECTS + PHASE_COMMIT))" ] && echo true || echo false)"
 note "iterations=$COMPLETED duration_ms=$DURATION_MS rate_iters_per_sec=$RATE"
+note "store_mode=$([ "$FRESH_STORE" = 1 ] && echo fresh-per-iteration || echo accumulating) verify_mode=full"
 note "verify clean=$VERIFY_CLEAN unpublished-tail=$VERIFY_UNPUBLISHED bad=$VERIFY_BAD"
 note "observed old=$OLD_COUNT new=$NEW_COUNT partial_or_missing=$((COMPLETED - OLD_COUNT - NEW_COUNT))"
 note "phases: after_objects=$PHASE_OBJECTS after_commit_file=$PHASE_COMMIT after_superblock_write=$PHASE_SUPERBLOCK"
 note "process-fault proxy via WEFT_CRASH_PHASE (SIGABRT/SIGKILL); NOT physical power loss, no cache drop, no torn-sector simulation"
 note "10000-iteration command: scripts/docker-court.sh fuse \"WEFT_CRASH_ITERATIONS=10000 bash bench/scripts/crash_torture.sh\""
+note "accumulating-store variant: WEFT_CRASH_FRESH_STORE=0 (O(n^2) verify, historical semantics)"
 
 save_out "iterations" "$NDJSON"
 artifact_local "iterations" "$NDJSON"
