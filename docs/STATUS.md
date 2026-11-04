@@ -1259,3 +1259,52 @@ multi-writer, physical rig).
       append counters, shuffled/duplicate/missing assembly, and range reads.
     - **Residual:** Huffman planes are not seekable, so a range read decodes one
       page/chunk and slices it; mode allocation is now 13, reserving 14+.
+
+    ## 2026-11-04 — A3: semantic roots and SEMANTIC_DELTA (14)
+
+    Near-duplicate tensors are now findable by an explicit semantic root and
+    exactly delta-encodable by mode 14. No lossy decode path exists.
+
+    - **Semantic root:** `H("weft/tensor/semantic/v1",
+      WCB(weft.tensor.semantic.v1))`. Policies are `none`,
+      `mantissa_truncate:N` (bf16/fp16/fp32; 1 <= N <= mantissa bits; sign,
+      exponent, NaN/inf preserved), and `block_quantize:B:L` (B divides the
+      element count; signed two's-complement words; symmetric `[-amax, amax]`
+      grid with the exact integer formulas in §15.1). `none` uses the exact
+      `weft/tensor/values/v1` hash; the other schemes use
+      `weft/tensor/semantic-values/v1`. `semantic_root` and `semantic_matches`
+      exist in both languages and are byte-identical.
+    - **Mode 14 `SEMANTIC_DELTA`** (`weft.ai.semantic_delta.v1`): the mode-11
+      payload verbatim (modular words, byte planes, one Huffman stream per
+      plane) plus a descriptor binding `base_semantic_root` and `policy`.
+      Decode verifies base content hash, dtype, shape, the semantic root
+      recomputed from the actual base bytes under the declared policy, the delta
+      root, and the reconstructed content hash. Every mismatch fails closed.
+    - **Candidate selection:** `select_semantic_base` requires both tensors
+      present, rejects different dtype/shape/root, and picks the smallest exact
+      per-plane Huffman size of the modular difference, tie-breaking on the
+      candidate content hash. Deterministic; different roots are never offered.
+    - **No-lossy statement:** approximate decoding is not implemented. The
+      semantic policy only groups and verifies a base; reconstruction is
+      bit-exact and an approximate base is `DependencyMismatch`, never a
+      fallback.
+    - **Vectors:** `conformance/v1/semantic-root/` (3 valid + 6 rejects) and
+      `conformance/v1/semantic-delta/` (3 valid + 6 rejects), byte-identical in
+      both codec repos. The previous reserved-mode vector moved from 14 to 15;
+      `017_unknown_mode_reserved14` is retained with `superseded_by`.
+    - **Cross gate:** `WeftCodec-Go/hack/cross.sh compare` reports
+      `YES byte-identical semantic_delta_bf16`, `..._fp32`, and `..._q8`, and
+      decode-equivalent both directions.
+    - **Tests:** Rust `cargo test --all-targets` 182 passed / 0 failed
+      (`tests/semantic_delta.rs` 6/6); Go `go test ./...` all packages pass
+      (`conformance` semantic vectors and `modes` near-duplicate selection).
+    - **Bench:** `bench/receipts/semantic-delta-20261104T222029Z.json`. Synthetic
+      single-host rust court, 8 MiB bf16 pair, 4,195/4,194,304 changed (0.10002%):
+      semantic root median `none` 0.68 ms, `mantissa_truncate:3` 8.95 ms,
+      `block_quantize:128:256` 15.91 ms; selection over 32 same-root candidates
+      983.2 ms, selected index 0; delta frame 1,050,660 B vs independent zstd-3
+      6,127,332 B (5.83x) and zstd-19 4,976,379 B; encode median 31.93 ms,
+      decode median 44.22 ms; `exact` and `logical_root_match` true.
+    - **Residual:** the semantic root is an index hint, not a remote search
+      service; candidate selection decodes every candidate; only three numeric
+      policies exist in v1.

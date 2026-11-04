@@ -1,0 +1,102 @@
+{
+  "base_content_hash": "e19562b49e91499787693980a424497a0a18a24a78ea62415d8ef7fe83f9fea1",
+  "bytes": {
+    "base_tensor_frame": 8388892,
+    "delta_frame": 1050660,
+    "delta_payload": 1050137,
+    "delta_vs_zstd_level3": 0.17147104155609652,
+    "independent_zstd_level19": 4976379,
+    "independent_zstd_level3": 6127332,
+    "zstd3_over_delta": 5.831888527211467
+  },
+  "candidate_selection": {
+    "all_candidates_share_root": true,
+    "candidate_count": 32,
+    "exact_modular_cost_used": true,
+    "expected_index": 0,
+    "median_ms": 983.211797,
+    "runs_ms": [
+      983.211797,
+      983.77899,
+      981.792815
+    ],
+    "selected_index": 0
+  },
+  "court": {
+    "cpus": "4",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "image": "weft/rust-court:1",
+    "image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "exact": true,
+  "label": "synthetic, single host, Docker court; 8 MiB bf16 pair with 0.1% low-mantissa changes; no approximate reconstruction path",
+  "limits": {
+    "max_decoded_bytes": 4294967296,
+    "max_dependency_count": 64,
+    "max_dependency_depth": 8,
+    "max_frame_bytes": 1073741824,
+    "max_tensor_elements": 4294967296,
+    "max_tensor_rank": 8,
+    "max_total_fetched_bytes": 8589934592
+  },
+  "logical_root": "1c2596d6779caab551395ee28fcfa7985d61b2b220429b16b1bc42f769b1e2c9",
+  "logical_root_match": true,
+  "no_lossy_mode": true,
+  "revision": {
+    "weftcodec": "f1d32e3ad42ebf172c65943f080b5cf32f51a7e3",
+    "weftcodec_go": "0f542e08aa866461e92683d5f05e73ae21253384",
+    "weftfs": "a81a38319483bf008603d68173af8ef83b86eed3",
+    "weftfs_go": "7a8451a9282d56cb0bce720977413e8720cb375f"
+  },
+  "semantic_root_ms": {
+    "block_quantize_b128_l256": 15.908759000000002,
+    "mantissa_truncate_bits3": 8.949812999999999,
+    "none": 0.6846279999999999
+  },
+  "semantic_roots": {
+    "base_mantissa_truncate_bits3": "bf6f7b4e4068911bb951c71fd53fd05a29595777e99081b32477c71d407378f8",
+    "root_host_mismatch_is_not_used_for_identity": true,
+    "target_and_base_share_mantissa_root": true,
+    "target_by_policy": {
+      "block_quantize_b128_l256": "919d463b043c07ac976f779597e5654fee83806de05ec4bf101778e00a235a85",
+      "mantissa_truncate_bits3": "bf6f7b4e4068911bb951c71fd53fd05a29595777e99081b32477c71d407378f8",
+      "none": "0298d8690b879d35c4da6736c5f5644d2403415a052f732a82ca573e3de9bbcd"
+    },
+    "target_mantissa_truncate_bits3": "bf6f7b4e4068911bb951c71fd53fd05a29595777e99081b32477c71d407378f8"
+  },
+  "target_content_hash": "2d8c7510c262eef5b8addb107886ecf05a906d4bf977410ae448880452353305",
+  "timings_ms": {
+    "decode_median": 44.222381,
+    "decode_runs": [
+      44.871253,
+      44.994203000000006,
+      43.111095,
+      43.953078,
+      44.222381
+    ],
+    "encode_median": 31.928634,
+    "encode_runs": [
+      31.92677,
+      32.122425,
+      31.815533,
+      31.928634,
+      32.274719
+    ]
+  },
+  "workload": {
+    "base_is_candidate_zero": true,
+    "changed_elements": 4195,
+    "changed_fraction": 0.0010001659393310547,
+    "dtype": "bf16",
+    "element_bytes": 8388608,
+    "element_count": 4194304,
+    "policy": "mantissa_truncate:3",
+    "shape": [
+      4194304
+    ]
+  }
+}
