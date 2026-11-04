@@ -17,22 +17,17 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Each package is published only by the repository that owns it:
+    # weftcodec by WeftCodec, weftcodec-go by WeftCodec-Go, weftfs-go by
+    # WeftFS-Go, and weftfs by this repository. Publishing all four from here
+    # would relink the subproject packages to WeftFS, which is wrong.
     strategy:
       fail-fast: false
       matrix:
         include:
-          - image: weftcodec
-            context: WeftCodec
-            file: WeftCodec/Dockerfile
-          - image: weftcodec-go
-            context: WeftCodec-Go
-            file: WeftCodec-Go/Dockerfile
           - image: weftfs
             context: .
             file: Dockerfile.weftfs
-          - image: weftfs-go
-            context: .
-            file: WeftFS-Go/Dockerfile
     steps:
       - uses: actions/checkout@v4
         with:
