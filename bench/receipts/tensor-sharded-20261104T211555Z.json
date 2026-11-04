@@ -1,0 +1,134 @@
+{
+  "schema": "weft.receipt.v1",
+  "kind": "tensor-sharded-mode-10",
+  "generated_utc": "20261104T211555Z",
+  "label": "Docker court only; synthetic fixtures; single host; not a compression or performance claim",
+  "environment": {
+    "courts": {
+      "rust": {
+        "image": "weft/rust-court:1",
+        "image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d"
+      },
+      "go": {
+        "image": "weft/go-court:1",
+        "image_id": "sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab"
+      }
+    },
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g",
+    "memory_swap_limit": "3g",
+    "cpus": "4",
+    "pids_limit": 1024,
+    "tmpfs": "/tmp 1g"
+  },
+  "revisions": {
+    "WeftFS": "798e42b87407a467b7a341c591033d3bfd0f7949",
+    "WeftCodec": "1d797d3bf60735195eee1f270db0358842586b6e",
+    "WeftCodec-Go": "fa111ef364d476818c451fa7eb8e8ec1b71ad1a7"
+  },
+  "revision_note": "WeftFS is the parent HEAD at test time. The commit containing this receipt changes only spec/, docs/STATUS.md, this receipt, and the two submodule pointers; the tested codec revisions are the WeftCodec and WeftCodec-Go values above.",
+  "format": {
+    "mode": 10,
+    "name": "TENSOR_SHARDED",
+    "schema": "weft.ai.tensor_sharded.v1",
+    "dtypes": ["q8_0", "q4_0"],
+    "block_sizes": [16, 32, 64, 128, 256],
+    "stored_payload": "huffman-canonical-v1(reconstructed planes)",
+    "payload_domain": "weft/tensor-sharded/payload/v1",
+    "logical_record_domain": "weft/tensor/logical/v1",
+    "values_domain": "weft/tensor/values/v1",
+    "logical_identity": "H(weft/tensor/logical/v1, WCB({schema:weft.tensor.logical.v1,dtype,shape,element_count,values_hash})) over sign-extended quantized words W and global block records B = per block u32le(f32 scale bits) || i64le(zero point)",
+    "shard_order": "shard_index is authoritative; duplicate, missing, and out-of-range indices fail closed"
+  },
+  "commands": [
+    {
+      "cwd": "/work/WeftCodec",
+      "court": "rust",
+      "command": "cargo test --all-targets",
+      "result": "pass"
+    },
+    {
+      "cwd": "/work/WeftCodec-Go",
+      "court": "go",
+      "command": "go test -v ./... -count=1",
+      "result": "pass"
+    },
+    {
+      "cwd": "/work/WeftCodec-Go",
+      "court": "go",
+      "command": "go build ./... && go vet ./...",
+      "result": "pass"
+    },
+    {
+      "cwd": "/work/WeftCodec-Go",
+      "court": "rust+go",
+      "command": "cargo build --release; hack/cross.sh rust-gen | go-build | go-gen | go-decode | rust-decode | compare",
+      "result": "pass"
+    }
+  ],
+  "results": {
+    "rust_tests": {
+      "passed": 150,
+      "failed": 0,
+      "ignored": 0
+    },
+    "go_tests": {
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mode10_tests": {
+      "rust_integration": 8,
+      "go_modes": 7,
+      "go_conformance_replay": 11
+    },
+    "cross_gate": {
+      "overall": "all checks passed",
+      "byte_identical_mode10": true,
+      "sets": {
+        "sharded_q8": {
+          "shards": 2,
+          "frames_identical": true,
+          "decode_equivalent": true,
+          "logical_root_identical": true
+        },
+        "sharded_q4": {
+          "shards": 4,
+          "frames_identical": true,
+          "decode_equivalent": true,
+          "logical_root_identical": true
+        },
+        "sharded_q8_single": {
+          "shards": 1,
+          "frames_identical": true,
+          "decode_equivalent": true,
+          "logical_root_identical": true
+        }
+      }
+    },
+    "vectors": {
+      "valid_sets": 3,
+      "rejects": 8,
+      "files": 11,
+      "repositories": ["WeftCodec", "WeftCodec-Go"],
+      "aggregate_sha256_over_sorted_files": "0c2d4fa71e472ce77028d1bea571331be6bdfe606bef161b90a24e6aa0fa9c99",
+      "byte_identical_across_repositories": true,
+      "reserved_mode_vector": {
+        "name": "017_unknown_mode_reserved11",
+        "sha256": "6bc7473851fd6b06a9635194132c1e8ceec15030c4ccf4298dcb5faec47a71a7",
+        "byte_identical_across_repositories": true,
+        "supersedes": "017_unknown_mode_reserved10"
+      }
+    }
+  },
+  "design_notes": [
+    "The scale plane and the descriptor scales array are global (one f32 per whole-tensor block), and every shard carries both. This makes the logical root independent of shard axis/count and keeps each shard self-describing. It duplicates 4 * block_count bytes per shard; a future version may introduce a shard-local block partition with a new schema.",
+    "The descriptor scale value is a u64 WCB value whose low 32 bits are the exact f32 bit pattern and whose high 32 bits must be zero, because WCB has no u32 tag.",
+    "block_count is bounded by max_structured_items (default 1,000,000) because scales and zero_points are descriptor arrays; this is stricter than max_tensor_elements for large tensors and is stated in the spec.",
+    "Dequantization is out of band and is not part of identity; zero points are carried exactly."
+  ],
+  "limitations": [
+    "Synthetic fixtures and local in-memory/court operations only; no compression or performance claim.",
+    "The scale plane is duplicated per shard in v1; no shard-local block partition is implemented."
+  ]
+}

@@ -63,6 +63,25 @@ file-backed ZFS run `bench-fs-cold-20261104T014727Z.json` is retained and
 separately labelled. The abstraction mapping, assumptions, and limitations are
 in `verification/README.md`.
 
+**TENSOR_SHARDED (mode 10), 2026-11-04.** Both codecs now implement an
+additive sharded quantized tensor mode (`spec/WEFT-AI-CODEC.md` §11,
+`spec/WEFT-TENSOR.md` §2.1). A shard frame carries a canonical
+`weft.ai.tensor_sharded.v1` descriptor (`q8_0`/`q4_0`, whole shape, global
+per-block f32 scale bits and i64 zero points, shard axis/count/index, and the
+WeftTensor `layout_root`) plus one `huffman-canonical-v1` stream over the
+shard's quantized words and the global scale plane. Decoding reconstructs the
+exact quantized values and scale bits; dequantization is out of band. The
+logical root is computed over the whole canonical row-major quantized words
+and block records, so it does not change with shard axis or count. Evidence:
+`cargo test --all-targets` 150 passed / 0 failed / 0 ignored; `go test ./...`
+all packages pass; `WeftCodec-Go/hack/cross.sh compare` reports byte-identical
+mode-10 frames, decode equivalence, and identical roots for all three sets.
+Vectors are `conformance/v1/sharded/001`–`003` (valid) and `101`–`108`
+(rejects), byte-identical in both repositories. The historical
+`017_unknown_mode_reserved10` vector is superseded by
+`017_unknown_mode_reserved11`. Receipt:
+`bench/receipts/tensor-sharded-20261104T211555Z.json`.
+
 ## 1. Repositories and revisions
 
 | Repo | Verified revision | Role |
@@ -1152,11 +1171,12 @@ multi-writer, physical rig).
    (`posix-torture-20261103T213317Z.json`) remain history.
    `pjdfstest`/`fsstress` are not installed in the court and no substitute run
    is claimed.
-6. **Remaining AI codec modes:** float-aware, sharded/quantized-layout,
-   weight-delta, KV-cache, activation/gradient, and semantic-delta.
-   Prerequisite: modes 6/7/8 byte-identical across Rust and Go
+6. **Remaining AI codec modes:** float-aware, weight-delta, KV-cache,
+   activation/gradient, and semantic-delta. Mode 10 `TENSOR_SHARDED` now covers
+   sharded/per-block quantized storage (WEFT-AI-CODEC §11).
+   Prerequisite: modes 6–10 byte-identical across Rust and Go
    (`WeftCodec-Go/hack/cross.sh`) and the `specified, not implemented` list in
-   `spec/WEFT-AI-CODEC.md` §5. No wire value exists for the remaining modes.
+   `spec/WEFT-AI-CODEC.md` §6. No wire value exists for the remaining modes.
 7. **Layout-independent tensor identity.** Implemented for the identity,
    layout, region, and shard layers in both codecs (WEFT-TENSOR v1); no
    FUSE/store binding yet, so this is not a topology-independent restore
