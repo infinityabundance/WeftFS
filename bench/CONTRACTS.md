@@ -138,7 +138,7 @@ an energy/counter probe. No headline performance claim is made.
 
 ## 8.1 Comparative pass (2026-11-03)
 
-- External context/query baseline: `bench/receipts/bench-external-20261103T232150Z.json`
+- External context/query baseline: `bench/receipts/bench-external-20261104T000122Z.json`
   — schema-indexed SQLite relational and adjacency-table variants at
   100/1,000/10,000 objects, using the exact `bench_store` corpus (ObjectIds,
   payloads, relations, snapshots, generations). Indexes, query plans, warm and

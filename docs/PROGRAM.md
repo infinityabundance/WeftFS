@@ -31,7 +31,7 @@ evidence.
 | C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — `bench/receipts/ai-corpus-20261103T220113Z.json`; no Meta/production data; relation-conditioned physical bytes 176,564 vs forced-zstd 575,808 on ai-v1 |
 | C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | **implemented** — cost graph JSON/CSV beside the receipt; analysis and every loss in `bench/RESULTS-ai-v1.md` |
 | C3 | POSIX matrix results with reproducible commands | B4 | partial |
-| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261103T232150Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. ZFS and RAPL/`perf` energy are blocked/unavailable; no winner claim. |
+| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. ZFS and RAPL/`perf` energy are blocked/unavailable; no winner claim. |
 
 ## D. Hooks
 

@@ -12,7 +12,7 @@ The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`
 `bench/receipts/bench-store-20261103T175920Z.json`, and
 `bench/receipts/bench-fs-20261103T180751Z.json`; the analysis, losses, and
 gaps are in `bench/RESULTS-v1.md`. The comparative pass receipts are
-`bench/receipts/bench-external-20261103T232150Z.json`,
+`bench/receipts/bench-external-20261104T000122Z.json`,
 `bench/receipts/bench-codec-matched-20261103T232158Z.json`,
 `bench/receipts/bench-fs-cold-20261103T232216Z.json`,
 `bench/receipts/bench-store-20261103T235127Z.json` (same-revision store side),
@@ -376,8 +376,8 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 
 ### P7 comparative pass — external SQLite, matched codec, cold-cache fio (implemented)
 
-- External context/query baseline: `bench-external-20261103T232150Z.json`
-  (plus corpus manifest `external-corpus-20261103T232150Z.json`). Schema-indexed
+- External context/query baseline: `bench-external-20261104T000122Z.json`
+  (plus corpus manifest `external-corpus-20261104T000122Z.json`). Schema-indexed
   SQLite relational and adjacency-table variants at 100/1,000/10,000 objects
   using the exact `bench_store` payloads, ObjectIds, relations, snapshots, and
   generations. Warm and cold (per-file page-cache eviction) samples, query

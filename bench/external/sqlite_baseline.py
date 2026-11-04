@@ -465,6 +465,73 @@ def environment():
     }
 
 
+def compute_losses(results):
+    """Explicit measured negatives, so the receipt is not only a win table."""
+    losses = []
+    by_size = {}
+    for row in results:
+        by_size.setdefault(row["size"], {})[row["variant"]] = row
+        for query, values in row["queries"].items():
+            warm = values["warm"]["median_ns"]
+            cold = values["cold"]["median_ns"]
+            if cold > warm:
+                losses.append(
+                    {
+                        "kind": "cold_slower_than_warm",
+                        "variant": row["variant"],
+                        "size": row["size"],
+                        "query": query,
+                        "warm_ns": warm,
+                        "cold_ns": cold,
+                        "ratio": cold / warm,
+                    }
+                )
+    for size, pair in sorted(by_size.items()):
+        if "relational" not in pair or "adjacency" not in pair:
+            continue
+        rel, adj = pair["relational"], pair["adjacency"]
+        for query in rel["queries"]:
+            r = rel["queries"][query]["warm"]["median_ns"]
+            a = adj["queries"][query]["warm"]["median_ns"]
+            if a > r:
+                losses.append(
+                    {
+                        "kind": "adjacency_slower_than_relational",
+                        "size": size,
+                        "query": query,
+                        "relational_ns": r,
+                        "adjacency_ns": a,
+                        "ratio": a / r,
+                    }
+                )
+        if adj["index_build"]["index_bytes"] > rel["index_build"]["index_bytes"]:
+            losses.append(
+                {
+                    "kind": "adjacency_index_bytes_larger",
+                    "size": size,
+                    "relational_bytes": rel["index_build"]["index_bytes"],
+                    "adjacency_bytes": adj["index_build"]["index_bytes"],
+                }
+            )
+    losses.extend(
+        [
+            {
+                "kind": "baseline_scope",
+                "detail": "The adjacency variant is a SQLite adjacency table, not a dedicated graph database; no Neo4j/SPARQL comparison is made.",
+            },
+            {
+                "kind": "cold_method_limitation",
+                "detail": "Cold uses per-file POSIX_FADV_DONTNEED, not a device cache drop; the VM fio court performs a real guest drop_caches.",
+            },
+            {
+                "kind": "no_weftfs_semantics",
+                "detail": "No authorization, Context Root, ambiguity, or evidence semantics are modelled; this is a physical-access baseline only.",
+            },
+        ]
+    )
+    return losses
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True)
@@ -558,6 +625,7 @@ def main():
             "cold_limitation": "Cold uses per-file page-cache eviction, not a device cache drop; the VM fio court performs a guest drop_caches.",
         },
         "results": results,
+        "losses": compute_losses(results),
     }
     Path(args.out).write_text(json.dumps(report, indent=2, sort_keys=False))
     print(f"wrote {args.out}")

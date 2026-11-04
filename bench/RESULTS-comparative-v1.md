@@ -16,11 +16,11 @@ test is called passed.
 
 | Run | Receipt | SHA-256 | Role |
 |---|---|---|---|
-| External SQLite, final | `bench/receipts/bench-external-20261103T232150Z.json` | `1c92b0a88c6e9f51a6196f0e6f96eb1edd2b10874b8d8d872d638268f460a61b` | Relational + adjacency baseline, 100/1,000/10,000 |
-| External corpus manifest | `bench/receipts/external-corpus-20261103T232150Z.json` | `491f121ccf73abbbe6025a528f400edcf7eb663f2c135974b7c6342db7c21914` | Exact payloads, ObjectIds, relations, snapshots, generations |
-| External raw log | `bench/receipts/bench-external-20261103T232150Z.log` | `7eb54f1d142876f58a8b687dc42da363b13df0aaf97ce6619cd4ec6aaf1a0311` | Commands and console output |
-| External SQLite, stability | `bench/receipts/bench-external-20261103T233736Z.json` | `28936be03cd75ab5b245faa1dc8dabe7f7361dc97988e24aa198abacb2af5c29` | Same-methodology stability comparison |
-| External stability log | `bench/receipts/bench-external-20261103T233736Z.log` | `a42a9825ccdfc1fa147664f681a954efe379188dc3677d246cb3efe55d659053` | Raw log |
+| External SQLite, final | `bench/receipts/bench-external-20261104T000122Z.json` | `6264a2c69e47119a804eb3b300970288e00f075d2114690b6087461e1acacb19` | Relational + adjacency baseline, 100/1,000/10,000 |
+| External corpus manifest | `bench/receipts/external-corpus-20261104T000122Z.json` | `491f121ccf73abbbe6025a528f400edcf7eb663f2c135974b7c6342db7c21914` | Exact payloads, ObjectIds, relations, snapshots, generations |
+| External raw log | `bench/receipts/bench-external-20261104T000122Z.log` | `dc9d59357aac78b43a8d3b9b4c88fc28ad3b4db733a2213c56def7af2fe79e5d` | Commands and console output |
+| External SQLite, stability | `bench/receipts/bench-external-20261104T000127Z.json` | `1d400627e0fa2964c9a3801706412120b7bd09084c7a1e7339ca9de4a0c02dfb` | Same-methodology stability comparison |
+| External stability log | `bench/receipts/bench-external-20261104T000127Z.log` | `4da675745f43b264b4fb256e820fa052d888842c63db3f012910d03b9f8fbca3` | Raw log |
 | Matched codec, final | `bench/receipts/bench-codec-matched-20261103T232158Z.json` | `7008187de4182b1c14b1e08089f34bb8db7eec1fc90460336c0e2e8e3c6e70db` | Rust vs Go CLI, 7 modes, encode/decode, CPU/RSS |
 | Matched codec, first | `bench/receipts/bench-codec-matched-20261103T225536Z.json` | `42a84fb74b1cb4804cfc37e7de604bc391125be11e4a05601496fbc9e323ab07` | Stability comparison |
 | Matched codec log | `bench/receipts/bench-codec-matched-20261103T232158Z.log` | `ee5bc747e9e3652990eea6fa3f82636273ed13a57eb3496a20c81185475070bb` | Raw court log |
@@ -31,7 +31,7 @@ test is called passed.
 | Energy probe | `bench/receipts/energy-probe-20261103T225547Z.json` | `d92d74ee5c4f9a105e6faf564d37374dea39dccf6fdf7987e6538ba18c38c150` | `perf`/RAPL availability |
 | Rust store, current HEAD | `bench/receipts/bench-store-20261103T235127Z.json` | `f37b9c449c05e8f39f91fa51c9e8f40cc9f9e1ef0989372745a6aa16b69858c8` | Same-revision store side of §3.4 |
 
-The stability receipts (`bench-external-20261103T233736Z.json`,
+The stability receipts (`bench-external-20261104T000127Z.json`,
 `bench-codec-matched-20261103T225536Z.json`,
 `bench-fs-cold-20261103T233740Z.json`) use the same code and method as their
 final counterparts; they are not headline results.
@@ -127,28 +127,28 @@ fio court performs a real guest `drop_caches`. Every result count was asserted
 
 | Objects | Variant | q0 tag absent | q1 relation incoming | qn kind=file | qeven tag | qhop one-hop | qoutgoing | snapshot resolve | snapshot visible |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | relational | 1.28 | 1.65 | 15.33 | 9.81 | 1.63 | 1.52 | 1.34 | 2.77 |
-| 100 | adjacency | 1.20 | 1.43 | 15.66 | 8.88 | 1.42 | 1.38 | 1.35 | 2.75 |
-| 1,000 | relational | 1.31 | 1.71 | 141.58 | 87.81 | 1.70 | 1.60 | 1.36 | 17.15 |
-| 1,000 | adjacency | 1.23 | 1.46 | 141.58 | 80.47 | 1.48 | 1.42 | 1.41 | 16.76 |
-| 10,000 | relational | 1.41 | 1.79 | 1,501.37 | 974.66 | 1.79 | 1.60 | 1.35 | 152.90 |
-| 10,000 | adjacency | 1.24 | 1.48 | 1,525.87 | 864.99 | 1.54 | 1.45 | 1.36 | 155.25 |
+| 100 | relational | 1.29 | 1.63 | 15.35 | 9.83 | 1.66 | 1.51 | 1.36 | 2.75 |
+| 100 | adjacency | 1.19 | 1.45 | 15.56 | 8.71 | 1.46 | 1.41 | 1.39 | 2.75 |
+| 1,000 | relational | 1.30 | 1.69 | 137.34 | 86.71 | 1.72 | 1.52 | 1.37 | 16.60 |
+| 1,000 | adjacency | 1.22 | 1.51 | 145.57 | 79.31 | 1.52 | 1.44 | 1.41 | 16.57 |
+| 10,000 | relational | 1.43 | 1.81 | 1,504.77 | 969.23 | 1.79 | 1.60 | 1.35 | 154.40 |
+| 10,000 | adjacency | 1.23 | 1.54 | 1,509.91 | 845.04 | 1.51 | 1.45 | 1.35 | 150.62 |
 
-Cold medians at 10,000, same column order (µs): relational `201.22, 578.85,
-5,070.26, 6,587.99, 579.51, 572.83, 133.01, 409.69`; adjacency `148.10, 439.66,
-4,761.73, 2,512.79, 381.19, 455.47, 142.91, 473.20`. The cold penalty is real
+Cold medians at 10,000, same column order (µs): relational `207.25, 527.78,
+5,155.73, 6,603.05, 522.34, 520.26, 137.79, 379.88`; adjacency `156.09, 448.27,
+6,034.81, 2,514.72, 377.10, 413.42, 160.24, 422.74`. The cold penalty is real
 for range scans and multi-result tags; point lookups remain sub-millisecond.
 
 ### 3.3 Updates, index build, and bytes on disk
 
 | Objects | Variant | Bulk load ms | Index build ms | Index bytes | Churn add ms | Churn delete ms | Durable insert ms | Total bytes |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|
-| 100 | relational | 1.46 | 5.91 | 8,192 | 1.13 | 1.13 | 1.15 | 208,896 |
-| 100 | adjacency | 1.38 | 6.24 | 0 | 1.14 | 1.15 | 1.14 | 159,744 |
-| 1,000 | relational | 4.37 | 7.83 | 290,816 | 1.14 | 1.14 | 1.14 | 1,249,280 |
-| 1,000 | adjacency | 3.58 | 8.41 | 126,976 | 1.14 | 1.14 | 1.14 | 733,184 |
-| 10,000 | relational | 39.67 | 27.24 | 3,137,536 | 1.14 | 1.13 | 0.77 | 11,870,208 |
-| 10,000 | adjacency | 32.63 | 21.64 | 1,396,736 | 1.16 | 1.14 | 0.77 | 6,447,104 |
+| 100 | relational | 1.45 | 5.83 | 8,192 | 1.14 | 1.14 | 1.15 | 208,896 |
+| 100 | adjacency | 1.41 | 6.12 | 0 | 1.16 | 1.15 | 1.14 | 159,744 |
+| 1,000 | relational | 4.51 | 7.78 | 290,816 | 1.14 | 1.14 | 1.15 | 1,249,280 |
+| 1,000 | adjacency | 3.64 | 8.92 | 126,976 | 1.16 | 1.15 | 1.14 | 733,184 |
+| 10,000 | relational | 35.96 | 24.96 | 3,137,536 | 1.15 | 1.14 | 0.77 | 11,870,208 |
+| 10,000 | adjacency | 29.20 | 22.11 | 1,396,736 | 1.17 | 1.15 | 0.77 | 6,447,104 |
 
 “Durable insert” is a per-object insert with its own committed transaction and
 `fsync`, on a scratch table, sampled over the first 100 objects. “Bulk load” is
@@ -170,18 +170,19 @@ The Rust store receipt is `bench/receipts/bench-store-20261103T235127Z.json`
 
 Scoped facts, not a verdict:
 
-- SQLite point/relation/tag lookups are ~1.2–1.8 µs warm and ~0.15–0.58 ms
+- SQLite point/relation/tag lookups are ~1.2–1.8 µs warm and ~0.14–0.60 ms
   cold at 10,000; the Rust store’s equivalent relation/tag selectors are
   ~457.6–494.4 ms because evaluation scans relations per object. This is the
   largest published loss in this pass.
 - The n-result `kind == "file"` query is close: 1.90 ms in the store versus
-  1.50 ms relational / 1.53 ms adjacency at 10,000.
+  1.50 ms relational / 1.51 ms adjacency at 10,000.
 - Relation insert/delete commits cost 5.94/6.02 ms in the store versus
-  1.14–1.16 ms in SQLite at 10,000. The store is committing a durable
+  1.14–1.17 ms in SQLite at 10,000. The store is committing a durable
   transaction; SQLite is also `synchronous=FULL`, but its WAL commit is cheaper.
-- The store’s replay/open at 10,000 is 32.83 s versus a 27.24 ms SQLite index
-  build. These are not the same operation (the store validates every manifest
-  and commit), so the comparison is only an order-of-magnitude statement.
+- The store’s replay/open at 10,000 is 32.83 s versus a 24.96 ms SQLite index
+  build (relational) / 22.11 ms (adjacency). These are not the same operation
+  (the store validates every manifest and commit), so the comparison is only
+  an order-of-magnitude statement.
 - Whole-store bytes before verification are 52.58 MB at 10,000 versus 11.87 MB
   (relational) and 6.45 MB (adjacency). The store also carries manifests,
   commits, snapshots, and version records; SQLite carries only the listed
@@ -408,7 +409,7 @@ change (|a−b| / min(a,b)); no sample was removed.
 
 | Court | Metric | Cells | Median | p95 | Max |
 |---|---|---:|---:|---:|---:|
-| External SQLite | query median (warm + cold) | 96 | 4.6% | 33.4% | 68.5% |
+| External SQLite | query median (warm + cold) | 96 | 1.6% | 13.4% | 35.0% |
 | Matched codec | encode/decode wall median | 28 | 2.9% | 33.5% | 40.0% |
 | Cold fio | IOPS median | 120 | 2.5% | 49.5% | 147.5% |
 | Cold fio | clat p50 median | 120 | 2.7% | 19.7% | 1,218.1% |
@@ -417,7 +418,7 @@ change (|a−b| / min(a,b)); no sample was removed.
 The worst matched-codec change is Rust `raw` encode (3.876 → 2.768 ms, 40.0%)
 and Rust `raw` decode (3.011 → 2.255 ms, 33.5%); the first run followed a fresh
 codec build, the second reused the binary. The worst external change is
-adjacency/1,000 `qn_kind_file` cold (1.34 ms → 0.79 ms, 68.5%). The worst
+relational/10,000 `qsnapshot_resolve` cold (137.8 → 186.1 µs, 35.0%). The worst
 cold-fio change is ext4 `fsync-write-4k` `numjobs=4` warm p50 (62.85 ms →
 4.77 ms, 1,218%); p99 changed by up to 916% and is not stable in this rig.
 Tail metrics at high concurrency are reported as unstable, not as a result.
