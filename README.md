@@ -59,6 +59,21 @@ Labels used throughout: **implemented** (built and tested), **experimental**
 6. **One writer.** The store is single-host, single-writer with an explicit
    `flock` ownership protocol.
 
+## Container images
+
+Published on GHCR, anonymously pullable:
+
+```sh
+docker pull ghcr.io/infinityabundance/weftcodec:v0.3.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v0.3.0
+docker pull ghcr.io/infinityabundance/weftfs:v0.3.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v0.3.0
+```
+
+`latest` is also published. FUSE mounts require `--device /dev/fuse --cap-add
+SYS_ADMIN`; codec and store-only commands do not. See
+[`docs/containers.md`](docs/containers.md).
+
 ## Testing: Docker only
 
 All builds and tests execute inside minimal official images. The host runs

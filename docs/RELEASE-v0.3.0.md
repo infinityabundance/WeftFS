@@ -3,6 +3,20 @@
 Research preview. This release adds storage-fault and filesystem-baseline
 evidence; it does not change the v0.2 codec/store formats.
 
+## Container images
+
+```sh
+docker pull ghcr.io/infinityabundance/weftcodec:v0.3.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v0.3.0
+docker pull ghcr.io/infinityabundance/weftfs:v0.3.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v0.3.0
+```
+
+`latest` is also published. The images are multi-stage builds of the same
+commits; `weftfs`/`weftfs-go` need `--device /dev/fuse --cap-add SYS_ADMIN`
+only for mounting. See `docs/containers.md`. All four were pulled anonymously
+and smoke-tested.
+
 ## Added
 
 - **Whole-disk ZFS baseline**: real `zpool create -f tank /dev/vdb` in the QEMU
