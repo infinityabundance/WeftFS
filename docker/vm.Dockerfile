@@ -28,6 +28,13 @@ RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firm
       jq util-linux coreutils procps \
  && rm -rf /var/lib/apt/lists/*
 
+# Btrfs and strace are in a separate layer so adding them does not rerun the
+# DKMS zfs build. strace records the exact zpool label/partition syscalls in the
+# whole-disk guest and is not used on the fio I/O path.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends btrfs-progs strace \
+ && rm -rf /var/lib/apt/lists/*
+
 # Build the OpenZFS module for the Debian guest kernel at image-build time so
 # the cold-cache fio court can run a real ZFS target in the guest. The module
 # is built by DKMS; no module is loaded on the host.

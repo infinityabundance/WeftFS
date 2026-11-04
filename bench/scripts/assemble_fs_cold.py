@@ -102,10 +102,24 @@ def summarize_fio(path):
 
 def parse_name(name):
     # <target>--<workload>--nj<N>--<cold|warm>-r<rep>.json
-    match = re.match(r"^(?P<target>[^-]+)--(?P<workload>.+)--nj(?P<nj>\d+)--(?P<mode>cold|warm)-r(?P<rep>\d+)\.json$", name)
-    if not match:
+    # Targets such as zfs-whole contain hyphens, so split on the "--"
+    # separators rather than matching a hyphen-free target.
+    stem = name[:-5] if name.endswith(".json") else name
+    parts = stem.split("--")
+    if len(parts) != 4:
         return None
-    return match.groupdict()
+    target, workload, nj_part, mode_part = parts
+    match = re.match(r"^nj(?P<nj>\d+)$", nj_part)
+    mode = re.match(r"^(?P<mode>cold|warm)-r(?P<rep>\d+)$", mode_part)
+    if not target or not workload or not match or not mode:
+        return None
+    return {
+        "target": target,
+        "workload": workload,
+        "nj": match.group("nj"),
+        "mode": mode.group("mode"),
+        "rep": mode.group("rep"),
+    }
 
 
 def read_text(path):
@@ -134,6 +148,7 @@ def main():
     parser.add_argument("--reps", type=int, required=True)
     parser.add_argument("--timeout", type=int, required=True)
     parser.add_argument("--xfs-status", required=True)
+    parser.add_argument("--btrfs-status", default="0")
     parser.add_argument("--zfs-status", required=True)
     args = parser.parse_args()
 
@@ -245,6 +260,7 @@ def main():
                 ),
             },
             "xfs_available": args.xfs_status == "1",
+            "btrfs": args.btrfs_status,
             "zfs": args.zfs_status,
         },
         "method": {
@@ -252,6 +268,9 @@ def main():
             "warm": "the next run on the same files, with no cache drop",
             "io": "fio psync, direct=0 (buffered), group_reporting, percentile_list=50:95:99",
             "data_disk": "raw virtio-blk, QEMU cache=none",
+            "zfs_whole_disk": "zfs-whole passes /dev/vdb directly to `zpool create -f -m /data/tank tank /dev/vdb`; no partition, loop device, or file-backed vdev is used for that target",
+            "zfs_legacy_file_vdev": "the separate zfs target remains the earlier file-backed vdev and is not a whole-disk result",
+            "btrfs": "mkfs.btrfs on the host, guest insmods btrfs.ko and mounts /dev/vdb",
             "results_disk": "raw ext4 virtio-blk, extracted with debugfs; no loop mount",
             "root": "read-only ext4 image built in the vm court",
             "reps": args.reps,
@@ -263,7 +282,7 @@ def main():
             "vms": "QEMU -smp 4 -m 1536M; the host court is limited to 4 CPUs and 3 GiB",
             "weftfs": "Rust and Go WeftFS are mounted over FUSE inside the guest; store and mount live on the ext4 data disk",
             "zero_buffers": "fio write buffers default to zeros; WeftFS chunk dedup can therefore reduce stored bytes. This receipt measures latency/IOPS, not storage amplification.",
-            "not_claimed": "No physical power loss, no host page-cache drop, no ZFS run, and no dedicated graph database.",
+            "not_claimed": "No physical power loss, no host page-cache drop, no device write-cache loss. ZFS reads are ARC-served unless the pool cache is separately emptied; drop_caches does not drop the ZFS ARC.",
         },
         "targets": target_info,
         "results": results,

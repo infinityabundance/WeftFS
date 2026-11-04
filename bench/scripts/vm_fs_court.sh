@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cold-cache and concurrent fio court for ext4, XFS (if available), and the
-# two independent WeftFS FUSE implementations.
+# Cold-cache and concurrent fio court for ext4, XFS, Btrfs, ZFS (whole-disk
+# vdev), and the two independent WeftFS FUSE implementations.
 #
 # Host usage (self-dispatches into the hard-limited VM court):
 #   scripts/docker-court.sh vm "bash bench/scripts/vm_fs_court.sh"
@@ -72,13 +72,13 @@ say "fio: $(fio --version)"
 say "mkfs.xfs: $(mkfs.xfs -V 2>&1 || echo unavailable)"
 
 # ---- root filesystem ------------------------------------------------------
-mkdir -p "$rootfs"/{bin,sbin,usr/bin,usr/sbin,proc,sys,dev,tmp,etc,etc/zfs,lib,lib64,run,results,data,data/mnt,data/fio}
+mkdir -p "$rootfs"/{bin,sbin,usr/bin,usr/sbin,proc,sys,dev,tmp,etc,etc/zfs,lib,lib64,run,results,data,data/mnt,data/fio,data/tank}
 cp /bin/busybox "$rootfs/bin/busybox"
 chmod 755 "$rootfs/bin/busybox"
 for applet in sh ash mount umount mkdir cat echo sed grep head tail dd wc cut \
               sha256sum sync poweroff reboot dmesg sleep mknod printf chmod \
               ln ls true false ps kill env insmod modprobe seq rm cp mv tee \
-              nproc df du find xargs awk truncate; do
+              nproc df du find xargs awk truncate blockdev; do
   ln -sf /bin/busybox "$rootfs/bin/$applet"
 done
 ln -sf /proc/mounts "$rootfs/etc/mtab"
@@ -95,10 +95,24 @@ copy_binary() {
   done
 }
 copy_binary /usr/bin/fio "$rootfs/usr/bin/fio"
+copy_binary /usr/bin/partx "$rootfs/usr/bin/partx"
+copy_binary /usr/bin/strace "$rootfs/usr/bin/strace"
 copy_binary "$bin/weftfs" "$rootfs/usr/bin/weftfs"
 if [ -x /usr/sbin/zpool ] && [ -x /usr/sbin/zfs ]; then
   copy_binary /usr/sbin/zpool "$rootfs/usr/sbin/zpool"
   copy_binary /usr/sbin/zfs "$rootfs/usr/sbin/zfs"
+fi
+# libzfs on Debian is built with libudev and waits for its own GPT partition
+# events through the udev database. The guest runs the stock Debian udevd so
+# whole-disk vdev creation can complete without a host udev or a file-backed
+# vdev. If udevd is unavailable the guest records the exact libudev error.
+if [ -x /usr/lib/systemd/systemd-udevd ]; then
+  mkdir -p "$rootfs/usr/lib/systemd" "$rootfs/usr/bin"
+  copy_binary /usr/lib/systemd/systemd-udevd "$rootfs/usr/lib/systemd/systemd-udevd"
+  copy_binary /usr/bin/udevadm "$rootfs/usr/bin/udevadm"
+  mkdir -p "$rootfs/etc/udev" "$rootfs/usr/lib/udev"
+  cp -a /etc/udev/. "$rootfs/etc/udev/" 2>/dev/null || true
+  cp -a /usr/lib/udev/. "$rootfs/usr/lib/udev/" 2>/dev/null || true
 fi
 cp "$bin/go-weftfs" "$rootfs/usr/bin/go-weftfs"
 chmod 755 "$rootfs/usr/bin/go-weftfs"
@@ -117,6 +131,7 @@ fi
 for rel in \
   kernel/fs/fuse/fuse.ko \
   kernel/fs/xfs/xfs.ko \
+  kernel/fs/btrfs/btrfs.ko \
   kernel/lib/libcrc32c.ko \
   kernel/crypto/crc32c_generic.ko \
   kernel/arch/x86/crypto/crc32c-intel.ko; do
@@ -153,16 +168,35 @@ if command -v mkfs.xfs >/dev/null 2>&1; then
     xfs_ok=1
   fi
 fi
-say "ext4 base: $base_ext4; xfs base: $base_xfs (ok=$xfs_ok)"
+base_btrfs="$work/data-btrfs.img"
+btrfs_ok=0
+if command -v mkfs.btrfs >/dev/null 2>&1; then
+  truncate -s 8G "$base_btrfs"
+  if mkfs.btrfs -f -q "$base_btrfs" >/dev/null 2>&1; then
+    btrfs_ok=1
+  fi
+fi
+# Whole-disk ZFS needs an unpartitioned, signature-free block device. The guest
+# passes /dev/vdb straight to zpool; there is no file-backed vdev for this
+# target.
+base_zfswhole="$work/data-zfswhole.img"
+truncate -s 8G "$base_zfswhole"
+dd if=/dev/zero of="$base_zfswhole" bs=1M count=8 conv=notrunc status=none
+say "ext4 base: $base_ext4; xfs base: $base_xfs (ok=$xfs_ok); btrfs base: $base_btrfs (ok=$btrfs_ok); zfs whole-disk base: $base_zfswhole"
 
 zfs_ok=0
 if command -v zpool >/dev/null 2>&1 && [ -e "$modules/updates/dkms/zfs.ko" ]; then
   zfs_ok=1
-  zfs_status="available: OpenZFS $(modinfo -k "$krel" -F version zfs 2>/dev/null || echo unknown) built by DKMS for $krel; real pool in the guest, file-backed vdev (whole-disk vdev needs udev partition nodes that the minimal guest does not run)"
+  zfs_status="available: OpenZFS $(modinfo -k "$krel" -F version zfs 2>/dev/null || echo unknown) built by DKMS for $krel; zfs-whole passes the raw /dev/vdb block device straight to zpool with no partition, loop device, or file-backed vdev; zfs (legacy) keeps its separately labelled file-backed vdev"
 else
   zfs_status="unavailable: zpool/zfs tools or the DKMS zfs.ko for $krel are missing in the vm court image"
 fi
+btrfs_status="unavailable: mkfs.btrfs or the guest btrfs.ko is missing in the vm court image"
+if [ "$btrfs_ok" = "1" ] && [ -e "$modules/kernel/fs/btrfs/btrfs.ko" ]; then
+  btrfs_status="available: mkfs.btrfs $(mkfs.btrfs --version 2>/dev/null | head -n 1) on the host; guest mounts a real Btrfs filesystem on /dev/vdb"
+fi
 say "zfs: $zfs_status"
+say "btrfs: $btrfs_status"
 
 # ---- QEMU -----------------------------------------------------------------
 accel="tcg"
@@ -198,6 +232,24 @@ for target in ${targets//,/ }; do
         continue
       fi
       base="$base_xfs"
+      ;;
+    btrfs)
+      if [ "$btrfs_ok" != "1" ]; then
+        say "BLOCKER btrfs: mkfs.btrfs unavailable or failed; no Btrfs baseline run"
+        target_exit[$target]=255
+        echo "$target none 255" >> "$work/targets.txt"
+        continue
+      fi
+      base="$base_btrfs"
+      ;;
+    zfs-whole)
+      if [ "$zfs_ok" != "1" ]; then
+        say "BLOCKER zfs-whole: zpool or the DKMS zfs.ko is unavailable; no whole-disk ZFS baseline run"
+        target_exit[$target]=255
+        echo "$target none 255" >> "$work/targets.txt"
+        continue
+      fi
+      base="$base_zfswhole"
       ;;
     zfs)
       if [ "$zfs_ok" != "1" ]; then
@@ -261,6 +313,7 @@ python3 bench/scripts/assemble_fs_cold.py \
   --reps "$reps" \
   --timeout "$target_timeout" \
   --xfs-status "$xfs_ok" \
+  --btrfs-status "$btrfs_ok" \
   --zfs-status "$zfs_status"
 
 echo "cold fs receipt: $receipt"

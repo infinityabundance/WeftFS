@@ -7,6 +7,8 @@ This directory contains two independent kinds of evidence for WeftFS v1:
 | `tla/WeftCommit.tla` + `tla/WeftCommit.cfg` | bounded TLC model checking | the **abstract** commit/recovery state machine has the listed invariants for the checked constants | that the Rust or Go implementation refines the model |
 | `tla/WeftCommitBuggy.tla` | deliberately flawed model | TLC finds a concrete counterexample for a plausible recovery defect | that the shipped code has (or lacks) any other defect |
 | `scripts/powerloss_court.sh` | QEMU VM power-cut proxy | the shipped Rust + Go stores recover the same exact whole state after a guest power cut at a random point in the write loop | physical media/device power loss, host page-cache loss, or an fsync that lies |
+| `scripts/blkdebug_court.sh` | block-layer lying-disk model | dm-flakey silent write drop loses acknowledged commits while both implementations still recover one exact whole state; dm-flakey write EIO fails closed; QEMU snapshot total write drop recovers the base | physical media power loss, a selective real-disk write-drop, or a flush-error model below a mounted ext4 |
+| `scripts/hostcache_probe.sh` | host page-cache probe | the unprivileged court cannot write `/proc/sys/vm/drop_caches`; a per-file `fadvise(DONTNEED)` works | host page-cache loss or any global cache drop |
 
 No claim in this directory is a proof about source code. "Model-checked"
 means the named TLC run completed with no invariant violation over its bounded
@@ -254,6 +256,51 @@ durability result, unsynced-control result, and raw serial logs.
   executed.
 - Checkpoints are exercised by the guest writes (interval 5) but are not in the
   TLA+ abstraction.
+
+### 2.6 Block-layer lying-disk court (2026-11-04)
+
+`scripts/blkdebug_court.sh` reuses `verification/powerloss/guest-init.sh` but
+prepares one clean ext4 store base, copies it per iteration, and installs a
+block-layer fault before the SIGKILL/reboot/Rust+Go verification. It ran 30
+iterations (5 per mode) in receipt `bench/receipts/blkdebug-20261104T071235Z.json`:
+
+| Mode | Result |
+|---|---|
+| control, no fault | 4 old, 1 new, 0 partial |
+| `dm-flakey` `drop_writes` (2 s up, 1 h down) | 5/5 lost acknowledged commits (218/109/248/208/165); 0 partial; both implementations agreed and read the exact expected bytes |
+| `dm-flakey` `error_writes` | 5/5 old, one `COMMIT_FAIL` each, 0 loss, 0 partial |
+| QEMU `snapshot=on` total write drop | 5/5 recovered generation 2, all acknowledged commits lost, 0 partial |
+| blkdebug `write_aio` EIO | 5/5 blocked at ext4 mount |
+| blkdebug `flush_to_os` EIO | 5/5 blocked at ext4 mount |
+
+The blkdebug blocker is exact: blkdebug arms at device open, so its first
+injected write is ext4's mount superblock. The guest log is `I/O error, dev
+vdb, sector 0 op 0x1:(WRITE)` then `JBD2: recovery failed` / `EXT4-fs (vdb):
+error loading journal`, and the guest never reaches `GUEST_WRITING`. QEMU 7.2
+blkdebug accepts `read_aio`, `write_aio`, and `flush_to_os`, rejects
+`flush_do_sync`, and `errno=0` still writes (tested with `qemu-io`). There is no
+silent selective write-drop primitive. `dm-flakey` is the arm-after-mount
+equivalent used for the data results. The claim is a **block-layer lying-disk
+model**, not physical media power loss.
+
+Reproduce:
+
+```
+scripts/docker-court.sh vm "bash scripts/blkdebug_court.sh"
+# bounded override:
+scripts/docker-court.sh vm "BLKDEBUG_MODES=control,dm-flakey-drop BLKDEBUG_ITERATIONS=5 bash scripts/blkdebug_court.sh"
+```
+
+### 2.7 Host page-cache probe (2026-11-04)
+
+`scripts/hostcache_probe.sh` runs in the vm court with `cap-drop=ALL` and records
+`bench/receipts/hostcache-probe-20261104T071612Z.json`. `/proc/sys/vm/drop_caches`
+exists (mode `200`) but the container cannot write it: `CapEff=0000000000000000`
+and the exact refusal is `Read-only file system`. **No host cache was dropped.**
+A per-file `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file under
+the court bind mount succeeded; that is safe per-file clean-page eviction, not
+host-wide cache loss. QEMU `cache=none` uses `O_DIRECT` for guest data. Host
+page-cache loss remains untested and is not claimed.
 
 ---
 

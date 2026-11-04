@@ -6,7 +6,7 @@
 # (an ext4 results disk) and extracted on the host with debugfs (no loop mount,
 # no extra capability).
 #
-# Kernel cmdline: weft.target=ext4|xfs|rust|go
+# Kernel cmdline: weft.target=ext4|xfs|btrfs|zfs|zfs-whole|rust|go
 # This script never runs fsck and never calls sync(1) on the host.
 set -x
 
@@ -101,10 +101,19 @@ run_matrix() {
 }
 
 case "$TARGET" in
-  ext4|xfs)
+  ext4|xfs|btrfs)
     loadmods
     if [ "$TARGET" = xfs ]; then
       insmod "$MOD/kernel/fs/xfs/xfs.ko" 2>>"$STATUS" || say "blocker=xfs_module_failed"
+    fi
+    if [ "$TARGET" = btrfs ]; then
+      insmod "$MOD/kernel/fs/btrfs/btrfs.ko" 2>>"$STATUS" || true
+      if awk '$1 == "btrfs" {found=1} END {exit !found}' /proc/modules \
+         || grep -qw btrfs /proc/filesystems; then
+        say "btrfs_module=loaded"
+      else
+        say "blocker=btrfs_module_failed"
+      fi
     fi
     if mount -t "$TARGET" -o rw /dev/vdb /data; then
       say "mount=ok"
@@ -113,6 +122,92 @@ case "$TARGET" in
       run_matrix /data/fio
     else
       say "blocker=mount_${TARGET}_failed"
+    fi
+    ;;
+  zfs-whole)
+    # Whole-disk vdev: /dev/vdb is passed straight to zpool, with no partition
+    # table, loop device, or udev-created node from the host. zpool may create
+    # its own GPT labels; if the kernel cannot create the partition nodes in
+    # this minimal guest, the exact zpool error is written to the status file
+    # and no file-backed vdev is substituted for this target.
+    loadmods
+    modprobe zfs 2>>"$STATUS" || insmod "$MOD/updates/dkms/zfs.ko" 2>>"$STATUS"
+    if awk '$1 == "zfs" {found=1} END {exit !found}' /proc/modules; then
+      say "zfs_module=loaded"
+    else
+      say "blocker=zfs_module_failed"
+    fi
+    minor="$(awk '$2 == "zfs" {print $1}' /proc/misc 2>/dev/null | head -n 1)"
+    if [ -n "$minor" ] && [ ! -c /dev/zfs ]; then
+      mknod /dev/zfs c 10 "$minor" 2>>"$STATUS" || true
+    fi
+    if [ -c /dev/zfs ]; then say "zfs_device=ok"; else say "blocker=zfs_device_missing"; fi
+    say "zpool_create_target=/dev/vdb (whole disk)"
+    if [ -x /usr/lib/systemd/systemd-udevd ]; then
+      mkdir -p /run/udev
+      /usr/lib/systemd/systemd-udevd --daemon 2>>"$STATUS" || true
+      udevadm trigger --action=add --subsystem-match=block >>"$STATUS" 2>&1 || true
+      udevadm settle --timeout=3 >>"$STATUS" 2>&1 || true
+      say "udev=started"
+    else
+      say "udev=absent"
+    fi
+    # libzfs on Debian waits for its own GPT partition through libudev. The
+    # guest starts the stock Debian udevd so that wait can complete without a
+    # host udev or a file-backed vdev. The explicit partx/blockdev rescan below
+    # is a fallback for a no-udev guest; it does not substitute a partition or
+    # file for the vdev argument.
+    (
+      n=0
+      first_err=1
+      while [ "$n" -lt 200 ]; do
+        [ -b /dev/vdb1 ] && [ -b /dev/vdb9 ] && break
+        err="$(partx -a /dev/vdb 2>&1)"
+        if [ -n "$err" ] && [ "$first_err" -eq 1 ]; then
+          say "partx_first_error=$err"
+          first_err=0
+        fi
+        blockdev --rereadpt /dev/vdb >/dev/null 2>&1 || true
+        sleep 0.05
+        n=$((n + 1))
+      done
+    ) &
+    rescan_pid=$!
+    strace -f -tt -o /results/zpool-whole.strace -e trace=file,ioctl \
+      zpool create -f -m /data/tank tank /dev/vdb >>"$STATUS" 2>&1
+    zpool_rc=$?
+    if [ "$zpool_rc" -ne 0 ]; then
+      # The first zpool attempt can race the kernel registering the new GPT
+      # partitions. Wait for the background rescan (bounded) and retry once
+      # on the same whole block device; no partition or file is substituted.
+      wait "$rescan_pid" 2>/dev/null || true
+      if [ -b /dev/vdb1 ] && [ -b /dev/vdb9 ]; then
+        say "zpool_create_retry_after_partition_nodes"
+        sleep 0.5
+        zpool create -f -m /data/tank tank /dev/vdb >>"$STATUS" 2>&1
+        zpool_rc=$?
+      fi
+    fi
+    kill "$rescan_pid" 2>/dev/null || true
+    wait "$rescan_pid" 2>/dev/null || true
+    if [ "$zpool_rc" -eq 0 ]; then
+      say "zpool_create=ok"
+      zfs create tank/fio >>"$STATUS" 2>&1 || say "blocker=zfs_dataset_failed"
+      say "mount=zfs-whole-ok"
+      zpool status -P tank >> "$STATUS" 2>&1
+      # The vdev argument was the raw whole disk /dev/vdb. ZFS creates and owns
+      # its own GPT partition (shown as /dev/vdb1); no partition, loop device,
+      # or file was supplied to zpool.
+      say "zpool_create_vdev=/dev/vdb"
+      say "zpool_status_vdev=$(zpool status -P tank | awk '/\/dev\/vdb/ {print $1; exit}')"
+      zfs list >> "$STATUS" 2>&1
+      run_matrix /data/tank/fio
+      zpool export tank >>"$STATUS" 2>&1 || say "blocker=zpool_export_failed"
+      say "zpool_export=done"
+    else
+      say "blocker=zpool_whole_disk_create_failed"
+      say "dev_nodes=$(ls -1 /dev/vd* 2>&1 | tr '\n' ' ')"
+      say "proc_partitions=$(tr '\n' ';' < /proc/partitions)"
     fi
     ;;
   zfs)

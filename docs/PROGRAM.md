@@ -31,7 +31,7 @@ evidence.
 | C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — current receipt `bench/receipts/ai-corpus-20261104T021627Z.json` (whole-pair-aware planner); historical `ai-corpus-20261103T220113Z.json` retained. No Meta/production data. Current relation-conditioned physical bytes 514,506 vs forced-zstd 575,808; raw pair bytes 697,014. |
 | C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | **implemented** — cost graph JSON/CSV beside the receipt; analysis and every loss in `bench/RESULTS-ai-v1.md` |
 | C3 | POSIX matrix results with reproducible commands | B4 | **implemented** — Rust matrix in `docs/fuse-status.md` with Rust/Go status and exact boundaries; `tests/fuse_verb_matrix.rs` (fallocate modes, server-side copy, mknod/FIFO rejection, O_TMPFILE boundary, mmap, locks, timestamps) passes in the FUSE court. Rust `O_TMPFILE`/flock are binding-limited; Go implements both. |
-| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. 2026-11-04 adds a real ZFS guest baseline (`bench-fs-cold-20261104T014727Z.json`; file-backed vdev, ARC caveat) and perf hardware counters (`perf-counters-20261104T015026Z.json`). RAPL/joule energy remains unavailable; no winner claim. |
+| C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/Btrfs/whole-disk ZFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `bench-fs-cold-20261104T070121Z.json`, `energy-probe-20261103T225547Z.json`. The 2026-11-04 run passes raw `/dev/vdb` to `zpool` for a real whole-disk vdev (ZFS-created GPT `/dev/vdb1`, guest udevd) and adds Btrfs; the earlier file-backed ZFS run is retained separately. ZFS reads are ARC-served. `perf-counters-20261104T015026Z.json` adds hardware counters. RAPL/joule energy remains unavailable; no winner claim. |
 
 ## D. Hooks
 
@@ -50,7 +50,7 @@ evidence.
 | E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian), `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128), and `QUANTIZED_TENSOR` (8, affine per-tensor i8/u8 with exact f64 scale bits and i64 zero point) implemented and cross-language byte-identical; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §5) |
 | E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | partial (uid/gid + ACL) |
 | E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | not started |
-| E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy; no refinement proof, and checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss and full CI remain outstanding. |
+| E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy plus a block-layer lying-disk matrix (`blkdebug-20261104T071235Z.json`: dm-flakey silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5, blkdebug mount-blocked 10/10). No refinement proof; checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss, host page-cache loss, and full CI remain outstanding. |
 | E7 | Adoption surfaces: checkpoint+delta format, dataset versioning/subset materialization, agent memory, experiment reproducibility | E3–E5 | not started |
 
 ## Implementation order (each stage ends with tests and a receipt)
@@ -81,8 +81,9 @@ evidence.
    A comparative performance pass (2026-11-03) adds an external schema-indexed
    SQLite relational/adjacency baseline, a matched Rust/Go codec court, and a
    guest cold-cache concurrent `fio` court on ext4/XFS/Rust/Go; results, every
-   loss, and blockers (ZFS absent, `perf`/RAPL unavailable) are in
-   `bench/RESULTS-comparative-v1.md`.
+   loss, and blockers (`perf`/RAPL unavailable, blkdebug mount-blocked) are in
+   `bench/RESULTS-comparative-v1.md`. The 2026-11-04 pass adds a whole-disk ZFS
+   vdev and Btrfs on the same fio matrix, plus dm-flakey lying-disk results.
 9. **F8 — Hooks:** Buck2 CAS adapter, agent memory example, generated types and
    drift CI. (D1–D3, E7) **Implemented** (2026-11-04) as a prototype adapter,
    simulated-timestamp agent-memory demo, and generated identity types with a
@@ -97,9 +98,14 @@ evidence.
     counterexample; `scripts/powerloss_court.sh` runs a QEMU VM power-cut proxy
     with Rust and Go verification (30/30 published iterations, 0 partial, 0
     durability failures) and a `cache=unsafe` lying-fsync device model (30/30,
-    0 partial, 0 durability failures; not physical media power loss). Still
-    outstanding: checkpoints/GC/capability/selector/multi-writer models, a
-    refinement proof, physical power loss, and the remaining release/CI items.
+    0 partial, 0 durability failures; not physical media power loss).
+    `scripts/blkdebug_court.sh` adds a block-layer lying-disk matrix: dm-flakey
+    silent write drop (5/5 lost acknowledged commits, 0 partial), dm-flakey EIO
+    (5/5 fail-closed), QEMU snapshot total write drop (5/5, recovered base), and
+    blkdebug write/flush error attempts (10/10 blocked at ext4 mount, exact log
+    recorded). Still outstanding: checkpoints/GC/capability/selector/multi-writer
+    models, a refinement proof, physical power loss, host page-cache loss, and
+    the remaining release/CI items.
 
 ## Non-negotiables
 

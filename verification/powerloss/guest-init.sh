@@ -24,14 +24,18 @@ mount -t tmpfs -o size=64m,nosuid,nodev tmpfs /tmp 2>/dev/null
 
 mode=verify
 iters=100000
+fault=none
+dm_up_secs=2
 for arg in $(cat /proc/cmdline); do
   case "$arg" in
     weft.mode=*) mode="${arg#weft.mode=}" ;;
     weft.iters=*) iters="${arg#weft.iters=}" ;;
+    weft.fault=*) fault="${arg#weft.fault=}" ;;
+    weft.dm_up_secs=*) dm_up_secs="${arg#weft.dm_up_secs=}" ;;
   esac
 done
 
-echo "GUEST_BOOT kernel=$(uname -r) mode=$mode"
+echo "GUEST_BOOT kernel=$(uname -r) mode=$mode fault=$fault dm_up_secs=$dm_up_secs"
 echo "GUEST_CMDLINE $(cat /proc/cmdline)"
 # Energy probing inside the guest: record exactly what is visible. The guest is
 # a QEMU VM and is not claimed to expose host RAPL.
@@ -58,9 +62,38 @@ if [ ! -b /dev/vdb ]; then
   poweroff -f
 fi
 
+# Handle the two block-layer lying-disk models that need a guest block device
+# mapper. dm-flakey is armed with a bounded up interval so ext4 mount and the
+# first commits complete normally; after the interval its down interval drops
+# writes (drop_writes, success returned) or fails them (error_writes).
+DATA_DEV=/dev/vdb
+if [ "$fault" = "dm-flakey-drop" ] || [ "$fault" = "dm-flakey-error" ]; then
+  KREL=$(uname -r)
+  MOD=/lib/modules/$KREL/kernel/drivers/md
+  insmod "$MOD/dm-mod.ko" 2>/dev/null || true
+  insmod "$MOD/dm-flakey.ko" 2>/dev/null || true
+  mkdir -p /dev/mapper
+  dm_minor=$(awk '$2 == "device-mapper" {print $1}' /proc/misc 2>/dev/null | head -n 1)
+  if [ -n "$dm_minor" ] && [ ! -e /dev/mapper/control ]; then
+    mknod /dev/mapper/control c 10 "$dm_minor" 2>/dev/null || true
+  fi
+  sectors=$(blockdev --getsz /dev/vdb)
+  feature=drop_writes
+  [ "$fault" = "dm-flakey-error" ] && feature=error_writes
+  echo "DM_TABLE 0 $sectors flakey /dev/vdb 0 $dm_up_secs 3600 1 $feature"
+  if dmsetup --noudevsync --noudevrules create --addnodeoncreate weftflakey \
+       --table "0 $sectors flakey /dev/vdb 0 $dm_up_secs 3600 1 $feature" 2>&1; then
+    echo "DM_CREATE_OK"
+    dmsetup --noudevsync --noudevrules mknodes weftflakey 2>&1 || true
+    DATA_DEV=/dev/mapper/weftflakey
+  else
+    echo "DM_CREATE_FAIL"
+  fi
+fi
+
 # No fsck: the kernel may replay the ext4 journal, which is what a real boot
 # after power loss does. A mount failure is a court failure, not a pass.
-if ! mount -t ext4 -o rw,data=ordered,barrier=1 /dev/vdb /data; then
+if ! mount -t ext4 -o rw,data=ordered,barrier=1 "$DATA_DEV" /data; then
   echo "PL_MOUNT_FAIL"
   dmesg | tail -n 40
   poweroff -f
@@ -79,6 +112,32 @@ json_num() {
     printf '%s' "$1" | grep -c "\"$2\": true"
   fi
 }
+
+if [ "$mode" = "prepare" ]; then
+  # One clean, untimed boot creates the store and the base file. The resulting
+  # raw ext4 image is copied for every fault iteration, so injected faults
+  # never hit mkfs, init, or the base-file creation.
+  if [ ! -f "$STORE/FORMAT" ]; then
+    $RUST --store "$STORE" init --chunk-size 65536 --checkpoint-interval 5 --gc-grace-secs 0 \
+      || { echo "PL_INIT_FAIL"; poweroff -f; }
+    dd if=/dev/zero of=/tmp/base bs=4096 count=256 2>/dev/null
+    $RUST --store "$STORE" create /f --file /tmp/base --seed powerloss-base \
+      || { echo "PL_CREATE_FAIL"; poweroff -f; }
+  fi
+  sync
+  info=$($RUST --store "$STORE" --json info 2>&1)
+  gen=$(printf '%s' "$info" | tr '\n' ' ' | sed -n 's/.*"generation": *\([0-9][0-9]*\).*/\1/p')
+  echo "PREPARE_DONE gen=$gen"
+  echo "PREPARE_INFO_BEGIN"
+  printf '%s\n' "$info"
+  echo "PREPARE_INFO_END"
+  # Unmount cleanly so the copied base image has no ext4 journal replay on a
+  # fault boot; otherwise the first injected write can land in journal recovery.
+  umount /data 2>/dev/null || true
+  sync
+  echo "PREPARE_END"
+  poweroff -f
+fi
 
 if [ "$mode" = "write" ]; then
   if [ ! -f "$STORE/FORMAT" ]; then
@@ -112,6 +171,7 @@ if [ "$mode" = "write" ]; then
   done
   echo "WRITE_LOOP_EXIT i=$i"
   sync
+  echo "SYNC_STATUS $?"
   poweroff -f
 fi
 

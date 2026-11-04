@@ -251,9 +251,10 @@ Losses and scoped facts:
 A QEMU guest boots the Debian kernel/initramfs from the vm court image with a
 read-only ext4 root image built in the court. The root contains busybox, fio,
 both WeftFS CLIs, and only the kernel modules needed (`fuse.ko`, `xfs.ko`,
-`libcrc32c.ko`, `crc32c_generic.ko`, `crc32c-intel.ko`). The data disk is raw
-virtio-blk with QEMU `cache=none`; the results disk is a small ext4 image
-extracted with `debugfs` (no loop mount, no extra capability).
+`btrfs.ko`, `libcrc32c.ko`, `crc32c_generic.ko`, `crc32c-intel.ko`, plus the
+OpenZFS DKMS module stack and `zpool`/`zfs`). The data disk is raw virtio-blk
+with QEMU `cache=none`; the results disk is a small ext4 image extracted with
+`debugfs` (no loop mount, no extra capability).
 
 - Cold: guest runs `sync; echo 3 > /proc/sys/vm/drop_caches` immediately before
   the run. Warm: the next run on the same files with no drop.
@@ -363,20 +364,24 @@ extracted with `debugfs` (no loop mount, no extra capability).
   Cold-cache penalty is visible and published.
 - ext4 versus XFS: XFS wins random writes and `fsync` at `numjobs=16` in this
   guest; ext4 wins some cold read tails. No general ranking is claimed.
-- **ZFS (2026-11-04):** a real ZFS target now runs in the same QEMU guest
-  (`bench/receipts/bench-fs-cold-20261104T014727Z.json`, ext4/XFS/ZFS, one
-  repetition per cell). OpenZFS 2.1.11-1+deb12u1 is built by DKMS for guest
-  kernel 6.1.0-54-amd64; `zfs.ko` loads, `/dev/zfs` is created, and a real pool
-  is created. The minimal guest runs no udev, so a whole-disk vdev could not
-  create its `/dev/vdb1` node; the pool uses a file-backed vdev on the ext4
-  data disk. That extra backing layer is a published caveat, not hidden.
-  `numjobs=1` cold medians: seq-write-1m 888.9 IOPS (ext4 1,142.9, XFS
-  1,142.9); fsync-write-4k 372.1 IOPS (ext4 363.6, XFS 444.4); rand-read-4k
-  128,000 IOPS vs ext4/XFS 9,846 — the ZFS read number is **ARC-served** and is
-  not a cold-disk comparison, because `drop_caches` does not drop the ZFS ARC.
-  At `numjobs=16`: ZFS rand-read-4k 512,000 (ARC), seq-write-1m 1,113, and
-  fsync-write-4k 3,282 IOPS. No ZFS ranking or superiority claim is made.
-- **Btrfs:** not requested and not run.
+- ZFS (2026-11-04, historical): `bench-fs-cold-20261104T014727Z.json` ran
+  ext4/XFS/ZFS with a **file-backed vdev** on an ext4 data disk
+  (`zpool create ... /data/zfs-vdev.img`). That result remains separately
+  labelled and is superseded for the whole-disk question by §5.4. The file
+  target was needed because the minimal guest ran no udev; libzfs' partition
+  wait could not see its own GPT partition. ZFS reads in that run are ARC-served
+  because `drop_caches` does not drop the ARC. No ZFS ranking is claimed.
+- **Whole-disk ZFS (2026-11-04):** §5.4. The vdev is the raw `/dev/vdb` block
+  device passed to `zpool create`; no partition, loop device, or file-backed
+  vdev is used. ZFS creates and owns its GPT partition `/dev/vdb1`. The guest
+  runs the stock Debian `systemd-udevd 252.39` so libzfs' libudev wait can
+  complete. Without udevd the exact failure is `cannot label 'vdb': failed to
+  detect device partitions on '/dev/vdb1': 19` and the pool is not created; no
+  substitute is reported as a whole-disk result.
+- **Btrfs (2026-11-04):** §5.4. `mkfs.btrfs` (btrfs-progs 6.2) on the host,
+  guest `btrfs.ko`, mount options `rw,relatime,space_cache=v2,subvolid=5`.
+  Cold reads use the guest `drop_caches`; Btrfs page cache is evictable in a way
+  the ZFS ARC is not. No ranking is claimed.
 - The Rust and Go mounts do not have identical options (`allow_other` vs
   `max_read=131072`); both are buffered FUSE mounts, but this is not a
   perfectly controlled mount-option comparison.
@@ -387,6 +392,150 @@ extracted with `debugfs` (no loop mount, no extra capability).
   write results measure the write/commit path, not storage growth.
 - Two repetitions per cell are enough for medians, not for trustworthy p99
   tails; §7 quantifies the tail variance.
+
+### 5.4 Whole-disk ZFS and Btrfs (2026-11-04)
+
+Receipt: `bench/receipts/bench-fs-cold-20261104T070121Z.json`. One repetition
+per cell, `numjobs` 1/4/16, the same `fio` matrix, data disk raw virtio-blk with
+`cache=none`. Targets: ext4, XFS, Btrfs, `zfs-whole`. All 30 fio runs per target
+completed. Guest kernel 6.1.0-54-amd64; OpenZFS 2.1.11-1+deb12u1 (DKMS);
+btrfs-progs 6.2; QEMU 7.2.22.
+
+ZFS construction in the guest (`zfs-whole`):
+
+```
+insmod /lib/modules/6.1.0-54-amd64/updates/dkms/zfs.ko
+mknod /dev/zfs c 10 <zfs-misc-minor>
+/usr/lib/systemd/systemd-udevd --daemon
+udevadm trigger --action=add --subsystem-match=block
+zpool create -f -m /data/tank tank /dev/vdb
+zfs create tank/fio
+# ... fio on /data/tank/fio ...
+zpool export tank
+```
+
+`zpool status -P` shows `NAME /dev/vdb1`; `/dev/vdb` is what was passed to
+`zpool`, and `/dev/vdb1` is the GPT partition ZFS created inside that whole
+disk. `zpool_create_vdev=/dev/vdb` and `zpool_status_vdev=/dev/vdb1` are both
+recorded in the guest status. No file-backed vdev is used for this target.
+
+| Target | Workload | nj | Cold IOPS | Warm IOPS |
+|---|---|---:|---:|---:|
+| ext4 | seq-write-1m | 1 | 1,142.9 | 1,000.0 |
+| XFS | seq-write-1m | 1 | 1,142.9 | 1,333.3 |
+| Btrfs | seq-write-1m | 1 | 1,000.0 | 800.0 |
+| ZFS whole-disk | seq-write-1m | 1 | 1,333.3 | 1,333.3 |
+| ext4 | fsync-write-4k | 1 | 410.3 | 571.4 |
+| XFS | fsync-write-4k | 1 | 444.4 | 941.2 |
+| Btrfs | fsync-write-4k | 1 | 484.8 | 457.1 |
+| ZFS whole-disk | fsync-write-4k | 1 | 842.1 | 842.1 |
+| ext4 | rand-read-4k | 1 | 9,846.2 | 9,846.2 |
+| XFS | rand-read-4k | 1 | 9,142.9 | 9,142.9 |
+| Btrfs | rand-read-4k | 1 | 8,533.3 | 8,533.3 |
+| ZFS whole-disk | rand-read-4k | 1 | 128,000.0 | 128,000.0 |
+| ext4 | rand-write-4k | 1 | 42,666.7 | 25,600.0 |
+| XFS | rand-write-4k | 1 | 42,666.7 | 42,666.7 |
+| Btrfs | rand-write-4k | 1 | 42,666.7 | 42,666.7 |
+| ZFS whole-disk | rand-write-4k | 1 | 64,000.0 | 64,000.0 |
+| ext4 | fsync-write-4k | 16 | 3,368.4 | 3,282.1 |
+| XFS | fsync-write-4k | 16 | 1,841.7 | 2,438.1 |
+| Btrfs | fsync-write-4k | 16 | 927.5 | 914.3 |
+| ZFS whole-disk | fsync-write-4k | 16 | 6,243.9 | 6,243.9 |
+| ext4 | rand-read-4k | 16 | 157,538.5 | 157,538.5 |
+| XFS | rand-read-4k | 16 | 146,285.7 | 136,533.3 |
+| Btrfs | rand-read-4k | 16 | 120,470.6 | 128,000.0 |
+| ZFS whole-disk | rand-read-4k | 16 | 682,666.7 | 682,666.7 |
+
+**Losses and caveats, stated plainly:**
+
+- ZFS random reads are **ARC-served** and are not a cold-disk comparison. The
+  cold and warm medians are identical for rand-read-4k because
+  `drop_caches` does not evict the ARC. No ZFS read or overall ranking is
+  claimed.
+- ZFS was created without an explicit `-O compression=off`; OpenZFS's
+  zero-block elimination can therefore affect all-zero fio writes. This is a
+  property of the target configuration, not a comparative claim.
+- Btrfs fsync-write at `numjobs=16` is 927.5 IOPS versus ext4 3,368.4 and XFS
+  1,841.7. Btrfs is not the fastest or slowest on every workload; no ranking is
+  claimed.
+- ZFS's 6,243.9 fsync-write IOPS at `numjobs=16` is the observed pool/ZIL
+  behaviour in this guest; it is not evidence of physical-media durability and
+  is not compared to a power-loss test.
+- One repetition per cell is enough for scoped medians, not for trustworthy
+  tails. Tail percentiles are retained in the receipt and are not summarized
+  here.
+- The guest runs `systemd-udevd` only for the `zfs-whole` target so libzfs can
+  observe its own GPT partition. This is guest-side udev, not a host partition
+  or a file-backed vdev. The no-udev failure is recorded above.
+
+### 5.5 Block-layer lying-disk model (dm-flakey and blkdebug, 2026-11-04)
+
+Receipt: `bench/receipts/blkdebug-20261104T071235Z.json`. `scripts/blkdebug_court.sh`
+runs in the vm court, prepares one clean store base image, copies it per
+iteration, boots the guest with a block-layer fault, waits for a returned
+commit, sleeps a seeded delay, `SIGKILL`s QEMU, reboots, and verifies with Rust
+and Go against the exact expected whole generation. 30 iterations: 5 per mode.
+
+| Mode | Iterations | old | new | lost | partial | fault observed |
+|---|---:|---:|---:|---:|---:|---:|
+| control (no fault) | 5 | 4 | 1 | 0 | 0 | 0 |
+| dm-flakey silent write drop | 5 | 0 | 0 | 5 | 0 | 5 (by loss) |
+| dm-flakey write EIO | 5 | 5 | 0 | 0 | 0 | 5 (COMMIT_FAIL) |
+| QEMU snapshot total write drop | 5 | 0 | 0 | 5 | 0 | 5 (by loss) |
+| blkdebug write-error | 5 | — | — | — | 0 | blocked at mount |
+| blkdebug flush-error | 5 | — | — | — | 0 | blocked at mount |
+
+- **dm-flakey silent write drop** is the lying-disk result. The guest creates
+  `flakey /dev/vdb 0 2 3600 1 drop_writes`; the 2-second up interval covers
+  ext4 mount, then writes are acknowledged and silently discarded. Every
+  iteration lost acknowledged commits: recovered generation 89/89/87/87/87 vs
+  last returned 307/198/335/295/252, i.e. 218/109/248/208/165 commits lost.
+  Both implementations recovered the same generation with `verify --full`
+  clean and read the exact expected bytes. **0 partial states.** This is the
+  expected consequence of a disk that lies about writes, not a WeftFS
+  consistency failure.
+- **dm-flakey write EIO** failed the first write after the 2-second up
+  interval every time. The store returned a failed commit (one `COMMIT_FAIL`
+  per iteration), recovered generation equalled the last returned generation
+  (89/87/89/89/87), `verify --full` was clean, and no acknowledged commit was
+  lost. This is fail-closed behaviour at the filesystem/block boundary.
+- **QEMU snapshot total write drop** (`snapshot=on`) acknowledged tens to
+  hundreds of commits into a volatile overlay that `SIGKILL` discarded. Every
+  iteration recovered generation 2, the prepared base, and lost all
+  acknowledged commits (last returned 66/79/193/179/132). 0 partial. This is
+  a total write-drop model, not selective media loss.
+- **blkdebug write-error and flush-error are blocked, not passed.** QEMU 7.2
+  blkdebug arms at device open, so the first injected write is ext4's mount
+  superblock at block 0. The guest log is exactly `I/O error, dev vdb, sector 0
+  op 0x1:(WRITE)` then `JBD2: recovery failed` / `EXT4-fs (vdb): error loading
+  journal`; the guest never reaches `GUEST_WRITING`. All 10 attempts are
+  recorded as blocked. No result is invented for these modes.
+- **What blkdebug can and cannot express here:** accepted events are `read_aio`,
+  `write_aio`, and `flush_to_os`; `flush_do_sync` is rejected, and a config with
+  `errno=0` still writes the bytes (tested with `qemu-io`). There is no silent
+  selective write-drop primitive. The arm-after-mount equivalent is dm-flakey,
+  which is what the data matrix uses.
+- **Claim boundary:** this is a **block-layer lying-disk model combined with
+  SIGKILL and reboot**, not physical media power loss. Host page cache is not
+  dropped. The next section records the exact host-cache blocker.
+
+### 5.6 Host page-cache loss attempt
+
+Receipt: `bench/receipts/hostcache-probe-20261104T071612Z.json`, run in the vm
+court with the usual `--cap-drop=ALL` and no added capabilities.
+
+- `/proc/sys/vm/drop_caches` exists (mode `200`) but the container cannot write
+  it: `writable_by_container=false`, `CapEff=0000000000000000`, and the exact
+  kernel refusal is `Read-only file system`. **No host cache was dropped.**
+- A per-file `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file under
+  the court bind mount succeeded. That is safe per-file clean-page eviction, not
+  host-wide cache loss, and is recorded as such.
+- The storage courts use QEMU `cache=none` for guest data, which opens the image
+  with `O_DIRECT`; guest data therefore does not occupy the host page cache on
+  that path. `cache=writeback` appears in labelled control/lying-fsync runs, but
+  its host page cache was not dropped.
+- **Not claimed:** host page-cache loss, global cache drop, device write-cache
+  loss, physical media power loss.
 
 ## 6. Energy and CPU
 
@@ -451,10 +600,20 @@ Tail metrics at high concurrency are reported as unstable, not as a result.
 
 - No physical power-loss, host page-cache loss, torn-sector, or device
   write-cache-loss test. The VM power-cut court remains a QEMU proxy; its
-  `cache=unsafe` mode is a lying-fsync device model, not physical media.
-- ZFS is a real pool in the guest but uses a file-backed vdev (no udev in the
-  minimal guest); its reads benefit from the ZFS ARC that `drop_caches` does
-  not clear. No Btrfs run.
+  `cache=unsafe` mode is a lying-fsync device model, not physical media. The
+  block-layer matrix in §5.5 deliberately loses acknowledged writes with
+  dm-flakey and a snapshot overlay, but it is a software block-layer model, not
+  physical media.
+- Host `drop_caches` is blocked in the unprivileged court (`Read-only file
+  system`, mode `200`, `CapEff=0`); only a per-file `fadvise(DONTNEED)` was
+  attempted and succeeded. No host/device cache was lost.
+- ZFS now has a **whole-disk** result (§5.4): raw `/dev/vdb` passed to `zpool`,
+  ZFS-created GPT inside it, guest udevd present. The earlier file-backed ZFS
+  result remains separately labelled. ZFS reads are ARC-served and are not
+  cold-disk numbers. Btrfs ran on the same matrix.
+- blkdebug write-error/flush-error injection cannot reach the write loop because
+  it arms at device open and hits ext4's mount superblock; the exact guest log
+  is recorded in §5.5. No result is substituted for those modes.
 - No RAPL energy or external power meter. Perf hardware counters are reported
   separately and are not energy.
 - No direct-I/O filesystem run and no same-inode concurrent direct I/O.
@@ -488,10 +647,17 @@ Tail metrics at high concurrency are reported as unstable, not as a result.
 - Cold fio targets: `WEFT_FS_COLD_TARGETS`; repetitions:
   `WEFT_FS_COLD_REPS`; per-target timeout: `WEFT_FS_COLD_TIMEOUT`.
   Raw fio JSON stays under `.docker-cache/vm-fs/<UTC>/extracted/`; the receipt
-  records each file name and every command line. The ZFS run command is
-  `scripts/docker-court.sh vm "WEFT_FS_COLD_TARGETS=ext4,xfs,zfs WEFT_FS_COLD_REPS=1 bash bench/scripts/vm_fs_court.sh"`;
+  records each file name and every command line. The whole-disk ZFS/Btrfs run is
+  `scripts/docker-court.sh vm "WEFT_FS_COLD_TARGETS=ext4,xfs,btrfs,zfs-whole WEFT_FS_COLD_REPS=1 bash bench/scripts/vm_fs_court.sh"`;
   the vm image is built from `docker/vm.Dockerfile`, which installs OpenZFS via
-  DKMS for the Debian guest kernel.
+  DKMS for the Debian guest kernel and btrfs-progs. The earlier file-backed ZFS
+  run is `WEFT_FS_COLD_TARGETS=ext4,xfs,zfs`.
+- Block-layer lying-disk matrix:
+  `scripts/docker-court.sh vm "bash scripts/blkdebug_court.sh"`; override modes
+  with `BLKDEBUG_MODES` and iterations with `BLKDEBUG_ITERATIONS`. The receipt
+  records every mode's blkdebug table/config, dm-flakey table, kill delay, and
+  the exact blocked-mount log. Host-cache probe:
+  `scripts/docker-court.sh vm "bash scripts/hostcache_probe.sh"`.
 - Perf/energy probe: `scripts/docker-court.sh bench "bash bench/scripts/run_perf_counters.sh"`.
   It installs `linux-perf`/`jq` inside the ephemeral bench court when absent and
   records the exact package versions; no host package is changed.

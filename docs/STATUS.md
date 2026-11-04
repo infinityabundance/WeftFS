@@ -41,13 +41,20 @@ model pass; flawed model counterexample). The F9 power-loss receipts are
 `bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`),
 `bench/receipts/powerloss-20261103T224652Z.json` (10/10, `cache=writeback`), and
 `bench/receipts/powerloss-20261104T014805Z.json` (30/30, `cache=unsafe`,
-lying-fsync device model). The B2 10,000-iteration receipt is
+lying-fsync device model). The block-layer lying-disk matrix is
+`bench/receipts/blkdebug-20261104T071235Z.json` (30 iterations; dm-flakey
+silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5;
+blkdebug write/flush error 10/10 blocked at ext4 mount). The host-cache probe is
+`bench/receipts/hostcache-probe-20261104T071612Z.json` (global drop refused:
+`Read-only file system`). The B2 10,000-iteration receipt is
 `bench/receipts/crash-torture-20261104T013521Z.json`. The counter/energy probe is
 `bench/receipts/perf-counters-20261104T015026Z.json` (perf counters available;
-RAPL energy still unreadable). The real ZFS guest baseline is
-`bench/receipts/bench-fs-cold-20261104T014727Z.json` (ext4/XFS/ZFS, one
-repetition per cell). The abstraction mapping, assumptions, and limitations
-are in `verification/README.md`.
+RAPL energy still unreadable). The whole-disk ZFS/Btrfs fio run is
+`bench/receipts/bench-fs-cold-20261104T070121Z.json` (ext4/XFS/Btrfs/ZFS,
+`zfs-whole` uses raw `/dev/vdb`; one repetition per cell). The earlier
+file-backed ZFS run `bench-fs-cold-20261104T014727Z.json` is retained and
+separately labelled. The abstraction mapping, assumptions, and limitations are
+in `verification/README.md`.
 
 ## 1. Repositories and revisions
 
@@ -465,19 +472,47 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. The
   Rust and Go mounts differ in `allow_other`/`max_read` defaults; that is
   published as a limitation.
-- ZFS baseline (2026-11-04): `bench-fs-cold-20261104T014727Z.json` runs
-  ext4/XFS/ZFS in one guest court, one repetition per cell. OpenZFS
-  2.1.11-1+deb12u1 was built by DKMS for the guest kernel 6.1.0-54-amd64; the
-  guest loaded `zfs.ko`, created `/dev/zfs`, and created a real pool with a
-  file-backed vdev (the minimal guest runs no udev, so a whole-disk vdev could
-  not create its `/dev/vdb1` node). The ext4 data disk is the backing layer; the
-  pool is real ZFS but not a whole-disk vdev. ZFS cold reads are **not** cold in
-  the same sense: `drop_caches` does not drop the ZFS ARC. Scoped medians
-  (`numjobs=1`, cold): seq-write-1m 888.9 IOPS (ext4 1,142.9, XFS 1,142.9),
-  fsync-write-4k 372.1 IOPS (ext4 363.6, XFS 444.4), rand-read-4k 128,000
-  (ARC-served; ext4/XFS 9,846, not comparable). At `numjobs=16`, ZFS
-  rand-read-4k is 512,000 IOPS (ARC) and seq-write-1m 1,113 IOPS. No ZFS
-  superiority claim is made.
+- Whole-disk ZFS and Btrfs (2026-11-04):
+  `bench-fs-cold-20261104T070121Z.json` runs ext4/XFS/Btrfs/`zfs-whole` in one
+  guest court, one repetition per cell, 30 fio runs per target. For `zfs-whole`
+  the guest passed the raw `/dev/vdb` block device to `zpool create -f -m
+  /data/tank tank /dev/vdb`; `zpool status -P` shows the GPT partition
+  `/dev/vdb1` that ZFS created and owns. No partition, loop device, or
+  file-backed vdev is used. The guest runs stock `systemd-udevd 252.39` so
+  libzfs' libudev partition wait can complete; without udevd the exact error is
+  `cannot label 'vdb': failed to detect device partitions on '/dev/vdb1': 19`.
+  OpenZFS 2.1.11-1+deb12u1 (DKMS, kernel 6.1.0-54-amd64); Btrfs uses
+  btrfs-progs 6.2 on the host and the guest `btrfs.ko`. Scoped `numjobs=1` cold
+  medians: seq-write-1m ext4 1,142.9, XFS 1,142.9, Btrfs 1,000.0, ZFS 1,333.3;
+  fsync-write-4k ext4 410.3, XFS 444.4, Btrfs 484.8, ZFS 842.1; rand-read-4k
+  ext4 9,846.2, XFS 9,142.9, Btrfs 8,533.3, ZFS 128,000 (ARC-served). At
+  `numjobs=16` fsync-write-4k: ext4 3,368.4, XFS 1,841.7, Btrfs 927.5, ZFS
+  6,243.9. ZFS reads are **not cold**: `drop_caches` does not evict the ARC. No
+  ranking or superiority claim is made. The earlier file-backed ZFS run
+  `bench-fs-cold-20261104T014727Z.json` is retained as a separate, labelled
+  result, not as the whole-disk claim.
+- Block-layer lying-disk matrix (2026-11-04): `bench/receipts/blkdebug-20261104T071235Z.json`,
+  30 iterations, 5 per mode, in the vm court. `dm-flakey drop_writes` (2 s up,
+  then silent drop) lost acknowledged commits in 5/5 iterations: recovered
+  generations 89/89/87/87/87 versus last returned 307/198/335/295/252
+  (218/109/248/208/165 commits lost), 0 partial, both implementations agreed,
+  `verify --full` clean. `dm-flakey error_writes` failed the first post-window
+  write in 5/5, recovered exactly the last returned generation, 0 loss,
+  0 partial. QEMU `snapshot=on` total write drop recovered generation 2 in 5/5
+  and lost all acknowledged commits. QEMU blkdebug write-error and flush-error
+  were attempted and are **blocked at ext4 mount** in 10/10: the first injected
+  write is the mount superblock at block 0, then `JBD2: recovery failed` /
+  `EXT4-fs (vdb): error loading journal`, and the guest never reaches
+  `GUEST_WRITING`. No result is invented for those two modes. This is a
+  block-layer lying-disk model, not physical media power loss.
+- Host page-cache attempt (2026-11-04):
+  `bench/receipts/hostcache-probe-20261104T071612Z.json`. The unprivileged court
+  (`CapEff=0`) cannot write `/proc/sys/vm/drop_caches`: mode `200`, exact
+  refusal `Read-only file system`; no host cache was dropped. A per-file
+  `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file succeeded and
+  is recorded as per-file eviction only. QEMU `cache=none` uses `O_DIRECT`, so
+  guest data does not occupy the host page cache on that path. Host page-cache
+  loss remains **not tested**.
 - Energy/counter probe: `energy-probe-20261103T225547Z.json` recorded that
   `perf` was not installed and no readable RAPL `energy_uj` existed. The
   2026-11-04 probe `perf-counters-20261104T015026Z.json` installs Debian
@@ -606,11 +641,40 @@ removed, so a lying guest-visible flush does not create loss under a process
 kill. The mode is labelled a **lying-fsync device model**, not physical media
 power loss; real disk-firmware lying and host power loss remain untested.
 
+**Block-layer lying-disk court (2026-11-04).** `scripts/blkdebug_court.sh`
+prepares one clean ext4 store base, copies it per iteration, and combines a
+block-layer fault with the same SIGKILL/reboot/Rust+Go verification. Modes are
+`control`, `dm-flakey-drop`, `dm-flakey-error`, `write-drop-all` (QEMU
+`snapshot=on`), and two blkdebug attempts. `dm-flakey` is created inside the
+guest over `/dev/vdb` with a 2 s up interval so mount completes, then a 1 h down
+interval; `drop_writes` silently discards writes while returning success, and
+`error_writes` returns EIO. In `bench/receipts/blkdebug-20261104T071235Z.json`:
+control 4 old + 1 new; dm-flakey-drop 5/5 lost (218/109/248/208/165
+acknowledged commits lost, recovered 89/89/87/87/87); dm-flakey-error 5/5 old,
+5/5 COMMIT_FAIL, 0 loss; write-drop-all 5/5 recovered generation 2 and lost all
+acknowledged commits; 0 partial in all completed modes. blkdebug write-error
+and flush-error are 10/10 **blocked**, not passed: blkdebug arms at open, so the
+first injected write is ext4's mount superblock (`I/O error, dev vdb, sector 0`,
+`JBD2: recovery failed`, `EXT4-fs (vdb): error loading journal`) and the guest
+never reaches `GUEST_WRITING`. QEMU 7.2 blkdebug accepts `read_aio`,
+`write_aio`, and `flush_to_os`; it rejects `flush_do_sync`, and `errno=0` still
+writes, so there is no silent selective write-drop primitive. `dm-flakey` is
+the arm-after-mount equivalent used for the data results.
+
+**Host page-cache probe (2026-11-04).**
+`bench/receipts/hostcache-probe-20261104T071612Z.json` records that the
+unprivileged court (`CapEff=0`) cannot write `/proc/sys/vm/drop_caches` (mode
+`200`, exact refusal `Read-only file system`), so no host cache was dropped. A
+per-file `posix_fadvise(POSIX_FADV_DONTNEED)` on one 4 MiB scratch file
+succeeded and is labelled per-file eviction only. QEMU `cache=none` uses
+`O_DIRECT` for guest data. Host page-cache loss remains untested.
+
 **Claim boundary.** This is a QEMU VM power-cut proxy plus a lying-fsync device
-model, not physical media power loss or host page-cache loss. The TLA+ model is
-checked; the implementation is not verified, and there is no refinement proof.
-See `verification/README.md` for the exact mapping, assumptions, and remaining
-gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
+model and a block-layer lying-disk model, not physical media power loss or host
+page-cache loss. The TLA+ model is checked; the implementation is not verified,
+and there is no refinement proof. See `verification/README.md` for the exact
+mapping, assumptions, and remaining gaps (checkpoints, GC, capabilities,
+multi-writer, physical rig).
 
 ## 3. Evidence discipline
 
@@ -636,17 +700,21 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
   checked model.
 - The F9 power-loss court is a QEMU virtual-machine power-cut proxy: `SIGKILL`
   loses the guest page cache and QEMU user-space state, not physical media or
-  host/device caches. It runs under the same hard limits as every other court.
+  host/device caches. The block-layer court adds dm-flakey silent write drop,
+  dm-flakey EIO, and a snapshot total-write-drop model; blkdebug write/flush
+  errors are recorded as blocked at mount. It runs under the same hard limits as
+  every other court.
 
 ## 4. What is **not** done (ranked)
 
 1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
-   SQLite, ext4/XFS cold-cache, concurrent-fio, and matched Go/Rust codec gaps
-   (`bench/RESULTS-comparative-v1.md`). The 2026-11-04 pass adds a real ZFS
-   guest baseline (`bench-fs-cold-20261104T014727Z.json`; file-backed vdev, ARC
-   caveat) and perf hardware counters (`perf-counters-20261104T015026Z.json`).
-   Still open: physical power loss and host/device cache loss, a whole-disk ZFS
-   vdev and Btrfs, RAPL/joule energy, direct-I/O, metadata storms, AI-corpus
+   SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec, and now
+   whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). The 2026-11-04
+   pass adds `bench-fs-cold-20261104T070121Z.json` (whole-disk `zfs-whole` on raw
+   `/dev/vdb` plus Btrfs), `blkdebug-20261104T071235Z.json` (dm-flakey lying-disk
+   matrix; blkdebug mount blocker), and `hostcache-probe-20261104T071612Z.json`
+   (global cache drop refused). Still open: physical media power loss, host/
+   device cache loss, RAPL/joule energy, direct-I/O, metadata storms, AI-corpus
    external baselines, 10^5–10^6-object scaling, and a library-vs-library codec
    court. See `bench/RESULTS-v1.md` §8 and `bench/RESULTS-comparative-v1.md` §8.
 2. **Formal model coverage beyond the commit/recovery abstraction.** The F9 TLA+
@@ -705,16 +773,19 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 ## 5. Next work queue (dependency order)
 
 1. Close the remaining P7 gaps in `bench/RESULTS-comparative-v1.md` §8:
-   physical power loss, a whole-disk ZFS vdev/Btrfs, RAPL/joule energy,
+   physical media power loss, host/device cache loss, RAPL/joule energy,
    direct I/O, metadata storms, AI-corpus external baselines, 10^5–10^6-object
-   scaling, and a library-vs-library codec court. Then add the eight-component
-   economic profile.
+   scaling, and a library-vs-library codec court. The whole-disk ZFS/Btrfs and
+   block-layer lying-disk gaps are closed within their stated models; blkdebug
+   write/flush injection remains blocked at mount and is recorded. Then add the
+   eight-component economic profile.
 2. Extend the TLA+ model to checkpoints, GC reachability, capability
    filtering, and multi-writer refusal; add a refinement mapping to the Rust
    and Go state machines. The current F9 model covers commit/recovery only.
 3. Physical power-loss on hardware with controllable power (and host/device
-   cache loss); today's F9 evidence is a QEMU VM power-cut proxy. The VM rig is
-   `scripts/powerloss_court.sh`; it should be re-run at each release revision.
+   cache loss); today's F9 evidence is a QEMU VM power-cut proxy plus software
+   block-layer lying-disk models (`scripts/powerloss_court.sh`,
+   `scripts/blkdebug_court.sh`). Re-run both at each release revision.
 4. Remaining Go FUSE edge work: physical-space PUNCH_HOLE or sparse extents,
    kernel-forwarded COLLAPSE/INSERT, `ioctl`, and cross-daemon/host locks.
    Online GC is implemented and opt-in.
