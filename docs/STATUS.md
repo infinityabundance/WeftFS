@@ -2,10 +2,11 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261103T220311Z.json` (all fourteen courts `pass`,
-including F6 tensor/tokens cross-decode and spec drift). Earlier
-`verify-20261103T172416Z` and `verify-20261103T165944Z` receipts are retained as
-history. The
+`bench/receipts/verify-20261104T022012Z.json` (all eighteen courts `pass`,
+including quantized cross-decode, generated-type drift, Buck2 CAS, and agent
+memory). Earlier `verify-20261103T220311Z`,
+`verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
+as history. The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
 The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
@@ -27,12 +28,12 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
 The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens/
 quantized byte-identical in both directions). The current F7 receipt is
-`bench/receipts/ai-corpus-20261104T020943Z.json` with cost graph JSON/CSV beside
+`bench/receipts/ai-corpus-20261104T021627Z.json` with cost graph JSON/CSV beside
 it (whole-pair-aware planner); analysis, losses, and caveats are in
 `bench/RESULTS-ai-v1.md`. The historical frame-smallest receipt
 `ai-corpus-20261103T220113Z.json` is retained. F8 receipts are
-`bench/receipts/buck2-cas-20261104T021121Z.json` (15/15 prototype assertions)
-and `bench/receipts/agent-memory-20261104T021117Z.json` (7/7 simulated-timestamp
+`bench/receipts/buck2-cas-20261104T022139Z.json` (15/15 prototype assertions)
+and `bench/receipts/agent-memory-20261104T022139Z.json` (7/7 simulated-timestamp
 months-later replay). Generated-type drift is `scripts/gen-types.sh --check`,
 wired into `verify-all`.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
@@ -50,12 +51,12 @@ are in `verification/README.md`.
 
 ## 1. Repositories and revisions
 
-| Repo | F9 revision | Role |
+| Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `b3e2ecc` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `ab50e8b` | Rust codec v1 |
-| `WeftCodec-Go` | `ce2cff9` | independent Go codec |
-| `WeftFS-Go` | `209e4c3` | independent Go store + FUSE |
+| `WeftFS` | `9353bf5` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `cc31f77` | Rust codec v1 |
+| `WeftCodec-Go` | `71ec772` | independent Go codec |
+| `WeftFS-Go` | `e4c5f04` | independent Go store + FUSE |
 
 All work is on `staging`. `main` holds the P0 foundation only. The research
 directory and `AGENTS.md` are gitignored, per operator directive.
@@ -128,7 +129,7 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   near-duplicate agent intermediates, 12 typed tensors, 8 token sequences, and
   near-duplicate checkpoint-like blobs. License CC0-1.0, synthetic provenance,
   per-file SHA-256 manifest.
-- Receipt `bench/receipts/ai-corpus-20261104T020943Z.json` + cost graph JSON/CSV
+- Receipt `bench/receipts/ai-corpus-20261104T021627Z.json` + cost graph JSON/CSV
   beside it. Historical `ai-corpus-20261103T220113Z.json` retained. Analysis,
   every loss, and caveats in `bench/RESULTS-ai-v1.md`.
 - Current measured physical bytes: `zstd_forced` 575,808; `weft_auto` 575,713;
@@ -154,7 +155,7 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   returns identical bytes, different toolchain/input misses, query by action
   type/toolchain/input works, and same-key/different-bytes fails closed. Go
   tests + `go vet` and a 15/15 assertion demo run in the Go court; receipt
-  `bench/receipts/buck2-cas-20261104T021121Z.json`. No REAPI gRPC, no Buck2
+  `bench/receipts/buck2-cas-20261104T022139Z.json`. No REAPI gRPC, no Buck2
   plugin ABI, no performance claim.
 - **D2 agent long-term memory:** `scripts/demo-agent-memory.sh` creates
   prompt/model/tool/dataset/output objects and five typed edges, three Context
@@ -163,7 +164,7 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   run-001 sha256 exact in all January views; run-002 absent from January;
   September time root keeps old bytes exact; replayed bundle reproduces all
   three ContextRootIds and five lineage edges with Go only. Receipt
-  `bench/receipts/agent-memory-20261104T021117Z.json` (7/7). Timestamps are
+  `bench/receipts/agent-memory-20261104T022139Z.json` (7/7). Timestamps are
   simulated; this is not a real-time aging or retention measurement.
 - **D3 spec-as-code:** `spec/schema/identity-v1.schema` is the canonical source;
   `scripts/gen-types.sh` generates `WeftCodec/src/generated.rs` and
@@ -617,9 +618,9 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
   image with `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
   bounded `/tmp`, `no-new-privileges`, and `cap-drop=ALL` (FUSE adds only
   `/dev/fuse` and `CAP_SYS_ADMIN`).
-- `scripts/verify-all.sh` re-ran all nine courts and produced
-  `bench/receipts/verify-20261103T165944Z.{json,log}` with revisions, host,
-  command log, and per-court results.
+- `scripts/verify-all.sh` re-ran all eighteen courts and produced
+  `bench/receipts/verify-20261104T022012Z.json` with revisions, host, command
+  log, and per-court results.
 - The P7 benchmark court ran codec, store, and filesystem benchmarks under the
   same hard limits. Every receipt contains raw samples, environment, and
   revisions. The codec receipt also records corpus hashes and per-tool command

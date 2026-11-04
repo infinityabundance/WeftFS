@@ -9,10 +9,10 @@ conclusion. The corpus is synthetic and contains no Meta or production data.
 
 | Artifact | SHA-256 | Role |
 |---|---|---|
-| `bench/receipts/ai-corpus-20261104T020943Z.json` | `3686c56f250dc91eae425f0e05b010f64c92c3d2d337c790845c18019c9b64ec` | **Current** receipt: whole-pair-aware planner, per-object base amortization and planner rejections |
-| `bench/receipts/ai-cost-graph-20261104T020943Z.json` | `7815829f609f4f339f693b4b3e95c5390bb477f6c842f89d8355d9709eb5f29b` | Cost-graph data for the current run |
-| `bench/receipts/ai-cost-graph-20261104T020943Z.csv` | `e1f79dd68ba64239017c7fa0b9ed0c3402070a96fe31eacdbb7627374525bdd6` | Long-form CSV of the current rows |
-| `bench/receipts/ai-corpus-20261104T020943Z.log` | `ceac38c372397e25ae30ee5924ca2f1868f1d7d51866ebb2db5ea5168f75b9f7` | Raw court log for the current run |
+| `bench/receipts/ai-corpus-20261104T021627Z.json` | `7fb7d9b432d6f4e633053ad69523fc25a64278dc2f2e94d18c54842ed2b8b44f` | **Current** receipt: whole-pair-aware planner, per-object base amortization and planner rejections |
+| `bench/receipts/ai-cost-graph-20261104T021627Z.json` | `9ca3dd313e5d415da5121bedaa8be7dede6255fe7949e9632fc766f430415bcd` | Cost-graph data for the current run |
+| `bench/receipts/ai-cost-graph-20261104T021627Z.csv` | `5f785f1b475015d52140b41812cce1e2a5584f4d3eba76b90b358489c3f5e670` | Long-form CSV of the current rows |
+| `bench/receipts/ai-corpus-20261104T021627Z.log` | `817ca4ebbbac74efb9543108a03d4ce642c5d03cc02e4f6408cb32c4fb6f377e` | Raw court log for the current run |
 | `bench/receipts/ai-corpus-20261103T220113Z.json` | `f779b851c4802995a630ab1dda0bafee0ae70564c92e2793654659b9d5657de0` | Historical receipt: frame-smallest planner (superseded) |
 | `bench/receipts/ai-cost-graph-20261103T220113Z.json` | `02253434c755d8c805ede59f2a21e40929706cf29ef22d8fe08ff5f735512b90` | Historical cost-graph data |
 | `bench/receipts/ai-cost-graph-20261103T220113Z.csv` | `4ddf788040e247ff0d3ae6a5235281054b0fec181c5cc0fbc0d3f285cf6fc44f` | Historical CSV |
@@ -44,7 +44,7 @@ per-object `base_amortized`/`planner_cost` values. Raw `pair_bytes` and raw
 `pair_losses` are still computed and published for every selected object;
 nothing is hidden.
 
-**Current aggregate (same corpus, same host, 5 iterations per object):**
+**Current aggregate (same corpus, same host, 7 iterations per object):**
 
 | Strategy | Frame bytes | Physical bytes | Physical / visible | vs `zstd_forced` | Pair bytes | Frame losses | Pair losses | Contextual objects |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -53,7 +53,7 @@ nothing is hidden.
 | `cdc_zstd` | 585,400 | 603,094 | 0.3976 | +4.74% | — | 8 | 0 | — |
 | `weft_context` | 508,522 | 514,506 | 0.3392 | **−10.65%** | **697,014** | 10 | **8** | **8 / 60** |
 
-Latency: median 5,240 ns, p95 35,726 ns (the previous planner's p95 was
+Latency: median 5,150 ns, p95 36,007 ns (the previous planner's p95 was
 269,625 ns because it selected deep delta chains with tiny frames).
 
 What changed and what remains:

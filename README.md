@@ -29,8 +29,8 @@ tested in the Docker court.
 |---|---|---|
 | P0 | Repositories, staging workflow, OOM-protected Docker courts, licenses | **Implemented** |
 | P1 | Normative specs: model, selectors, codec format, compatibility | **Implemented** (v1 frozen; clarifications recorded in the specs) |
-| P2 | Rust WeftCodec v1 (all modes, CLI, tests) | **Implemented** — 110 tests in the Rust court; 49 codec, 20 WCB, 22 selector, 16 context, 10 causal, 36 adversarial vectors |
-| P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | **Implemented** — 57 top-level Go tests; Rust→Go and Go→Rust decode gates pass for all modes, including byte-identical TENSOR and TOKENS |
+| P2 | Rust WeftCodec v1 (all modes, CLI, tests) | **Implemented** — Rust unit and integration suites pass; 60 codec, 20 WCB, 22 selector, 16 context, 10 causal, 36 adversarial vectors |
+| P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | **Implemented** — Go unit/vector suites pass; Rust→Go and Go→Rust decode gates pass for all modes, including byte-identical TENSOR, TOKENS, and QUANTIZED_TENSOR |
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — 39 core tests — see [`docs/store-status.md`](docs/store-status.md) |
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **Implemented** — 81 Rust court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
