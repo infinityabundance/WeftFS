@@ -13,6 +13,7 @@
 //! hash; neither is derived from the result set.
 
 use std::cmp::Ordering;
+use std::collections::BTreeSet;
 
 use weftcodec::context::Budget;
 use weftcodec::selector::{CmpOp, Expr, Field, Literal, OrderItem, Selector};
@@ -22,6 +23,7 @@ use crate::auth::{can_read, relation_visible, Principal};
 use crate::context::CapabilityContext;
 use crate::error::{Error, Result};
 use crate::identity::Hash32;
+use crate::index::{attr_field_key, eq_key, field_always_present, StateIndex};
 use crate::state::{ObjectKind, ObjectRecord, RelationKind, RelationTarget, State};
 use crate::store::Store;
 
@@ -99,19 +101,47 @@ pub(crate) fn resolve(
         owned_state = store.state_at(snapshot_id)?;
         &owned_state
     };
-    resolve_state(selector, snapshot_id, state, principal, limits)
+    // The snapshot hash is the cache key for the index derived from its
+    // replay; `Store::state_index` also checks the state's shape.
+    let index = store.state_index(snapshot_id, state);
+    resolve_state_with_budget_indexed(
+        selector,
+        snapshot_id,
+        state,
+        principal,
+        limits,
+        None,
+        None,
+        None,
+        index.as_ref(),
+    )
 }
 
-/// Evaluate a selector against an explicit replayed state (used by the FUSE
-/// frontend for a mounted snapshot, avoiding a replay per lookup).
-pub(crate) fn resolve_state(
+/// Differential-oracle entry point: the same resolution with candidate
+/// selection forced to the full authorized scan (no index).
+pub(crate) fn resolve_scan(
+    store: &Store,
     selector: &Selector,
-    snapshot_id: Hash32,
-    state: &State,
+    snapshot: Option<Hash32>,
     principal: &Principal,
     limits: &weftcodec::Limits,
 ) -> Result<Resolution> {
-    resolve_state_with_budget(
+    if selector.namespace != crate::state::DEFAULT_NAMESPACE {
+        return Err(Error::namespace_mismatch(format!(
+            "selector namespace `{}` is not `{}`",
+            selector.namespace,
+            crate::state::DEFAULT_NAMESPACE
+        )));
+    }
+    let snapshot_id = snapshot.unwrap_or_else(|| store.snapshot_root());
+    let owned_state;
+    let state: &State = if snapshot_id == store.snapshot_root() {
+        store.current_state()
+    } else {
+        owned_state = store.state_at(snapshot_id)?;
+        &owned_state
+    };
+    resolve_state_scan_with_budget(
         selector,
         snapshot_id,
         state,
@@ -176,8 +206,18 @@ fn selector_predicates_allowed(expr: &Expr, capability: &CapabilityContext) -> b
     }
 }
 
+/// Candidate source for the shared resolver body. `Scan` reproduces the
+/// historical index-free implementation exactly and is the differential
+/// oracle; `Indexed` narrows candidates but evaluates identically.
+enum CandidateMode<'a> {
+    Scan,
+    Indexed(&'a StateIndex),
+}
+
+/// Indexed resolution using a caller-provided (cached) index. The index must
+/// have been built from `state`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn resolve_state_with_budget(
+pub(crate) fn resolve_state_with_budget_indexed(
     selector: &Selector,
     snapshot_id: Hash32,
     state: &State,
@@ -186,6 +226,66 @@ pub(crate) fn resolve_state_with_budget(
     capability: Option<&CapabilityContext>,
     context_root_id: Option<Hash32>,
     budget: Option<&Budget>,
+    index: &StateIndex,
+) -> Result<Resolution> {
+    // Fail closed, not a debug-only check: an index that does not describe
+    // this state could under-select candidates, which would be a silent
+    // correctness violation. `snapshot_id` keys the cache and the structural
+    // guard rejects a state shape that changed underneath that key.
+    if !index.matches_state(state) {
+        return Err(Error::corrupt(
+            "cached state index does not describe this state",
+        ));
+    }
+    resolve_state_inner(
+        selector,
+        snapshot_id,
+        state,
+        principal,
+        limits,
+        capability,
+        context_root_id,
+        budget,
+        CandidateMode::Indexed(index),
+    )
+}
+
+/// Full-scan resolution (differential oracle; no candidate narrowing).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn resolve_state_scan_with_budget(
+    selector: &Selector,
+    snapshot_id: Hash32,
+    state: &State,
+    principal: &Principal,
+    limits: &weftcodec::Limits,
+    capability: Option<&CapabilityContext>,
+    context_root_id: Option<Hash32>,
+    budget: Option<&Budget>,
+) -> Result<Resolution> {
+    resolve_state_inner(
+        selector,
+        snapshot_id,
+        state,
+        principal,
+        limits,
+        capability,
+        context_root_id,
+        budget,
+        CandidateMode::Scan,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn resolve_state_inner(
+    selector: &Selector,
+    snapshot_id: Hash32,
+    state: &State,
+    principal: &Principal,
+    limits: &weftcodec::Limits,
+    capability: Option<&CapabilityContext>,
+    context_root_id: Option<Hash32>,
+    budget: Option<&Budget>,
+    mode: CandidateMode<'_>,
 ) -> Result<Resolution> {
     if selector.namespace != crate::state::DEFAULT_NAMESPACE {
         return Err(Error::namespace_mismatch(format!(
@@ -260,9 +360,36 @@ pub(crate) fn resolve_state_with_budget(
     let selector_id = selector.selector_id_with_limits(limits)?;
 
     let mut matches: Vec<(ObjectRecord, Vec<EvidenceEntry>)> = Vec::new();
-    for record in authorized {
-        if let Some(evidence) = eval_expr(&selector.predicate, record, state, principal) {
-            matches.push((record.clone(), evidence));
+    match mode {
+        CandidateMode::Scan => {
+            for record in authorized {
+                if let Some(evidence) = eval_expr(&selector.predicate, record, state, principal) {
+                    matches.push((record.clone(), evidence));
+                }
+            }
+        }
+        CandidateMode::Indexed(index) => {
+            let authorized_ids: BTreeSet<Hash32> = authorized.iter().map(|r| r.id).collect();
+            let candidates = candidates_for(
+                &selector.predicate,
+                index,
+                state,
+                principal,
+                &authorized_ids,
+            );
+            for id in &candidates.ids {
+                // Defense in depth: candidates are always intersected with the
+                // authorized universe, but never rely on that for disclosure.
+                if !authorized_ids.contains(id) {
+                    continue;
+                }
+                let Some(record) = state.objects.get(id) else {
+                    continue;
+                };
+                if let Some(evidence) = eval_expr(&selector.predicate, record, state, principal) {
+                    matches.push((record.clone(), evidence));
+                }
+            }
         }
     }
     let matched_count = matches.len() as u64;
@@ -311,6 +438,156 @@ pub(crate) fn resolve_state_with_budget(
         matched_count,
         evidence,
     })
+}
+
+/// Candidate set plus whether it is *exact* (equal to `eval_expr`'s match
+/// set). `Not` may only complement an exact set; complementing an
+/// over-approximation would drop real matches.
+struct Candidates {
+    ids: BTreeSet<Hash32>,
+    exact: bool,
+}
+
+fn all_authorized(authorized: &BTreeSet<Hash32>, exact: bool) -> Candidates {
+    Candidates {
+        ids: authorized.clone(),
+        exact,
+    }
+}
+
+fn intersect_index(
+    set: Option<&BTreeSet<Hash32>>,
+    authorized: &BTreeSet<Hash32>,
+) -> BTreeSet<Hash32> {
+    match set {
+        None => BTreeSet::new(),
+        Some(set) if set.len() <= authorized.len() => set
+            .iter()
+            .filter(|id| authorized.contains(id))
+            .copied()
+            .collect(),
+        Some(set) => authorized
+            .iter()
+            .filter(|id| set.contains(id))
+            .copied()
+            .collect(),
+    }
+}
+
+/// Derive the authorized candidate set for one AST node from the index. This
+/// never decides a match; `eval_expr` still confirms every candidate.
+fn candidates_for(
+    expr: &Expr,
+    index: &StateIndex,
+    state: &State,
+    principal: &Principal,
+    authorized: &BTreeSet<Hash32>,
+) -> Candidates {
+    // An incomplete index would drop entries; fail safe by scanning instead.
+    if !index.complete() {
+        return all_authorized(authorized, false);
+    }
+    match expr {
+        Expr::True => all_authorized(authorized, true),
+        Expr::False => Candidates {
+            ids: BTreeSet::new(),
+            exact: true,
+        },
+        Expr::Has(field) => {
+            if let Some(key) = attr_field_key(field) {
+                Candidates {
+                    ids: intersect_index(index.objects_with_attr.get(&key), authorized),
+                    exact: true,
+                }
+            } else if field_always_present(field) {
+                all_authorized(authorized, true)
+            } else {
+                // `media_type` can be absent or null; unknown paths are absent.
+                // Scanning is always safe and keeps this path index-free.
+                all_authorized(authorized, false)
+            }
+        }
+        Expr::Tag(name) => Candidates {
+            ids: intersect_index(index.tags.get(name), authorized),
+            exact: true,
+        },
+        Expr::Relation { predicate, target } => {
+            // `eval_expr` requires a readable target object; when it is absent
+            // or hidden the predicate is false for every object.
+            let target_visible = state
+                .objects
+                .get(target)
+                .map(|record| can_read(record, principal))
+                .unwrap_or(false);
+            if !target_visible {
+                return Candidates {
+                    ids: BTreeSet::new(),
+                    exact: true,
+                };
+            }
+            let mut ids = BTreeSet::new();
+            for ((subject, edge_predicate), edges) in &index.relations_from {
+                if edge_predicate != predicate || !authorized.contains(subject) {
+                    continue;
+                }
+                if edges.iter().any(|edge| {
+                    edge.kind == RelationKind::Object
+                        && matches!(&edge.target, RelationTarget::Object(hash) if hash == target)
+                }) {
+                    ids.insert(*subject);
+                }
+            }
+            Candidates { ids, exact: true }
+        }
+        Expr::Compare { field, op, value } if *op == CmpOp::Eq => {
+            let Some(key) = attr_field_key(field) else {
+                // Derived fields (`size`, `object_id`, …) are not indexed for
+                // equality; the full authorized scan is the safe superset.
+                return all_authorized(authorized, false);
+            };
+            match eq_key(&literal_value(value)) {
+                Some(encoded) => Candidates {
+                    ids: intersect_index(index.objects_by_attr_eq.get(&(key, encoded)), authorized),
+                    exact: true,
+                },
+                None => all_authorized(authorized, false),
+            }
+        }
+        Expr::Compare { .. } => all_authorized(authorized, false),
+        Expr::And(items) => {
+            let mut ids = authorized.clone();
+            let mut exact = true;
+            for item in items {
+                let part = candidates_for(item, index, state, principal, authorized);
+                ids = ids.intersection(&part.ids).copied().collect();
+                exact &= part.exact;
+            }
+            Candidates { ids, exact }
+        }
+        Expr::Or(items) => {
+            let mut ids = BTreeSet::new();
+            let mut exact = true;
+            for item in items {
+                let part = candidates_for(item, index, state, principal, authorized);
+                ids.extend(part.ids);
+                exact &= part.exact;
+            }
+            Candidates { ids, exact }
+        }
+        Expr::Not(inner) => {
+            let part = candidates_for(inner, index, state, principal, authorized);
+            if part.exact {
+                Candidates {
+                    ids: authorized.difference(&part.ids).copied().collect(),
+                    exact: true,
+                }
+            } else {
+                // `Not` complements inside the authorized universe; with only
+                // an over-approximation available, scan the universe.
+                all_authorized(authorized, false)
+            }
+        }
+    }
 }
 
 pub(crate) fn require_one(

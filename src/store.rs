@@ -10,6 +10,7 @@ use std::io::Write;
 use std::os::unix::fs::{FileExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fs2::FileExt as Fs2FileExt;
@@ -25,6 +26,7 @@ use crate::format::{
     SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
+use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY};
 use crate::recovery::{self, BlobKind};
 use crate::state::{
     derive_entry_id, derive_version_id, derive_version_id_with_identity, validate_name_bytes,
@@ -219,6 +221,10 @@ pub struct Store {
     /// In-memory content pins by manifest id, for readers that hold a pinned
     /// `(content, size)` pair (`Store::read_content`).
     content_pins: BTreeMap<Hash32, u64>,
+    /// Bounded cache of selector indexes keyed by snapshot commit hash. The
+    /// index is derived data only; correctness is checked by `StateIndex`
+    /// shape and no store mutation is ever written from it.
+    index_cache: Mutex<StateIndexCache>,
 }
 
 impl Store {
@@ -290,6 +296,7 @@ impl Store {
             notes: Vec::new(),
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
+            index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
         };
         store.write_genesis()?;
         fsync_dir(&store.root)?;
@@ -350,6 +357,7 @@ impl Store {
             notes: recovery.notes,
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
+            index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
         })
     }
 
@@ -413,6 +421,25 @@ impl Store {
     /// Current replayed state.
     pub fn current_state(&self) -> &State {
         &self.state
+    }
+
+    /// The selector index for `state`, cached under `snapshot` (the commit
+    /// whose replay produced it). The cache holds at most
+    /// `DEFAULT_INDEX_CAPACITY` entries and evicts oldest-first. The index is
+    /// only used to narrow candidates; `eval_expr` is still authoritative.
+    pub(crate) fn state_index(&self, snapshot: Hash32, state: &State) -> Arc<StateIndex> {
+        let mut cache = self
+            .index_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(index) = cache.get(snapshot) {
+            if index.matches_state(state) {
+                return index;
+            }
+        }
+        let index = Arc::new(StateIndex::build(state));
+        cache.insert(snapshot, index.clone());
+        index
     }
 
     /// Rebuild the state at an arbitrary commit by replay.
@@ -1996,6 +2023,9 @@ impl Store {
     /// Evaluate a selector against an explicit state pinned by the caller
     /// (`snapshot` is the view identity recorded in the result). Used by the
     /// FUSE frontend so a snapshot mount does not replay per lookup.
+    ///
+    /// `snapshot` must be the commit whose replay produced `state`; the derived
+    /// selector index is cached under that key.
     pub fn resolve_state(
         &self,
         selector: &weftcodec::selector::Selector,
@@ -2004,7 +2034,47 @@ impl Store {
         principal: &Principal,
         limits: &weftcodec::Limits,
     ) -> Result<crate::evaluate::Resolution> {
-        crate::evaluate::resolve_state(selector, snapshot, state, principal, limits)
+        let index = self.state_index(snapshot, state);
+        crate::evaluate::resolve_state_with_budget_indexed(
+            selector,
+            snapshot,
+            state,
+            principal,
+            limits,
+            None,
+            None,
+            None,
+            index.as_ref(),
+        )
+    }
+
+    /// Differential-test oracle: the same resolution with candidate selection
+    /// forced to the full authorized scan (no index). `#[doc(hidden)]` because
+    /// it exists only to prove indexed/scan equivalence.
+    #[doc(hidden)]
+    pub fn resolve_scan(
+        &self,
+        selector: &weftcodec::selector::Selector,
+        snapshot: Option<Hash32>,
+        principal: &Principal,
+        limits: &weftcodec::Limits,
+    ) -> Result<crate::evaluate::Resolution> {
+        crate::evaluate::resolve_scan(self, selector, snapshot, principal, limits)
+    }
+
+    /// Differential-test oracle for an explicit state (no index).
+    #[doc(hidden)]
+    pub fn resolve_state_scan(
+        &self,
+        selector: &weftcodec::selector::Selector,
+        snapshot: Hash32,
+        state: &State,
+        principal: &Principal,
+        limits: &weftcodec::Limits,
+    ) -> Result<crate::evaluate::Resolution> {
+        crate::evaluate::resolve_state_scan_with_budget(
+            selector, snapshot, state, principal, limits, None, None, None,
+        )
     }
 
     /// Resolve a saved-context view under an optional capability context.
@@ -2024,8 +2094,17 @@ impl Store {
         if let Some(cap) = capability {
             cap.check_valid_at(now_ns)?;
         }
-        crate::evaluate::resolve_state_with_budget(
-            selector, snapshot, state, principal, limits, capability, None, None,
+        let index = self.state_index(snapshot, state);
+        crate::evaluate::resolve_state_with_budget_indexed(
+            selector,
+            snapshot,
+            state,
+            principal,
+            limits,
+            capability,
+            None,
+            None,
+            index.as_ref(),
         )
     }
 

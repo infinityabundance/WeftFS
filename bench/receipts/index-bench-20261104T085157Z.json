@@ -1,0 +1,64 @@
+{
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "cpus": "4",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g"
+  },
+  "generated_unix_secs": 1793782317,
+  "kinds": {
+    "attr_eq": {
+      "after_cold_ms": 13.323307,
+      "after_warm_max_ms": 2.365431,
+      "after_warm_median_ms": 1.2389205,
+      "before_max_ms": 3.9383450000000004,
+      "before_median_ms": 1.6397179999999998,
+      "before_over_after": 1.3235054226643272,
+      "iterations": 100,
+      "matched_total": 147135
+    },
+    "relation": {
+      "after_cold_ms": 13.027596,
+      "after_warm_max_ms": 1.0892009999999999,
+      "after_warm_median_ms": 0.6886795,
+      "before_max_ms": 151.837851,
+      "before_median_ms": 132.794829,
+      "before_over_after": 192.8252968180409,
+      "iterations": 100,
+      "matched_total": 83
+    },
+    "tag": {
+      "after_cold_ms": 14.043972,
+      "after_warm_max_ms": 2.190826,
+      "after_warm_median_ms": 2.051361,
+      "before_max_ms": 165.20373899999998,
+      "before_median_ms": 148.01471500000002,
+      "before_over_after": 72.15439652016394,
+      "iterations": 100,
+      "matched_total": 8570
+    }
+  },
+  "label": "synthetic in-memory state built in the same process; resolver candidate selection only; not a disk, FUSE, or end-to-end measurement",
+  "method": {
+    "after_cold": "first indexed call for a fresh snapshot key, includes one StateIndex::build",
+    "after_warm": "Store::resolve_state: cached StateIndex narrows candidates, eval_expr confirms every candidate",
+    "before": "Store::resolve_state_scan: full authorized universe, no index",
+    "cache_capacity": 8,
+    "equivalence": "indexed matched_count and ordered (object_id, version_id, content_id) verified against the scan for every query",
+    "statistic": "median of per-query wall-clock milliseconds"
+  },
+  "package_version": "0.3.0",
+  "profile": "release",
+  "revision": "6e1380a6e3949a303760cd6b5ca8a29e8fe31823",
+  "schema": "weftfs.index-bench.v1",
+  "state": {
+    "object_target_edges": 5000,
+    "objects": 10000,
+    "relations": 10000,
+    "snapshot_keys": "synthetic per-kind hashes (0x11/0x22/0x33 repeated)",
+    "tagged_as_edges": 5000,
+    "visible_objects": 8571
+  }
+}

@@ -698,7 +698,10 @@ impl Store {
 
         let selector = root.selector()?;
         let budget = effective_budget(root.budget.as_ref(), active_capability);
-        let resolution = crate::evaluate::resolve_state_with_budget(
+        // `snapshot_state` is the replay of `root.snapshot`, so the snapshot
+        // hash is a correct cache key for its derived selector index.
+        let index = self.state_index(root.snapshot, &snapshot_state);
+        let resolution = crate::evaluate::resolve_state_with_budget_indexed(
             &selector,
             root.snapshot,
             &snapshot_state,
@@ -707,6 +710,7 @@ impl Store {
             active_capability,
             Some(recomputed),
             budget.as_ref(),
+            index.as_ref(),
         )?;
         if resolution.snapshot_id != root.snapshot {
             return Err(Error::corrupt("resolution changed the pinned snapshot"));

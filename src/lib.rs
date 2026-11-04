@@ -26,6 +26,7 @@ pub mod format;
 #[cfg(feature = "fuse")]
 pub mod fuse;
 pub mod identity;
+pub(crate) mod index;
 pub mod recovery;
 pub mod state;
 pub mod store;
