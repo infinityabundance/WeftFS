@@ -28,7 +28,7 @@ use crate::format::{
     RepresentationKind, SuperblockSlot, FORMAT_CONTENTS, SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
-use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY};
+use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
 use crate::recovery::{self, BlobKind};
 use crate::representation::{self, MAX_CODEC_DEPENDENCY_DEPTH};
 use crate::state::{
@@ -211,12 +211,37 @@ pub struct GcReport {
     pub marked_chunks: u64,
     pub candidates: Vec<String>,
     pub deleted: Vec<String>,
+    /// Advisory index files deleted because no retained root names their
+    /// commit. Deleting an index never deletes data.
+    pub deleted_indexes: Vec<String>,
     pub deleted_bytes: u64,
     pub retained: u64,
     /// Unreferenced object records removed in a dedicated commit (a crash left
     /// an unlinked-but-pinned object behind).
     pub removed_orphans: Vec<String>,
     pub problems: Vec<String>,
+}
+
+/// Diagnostics for the advisory on-disk selector index. It is never consulted
+/// for correctness; tests and benchmarks use it to prove that a reopen loaded
+/// a persisted segment rather than rebuilding from state.
+#[doc(hidden)]
+#[derive(Clone, Debug, Default)]
+pub struct IndexStats {
+    /// Index files decoded, validated, and used for candidate narrowing.
+    pub disk_loads: u64,
+    /// `StateIndex::build` calls from replayed state.
+    pub builds: u64,
+    /// Index files ignored because of a decode, integrity, or shape failure.
+    pub rejects: u64,
+    /// Advisory index files written after a commit.
+    pub writes: u64,
+    /// Index writes that failed (the commit still succeeded).
+    pub write_errors: u64,
+    /// Index files removed by `gc --apply`.
+    pub gc_deleted: u64,
+    /// Human-readable reject/write-failure notes (bounded).
+    pub notes: Vec<String>,
 }
 
 /// Result of [`Store::statfs`], all counters derived from replayed state.
@@ -329,6 +354,8 @@ pub struct Store {
     /// index is derived data only; correctness is checked by `StateIndex`
     /// shape and no store mutation is ever written from it.
     index_cache: Mutex<StateIndexCache>,
+    /// Advisory index diagnostics and reject/write-failure notes.
+    index_stats: Mutex<IndexStats>,
 }
 
 impl Store {
@@ -355,6 +382,7 @@ impl Store {
         make_dir(&root.join("commits"))?;
         make_dir(&root.join("objects"))?;
         make_dir(&root.join("manifests"))?;
+        make_dir(&root.join("indexes"))?;
         make_dir(&root.join("refs"))?;
         make_dir(&root.join("refs").join("snapshots"))?;
         make_dir(&root.join("refs").join("tags"))?;
@@ -405,6 +433,7 @@ impl Store {
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
+            index_stats: Mutex::new(IndexStats::default()),
         };
         store.write_genesis()?;
         fsync_dir(&store.root)?;
@@ -486,6 +515,7 @@ impl Store {
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
+            index_stats: Mutex::new(IndexStats::default()),
         })
     }
 
@@ -555,6 +585,11 @@ impl Store {
     /// whose replay produced it). The cache holds at most
     /// `DEFAULT_INDEX_CAPACITY` entries and evicts oldest-first. The index is
     /// only used to narrow candidates; `eval_expr` is still authoritative.
+    ///
+    /// On a cache miss the advisory segment `indexes/<ab>/<commit>.idx` is
+    /// tried first. It is used only when the commit key, generation, all three
+    /// counts, and the integrity checksum agree with `state`; any failure is
+    /// ignored, recorded as a diagnostic note, and the index is rebuilt.
     pub(crate) fn state_index(&self, snapshot: Hash32, state: &State) -> Arc<StateIndex> {
         // Inside a group the state changes while `head` does not, so a cached
         // index keyed by the commit hash can no longer be validated by
@@ -562,20 +597,211 @@ impl Store {
         // the generation unchanged). Rebuild per call instead of serving a
         // stale candidate set; the index may only ever over-approximate.
         if self.group_depth != 0 {
+            self.bump_index_stat(|stats| stats.builds += 1);
             return Arc::new(StateIndex::build(state));
         }
-        let mut cache = self
-            .index_cache
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        if let Some(index) = cache.get(snapshot) {
+        let cached = {
+            let mut cache = self
+                .index_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            cache.get(snapshot)
+        };
+        if let Some(index) = cached {
             if index.matches_state(state) {
                 return index;
             }
         }
+        if let Some(index) = self.load_persisted_index(snapshot, state) {
+            self.index_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .insert(snapshot, index.clone());
+            return index;
+        }
         let index = Arc::new(StateIndex::build(state));
-        cache.insert(snapshot, index.clone());
+        self.bump_index_stat(|stats| stats.builds += 1);
+        self.index_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(snapshot, index.clone());
         index
+    }
+
+    /// Load, validate, and return the advisory index for `commit`.
+    ///
+    /// `None` means "rebuild from state": the file is absent, unreadable,
+    /// truncated, fails its integrity digest, decodes non-canonically, names a
+    /// different commit, or disagrees with the state's generation/counts.
+    fn load_persisted_index(&self, commit: Hash32, state: &State) -> Option<Arc<StateIndex>> {
+        let path = recovery::index_path(&self.root, commit);
+        let bytes = match fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(err) if err.kind() == ErrorKind::NotFound => return None,
+            Err(err) => {
+                self.note_index_reject(format!("cannot read index {}: {err}", path.display()));
+                return None;
+            }
+        };
+        if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
+            self.note_index_reject(format!(
+                "index {} is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
+                path.display(),
+                bytes.len()
+            ));
+            return None;
+        }
+        let index = match StateIndex::decode_file(&bytes) {
+            Ok(index) => index,
+            Err(err) => {
+                self.note_index_reject(format!("ignoring index {}: {err}", path.display()));
+                return None;
+            }
+        };
+        if index.commit() != commit {
+            self.note_index_reject(format!(
+                "ignoring index {}: declares commit {} but is stored under {}",
+                path.display(),
+                index.commit(),
+                commit
+            ));
+            return None;
+        }
+        if !index.matches_state(state) {
+            self.note_index_reject(format!(
+                "ignoring index {}: generation/counts disagree with the replayed state",
+                path.display()
+            ));
+            return None;
+        }
+        self.bump_index_stat(|stats| stats.disk_loads += 1);
+        Some(Arc::new(index))
+    }
+
+    /// Write the advisory index for a published commit, atomically. The index
+    /// is derived data: a failure here is recorded but must never fail the
+    /// commit that already published.
+    fn write_state_index(&self, commit: Hash32, state: &State) -> Result<u64> {
+        if self.mode != OpenMode::ReadWrite {
+            return Ok(0);
+        }
+        let index = StateIndex::build(state).with_commit(commit);
+        let bytes = index.encode_file()?;
+        if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "index encoding is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
+                bytes.len()
+            )));
+        }
+        let hex = commit.to_hex();
+        let dir = self.root.join("indexes").join(&hex[0..2]);
+        let existed = dir.exists();
+        make_dir(&dir)?;
+        if !existed {
+            fsync_dir(&self.root.join("indexes"))?;
+        }
+        let counter = TMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let tmp =
+            self.root
+                .join("tmp")
+                .join(format!("index-{}-{}-{counter}", std::process::id(), hex));
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&tmp)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
+        file.write_all(&bytes)?;
+        file.sync_all()?;
+        drop(file);
+        fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
+        let final_path = dir.join(format!("{hex}.idx"));
+        fs::rename(&tmp, &final_path).map_err(|err| {
+            cleanup_tmp(&tmp);
+            Error::io(format!(
+                "cannot rename {} into place: {err}",
+                final_path.display()
+            ))
+        })?;
+        fsync_dir(&dir)?;
+        self.index_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(commit, Arc::new(index));
+        self.bump_index_stat(|stats| stats.writes += 1);
+        Ok(bytes.len() as u64)
+    }
+
+    /// Best-effort index write after a commit has published. Errors become
+    /// diagnostics; the commit's success and durability are unaffected.
+    fn persist_index_after_commit(&self, commit: Hash32, state: &State) {
+        if let Err(err) = self.write_state_index(commit, state) {
+            self.note_index_write_error(format!("index for {commit} was not written: {err}"));
+        }
+    }
+
+    fn bump_index_stat(&self, update: impl FnOnce(&mut IndexStats)) {
+        let mut stats = self
+            .index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        update(&mut stats);
+    }
+
+    fn note_index_reject(&self, note: String) {
+        let mut stats = self
+            .index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        stats.rejects += 1;
+        if stats.notes.len() < 64 {
+            stats.notes.push(note);
+        }
+    }
+
+    fn note_index_write_error(&self, note: String) {
+        let mut stats = self
+            .index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        stats.write_errors += 1;
+        if stats.notes.len() < 64 {
+            stats.notes.push(note);
+        }
+    }
+
+    /// Advisory index diagnostics (loads, rebuilds, rejects, writes).
+    #[doc(hidden)]
+    pub fn index_stats(&self) -> IndexStats {
+        self.index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
+    /// Reset advisory index diagnostics (tests and benchmarks only).
+    #[doc(hidden)]
+    pub fn reset_index_stats(&self) {
+        let mut stats = self
+            .index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *stats = IndexStats::default();
+    }
+
+    /// Write the advisory index for the current head (benchmark only).
+    #[doc(hidden)]
+    pub fn write_index_for_bench(&self) -> Result<u64> {
+        self.require_writable()?;
+        self.write_state_index(self.head, &self.state)
+    }
+
+    /// Build an index from `state` without writing it (benchmark only).
+    #[doc(hidden)]
+    pub fn build_index_for_bench(&self, state: &State) -> usize {
+        let index = StateIndex::build(state);
+        self.bump_index_stat(|stats| stats.builds += 1);
+        index.object_count()
     }
 
     /// Rebuild the state at an arbitrary commit by replay.
@@ -3687,6 +3913,50 @@ impl Store {
                 }
             }
         }
+
+        // Advisory index segments are retained only for commits named by a
+        // retained root: the current head, a snapshot, or a commit carrying a
+        // checkpoint manifest. In-memory object pins are subsumed by the head.
+        // Removing an index never removes data; a later query simply rebuilds.
+        let mut retained_indexes: BTreeSet<Hash32> = BTreeSet::new();
+        retained_indexes.insert(self.head);
+        retained_indexes.extend(self.state.snapshots.values().copied());
+        for commit in recovery::all_commits(&self.root, u64::MAX)? {
+            if commit.commit.checkpoint.is_some() {
+                retained_indexes.insert(commit.hash);
+            }
+        }
+        let mut index_candidates = collect_unreachable_indexes(
+            &self.root.join("indexes"),
+            &retained_indexes,
+            now,
+            grace,
+            &mut report,
+        )?;
+        index_candidates.sort_by(|a, b| a.0.cmp(&b.0));
+        for (path, len) in &index_candidates {
+            let display = path
+                .strip_prefix(&self.root)
+                .unwrap_or(path)
+                .display()
+                .to_string();
+            report.candidates.push(display.clone());
+            if apply {
+                match fs::remove_file(path) {
+                    Ok(()) => {
+                        report.deleted_indexes.push(display);
+                        report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
+                        self.bump_index_stat(|stats| stats.gc_deleted += 1);
+                    }
+                    Err(err) => {
+                        return Err(Error::io(format!(
+                            "cannot delete {}: {err}",
+                            path.display()
+                        )))
+                    }
+                }
+            }
+        }
         Ok(report)
     }
 
@@ -3796,6 +4066,7 @@ impl Store {
         self.head = commit.id()?;
         self.generation = 1;
         self.next_generation = 2;
+        self.persist_index_after_commit(self.head, &self.state);
         Ok(())
     }
 
@@ -3845,6 +4116,9 @@ impl Store {
         self.next_generation = new_generation
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        // Advisory only: the commit is already durable and visible. A failed
+        // index write is recorded and ignored.
+        self.persist_index_after_commit(hash, &self.state);
         Ok(hash)
     }
 
@@ -4000,6 +4274,8 @@ impl Store {
 
         self.head = hash;
         self.generation = new_generation;
+        // Advisory only: the commit is already durable and visible.
+        self.persist_index_after_commit(hash, &self.state);
         Ok(hash)
     }
 
@@ -4739,6 +5015,7 @@ fn ensure_layout(root: &Path) -> Result<()> {
         "commits",
         "objects",
         "manifests",
+        "indexes",
         "refs",
         "refs/snapshots",
         "refs/tags",
@@ -4770,7 +5047,7 @@ fn clean_stale_tmp(root: &Path, grace_secs: u64) -> Result<()> {
             Some(name) => name,
             None => continue,
         };
-        if !(name.starts_with("blob-") || name.starts_with("snap-")) {
+        if !(name.starts_with("blob-") || name.starts_with("snap-") || name.starts_with("index-")) {
             continue;
         }
         if grace_secs > 0 {
@@ -4927,6 +5204,82 @@ fn mark_manifest_tree(
         }
         Err(err) => problems.push(format!("cannot read manifest {manifest_id}: {err}")),
     }
+}
+
+/// Collect advisory `indexes/<ab>/<commit>.idx` files whose commit is not in
+/// `retained`. Filenames must be the canonical lowercase hex commit plus
+/// `.idx`; anything else is reported and left untouched.
+fn collect_unreachable_indexes(
+    dir: &Path,
+    retained: &BTreeSet<Hash32>,
+    now: SystemTime,
+    grace_secs: u64,
+    report: &mut GcReport,
+) -> Result<Vec<(PathBuf, u64)>> {
+    let mut out = Vec::new();
+    let subdirs = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(out),
+        Err(err) => return Err(Error::io(format!("cannot read {}: {err}", dir.display()))),
+    };
+    for subdir in subdirs {
+        let subdir = subdir?;
+        if !subdir.file_type()?.is_dir() {
+            continue;
+        }
+        let shard = subdir.file_name();
+        let shard = match shard.to_str() {
+            Some(shard) => shard,
+            None => continue,
+        };
+        for entry in fs::read_dir(subdir.path())? {
+            let entry = entry?;
+            if !entry.file_type()?.is_file() {
+                continue;
+            }
+            let name = entry.file_name();
+            let name = match name.to_str() {
+                Some(name) => name,
+                None => continue,
+            };
+            let Some(stem) = name.strip_suffix(".idx") else {
+                report.problems.push(format!(
+                    "unrecognized index filename {}",
+                    entry.path().display()
+                ));
+                continue;
+            };
+            let commit = match Hash32::from_lower_hex(stem) {
+                Ok(commit) if &commit.to_hex()[0..2] == shard => commit,
+                _ => {
+                    report.problems.push(format!(
+                        "unrecognized index filename {}",
+                        entry.path().display()
+                    ));
+                    continue;
+                }
+            };
+            let metadata = entry.metadata()?;
+            if retained.contains(&commit) {
+                report.retained += 1;
+                continue;
+            }
+            if grace_secs > 0 {
+                let age = metadata
+                    .modified()
+                    .ok()
+                    .and_then(|modified| now.duration_since(modified).ok())
+                    .map(|duration| duration.as_secs())
+                    .unwrap_or(0);
+                if age < grace_secs {
+                    report.retained += 1;
+                    continue;
+                }
+            }
+            out.push((entry.path(), metadata.len()));
+        }
+    }
+    Ok(out)
 }
 
 fn collect_unmarked(

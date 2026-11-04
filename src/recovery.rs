@@ -133,6 +133,14 @@ pub fn commit_path(root: &Path, generation: u64) -> PathBuf {
     root.join("commits").join(format!("{generation}.commit"))
 }
 
+/// Path to the advisory per-commit selector index.
+pub fn index_path(root: &Path, commit: Hash32) -> PathBuf {
+    let hex = commit.to_hex();
+    root.join("indexes")
+        .join(&hex[0..2])
+        .join(format!("{hex}.idx"))
+}
+
 /// Numeric generation of a commit filename, if it has the canonical shape.
 fn parse_commit_filename(name: &str) -> Option<u64> {
     let stem = name.strip_suffix(".commit")?;

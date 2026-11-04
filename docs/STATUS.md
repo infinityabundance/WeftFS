@@ -462,16 +462,33 @@ identical and pushed in all four repositories).
 - **Cache:** bounded 8-entry LRU keyed by the snapshot commit hash that produced
   the state; the guard fails closed with `Corrupt` if the index does not
   describe the state (never a silent under-selection).
+- **Persistence:** `indexes/<ab>/<commit>.idx` holds a canonical-WCB
+  `weftfs.index.v1` segment (`WFX1 || u64le length || WCB || BLAKE3("weft/index/v1",
+  WCB)`) written atomically after a commit publishes. The segment is advisory:
+  the read path accepts it only when the commit key, generation, object/relation/
+  entry counts, integrity digest, and canonical re-encoding agree with the
+  replayed state. Any failure records a reject in `Store::index_stats()` and
+  rebuilds from state, so query results are unchanged. Read-only opens never
+  write segments; GC deletes segments not named by the head, a snapshot, or a
+  checkpoint commit; `verify` ignores them. See `tests/index_persistence.rs`.
 - **Measured:** synthetic in-memory state, 10,000 objects + 10,000 relations,
   100 queries per kind, release, medians. Relation 132.795 ms → 0.689 ms warm
   (13.028 ms cold); tag 148.015 ms → 2.051 ms warm (14.044 ms cold); attr-eq
   1.640 ms → 1.239 ms warm. Receipt
   `bench/receipts/index-bench-20261104T085157Z.json`; labelled as a resolver-only
   synthetic measurement, not disk/FUSE/end-to-end.
-- **Not claimed:** the index is **not persisted on disk** and is not yet
-  snapshot-incremental; it is rebuilt from the replayed state on first use per
-  commit. Cold resolution therefore still pays one O(objects+relations) build.
-  On-disk, generation-keyed index segments and replay-skipping are future work.
+- **Persistence measurement** (`bench/receipts/index-persist-20261104T140435Z.json`):
+  10,000 objects / 10,000 relations, release, synthetic/tmpfs. Cold build
+  9.69 ms; write including build 19.52 ms; segment 3,065,209 B; peak RSS
+  171,616 KiB. First relation query after a fresh reopen is 19.05 ms from the
+  segment vs 14.17 ms rebuilding (tag 21.11 vs 12.96 ms). Canonical-WCB decode
+  currently costs more than the in-memory rebuild at this scale; the segment is
+  kept for restart survival and as the base for future compact/incremental
+  segments, and is not claimed as a first-query speedup.
+- **Not claimed:** segments are per-commit full snapshots, not
+  snapshot-incremental; the write path builds the whole index after each commit.
+  GC retention is exact-commit membership, not graph reachability. Go has no
+  segment parity yet.
 
 ### F3 — Context mounts, ambiguity court, time travel, and replay bundle (Rust + Go)
 
@@ -1023,11 +1040,10 @@ multi-writer, physical rig).
    representation result (`bench/receipts/representation-20261104T093437Z.json`),
    the unchanged default raw fixture (`8959c65b…e1d81`), and the Rust↔Go
    handoff court, which stays on raw. The Go store rejects v2 today.
-4. **On-disk/persistent selector index segments.** Prerequisite: the in-memory
-   per-state index and its scan-equivalence court
-   (`bench/receipts/index-bench-20261104T085157Z.json`,
-   `tests/index_equivalence.rs`: 3 states, 315 selector/views, 1,566 assertions).
-   The index is rebuilt per state, not persisted.
+4. **Go parity for persisted selector-index segments.** Rust writes advisory
+   `indexes/<ab>/<commit>.idx` segments (see §F2 above); the portable format does
+   not require them and Go still rebuilds per state. Segments are not
+   snapshot-incremental on either side.
 5. **1,000,000-operation POSIX torture.** Prerequisite: the fsx-style court at
    13,694 operations (`bench/receipts/posix-torture-20261103T213317Z.json`).
    `pjdfstest`/`fsstress` are not installed in the court and no substitute run
