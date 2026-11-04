@@ -1417,17 +1417,17 @@ multi-writer, physical rig).
       `cargo test --all-targets`: 135 passed / 0 failed / 0 ignored. FUSE
       `cargo test --features fuse --all-targets`: 163 passed / 0 failed /
       2 ignored (existing CAP_SETUID and kernel direct-I/O guards).
-    - **Bench:** `bench/receipts/provenance-20261104T234625Z.json`, bench court
+    - **Bench:** `bench/receipts/provenance-20261104T235013Z.json`, bench court
       `weft/bench-court:1` (3 GiB, 4 vCPU, 1024 pids, kernel
       7.3.1-1-cachyos), synthetic 10 operations x 10 artefacts x 1 MiB
       (104,857,600 logical bytes; 80 fetch-capable, 20 decode-capable), one
       full operation (10 artefacts) unlinked and collected (141 blobs /
       8,579,129 bytes), receipt retained by the harness. Injected plan
       (fetch 10 ms/MiB, decode 30 ms, recompute 100 ms): 72 fetch / 18 decode /
-      10 recompute, 68.278 ms wall, 159,629,377 physical bytes, 2,260 ms
-      declared. Measured plan (warm-cache medians: fetch 316,801 ns across 72
-      artefacts, decode 374,398 ns across 18): same mix, 68.471 ms wall, 1,029
-      ms declared. Forced recompute: 100 recompute, 309.637 ms wall,
+      10 recompute, 68.648 ms wall, 159,629,377 physical bytes, 2,260 ms
+      declared. Measured plan (warm-cache medians: fetch 318,013 ns across 72
+      artefacts, decode 374,498 ns across 18): same mix, 68.823 ms wall, 1,029
+      ms declared. Forced recompute: 100 recompute, 311.583 ms wall,
       756,138,570 physical bytes, 10,000 ms declared. `verify --full` clean
       with 90 checked provenance relations. Label: synthetic, warm-cache,
       single host, no fleet claim.
