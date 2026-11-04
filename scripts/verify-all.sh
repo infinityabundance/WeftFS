@@ -55,6 +55,20 @@ run_court go "codec_cross_compare" \
 run_court rust "spec_drift" \
   "bash scripts/check-spec-drift.sh"
 
+# Spec-as-code: regenerate both identity type files and fail on any drift.
+run_court go "generated_types" \
+  "GO111MODULE=off go run scripts/gen-types.go -schema spec/schema/identity-v1.schema -rust WeftCodec/src/generated.rs -go WeftCodec-Go/generated/generated.go --check"
+
+# D1 prototype Buck2 CAS adapter + exact-rebuild/miss/query demonstration.
+run_court go "buck2_cas" \
+  "cd adapters/buck2 && go vet ./... && go test -count=1 ./..."
+run_court go "buck2_cas_demo" \
+  "bash scripts/demo-buck2-cas.sh"
+
+# D2 agent long-term memory with simulated timestamps and a months-later replay.
+run_court fuse "agent_memory" \
+  "bash scripts/demo-agent-memory.sh"
+
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
 run_court rust "context_cross_rust_gen" \

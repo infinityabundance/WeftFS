@@ -9,10 +9,14 @@ conclusion. The corpus is synthetic and contains no Meta or production data.
 
 | Artifact | SHA-256 | Role |
 |---|---|---|
-| `bench/receipts/ai-corpus-20261103T220113Z.json` | `f779b851c4802995a630ab1dda0bafee0ae70564c92e2793654659b9d5657de0` | Final receipt: per-file records, raw latency samples summary, losses |
-| `bench/receipts/ai-cost-graph-20261103T220113Z.json` | `02253434c755d8c805ede59f2a21e40929706cf29ef22d8fe08ff5f735512b90` | Cost-graph data (axes: visible, physical, latency, depth) |
-| `bench/receipts/ai-cost-graph-20261103T220113Z.csv` | `4ddf788040e247ff0d3ae6a5235281054b0fec181c5cc0fbc0d3f285cf6fc44f` | Long-form CSV of the same rows |
-| `bench/receipts/ai-corpus-20261103T220113Z.log` | `6f7fb342240f3931abb64861d4de4fdd89bf18f8d9280ecd30c75c1dfdea427d` | Raw court log |
+| `bench/receipts/ai-corpus-20261104T020943Z.json` | `3686c56f250dc91eae425f0e05b010f64c92c3d2d337c790845c18019c9b64ec` | **Current** receipt: whole-pair-aware planner, per-object base amortization and planner rejections |
+| `bench/receipts/ai-cost-graph-20261104T020943Z.json` | `7815829f609f4f339f693b4b3e95c5390bb477f6c842f89d8355d9709eb5f29b` | Cost-graph data for the current run |
+| `bench/receipts/ai-cost-graph-20261104T020943Z.csv` | `e1f79dd68ba64239017c7fa0b9ed0c3402070a96fe31eacdbb7627374525bdd6` | Long-form CSV of the current rows |
+| `bench/receipts/ai-corpus-20261104T020943Z.log` | `ceac38c372397e25ae30ee5924ca2f1868f1d7d51866ebb2db5ea5168f75b9f7` | Raw court log for the current run |
+| `bench/receipts/ai-corpus-20261103T220113Z.json` | `f779b851c4802995a630ab1dda0bafee0ae70564c92e2793654659b9d5657de0` | Historical receipt: frame-smallest planner (superseded) |
+| `bench/receipts/ai-cost-graph-20261103T220113Z.json` | `02253434c755d8c805ede59f2a21e40929706cf29ef22d8fe08ff5f735512b90` | Historical cost-graph data |
+| `bench/receipts/ai-cost-graph-20261103T220113Z.csv` | `4ddf788040e247ff0d3ae6a5235281054b0fec181c5cc0fbc0d3f285cf6fc44f` | Historical CSV |
+| `bench/receipts/ai-corpus-20261103T220113Z.log` | `6f7fb342240f3931abb64861d4de4fdd89bf18f8d9280ecd30c75c1dfdea427d` | Historical raw court log |
 | `bench/corpora/ai-v1/MANIFEST.json` | `f88e5dfcc7ffad772f905018ed22b2cc0904894725e9b3760ee6c826b5c5af83` | Per-file sha256, sizes, typed metadata, relations, license |
 
 A second run on the same corpus and code (`ai-corpus-20261103T215948Z.json`)
@@ -21,6 +25,57 @@ produced **identical physical-byte totals** and latency medians within 2.1%
 not as a headline. Earlier `215848`/`215911` receipts are superseded
 development runs (one used an 8-revision chain trimmed to the default dependency
 depth; one lacked the text tool-output files).
+
+## 1.1 Current revision: whole-pair-aware planner (2026-11-04)
+
+The 2026-11-04 run changes only the context planner. It replaces "pick the
+smallest frame" with a whole-pair objective:
+
+```
+planner_cost = marginal_frame_bytes
+             + (base_plaintext_bytes unless the base is amortized)
+amortized    = base is a retained chain root (no declared relation)
+             OR base has >= 2 direct dependents
+select contextual only when planner_cost < best context-free frame bytes
+```
+
+The receipt records `planner_policy`, every `planner_rejections` entry, and
+per-object `base_amortized`/`planner_cost` values. Raw `pair_bytes` and raw
+`pair_losses` are still computed and published for every selected object;
+nothing is hidden.
+
+**Current aggregate (same corpus, same host, 5 iterations per object):**
+
+| Strategy | Frame bytes | Physical bytes | Physical / visible | vs `zstd_forced` | Pair bytes | Frame losses | Pair losses | Contextual objects |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `zstd_forced` | 571,897 | 575,808 | 0.3796 | — | — | 10 | 0 | — |
+| `weft_auto` | 571,802 | 575,713 | 0.3796 | −0.02% | 571,802 | 10 | 0 | 0 |
+| `cdc_zstd` | 585,400 | 603,094 | 0.3976 | +4.74% | — | 8 | 0 | — |
+| `weft_context` | 508,522 | 514,506 | 0.3392 | **−10.65%** | **697,014** | 10 | **8** | **8 / 60** |
+
+Latency: median 5,240 ns, p95 35,726 ns (the previous planner's p95 was
+269,625 ns because it selected deep delta chains with tiny frames).
+
+What changed and what remains:
+
+- Pair bytes fall from **1,367,212 (90.14% of visible) to 697,014 (45.96%)**.
+- Pair losses fall from **20 to 8**. The eight remaining pair losses are all
+  selected because the base is a retained chain root; their raw pair cost is
+  still above the object's visible bytes, and each one is listed in the
+  receipt with `base_amortized: true`.
+- 24 contextual candidates were rejected because their planner cost was not
+  below the context-free best. Twelve chain revisions (`a002`–`a008`,
+  `c002`–`c006`) now use context-free zstd frames instead of tiny deltas against
+  an unamortized intermediate revision. This is why physical bytes rise from
+  the historical 176,564: the old number was bought with per-object pair costs
+  that the planner no longer accepts.
+- `planner_violations` is empty: no selected contextual object violates the
+  planner objective.
+
+**This is a tradeoff, not a free win.** The historical 176,564-byte store
+remains in the repository as a superseded result. The new planner chooses fewer
+contextual objects and a larger store because it refuses to move cost into
+bases that an individual historical read must still materialize.
 
 ## 2. Corpus
 
@@ -175,7 +230,8 @@ Every loss is listed in the receipt. Grouped by strategy and kind:
 | `weft_auto` | 7 | 3 | same tiny artifacts; `tensors/f32_zero.bin` (100 B vs 0 B) | RAW frame overhead |
 | `cdc_zstd` | 6 | 2 | `tensors/f32_scalar.bin` (13 B vs 4 B), `tokens/single.json` (10 B vs 1 B) | zstd chunk headers on tiny inputs |
 | `weft_context` | 7 | 3 | same as `weft_auto` | frame overhead |
-| `weft_context` pair losses | — | — | all 20 dependent objects | `marginal + base plaintext` exceeds the object's own visible size because the base is nearly as large as the target |
+| `weft_context` pair losses (current planner) | — | — | 8 retained-base objects (`a001`, `c001`, `p004`, `p008`, `t002`, `t005`, `t008`, `t011`) | raw pair exceeds visible, but the base is a retained chain root and is charged zero by the planner; the receipt marks `base_amortized: true` for each |
+| `weft_context` pair losses (historical planner) | — | — | all 20 dependent objects | superseded frame-smallest planner |
 
 No loss was deleted. The pair-loss result is important: context conditioning
 moves cost into shared bases. It reduces the **store**, but a single historical

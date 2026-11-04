@@ -10,6 +10,10 @@ for repo in WeftCodec WeftCodec-Go WeftFS-Go; do
   if [[ -d "$root/$repo/.git" || -f "$root/$repo/.git" ]]; then
     mkdir -p "$root/$repo/spec"
     cp "$root"/spec/*.md "$root/$repo/spec/"
+    if [[ -d "$root/spec/schema" ]]; then
+      mkdir -p "$root/$repo/spec/schema"
+      cp "$root"/spec/schema/*.schema "$root/$repo/spec/schema/"
+    fi
     echo "exported spec -> $repo/spec"
   else
     echo "skip $repo (not checked out)" >&2

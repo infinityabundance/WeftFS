@@ -51,6 +51,29 @@ for repo in "${repos[@]}"; do
       checked=$((checked + 1))
     fi
   done < <(find "$repo/spec" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
+
+  # Canonical schema sources are also normative and exported verbatim.
+  if [[ -d spec/schema ]]; then
+    while IFS= read -r -d '' file; do
+      name="$(basename "$file")"
+      checked=$((checked + 1))
+      if [[ ! -f "$repo/spec/schema/$name" ]]; then
+        echo "DRIFT $repo/spec/schema/$name: missing" >&2
+        status=1
+      elif ! cmp -s "$file" "$repo/spec/schema/$name"; then
+        echo "DRIFT $repo/spec/schema/$name: differs from parent" >&2
+        diff -u "$file" "$repo/spec/schema/$name" >&2 || true
+        status=1
+      fi
+    done < <(find spec/schema -maxdepth 1 -type f -name '*.schema' -print0 | sort -z)
+    while IFS= read -r -d '' file; do
+      name="$(basename "$file")"
+      if [[ ! -f "spec/schema/$name" ]]; then
+        echo "DRIFT $repo/spec/schema/$name: extra file not present in parent" >&2
+        status=1
+      fi
+    done < <(find "$repo/spec/schema" -maxdepth 1 -type f -name '*.schema' -print0 | sort -z)
+  fi
 done
 
 if [[ "$status" -ne 0 ]]; then

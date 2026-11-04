@@ -25,10 +25,16 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4), each with its raw
 `.log` and `.results.tsv`; the determinism comparison is
 `bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
-The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens
-byte-identical in both directions). The F7 final receipt is
-`bench/receipts/ai-corpus-20261103T220113Z.json` with cost graph JSON/CSV beside
-it; analysis, losses, and caveats are in `bench/RESULTS-ai-v1.md`.
+The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens/
+quantized byte-identical in both directions). The current F7 receipt is
+`bench/receipts/ai-corpus-20261104T020943Z.json` with cost graph JSON/CSV beside
+it (whole-pair-aware planner); analysis, losses, and caveats are in
+`bench/RESULTS-ai-v1.md`. The historical frame-smallest receipt
+`ai-corpus-20261103T220113Z.json` is retained. F8 receipts are
+`bench/receipts/buck2-cas-20261104T021121Z.json` (15/15 prototype assertions)
+and `bench/receipts/agent-memory-20261104T021117Z.json` (7/7 simulated-timestamp
+months-later replay). Generated-type drift is `scripts/gen-types.sh --check`,
+wired into `verify-all`.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
 `bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`),
@@ -62,14 +68,15 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   and trailing CRC32C, checked lengths, reserved-bit rejection.
 - Domain-separated BLAKE3, minimal LEB128, canonical WCB with encoded-key map
   ordering and non-canonical rejection.
-- RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR, TOKEN_SEQUENCE;
-  chunked RAW/ZSTD; `read_range` decodes only intersecting chunks.
+- RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR, TOKEN_SEQUENCE,
+  QUANTIZED_TENSOR; chunked RAW/ZSTD; `read_range` decodes only intersecting
+  chunks.
 - Resolver + frame-DAG decoding with cycle detection and depth/fetch/decoded
   bounds; WFA1 self-contained archives.
 - WeftQL parser, normalization, canonical selector bytes, SelectorId.
 - CLI (`encode`, `decode`, `inspect --json`, `verify`, `archive`, `selector`,
   `conformance`), including `--mode tensor` and `--mode tokens`.
-- **110 tests pass** in the Rust court. Frozen vectors: 49 codec (including 20
+- **110 tests pass** in the Rust court. Frozen vectors: 60 codec (including 28
   AI-mode valid/reject vectors), 20 WCB, 22 selector, 16 context, 10 causal,
   and 36 adversarial.
 
@@ -79,9 +86,9 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - **57 top-level tests pass**, including Rust-vector replay and malformed-input
   classes; `go vet` and a CGO-disabled build pass.
 - Cross-language gates pass in both directions for RAW, ZSTD, REFERENCE, DELTA,
-  DICTIONARY, chunked, STRUCTURED, TENSOR, and TOKENS. RAW/REFERENCE/DELTA/
-  STRUCTURED/TENSOR/TOKENS frames are byte-identical; ZSTD/DICTIONARY are
-  decode-equivalent by spec.
+  DICTIONARY, chunked, STRUCTURED, TENSOR, TOKENS, and QUANTIZED_TENSOR.
+  RAW/REFERENCE/DELTA/STRUCTURED/TENSOR/TOKENS/QUANTIZED_TENSOR frames are
+  byte-identical; ZSTD/DICTIONARY are decode-equivalent by spec.
 
 ### F6 — AI codec modes (implemented)
 
@@ -97,14 +104,22 @@ directory and `AGENTS.md` are gitignored, per operator directive.
 - Both modes: `decoded_len` is the payload length and `content_hash` is
   `H(weft/chunk/v1, payload)`; the descriptor binds the payload under its own
   domain. Frame `domain=0`, no dependencies, no chunks.
+- `QUANTIZED_TENSOR` (mode 8, added 2026-11-04): packed `i8`/`u8` row-major
+  payload plus a `weft.quantized-tensor.v1` descriptor carrying dtype, shape,
+  layout, `affine-asymmetric-per-tensor`, exact f64 `scale_bits_le`, i64
+  `zero_point`, element count, payload bytes, and a
+  `weft/quantized-tensor/payload/v1` hash binding. Finite positive scale and
+  dtype-range zero point are enforced; three valid and eight reject vectors;
+  Rust↔Go frames are byte-identical.
 - **Not implemented and not allocated a wire value:** blocked/column-major/
-  sharded/quantized layouts, activation/gradient streams, embedding/KV-cache
-  pages, attention masks, vocabulary-artifact binding, weight-delta descriptors,
-  and semantic/structured deltas. They are `specified, not implemented` in
-  `spec/WEFT-AI-CODEC.md` §4.
-- Cross-language: Rust→Go and Go→Rust decode gates pass; TENSOR and TOKENS
-  frames are byte-identical. Historical `017_unknown_mode` (mode 6 reserved) is
-  retained byte-for-byte and marked superseded by mode 8's reject vector.
+  sharded layouts, i4 nibble packing and per-axis quantized scales,
+  activation/gradient streams, embedding/KV-cache pages, attention masks,
+  vocabulary-artifact binding, weight-delta descriptors, and semantic/structured
+  deltas. They are `specified, not implemented` in `spec/WEFT-AI-CODEC.md` §5.
+- Cross-language: Rust→Go and Go→Rust decode gates pass; TENSOR, TOKENS, and
+  QUANTIZED_TENSOR frames are byte-identical. Historical
+  `017_unknown_mode_reserved8` (mode 8 reserved) is retained byte-for-byte and
+  marked superseded by the new mode-9 reject vector.
 
 ### F7 — AI corpus and cost graph (implemented, synthetic)
 
@@ -113,13 +128,51 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   near-duplicate agent intermediates, 12 typed tensors, 8 token sequences, and
   near-duplicate checkpoint-like blobs. License CC0-1.0, synthetic provenance,
   per-file SHA-256 manifest.
-- Receipt `bench/receipts/ai-corpus-20261103T220113Z.json` + cost graph JSON/CSV
-  beside it. Analysis, every loss, and caveats in `bench/RESULTS-ai-v1.md`.
-- Measured physical bytes: `zstd_forced` 575,808; `weft_auto` 575,713;
-  `cdc_zstd` 603,094 (+4.74%); `weft_context` 176,564 (−69.34% vs forced zstd).
-  COLD chain p95 269,625 ns vs 30,126 ns for `weft_auto`. Typed TENSOR/TOKENS
-  modes were evaluated for all 20 typed objects and chosen 0 times; descriptor
-  overhead 272–288 bytes. No superiority claim.
+- Receipt `bench/receipts/ai-corpus-20261104T020943Z.json` + cost graph JSON/CSV
+  beside it. Historical `ai-corpus-20261103T220113Z.json` retained. Analysis,
+  every loss, and caveats in `bench/RESULTS-ai-v1.md`.
+- Current measured physical bytes: `zstd_forced` 575,808; `weft_auto` 575,713;
+  `cdc_zstd` 603,094 (+4.74%); `weft_context` 514,506 (−10.65% vs forced zstd)
+  with raw pair bytes 697,014 (45.96% of visible), 8 pair losses, and 8
+  contextual objects. The current whole-pair-aware planner rejects contextual
+  candidates whose base is not amortized and whose pair cost does not beat the
+  context-free frame; 24 such rejections are recorded. The historical
+  frame-smallest planner produced 176,564 physical bytes but 1,367,212 pair
+  bytes and 20 pair losses; it is retained as a superseded result.
+- Typed TENSOR/TOKENS modes were evaluated for all 20 typed objects and chosen
+  0 times; descriptor overhead 272–288 bytes. QUANTIZED_TENSOR is implemented
+  and cross-language tested but is not part of the ai-v1 corpus. No superiority
+  claim.
+
+### F8 — Hooks: Buck2 CAS prototype, agent memory, generated types (implemented)
+
+- **D1 Buck2 adapter (prototype, not a plugin):** `adapters/buck2/` implements a
+  local CAS plus Buck2-compatible `sha256:<hex>` blob layout. The action key is
+  a real `weft.context-root.v1` record whose pinned snapshot is the BLAKE3
+  digest of the typed action context (action type + toolchain + sorted inputs).
+  `store`, `fetch`, `materialize`, `query`, and `verify` exist; the same key
+  returns identical bytes, different toolchain/input misses, query by action
+  type/toolchain/input works, and same-key/different-bytes fails closed. Go
+  tests + `go vet` and a 15/15 assertion demo run in the Go court; receipt
+  `bench/receipts/buck2-cas-20261104T021121Z.json`. No REAPI gRPC, no Buck2
+  plugin ABI, no performance claim.
+- **D2 agent long-term memory:** `scripts/demo-agent-memory.sh` creates
+  prompt/model/tool/dataset/output objects and five typed edges, three Context
+  Roots (task/model/time), a January snapshot, an exported bundle, then
+  simulates September writes and replays the January bundle later. Verified:
+  run-001 sha256 exact in all January views; run-002 absent from January;
+  September time root keeps old bytes exact; replayed bundle reproduces all
+  three ContextRootIds and five lineage edges with Go only. Receipt
+  `bench/receipts/agent-memory-20261104T021117Z.json` (7/7). Timestamps are
+  simulated; this is not a real-time aging or retention measurement.
+- **D3 spec-as-code:** `spec/schema/identity-v1.schema` is the canonical source;
+  `scripts/gen-types.sh` generates `WeftCodec/src/generated.rs` and
+  `WeftCodec-Go/generated/generated.go` (schema/domain constants, limits,
+  record types, field lists, source SHA-256). The runtime identity layer
+  re-exports generated constants; Rust and Go tests compare generated values to
+  runtime values; `scripts/gen-types.sh --check` fails on drift and is a court
+  in `verify-all`. The schema is exported to subproject `spec/schema/` and
+  checked by `scripts/check-spec-drift.sh`.
 
 ### WeftFS (Rust) — implemented core + FUSE (with documented limitations)
 
@@ -624,15 +677,22 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 9. **atime/ctime persistence**, device/FIFO/socket nodes, and Rust `O_TMPFILE`;
    not implemented. `mknod` regular files and FIFO/device rejection are
    implemented and tested in both frontends; Go implements `tmpfile`.
-10. **Spec-to-Go export automation in CI**; `scripts/export-spec.sh` exists but
-    no CI workflow pins the export.
+10. **Spec-to-Go export automation in CI**; `scripts/export-spec.sh` and
+    `scripts/gen-types.sh --check` exist, but no CI workflow pins them. The
+    drift court runs only when `verify-all` is invoked.
 11. **F3 time travel is correctness-only.** There is no io_uring, EKBLOOM, or
     other acceleration; none is implemented or claimed. The 100-version demo
     measures exactness and pinning, not latency.
-12. **Long-horizon agent memory (D2) is partial.** Typed edges and task/model/
-    time mounts pass, but “months-later” retention and a multi-month corpus are
-    not measured. The demo covers 100 versions and a rename/retag within one
-    store.
+12. **Long-horizon agent memory (D2) is simulated, not measured.** Typed edges,
+    task/model/time mounts, a January snapshot, September writes, and a
+    months-later bundle replay pass with exact bytes and lineage. The timestamps
+    are fixture nanoseconds and the replay is a point-in-time export; no real
+    months of wall-clock retention, no background aging, and no physical media
+    aging were tested.
+13. **The Buck2 adapter is a prototype.** It is a local CAS service plus a
+    Buck2-compatible key/digest mapping, not a Buck2 plugin, worker, or REAPI
+    gRPC backend. It does not execute actions, fetch remotely, or integrate with
+    Buck2's scheduler.
 13. **Replay bundle scope.** The bundle carries one store and its Context
     Roots; it does not yet carry a filtered/partitioned subset, remote fetch,
     or a signature. `tar` and `zstd` are required tools and a missing tool is a

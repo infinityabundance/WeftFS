@@ -28,7 +28,7 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — `bench/receipts/ai-corpus-20261103T220113Z.json`; no Meta/production data; relation-conditioned physical bytes 176,564 vs forced-zstd 575,808 on ai-v1 |
+| C1 | Context-conditioned vs content-only dedup on an AI corpus (prompts, tool outputs, intermediate checkpoints, model deltas), whole-store accounting | AI codec modes, corpus | **implemented on a synthetic corpus** — current receipt `bench/receipts/ai-corpus-20261104T020943Z.json` (whole-pair-aware planner); historical `ai-corpus-20261103T220113Z.json` retained. No Meta/production data. Current relation-conditioned physical bytes 514,506 vs forced-zstd 575,808; raw pair bytes 697,014. |
 | C2 | Manifested-vs-visible cost graph: visible bytes, physical/manifested space, historical read latency, dependency depth | codec accounting, bench | **implemented** — cost graph JSON/CSV beside the receipt; analysis and every loss in `bench/RESULTS-ai-v1.md` |
 | C3 | POSIX matrix results with reproducible commands | B4 | **implemented** — Rust matrix in `docs/fuse-status.md` with Rust/Go status and exact boundaries; `tests/fuse_verb_matrix.rs` (fallocate modes, server-side copy, mknod/FIFO rejection, O_TMPFILE boundary, mmap, locks, timestamps) passes in the FUSE court. Rust `O_TMPFILE`/flock are binding-limited; Go implements both. |
 | C4 | Comparative performance: external SQLite relational/adjacency context baseline, matched Rust/Go codec court, cold-cache concurrent fio on ext4/XFS/WeftFS, energy probe | C3, P7 | **implemented, scoped** — `bench/RESULTS-comparative-v1.md`; receipts `bench-external-20261104T000122Z.json`, `bench-codec-matched-20261103T232158Z.json`, `bench-fs-cold-20261103T232216Z.json`, `energy-probe-20261103T225547Z.json`. 2026-11-04 adds a real ZFS guest baseline (`bench-fs-cold-20261104T014727Z.json`; file-backed vdev, ARC caveat) and perf hardware counters (`perf-counters-20261104T015026Z.json`). RAPL/joule energy remains unavailable; no winner claim. |
@@ -37,9 +37,9 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| D1 | Buck2 artifact-store backend: action key = typed context + toolchain version; exact rebuild; query by context | Context Root, CAS API | not started |
-| D2 | Agent long-term memory: typed edges (`generated_by`, `grounded_in`, `derived_from`, `prompted_by`), mountable by task/model/time, months-later byte-exact | A1, causal closure | **partial** — typed edges and task/model/time mounts pass; long-horizon (months) retention is not measured |
-| D3 | Spec-as-code: generate/validate Rust and Go types from the normative spec; CI fails on drift | spec export | not started |
+| D1 | Buck2 artifact-store backend: action key = typed context + toolchain version; exact rebuild; query by context | Context Root, CAS API | **implemented as a prototype adapter** — `adapters/buck2/` is a local CAS plus Buck2-compatible key/digest mapping, explicitly **not** a Buck2 plugin or REAPI gRPC server. Receipt `bench/receipts/buck2-cas-20261104T021121Z.json` (15/15). |
+| D2 | Agent long-term memory: typed edges (`generated_by`, `grounded_in`, `derived_from`, `prompted_by`), mountable by task/model/time, months-later byte-exact | A1, causal closure | **implemented with simulated timestamps** — `scripts/demo-agent-memory.sh`, receipt `bench/receipts/agent-memory-20261104T021117Z.json` (7/7): 5 typed edges, 3 Context Roots, January snapshot, September writes, January mounts and bundle replay byte-exact. Real-time multi-month aging is not measured. |
+| D3 | Spec-as-code: generate/validate Rust and Go types from the normative spec; CI fails on drift | spec export | **implemented** — canonical `spec/schema/identity-v1.schema`; `scripts/gen-types.sh [--check]` generates `WeftCodec/src/generated.rs` and `WeftCodec-Go/generated/generated.go`; runtime constants are re-exports; drift court wired into `verify-all`. |
 
 ## E. Strategic pillars (identity, lineage, codec, agents, reproducibility, guarantees, adoption)
 
@@ -47,7 +47,7 @@ evidence.
 |---|---|---|---|
 | E1 | Context Root as primary public identity; `weft://` URI is the address; paths are a compatibility projection | — | not started |
 | E2 | Native causal closure; derived identity modes `bytes_only` vs `causal_exact`; minimal sufficient closure queries | E1 | not started |
-| E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian) and `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128) implemented and cross-language; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §4) |
+| E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian), `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128), and `QUANTIZED_TENSOR` (8, affine per-tensor i8/u8 with exact f64 scale bits and i64 zero point) implemented and cross-language byte-identical; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §5) |
 | E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | partial (uid/gid + ACL) |
 | E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | not started |
 | E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy; no refinement proof, and checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss and full CI remain outstanding. |
@@ -72,7 +72,8 @@ evidence.
    not physical power loss.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode, cross-language, vectors for every implemented mode. **Implemented**
-   (2026-11-03): `TENSOR` (6) and `TOKEN_SEQUENCE` (7); semantic delta and all
+   (2026-11-03; QUANTIZED_TENSOR added 2026-11-04): `TENSOR` (6),
+   `TOKEN_SEQUENCE` (7), and `QUANTIZED_TENSOR` (8); semantic delta and all
    other brainstormed modes are `specified, not implemented` with no wire value.
 8. **F7 — AI corpus + cost graph:** C1/C2, real measurements with losses.
    **Implemented** (2026-11-03) on a committed synthetic corpus; results and
@@ -83,7 +84,10 @@ evidence.
    loss, and blockers (ZFS absent, `perf`/RAPL unavailable) are in
    `bench/RESULTS-comparative-v1.md`.
 9. **F8 — Hooks:** Buck2 CAS adapter, agent memory example, generated types and
-   drift CI. (D1–D3, E7)
+   drift CI. (D1–D3, E7) **Implemented** (2026-11-04) as a prototype adapter,
+   simulated-timestamp agent-memory demo, and generated identity types with a
+   drift court. Buck2 plugin integration and real-time aging remain out of
+   scope.
 10. **F9 — Formal guarantees:** TLA+/Alloy or exhaustive bounded + machine
     checked invariants; bit-identical CI; AI workload court; release.
     **Partly implemented** (2026-11-03): `verification/tla/` checks the bounded

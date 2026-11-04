@@ -262,7 +262,8 @@ fn run(args: &Args) -> Result<(), String> {
 
     let level = 3;
     let auto_plans = plan_weft(&entries, &expected, &kinds, false, level, &limits)?;
-    let context_plans = plan_weft(&entries, &expected, &kinds, true, level, &limits)?;
+    let context_planning = plan_weft_context(&entries, &expected, &kinds, level, &limits)?;
+    let context_plans = &context_planning.plans;
     let depths = compute_depths(&entries);
 
     let zstd = measure_zstd_forced(
@@ -287,7 +288,7 @@ fn run(args: &Args) -> Result<(), String> {
     let context = measure_weft(
         "weft_context",
         &entries,
-        &context_plans,
+        context_plans,
         &expected,
         &depths,
         true,
@@ -347,6 +348,8 @@ fn run(args: &Args) -> Result<(), String> {
         },
         "iterations": args.iterations,
         "typed_mode_candidates": typed_candidates,
+        "planner_policy": context_planning.policy,
+        "planner_rejections": context_planning.rejections,
         "strategies": {
             "zstd_forced": zstd.receipt,
             "cdc_zstd": cdc.receipt,
@@ -359,7 +362,8 @@ fn run(args: &Args) -> Result<(), String> {
         },
         "notes": [
             "All sizes are bytes. `visible_bytes` is the manifest's declared visible representation; for TENSOR it is the element payload and for TOKENS it is the canonical delta-LEB128 payload, while `source_bytes` is the JSON/text file.",
-            "`physical_bytes` counts every stored frame/chunk/index/manifest once for the whole corpus; `pair_bytes` sums marginal + base plaintext per dependent object and therefore may double-count shared bases.",
+            "`physical_bytes` counts every stored frame/chunk/index/manifest once for the whole corpus; `pair_bytes` sums marginal + base plaintext per dependent object and therefore may double-count shared bases. Pair losses are reported raw and are not hidden.",
+            "`weft_context` uses a whole-pair-aware planner: a DELTA/DICTIONARY/REFERENCE candidate is selected only when the base is shared (>=2 direct dependents) or retained (a declared chain root), or when marginal frame + base plaintext is strictly smaller than the best context-free frame. `planner_cost` records the objective value; `planner_rejections` records every contextual candidate that lost for cost reasons.",
             "`read_latency_ns` is the median of verified decodes; `historical_read_ns` uses the cold dependency-DAG path when the object has a relation chain, otherwise the warm path.",
             "CDC is content-only and relation-agnostic. WeftCodec context bases come only from declared typed relations in the manifest.",
             "No winner or superiority claim is made. See bench/RESULTS-ai-v1.md for the analysis and every loss.",
@@ -391,97 +395,248 @@ struct Plan {
     mode_value: u8,
     frame: Vec<u8>,
     base_path: Option<String>,
+    base_amortized: bool,
+    planner_cost: u64,
+    context_free_frame_bytes: u64,
+}
+
+struct Planning {
+    plans: Vec<Plan>,
+    rejections: Vec<Json>,
+    policy: Json,
+}
+
+type Candidate = (&'static str, u8, Vec<u8>, Option<String>);
+
+fn context_free_candidates(
+    entry: &Entry,
+    bytes: &[u8],
+    kinds: &HashMap<String, Kind>,
+    level: i32,
+    limits: &Limits,
+) -> Result<Vec<Candidate>, String> {
+    let mut candidates: Vec<Candidate> = Vec::new();
+    candidates.push((
+        "raw",
+        Mode::Raw.as_u8(),
+        modes::encode_raw(bytes, None, limits).map_err(|e| format!("{}: {e}", entry.path))?,
+        None,
+    ));
+    candidates.push((
+        "zstd",
+        Mode::Zstd.as_u8(),
+        modes::encode_zstd(bytes, level, None, limits)
+            .map_err(|e| format!("{}: {e}", entry.path))?,
+        None,
+    ));
+    match kinds.get(&entry.path) {
+        Some(Kind::Tensor(dtype, shape)) => {
+            candidates.push((
+                "tensor",
+                Mode::Tensor.as_u8(),
+                modes::encode_tensor(bytes, *dtype, shape, limits)
+                    .map_err(|e| format!("{}: {e}", entry.path))?,
+                None,
+            ));
+        }
+        Some(Kind::Tokens(ids, vocab)) => {
+            candidates.push((
+                "tokens",
+                Mode::TokenSequence.as_u8(),
+                modes::encode_token_sequence(ids, vocab, limits)
+                    .map_err(|e| format!("{}: {e}", entry.path))?,
+                None,
+            ));
+        }
+        _ => {}
+    }
+    Ok(candidates)
 }
 
 fn plan_weft(
     entries: &[Entry],
     expected: &HashMap<String, Vec<u8>>,
     kinds: &HashMap<String, Kind>,
-    use_context: bool,
+    _use_context: bool,
     level: i32,
     limits: &Limits,
 ) -> Result<Vec<Plan>, String> {
     let mut plans = Vec::with_capacity(entries.len());
     for (index, entry) in entries.iter().enumerate() {
         let bytes = &expected[&entry.path];
-        let mut candidates: Vec<(&'static str, u8, Vec<u8>, Option<String>)> = Vec::new();
-        candidates.push((
-            "raw",
-            Mode::Raw.as_u8(),
-            modes::encode_raw(bytes, None, limits).map_err(|e| format!("{}: {e}", entry.path))?,
-            None,
-        ));
-        candidates.push((
-            "zstd",
-            Mode::Zstd.as_u8(),
-            modes::encode_zstd(bytes, level, None, limits)
-                .map_err(|e| format!("{}: {e}", entry.path))?,
-            None,
-        ));
-        match kinds.get(&entry.path) {
-            Some(Kind::Tensor(dtype, shape)) => {
-                candidates.push((
-                    "tensor",
-                    Mode::Tensor.as_u8(),
-                    modes::encode_tensor(bytes, *dtype, shape, limits)
-                        .map_err(|e| format!("{}: {e}", entry.path))?,
-                    None,
-                ));
-            }
-            Some(Kind::Tokens(ids, vocab)) => {
-                candidates.push((
-                    "tokens",
-                    Mode::TokenSequence.as_u8(),
-                    modes::encode_token_sequence(ids, vocab, limits)
-                        .map_err(|e| format!("{}: {e}", entry.path))?,
-                    None,
-                ));
-            }
-            _ => {}
-        }
-        if use_context {
-            if let Some(relation) = &entry.relation {
-                if let Some(base) = expected.get(&relation.target) {
-                    let base_path = Some(relation.target.clone());
-                    candidates.push((
-                        "delta",
-                        Mode::Delta.as_u8(),
-                        modes::encode_delta(bytes, base, limits)
-                            .map_err(|e| format!("{}: {e}", entry.path))?,
-                        base_path.clone(),
-                    ));
-                    if base == bytes {
-                        candidates.push((
-                            "reference",
-                            Mode::Reference.as_u8(),
-                            modes::encode_reference(bytes, base, limits)
-                                .map_err(|e| format!("{}: {e}", entry.path))?,
-                            base_path.clone(),
-                        ));
-                    }
-                    candidates.push((
-                        "dictionary",
-                        Mode::Dictionary.as_u8(),
-                        modes::encode_dictionary(bytes, base, level, limits)
-                            .map_err(|e| format!("{}: {e}", entry.path))?,
-                        base_path,
-                    ));
-                }
-            }
-        }
+        let candidates = context_free_candidates(entry, bytes, kinds, level, limits)?;
         let chosen = candidates
             .into_iter()
             .min_by(|a, b| a.2.len().cmp(&b.2.len()).then(a.1.cmp(&b.1)))
             .ok_or_else(|| format!("{}: no candidate", entry.path))?;
+        let frame_len = chosen.2.len() as u64;
         plans.push(Plan {
             entry: index,
             mode: chosen.0,
             mode_value: chosen.1,
             frame: chosen.2,
             base_path: chosen.3,
+            base_amortized: false,
+            planner_cost: frame_len,
+            context_free_frame_bytes: frame_len,
         });
     }
     Ok(plans)
+}
+
+/// Whole-pair-aware context planner.
+///
+/// A contextual candidate is selected only when its base cost is amortized
+/// (the base is shared by >=2 direct dependents, or is a retained chain root)
+/// or when `marginal frame + base plaintext` is strictly smaller than the best
+/// context-free frame. Raw pair cost is still reported for every selected
+/// object, including the remaining losses.
+fn plan_weft_context(
+    entries: &[Entry],
+    expected: &HashMap<String, Vec<u8>>,
+    kinds: &HashMap<String, Kind>,
+    level: i32,
+    limits: &Limits,
+) -> Result<Planning, String> {
+    let mut dependent_counts: HashMap<&str, usize> = HashMap::new();
+    for entry in entries {
+        if let Some(relation) = &entry.relation {
+            *dependent_counts
+                .entry(relation.target.as_str())
+                .or_insert(0) += 1;
+        }
+    }
+    let retained_roots: BTreeMap<&str, ()> = entries
+        .iter()
+        .filter(|entry| entry.relation.is_none())
+        .map(|entry| (entry.path.as_str(), ()))
+        .collect();
+    let shared_bases: BTreeMap<&str, ()> = dependent_counts
+        .iter()
+        .filter(|(_, count)| **count >= 2)
+        .map(|(path, _)| (*path, ()))
+        .collect();
+
+    let mut plans = Vec::with_capacity(entries.len());
+    let mut rejections: Vec<Json> = Vec::new();
+    for (index, entry) in entries.iter().enumerate() {
+        let bytes = &expected[&entry.path];
+        let free_candidates = context_free_candidates(entry, bytes, kinds, level, limits)?;
+        let context_free = free_candidates
+            .into_iter()
+            .min_by(|a, b| a.2.len().cmp(&b.2.len()).then(a.1.cmp(&b.1)))
+            .ok_or_else(|| format!("{}: no context-free candidate", entry.path))?;
+        let context_free_len = context_free.2.len() as u64;
+
+        let mut chosen = Plan {
+            entry: index,
+            mode: context_free.0,
+            mode_value: context_free.1,
+            frame: context_free.2,
+            base_path: None,
+            base_amortized: false,
+            planner_cost: context_free_len,
+            context_free_frame_bytes: context_free_len,
+        };
+
+        if let Some(relation) = &entry.relation {
+            if let Some(base) = expected.get(&relation.target) {
+                let base_bytes = base.len() as u64;
+                let base_amortized = retained_roots.contains_key(relation.target.as_str())
+                    || shared_bases.contains_key(relation.target.as_str());
+                let mut contextual: Vec<Candidate> = Vec::new();
+                contextual.push((
+                    "delta",
+                    Mode::Delta.as_u8(),
+                    modes::encode_delta(bytes, base, limits)
+                        .map_err(|e| format!("{}: {e}", entry.path))?,
+                    Some(relation.target.clone()),
+                ));
+                if base == bytes {
+                    contextual.push((
+                        "reference",
+                        Mode::Reference.as_u8(),
+                        modes::encode_reference(bytes, base, limits)
+                            .map_err(|e| format!("{}: {e}", entry.path))?,
+                        Some(relation.target.clone()),
+                    ));
+                }
+                contextual.push((
+                    "dictionary",
+                    Mode::Dictionary.as_u8(),
+                    modes::encode_dictionary(bytes, base, level, limits)
+                        .map_err(|e| format!("{}: {e}", entry.path))?,
+                    Some(relation.target.clone()),
+                ));
+
+                let mut best: Option<(u64, Candidate)> = None;
+                for candidate in contextual {
+                    let frame_bytes = candidate.2.len() as u64;
+                    let planner_cost = frame_bytes + if base_amortized { 0 } else { base_bytes };
+                    let acceptable = planner_cost < context_free_len;
+                    if acceptable {
+                        let replace = match &best {
+                            None => true,
+                            Some((cost, current)) => {
+                                planner_cost < *cost
+                                    || (planner_cost == *cost
+                                        && (frame_bytes, candidate.1)
+                                            < (current.2.len() as u64, current.1))
+                            }
+                        };
+                        if replace {
+                            best = Some((planner_cost, candidate));
+                        }
+                    } else {
+                        rejections.push(json!({
+                            "path": entry.path,
+                            "mode": candidate.0,
+                            "frame_bytes": frame_bytes,
+                            "base_path": relation.target,
+                            "base_bytes": base_bytes,
+                            "base_amortized": base_amortized,
+                            "planner_cost": planner_cost,
+                            "context_free_frame_bytes": context_free_len,
+                            "reason": if base_amortized {
+                                "marginal frame is not smaller than the best context-free frame"
+                            } else {
+                                "marginal frame + unamortized base is not smaller than the best context-free frame"
+                            },
+                        }));
+                    }
+                }
+                if let Some((planner_cost, candidate)) = best {
+                    chosen = Plan {
+                        entry: index,
+                        mode: candidate.0,
+                        mode_value: candidate.1,
+                        frame: candidate.2,
+                        base_path: candidate.3,
+                        base_amortized,
+                        planner_cost,
+                        context_free_frame_bytes: context_free_len,
+                    };
+                }
+            }
+        }
+        plans.push(chosen);
+    }
+
+    let policy = json!({
+        "objective": "marginal_frame_bytes + (base_bytes unless the base is amortized)",
+        "amortized_when": "base is a retained chain root (no declared relation) or has >=2 direct dependents",
+        "accept_when": "planner_cost < best context-free frame bytes",
+        "retained_chain_roots": retained_roots.keys().collect::<Vec<_>>(),
+        "shared_bases": shared_bases.keys().collect::<Vec<_>>(),
+        "direct_dependents": dependent_counts,
+        "contextual_objects": plans.iter().filter(|plan| plan.base_path.is_some()).count(),
+        "context_free_objects": plans.iter().filter(|plan| plan.base_path.is_none()).count(),
+    });
+    Ok(Planning {
+        plans,
+        rejections,
+        policy,
+    })
 }
 
 struct StrategyOutput {
@@ -611,6 +766,7 @@ fn measure_weft(
     let mut pair_total = 0u64;
     let mut losses = Vec::new();
     let mut pair_losses = Vec::new();
+    let mut planner_violations = Vec::new();
     let mut latencies = Vec::new();
 
     for plan in plans {
@@ -686,7 +842,18 @@ fn measure_weft(
                 "mode": plan.mode,
                 "pair_bytes": pair,
                 "visible_bytes": entry.visible_bytes,
-                "reason": "marginal + base plaintext exceeds the visible representation",
+                "base_amortized": plan.base_amortized,
+                "planner_cost": plan.planner_cost,
+                "context_free_frame_bytes": plan.context_free_frame_bytes,
+                "reason": "marginal + raw base plaintext exceeds the visible representation; the base may still be retained/amortized, which is why the planner accepted it",
+            }));
+        }
+        if plan.planner_cost >= plan.context_free_frame_bytes && plan.base_path.is_some() {
+            planner_violations.push(json!({
+                "path": entry.path,
+                "mode": plan.mode,
+                "planner_cost": plan.planner_cost,
+                "context_free_frame_bytes": plan.context_free_frame_bytes,
             }));
         }
         records.push(json!({
@@ -700,6 +867,9 @@ fn measure_weft(
             "frame_bytes": plan.frame.len(),
             "base_path": plan.base_path,
             "base_bytes": base_bytes,
+            "base_amortized": plan.base_amortized,
+            "planner_cost": plan.planner_cost,
+            "context_free_frame_bytes": plan.context_free_frame_bytes,
             "pair_bytes": pair,
             "physical_contribution_bytes": plan.frame.len(),
             "manifest_bytes": file_index_bytes(entry),
@@ -743,6 +913,7 @@ fn measure_weft(
             "aggregate": aggregate,
             "losses": losses,
             "pair_losses": pair_losses,
+            "planner_violations": planner_violations,
         }),
         records,
     })
