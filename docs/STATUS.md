@@ -339,7 +339,9 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   `dependencies` list of base content roots. v2 also permits `kind:"raw"`.
   The frozen `weft.manifest.v1` is unchanged and remains the default.
 - **Selection:** `Options.representation = RepresentationMode::CodecAuto` plus
-  `codec_min_bytes` (default 4096). The writer picks DELTA against the causal
+  `codec_min_bytes` (default 4096), reachable as `--representation
+  raw|codec-auto` and `--codec-min-bytes` on both the CLI and `mount`. The
+  default stays `raw`. The writer picks DELTA against the causal
   parent's content root only when it beats independent ZSTD by the configured
   margin; otherwise it falls back to a v2 raw manifest. There is exactly one
   v2 schema spelling (`weft.manifest.v2`); unknown schemas fail closed.
