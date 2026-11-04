@@ -173,7 +173,13 @@ Scoped facts, not a verdict:
 - SQLite point/relation/tag lookups are ~1.2–1.8 µs warm and ~0.14–0.60 ms
   cold at 10,000; the Rust store’s equivalent relation/tag selectors are
   ~457.6–494.4 ms because evaluation scans relations per object. This is the
-  largest published loss in this pass.
+  largest published loss in this pass. **Superseded in v0.4.0 (mechanism):**
+  the per-state index narrows candidates while `eval_expr` stays authoritative,
+  measured at 132.795→0.689 ms (relation) and 148.015→2.051 ms (tag) warm on
+  the same 10k/10k shape (`index-bench-20261104T085157Z.json`). Residual: the
+  index is in-memory and rebuilt per state, so cold resolution is 13.0–14.0 ms;
+  this is a different harness from the store run below and does not replace its
+  exact rows.
 - The n-result `kind == "file"` query is close: 1.90 ms in the store versus
   1.50 ms relational / 1.51 ms adjacency at 10,000.
 - Relation insert/delete commits cost 5.94/6.02 ms in the store versus
@@ -182,7 +188,13 @@ Scoped facts, not a verdict:
 - The store’s replay/open at 10,000 is 32.83 s versus a 24.96 ms SQLite index
   build (relational) / 22.11 ms (adjacency). These are not the same operation
   (the store validates every manifest and commit), so the comparison is only
-  an order-of-magnitude statement.
+  an order-of-magnitude statement. **Addressed in v0.4.0 (mechanism):**
+  bounded replay resumes from the newest verified checkpoint
+  (`fast-open-20261104T090945Z.json`: 10,000-generation open 3,789.1→71.6 ms,
+  10,001→18 commit reads). The 32.83 s row is retained as the pre-v0.4.0
+  full-scan observation and was not re-run on this identical corpus, so it is
+  not numerically replaced. Residual: bounded open can skip older-history gaps
+  below a checkpoint; `verify --full` still enumerates every commit.
 - Whole-store bytes before verification are 52.58 MB at 10,000 versus 11.87 MB
   (relational) and 6.45 MB (adjacency). The store also carries manifests,
   commits, snapshots, and version records; SQLite carries only the listed
@@ -346,7 +358,13 @@ with QEMU `cache=none`; the results disk is a small ext4 image extracted with
 - WeftFS sequential 1 MiB writes are 9.9–12.1 IOPS (Rust) and 2.4–3.2 IOPS
   (Go) versus 1,143–2,784 (ext4) and 1,333–2,702 (XFS). The store rewrites the
   whole file and publishes a commit per write; the gap is two to three orders
-  of magnitude.
+  of magnitude. **Superseded in v0.4.0 (mechanism):** range writes now read the
+  manifest and rewrite only touched chunks, measured on a 64 MiB object with
+  4 KiB overwrites at 69.64→33.01 ms, `rchar` 134.2→67.2 MB, peak RSS
+  134.8→3.9 MiB (`extent-cow-20261104T090112Z.json`). Residual: the v1
+  whole-file `ContentId` still costs an O(size) digest pass, and the `fio`
+  matrix above was **not** re-run, so those IOPS figures remain v0.3.0
+  observations.
 - WeftFS 4 KiB random writes are 73.9–80.2 IOPS (Rust) and 50.5–68.6 IOPS (Go)
   versus 37,333–316,952 IOPS for ext4/XFS. The ext4/XFS figure is buffered
   submission throughput with an end-of-job flush; it is not a device write
@@ -355,7 +373,12 @@ with QEMU `cache=none`; the results disk is a small ext4 image extracted with
   1, but tail latency explodes with concurrency: in the headline run Rust p99
   reaches 1.13 s at `numjobs=16`, Go 214 ms; the stability run shows the same
   tail instability. ext4/XFS sustain 586–3,205 / 693–2,846 IOPS with p99
-  between 12 µs and 25 ms. This is the most severe tail loss.
+  between 12 µs and 25 ms. This is the most severe tail loss. **Addressed in
+  v0.4.0 only for explicit groups:** `Store::group` batches mutations into one
+  durable publish, measured at 1,000 creates 89.87→22.01 ms and 1,000→1 commit
+  (`group-commit-20261104T092015Z.json`, tmpfs). Residual: the FUSE/`fio` path
+  does not use group commit, the matrix above was not re-run, and ungrouped
+  mutations still pay one durable commit each.
 - 4 KiB random reads: Rust is faster than ext4/XFS at `numjobs=1`
   (14,476 vs 9,495 IOPS) but loses at `numjobs=16` (26,427 vs 146,286). Go is
   slower than both baselines at every concurrency level.
@@ -633,6 +656,16 @@ Tail metrics at high concurrency are reported as unstable, not as a result.
 - No claim that any implementation is “faster”, “smallest”, “production
   ready”, or superior overall. The tables contain wins and losses for every
   contestant; the losses are part of the result.
+
+### 8.1 Addressed in v0.4.0 (old measurements retained)
+
+| Gap in this pass | v0.4.0 evidence | Residual caveat |
+|---|---|---|
+| Relation/tag selector latency, 10k/10k | `index-bench-20261104T085157Z.json`: 132.795→0.689 ms relation, 148.015→2.051 ms tag warm | In-memory per-state index, rebuilt on first use; cold 13.0–14.0 ms; resolver-only |
+| Whole-file rewrite on range writes | `extent-cow-20261104T090112Z.json`: 69.64→33.01 ms, 134,204,646→67,226,853 B `rchar`, 134,836→3,932 KiB RSS | v1 whole-file `ContentId` still O(size); `fio` IOPS not re-run |
+| Per-write durable commit cost | `group-commit-20261104T092015Z.json`: 1,000 creates 89.87→22.01 ms, 1,000→1 commit | Explicit `Store::group` only; FUSE/`fio` path unchanged; ungrouped writes still commit each |
+| ~33 s open/replay at 10,000 | `fast-open-20261104T090945Z.json`: 10,000-generation open 3,789.1→71.6 ms, 10,001→18 commit reads | Different workload from the 32.83 s row, which is retained; older-history gaps below a checkpoint are not detected by open |
+| 256 MiB file-size cap | `streaming-20261104T094742Z.json` + `tests/streaming.rs`: bound raised to 1 TiB + 16,777,216 chunks; 256 MiB create at 6,764 KiB peak RSS | Effective cap is the WCB array limit (~12.8 GiB at 64 KiB chunks); buffered `write_file` still materializes; the Go store still enforces its 256 MiB `MaxFileBytes` (`docs/store-status.md` §6) |
 
 ## 9. Reproduction notes
 

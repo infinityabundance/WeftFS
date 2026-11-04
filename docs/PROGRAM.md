@@ -10,17 +10,17 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| A1 | Context Views as mounts: one store, ≥3 simultaneous mounts rooted at typed contexts (`by:task=...`, `by:model=...`, `at:<timestamp>`); different listings; every file `sha256` matches its declared root | Context Root, mount `--context` | **implemented** — `bench/receipts/context-mounts-20261103T210625Z.json` (6/6 pass) |
+| A1 | Context Views as mounts: one store, ≥3 simultaneous mounts rooted at typed contexts (`by:task=...`, `by:model=...`, `at:<timestamp>`); different listings; every file `sha256` matches its declared root | Context Root, mount `--context` | **implemented** — default demo `bench/receipts/context-mounts-20261103T210625Z.json` (6/6); scaled run `bench/receipts/context-mounts-20261104T125344Z.json` (5/5): 100 concurrent mounts, 100 distinct roots, 425/425 mounted-file SHA-256 matches, 100/100 distinct listing digests, 0 surviving daemons. Single-host court, synthetic fixtures; not a fleet claim. |
 | A2 | Reproducible Agent Replay Bundle: one `weft-receipt.tar.zst` with context graph, codec snapshots, exact replay command; Rust writes, Go replays byte-exactly with no code sharing | A1, replay/export | **implemented** — `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4 pass; bundle sha256 `940579db…`) |
 | A3 | Ambiguity Court: selector matching ≥2 distinct content roots; live query returns the full set; singular API fails closed with `Ambiguous`; FUSE never silently picks | ambiguity errors (exist), court | **implemented** — `bench/receipts/ambiguity-20261103T210633Z.json` (4/4 pass) |
-| A4 | Time-Travel POSIX: many versions of one path mounted at once; historical reads exact and pinned; no withdrawal | versioned views, context mounts | **implemented, correctness-only** — `bench/receipts/time-travel-20261103T210633Z.json` (4/4 pass); no io_uring/EKBLOOM acceleration |
+| A4 | Time-Travel POSIX: many versions of one path mounted at once; historical reads exact and pinned; no withdrawal | versioned views, context mounts | **implemented, correctness-only** — default `bench/receipts/time-travel-20261103T210633Z.json` (4/4); scaled `bench/receipts/time-travel-20261104T125947Z.json` (6/6): 10,000 versions, 101 snapshots, 10 concurrent snapshot mounts, all byte-exact after a live rename and retag. Ingest/latency are reported but not claimed as acceleration; no io_uring/EKBLOOM. |
 
 ## B. Proofs
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | **implemented** — 36 vectors, 36/36 class-identical, `bench/receipts/decoder-bombs-20261103T213314Z.json`; curated corpus, not fuzzing |
-| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 10,000 process-fault iterations** — `bench/receipts/crash-torture-20261104T013521Z.json`: 10,000/10,000 pass, 6,667 old + 3,333 new, 0 partial, 0 failures, 19.7 it/s. The earlier 1,000-iteration receipt is retained. F9 adds a QEMU VM power-cut proxy: 30/30 (`cache=none`) and 30/30 under a lying-fsync `cache=unsafe` device model, 0 partial, 0 durability failures (`powerloss-20261103T224453Z.json`, `powerloss-20261104T014805Z.json`). Physical power loss remains **not done**. |
+| B1 | Decoder-bomb court: ≥20 adversarial vectors (≥10 GiB claims, expansion bombs, loops/cycles, depth/count overflows), Rust and Go fail closed with identical classes under hard limits; receipt with RSS | limit flags, vectors | **implemented** — 36 vectors, 36/36 class-identical, `bench/receipts/decoder-bombs-20261103T213314Z.json`; curated corpus, not fuzzing. A separate deterministic differential fuzz court covers 1,000,000 generated inputs: `bench/receipts/fuzz-diff-20261104T103431Z.json` (0 mismatches, 0 panics); synthetic, not coverage-guided. |
+| B2 | Crash-consistency torture: 10,000 interrupted transactions across both frontends; Rust recovers, Go reads; no fsck; receipt | crash proxy harness | **implemented for 100,000 process-fault iterations** — `bench/receipts/crash-torture-20261104T104233Z.json`: 100,000/100,000 pass, 66,667 old + 33,333 new, 0 partial, 0 failures, 19.2 it/s; counts independently recomputed from the 14,822,217-byte NDJSON. The 10,000-iteration receipt `crash-torture-20261104T013521Z.json` and the 1,000-iteration receipt are retained. F9 adds a QEMU VM power-cut proxy: 30/30 (`cache=none`) and 30/30 under a lying-fsync `cache=unsafe` device model, 0 partial, 0 durability failures (`powerloss-20261103T224453Z.json`, `powerloss-20261104T014805Z.json`). Physical power loss remains **not done**. |
 | B3 | One-command receipt bundle: Dockerfile hash, corpus hash, environment, raw output, dmesg, sha256; rerunnable by a stranger | receipts (exist) | **implemented** — `scripts/package-receipts.sh` + independent `scripts/verify-receipts.sh`; dmesg unavailable without CAP_SYSLOG |
 | B4 | POSIX conformance court: `fsx`-style randomized ops, `fsstress`/`pjdfstest` where available, Rust and Go, green matrix | FUSE frontends | **implemented** — self-written fsx-style court, 6/6 runs, 13,694 ops, `bench/receipts/posix-torture-20261103T213317Z.json`; `pjdfstest`/`fsstress` not available and not substituted |
 
@@ -45,13 +45,13 @@ evidence.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| E1 | Context Root as primary public identity; `weft://` URI is the address; paths are a compatibility projection | — | not started |
-| E2 | Native causal closure; derived identity modes `bytes_only` vs `causal_exact`; minimal sufficient closure queries | E1 | not started |
+| E1 | Context Root as primary public identity; `weft://` URI is the address; paths are a compatibility projection | — | **not started** — no receipt; design text in `spec/WEFT-CONTEXT-ROOT.md` §5. |
+| E2 | Native causal closure; derived identity modes `bytes_only` vs `causal_exact`; minimal sufficient closure queries | E1 | **not started** — no receipt; design text in `spec/WEFT-CAUSAL.md`. |
 | E3 | AI-native codec modes: tensor layouts (row/col/blocked/sharded/quantized), activation/gradient streams, embedding/KV-cache pages, token sequences/masks, weight deltas (LoRA/full/quantized), structured semantic delta | E1 | **partial** — `TENSOR` (6, row-major little-endian), `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128), and `QUANTIZED_TENSOR` (8, affine per-tensor i8/u8 with exact f64 scale bits and i64 zero point) implemented and cross-language byte-identical; every other layout/stream/delta mode is `specified, not implemented` with no wire value (`spec/WEFT-AI-CODEC.md` §5) |
-| E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | partial (uid/gid + ACL) |
-| E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | not started |
+| E4 | Agents as capability principals: allowed roots/predicates/namespaces, budgets, revocation, no ambient authority | E1, auth | **partial (uid/gid + ACL)** — budget and authorization accounting are covered by `tests/capability_nondisclosure.rs` (2 vs 7 hidden files, identical authorized views); no revocation receipt. |
+| E5 | Training-ready world slices: exact, capability-checked materialization of datasets/models/configs/evals, fail closed before compute | E1–E4 | **not started** — no receipt; depends on E1–E4. |
 | E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy plus a block-layer lying-disk matrix (`blkdebug-20261104T072008Z.json`: dm-flakey silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5, blkdebug mount-blocked 10/10). No refinement proof; checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss, host page-cache loss, and full CI remain outstanding. |
-| E7 | Adoption surfaces: checkpoint+delta format, dataset versioning/subset materialization, agent memory, experiment reproducibility | E3–E5 | not started |
+| E7 | Adoption surfaces: checkpoint+delta format, dataset versioning/subset materialization, agent memory, experiment reproducibility | E3–E5 | **not started** — no receipt; the Buck2 CAS and agent-memory items are D1/D2 prototypes, not adoption claims. |
 
 ## Implementation order (each stage ends with tests and a receipt)
 
@@ -64,12 +64,16 @@ evidence.
    filtering, budgets; cross-language tests. (E4)
 4. **F3 — Context mounts + ambiguity + time travel:** `--context`/`--at` mount
    roots in Rust and Go, A1/A3/A4 + receipts, sha256 verification. **Implemented**
-   (2026-11-03); receipts under `bench/receipts/`.
+   (2026-11-03); scaled 2026-11-04: 100 concurrent context mounts
+   (`context-mounts-20261104T125344Z.json`) and 10,000-version time travel
+   (`time-travel-20261104T125947Z.json`).
 5. **F4 — Replay bundle:** export/import, A2, one-command rerun from Go.
    **Implemented** (2026-11-03) as part of F3.
 6. **F5 — Proof courts:** B1/B2/B3/B4, receipts. **Implemented** (2026-11-03);
-   B2 ran 10,000 process-fault iterations on 2026-11-04 (0 failures, 19.7 it/s),
-   not physical power loss.
+   the 2026-11-04 pass adds 100,000/100,000 process-fault crash iterations
+   (`crash-torture-20261104T104233Z.json`, 0 partial, 19.2 it/s) and the separate
+   1,000,000-input differential fuzz court (B5,
+   `fuzz-diff-20261104T103431Z.json`, 0 mismatches), not physical power loss.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode, cross-language, vectors for every implemented mode. **Implemented**
    (2026-11-03; QUANTIZED_TENSOR added 2026-11-04): `TENSOR` (6),

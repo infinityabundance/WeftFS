@@ -34,7 +34,7 @@ tested in the Docker court.
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — 39 core tests — see [`docs/store-status.md`](docs/store-status.md) |
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **Implemented** — 88 Rust court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
-| P7 | Bench courts, receipt bundle, showcase, release | **Released v0.3.0; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio` comparative suites all exist. Latest full verification: `bench/receipts/verify-20261104T022254Z.json` (18/18). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md) and [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md); no headline performance claim is made. See [`docs/RELEASE-v0.3.0.md`](docs/RELEASE-v0.3.0.md). |
+| P7 | Bench courts, receipt bundle, showcase, release | **Released v0.4.0; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio` comparative suites all exist. Latest full verification: `bench/receipts/verify-20261104T103447Z.json` (**19/19**, including `fuzz_diff`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md), [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md), and [`bench/RESULTS-v0.4.0-storage-path.md`](bench/RESULTS-v0.4.0-storage-path.md); no headline performance claim is made. See [`docs/RELEASE-v0.4.0.md`](docs/RELEASE-v0.4.0.md). |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 | F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; default 3-mount demo plus **100 concurrent read-only context mounts** (50 `by:task`, 25 `by:model`, 25 `derived_from` roots; 425 file checks, 100/100 distinct listing digests); ambiguity fails closed and lists every ObjectId; default 100-version plus **10,000-version time travel** (101 snapshots, 10 mounted at once, later live write/rename leaves every snapshot byte-identical); Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6, default), `context-mounts-20261104T125344Z.json` (5/5, 100 mounts, `semantic_match=true`), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4, default), `time-travel-20261104T125947Z.json` (6/6, 10,000 versions, `semantic_match=true`), `replay-bundle-20261103T210824Z.json` (4/4). Single-host court, synthetic fixtures; not a fleet claim. Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
 | F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **100,000/100,000 crash iterations at 19.2 it/s** (66,667 old / 33,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T104233Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
@@ -45,6 +45,25 @@ tested in the Docker court.
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
+
+## What's new in v0.4.0
+
+Full note: [`docs/RELEASE-v0.4.0.md`](docs/RELEASE-v0.4.0.md).
+
+- **Correctness:** work accounting counts only authorized objects and visible
+  relations; budget denials are non-disclosing (`tests/capability_nondisclosure.rs`).
+- **Fuzz:** 1,000,000-input Rust↔Go differential court; the first deep run found
+  544 zstd strictness mismatches, one normative rule fixed them, re-run 0
+  mismatches / 0 panics (peak RSS 6.3 MiB Rust, 205.9 MiB Go).
+- **Storage path (single host):** relation selector 132.8→0.69 ms and tag
+  148.0→2.05 ms warm at 10k objects; 4 KiB overwrite of 64 MiB 69.6→33.0 ms
+  (RSS 131.7→3.8 MiB); 10,000-generation open 3,789.1→71.6 ms; 1,000 creates
+  89.87→22.01 ms and 1,000→1 commit; 256 MiB create 269,072→6,764 KiB RSS.
+- **Scale:** 100,000/100,000 crash-proxy iterations, 100 concurrent context
+  mounts, 10,000-version time travel.
+- Opt-in Rust-only `weft.manifest.v2`; the default raw fixture is unchanged.
+
+Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Non-negotiable engineering rules
 
@@ -66,10 +85,10 @@ Labels used throughout: **implemented** (built and tested), **experimental**
 Published on GHCR, anonymously pullable:
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftcodec:v0.3.0
-docker pull ghcr.io/infinityabundance/weftcodec-go:v0.3.0
-docker pull ghcr.io/infinityabundance/weftfs:v0.3.0
-docker pull ghcr.io/infinityabundance/weftfs-go:v0.3.0
+docker pull ghcr.io/infinityabundance/weftcodec:v0.4.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v0.4.0
+docker pull ghcr.io/infinityabundance/weftfs:v0.4.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v0.4.0
 ```
 
 `latest` is also published. FUSE mounts require `--device /dev/fuse --cap-add
@@ -82,13 +101,13 @@ Published on crates.io:
 
 ```toml
 [dependencies]
-weftcodec = "0.3.0"
-weftfs = "0.3.0"
+weftcodec = "0.4.0"
+weftfs = "0.4.0"
 ```
 
 ```sh
-cargo add weftcodec@0.3.0
-cargo add weftfs@0.3.0
+cargo add weftcodec@0.4.0
+cargo add weftfs@0.4.0
 ```
 
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the

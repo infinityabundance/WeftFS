@@ -1,6 +1,6 @@
 # Verification — model checking and power-loss evidence
 
-This directory contains two independent kinds of evidence for WeftFS v1:
+This directory contains independent kinds of evidence for WeftFS v1:
 
 | Artifact | Kind | What it establishes | What it does **not** establish |
 |---|---|---|---|
@@ -304,7 +304,62 @@ page-cache loss remains untested and is not claimed.
 
 ---
 
-## 3. Evidence index
+## 3. Codec differential fuzz and scale courts (2026-11-04)
+
+These are not power-loss evidence; they are grouped here because they extend the
+same receipt-backed verification surface. Both are synthetic, single-host, and
+run under the unchanged hard limits.
+
+### 3.1 Differential fuzz court
+
+`WeftCodec/examples/fuzz_differential.rs` and `WeftCodec-Go/cmd/fuzzdiff`
+generate the same 1,000,000 inputs from a shared xorshift64* stream and a 44-frame
+seed corpus (`conformance/fuzz/v1/seeds.txt`): 1/8 raw random bytes, 1/8
+unrepaired seed mutations, 4/8 checksum-repaired body/table mutations with the
+content hash deliberately stale, 1/8 semantic faults (missing/lying/denying
+dependency, self-cycle, reserved mode bytes, `decoded_len = u64::MAX`, bad chunk
+extent, wrong content hash, unknown critical flag, non-canonical STRUCTURED),
+and 1/8 clean seeds. Both decoders run with `Limits::default()`.
+
+Receipts: `bench/receipts/fuzz-diff-20261104T103431Z.json` (direct run) and
+`bench/receipts/fuzz-diff-20261104T103623Z.json` (inside `verify-all`). Result:
+1,000,000 result lines per implementation, **0 mismatches**, **0 panics**,
+172,294 accepted, identical class distributions, corpus hash
+`4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5` matched
+before comparison, peak RSS 6.3 MiB (Rust) / 205.9 MiB (Go). The court is
+CPU-only synthetic differential testing, **not coverage-guided fuzzing** and not
+a proof of absence.
+
+### 3.2 The 544-mismatch finding and its resolution
+
+`bench/receipts/fuzz-diff-20261104T102754Z.json` is retained as the failing
+first deep run: **544 real zstd strictness mismatches** between the independent
+decoders — 451 inputs where Rust accepted and Go reported `Corrupt` (a zstd frame
+declaring content size 2 while yielding 0 bytes), and 93 where Rust reported
+`Corrupt` and Go accepted (an empty zstd body with `decoded_len = 0`).
+
+Both codecs now apply one normative rule to ZSTD, DICTIONARY, and every chunked
+ZSTD chunk (`WEFTCODEC-FORMAT` §3): an empty payload is `Malformed` even when
+`decoded_len == 0`; a header-declared frame content size must equal
+`decoded_len` (`Corrupt` otherwise); and the actual decoded length must match
+`decoded_len`. Rust uses `zstd::zstd_safe::get_frame_content_size`; Go uses
+`zstd.Header.Decode`/`HasFCS` and now encodes empty plaintext with
+`WithZeroFrames(true)`. Two new byte-identical reject vectors,
+`038_zstd_empty_body` (`Malformed`) and `039_zstd_content_size_mismatch`
+(`Corrupt`), were added to both repos. The re-run is 3.1 above; the failing
+receipt is evidence that the rule was needed, not a currently failing court.
+
+### 3.3 Scale runs
+
+| Run | Receipt | N | Result | Caveat |
+|---|---|---:|---|---|
+| Process-fault crash consistency | `bench/receipts/crash-torture-20261104T104233Z.json` | 100,000 iterations | 100,000/100,000 pass, 66,667 old / 33,333 new, 0 partial, 0 bad, 19.2 it/s; counts recomputed from a 14,822,217-byte NDJSON | Process-fault proxy, **not** physical power loss; log and TSV stored as `.zst` (receipt 18 MB) |
+| Concurrent context mounts | `bench/receipts/context-mounts-20261104T125344Z.json` + `.determinism.txt` | 100 mounts (50 Rust, 50 Go) | 100 distinct roots, 200 objects, 599 relations, 425/425 file SHA-256 matches, 100/100 distinct listing digests, 0 surviving daemons; mount p50/p95/max 31.6/32.5/32.6 s; daemon RSS 1.62 GiB, cgroup peak 1.56 GiB | Single-host court, synthetic fixtures, one store; 100-way startup on 4 vCPUs; not a fleet claim |
+| Time-travel POSIX | `bench/receipts/time-travel-20261104T125947Z.json` + `.determinism.txt` | 10,000 versions, 101 snapshots, 10 concurrent mounts | Ingest 164.1 s (60.9/s), reopen p50 6 ms, verify 77 ms; every snapshot byte-exact across a live rename and retag | Correctness only; no io_uring/EKBLOOM acceleration and no latency claim |
+
+---
+
+## 4. Evidence index
 
 | Artifact | Result |
 |---|---|
@@ -315,3 +370,9 @@ page-cache loss remains untested and is not claimed.
 | `bench/receipts/powerloss-20261104T014805Z.json` / `.log` | lying-fsync `cache=unsafe` device model: 30/30 pass, 27 old + 3 new, 0 partial, 0 durability failures, 0 data-loss events, control loss 30/30; not physical |
 | `tests/bounded_recovery.rs` | test-only bounded corruption enumeration (not model checking) |
 | `bench/receipts/crash-torture-*.json` | process-fault crash proxy, explicitly not physical power loss |
+| `bench/receipts/crash-torture-20261104T104233Z.json` / `.log.zst` / `.results.tsv.zst` | 100,000/100,000 iterations, 66,667 old + 33,333 new, 0 partial, 0 bad, 19.2 it/s; process-fault proxy, not physical |
+| `bench/receipts/fuzz-diff-20261104T103431Z.json`, `fuzz-diff-20261104T103623Z.json` | 1,000,000 deterministic inputs, 0 mismatches, 0 panics, 172,294 accepted; synthetic, not coverage-guided; peak RSS 6.3/205.9 MiB |
+| `bench/receipts/fuzz-diff-20261104T102754Z.json` | retained failing run: 544 zstd strictness mismatches (451 + 93), motivating the shared normative rule |
+| `bench/receipts/context-mounts-20261104T125344Z.json` / `.determinism.txt` | 100 concurrent mounts, 425/425 SHA-256 matches, 100/100 distinct listings, 0 survivors; single-host synthetic store |
+| `bench/receipts/time-travel-20261104T125947Z.json` / `.determinism.txt` | 10,000 versions, 101 snapshots, 10 concurrent mounts, byte-exact across live rename + retag; correctness only |
+| `bench/receipts/verify-20261104T103447Z.json` | 19/19 courts pass, including `fuzz_diff`, spec drift (27 comparisons), and generated types |

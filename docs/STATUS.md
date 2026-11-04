@@ -2,11 +2,14 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261104T100531Z.json` (all eighteen courts `pass`,
-including quantized cross-decode, generated-type drift, Buck2 CAS, and agent
-memory), at WeftFS `c72255d`, WeftCodec `474fc33`, WeftCodec-Go `c3f30e8`,
-WeftFS-Go `33743f0`. The preceding receipt `verify-20261104T022254Z.json` is
-retained as history. Earlier `verify-20261103T220311Z`,
+`bench/receipts/verify-20261104T103447Z.json` (all nineteen courts `pass`,
+including spec drift with 27 comparisons, generated-type drift, quantized
+cross-decode, context cross-language gates, Buck2 CAS, agent memory, and the new
+`fuzz_diff` court), at WeftFS `82518e5`, WeftCodec `beb88cf`, WeftCodec-Go
+`6f535ea`, WeftFS-Go `33743f0`. The preceding receipt
+`verify-20261104T100531Z.json` is retained as history. Earlier
+`verify-20261104T022254Z`,
+`verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
 as history. The
 twelve-step showcase receipt is
@@ -64,16 +67,19 @@ in `verification/README.md`.
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `3ea3e09` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `cc31f77` | Rust codec v1 |
-| `WeftCodec-Go` | `1a48394` | independent Go codec |
-| `WeftFS-Go` | `e4c5f04` | independent Go store + FUSE |
+| `WeftFS` | `82518e5` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `beb88cf` | Rust codec v1 |
+| `WeftCodec-Go` | `6f535ea` | independent Go codec |
+| `WeftFS-Go` | `33743f0` | independent Go store + FUSE |
 
 These are the revisions pinned by the latest full verification receipt; later
 commits (documentation, tests, packaging) may be ahead of them without a new
-full receipt. `staging` and `main` are synchronized and pushed for all four
-repositories; `v0.3.0` tags exist in each. The research directory and
-`AGENTS.md` are gitignored, per operator directive.
+full receipt. Version 0.4.0 is committed on `staging` in the parent and
+WeftCodec. At the time of writing, `staging == main` and pushed for WeftCodec-Go
+and WeftFS-Go; the parent and WeftCodec `staging` commits for 0.4.0 are local
+and ahead of their `main`/`origin/staging`. **No `v0.4.0` tag exists in any of
+the four local clones** (the newest tag is `v0.3.0`), so no tag claim is made.
+The research directory and `AGENTS.md` are gitignored, per operator directive.
 
 ## 2. What is implemented and tested
 
@@ -404,9 +410,14 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   them. Tests: `tests/extent_cow.rs` (6) and `tests/fast_open.rs` (3),
   including corrupted-chain fallbacks and checkpoint corruption.
 - **Not claimed:** these are single-host, page-cache measurements on synthetic
-  fixtures, not device-level or fleet claims, and no group-commit or
-  write-batching change has been made (each mutation still pays its durable
-  commit).
+  fixtures, not device-level or fleet claims.
+- **Group commit.** `Store::group` applies mutations to a journalled in-memory
+  state and publishes exactly one durable commit; rollback and crash-proxy
+  tests cover the failure path (`tests/group_commit.rs`). Measured on tmpfs
+  over 5 fresh stores, release, rust court: 1,000 creates 89.87 ms → 22.01 ms
+  and 1,000 commits → 1; 1,000 grouped writes 21.86 ms. Receipt
+  `bench/receipts/group-commit-20261104T092015Z.json`. This is a store-API
+  timing on tmpfs, not a device, FUSE, or fleet claim.
 
 - **Streaming I/O and the file bound.** `create_file_streaming*` and
   `append_file_streaming` read the source in 1 MiB steps, compute the frozen
@@ -901,8 +912,8 @@ multi-writer, physical rig).
   image with `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
   bounded `/tmp`, `no-new-privileges`, and `cap-drop=ALL` (FUSE adds only
   `/dev/fuse` and `CAP_SYS_ADMIN`).
-- `scripts/verify-all.sh` re-ran all eighteen courts and produced
-  `bench/receipts/verify-20261104T022254Z.json` with revisions, host, command
+- `scripts/verify-all.sh` re-ran all nineteen courts and produced
+  `bench/receipts/verify-20261104T103447Z.json` with revisions, host, command
   log, and per-court results.
 - The P7 benchmark court ran codec, store, and filesystem benchmarks under the
   same hard limits. Every receipt contains raw samples, environment, and
@@ -991,29 +1002,47 @@ multi-writer, physical rig).
 
 ## 5. Next work queue (dependency order)
 
-1. Close the remaining P7 gaps in `bench/RESULTS-comparative-v1.md` §8:
-   physical media power loss, host/device cache loss, RAPL/joule energy,
-   direct I/O, metadata storms, AI-corpus external baselines, 10^5–10^6-object
-   scaling, and a library-vs-library codec court. The whole-disk ZFS/Btrfs and
-   block-layer lying-disk gaps are closed within their stated models; blkdebug
-   write/flush injection remains blocked at mount and is recorded. Then add the
-   eight-component economic profile.
-2. Extend the TLA+ model to checkpoints, GC reachability, capability
-   filtering, and multi-writer refusal; add a refinement mapping to the Rust
-   and Go state machines. The current F9 model covers commit/recovery only.
-3. Physical power-loss on hardware with controllable power (and host/device
-   cache loss); today's F9 evidence is a QEMU VM power-cut proxy plus software
-   block-layer lying-disk models (`scripts/powerloss_court.sh`,
-   `scripts/blkdebug_court.sh`). Re-run both at each release revision.
-4. Remaining Go FUSE edge work: physical-space PUNCH_HOLE or sparse extents,
-   kernel-forwarded COLLAPSE/INSERT, `ioctl`, and cross-daemon/host locks.
-   Online GC is implemented and opt-in.
-5. F3 follow-ups: partitioned replay bundles, a long-horizon agent-memory
-   retention measurement, and any future acceleration (none is claimed now).
-6. Contextual-index follow-ups: persist generation-keyed index segments so a
-   cold open does not rebuild from replay, make index maintenance incremental
-   per commit, add range/ordered indexes for `lt/le/gt/ge`, and re-measure at
-   10^5–10^6 objects. The current index is in-memory and rebuild-on-first-use.
-7. `v0.3.0` was released (per-repo GHCR images, crates.io crates, GitHub
-   releases). The next versioned release should be cut only after items 1–6
-   either close or are explicitly recorded as accepted gaps with receipts.
+1. **Physical media power loss, host page-cache loss, and RAPL/joule energy.**
+   Prerequisites already recorded: QEMU VM power-cut proxy and lying-fsync
+   device model (`bench/receipts/powerloss-20261104T014805Z.json`), block-layer
+   lying-disk matrix (`bench/receipts/blkdebug-20261104T072008Z.json`),
+   unprivileged host-cache probe (`bench/receipts/hostcache-probe-20261104T072314Z.json`),
+   and perf counters without readable RAPL
+   (`bench/receipts/perf-counters-20261104T015026Z.json`). The exact remaining
+   limits are in `verification/README.md` §2.5.
+2. **TLA+ implementation refinement.** Prerequisite: the bounded
+   commit/recovery model and its deliberate counterexample
+   (`bench/receipts/tla-20261103T224446Z.json`, `verification/tla/`). The model
+   is abstract; there is no refinement proof to the Rust or Go state machines.
+3. **Go parity for `weft.manifest.v2`.** Prerequisite: the Rust-only v2
+   representation result (`bench/receipts/representation-20261104T093437Z.json`),
+   the unchanged default raw fixture (`8959c65b…e1d81`), and the Rust↔Go
+   handoff court, which stays on raw. The Go store rejects v2 today.
+4. **On-disk/persistent selector index segments.** Prerequisite: the in-memory
+   per-state index and its scan-equivalence court
+   (`bench/receipts/index-bench-20261104T085157Z.json`,
+   `tests/index_equivalence.rs`: 3 states, 315 selector/views, 1,566 assertions).
+   The index is rebuilt per state, not persisted.
+5. **1,000,000-operation POSIX torture.** Prerequisite: the fsx-style court at
+   13,694 operations (`bench/receipts/posix-torture-20261103T213317Z.json`).
+   `pjdfstest`/`fsstress` are not installed in the court and no substitute run
+   is claimed.
+6. **Remaining AI codec modes:** float-aware, sharded/quantized-layout,
+   weight-delta, KV-cache, activation/gradient, and semantic-delta.
+   Prerequisite: modes 6/7/8 byte-identical across Rust and Go
+   (`WeftCodec-Go/hack/cross.sh`) and the `specified, not implemented` list in
+   `spec/WEFT-AI-CODEC.md` §5. No wire value exists for the remaining modes.
+7. **Layout-independent tensor identity.** Depends on item 6; no receipt and no
+   implementation claim.
+8. **A real public model-family corpus.** Prerequisite: the synthetic `ai-v1`
+   corpus and cost graph (`bench/receipts/ai-corpus-20261104T021627Z.json`,
+   `bench/RESULTS-ai-v1.md`). `ai-v1` is synthetic; no public corpus or
+   superiority claim is made.
+9. **Native async API and object-store backend.** Prerequisite: none; not
+   started, and no claim is made.
+10. **Buck2 plugin/REAPI integration.** Prerequisite: the local CAS prototype
+    (`bench/receipts/buck2-cas-20261104T022511Z.json`, 15/15), which is not a
+    plugin, worker, or REAPI gRPC backend.
+11. **Real-time aging.** Prerequisite: the simulated-timestamp agent-memory demo
+    (`bench/receipts/agent-memory-20261104T022512Z.json`, 7/7). Months of
+    wall-clock retention were not measured.
