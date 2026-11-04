@@ -2,18 +2,16 @@
 
 Published to GitHub Container Registry under `ghcr.io/infinityabundance`.
 
-**Repository association:** all four packages are currently linked to the
-program-home repository because they were first published by its workflow.
-They therefore appear under **WeftFS → Packages**
-(<https://github.com/infinityabundance/WeftFS/packages>), not under the three
-subproject Packages tabs. Direct package pages work anyway. GitHub links one
-package to one repository; to move a package to a subproject, use the package's
-**Settings → Connect repository** in the GitHub UI (requires package admin), or
-delete and republish it from that subproject with `delete:packages` and
-`write:packages`. The Actions `GITHUB_TOKEN` could not see or delete these
-user-owned packages (HTTP 404), and the interactive CLI token lacks those
-scopes, so the image bits and anonymous pulls are verified but the repository
-link remains a GitHub settings action.
+**Repository ownership:** each package is linked to its own repository and
+appears in that repository's Packages tab:
+
+- `weftcodec` → https://github.com/infinityabundance/WeftCodec/packages
+- `weftcodec-go` → https://github.com/infinityabundance/WeftCodec-Go/packages
+- `weftfs` → https://github.com/infinityabundance/WeftFS/packages
+- `weftfs-go` → https://github.com/infinityabundance/WeftFS-Go/packages
+
+Each repository has a `container.yml` workflow that publishes its canonical
+image on a `v*` tag or manual dispatch.
 
 | Image | Binary | Entry point |
 |---|---|---|
