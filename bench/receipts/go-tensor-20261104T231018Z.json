@@ -1,0 +1,131 @@
+{
+  "court": {
+    "cpus": "4",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "image": "weft/go-court:1",
+    "image_id": "sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "generated_utc": "2026-11-04T23:10:18Z",
+  "harness": "WeftFS-Go/cmd/tensorbench",
+  "label": "single-host Go court, synthetic bf16 pair, local store; not a fleet, hardware, or production-data claim",
+  "plan": {
+    "candidates": [
+      {
+        "applicable": true,
+        "cost_hi": 0,
+        "cost_lo": 8388608,
+        "detail": "canonical row-major chunks",
+        "estimated_decode_ns": 61943,
+        "physical_bytes": 8388608,
+        "strategy": "raw"
+      },
+      {
+        "applicable": true,
+        "cost_hi": 0,
+        "cost_lo": 5438698,
+        "detail": "one ZSTD frame",
+        "estimated_decode_ns": 8438608,
+        "physical_bytes": 5438698,
+        "strategy": "zstd"
+      },
+      {
+        "applicable": false,
+        "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+        "strategy": "tensor-sharded"
+      },
+      {
+        "applicable": true,
+        "cost_hi": 0,
+        "cost_lo": 1054778,
+        "dependency": "8bd4548f18b67a2b2e18eb8996a2b1de335cbbf831f5fff4fb3c8148aba0c68a",
+        "detail": "mode 11 against the causal parent",
+        "estimated_decode_ns": 25265824,
+        "physical_bytes": 1054778,
+        "strategy": "weight-delta"
+      }
+    ],
+    "chosen": "weight-delta",
+    "chosen_physical_bytes": 1054778,
+    "runner_up": "zstd"
+  },
+  "receipt": "go-tensor",
+  "revisions": {
+    "weftcodec": "f1d32e3ad42ebf172c65943f080b5cf32f51a7e3",
+    "weftcodec_go": "0f542e08aa866461e92683d5f05e73ae21253384",
+    "weftfs": "10c296561744780586f7a66f772384f766e53334",
+    "weftfs_go": "56cd05ac23aa988de90e8117da23a58e46047f12"
+  },
+  "storage": {
+    "delta_frame_bytes": 1054778,
+    "delta_over_independent": 0.19480811148545946,
+    "independent_frame_bytes": 5414446,
+    "region_bytes": 1048576
+  },
+  "timings_ns": {
+    "decode": {
+      "median": 73266215,
+      "samples": [
+        72746115,
+        73819297,
+        72827536,
+        73266215,
+        73932980
+      ]
+    },
+    "encode": {
+      "median": 139842022,
+      "samples": [
+        137739378,
+        159107322,
+        161486473,
+        139842022,
+        133263393
+      ]
+    },
+    "region_read": {
+      "median": 74016505,
+      "samples": [
+        74016505,
+        73646425,
+        74690283,
+        73817052,
+        75160421
+      ]
+    },
+    "write": {
+      "median": 127221195,
+      "samples": [
+        133405979,
+        126258328,
+        128397470,
+        125732135,
+        127221195
+      ]
+    }
+  },
+  "verify": {
+    "checked_representations": 6,
+    "ok": true
+  },
+  "workload": {
+    "bytes": 8388608,
+    "changed_elements": 41943,
+    "changed_fraction": 0.009999990463256836,
+    "derived": "/pair-derived-04.bin",
+    "derived_strategy": "weight-delta",
+    "dtype": "bf16",
+    "element_bytes": 2,
+    "elements": 4194304,
+    "independent": "/pair-base.bin",
+    "iterations": 5,
+    "logical_root": "b4c8bea1accc48ace316e6224c012ea3275446ded9eddd2c1654cac77e5288cb",
+    "shape": [
+      2048,
+      2048
+    ]
+  }
+}
