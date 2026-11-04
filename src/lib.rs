@@ -31,6 +31,7 @@ pub mod recovery;
 pub mod representation;
 pub mod state;
 pub mod store;
+pub mod tensor_store;
 pub mod timeparse;
 pub mod wcb_util;
 
@@ -43,4 +44,8 @@ pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
     GcReport, LineageEntry, OpenMode, Options, RepresentationMode, SavedContext, SetAttr, StatFs,
     Store, VerifyReport,
+};
+pub use tensor_store::{
+    StoredTensorMetadata, TensorLayoutSpec, TensorPlan, TensorPlanCandidate, TensorPlanOptions,
+    TensorStrategy, TensorWriteSpec,
 };

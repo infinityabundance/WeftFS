@@ -10,6 +10,7 @@ use weftcodec::wcb::Value;
 
 use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
+use crate::representation::TensorElementDtype;
 use crate::state::{validate_object_record, EntryRecord, ObjectRecord, Op, RelationRecord, State};
 use crate::wcb_util as wu;
 
@@ -255,6 +256,8 @@ pub enum RepresentationKind {
     Raw,
     /// The logical bytes are decoded from a WeftCodec WFT1 frame blob.
     Codec,
+    /// The logical bytes are decoded from a WeftTensor frame (modes 10-14).
+    Tensor,
 }
 
 impl RepresentationKind {
@@ -262,6 +265,7 @@ impl RepresentationKind {
         match self {
             RepresentationKind::Raw => "raw",
             RepresentationKind::Codec => "codec",
+            RepresentationKind::Tensor => "tensor",
         }
     }
 
@@ -269,10 +273,59 @@ impl RepresentationKind {
         match text {
             "raw" => Ok(RepresentationKind::Raw),
             "codec" => Ok(RepresentationKind::Codec),
+            "tensor" => Ok(RepresentationKind::Tensor),
             other => Err(Error::malformed(format!(
                 "unknown representation kind `{other}`"
             ))),
         }
+    }
+}
+
+/// Tensor-specific fields of a `kind:"tensor"` representation manifest.
+///
+/// `layout` is the canonical WCB map `weft.tensor.layout.v1` from
+/// `spec/WEFT-TENSOR.md` §4. It is kept as a `Value` so the store can validate
+/// the exact canonical record (including the additive quantized dtype names)
+/// without re-defining the descriptor.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TensorRepresentation {
+    /// 10 `TENSOR_SHARDED`, 11 `WEIGHT_DELTA`, 12 `KV_CACHE`,
+    /// 13 `ACTIVATION_STREAM`, 14 `SEMANTIC_DELTA`.
+    pub tensor_mode: u32,
+    pub dtype: TensorElementDtype,
+    pub shape: Vec<u64>,
+    pub logical_root: Hash32,
+    pub layout: Value,
+}
+
+impl TensorRepresentation {
+    /// Canonical number of the frame mode a strategy requires.
+    pub fn expected_mode(strategy: &str) -> Option<u32> {
+        match strategy {
+            "tensor-sharded" => Some(10),
+            "weight-delta" => Some(11),
+            "kv-cache" => Some(12),
+            "activation" => Some(13),
+            "semantic-delta" => Some(14),
+            _ => None,
+        }
+    }
+
+    /// Canonical strategy name for a frame mode.
+    pub fn strategy_for_mode(mode: u32) -> Option<&'static str> {
+        match mode {
+            10 => Some("tensor-sharded"),
+            11 => Some("weight-delta"),
+            12 => Some("kv-cache"),
+            13 => Some("activation"),
+            14 => Some("semantic-delta"),
+            _ => None,
+        }
+    }
+
+    /// True when the mode carries a base-frame dependency (11/14).
+    pub fn mode_has_dependency(mode: u32) -> bool {
+        matches!(mode, 11 | 14)
     }
 }
 
@@ -282,7 +335,8 @@ impl RepresentationKind {
 /// whose bytes are the complete WFT1 frame. `dependencies` are the **content
 /// roots** (manifest ids) of the base files a decoder needs, in the frame's
 /// dependency-table order. `strategy` is informational and is cross-checked
-/// against the frame header's payload mode on every decode.
+/// against the frame header's payload mode on every decode. `tensor` is present
+/// exactly when `kind` is [`RepresentationKind::Tensor`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Representation {
     pub kind: RepresentationKind,
@@ -290,11 +344,24 @@ pub struct Representation {
     pub dependencies: Vec<Hash32>,
     pub strategy: String,
     pub decoded_size: u64,
+    pub tensor: Option<TensorRepresentation>,
 }
 
 impl Representation {
     const KEYS: &'static [&'static str] =
         &["kind", "frame", "dependencies", "strategy", "decoded_size"];
+    const KEYS_TENSOR: &'static [&'static str] = &[
+        "kind",
+        "frame",
+        "tensor_mode",
+        "dtype",
+        "shape",
+        "logical_root",
+        "layout",
+        "dependencies",
+        "decoded_size",
+        "strategy",
+    ];
 
     pub fn to_value(&self) -> Value {
         let dependencies = self
@@ -302,6 +369,28 @@ impl Representation {
             .iter()
             .map(|hash| wu::hash_value(*hash))
             .collect();
+        if self.kind == RepresentationKind::Tensor {
+            let tensor = self.tensor.clone().unwrap_or(TensorRepresentation {
+                tensor_mode: 0,
+                dtype: TensorElementDtype::U8,
+                shape: Vec::new(),
+                logical_root: Hash32::ZERO,
+                layout: Value::Null,
+            });
+            let shape = tensor.shape.iter().map(|dim| Value::U64(*dim)).collect();
+            return wu::map([
+                ("kind", Value::Str(self.kind.as_str().to_owned())),
+                ("frame", wu::opt_hash_value(self.frame)),
+                ("tensor_mode", Value::U64(u64::from(tensor.tensor_mode))),
+                ("dtype", Value::Str(tensor.dtype.as_str().to_owned())),
+                ("shape", Value::Array(shape)),
+                ("logical_root", wu::hash_value(tensor.logical_root)),
+                ("layout", tensor.layout),
+                ("dependencies", Value::Array(dependencies)),
+                ("decoded_size", Value::U64(self.decoded_size)),
+                ("strategy", Value::Str(self.strategy.clone())),
+            ]);
+        }
         wu::map([
             ("kind", Value::Str(self.kind.as_str().to_owned())),
             ("frame", wu::opt_hash_value(self.frame)),
@@ -313,21 +402,14 @@ impl Representation {
 
     pub fn from_wcb(value: &Value) -> Result<Self> {
         let map = wu::as_map(value)?;
-        wu::check_keys(map, Self::KEYS)?;
-        let kind = RepresentationKind::parse(&wu::get_text(map, "kind")?)?;
-        let frame = wu::get_opt_hash(map, "frame")?;
-        let mut dependencies = Vec::new();
-        for item in wu::get_array(map, "dependencies")? {
-            let bytes = match item {
-                Value::Bytes(bytes) => bytes,
-                _ => {
-                    return Err(Error::malformed(
-                        "representation dependency must be bytes32",
-                    ))
-                }
-            };
-            dependencies.push(Hash32::from_slice(bytes).map_err(Error::from)?);
+        let kind_text = wu::get_text(map, "kind")?;
+        let kind = RepresentationKind::parse(&kind_text)?;
+        if kind == RepresentationKind::Tensor {
+            return Self::tensor_from_wcb(map);
         }
+        wu::check_keys(map, Self::KEYS)?;
+        let frame = wu::get_opt_hash(map, "frame")?;
+        let dependencies = parse_dependencies(map)?;
         let strategy = wu::get_text(map, "strategy")?;
         let decoded_size = wu::get_u64(map, "decoded_size")?;
         match kind {
@@ -377,6 +459,7 @@ impl Representation {
                     }
                 }
             }
+            RepresentationKind::Tensor => unreachable!("handled above"),
         }
         Ok(Representation {
             kind,
@@ -384,8 +467,91 @@ impl Representation {
             dependencies,
             strategy,
             decoded_size,
+            tensor: None,
         })
     }
+
+    fn tensor_from_wcb(map: &std::collections::BTreeMap<String, Value>) -> Result<Self> {
+        wu::check_keys(map, Self::KEYS_TENSOR)?;
+        let frame = match wu::get_opt_hash(map, "frame")? {
+            Some(hash) if hash != Hash32::ZERO => hash,
+            _ => {
+                return Err(Error::malformed(
+                    "tensor representation requires a non-zero frame id",
+                ))
+            }
+        };
+        let tensor_mode_u64 = wu::get_u64(map, "tensor_mode")?;
+        let tensor_mode = u32::try_from(tensor_mode_u64)
+            .map_err(|_| Error::malformed("tensor_mode does not fit u32"))?;
+        let strategy = wu::get_text(map, "strategy")?;
+        let expected = TensorRepresentation::expected_mode(&strategy)
+            .ok_or_else(|| Error::malformed(format!("unknown tensor strategy `{strategy}`")))?;
+        if expected != tensor_mode {
+            return Err(Error::malformed(format!(
+                "tensor strategy `{strategy}` requires tensor_mode {expected}, got {tensor_mode}"
+            )));
+        }
+        let dtype = TensorElementDtype::parse(&wu::get_text(map, "dtype")?)?;
+        let mut shape = Vec::new();
+        for item in wu::get_array(map, "shape")? {
+            match item {
+                Value::U64(dim) => shape.push(*dim),
+                _ => return Err(Error::malformed("tensor shape must be an array of u64")),
+            }
+        }
+        weftcodec::tensor::validate_shape(&shape, &weftcodec::Limits::default())?;
+        let logical_root = wu::get_hash(map, "logical_root")?;
+        let layout = wu::field(map, "layout")?.clone();
+        if !matches!(layout, Value::Map(_)) {
+            return Err(Error::malformed(
+                "tensor layout must be a canonical WCB map",
+            ));
+        }
+        let dependencies = parse_dependencies(map)?;
+        let decoded_size = wu::get_u64(map, "decoded_size")?;
+        if TensorRepresentation::mode_has_dependency(tensor_mode) {
+            if dependencies.len() != 1 {
+                return Err(Error::malformed(
+                    "weight-delta/semantic-delta representation requires exactly one dependency",
+                ));
+            }
+        } else if !dependencies.is_empty() {
+            return Err(Error::malformed(
+                "this tensor representation must not have dependencies",
+            ));
+        }
+        Ok(Representation {
+            kind: RepresentationKind::Tensor,
+            frame: Some(frame),
+            dependencies,
+            strategy,
+            decoded_size,
+            tensor: Some(TensorRepresentation {
+                tensor_mode,
+                dtype,
+                shape,
+                logical_root,
+                layout,
+            }),
+        })
+    }
+}
+
+fn parse_dependencies(map: &std::collections::BTreeMap<String, Value>) -> Result<Vec<Hash32>> {
+    let mut dependencies = Vec::new();
+    for item in wu::get_array(map, "dependencies")? {
+        let bytes = match item {
+            Value::Bytes(bytes) => bytes,
+            _ => {
+                return Err(Error::malformed(
+                    "representation dependency must be bytes32",
+                ))
+            }
+        };
+        dependencies.push(Hash32::from_slice(bytes).map_err(Error::from)?);
+    }
+    Ok(dependencies)
 }
 
 /// A file content manifest (`WEFT-MODEL.md` §2.3).
@@ -485,9 +651,11 @@ impl Manifest {
         } else {
             None
         };
-        let codec = representation
+        let frame_backed = representation
             .as_ref()
-            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .map(|rep| {
+                rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
+            })
             .unwrap_or(false);
         let mut chunks = Vec::new();
         let mut total: u64 = 0;
@@ -509,12 +677,13 @@ impl Manifest {
                 len,
             });
         }
-        if codec {
-            // A codec representation carries its chunks inside the frame; any
-            // chunk entries here would be a second, conflicting physical layout.
+        if frame_backed {
+            // A codec or tensor representation carries its bytes inside the
+            // frame; any chunk entries here would be a second, conflicting
+            // physical layout.
             if !chunks.is_empty() {
                 return Err(Error::corrupt(
-                    "codec manifest must not list chunk references",
+                    "frame-backed manifest must not list chunk references",
                 ));
             }
         } else {

@@ -288,6 +288,82 @@ part of the frozen v1 format and is not claimed compatible or interoperable.
 
 ---
 
+## 2b. Tensor representations and the per-object planner (B1)
+
+**Status: implemented in Rust only; the Go store rejects `kind:"tensor"` with
+its usual unknown-schema/unsupported-version class.** A tensor object uses the
+v2 `kind:"tensor"` representation described in `spec/WEFT-MODEL.md` §2.3.1:
+`frame`, `tensor_mode` (10/11/12/13/14), `dtype`, `shape`, `logical_root`,
+canonical `layout`, `dependencies` (base content roots for 11/14), `strategy`,
+and `decoded_size`. The store owns the tensor vocabulary:
+
+- **One object per tensor, one frame.** A multi-shard declaration
+  (`sharded` with `shards > 1`) is rejected with `InvalidArgument`; the store
+  does not silently write a partial shard set.
+- **Layout independence.** `write_tensor_file*` accepts canonical row-major,
+  column-major, blocked, or single-shard input for `bytes` and canonicalises it
+  to row-major before encoding. The recorded `layout` describes the supplied
+  arrangement. The same logical tensor written under different layouts has the
+  same `LogicalTensorRoot` (tested).
+- **Writer/planner coverage:** `raw` chunks, v2 `zstd`, mode 10 (`q8_0` only),
+  mode 11 weight-delta against the causal parent, and mode 14 semantic-delta
+  against a bounded same-semantic-root candidate set. Modes 12/13 are decoded
+  and verified on read but not produced by the B1 planner (they need workload
+  metadata outside the tensor contract). `q4_0` store writes are rejected.
+- **Delta bases are synthesised, not stored.** A mode-11/14 frame's
+  `dependencies` is the base *content root*; the reader materialises the base
+  representation, verifies its content hash against the frame descriptor, and
+  rebuilds a self-contained mode-6 `TENSOR` frame. The frozen dependency/GC
+  rules therefore apply unchanged and no extra base blob is written.
+- **Depth bound.** The planner refuses a delta whose base chain would exceed
+  the frozen dependency depth bound (8), falling back to an independent
+  representation. This keeps a 10-step checkpoint chain readable.
+- **Identity for raw/zstd tensors.** When the planner chooses `raw` or `zstd`,
+  the manifest stays the unchanged v2 kind; tensor identity is carried by the
+  reserved attributes `weft.tensor.dtype`, `weft.tensor.shape`,
+  `weft.tensor.logical_root`, `weft.tensor.layout`, and `weft.tensor.strategy`.
+- **Reads:** full reads decode the frame, verify dtype/shape, recompute
+  `logical_root`, and verify the frozen whole-content digest. `read_tensor_region`
+  returns an exact row-major hyper-rectangle; delta/Huffman frames are not
+  independently seekable, so the whole object is decoded first (documented cost,
+  not a correctness claim).
+- **GC/verify:** `mark_manifest_tree` retains a tensor frame and recursively
+  marks dependency content roots; `verify --full` decodes every tensor
+  representation and reports the object, manifest, frame, and failing
+  dependency. A missing base fails reads with `Corrupt` and is named by verify.
+
+The planner is `physical_bytes + lambda_ns * estimated_decode_ns`, with
+`lambda_ns = 0` by default (bytes-only). Candidates are encoded to measure
+`physical_bytes`; the integer decode model is fixed in code
+(raw `size/200 + 20 µs`, zstd `size + 50 µs`, mode 10 `4*size + 100 µs`,
+mode 11 `3*size + 100 µs`, mode 14 `3*size + 150 µs`) and is explicitly an
+estimate, not a measurement. Ties keep the fixed candidate order. Only the
+chosen representation is written; the runner-up and prices are exposed by
+`Store::plan_tensor` and `weft plan --json` because the manifest schema admits no
+planner fields.
+
+CLI:
+
+```sh
+weftfs --store DIR write /w --tensor --dtype bf16 --shape 256,512 \
+    --file weights.bin --layout blocked --block-shape 64,64 --lambda-ns 0
+weftfs --store DIR --json plan --file weights.bin --dtype bf16 --shape 256,512 \
+    --lambda-ns 100000 --causal <version-hex>
+weftfs --store DIR cat /w --region 0,0:2,512
+weftfs --store DIR verify --full
+```
+
+Measured bench (`bench/receipts/tensor-planner-20261104T224237Z.json`, synthetic
+10 checkpoints x 8 tensors x 1 MiB bf16, 1% change per step, single host court,
+no fleet claim): independent ZSTD 15,917,707 physical bytes / 8.7 s ingest /
+91 ms restore (1 worker); bytes-only planner 11,191,832 bytes / 26.4 s / 1.81 s;
+latency-weighted planner 83,985,344 bytes / 8.4 s / 37 ms. The bytes-only
+planner saves 29.7% physical bytes but its delta chains and semantic candidate
+search cost ~3x ingest and ~20x restore; the latency-weighted planner trades
+5.3x physical space for the fastest restore. Both planner runs verify clean.
+
+---
+
 ## 3. Format interpretations and spec notes
 
 These are deliberate, documented decisions where the prose admits more than one

@@ -608,17 +608,24 @@ fn validate_manifest_tree(
     }
     let manifest = read_manifest(root, manifest_id)?;
     if let Some(rep) = &manifest.representation {
-        if rep.kind == crate::format::RepresentationKind::Codec {
+        if rep.kind == crate::format::RepresentationKind::Codec
+            || rep.kind == crate::format::RepresentationKind::Tensor
+        {
             let frame = rep
                 .frame
-                .ok_or_else(|| Error::corrupt("codec manifest has no frame id"))?;
+                .ok_or_else(|| Error::corrupt("frame-backed manifest has no frame id"))?;
             let path = manifest_path(root, frame);
             let metadata = fs::metadata(&path).map_err(|err| {
-                Error::corrupt(format!("missing codec frame {}: {err}", path.display()))
+                Error::corrupt(format!(
+                    "missing {} frame {}: {err}",
+                    rep.kind.as_str(),
+                    path.display()
+                ))
             })?;
             if !metadata.is_file() {
                 return Err(Error::corrupt(format!(
-                    "codec frame {} is not a regular file",
+                    "{} frame {} is not a regular file",
+                    rep.kind.as_str(),
                     path.display()
                 )));
             }

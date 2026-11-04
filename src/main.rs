@@ -15,6 +15,7 @@ use serde_json::json;
 use weftcodec::context::{Budget, ContextRoot, DEFAULT_RESOLVER};
 use weftcodec::selector;
 use weftcodec::wcb::Value;
+use weftcodec::{Region, SemanticPolicy};
 
 use weftfs::auth::Principal;
 use weftfs::conformance::build_fixture_store;
@@ -26,6 +27,7 @@ use weftfs::state::{object_causal_closure, RelationTarget, ATTR_CAUSAL_HASH, ATT
 use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
+use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
 use weftfs::wcb_util::value_to_json;
 
 #[derive(Parser)]
@@ -122,6 +124,36 @@ enum Command {
         /// Causal parent identities (comma-separated 64-hex ids).
         #[arg(long)]
         causal: Option<String>,
+        /// Treat the input as a logical tensor (requires `--dtype`/`--shape`).
+        #[arg(long)]
+        tensor: bool,
+        #[arg(long)]
+        dtype: Option<String>,
+        #[arg(long)]
+        shape: Option<String>,
+        /// Physical input arrangement: row-major, column-major, blocked, sharded.
+        #[arg(long, default_value = "row-major")]
+        layout: String,
+        #[arg(long = "block-shape")]
+        block_shape: Option<String>,
+        #[arg(long = "shard-axis", default_value_t = 0)]
+        shard_axis: u32,
+        #[arg(long, default_value_t = 1)]
+        shards: u32,
+        #[arg(long = "shard-index", default_value_t = 0)]
+        shard_index: u32,
+        /// Bytes charged per estimated nanosecond of decode time (0 = bytes only).
+        #[arg(long = "lambda-ns", default_value_t = 0)]
+        lambda_ns: u64,
+        /// `auto` runs the planner; any other value requires that strategy.
+        #[arg(long, default_value = "auto")]
+        strategy: String,
+        /// Semantic policy: none | mantissa_truncate:N | block_quantize:B:L.
+        #[arg(long = "semantic-policy")]
+        semantic_policy: Option<String>,
+        /// Explicit semantic candidate ObjectIds (comma-separated hex).
+        #[arg(long)]
+        candidates: Option<String>,
     },
     /// Write file bytes to stdout.
     Cat {
@@ -130,6 +162,36 @@ enum Command {
         offset: u64,
         #[arg(long)]
         len: Option<u64>,
+        /// Logical tensor hyper-rectangle `s0,s1:e0,e1` (row-major).
+        #[arg(long)]
+        region: Option<String>,
+    },
+    /// Price the tensor representation planner without writing anything.
+    Plan {
+        #[arg(long = "file")]
+        input_file: PathBuf,
+        #[arg(long)]
+        dtype: String,
+        #[arg(long)]
+        shape: String,
+        #[arg(long, default_value = "row-major")]
+        layout: String,
+        #[arg(long = "block-shape")]
+        block_shape: Option<String>,
+        #[arg(long = "shard-axis", default_value_t = 0)]
+        shard_axis: u32,
+        #[arg(long, default_value_t = 1)]
+        shards: u32,
+        #[arg(long = "shard-index", default_value_t = 0)]
+        shard_index: u32,
+        #[arg(long = "lambda-ns", default_value_t = 0)]
+        lambda_ns: u64,
+        #[arg(long)]
+        causal: Option<String>,
+        #[arg(long = "semantic-policy")]
+        semantic_policy: Option<String>,
+        #[arg(long)]
+        candidates: Option<String>,
     },
     /// List a directory.
     Ls { path: String },
@@ -637,27 +699,186 @@ fn run(cli: Cli) -> Result<()> {
             text,
             input_file,
             causal,
+            tensor,
+            dtype,
+            shape,
+            layout,
+            block_shape,
+            shard_axis,
+            shards,
+            shard_index,
+            lambda_ns,
+            strategy,
+            semantic_policy,
+            candidates,
         } => {
             let bytes = read_input(text, input_file)?;
             let causal = parse_causal_entries(causal.as_deref())?;
             let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
-            let id = store.resolve_path(&path)?;
-            let version = store.write_file_causal(id, offset, &bytes, &causal)?;
+            if tensor {
+                let dtype =
+                    dtype.ok_or_else(|| Error::invalid_argument("--tensor requires --dtype"))?;
+                let shape = parse_u64_list(
+                    shape
+                        .as_deref()
+                        .ok_or_else(|| Error::invalid_argument("--tensor requires --shape"))?,
+                    "--shape",
+                )?;
+                let layout = parse_tensor_layout(
+                    &layout,
+                    block_shape.as_deref(),
+                    shard_axis,
+                    shards,
+                    shard_index,
+                )?;
+                let spec = TensorWriteSpec {
+                    strategy_hint: parse_tensor_strategy(&strategy)?,
+                    causal,
+                    plan: TensorPlanOptions {
+                        lambda_ns,
+                        semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
+                        candidates: parse_object_ids(candidates.as_deref())?,
+                        ..TensorPlanOptions::default()
+                    },
+                };
+                let (parent, name) = split_path(&path)?;
+                let parent_id = store.resolve_path(&parent)?;
+                let id = store.write_tensor_file_with_spec(
+                    parent_id, &name, &dtype, &shape, &bytes, &layout, &spec,
+                )?;
+                let meta = store.tensor_metadata(id)?;
+                if json {
+                    print_json(&json!({
+                        "object_id": id.to_hex(),
+                        "path": path,
+                        "dtype": meta.dtype.as_str(),
+                        "shape": meta.shape,
+                        "layout": meta.layout.name(),
+                        "strategy": meta.strategy,
+                        "logical_root": meta.logical_root.to_hex(),
+                        "size": bytes.len(),
+                        "generation": store.generation(),
+                    }))
+                } else {
+                    println!("{id}");
+                    Ok(())
+                }
+            } else {
+                let id = store.resolve_path(&path)?;
+                let version = store.write_file_causal(id, offset, &bytes, &causal)?;
+                if json {
+                    print_json(&json!({
+                        "object_id": id.to_hex(),
+                        "version_id": version.to_hex(),
+                        "generation": store.generation(),
+                    }))
+                } else {
+                    println!("{version}");
+                    Ok(())
+                }
+            }
+        }
+        Command::Plan {
+            input_file,
+            dtype,
+            shape,
+            layout,
+            block_shape,
+            shard_axis,
+            shards,
+            shard_index,
+            lambda_ns,
+            causal,
+            semantic_policy,
+            candidates,
+        } => {
+            let bytes = fs::read(&input_file)
+                .map_err(|err| Error::io(format!("cannot read {}: {err}", input_file.display())))?;
+            let shape = parse_u64_list(&shape, "--shape")?;
+            let layout = parse_tensor_layout(
+                &layout,
+                block_shape.as_deref(),
+                shard_axis,
+                shards,
+                shard_index,
+            )?;
+            let causal = parse_causal_entries(causal.as_deref())?;
+            let options = TensorPlanOptions {
+                lambda_ns,
+                semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
+                candidates: parse_object_ids(candidates.as_deref())?,
+                ..TensorPlanOptions::default()
+            };
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+            let plan = store.plan_tensor(&dtype, &shape, &bytes, &layout, &causal, &options)?;
             if json {
+                let candidates: Vec<serde_json::Value> = plan
+                    .candidates
+                    .iter()
+                    .map(|item| {
+                        json!({
+                            "strategy": item.strategy.as_str(),
+                            "applicable": item.applicable,
+                            "detail": item.detail,
+                            "physical_bytes": item.physical_bytes,
+                            "estimated_decode_ns": item.estimated_decode_ns,
+                            "cost": item.cost.map(|cost| cost.to_string()),
+                            "dependency": item.dependency.map(|hash| hash.to_hex()),
+                        })
+                    })
+                    .collect();
                 print_json(&json!({
-                    "object_id": id.to_hex(),
-                    "version_id": version.to_hex(),
-                    "generation": store.generation(),
+                    "chosen": plan.chosen.as_str(),
+                    "chosen_physical_bytes": plan.chosen_physical_bytes,
+                    "chosen_estimated_decode_ns": plan.chosen_estimated_decode_ns,
+                    "chosen_cost": plan.chosen_cost.to_string(),
+                    "runner_up": plan.runner_up.map(|strategy| strategy.as_str()),
+                    "runner_up_physical_bytes": plan.runner_up_physical_bytes,
+                    "runner_up_estimated_decode_ns": plan.runner_up_estimated_decode_ns,
+                    "runner_up_cost": plan.runner_up_cost.map(|cost| cost.to_string()),
+                    "lambda_ns": lambda_ns,
+                    "candidates": candidates,
                 }))
             } else {
-                println!("{version}");
+                println!("chosen={}", plan.chosen.as_str());
+                println!("chosen_physical_bytes={}", plan.chosen_physical_bytes);
+                println!(
+                    "chosen_estimated_decode_ns={}",
+                    plan.chosen_estimated_decode_ns
+                );
+                println!("chosen_cost={}", plan.chosen_cost);
+                if let Some(runner) = plan.runner_up {
+                    println!("runner_up={}", runner.as_str());
+                }
+                for item in &plan.candidates {
+                    println!(
+                        "candidate={} applicable={} physical_bytes={} estimated_decode_ns={} detail={}",
+                        item.strategy.as_str(),
+                        item.applicable,
+                        item.physical_bytes
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| "-".to_owned()),
+                        item.estimated_decode_ns
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| "-".to_owned()),
+                        item.detail
+                    );
+                }
                 Ok(())
             }
         }
-        Command::Cat { path, offset, len } => {
+        Command::Cat {
+            path,
+            offset,
+            len,
+            region,
+        } => {
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
-            let bytes = if offset == 0 && len.is_none() {
+            let bytes = if let Some(region) = region {
+                let region = parse_region(&region)?;
+                store.read_tensor_region(id, &region)?.bytes
+            } else if offset == 0 && len.is_none() {
                 store.read_object(id)?
             } else {
                 store.read_range(id, offset, len.unwrap_or(u64::MAX))?
@@ -1395,6 +1616,108 @@ fn parse_causal_entries(spec: Option<&str>) -> Result<Vec<Hash32>> {
         Some(text) if text.trim().is_empty() => Ok(Vec::new()),
         Some(text) => parse_hash_list(text),
     }
+}
+
+fn parse_u64_list(text: &str, flag: &str) -> Result<Vec<u64>> {
+    let mut out = Vec::new();
+    for part in text.split(',') {
+        let part = part.trim();
+        if part.is_empty() {
+            return Err(Error::invalid_argument(format!(
+                "{flag} has an empty component"
+            )));
+        }
+        out.push(part.parse::<u64>().map_err(|_| {
+            Error::invalid_argument(format!("{flag} component `{part}` is not a u64"))
+        })?);
+    }
+    Ok(out)
+}
+
+fn parse_tensor_layout(
+    name: &str,
+    block_shape: Option<&str>,
+    axis: u32,
+    shards: u32,
+    index: u32,
+) -> Result<TensorLayoutSpec> {
+    match name {
+        "row-major" => Ok(TensorLayoutSpec::row_major()),
+        "column-major" => Ok(TensorLayoutSpec::column_major()),
+        "blocked" => {
+            let block = block_shape.ok_or_else(|| {
+                Error::invalid_argument("--layout blocked requires --block-shape")
+            })?;
+            Ok(TensorLayoutSpec::blocked(parse_u64_list(
+                block,
+                "--block-shape",
+            )?))
+        }
+        "sharded" => Ok(TensorLayoutSpec::sharded(axis, shards, index)),
+        other => Err(Error::invalid_argument(format!(
+            "--layout must be row-major, column-major, blocked, or sharded (got `{other}`)"
+        ))),
+    }
+}
+
+fn parse_tensor_strategy(text: &str) -> Result<Option<TensorStrategy>> {
+    match text {
+        "auto" => Ok(None),
+        other => Ok(Some(TensorStrategy::parse(other)?)),
+    }
+}
+
+fn parse_semantic_policy(text: Option<&str>) -> Result<Option<SemanticPolicy>> {
+    let Some(text) = text else {
+        return Ok(None);
+    };
+    let text = text.trim();
+    if text == "none" {
+        return Ok(Some(SemanticPolicy::None));
+    }
+    if let Some(bits) = text.strip_prefix("mantissa_truncate:") {
+        let bits = bits.parse::<u32>().map_err(|_| {
+            Error::invalid_argument("--semantic-policy mantissa_truncate bits is not a u32")
+        })?;
+        return Ok(Some(SemanticPolicy::MantissaTruncate { bits }));
+    }
+    if let Some(rest) = text.strip_prefix("block_quantize:") {
+        let (block, levels) = rest.split_once(':').ok_or_else(|| {
+            Error::invalid_argument("--semantic-policy block_quantize expects block:levels")
+        })?;
+        let block_size = block
+            .parse::<u64>()
+            .map_err(|_| Error::invalid_argument("--semantic-policy block size is not a u64"))?;
+        let levels = levels
+            .parse::<u64>()
+            .map_err(|_| Error::invalid_argument("--semantic-policy levels is not a u64"))?;
+        return Ok(Some(SemanticPolicy::BlockQuantize { block_size, levels }));
+    }
+    Err(Error::invalid_argument(format!(
+        "--semantic-policy must be none, mantissa_truncate:N, or block_quantize:B:L (got `{text}`)"
+    )))
+}
+
+fn parse_object_ids(spec: Option<&str>) -> Result<Vec<Hash32>> {
+    match spec {
+        None => Ok(Vec::new()),
+        Some(text) if text.trim().is_empty() => Ok(Vec::new()),
+        Some(text) => parse_hash_list(text),
+    }
+}
+
+fn parse_region(text: &str) -> Result<Region> {
+    let (start, end) = text
+        .split_once(':')
+        .ok_or_else(|| Error::invalid_argument("--region must be `s0,s1:e0,e1`"))?;
+    let start = parse_u64_list(start, "--region start")?;
+    let end = parse_u64_list(end, "--region end")?;
+    if start.len() != end.len() {
+        return Err(Error::invalid_argument(
+            "--region start and end ranks differ",
+        ));
+    }
+    Ok(Region::new(start, end))
 }
 
 fn parse_hash_list(text: &str) -> Result<Vec<Hash32>> {

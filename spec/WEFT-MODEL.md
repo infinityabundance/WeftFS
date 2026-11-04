@@ -195,6 +195,77 @@ Rules:
 - v2 is **experimental**; an implementation that does not understand it MUST
   reject the store/manifest (`UnsupportedVersion`) rather than guess.
 
+#### Tensor representations (additive within v2)
+
+A v2 manifest MAY use `kind:"tensor"` to name a WeftTensor frame as the
+physical representation. `kind:"raw"` and `kind:"codec"` are unchanged; the
+tensor key set is exactly:
+
+```
+{
+  "kind": "tensor",
+  "frame": bytes32,               # WFT1 frame blob id, never null
+  "tensor_mode": 10|11|12|13|14,  # u32 carried as WCB u64
+  "dtype": text,                  # WEFT-TENSOR dtype, or q8_0/q4_0
+  "shape": [u64, ...],            # logical extents
+  "logical_root": bytes32,        # WEFT-TENSOR LogicalTensorRoot
+  "layout": map,                  # canonical weft.tensor.layout.v1
+  "dependencies": [bytes32, ...], # base content roots for 11 and 14
+  "decoded_size": u64,            # logical element bytes; MUST equal size
+  "strategy": text                # mode name (below)
+}
+```
+
+The `strategy` text is fixed by `tensor_mode`: `10 = "tensor-sharded"`,
+`11 = "weight-delta"`, `12 = "kv-cache"`, `13 = "activation"`,
+`14 = "semantic-delta"`. A mismatch is `Malformed`; a frame whose actual mode
+disagrees with `tensor_mode` is `Corrupt` on read. No other mode is legal, and
+no planner bookkeeping field may be added to this map.
+
+Rules:
+
+- `frame` MUST be a manifest-domain blob; the reader verifies its blob id and
+the frame's own checksum, mode, and descriptor.
+- `dtype` and `shape` MUST agree with the frame descriptor. The logical bytes
+are the canonical row-major element bytes implied by `(dtype, shape)`; for
+`q8_0` the bytes are one sign-extended byte per logical element and the root is
+the additive quantized root of `WEFT-AI-CODEC.md` §11.5. `decoded_size` MUST
+equal the manifest `size` and the decoded logical byte length.
+- `layout` MUST be the canonical `weft.tensor.layout.v1` map from
+`WEFT-TENSOR.md` §4, with `dtype`/`shape` equal to the manifest fields. The
+store canonicalises the caller's physical arrangement to row-major before
+writing, so the same tensor written row-major, column-major, blocked, or as a
+single shard has the same `logical_root` (`WEFT-TENSOR.md` §3).
+- `dependencies` follows the frozen v2 content-root rule. Modes 11 and 14 have
+exactly one dependency: the base representation's content root. The base frame
+is reconstructed deterministically as a self-contained mode-6 `TENSOR` frame
+over the base's canonical element bytes; its content hash MUST equal the delta
+descriptor's `base`. No extra base-frame blob is stored. Modes 10, 12, and 13
+have no dependencies. Missing, unreadable, cyclic, or mismatched dependencies
+fail closed with `Corrupt`; depth is bounded by the codec dependency bound.
+- `content_hash` remains the frozen whole-content digest over the decoded
+logical bytes and MUST verify on a full read. `verify --full` decodes every
+tensor representation, recomputes `logical_root`, and checks dtype/shape,
+frames, and dependencies.
+- Retention follows dependencies, exactly as for `kind:"codec"`: a live tensor
+dependent keeps its base's transitive closure and frame blobs.
+- **B1 choice:** one object per tensor with exactly one frame. A multi-shard
+tensor is therefore not a single bulk object; a `sharded` write with
+`shards > 1` is rejected with `InvalidArgument` rather than silently
+truncated. Modes 12 and 13 are readable but are not produced by the B1 writer
+(they require workload metadata outside the tensor contract).
+- A tensor written through `kind:"raw"` or `kind:"codec"` (the planner may
+choose either) records the same identity in reserved object attributes:
+`weft.tensor.dtype`, `weft.tensor.shape`, `weft.tensor.logical_root`,
+`weft.tensor.layout` (canonical WCB bytes), and `weft.tensor.strategy`. These
+are ordinary additive attributes, not manifest fields.
+- `q8_0` is only stored through mode 10 because its additive identity binds the
+mode-10 scale plane; `q4_0` store support is not implemented in B1.
+- **The planner is not part of the format.** The cost function
+`physical_bytes + lambda_ns * estimated_decode_ns` and the chosen/runner-up
+prices are exposed by `weft plan --json` and `Store::plan_tensor` only. The
+manifest records exactly the chosen representation, never a cost table.
+
 ### 2.3.1 Derived identities
 
 ```

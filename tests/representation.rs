@@ -445,6 +445,7 @@ fn dependency_depth_bound_is_enforced() {
                 dependencies: Vec::new(),
                 strategy: "zstd".to_owned(),
                 decoded_size: bottom.len() as u64,
+                tensor: None,
             }),
         },
     );
@@ -466,6 +467,7 @@ fn dependency_depth_bound_is_enforced() {
                     dependencies: vec![below],
                     strategy: "delta".to_owned(),
                     decoded_size: target.len() as u64,
+                    tensor: None,
                 }),
             },
         );

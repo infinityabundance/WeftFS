@@ -1038,7 +1038,7 @@ impl Store {
         self.read_manifest_bytes_inner(manifest, offset, length, verify_whole, 0, &mut seen)
     }
 
-    fn read_manifest_bytes_inner(
+    pub(crate) fn read_manifest_bytes_inner(
         &self,
         manifest: &Manifest,
         offset: u64,
@@ -1052,6 +1052,15 @@ impl Store {
             Some(rep) if rep.kind == RepresentationKind::Raw => {
                 self.read_raw_manifest_bytes(manifest, offset, length, verify_whole)
             }
+            Some(rep) if rep.kind == RepresentationKind::Tensor => self.read_tensor_manifest_bytes(
+                manifest,
+                rep,
+                offset,
+                length,
+                verify_whole,
+                depth,
+                seen,
+            ),
             Some(rep) => self.read_codec_manifest_bytes(
                 manifest,
                 rep,
@@ -1498,7 +1507,7 @@ impl Store {
     /// exactly one commit. Shared by the buffered and streaming create paths so
     /// both produce byte-identical state transitions.
     #[allow(clippy::too_many_arguments)]
-    fn commit_created_file(
+    pub(crate) fn commit_created_file(
         &mut self,
         parent: Hash32,
         name: &[u8],
@@ -1614,16 +1623,18 @@ impl Store {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
         let new_size = end.max(old.size);
-        let old_is_codec = old_manifest
+        let old_is_frame_backed = old_manifest
             .representation
             .as_ref()
-            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .map(|rep| {
+                rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
+            })
             .unwrap_or(false);
-        // CodecAuto, or writing back to a store whose current version is a v2
-        // codec representation, materialises the whole object once. This keeps
-        // the experimental path simple; the frozen Raw mode still uses the
-        // chunk-granular COW path below.
-        if self.options.representation == RepresentationMode::CodecAuto || old_is_codec {
+        // CodecAuto, or writing back to a store whose current version is a
+        // frame-backed (codec or tensor) representation, materialises the whole
+        // object once. This keeps the experimental and tensor paths simple; the
+        // frozen Raw mode still uses the chunk-granular COW path below.
+        if self.options.representation == RepresentationMode::CodecAuto || old_is_frame_backed {
             let old_bytes =
                 self.read_manifest_bytes(&old_manifest, old.content, 0, old_manifest.size, true)?;
             let offset_usize = checked_usize(offset, "write offset")?;
@@ -1683,11 +1694,13 @@ impl Store {
         if old_manifest
             .representation
             .as_ref()
-            .map(|rep| rep.kind == RepresentationKind::Codec)
+            .map(|rep| {
+                rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
+            })
             .unwrap_or(false)
         {
             return Err(Error::invalid_argument(
-                "streaming append to a codec-backed object is not implemented",
+                "streaming append to a frame-backed object is not implemented",
             ));
         }
         let chunk_size = old_manifest.chunk_size;
@@ -1830,6 +1843,7 @@ impl Store {
                 dependencies: Vec::new(),
                 strategy: "raw".to_owned(),
                 decoded_size: new_size,
+                tensor: None,
             })
         } else {
             None
@@ -1899,7 +1913,7 @@ impl Store {
         new_size: u64,
         causal: &[Hash32],
     ) -> Result<Hash32> {
-        let (attrs, identity_mode, causal_hash, closure) = if causal.is_empty() {
+        let (mut attrs, identity_mode, causal_hash, closure) = if causal.is_empty() {
             let (mode, hash) = crate::state::identity_from_attrs(&old)?;
             (old.attrs.clone(), mode, hash, None)
         } else {
@@ -1909,6 +1923,67 @@ impl Store {
                 causal,
                 &Limits::default(),
             )?
+        };
+        // A byte rewrite replaces the tensor representation; stale tensor
+        // identity attributes must never survive it.
+        strip_tensor_attrs(&mut attrs);
+        if let Some(closure) = closure {
+            crate::context::store_causal_closure(self, &closure)?;
+        }
+        let mtime = self.now_ns();
+        let version = derive_version_id_with_identity(
+            id,
+            manifest_id,
+            new_size,
+            mtime,
+            Some(old.version),
+            identity_mode,
+            causal_hash,
+        )?;
+        let record = ObjectRecord {
+            version,
+            mtime_ns: mtime,
+            content: manifest_id,
+            size: new_size,
+            attrs,
+            ..old
+        };
+        let ops = vec![
+            Op::PutObject(record),
+            Op::SetTip {
+                object: id,
+                version,
+            },
+        ];
+        self.commit_ops(ops, false)?;
+        Ok(version)
+    }
+
+    /// Publish a new file version with explicit attributes (the tensor range
+    /// write updates the tensor identity attributes in the same commit).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn publish_file_version_with_attrs(
+        &mut self,
+        id: Hash32,
+        old: ObjectRecord,
+        manifest_id: Hash32,
+        _content_hash: Hash32,
+        new_size: u64,
+        causal: &[Hash32],
+        mut attrs: BTreeMap<String, Value>,
+    ) -> Result<Hash32> {
+        let (identity_mode, causal_hash, closure) = if causal.is_empty() {
+            let (mode, hash) = crate::state::identity_from_attrs(&old)?;
+            (mode, hash, None)
+        } else {
+            let (prepared, mode, hash, closure) = crate::context::prepare_causal(
+                self.current_state(),
+                attrs,
+                causal,
+                &Limits::default(),
+            )?;
+            attrs = prepared;
+            (mode, hash, closure)
         };
         if let Some(closure) = closure {
             crate::context::store_causal_closure(self, &closure)?;
@@ -2066,11 +2141,16 @@ impl Store {
             identity_mode,
             causal_hash,
         )?;
+        let mut attrs = old.attrs.clone();
+        // A byte rewrite replaces the tensor representation; stale tensor
+        // identity attributes must never survive it.
+        strip_tensor_attrs(&mut attrs);
         let record = ObjectRecord {
             version,
             mtime_ns: mtime,
             content: manifest_id,
             size,
+            attrs,
             ..old
         };
         let ops = vec![
@@ -3683,7 +3763,10 @@ impl Store {
                     if manifest
                         .representation
                         .as_ref()
-                        .map(|rep| rep.kind == RepresentationKind::Codec)
+                        .map(|rep| {
+                            rep.kind == RepresentationKind::Codec
+                                || rep.kind == RepresentationKind::Tensor
+                        })
                         .unwrap_or(false)
                     {
                         if full {
@@ -3692,6 +3775,11 @@ impl Store {
                                 Some(hash) => hash.to_hex(),
                                 None => "<none>".to_owned(),
                             };
+                            let kind = manifest
+                                .representation
+                                .as_ref()
+                                .map(|rep| rep.kind.as_str())
+                                .unwrap_or("none");
                             let mut seen = vec![record.content];
                             match self.read_manifest_bytes_inner(
                                 &manifest,
@@ -3705,7 +3793,7 @@ impl Store {
                                 Err(err) => report.problems.push(VerifyProblem {
                                     class: err.class_name().to_owned(),
                                     detail: format!(
-                                        "codec representation for object {} manifest {} frame {}: {err}",
+                                        "{kind} representation for object {} manifest {} frame {}: {err}",
                                         record.id, record.content, frame
                                     ),
                                 }),
@@ -3990,7 +4078,7 @@ impl Store {
         self.store_blob(BlobKind::Manifest, weftcodec::hash::DOMAIN_CAUSAL, bytes)
     }
 
-    fn require_writable(&self) -> Result<()> {
+    pub(crate) fn require_writable(&self) -> Result<()> {
         if self.mode != OpenMode::ReadWrite {
             return Err(Error::read_only(
                 "store is opened read-only; mutation refused",
@@ -3999,7 +4087,7 @@ impl Store {
         Ok(())
     }
 
-    fn require_dir(&self, id: Hash32) -> Result<()> {
+    pub(crate) fn require_dir(&self, id: Hash32) -> Result<()> {
         let object = self
             .state
             .objects
@@ -4011,7 +4099,7 @@ impl Store {
         Ok(())
     }
 
-    fn require_free_name(&self, parent: Hash32, name: &[u8]) -> Result<()> {
+    pub(crate) fn require_free_name(&self, parent: Hash32, name: &[u8]) -> Result<()> {
         if self
             .state
             .entries
@@ -4022,7 +4110,7 @@ impl Store {
         Ok(())
     }
 
-    fn now_ns(&self) -> i64 {
+    pub(crate) fn now_ns(&self) -> i64 {
         if let Some(fixed) = self.options.fixed_timestamp_ns {
             return fixed;
         }
@@ -4075,7 +4163,7 @@ impl Store {
         Ok(())
     }
 
-    fn commit_ops(&mut self, ops: Vec<Op>, force_checkpoint: bool) -> Result<Hash32> {
+    pub(crate) fn commit_ops(&mut self, ops: Vec<Op>, force_checkpoint: bool) -> Result<Hash32> {
         self.require_writable()?;
         if self.group_depth != 0 {
             if force_checkpoint {
@@ -4417,6 +4505,7 @@ impl Store {
                 dependencies: Vec::new(),
                 strategy: "raw".to_owned(),
                 decoded_size: size,
+                tensor: None,
             })
         } else {
             None
@@ -4504,6 +4593,7 @@ impl Store {
                     dependencies: Vec::new(),
                     strategy: "raw".to_owned(),
                     decoded_size: bytes.len() as u64,
+                    tensor: None,
                 }),
                 ..manifest
             };
@@ -4515,7 +4605,7 @@ impl Store {
 
     /// Write the chunk blobs for a raw layout and return a v1-shaped manifest
     /// value (with no representation).
-    fn build_raw_manifest(
+    pub(crate) fn build_raw_manifest(
         &self,
         bytes: &[u8],
         chunk_size: u64,
@@ -4537,7 +4627,7 @@ impl Store {
         })
     }
 
-    fn store_manifest(&self, manifest: Manifest) -> Result<(Hash32, Hash32, u64)> {
+    pub(crate) fn store_manifest(&self, manifest: Manifest) -> Result<(Hash32, Hash32, u64)> {
         let size = manifest.size;
         let content_hash = manifest.content_hash;
         let wcb = manifest.encode()?;
@@ -4604,6 +4694,7 @@ impl Store {
                 dependencies,
                 strategy,
                 decoded_size: bytes.len() as u64,
+                tensor: None,
             },
         )))
     }
@@ -4789,7 +4880,7 @@ impl Store {
 
     /// Content-addressed, crash-safe blob write: `tmp/` → fsync → rename →
     /// fsync directory. An existing file is verified, never overwritten.
-    fn store_blob(&self, kind: BlobKind, domain: &str, bytes: &[u8]) -> Result<Hash32> {
+    pub(crate) fn store_blob(&self, kind: BlobKind, domain: &str, bytes: &[u8]) -> Result<Hash32> {
         let hash = identity::h(domain, bytes);
         let final_path = match kind {
             BlobKind::Object => recovery::object_path(&self.root, hash),
@@ -5126,6 +5217,12 @@ fn resolve_in(state: &State, path: &str) -> Result<Hash32> {
     Ok(current)
 }
 
+/// Remove reserved tensor identity attributes when an object stops being a
+/// tensor representation (any ordinary byte rewrite).
+fn strip_tensor_attrs(attrs: &mut BTreeMap<String, Value>) {
+    attrs.retain(|key, _| !key.starts_with("weft.tensor."));
+}
+
 fn mark_state(
     root: &Path,
     state: &State,
@@ -5185,7 +5282,7 @@ fn mark_manifest_tree(
     match recovery::read_manifest(root, manifest_id) {
         Ok(manifest) => {
             if let Some(rep) = &manifest.representation {
-                if rep.kind == RepresentationKind::Codec {
+                if rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor {
                     if let Some(frame) = rep.frame {
                         manifests.insert(frame);
                     }

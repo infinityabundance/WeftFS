@@ -1308,3 +1308,58 @@ multi-writer, physical rig).
     - **Residual:** the semantic root is an index hint, not a remote search
       service; candidate selection decodes every candidate; only three numeric
       policies exist in v1.
+
+    ## 2026-11-04 — B1: tensor representations and the per-object planner
+
+    WeftTensor frames are a first-class physical representation in the Rust
+    store, selected by a deterministic cost-aware planner.
+
+    - **Manifest extension:** additive v2 `kind:"tensor"` with `frame`,
+      `tensor_mode` (10/11/12/13/14), `dtype`, `shape`, `logical_root`,
+      canonical `layout`, `dependencies` (base content roots for 11/14),
+      `decoded_size`, and `strategy`. Raw/codec v2 bytes are unchanged.
+      `spec/WEFT-MODEL.md` §2.3.1 is normative.
+    - **Store API:** `write_tensor_file`, `write_tensor_file_with_spec`,
+      `plan_tensor`, `read_tensor`, `read_tensor_region`,
+      `tensor_logical_root`, `tensor_metadata`, `write_tensor_range`. The store
+      writes one object per tensor with one frame; multi-shard declarations are
+      rejected rather than truncated. Row-major/column-major/blocked/single-
+      shard inputs canonicalise to the same logical bytes and root.
+    - **Planner:** `physical_bytes + lambda_ns * estimated_decode_ns`, default
+      `lambda_ns = 0`; deterministic candidate order and tie-break; estimates
+      are a documented integer model, not measurements. Candidates are raw,
+      zstd, mode 10 (q8_0), mode 11 (causal parent), mode 14 (bounded
+      same-semantic-root candidate set). Delta chains respect the frozen
+      dependency depth bound. Planner prices are surfaced by `plan --json`
+      only; the manifest carries no non-canonical fields.
+    - **Reads/GC/verify:** full reads verify frame/mode/strategy, dtype/shape,
+      dependency closure, recomputed `LogicalTensorRoot`, and the frozen
+      content hash. GC recursively retains delta bases; `verify --full` names
+      the object/manifest/frame/dependency on failure. Missing dependencies
+      fail closed with `Corrupt`.
+    - **Identity for raw/zstd tensors:** reserved attributes
+      `weft.tensor.dtype|shape|logical_root|layout|strategy`.
+    - **CLI:** `write --tensor --dtype --shape --layout`, `cat --region`,
+      `plan --json`.
+    - **Tests:** `tests/tensor_store.rs` 9/9 (mode 10/11 round trips and layout
+      roots, raw selection for incompressible data, weight-delta under 50% of
+      independent zstd, latency-weight switch, semantic-root gating,
+      missing-dependency/GC/verify, canonical layout encoding, byte-rewrite
+      drops stale tensor identity). Full Rust
+      `cargo test --all-targets`: 112 passed / 0 failed. FUSE `--features fuse
+      --all-targets`: 140 passed / 2 ignored.
+    - **Bench:** `bench/receipts/tensor-planner-20261104T224237Z.json`,
+      synthetic 10 checkpoints x 8 tensors x 1 MiB bf16, 1% change per step,
+      bench court (`weft/bench-court:1`, 3 GiB, 4 vCPU, kernel
+      7.3.1-1-cachyos), labelled single-host/no-fleet. Physical data bytes /
+      ingest / restore (1 worker): zstd 15,917,707 / 8.72 s / 91 ms; bytes-only
+      planner 11,191,832 / 26.39 s / 1.81 s; latency-weighted planner
+      83,985,344 / 8.40 s / 37 ms. Restore with 2/4 workers: zstd 47/25 ms,
+      bytes 913/483 ms, latency 21/15 ms; all three verify clean. The bytes
+      planner saves 29.7% physical bytes at ~3x ingest and ~20x restore cost
+      (delta chains are decoded per read); the latency planner is fastest to
+      restore at 5.3x the physical bytes.
+    - **Residual:** Go store parity for `kind:"tensor"`; multi-shard objects;
+      q4_0 store representation; modes 12/13 are read-only in the store;
+      region reads decode the whole delta/Huffman frame; the planner's decode
+      estimate is not calibrated to a device.
