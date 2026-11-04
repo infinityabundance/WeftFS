@@ -336,7 +336,7 @@ identical and pushed in all four repositories).
   `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
   Golden causal vectors are `conformance/context/v1/causal_versions.json`.
 
-### Codec-backed representation manifests (implemented 2026-11-04, opt-in, Rust-only)
+### Codec-backed representation manifests (implemented 2026-11-04, opt-in, Rust + Go)
 
 - **What it is:** a `weft.manifest.v2` representation manifest can store an
   object's bytes as a WFT1 frame (`kind:"codec"`) instead of raw chunks, with
@@ -368,11 +368,19 @@ identical and pushed in all four repositories).
   `conformance/store/v1` fixture still rebuilds to generation 11 and head
   `8959c65b…e1d81`, and `tests/representation.rs` asserts the v1 manifest
   layout, keys, and byte-identical manifests across two Raw stores.
-- **Not claimed:** this is experimental and **Rust-only**. The Go store has no
-  v2 parser and fails closed on such a manifest; the Rust→Go handoff court
-  still runs on the Raw path. Cross-language v2 parity, a planner that
-  chooses representations globally, and compaction/migration of existing
-  objects are future work. Bench numbers are synthetic, not production data.
+- **Go parity (2026-11-04, `WeftFS-Go` `d7d8d06`):** the Go store now parses,
+  writes, verifies, and GCs v2 manifests with the same selection rule, limits
+  (depth 8, cycles, chunk count), fail-closed dependency handling, and CLI /
+  mount flags. Cross-language tests run both directions for real: Rust writes
+  zstd + delta + raw-fallback, Go verifies and reads byte-exactly; Go writes
+  the same shape, Rust verifies and reads byte-exactly; Go GC retains a
+  Rust-written delta base.
+- **Not claimed:** experimental. V2 **frame bytes are not byte-identical**
+  between the Rust and Go zstd encoders; the claim is mutual read/verify, not
+  identical frames. DELTA/REFERENCE and unchunked ZSTD ranged reads materialise
+  the whole plaintext in both implementations. A global representation
+  planner and compaction/migration of existing objects remain future work.
+  Bench numbers are synthetic, not production data.
 
 ### Storage-path performance: extent COW and bounded open (implemented 2026-11-04)
 

@@ -61,7 +61,7 @@ Full note: [`docs/RELEASE-v0.4.0.md`](docs/RELEASE-v0.4.0.md).
   89.87→22.01 ms and 1,000→1 commit; 256 MiB create 269,072→6,764 KiB RSS.
 - **Scale:** 100,000/100,000 crash-proxy iterations, 100 concurrent context
   mounts, 10,000-version time travel.
-- Opt-in Rust-only `weft.manifest.v2`; the default raw fixture is unchanged.
+- Opt-in `weft.manifest.v2` with Rust and Go parity (mutual read/verify; frame bytes are not claimed identical); the default raw fixture is unchanged.
 
 Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](docs/STATUS.md).
 
@@ -116,7 +116,7 @@ transactional store plus FUSE frontend (the `fuse` feature enables mounting).
 ### Experimental codec representation (opt-in)
 
 The default `raw` policy writes the frozen v1 manifests. The experimental,
-Rust-only `codec-auto` policy is selected with `--representation codec-auto`
+`codec-auto` is selected with `--representation codec-auto` in both implementations
 and `--codec-min-bytes N` (default 4096); both are global flags and are also
 accepted after `mount`, e.g. `weftfs --store DIR mount --mountpoint MNT
 --representation codec-auto`. Read-only verbs accept and ignore them, and

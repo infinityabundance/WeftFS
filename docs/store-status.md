@@ -186,7 +186,7 @@ Tests map to the P4 requirements as follows:
 
 ## 2a. Experimental codec-backed representations (`CodecAuto`)
 
-**Status: experimental, opt-in, Rust-only.** `Options.representation` defaults to
+**Status: experimental, opt-in, implemented in Rust and Go (mutual read/verify; frame bytes are not claimed identical).** `Options.representation` defaults to
 `RepresentationMode::Raw`. With `Raw` — the mode used by every existing fixture,
 test, FUSE mount, and handoff — the writer emits the frozen v1 manifest and the
 on-disk bytes are unchanged. `CodecAuto` must be selected explicitly.
@@ -259,7 +259,7 @@ dependent that names it. `gc --apply` reclaims the dependency once no root
 references it. `verify --full` decodes and re-hashes every codec representation
 and names the object, manifest, and frame on failure.
 
-The Go store has no v2 parser and is expected to reject `weft.manifest.v2`
+The Go store implements the same v2 parser and writer for `weft.manifest.v2`
 (fail closed with its unknown-schema/unsupported-version class). The Rust→Go
 handoff court therefore still uses the default `Raw` path (`--representation raw`)
 and continues to compare byte-identical v1 fixtures; the Go store does not
@@ -409,7 +409,7 @@ reading. They are part of the Go handoff contract.
    costs one O(size) digest pass even on the streaming append path; range
    reads are chunk-bounded, but `read_object` returns the whole file and is
    memory-limited by design. The Go store still enforces its 256 MiB
-   `MaxFileBytes`, so files above that bound are Rust-only until Go parity.
+   `MaxFileBytes`; Go matches the same bound and chunk limit.
 3. **Checkpoint cost.** A checkpoint manifest contains the whole state; a
    checkpoint commit is O(state). The default interval of 256 is a
    replay-cost/memory tradeoff not yet measured.
