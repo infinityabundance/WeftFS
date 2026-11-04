@@ -7,10 +7,10 @@
 //! in the resulting state has a valid manifest and existing chunk files.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::backend::{Key, LocalBackend, StorageBackend};
 use crate::error::{Error, Result};
 use crate::format::{
     decode_commit_file, decode_state, decode_superblock, Manifest, SuperblockSlot, SUPERBLOCK_BYTES,
@@ -84,10 +84,14 @@ pub struct SuperblockView {
 /// Read and decode the superblock; zero slots are "empty", non-zero invalid
 /// slots are recorded as notes.
 pub fn read_superblock(root: &Path) -> Result<SuperblockView> {
-    let path = root.join("superblock");
-    let bytes = fs::read(&path).map_err(|err| {
-        Error::corrupt(format!("cannot read superblock {}: {err}", path.display()))
-    })?;
+    read_superblock_via(&LocalBackend::new(root))
+}
+
+/// Backend-generic superblock read.
+pub fn read_superblock_via(backend: &dyn StorageBackend) -> Result<SuperblockView> {
+    let bytes = backend
+        .read_all(&Key::superblock())
+        .map_err(|err| Error::corrupt(format!("cannot read superblock: {err}")))?;
     if bytes.len() != SUPERBLOCK_BYTES {
         return Err(Error::corrupt(format!(
             "superblock is {} bytes, expected {SUPERBLOCK_BYTES}",
@@ -153,19 +157,19 @@ fn parse_commit_filename(name: &str) -> Option<u64> {
 /// Every commit file on disk keyed by generation. Filenames are canonical
 /// zero-padded decimals; a non-canonical numeric name is ignored.
 pub fn scan_commit_files(root: &Path) -> Result<BTreeMap<u64, PathBuf>> {
-    let dir = root.join("commits");
+    let keys = scan_commit_keys_via(&LocalBackend::new(root))?;
+    Ok(keys
+        .into_keys()
+        .map(|generation| (generation, commit_path(root, generation)))
+        .collect())
+}
+
+/// Backend-generic commit enumeration keyed by generation.
+pub fn scan_commit_keys_via(backend: &dyn StorageBackend) -> Result<BTreeMap<u64, Key>> {
     let mut out = BTreeMap::new();
-    let entries = fs::read_dir(&dir)
-        .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", dir.display())))?;
-    for entry in entries {
-        let entry = entry?;
-        let name = entry.file_name();
-        let name = match name.to_str() {
-            Some(name) => name,
-            None => continue,
-        };
-        if let Some(generation) = parse_commit_filename(name) {
-            out.insert(generation, entry.path());
+    for key in backend.list_prefix(&Key::prefix(crate::backend::KeyKind::Commit))? {
+        if let Key::Commit { generation } = key {
+            out.insert(generation, Key::commit(generation));
         }
     }
     Ok(out)
@@ -173,15 +177,40 @@ pub fn scan_commit_files(root: &Path) -> Result<BTreeMap<u64, PathBuf>> {
 
 /// Load and validate one commit file.
 pub fn load_commit_file(path: &Path, expected_generation: Option<u64>) -> Result<LoadedCommit> {
+    let root = path
+        .parent()
+        .and_then(Path::parent)
+        .unwrap_or_else(|| Path::new("."));
+    let generation = expected_generation.unwrap_or_else(|| {
+        path.file_name()
+            .and_then(|name| name.to_str())
+            .and_then(parse_commit_filename)
+            .unwrap_or(0)
+    });
+    load_commit_key_via(
+        &LocalBackend::new(root),
+        &Key::commit(generation),
+        expected_generation,
+    )
+    .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", path.display())))
+}
+
+/// Backend-generic commit decode.
+pub fn load_commit_key_via(
+    backend: &dyn StorageBackend,
+    key: &Key,
+    expected_generation: Option<u64>,
+) -> Result<LoadedCommit> {
     COMMIT_FILE_READS.fetch_add(1, Ordering::Relaxed);
-    let bytes = fs::read(path)
-        .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", path.display())))?;
+    let bytes = backend
+        .read_all(key)
+        .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", key.display_path())))?;
     let (wcb, commit) = decode_commit_file(&bytes)?;
     if let Some(expected) = expected_generation {
         if commit.generation != expected {
             return Err(Error::corrupt(format!(
                 "commit file {} declares generation {} but the filename says {expected}",
-                path.display(),
+                key.display_path(),
                 commit.generation
             )));
         }
@@ -201,12 +230,20 @@ pub fn load_commit_file(path: &Path, expected_generation: Option<u64>) -> Result
 /// Parse every commit file up to `max_generation` (inclusive), ignoring files
 /// that fail to parse. Used for replay indexes.
 pub fn commit_index(root: &Path, max_generation: u64) -> Result<BTreeMap<Hash32, LoadedCommit>> {
+    commit_index_via(&LocalBackend::new(root), max_generation)
+}
+
+/// Backend-generic commit index.
+pub fn commit_index_via(
+    backend: &dyn StorageBackend,
+    max_generation: u64,
+) -> Result<BTreeMap<Hash32, LoadedCommit>> {
     let mut index = BTreeMap::new();
-    for (generation, path) in scan_commit_files(root)? {
+    for (generation, key) in scan_commit_keys_via(backend)? {
         if generation > max_generation {
             continue;
         }
-        if let Ok(loaded) = load_commit_file(&path, Some(generation)) {
+        if let Ok(loaded) = load_commit_key_via(backend, &key, Some(generation)) {
             index.insert(loaded.hash, loaded);
         }
     }
@@ -220,17 +257,28 @@ pub fn read_blob_verified(
     hash: Hash32,
     domain: &str,
 ) -> Result<Vec<u8>> {
-    let path = match kind {
-        BlobKind::Object => object_path(root, hash),
-        BlobKind::Manifest => manifest_path(root, hash),
+    read_blob_verified_via(&LocalBackend::new(root), kind, hash, domain)
+}
+
+/// Backend-generic blob read and hash check.
+pub fn read_blob_verified_via(
+    backend: &dyn StorageBackend,
+    kind: BlobKind,
+    hash: Hash32,
+    domain: &str,
+) -> Result<Vec<u8>> {
+    let key = match kind {
+        BlobKind::Object => Key::object(hash),
+        BlobKind::Manifest => Key::manifest(hash),
     };
-    let bytes = fs::read(&path)
-        .map_err(|err| Error::corrupt(format!("missing blob {}: {err}", path.display())))?;
+    let bytes = backend
+        .read_all(&key)
+        .map_err(|err| Error::corrupt(format!("missing blob {}: {err}", key.display_path())))?;
     let actual = identity::h(domain, &bytes);
     if actual != hash {
         return Err(Error::corrupt(format!(
             "blob {} fails its hash check (expected {hash}, got {actual})",
-            path.display()
+            key.display_path()
         )));
     }
     Ok(bytes)
@@ -245,8 +293,13 @@ pub enum BlobKind {
 
 /// Read a file manifest by its manifest id.
 pub fn read_manifest(root: &Path, manifest_id: Hash32) -> Result<Manifest> {
-    let bytes = read_blob_verified(
-        root,
+    read_manifest_via(&LocalBackend::new(root), manifest_id)
+}
+
+/// Backend-generic manifest read.
+pub fn read_manifest_via(backend: &dyn StorageBackend, manifest_id: Hash32) -> Result<Manifest> {
+    let bytes = read_blob_verified_via(
+        backend,
         BlobKind::Manifest,
         manifest_id,
         identity::MANIFEST_DOMAIN,
@@ -257,8 +310,16 @@ pub fn read_manifest(root: &Path, manifest_id: Hash32) -> Result<Manifest> {
 
 /// Read and verify a checkpoint state manifest.
 pub fn read_state_manifest(root: &Path, manifest_id: Hash32) -> Result<State> {
-    let bytes = read_blob_verified(
-        root,
+    read_state_manifest_via(&LocalBackend::new(root), manifest_id)
+}
+
+/// Backend-generic checkpoint read.
+pub fn read_state_manifest_via(
+    backend: &dyn StorageBackend,
+    manifest_id: Hash32,
+) -> Result<State> {
+    let bytes = read_blob_verified_via(
+        backend,
         BlobKind::Manifest,
         manifest_id,
         identity::MANIFEST_DOMAIN,
@@ -277,7 +338,22 @@ pub fn load_state_at(
     max_generation: u64,
     check_catalog: bool,
 ) -> Result<(State, Vec<String>)> {
-    let index = commit_index(root, max_generation)?;
+    load_state_at_via(
+        &LocalBackend::new(root),
+        head_hash,
+        max_generation,
+        check_catalog,
+    )
+}
+
+/// Backend-generic parent-chain replay.
+pub fn load_state_at_via(
+    backend: &dyn StorageBackend,
+    head_hash: Hash32,
+    max_generation: u64,
+    check_catalog: bool,
+) -> Result<(State, Vec<String>)> {
+    let index = commit_index_via(backend, max_generation)?;
     let mut notes = Vec::new();
 
     // Walk parents from the head down to the first commit.
@@ -333,7 +409,7 @@ pub fn load_state_at(
     };
     for loaded in &chain {
         if let Some(checkpoint) = loaded.commit.checkpoint {
-            match read_state_manifest(root, checkpoint) {
+            match read_state_manifest_via(backend, checkpoint) {
                 Ok(checkpoint_state) => {
                     if checkpoint_state.generation != loaded.generation {
                         notes.push(format!(
@@ -361,7 +437,7 @@ pub fn load_state_at(
     }
 
     if check_catalog {
-        validate_catalog(root, &state)?;
+        validate_catalog_via(backend, &state)?;
     }
     Ok((state, notes))
 }
@@ -398,6 +474,21 @@ pub fn load_state_bounded(
     head_generation: u64,
     max_generation: u64,
 ) -> Result<(State, Vec<String>)> {
+    load_state_bounded_via(
+        &LocalBackend::new(root),
+        head_hash,
+        head_generation,
+        max_generation,
+    )
+}
+
+/// Backend-generic generation-addressed bounded replay.
+pub fn load_state_bounded_via(
+    backend: &dyn StorageBackend,
+    head_hash: Hash32,
+    head_generation: u64,
+    max_generation: u64,
+) -> Result<(State, Vec<String>)> {
     if head_generation == 0 {
         return Err(Error::corrupt(
             "bounded replay requires a non-zero head generation",
@@ -423,12 +514,12 @@ pub fn load_state_bounded(
         if !seen.insert(cursor_hash) {
             return Err(Error::corrupt("commit parent chain contains a cycle"));
         }
-        let path = commit_path(root, cursor_generation);
-        let loaded = load_commit_file(&path, Some(cursor_generation))?;
+        let key = Key::commit(cursor_generation);
+        let loaded = load_commit_key_via(backend, &key, Some(cursor_generation))?;
         if loaded.hash != cursor_hash {
             return Err(Error::corrupt(format!(
                 "commit {} hashes to {} but the child or superblock declares {}",
-                path.display(),
+                key.display_path(),
                 loaded.hash,
                 cursor_hash
             )));
@@ -443,7 +534,7 @@ pub fn load_state_bounded(
         if let Some(checkpoint) = loaded.commit.checkpoint {
             // A checkpoint that cannot be verified is not silently ignored
             // here: the caller replays through the full path instead.
-            let state = read_state_manifest(root, checkpoint)?;
+            let state = read_state_manifest_via(backend, checkpoint)?;
             if state.generation != loaded.generation {
                 return Err(Error::corrupt(format!(
                     "checkpoint {checkpoint} in generation {} declares generation {}",
@@ -521,7 +612,7 @@ pub fn load_state_bounded(
         state.generation = loaded.generation;
     }
 
-    validate_catalog(root, &state)?;
+    validate_catalog_via(backend, &state)?;
     // Honest recovery note: a bounded open does not enumerate commit files
     // below the checkpoint. The checkpoint state is hash-verified and its
     // generation is matched, so the recovered state is exact for the head; but
@@ -544,6 +635,11 @@ pub fn load_state_bounded(
 /// verifies manifest identity and chunk **existence and length**, not chunk
 /// bytes; `verify --full` and materialization perform full hashing.
 pub fn validate_catalog(root: &Path, state: &State) -> Result<()> {
+    validate_catalog_via(&LocalBackend::new(root), state)
+}
+
+/// Backend-generic catalog validation.
+pub fn validate_catalog_via(backend: &dyn StorageBackend, state: &State) -> Result<()> {
     let root_object = state
         .objects
         .get(&State::ROOT_ID)
@@ -575,7 +671,7 @@ pub fn validate_catalog(root: &Path, state: &State) -> Result<()> {
         if record.kind != ObjectKind::File {
             continue;
         }
-        let manifest = read_manifest(root, record.content)?;
+        let manifest = read_manifest_via(backend, record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt(format!(
                 "object {} size {} disagrees with manifest size {}",
@@ -583,15 +679,15 @@ pub fn validate_catalog(root: &Path, state: &State) -> Result<()> {
             )));
         }
         let mut seen = BTreeSet::new();
-        validate_manifest_tree(root, record.content, 0, &mut seen)?;
+        validate_manifest_tree_via(backend, record.content, 0, &mut seen)?;
     }
     Ok(())
 }
 
 /// Check that every physical blob a manifest needs is present with the right
 /// length. Codec representations are walked through frames and dependencies.
-fn validate_manifest_tree(
-    root: &Path,
+fn validate_manifest_tree_via(
+    backend: &dyn StorageBackend,
     manifest_id: Hash32,
     depth: usize,
     seen: &mut BTreeSet<Hash32>,
@@ -606,7 +702,7 @@ fn validate_manifest_tree(
             "manifest {manifest_id} participates in a cycle"
         )));
     }
-    let manifest = read_manifest(root, manifest_id)?;
+    let manifest = read_manifest_via(backend, manifest_id)?;
     if let Some(rep) = &manifest.representation {
         if rep.kind == crate::format::RepresentationKind::Codec
             || rep.kind == crate::format::RepresentationKind::Tensor
@@ -614,36 +710,34 @@ fn validate_manifest_tree(
             let frame = rep
                 .frame
                 .ok_or_else(|| Error::corrupt("frame-backed manifest has no frame id"))?;
-            let path = manifest_path(root, frame);
-            let metadata = fs::metadata(&path).map_err(|err| {
-                Error::corrupt(format!(
-                    "missing {} frame {}: {err}",
-                    rep.kind.as_str(),
-                    path.display()
-                ))
-            })?;
-            if !metadata.is_file() {
+            let frame_key = Key::manifest(frame);
+            if !backend.is_file(&frame_key)? {
                 return Err(Error::corrupt(format!(
-                    "{} frame {} is not a regular file",
+                    "missing {} frame {}",
                     rep.kind.as_str(),
-                    path.display()
+                    frame_key.display_path()
                 )));
             }
             for dependency in &rep.dependencies {
-                validate_manifest_tree(root, *dependency, depth + 1, seen)?;
+                validate_manifest_tree_via(backend, *dependency, depth + 1, seen)?;
             }
             return Ok(());
         }
     }
     for chunk in &manifest.chunks {
-        let path = object_path(root, chunk.hash);
-        let metadata = fs::metadata(&path)
-            .map_err(|err| Error::corrupt(format!("missing chunk {}: {err}", path.display())))?;
-        if metadata.len() != chunk.len {
+        let key = Key::object(chunk.hash);
+        if !backend.is_file(&key)? {
+            return Err(Error::corrupt(format!(
+                "missing chunk {}",
+                key.display_path()
+            )));
+        }
+        let len = backend.len(&key)?;
+        if len != chunk.len {
             return Err(Error::corrupt(format!(
                 "chunk {} is {} bytes, manifest says {}",
-                path.display(),
-                metadata.len(),
+                key.display_path(),
+                len,
                 chunk.len
             )));
         }
@@ -658,7 +752,12 @@ fn validate_manifest_tree(
 /// original scan-based recovery below, so the fast path can only ever save
 /// work, never accept a different state.
 pub fn recover(root: &Path) -> Result<Recovery> {
-    recover_inner(root, ReplayStrategy::Bounded, true)
+    recover_via(&LocalBackend::new(root))
+}
+
+/// Backend-generic open-time recovery (bounded + directory-free fast path).
+pub fn recover_via(backend: &dyn StorageBackend) -> Result<Recovery> {
+    recover_inner_via(backend, ReplayStrategy::Bounded, true)
 }
 
 /// Open-time recovery for a writable handle.
@@ -666,22 +765,22 @@ pub fn recover(root: &Path) -> Result<Recovery> {
 /// A writable open must know the highest commit-file generation on disk so
 /// `next_generation` never reuses a rejected generation. That requires one
 /// directory enumeration; the commit *decode* window is still bounded.
-pub(crate) fn recover_for_write(root: &Path) -> Result<Recovery> {
-    recover_inner(root, ReplayStrategy::Bounded, false)
+pub fn recover_for_write_via(backend: &dyn StorageBackend) -> Result<Recovery> {
+    recover_inner_via(backend, ReplayStrategy::Bounded, false)
 }
 
 /// Original full commit-directory recovery, kept for benchmark comparison.
 #[doc(hidden)]
-pub(crate) fn recover_full_scan(root: &Path) -> Result<Recovery> {
-    recover_inner(root, ReplayStrategy::FullScan, false)
+pub fn recover_full_scan_via(backend: &dyn StorageBackend) -> Result<Recovery> {
+    recover_inner_via(backend, ReplayStrategy::FullScan, false)
 }
 
-fn recover_inner(
-    root: &Path,
+fn recover_inner_via(
+    backend: &dyn StorageBackend,
     strategy: ReplayStrategy,
     allow_directory_free: bool,
 ) -> Result<Recovery> {
-    let view = read_superblock(root)?;
+    let view = read_superblock_via(backend)?;
     let mut notes = view.notes.clone();
     let mut valid_slots: Vec<SuperblockSlot> = view.slots.iter().flatten().copied().collect();
     if valid_slots.is_empty() {
@@ -695,13 +794,13 @@ fn recover_inner(
         .collect();
 
     if allow_directory_free && strategy == ReplayStrategy::Bounded {
-        match recover_directory_free(root, &view, &valid_slots, max_visible, &slot_hashes) {
+        match recover_directory_free_via(backend, &view, &valid_slots, max_visible, &slot_hashes) {
             Ok(recovery) => return Ok(recovery),
             Err(err) => {
                 // Do not reuse anything from the fast attempt: the scan-based
                 // recovery is authoritative, including its rejected set and
                 // notes. Record that the fallback happened.
-                let mut recovery = recover_inner(root, ReplayStrategy::Bounded, false)?;
+                let mut recovery = recover_inner_via(backend, ReplayStrategy::Bounded, false)?;
                 recovery.notes.push(format!(
                     "open fast path fell back to full commit-directory recovery: {err}"
                 ));
@@ -710,7 +809,7 @@ fn recover_inner(
         }
     }
 
-    let files = scan_commit_files(root)?;
+    let files = scan_commit_keys_via(backend)?;
     let highest_file_generation = files.keys().next_back().copied().unwrap_or(0);
     let mut candidates: Vec<u64> = files
         .keys()
@@ -731,8 +830,8 @@ fn recover_inner(
         }
     }
     for generation in candidates {
-        let path = commit_path(root, generation);
-        let loaded = match load_commit_file(&path, Some(generation)) {
+        let key = Key::commit(generation);
+        let loaded = match load_commit_key_via(backend, &key, Some(generation)) {
             Ok(loaded) => loaded,
             Err(err) => {
                 notes.push(format!("generation {generation} rejected: {err}"));
@@ -765,13 +864,13 @@ fn recover_inner(
         }
         let replayed = match strategy {
             ReplayStrategy::Bounded => {
-                match load_state_bounded(root, loaded.hash, loaded.generation, max_visible) {
+                match load_state_bounded_via(backend, loaded.hash, loaded.generation, max_visible) {
                     Ok(value) => Some(value),
                     Err(err) => {
                         notes.push(format!(
                             "generation {generation}: bounded replay fell back to full scan: {err}"
                         ));
-                        match load_state_at(root, loaded.hash, max_visible, true) {
+                        match load_state_at_via(backend, loaded.hash, max_visible, true) {
                             Ok(value) => Some(value),
                             Err(err) => {
                                 notes.push(format!("generation {generation} rejected: {err}"));
@@ -782,14 +881,16 @@ fn recover_inner(
                     }
                 }
             }
-            ReplayStrategy::FullScan => match load_state_at(root, loaded.hash, max_visible, true) {
-                Ok(value) => Some(value),
-                Err(err) => {
-                    notes.push(format!("generation {generation} rejected: {err}"));
-                    rejected.push(generation);
-                    None
+            ReplayStrategy::FullScan => {
+                match load_state_at_via(backend, loaded.hash, max_visible, true) {
+                    Ok(value) => Some(value),
+                    Err(err) => {
+                        notes.push(format!("generation {generation} rejected: {err}"));
+                        rejected.push(generation);
+                        None
+                    }
                 }
-            },
+            }
         };
         if let Some((state, load_notes)) = replayed {
             notes.extend(load_notes);
@@ -813,8 +914,8 @@ fn recover_inner(
 /// commit file must exist and match the slot hash and length, and the bounded
 /// chain replay must complete. Anything else returns an error so the caller
 /// can fall back to the full directory scan.
-fn recover_directory_free(
-    root: &Path,
+fn recover_directory_free_via(
+    backend: &dyn StorageBackend,
     view: &SuperblockView,
     valid_slots: &[SuperblockSlot],
     max_visible: u64,
@@ -824,16 +925,16 @@ fn recover_directory_free(
     // commit file is missing. Reproducing that note without enumerating is not
     // possible, so fall back when it happens.
     for generation in slot_hashes.keys() {
-        let path = commit_path(root, *generation);
-        if !path.is_file() {
+        let key = Key::commit(*generation);
+        if !backend.is_file(&key)? {
             return Err(Error::corrupt(format!(
                 "published generation {generation} has no commit file"
             )));
         }
     }
 
-    let path = commit_path(root, max_visible);
-    let loaded = load_commit_file(&path, Some(max_visible))?;
+    let key = Key::commit(max_visible);
+    let loaded = load_commit_key_via(backend, &key, Some(max_visible))?;
     if let Some(expected) = slot_hashes.get(&max_visible) {
         if *expected != loaded.hash {
             return Err(Error::corrupt(format!(
@@ -853,7 +954,7 @@ fn recover_directory_free(
     }
 
     let (state, load_notes) =
-        load_state_bounded(root, loaded.hash, loaded.generation, max_visible)?;
+        load_state_bounded_via(backend, loaded.hash, loaded.generation, max_visible)?;
     let mut notes = view.notes.clone();
     notes.extend(load_notes);
     Ok(Recovery {
@@ -868,12 +969,20 @@ fn recover_directory_free(
 
 /// List every valid parsed commit file, for `verify` and GC roots.
 pub fn all_commits(root: &Path, max_generation: u64) -> Result<Vec<LoadedCommit>> {
+    all_commits_via(&LocalBackend::new(root), max_generation)
+}
+
+/// Backend-generic commit enumeration for verification and GC roots.
+pub fn all_commits_via(
+    backend: &dyn StorageBackend,
+    max_generation: u64,
+) -> Result<Vec<LoadedCommit>> {
     let mut out = Vec::new();
-    for (generation, path) in scan_commit_files(root)? {
+    for (generation, key) in scan_commit_keys_via(backend)? {
         if generation > max_generation {
             continue;
         }
-        if let Ok(loaded) = load_commit_file(&path, Some(generation)) {
+        if let Ok(loaded) = load_commit_key_via(backend, &key, Some(generation)) {
             out.push(loaded);
         }
     }

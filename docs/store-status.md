@@ -18,6 +18,25 @@ power loss.
 > superseded by that addendum; the P4 observations and risks remain otherwise
 > unchanged.
 
+> **Storage-backend addendum (subphase C, 2026-11-04).** All durable I/O now
+> goes through `StorageBackend` (`src/backend.rs`). `LocalBackend` is the
+> normative POSIX layout and remains the default, byte-for-byte. `ObjectBackend`
+> runs the same commit protocol over an immutable object namespace published
+> with `fsync` + `link(2)` (no rename replacement). `BackendKind::Posix {
+> capabilities }` lets a caller declare weaker guarantees; writable mode refuses
+> when `durable_fsync` is absent and every publication refuses when
+> `atomic_publish` is absent. `tests/backend.rs` builds the same seeded fixture
+> over both backends and requires identical logical state, commit bytes, head
+> hash, and full verification; it also replays the extension operations over the
+> object backend, proves capability refusals, and runs the process-fault crash
+> proxy over the object backend. Bench receipt:
+> `bench/receipts/backend-20261104T232908Z.json` (1,000 creates + 100 MiB, 3,612
+> publications each, same head, physical bytes identical, 3,612 `link(2)`
+> publications for the object backend and 0 rename fallbacks). The release
+> binary
+> selects it with `--backend local|object`. No 3FS run is claimed; see
+> `spec/WEFT-MODEL.md` §4.1.
+
 ---
 
 ## 1. Verification commands and observed results

@@ -5,15 +5,12 @@
 //! store is single-writer (`flock`); readers pin the generation they opened.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs::{self, File, OpenOptions};
-use std::io::{ErrorKind, Read, Write};
-use std::os::unix::fs::{FileExt, OpenOptionsExt, PermissionsExt};
+use std::fs;
+use std::io::{ErrorKind, Read};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use fs2::FileExt as Fs2FileExt;
 use weftcodec::context::CausalClosure;
 use weftcodec::dependency::MapResolver;
 use weftcodec::frame::{Frame, Mode};
@@ -22,6 +19,7 @@ use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
 use crate::auth::Principal;
+use crate::backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
 use crate::error::{Error, Result};
 use crate::format::{
     encode_commit_file, encode_state, ChunkRef, Commit, Manifest, Representation,
@@ -266,29 +264,12 @@ pub struct SavedContext {
     pub relation_id: Hash32,
 }
 
-static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
-
 fn crash_point(phase: &str) {
     if let Ok(configured) = std::env::var("WEFT_CRASH_PHASE") {
         if configured == phase {
             std::process::abort();
         }
     }
-}
-
-fn fsync_dir(path: &Path) -> Result<()> {
-    let dir = File::open(path)
-        .map_err(|err| Error::io(format!("cannot open directory {}: {err}", path.display())))?;
-    dir.sync_all()
-        .map_err(|err| Error::io(format!("cannot fsync directory {}: {err}", path.display())))
-}
-
-fn make_dir(path: &Path) -> Result<()> {
-    fs::create_dir_all(path)
-        .map_err(|err| Error::io(format!("cannot create {}: {err}", path.display())))?;
-    fs::set_permissions(path, fs::Permissions::from_mode(0o755))
-        .map_err(|err| Error::io(format!("cannot chmod {}: {err}", path.display())))?;
-    Ok(())
 }
 
 /// Restore one journalled state key: re-insert the previous value, or remove
@@ -324,7 +305,11 @@ pub struct Store {
     root: PathBuf,
     mode: OpenMode,
     options: Options,
-    _lock: Option<File>,
+    /// All physical I/O for durable artifacts goes through this backend. The
+    /// mutex is non-reentrant: never call a `with_backend*` helper from a
+    /// closure that already holds the guard.
+    backend: Mutex<Box<dyn StorageBackend + Send>>,
+    backend_kind: BackendKind,
     state: State,
     head: Hash32,
     generation: u64,
@@ -359,16 +344,34 @@ pub struct Store {
 }
 
 impl Store {
-    /// Initialize a new store. The directory must be absent or empty.
+    /// Initialize a new store with the normative local backend. The directory
+    /// must be absent or empty.
     pub fn init(path: impl AsRef<Path>, options: Options) -> Result<Store> {
+        Self::init_with_backend(path, options, BackendKind::Local)
+    }
+
+    /// Initialize a new store on an explicit backend.
+    ///
+    /// The store refuses before touching disk when the declared backend cannot
+    /// publish atomically or cannot make writes durable; there is no degraded
+    /// mode.
+    pub fn init_with_backend(
+        path: impl AsRef<Path>,
+        options: Options,
+        backend_kind: BackendKind,
+    ) -> Result<Store> {
         validate_options(&options)?;
+        let capabilities = backend_kind.capabilities();
+        capabilities.require_durable_fsync("a writable store")?;
+        capabilities.require_atomic_publish("initial store publication")?;
         let root = path.as_ref().to_path_buf();
 
         if root.exists() {
             if !root.is_dir() {
                 return Err(Error::exists("store path exists and is not a directory"));
             }
-            if root.join("FORMAT").exists() {
+            let probe = backend_kind.open(&root);
+            if probe.exists(&Key::format())? {
                 return Err(Error::exists("a WeftFS store already exists at this path"));
             }
             let mut entries = fs::read_dir(&root)
@@ -377,49 +380,21 @@ impl Store {
                 return Err(Error::exists("store path is not empty"));
             }
         } else {
-            make_dir(&root)?;
+            crate::backend::make_dir(&root)?;
         }
-        make_dir(&root.join("commits"))?;
-        make_dir(&root.join("objects"))?;
-        make_dir(&root.join("manifests"))?;
-        make_dir(&root.join("indexes"))?;
-        make_dir(&root.join("refs"))?;
-        make_dir(&root.join("refs").join("snapshots"))?;
-        make_dir(&root.join("refs").join("tags"))?;
-        make_dir(&root.join("tmp"))?;
 
-        write_new_file(&root.join("FORMAT"), FORMAT_CONTENTS.as_bytes(), 0o644)?;
-
-        let lock_path = root.join("LOCK");
-        let lock = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .mode(0o644)
-            .open(&lock_path)
-            .map_err(|err| Error::io(format!("cannot open LOCK: {err}")))?;
-        Fs2FileExt::try_lock_exclusive(&lock)
-            .map_err(|err| Error::busy(format!("store is locked by another writer: {err}")))?;
-
-        let superblock = root.join("superblock");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create_new(true)
-            .mode(0o644)
-            .open(&superblock)
-            .map_err(|err| Error::io(format!("cannot create superblock: {err}")))?;
-        file.set_len(SUPERBLOCK_BYTES as u64)
-            .map_err(|err| Error::io(format!("cannot size superblock: {err}")))?;
-        file.sync_all()?;
-        drop(file);
+        let mut backend = backend_kind.open(&root);
+        backend.init_layout()?;
+        backend.put_atomic(&Key::format(), FORMAT_CONTENTS.as_bytes())?;
+        backend.create_zeroed(&Key::superblock(), SUPERBLOCK_BYTES as u64)?;
+        backend.acquire_writer_lock()?;
 
         let mut store = Store {
             root,
             mode: OpenMode::ReadWrite,
             options,
-            _lock: Some(lock),
+            backend: Mutex::new(backend),
+            backend_kind,
             state: State::default(),
             head: Hash32::ZERO,
             generation: 0,
@@ -436,49 +411,59 @@ impl Store {
             index_stats: Mutex::new(IndexStats::default()),
         };
         store.write_genesis()?;
-        fsync_dir(&store.root)?;
+        store.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
         Ok(store)
     }
 
-    /// Open an existing store.
+    /// Open an existing store with the normative local backend.
     pub fn open(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
-        Self::open_impl(path, mode, false)
+        Self::open_impl(path, mode, false, BackendKind::Local)
+    }
+
+    /// Open an existing store on an explicit backend.
+    pub fn open_with_backend(
+        path: impl AsRef<Path>,
+        mode: OpenMode,
+        backend_kind: BackendKind,
+    ) -> Result<Store> {
+        Self::open_impl(path, mode, false, backend_kind)
     }
 
     /// Benchmark-only: open through the original full commit-directory scan so
     /// the fast path's cost can be measured against it.
     #[doc(hidden)]
     pub fn open_full_scan_for_bench(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
-        Self::open_impl(path, mode, true)
+        Self::open_impl(path, mode, true, BackendKind::Local)
     }
 
-    fn open_impl(path: impl AsRef<Path>, mode: OpenMode, full_scan: bool) -> Result<Store> {
+    fn open_impl(
+        path: impl AsRef<Path>,
+        mode: OpenMode,
+        full_scan: bool,
+        backend_kind: BackendKind,
+    ) -> Result<Store> {
         let root = path.as_ref().to_path_buf();
-        let format = fs::read_to_string(root.join("FORMAT"))
+        if mode == OpenMode::ReadWrite {
+            backend_kind
+                .capabilities()
+                .require_durable_fsync("a read-write store")?;
+        }
+        let mut backend = backend_kind.open(&root);
+        let format_bytes = backend
+            .read_all(&Key::format())
             .map_err(|err| Error::corrupt(format!("cannot read FORMAT: {err}")))?;
+        let format = std::str::from_utf8(&format_bytes)
+            .map_err(|_| Error::unsupported_version("FORMAT is not valid UTF-8".to_owned()))?;
         if format != FORMAT_CONTENTS {
             return Err(Error::unsupported_version(format!(
                 "FORMAT is `{}`, expected `{FORMAT_CONTENTS}`",
                 format.escape_debug()
             )));
         }
-        let lock = if mode == OpenMode::ReadWrite {
-            let lock_path = root.join("LOCK");
-            let lock = OpenOptions::new()
-                .read(true)
-                .write(true)
-                .create(false)
-                .open(&lock_path)
-                .map_err(|err| Error::io(format!("cannot open LOCK: {err}")))?;
-            Fs2FileExt::try_lock_exclusive(&lock)
-                .map_err(|err| Error::busy(format!("store is locked by another writer: {err}")))?;
-            Some(lock)
-        } else {
-            None
-        };
         if mode == OpenMode::ReadWrite {
-            ensure_layout(&root)?;
-            clean_stale_tmp(&root, DEFAULT_GC_GRACE_SECS)?;
+            backend.acquire_writer_lock()?;
+            backend.ensure_layout()?;
+            backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
         }
 
         // Read-only opens use the directory-free fast path. Writable opens
@@ -486,11 +471,11 @@ impl Store {
         // never reuses a rejected generation; they still bound commit decodes
         // to the checkpoint window.
         let recovery = if full_scan {
-            recovery::recover_full_scan(&root)?
+            recovery::recover_full_scan_via(&*backend)?
         } else if mode == OpenMode::ReadWrite {
-            recovery::recover_for_write(&root)?
+            recovery::recover_for_write_via(&*backend)?
         } else {
-            recovery::recover(&root)?
+            recovery::recover_via(&*backend)?
         };
         let next_generation = recovery
             .generation
@@ -501,7 +486,8 @@ impl Store {
             root,
             mode,
             options: Options::default(),
-            _lock: lock,
+            backend: Mutex::new(backend),
+            backend_kind,
             state: recovery.state,
             head: recovery.head,
             generation: recovery.generation,
@@ -526,10 +512,72 @@ impl Store {
         mode: OpenMode,
         options: Options,
     ) -> Result<Store> {
+        Self::open_with_options_and_backend(path, mode, options, BackendKind::Local)
+    }
+
+    /// Open with explicit runtime options and backend.
+    pub fn open_with_options_and_backend(
+        path: impl AsRef<Path>,
+        mode: OpenMode,
+        options: Options,
+        backend_kind: BackendKind,
+    ) -> Result<Store> {
         validate_options(&options)?;
-        let mut store = Self::open(path, mode)?;
+        let mut store = Self::open_impl(path, mode, false, backend_kind)?;
         store.options = options;
         Ok(store)
+    }
+
+    /// The backend selected for this store.
+    pub fn backend_kind(&self) -> &BackendKind {
+        &self.backend_kind
+    }
+
+    /// Declared capabilities of the active backend.
+    pub fn backend_capabilities(&self) -> Capabilities {
+        self.with_backend(|backend| Ok(backend.capabilities()))
+            .unwrap_or_else(|_| self.backend_kind.capabilities())
+    }
+
+    /// Physical I/O counters for receipts and tests.
+    pub fn backend_stats(&self) -> BackendStats {
+        self.with_backend(|backend| Ok(backend.stats()))
+            .unwrap_or_default()
+    }
+
+    /// Backend diagnostics (for example a publication-primitive fallback).
+    pub fn backend_diagnostics(&self) -> Vec<String> {
+        self.with_backend(|backend| Ok(backend.diagnostics()))
+            .unwrap_or_default()
+    }
+
+    /// Read a backend key. Test/diagnostic surface: the store's normal API
+    /// addresses content through object and manifest identities.
+    #[doc(hidden)]
+    pub fn backend_read_key(&self, key: &Key) -> Result<Vec<u8>> {
+        self.with_backend(|backend| backend.read_all(key))
+    }
+
+    pub(crate) fn with_backend<T>(
+        &self,
+        f: impl FnOnce(&dyn StorageBackend) -> Result<T>,
+    ) -> Result<T> {
+        let guard = self
+            .backend
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        f(&**guard)
+    }
+
+    fn with_backend_mut<T>(
+        &self,
+        f: impl FnOnce(&mut dyn StorageBackend) -> Result<T>,
+    ) -> Result<T> {
+        let mut guard = self
+            .backend
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        f(&mut **guard)
     }
 
     /// Replace runtime options on an open store.
@@ -634,19 +682,19 @@ impl Store {
     /// truncated, fails its integrity digest, decodes non-canonically, names a
     /// different commit, or disagrees with the state's generation/counts.
     fn load_persisted_index(&self, commit: Hash32, state: &State) -> Option<Arc<StateIndex>> {
-        let path = recovery::index_path(&self.root, commit);
-        let bytes = match fs::read(&path) {
+        let key = Key::index(commit);
+        let displayed = key.display_path();
+        let bytes = match self.with_backend(|backend| backend.read_all(&key)) {
             Ok(bytes) => bytes,
-            Err(err) if err.kind() == ErrorKind::NotFound => return None,
+            Err(err) if err.class() == crate::error::Class::NotFound => return None,
             Err(err) => {
-                self.note_index_reject(format!("cannot read index {}: {err}", path.display()));
+                self.note_index_reject(format!("cannot read index {displayed}: {err}"));
                 return None;
             }
         };
         if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             self.note_index_reject(format!(
-                "index {} is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
-                path.display(),
+                "index {displayed} is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
                 bytes.len()
             ));
             return None;
@@ -654,14 +702,13 @@ impl Store {
         let index = match StateIndex::decode_file(&bytes) {
             Ok(index) => index,
             Err(err) => {
-                self.note_index_reject(format!("ignoring index {}: {err}", path.display()));
+                self.note_index_reject(format!("ignoring index {displayed}: {err}"));
                 return None;
             }
         };
         if index.commit() != commit {
             self.note_index_reject(format!(
-                "ignoring index {}: declares commit {} but is stored under {}",
-                path.display(),
+                "ignoring index {displayed}: declares commit {} but is stored under {}",
                 index.commit(),
                 commit
             ));
@@ -669,8 +716,7 @@ impl Store {
         }
         if !index.matches_state(state) {
             self.note_index_reject(format!(
-                "ignoring index {}: generation/counts disagree with the replayed state",
-                path.display()
+                "ignoring index {displayed}: generation/counts disagree with the replayed state"
             ));
             return None;
         }
@@ -699,36 +745,14 @@ impl Store {
             )));
         }
         let hex = commit.to_hex();
-        let dir = self.root.join("indexes").join(&hex[0..2]);
-        let existed = dir.exists();
-        make_dir(&dir)?;
-        if !existed {
-            fsync_dir(&self.root.join("indexes"))?;
-        }
-        let counter = TMP_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let tmp =
-            self.root
-                .join("tmp")
-                .join(format!("index-{}-{}-{counter}", std::process::id(), hex));
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o600)
-            .open(&tmp)
-            .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
-        file.write_all(&bytes)?;
-        file.sync_all()?;
-        drop(file);
-        fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
-        let final_path = dir.join(format!("{hex}.idx"));
-        fs::rename(&tmp, &final_path).map_err(|err| {
-            cleanup_tmp(&tmp);
-            Error::io(format!(
-                "cannot rename {} into place: {err}",
-                final_path.display()
-            ))
-        })?;
-        fsync_dir(&dir)?;
+        let _ = hex;
+        self.with_backend_mut(|backend| backend.put_atomic(&Key::index(commit), &bytes))
+            .map_err(|err| {
+                Error::io(format!(
+                    "cannot publish index {}: {err}",
+                    Key::index(commit).display_path()
+                ))
+            })?;
         self.index_cache
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -819,7 +843,9 @@ impl Store {
                 "commit is not on the published parent chain",
             ));
         }
-        let (state, _notes) = recovery::load_state_at(&self.root, commit, u64::MAX, false)?;
+        let (state, _notes) = self.with_backend(|backend| {
+            recovery::load_state_at_via(backend, commit, u64::MAX, false)
+        })?;
         Ok(state)
     }
 
@@ -827,7 +853,7 @@ impl Store {
     /// keeps an uncommitted crash-tail commit file from exposing state that the
     /// superblock never published.
     fn is_published_ancestor(&self, target: Hash32) -> Result<bool> {
-        let index = recovery::commit_index(&self.root, u64::MAX)?;
+        let index = self.with_backend(|backend| recovery::commit_index_via(backend, u64::MAX))?;
         let mut cursor = Some(self.head);
         let mut seen = BTreeSet::new();
         while let Some(hash) = cursor {
@@ -846,7 +872,7 @@ impl Store {
     /// commit. This is the *published* parent chain: every entry was reachable
     /// from the recovered head when `base` was selected.
     pub fn commit_lineage(&self, base: Hash32) -> Result<Vec<LineageEntry>> {
-        let index = recovery::commit_index(&self.root, u64::MAX)?;
+        let index = self.with_backend(|backend| recovery::commit_index_via(backend, u64::MAX))?;
         let mut out = Vec::new();
         let mut cursor = Some(base);
         let mut seen = BTreeSet::new();
@@ -968,7 +994,8 @@ impl Store {
                 .map(|bytes| bytes.to_vec())
                 .ok_or_else(|| Error::corrupt("symlink object has no target attribute")),
             ObjectKind::File => {
-                let manifest = recovery::read_manifest(&self.root, record.content)?;
+                let manifest = self
+                    .with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
                 if manifest.size != record.size {
                     return Err(Error::corrupt("object size disagrees with manifest"));
                 }
@@ -994,7 +1021,9 @@ impl Store {
                         .map(|bytes| bytes.to_vec())
                         .ok_or_else(|| Error::corrupt("symlink object has no target attribute")),
                     ObjectKind::File => {
-                        let manifest = recovery::read_manifest(&self.root, record.content)?;
+                        let manifest = self.with_backend(|backend| {
+                            recovery::read_manifest_via(backend, record.content)
+                        })?;
                         if manifest.size != record.size {
                             return Err(Error::corrupt("object size disagrees with manifest"));
                         }
@@ -1011,7 +1040,8 @@ impl Store {
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
         }
-        let manifest = recovery::read_manifest(&self.root, record.content)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -1021,7 +1051,8 @@ impl Store {
     /// Read a byte range directly from a content root (manifest id). Safe for
     /// snapshot materialization because it does not consult live object state.
     pub fn read_content(&self, content_root: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
-        let manifest = recovery::read_manifest(&self.root, content_root)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
         let whole = offset == 0 && length >= manifest.size;
         self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
     }
@@ -1097,12 +1128,14 @@ impl Store {
             if chunk_end <= offset || chunk_start >= end {
                 continue;
             }
-            let bytes = recovery::read_blob_verified(
-                &self.root,
-                BlobKind::Object,
-                chunk.hash,
-                identity::CHUNK_DOMAIN,
-            )?;
+            let bytes = self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Object,
+                    chunk.hash,
+                    identity::CHUNK_DOMAIN,
+                )
+            })?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
@@ -1157,12 +1190,14 @@ impl Store {
                 "codec representation decoded_size disagrees with manifest size",
             ));
         }
-        let frame_bytes = recovery::read_blob_verified(
-            &self.root,
-            BlobKind::Manifest,
-            frame_id,
-            identity::MANIFEST_DOMAIN,
-        )?;
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match rep.strategy.as_str() {
@@ -1200,7 +1235,8 @@ impl Store {
             if seen.contains(&dep_root) {
                 return Err(Error::corrupt("codec representation dependency cycle"));
             }
-            let dep_manifest = recovery::read_manifest(&self.root, dep_root)?;
+            let dep_manifest =
+                self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
             seen.push(dep_root);
             let bytes = self.read_manifest_bytes_inner(
                 &dep_manifest,
@@ -1618,7 +1654,8 @@ impl Store {
                 "file exceeds the {MAX_FILE_BYTES}-byte bound"
             )));
         }
-        let old_manifest = recovery::read_manifest(&self.root, old.content)?;
+        let old_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -1687,7 +1724,8 @@ impl Store {
                 "append_file_streaming requires a file object",
             ));
         }
-        let old_manifest = recovery::read_manifest(&self.root, old.content)?;
+        let old_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -1737,12 +1775,14 @@ impl Store {
                 .chunks
                 .get(checked_usize(index, "chunk index")?)
                 .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
-            let bytes = recovery::read_blob_verified(
-                &self.root,
-                BlobKind::Object,
-                reference.hash,
-                identity::CHUNK_DOMAIN,
-            )?;
+            let bytes = self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Object,
+                    reference.hash,
+                    identity::CHUNK_DOMAIN,
+                )
+            })?;
             if bytes.len() as u64 != reference.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
@@ -1756,12 +1796,14 @@ impl Store {
                 .chunks
                 .get(checked_usize(full_chunks, "chunk index")?)
                 .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
-            let bytes = recovery::read_blob_verified(
-                &self.root,
-                BlobKind::Object,
-                reference.hash,
-                identity::CHUNK_DOMAIN,
-            )?;
+            let bytes = self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Object,
+                    reference.hash,
+                    identity::CHUNK_DOMAIN,
+                )
+            })?;
             if bytes.len() as u64 != reference.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
@@ -3376,7 +3418,7 @@ impl Store {
             ..VerifyReport::default()
         };
 
-        let view = recovery::read_superblock(&self.root)?;
+        let view = self.with_backend(recovery::read_superblock_via)?;
         for note in &view.notes {
             report.problems.push(VerifyProblem {
                 class: "Corrupt".to_owned(),
@@ -3400,9 +3442,11 @@ impl Store {
             .map(|slot| (slot.generation, slot.commit))
             .collect();
 
-        let files = recovery::scan_commit_files(&self.root)?;
-        for (generation, path) in files {
-            match recovery::load_commit_file(&path, Some(generation)) {
+        let files = self.with_backend(recovery::scan_commit_keys_via)?;
+        for (generation, key) in files {
+            match self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &key, Some(generation))
+            }) {
                 Ok(loaded) => {
                     report.checked_commits += 1;
                     if generation > max_visible {
@@ -3442,12 +3486,12 @@ impl Store {
                 }
                 Err(err) => report.problems.push(VerifyProblem {
                     class: err.class_name().to_owned(),
-                    detail: format!("commit file {}: {err}", path.display()),
+                    detail: format!("commit file {}: {err}", key.display_path()),
                 }),
             }
         }
 
-        match recovery::recover(&self.root) {
+        match self.with_backend(recovery::recover_via) {
             Ok(recovered) => {
                 report.rejected_generations = recovered.rejected.clone();
                 // A rejected generation means recovery could not validate that
@@ -3471,7 +3515,9 @@ impl Store {
                         ),
                     });
                 }
-                match recovery::load_state_at(&self.root, recovered.head, max_visible, true) {
+                match self.with_backend(|backend| {
+                    recovery::load_state_at_via(backend, recovered.head, max_visible, true)
+                }) {
                     Ok((state, notes)) => {
                         for note in notes {
                             report.problems.push(VerifyProblem {
@@ -3495,10 +3541,14 @@ impl Store {
         }
 
         // Verify every checkpoint manifest named by a parsed commit.
-        for commit in recovery::all_commits(&self.root, max_visible)? {
+        for commit in
+            self.with_backend(|backend| recovery::all_commits_via(backend, max_visible))?
+        {
             if let Some(checkpoint) = commit.commit.checkpoint {
                 report.checked_manifests += 1;
-                match recovery::read_state_manifest(&self.root, checkpoint) {
+                match self
+                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
+                {
                     Ok(state) => {
                         if state.generation != commit.generation {
                             report.problems.push(VerifyProblem {
@@ -3521,8 +3571,9 @@ impl Store {
 
         // Snapshot pointer files are caches; report mismatches, not absence.
         for (name, hash) in &self.state.snapshots {
-            let path = self.root.join("refs").join("snapshots").join(name);
-            if let Ok(text) = fs::read_to_string(&path) {
+            let key = Key::snapshot_ref(name.clone());
+            if let Ok(bytes) = self.with_backend(|backend| backend.read_all(&key)) {
+                let text = String::from_utf8_lossy(&bytes);
                 let text = text.trim();
                 if Hash32::from_hex(text).ok() != Some(*hash) {
                     report.problems.push(VerifyProblem {
@@ -3711,12 +3762,14 @@ impl Store {
                             continue;
                         }
                     };
-                    match recovery::read_blob_verified(
-                        &self.root,
-                        BlobKind::Manifest,
-                        hash,
-                        weftcodec::hash::DOMAIN_CAUSAL,
-                    ) {
+                    match self.with_backend(|backend| {
+                        recovery::read_blob_verified_via(
+                            backend,
+                            BlobKind::Manifest,
+                            hash,
+                            weftcodec::hash::DOMAIN_CAUSAL,
+                        )
+                    }) {
                         Ok(bytes) => match CausalClosure::from_canonical_bytes(&bytes, &limits) {
                             Ok(stored_closure) if stored_closure == closure => {}
                             Ok(_) => report.problems.push(VerifyProblem {
@@ -3751,7 +3804,8 @@ impl Store {
                 continue;
             }
             report.checked_objects += 1;
-            match recovery::read_manifest(&self.root, record.content) {
+            match self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))
+            {
                 Ok(manifest) => {
                     report.checked_manifests += 1;
                     if manifest.size != record.size {
@@ -3809,12 +3863,14 @@ impl Store {
                         let mut total: u64 = 0;
                         for chunk in &manifest.chunks {
                             report.checked_chunks += 1;
-                            match recovery::read_blob_verified(
-                                &self.root,
-                                BlobKind::Object,
-                                chunk.hash,
-                                identity::CHUNK_DOMAIN,
-                            ) {
+                            match self.with_backend(|backend| {
+                                recovery::read_blob_verified_via(
+                                    backend,
+                                    BlobKind::Object,
+                                    chunk.hash,
+                                    identity::CHUNK_DOMAIN,
+                                )
+                            }) {
                                 Ok(bytes) => {
                                     if bytes.len() as u64 != chunk.len {
                                         report.problems.push(VerifyProblem {
@@ -3903,7 +3959,7 @@ impl Store {
         let mut marked_chunks: BTreeSet<Hash32> = BTreeSet::new();
 
         mark_state(
-            &self.root,
+            self,
             &self.state,
             &mut marked_manifests,
             &mut marked_chunks,
@@ -3914,7 +3970,7 @@ impl Store {
         for commit in snapshot_commits {
             match self.state_at(commit) {
                 Ok(state) => mark_state(
-                    &self.root,
+                    self,
                     &state,
                     &mut marked_manifests,
                     &mut marked_chunks,
@@ -3928,12 +3984,14 @@ impl Store {
 
         // Checkpoints are roots even for rejected/unpublished generations:
         // they are immutable evidence and are never swept by inference.
-        for commit in recovery::all_commits(&self.root, u64::MAX)? {
+        for commit in self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))? {
             if let Some(checkpoint) = commit.commit.checkpoint {
                 marked_manifests.insert(checkpoint);
-                match recovery::read_state_manifest(&self.root, checkpoint) {
+                match self
+                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
+                {
                     Ok(state) => mark_state(
-                        &self.root,
+                        self,
                         &state,
                         &mut marked_manifests,
                         &mut marked_chunks,
@@ -3952,7 +4010,7 @@ impl Store {
         for content in pinned_contents {
             let mut seen = BTreeSet::new();
             mark_manifest_tree(
-                &self.root,
+                self,
                 content,
                 &mut marked_manifests,
                 &mut marked_chunks,
@@ -3967,16 +4025,18 @@ impl Store {
 
         let now = SystemTime::now();
         let grace = self.options.gc_grace_secs;
-        let mut candidates: Vec<(PathBuf, u64)> = Vec::new();
+        let mut candidates: Vec<(Key, u64)> = Vec::new();
         candidates.extend(collect_unmarked(
-            &self.root.join("manifests"),
+            self,
+            KeyKind::Manifest,
             &marked_manifests,
             now,
             grace,
             &mut report,
         )?);
         candidates.extend(collect_unmarked(
-            &self.root.join("objects"),
+            self,
+            KeyKind::Object,
             &marked_chunks,
             now,
             grace,
@@ -3984,26 +4044,13 @@ impl Store {
         )?);
         candidates.sort_by(|a, b| a.0.cmp(&b.0));
 
-        for (path, len) in &candidates {
-            let display = path
-                .strip_prefix(&self.root)
-                .unwrap_or(path)
-                .display()
-                .to_string();
+        for (key, len) in &candidates {
+            let display = key.display_path();
             report.candidates.push(display.clone());
             if apply {
-                match fs::remove_file(path) {
-                    Ok(()) => {
-                        report.deleted.push(display);
-                        report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
-                    }
-                    Err(err) => {
-                        return Err(Error::io(format!(
-                            "cannot delete {}: {err}",
-                            path.display()
-                        )))
-                    }
-                }
+                self.with_backend_mut(|backend| backend.delete(key))?;
+                report.deleted.push(display);
+                report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
             }
         }
 
@@ -4014,40 +4061,22 @@ impl Store {
         let mut retained_indexes: BTreeSet<Hash32> = BTreeSet::new();
         retained_indexes.insert(self.head);
         retained_indexes.extend(self.state.snapshots.values().copied());
-        for commit in recovery::all_commits(&self.root, u64::MAX)? {
+        for commit in self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))? {
             if commit.commit.checkpoint.is_some() {
                 retained_indexes.insert(commit.hash);
             }
         }
-        let mut index_candidates = collect_unreachable_indexes(
-            &self.root.join("indexes"),
-            &retained_indexes,
-            now,
-            grace,
-            &mut report,
-        )?;
+        let mut index_candidates =
+            collect_unreachable_indexes(self, &retained_indexes, now, grace, &mut report)?;
         index_candidates.sort_by(|a, b| a.0.cmp(&b.0));
-        for (path, len) in &index_candidates {
-            let display = path
-                .strip_prefix(&self.root)
-                .unwrap_or(path)
-                .display()
-                .to_string();
+        for (key, len) in &index_candidates {
+            let display = key.display_path();
             report.candidates.push(display.clone());
             if apply {
-                match fs::remove_file(path) {
-                    Ok(()) => {
-                        report.deleted_indexes.push(display);
-                        report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
-                        self.bump_index_stat(|stats| stats.gc_deleted += 1);
-                    }
-                    Err(err) => {
-                        return Err(Error::io(format!(
-                            "cannot delete {}: {err}",
-                            path.display()
-                        )))
-                    }
-                }
+                self.with_backend_mut(|backend| backend.delete(key))?;
+                report.deleted_indexes.push(display);
+                report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
+                self.bump_index_stat(|stats| stats.gc_deleted += 1);
             }
         }
         Ok(report)
@@ -4374,26 +4403,29 @@ impl Store {
 
     /// Write the commit file, fsync it and its directory, publish the
     /// superblock slot, then fsync the store root.
+    ///
+    /// The physical primitives come from the backend; this sequence is the
+    /// protocol. `put_atomic` supplies all-or-nothing visibility for the commit
+    /// record and `write_at` updates the inactive 4 KiB slot. Both are gated on
+    /// `atomic_publish` and `durable_fsync`; a backend lacking either is
+    /// refused rather than downgraded.
     fn publish_commit(&self, commit: &Commit) -> Result<Hash32> {
         let wcb = commit.encode()?;
         let hash = identity::commit_id(&wcb);
         let file_bytes = encode_commit_file(&wcb)?;
-        let path = crate::recovery::commit_path(&self.root, commit.generation);
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o644)
-            .open(&path)
-            .map_err(|err| {
-                Error::corrupt(format!(
-                    "cannot create commit file {}: {err}",
-                    path.display()
-                ))
-            })?;
-        file.write_all(&file_bytes)?;
-        file.sync_all()?;
-        drop(file);
-        fsync_dir(&self.root.join("commits"))?;
+        let key = Key::commit(commit.generation);
+        self.with_backend_mut(|backend| {
+            let capabilities = backend.capabilities();
+            capabilities.require_atomic_publish("commit publication")?;
+            capabilities.require_durable_fsync("commit publication")?;
+            if backend.exists(&key)? {
+                return Err(Error::corrupt(format!(
+                    "commit file {} already exists",
+                    key.display_path()
+                )));
+            }
+            backend.put_atomic(&key, &file_bytes)
+        })?;
 
         crash_point("after_commit_file");
 
@@ -4403,20 +4435,16 @@ impl Store {
             commit_len: wcb.len() as u64,
             timestamp_ns: commit.timestamp_ns,
         };
-        let superblock_path = self.root.join("superblock");
-        let superblock = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(&superblock_path)
-            .map_err(|err| Error::io(format!("cannot open superblock: {err}")))?;
         let offset = (commit.generation % 2) * SLOT_BYTES as u64;
-        superblock.write_all_at(&slot.encode(), offset)?;
-        superblock.sync_all()?;
-        drop(superblock);
+        self.with_backend_mut(|backend| {
+            let capabilities = backend.capabilities();
+            capabilities.require_durable_fsync("superblock publication")?;
+            backend.write_at(&Key::superblock(), offset, &slot.encode())
+        })?;
 
         crash_point("after_superblock_write");
 
-        fsync_dir(&self.root)?;
+        self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
         Ok(hash)
     }
 
@@ -4812,12 +4840,14 @@ impl Store {
                     "chunk keep length",
                 )?;
                 if keep > 0 {
-                    let stored = recovery::read_blob_verified(
-                        &self.root,
-                        BlobKind::Object,
-                        old_ref.hash,
-                        identity::CHUNK_DOMAIN,
-                    )?;
+                    let stored = self.with_backend(|backend| {
+                        recovery::read_blob_verified_via(
+                            backend,
+                            BlobKind::Object,
+                            old_ref.hash,
+                            identity::CHUNK_DOMAIN,
+                        )
+                    })?;
                     if stored.len() as u64 != old_ref.len {
                         return Err(Error::corrupt("chunk length disagrees with manifest"));
                     }
@@ -4849,12 +4879,14 @@ impl Store {
         // digest. Peak memory is one chunk, never the whole file.
         let mut hasher = identity::content_hash_hasher();
         for chunk in &chunks {
-            let data = recovery::read_blob_verified(
-                &self.root,
-                BlobKind::Object,
-                chunk.hash,
-                identity::CHUNK_DOMAIN,
-            )?;
+            let data = self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Object,
+                    chunk.hash,
+                    identity::CHUNK_DOMAIN,
+                )
+            })?;
             if data.len() as u64 != chunk.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
@@ -4878,106 +4910,53 @@ impl Store {
         Ok((manifest_id, content_hash, new_size))
     }
 
-    /// Content-addressed, crash-safe blob write: `tmp/` → fsync → rename →
-    /// fsync directory. An existing file is verified, never overwritten.
+    /// Content-addressed, crash-safe blob write. The backend publishes the
+    /// fully written and fsynced temporary object all-or-nothing under its
+    /// content key. An existing blob is verified, never overwritten.
     pub(crate) fn store_blob(&self, kind: BlobKind, domain: &str, bytes: &[u8]) -> Result<Hash32> {
         let hash = identity::h(domain, bytes);
-        let final_path = match kind {
-            BlobKind::Object => recovery::object_path(&self.root, hash),
-            BlobKind::Manifest => recovery::manifest_path(&self.root, hash),
+        let key = match kind {
+            BlobKind::Object => Key::object(hash),
+            BlobKind::Manifest => Key::manifest(hash),
         };
-        if final_path.exists() {
-            let existing = fs::read(&final_path)
-                .map_err(|err| Error::io(format!("cannot read {}: {err}", final_path.display())))?;
-            if identity::h(domain, &existing) != hash {
-                return Err(Error::corrupt(format!(
-                    "existing blob {} does not match its name",
-                    final_path.display()
+        self.with_backend_mut(|backend| {
+            let capabilities = backend.capabilities();
+            capabilities.require_atomic_publish("blob publication")?;
+            if bytes.len() as u64 > capabilities.max_object_bytes {
+                return Err(Error::limit_exceeded(format!(
+                    "blob is {} bytes, above the backend's {}-byte bound",
+                    bytes.len(),
+                    capabilities.max_object_bytes
                 )));
             }
-            return Ok(hash);
-        }
-        let parent = final_path
-            .parent()
-            .ok_or_else(|| Error::io("blob path has no parent"))?;
-        if !parent.exists() {
-            make_dir(parent)?;
-            // A newly created two-hex shard directory needs its own parent
-            // fsynced, or a power loss could lose the shard entry even though
-            // the blob rename inside it was fsynced.
-            if let Some(grandparent) = parent.parent() {
-                fsync_dir(grandparent)?;
+            match backend.read_all(&key) {
+                Ok(existing) => {
+                    if identity::h(domain, &existing) != hash {
+                        return Err(Error::corrupt(format!(
+                            "existing blob {} does not match its name",
+                            key.display_path()
+                        )));
+                    }
+                    return Ok(hash);
+                }
+                Err(err) if err.class() == crate::error::Class::NotFound => {}
+                Err(err) => return Err(err),
             }
-        } else {
-            make_dir(parent)?;
-        }
-        let counter = TMP_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let tmp = self.root.join("tmp").join(format!(
-            "blob-{}-{}-{counter}",
-            std::process::id(),
-            hash.to_hex()
-        ));
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o600)
-            .open(&tmp)
-            .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        drop(file);
-        if final_path.exists() {
-            let existing = fs::read(&final_path)?;
-            fs::remove_file(&tmp).ok();
-            if identity::h(domain, &existing) != hash {
-                return Err(Error::corrupt("blob appeared with a mismatched hash"));
-            }
-            return Ok(hash);
-        }
-        fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
-        fs::rename(&tmp, &final_path).map_err(|err| {
-            cleanup_tmp(&tmp);
-            Error::io(format!(
-                "cannot rename {} into place: {err}",
-                final_path.display()
-            ))
-        })?;
-        fsync_dir(parent)?;
-        Ok(hash)
+            backend.put_atomic(&key, bytes)?;
+            Ok(hash)
+        })
     }
 
     fn write_snapshot_pointer(&self, name: &str, commit: Hash32) -> Result<()> {
-        let dir = self.root.join("refs").join("snapshots");
-        make_dir(&dir)?;
-        let path = dir.join(name);
-        let tmp = self.root.join("tmp").join(format!(
-            "snap-{}-{}-{}",
-            std::process::id(),
-            name,
-            TMP_COUNTER.fetch_add(1, Ordering::Relaxed)
-        ));
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o644)
-            .open(&tmp)
-            .map_err(|err| Error::io(format!("cannot create snapshot pointer: {err}")))?;
-        file.write_all(format!("{}\n", commit.to_hex()).as_bytes())?;
-        file.sync_all()?;
-        drop(file);
-        if path.exists() {
-            fs::remove_file(&tmp).ok();
-            return Err(Error::exists("snapshot pointer already exists"));
-        }
-        fs::rename(&tmp, &path)
-            .map_err(|err| Error::io(format!("cannot publish snapshot pointer: {err}")))?;
-        fsync_dir(&dir)?;
-        Ok(())
+        let key = Key::snapshot_ref(name);
+        let bytes = format!("{}\n", commit.to_hex());
+        self.with_backend_mut(|backend| {
+            if backend.exists(&key)? {
+                return Err(Error::exists("snapshot pointer already exists"));
+            }
+            backend.put_atomic(&key, bytes.as_bytes())
+        })
     }
-}
-
-fn cleanup_tmp(path: &Path) {
-    let _ = fs::remove_file(path);
 }
 
 /// Checked `u64 -> usize` conversion for offsets, lengths, counts, and sizes.
@@ -5103,84 +5082,12 @@ fn validate_options(options: &Options) -> Result<()> {
     Ok(())
 }
 
-/// Recreate any layout directory missing from an otherwise valid store. This
-/// keeps a git-carried fixture (which cannot represent empty directories)
-/// writable without changing the normative layout.
-fn ensure_layout(root: &Path) -> Result<()> {
-    for relative in [
-        "commits",
-        "objects",
-        "manifests",
-        "indexes",
-        "refs",
-        "refs/snapshots",
-        "refs/tags",
-        "tmp",
-    ] {
-        make_dir(&root.join(relative))?;
-    }
-    Ok(())
-}
-
-/// Remove unreferenced atomic-write staging files older than the grace period.
-/// Only our `blob-`/`snap-` prefixes are considered, so placeholder files in a
-/// carried fixture are left alone.
-fn clean_stale_tmp(root: &Path, grace_secs: u64) -> Result<()> {
-    let dir = root.join("tmp");
-    let entries = match fs::read_dir(&dir) {
-        Ok(entries) => entries,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(err) => return Err(Error::io(format!("cannot read {}: {err}", dir.display()))),
-    };
-    let now = SystemTime::now();
-    for entry in entries {
-        let entry = entry?;
-        if !entry.file_type()?.is_file() {
-            continue;
-        }
-        let name = entry.file_name();
-        let name = match name.to_str() {
-            Some(name) => name,
-            None => continue,
-        };
-        if !(name.starts_with("blob-") || name.starts_with("snap-") || name.starts_with("index-")) {
-            continue;
-        }
-        if grace_secs > 0 {
-            let age = entry
-                .metadata()
-                .ok()
-                .and_then(|metadata| metadata.modified().ok())
-                .and_then(|modified| now.duration_since(modified).ok())
-                .map(|duration| duration.as_secs())
-                .unwrap_or(0);
-            if age < grace_secs {
-                continue;
-            }
-        }
-        let _ = fs::remove_file(entry.path());
-    }
-    Ok(())
-}
-
 fn check_mode(mode: u64) -> Result<()> {
     if mode > 0o7777 {
         return Err(Error::invalid_argument(
             "mode must fit POSIX permission bits (0..=0o7777)",
         ));
     }
-    Ok(())
-}
-
-fn write_new_file(path: &Path, bytes: &[u8], mode: u32) -> Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(mode)
-        .open(path)
-        .map_err(|err| Error::io(format!("cannot create {}: {err}", path.display())))?;
-    file.write_all(bytes)?;
-    file.sync_all()?;
     Ok(())
 }
 
@@ -5224,7 +5131,7 @@ fn strip_tensor_attrs(attrs: &mut BTreeMap<String, Value>) {
 }
 
 fn mark_state(
-    root: &Path,
+    store: &Store,
     state: &State,
     manifests: &mut BTreeSet<Hash32>,
     chunks: &mut BTreeSet<Hash32>,
@@ -5246,7 +5153,7 @@ fn mark_state(
         }
         let mut seen = BTreeSet::new();
         mark_manifest_tree(
-            root,
+            store,
             record.content,
             manifests,
             chunks,
@@ -5260,7 +5167,7 @@ fn mark_state(
 /// Mark a manifest and everything it physically references: raw chunks, the
 /// codec frame blob, and (transitively, bounded) dependency content roots.
 fn mark_manifest_tree(
-    root: &Path,
+    store: &Store,
     manifest_id: Hash32,
     manifests: &mut BTreeSet<Hash32>,
     chunks: &mut BTreeSet<Hash32>,
@@ -5279,7 +5186,7 @@ fn mark_manifest_tree(
         return;
     }
     manifests.insert(manifest_id);
-    match recovery::read_manifest(root, manifest_id) {
+    match store.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id)) {
         Ok(manifest) => {
             if let Some(rep) = &manifest.representation {
                 if rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor {
@@ -5288,7 +5195,7 @@ fn mark_manifest_tree(
                     }
                     for dependency in &rep.dependencies {
                         mark_manifest_tree(
-                            root,
+                            store,
                             *dependency,
                             manifests,
                             chunks,
@@ -5308,140 +5215,105 @@ fn mark_manifest_tree(
     }
 }
 
-/// Collect advisory `indexes/<ab>/<commit>.idx` files whose commit is not in
-/// `retained`. Filenames must be the canonical lowercase hex commit plus
-/// `.idx`; anything else is reported and left untouched.
+/// Collect advisory index keys whose commit is not in `retained`. Filenames
+/// must be the canonical lowercase hex commit plus `.idx`; anything else is
+/// reported and left untouched.
 fn collect_unreachable_indexes(
-    dir: &Path,
+    store: &Store,
     retained: &BTreeSet<Hash32>,
     now: SystemTime,
     grace_secs: u64,
     report: &mut GcReport,
-) -> Result<Vec<(PathBuf, u64)>> {
+) -> Result<Vec<(Key, u64)>> {
     let mut out = Vec::new();
-    let subdirs = match fs::read_dir(dir) {
-        Ok(entries) => entries,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(out),
-        Err(err) => return Err(Error::io(format!("cannot read {}: {err}", dir.display()))),
-    };
-    for subdir in subdirs {
-        let subdir = subdir?;
-        if !subdir.file_type()?.is_dir() {
-            continue;
-        }
-        let shard = subdir.file_name();
-        let shard = match shard.to_str() {
-            Some(shard) => shard,
-            None => continue,
-        };
-        for entry in fs::read_dir(subdir.path())? {
-            let entry = entry?;
-            if !entry.file_type()?.is_file() {
-                continue;
-            }
-            let name = entry.file_name();
-            let name = match name.to_str() {
-                Some(name) => name,
-                None => continue,
-            };
-            let Some(stem) = name.strip_suffix(".idx") else {
+    let keys = store.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Index)))?;
+    for key in keys {
+        let commit = match key {
+            Key::Index { commit } => commit,
+            Key::Other { .. } => {
                 report.problems.push(format!(
                     "unrecognized index filename {}",
-                    entry.path().display()
+                    key.display_path()
                 ));
                 continue;
-            };
-            let commit = match Hash32::from_lower_hex(stem) {
-                Ok(commit) if &commit.to_hex()[0..2] == shard => commit,
-                _ => {
-                    report.problems.push(format!(
-                        "unrecognized index filename {}",
-                        entry.path().display()
-                    ));
-                    continue;
-                }
-            };
-            let metadata = entry.metadata()?;
-            if retained.contains(&commit) {
+            }
+            _ => continue,
+        };
+        if retained.contains(&commit) {
+            report.retained += 1;
+            continue;
+        }
+        if grace_secs > 0 {
+            let age = store
+                .with_backend(|backend| backend.modified(&key))?
+                .and_then(|modified| now.duration_since(modified).ok())
+                .map(|duration| duration.as_secs())
+                .unwrap_or(0);
+            if age < grace_secs {
                 report.retained += 1;
                 continue;
             }
-            if grace_secs > 0 {
-                let age = metadata
-                    .modified()
-                    .ok()
-                    .and_then(|modified| now.duration_since(modified).ok())
-                    .map(|duration| duration.as_secs())
-                    .unwrap_or(0);
-                if age < grace_secs {
-                    report.retained += 1;
-                    continue;
-                }
-            }
-            out.push((entry.path(), metadata.len()));
         }
+        let len = match store.with_backend(|backend| backend.len(&key)) {
+            Ok(len) => len,
+            Err(err) => {
+                report
+                    .problems
+                    .push(format!("cannot stat index {}: {err}", key.display_path()));
+                continue;
+            }
+        };
+        out.push((key, len));
     }
     Ok(out)
 }
 
 fn collect_unmarked(
-    dir: &Path,
+    store: &Store,
+    kind: KeyKind,
     marked: &BTreeSet<Hash32>,
     now: SystemTime,
     grace_secs: u64,
     report: &mut GcReport,
-) -> Result<Vec<(PathBuf, u64)>> {
+) -> Result<Vec<(Key, u64)>> {
     let mut out = Vec::new();
-    let subdirs = match fs::read_dir(dir) {
-        Ok(entries) => entries,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(out),
-        Err(err) => return Err(Error::io(format!("cannot read {}: {err}", dir.display()))),
-    };
-    for subdir in subdirs {
-        let subdir = subdir?;
-        if !subdir.file_type()?.is_dir() {
-            continue;
-        }
-        for entry in fs::read_dir(subdir.path())? {
-            let entry = entry?;
-            let file_type = entry.file_type()?;
-            if !file_type.is_file() {
+    let keys = store.with_backend(|backend| backend.list_prefix(&Key::prefix(kind)))?;
+    for key in keys {
+        let hash = match key {
+            Key::Object { hash } | Key::Manifest { hash } => hash,
+            Key::Other { .. } => {
+                report
+                    .problems
+                    .push(format!("unrecognized blob filename {}", key.display_path()));
                 continue;
             }
-            let name = entry.file_name();
-            let name = match name.to_str() {
-                Some(name) => name,
-                None => continue,
-            };
-            let hash = match Hash32::from_lower_hex(name) {
-                Ok(hash) => hash,
-                Err(_) => {
-                    report.problems.push(format!(
-                        "unrecognized blob filename {}",
-                        entry.path().display()
-                    ));
-                    continue;
-                }
-            };
-            let metadata = entry.metadata()?;
-            if marked.contains(&hash) {
+            _ => continue,
+        };
+        if marked.contains(&hash) {
+            report.retained += 1;
+            continue;
+        }
+        if grace_secs > 0 {
+            let age = store
+                .with_backend(|backend| backend.modified(&key))?
+                .and_then(|modified| now.duration_since(modified).ok())
+                .map(|duration| duration.as_secs())
+                .unwrap_or(0);
+            if age < grace_secs {
                 report.retained += 1;
                 continue;
             }
-            if grace_secs > 0 {
-                let age = metadata
-                    .modified()
-                    .ok()
-                    .and_then(|modified| now.duration_since(modified).ok())
-                    .map(|duration| duration.as_secs())
-                    .unwrap_or(0);
-                if age < grace_secs {
-                    report.retained += 1;
-                    continue;
-                }
-            }
-            out.push((entry.path(), metadata.len()));
         }
+        let len = match store.with_backend(|backend| backend.len(&key)) {
+            Ok(len) => len,
+            Err(err) => {
+                report
+                    .problems
+                    .push(format!("cannot stat blob {}: {err}", key.display_path()));
+                continue;
+            }
+        };
+        out.push((key, len));
     }
     Ok(out)
 }

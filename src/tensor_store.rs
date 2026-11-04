@@ -738,7 +738,8 @@ impl Store {
 
     fn q8_0_shard_meta(&self, id: Hash32) -> Result<weftcodec::TensorShardedMeta> {
         let record = self.object_meta(id)?;
-        let manifest = recovery::read_manifest(self.root(), record.content)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
         let rep = manifest
             .representation
             .as_ref()
@@ -750,12 +751,14 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = recovery::read_blob_verified(
-            self.root(),
-            BlobKind::Manifest,
-            frame_id,
-            identity::MANIFEST_DOMAIN,
-        )?;
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         Ok(weftcodec::decode_shard_frame(&frame, &limits)?.meta)
@@ -769,7 +772,8 @@ impl Store {
                 "tensor metadata requires a file object",
             ));
         }
-        let manifest = recovery::read_manifest(self.root(), record.content)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 let tensor = rep
@@ -1273,7 +1277,8 @@ impl Store {
         if seen.contains(&manifest_id) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let manifest = recovery::read_manifest(self.root(), manifest_id)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id))?;
         let Some(rep) = &manifest.representation else {
             return Ok(0);
         };
@@ -1566,12 +1571,14 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = recovery::read_blob_verified(
-            self.root(),
-            BlobKind::Manifest,
-            frame_id,
-            identity::MANIFEST_DOMAIN,
-        )?;
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match tensor.tensor_mode {
@@ -1728,7 +1735,8 @@ impl Store {
         if seen.contains(&dep_root) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let dep_manifest = recovery::read_manifest(self.root(), dep_root)?;
+        let dep_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
         seen.push(dep_root);
         let base_bytes = self.read_manifest_bytes_inner(
             &dep_manifest,

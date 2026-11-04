@@ -18,6 +18,7 @@ use weftcodec::wcb::Value;
 use weftcodec::{Region, SemanticPolicy};
 
 use weftfs::auth::Principal;
+use weftfs::backend::BackendKind;
 use weftfs::conformance::build_fixture_store;
 use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
@@ -52,6 +53,15 @@ struct Cli {
         default_value = "raw"
     )]
     representation: String,
+    /// Physical storage backend: `local` (normative POSIX layout) or `object`
+    /// (immutable object namespace published with link(2)).
+    #[arg(
+        long,
+        global = true,
+        value_name = "local|object",
+        default_value = "local"
+    )]
+    backend: String,
     /// `codec-auto` leaves files smaller than this on the raw path.
     #[arg(
         long = "codec-min-bytes",
@@ -490,10 +500,26 @@ fn main() {
 /// `Options` is constructed, so every verb that opens the store for writing
 /// sees the same representation policy; read-only verbs simply never write.
 #[derive(Clone, Copy, Debug)]
+enum CliBackend {
+    Local,
+    Object,
+}
+
+impl CliBackend {
+    fn kind(self) -> BackendKind {
+        match self {
+            CliBackend::Local => BackendKind::Local,
+            CliBackend::Object => BackendKind::Object,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 struct OpenPolicy {
     fixed_timestamp_ns: Option<i64>,
     representation: RepresentationMode,
     codec_min_bytes: u64,
+    backend: CliBackend,
 }
 
 impl OpenPolicy {
@@ -504,6 +530,16 @@ impl OpenPolicy {
             codec_min_bytes: self.codec_min_bytes,
             ..Options::default()
         }
+    }
+}
+
+fn parse_backend(text: &str) -> Result<CliBackend> {
+    match text {
+        "local" => Ok(CliBackend::Local),
+        "object" => Ok(CliBackend::Object),
+        other => Err(Error::invalid_argument(format!(
+            "--backend must be `local` or `object` (got `{other}`)"
+        ))),
     }
 }
 
@@ -534,6 +570,7 @@ fn run(cli: Cli) -> Result<()> {
         json,
         fixed_timestamp_ns,
         representation,
+        backend,
         codec_min_bytes,
         command,
     } = cli;
@@ -541,6 +578,7 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
+        backend: parse_backend(&backend)?,
     };
     let needs_store = !matches!(command, Command::ConformanceStore { .. });
     let store = match store {
@@ -572,7 +610,7 @@ fn run(cli: Cli) -> Result<()> {
                 codec_min_bytes: policy.codec_min_bytes,
                 ..Options::default()
             };
-            let store = Store::init(&store, options)?;
+            let store = Store::init_with_backend(&store, options, policy.backend.kind())?;
             if json {
                 print_json(&json!({
                     "generation": store.generation(),
@@ -1460,7 +1498,7 @@ fn run(cli: Cli) -> Result<()> {
 }
 
 fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Result<Store> {
-    Store::open_with_options(path, mode, policy.options())
+    Store::open_with_options_and_backend(path, mode, policy.options(), policy.backend.kind())
 }
 
 fn run_relation(

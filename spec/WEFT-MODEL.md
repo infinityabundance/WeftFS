@@ -422,6 +422,92 @@ Replay is idempotent: a generation is applied at most once, selected by the
 superblock. Torn commit files fail CRC or hash and are ignored; a torn
 superblock slot fails CRC and the other slot is used.
 
+### 4.1 Storage backend contract
+
+The store addresses durable artifacts through typed keys and performs all
+physical I/O through a storage backend. The on-disk logical layout in §2 and the
+commit protocol above are unchanged; a backend supplies the publication and
+`fsync` primitives. The Rust reference implementation defines:
+
+```
+trait StorageBackend {
+    fn read(&self, key, offset, len) -> Result<Vec<u8>>;
+    fn read_all(&self, key) -> Result<Vec<u8>>;
+    fn write_at(&mut self, key, offset, bytes) -> Result<()>;   // superblock slots
+    fn put_atomic(&mut self, key, bytes) -> Result<()>;         // all-or-nothing
+    fn create_zeroed(&mut self, key, len) -> Result<()>;
+    fn delete(&mut self, key) -> Result<()>;
+    fn list_prefix(&self, prefix) -> Result<Vec<Key>>;
+    fn sync(&mut self, key) -> Result<()>;
+    fn sync_dir(&mut self, key) -> Result<()>;
+    // plus len, exists, modified, layout, writer lock, staging cleanup
+}
+```
+
+A backend declares `Capabilities { atomic_publish, durable_fsync,
+  true_range_reads, max_object_bytes, consistency, publication }`.
+
+Required guarantees:
+
+- `atomic_publish` — a `put_atomic` write becomes visible all-or-nothing under
+  its final key. Every content blob, manifest, commit record, index segment,
+  and snapshot pointer is published this way after its bytes are durable.
+- `durable_fsync` — `sync`, `put_atomic`, and `write_at` return only after the
+  data is stable. The commit protocol depends on this for the commit file and
+  the superblock slot.
+- `true_range_reads` — `read(offset, len)` reads only the requested range. If
+  false, a backend may still be used, but range reads materialise whole
+  objects; this is a performance property, not a durability guarantee, and the
+  store never claims otherwise.
+- `max_object_bytes` — a hard per-object bound. Blobs and pages above it are
+  `LimitExceeded`, never silently split or truncated.
+
+Publication primitive. `LocalBackend` is the normative POSIX namespace:
+temporary file, `fsync`, `rename(2)`, parent `fsync`. `ObjectBackend` maps keys
+to an immutable object namespace (`objects/<2-hex>/<name>`) and publishes with
+temporary file, `fsync`, `link(2)`, unlink of the temporary name, parent
+`fsync`. The final name appears only after the inode is complete, so it does not
+rely on POSIX rename replacement. If `link(2)` is unavailable, the backend
+falls back to `rename(2)` and states that in `Capabilities::publication` and in
+its diagnostics; it never claims a link-published run.
+
+Commit protocol mapping. The sequence in §4 maps one-to-one onto backend calls:
+
+1. content and checkpoint blobs: `put_atomic` per blob;
+2. commit record: `put_atomic` of `commits/<generation>.commit`, then its
+   directory fsync;
+3. superblock: `write_at` the inactive 4096-byte slot, then `sync`;
+4. store root: `sync_dir`.
+
+A crash between any two steps leaves either the previous whole generation or
+the new whole generation. `put_atomic` supplies the property `create_new` plus
+rename supplies on the local backend: an existing key with different bytes is
+an error, and identical bytes are a no-op.
+
+Fail-closed capability enforcement. The store consults capabilities rather than
+assuming them:
+
+- a writable open or initialization requires `durable_fsync` and refuses with
+  `UnsupportedVersion` if it is absent;
+- every publication requires `atomic_publish` and refuses rather than
+  degrading to a non-atomic write;
+- a read-only open may use a backend that declares weaker write guarantees,
+  because it performs no publication.
+
+Backend selection is explicit (`Store::init_with_backend`,
+`Store::open_with_backend`, `Options`-equivalent CLI `--backend local|object`).
+The default is `LocalBackend`, so every existing fixture and handoff is
+unchanged.
+
+Network and distributed filesystems. A POSIX-namespace target (for example 3FS)
+can be addressed through the local backend because it exposes files, `rename`,
+and `fsync`. That path is **not exercised by this repository**: no 3FS instance
+is available in the courts. A caller that configures a POSIX target must declare
+its real capabilities with `BackendKind::Posix { capabilities }`. If the target
+cannot honour `fsync` or atomic publication, the store refuses writable mode;
+before any production use its consistency and durability claims must be
+measured, not inferred from the API shape.
+
 ---
 
 ## 5. Garbage collection and retention

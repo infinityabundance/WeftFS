@@ -1276,12 +1276,14 @@ fn selector_predicates_allowed(selector: &Selector, cap: &CapabilityContext) -> 
 pub(crate) fn store_causal_closure(store: &Store, closure: &CausalClosure) -> Result<Hash32> {
     let bytes = closure.canonical_bytes()?;
     let id = closure.id()?;
-    let stored = recovery::read_blob_verified(
-        store.root(),
-        BlobKind::Manifest,
-        id,
-        weftcodec::hash::DOMAIN_CAUSAL,
-    );
+    let stored = store.with_backend(|backend| {
+        recovery::read_blob_verified_via(
+            backend,
+            BlobKind::Manifest,
+            id,
+            weftcodec::hash::DOMAIN_CAUSAL,
+        )
+    });
     if stored.is_err() {
         store.store_causal_blob(&bytes)?;
     }

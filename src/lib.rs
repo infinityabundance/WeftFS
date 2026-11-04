@@ -18,6 +18,7 @@
 #![forbid(unsafe_code)]
 
 pub mod auth;
+pub mod backend;
 pub mod conformance;
 pub mod context;
 pub mod error;
@@ -36,6 +37,7 @@ pub mod timeparse;
 pub mod wcb_util;
 
 pub use auth::Principal;
+pub use backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};

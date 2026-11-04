@@ -1,0 +1,104 @@
+{
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "f1d32e3ad42ebf172c65943f080b5cf32f51a7e3",
+    "revision_weftfs": "2c5a6183134770d480f7b70a776ff62beba72b86"
+  },
+  "kind": "storage-backend-comparison",
+  "label": "Single host, synthetic workload, Docker bench court with hard memory/CPU/pids limits and bounded /tmp. Not a device, fleet, power-loss, RPO/RTO, or production claim.",
+  "local": {
+    "backend": "local",
+    "backend_stats": {
+      "bytes_read": 416583,
+      "bytes_written": 110454966,
+      "link_publications": 0,
+      "range_reads": 0,
+      "reads": 1998,
+      "rename_fallbacks": 0,
+      "rename_publications": 3612,
+      "writes": 4614
+    },
+    "capabilities": {
+      "atomic_publish": true,
+      "consistency": "single-host POSIX namespace; read-after-write; rename(2) is atomic; parent directory fsync orders the new name",
+      "durable_fsync": true,
+      "max_object_bytes": 1073741824,
+      "publication": "tmp file + fsync + rename(2) + directory fsync",
+      "true_range_reads": true
+    },
+    "create_per_sec": 10775.642259797438,
+    "create_wall_ns": 92801893,
+    "creates": 1000,
+    "diagnostics": [],
+    "generation": 1002,
+    "head": "61f1a9f3b3b28ce7912443c7d17eb1f614320998b2508d93e78e03c5df011086",
+    "init_ns": 108272,
+    "physical_bytes": 106350774,
+    "verify_ok": true,
+    "verify_wall_ns": 146375393,
+    "write_mib": 100,
+    "write_mib_per_sec": 565.0600093164834,
+    "write_wall_ns": 176972354
+  },
+  "notes": [
+    "No syscall counter is present in the bench court. Wall time and backend byte counters are reported instead.",
+    "`bytes_written` counts bytes accepted by the backend publication path; physical bytes are the recursive on-disk total after the run.",
+    "Both backends receive the same seeded operations and fixed clock, so equal heads demonstrate identical commit bytes.",
+    "The object backend's link/rename publication counts show which primitive was actually exercised; rename_fallbacks is non-zero only if link(2) failed.",
+    "No fsync, device-cache, power-loss, or distributed-filesystem claim is made."
+  ],
+  "object": {
+    "backend": "object",
+    "backend_stats": {
+      "bytes_read": 416583,
+      "bytes_written": 110454966,
+      "link_publications": 3612,
+      "range_reads": 0,
+      "reads": 1998,
+      "rename_fallbacks": 0,
+      "rename_publications": 0,
+      "writes": 4614
+    },
+    "capabilities": {
+      "atomic_publish": true,
+      "consistency": "single-host immutable object namespace; a key appears only after its bytes are fsynced; read-after-write",
+      "durable_fsync": true,
+      "max_object_bytes": 1073741824,
+      "publication": "tmp file + fsync + link(2) + unlink(tmp) + directory fsync",
+      "true_range_reads": true
+    },
+    "create_per_sec": 10514.43259910665,
+    "create_wall_ns": 95107367,
+    "creates": 1000,
+    "diagnostics": [],
+    "generation": 1002,
+    "head": "61f1a9f3b3b28ce7912443c7d17eb1f614320998b2508d93e78e03c5df011086",
+    "init_ns": 128009,
+    "physical_bytes": 106350774,
+    "verify_ok": true,
+    "verify_wall_ns": 152808691,
+    "write_mib": 100,
+    "write_mib_per_sec": 566.2930218117667,
+    "write_wall_ns": 176587025
+  },
+  "physical_bytes_ratio_object_over_local": 1.0,
+  "same_generation": true,
+  "same_head": true,
+  "schema": "weft-backend-bench-v1",
+  "syscalls": null,
+  "workload": {
+    "checkpoint_interval": 256,
+    "chunk_size": 65536,
+    "create_payload_bytes": 256,
+    "creates": 1000,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "stream_write_mib": 100
+  }
+}

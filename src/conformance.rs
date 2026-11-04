@@ -148,7 +148,11 @@ pub fn build_fixture_store(path: &Path) -> Result<FixtureSummary> {
             .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
             .unwrap_or_else(|| format!("<unlinked:{}>", record.id));
         let content_hash = if record.kind == ObjectKind::File {
-            crate::recovery::read_manifest(store.root(), record.content)?.content_hash
+            store
+                .with_backend(|backend| {
+                    crate::recovery::read_manifest_via(backend, record.content)
+                })?
+                .content_hash
         } else {
             record.content
         };
