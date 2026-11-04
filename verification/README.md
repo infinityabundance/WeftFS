@@ -195,6 +195,17 @@ reported exactly the documented `above the highest published superblock
 generation` note for generation 54, both recovered generation 53 with the same
 root, and both read the exact expected bytes.
 
+**Lying-fsync device model (2026-11-04).** `POWERLOSS_CACHE_MODE=unsafe`
+(receipt `bench/receipts/powerloss-20261104T014805Z.json`) ran the same matrix
+for 30 iterations: 30/30 pass, 27 old, 3 new, 0 partial, 0 durability failures,
+0 Rust/Go disagreements, 0 unpublished tails, unsynced-control loss 30/30.
+No data loss was observed. This is reported as a **lying-fsync device model**:
+QEMU accepts guest flush requests and does not honour them, while SIGKILL still
+leaves the host page cache containing QEMU's already-written data. It therefore
+does not demonstrate loss under a process kill; it demonstrates that the store's
+recovery result does not depend on flush acknowledgement when the host cache
+survives. It is **not** physical media power loss and not a real lying disk.
+
 The earlier 20-iteration and 12-iteration runs and the single-iteration smoke
 tests are retained in `bench/receipts/` as run history. One pre-fix
 12-iteration run (`powerloss-20261103T223301Z`) flagged a valid-but-unpublished
@@ -212,8 +223,17 @@ exercised the accepted-tail path in iteration 29.
 ```
 scripts/powerloss_court.sh
 # or, with explicit parameters inside the court:
-scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=none bash scripts/powerloss_court.sh"
+`scripts/docker-court.sh vm "POWERLOSS_ITERATIONS=30 POWERLOSS_CACHE_MODE=none bash scripts/powerloss_court.sh"`
 ```
+
+The cache mode selects the QEMU virtual disk behaviour:
+
+| Mode | Guest-visible flush | Model |
+|---|---|---|
+| `none` | honoured (O_DIRECT) | baseline VM power-cut proxy |
+| `writeback` | honoured | host-cache writeback, still flushes on request |
+| `writethrough` | honoured | slower host-synchronous variant |
+| `unsafe` | **ignored** | lying-fsync device model; not physical media |
 
 Receipts record the exact kernel/initramfs, QEMU version, acceleration mode,
 cache mode, seeded kill delays, per-iteration generations, verifier problems,
@@ -224,10 +244,14 @@ durability result, unsynced-control result, and raw serial logs.
 - **Physical power loss** (real media/device write-cache loss) is not
   achievable on this host inside Docker. No workaround here is relabelled as
   physical.
-- Host page-cache loss and an fsync that lies to the guest are not modelled by
-  this rig.
-- The 10,000-iteration campaign from the F5 contract is supported
-  (`POWERLOSS_ITERATIONS`) but only bounded runs have been executed.
+- Host page-cache loss and real disk firmware that lies about flushes are not
+  modelled. `cache=unsafe` is a lying-fsync *device model*, and because SIGKILL
+  leaves the host page cache intact it produced 0 data-loss events in 30/30
+  iterations (see §2.3).
+- The 10,000-iteration campaign from the F5 contract was run for the
+  process-fault crash court (10,000/10,000, 19.7 it/s), not for this QEMU rig;
+  `POWERLOSS_ITERATIONS` supports larger QEMU runs but only bounded runs were
+  executed.
 - Checkpoints are exercised by the guest writes (interval 5) but are not in the
   TLA+ abstraction.
 
@@ -241,5 +265,6 @@ durability result, unsynced-control result, and raw serial logs.
 | `verification/tla/WeftCommitBuggy.counterexample.txt` | TLC trace quoted from the committed log |
 | `bench/receipts/powerloss-20261103T224453Z.json` / `.log` | 30/30 VM power-cut iterations pass, 28 old + 2 new, 0 partial, 0 durability failures, 1 accepted unpublished tail, unsynced-control loss 30/30 |
 | `bench/receipts/powerloss-20261103T224652Z.json` / `.log` | secondary writeback run: 10/10 pass, 0 partial, 0 unpublished tails |
+| `bench/receipts/powerloss-20261104T014805Z.json` / `.log` | lying-fsync `cache=unsafe` device model: 30/30 pass, 27 old + 3 new, 0 partial, 0 durability failures, 0 data-loss events, control loss 30/30; not physical |
 | `tests/bounded_recovery.rs` | test-only bounded corruption enumeration (not model checking) |
 | `bench/receipts/crash-torture-*.json` | process-fault crash proxy, explicitly not physical power loss |

@@ -33,6 +33,19 @@ done
 
 echo "GUEST_BOOT kernel=$(uname -r) mode=$mode"
 echo "GUEST_CMDLINE $(cat /proc/cmdline)"
+# Energy probing inside the guest: record exactly what is visible. The guest is
+# a QEMU VM and is not claimed to expose host RAPL.
+echo "GUEST_POWERCAP_CLASS $(test -d /sys/class/powercap && echo present || echo absent)"
+energy_files=0
+energy_readable=0
+for f in /sys/class/powercap/*/energy_uj /sys/class/powercap/*/*/energy_uj; do
+  [ -f "$f" ] || continue
+  energy_files=$((energy_files + 1))
+  [ -r "$f" ] && energy_readable=$((energy_readable + 1))
+done
+echo "GUEST_ENERGY_UJ_FILES $energy_files"
+echo "GUEST_ENERGY_UJ_READABLE $energy_readable"
+echo "GUEST_PERF_BINARY $(command -v perf >/dev/null 2>&1 && echo present || echo absent)"
 
 # The data disk is virtio-blk. devtmpfs creates the node once the driver probes.
 try=0

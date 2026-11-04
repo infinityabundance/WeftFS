@@ -23,6 +23,12 @@
 # virtual disk's own write cache are not physically removed. No fsck is run.
 # A software process abort alone would not be evidence and is not used.
 #
+# POWERLOSS_CACHE_MODE=unsafe selects QEMU's lying-fsync device model: the guest
+# still sees successful fsync/flush requests, but QEMU with cache=unsafe does
+# not honour them. This is labelled "lying-fsync device model" and is not
+# physical media power loss; cache=none/writeback/writethrough remain the
+# non-lying modes.
+#
 # Limits: inherited Docker limits (3g memory/3g swap/4 cpus/1024 pids, 1g
 # bounded /tmp), guest 512 MiB, root disk 160 MiB read-only, data disk 128 MiB
 # qcow2, boot timeouts, bounded iterations. Nothing here disables a limit.
@@ -563,7 +569,9 @@ jq -n \
     run: {started_at: $started_at, finished_at: $finished_at, duration_ms: $duration_ms},
     rig: {
       type: "qemu-virtual-machine",
-      claim: "VM power-cut proxy: SIGKILL of QEMU loses guest page cache and QEMU user-space state; not physical media power loss and not host/device cache loss",
+      device_model: (if $cache_mode == "unsafe" then "lying-fsync device model: cache=unsafe accepts fsync but does not flush to the host image" else "cache=$cache_mode" end),
+      lying_fsync_modelled: ($cache_mode == "unsafe"),
+      claim: (if $cache_mode == "unsafe" then "VM power-cut proxy plus lying-fsync device model: SIGKILL loses guest page cache and QEMU user-space state, and cache=unsafe ignores flush requests; this is not physical media power loss" else "VM power-cut proxy: SIGKILL of QEMU loses guest page cache and QEMU user-space state; not physical media power loss and not host/device cache loss" end),
       available: ($blocked == 0),
       blockers: (if $blocked == 0 then [] else ["guest did not boot twice consecutively"] end),
       qemu_version: $qemu_version,
@@ -608,14 +616,20 @@ jq -n \
       qemu: $qemu_cmd
     },
     scope: {
-      asserted: "for every completed iteration, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean",
-      not_asserted: [
+      asserted: (if $cache_mode == "unsafe" then "for every completed iteration under the lying-fsync device model, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean" else "for every completed iteration, both implementations recover the same generation; that state is exactly the expected whole state; every commit that returned before SIGKILL is still present; verify --full is clean" end),
+      not_asserted: (if $cache_mode == "unsafe" then [
+        "physical power loss (media/device write-cache loss)",
+        "host page-cache loss",
+        "a real disk whose firmware lies about flush semantics; cache=unsafe is a device model",
+        "power loss during mkfs or during the read-only root mount",
+        "10,000-iteration campaign"
+      ] else [
         "physical power loss (media/device write-cache loss)",
         "host page-cache loss",
         "fsync that lies to the guest",
         "power loss during mkfs or during the read-only root mount",
         "10,000-iteration campaign"
-      ]
+      ] end)
     }
   }' >"$RECEIPT"
 
