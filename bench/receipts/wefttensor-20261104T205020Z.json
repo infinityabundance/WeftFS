@@ -1,0 +1,133 @@
+{
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "cpus": "4",
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g",
+    "pids_limit": "1024"
+  },
+  "generated_utc": "20261104T205020Z",
+  "kind": "tensor-bench",
+  "label": "synthetic, in-memory buffers (no I/O), single host; not a storage benchmark",
+  "measurements": {
+    "logical_root_8_shards": {
+      "bytes_read": 67108864,
+      "logical_root": "410800d9c574b05eb73daec70f18ea82af3f221ecca5047a18be6a00366308e3",
+      "median_ms": 16.625733,
+      "samples_ms": [
+        22.486932,
+        20.418089000000002,
+        16.159525000000002,
+        16.625733,
+        14.402652
+      ],
+      "shards_touched": 8
+    },
+    "logical_root_blocked": {
+      "blocks_touched": 512,
+      "bytes_read": 67108864,
+      "logical_root": "410800d9c574b05eb73daec70f18ea82af3f221ecca5047a18be6a00366308e3",
+      "median_ms": 10.9502,
+      "samples_ms": [
+        15.719745999999999,
+        10.351544,
+        10.9502,
+        11.851258999999999,
+        10.879849
+      ]
+    },
+    "logical_root_row_major": {
+      "bytes_hashed": 67108864,
+      "logical_root": "410800d9c574b05eb73daec70f18ea82af3f221ecca5047a18be6a00366308e3",
+      "median_ms": 6.1811050000000005,
+      "samples_ms": [
+        6.30176,
+        6.280209999999999,
+        6.1811050000000005,
+        6.07601,
+        5.711831
+      ]
+    },
+    "region_1mib_row_major": {
+      "bytes_returned": 1048576,
+      "median_ms": 0.025858,
+      "region": {
+        "end": [
+          66,
+          512,
+          512
+        ],
+        "start": [
+          64,
+          0,
+          0
+        ]
+      },
+      "samples_ms": [
+        0.055463,
+        0.040947,
+        0.025778,
+        0.025858,
+        0.025748
+      ],
+      "units_touched": 1
+    },
+    "region_1mib_sharded": {
+      "bytes_returned": 1048576,
+      "median_ms": 0.030626999999999998,
+      "region": {
+        "end": [
+          66,
+          512,
+          512
+        ],
+        "start": [
+          64,
+          0,
+          0
+        ]
+      },
+      "samples_ms": [
+        0.054832,
+        0.057788000000000006,
+        0.030626999999999998,
+        0.027972,
+        0.027962
+      ],
+      "shards_touched": 1,
+      "touched_unit_bytes": 8388608,
+      "units_touched": 1
+    }
+  },
+  "package_version": "0.4.0",
+  "peak_rss_kib": 338292,
+  "profile": "release",
+  "revisions": {
+    "WeftCodec": "0626295862635603c69b997f40e5f1cb2dcfbeed",
+    "WeftCodec-Go": "e869136d65723060bb46d18a532039df8cbebe71",
+    "WeftFS": "25a774835485002daef80179b7e26ee7f5b17922",
+    "WeftFS-Go": "be257a885023e2676b85d01c0c1d43c746def8f7"
+  },
+  "roots_equal": true,
+  "schema": "weft.tensor-bench.v1",
+  "tensor": {
+    "block_shape": [
+      16,
+      64,
+      64
+    ],
+    "blocks": 512,
+    "dtype": "bf16",
+    "element_count": 33554432,
+    "logical_bytes": 67108864,
+    "shape": [
+      128,
+      512,
+      512
+    ],
+    "shard_axis": 0,
+    "shards": 8
+  },
+  "timestamp_utc": "2026-11-04T20:50:20Z"
+}

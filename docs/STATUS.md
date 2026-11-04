@@ -130,15 +130,43 @@ identical and pushed in all four repositories).
   dtype-range zero point are enforced; three valid and eight reject vectors;
   Rust↔Go frames are byte-identical.
 - `FLOAT_TENSOR` (mode 9, added 2026-11-04): zstd-compressed exponent plane plus raw sign+mantissa plane, bit-exact including NaN payloads, infinities, signed zeros and denormals; 3 valid + 8 reject vectors; Rust↔Go decode-equivalent (exponent-plane zstd bytes differ).
-- **Not implemented and not allocated a wire value:** blocked/column-major/
-  sharded layouts, i4 nibble packing and per-axis quantized scales,
-  activation/gradient streams, embedding/KV-cache pages, attention masks,
-  vocabulary-artifact binding, weight-delta descriptors, and semantic/structured
-  deltas. They are `specified, not implemented` in `spec/WEFT-AI-CODEC.md` §6.
+- **Not implemented and not allocated a wire value in mode 6:** blocked/
+  column-major/sharded layout *fields*, i4 nibble packing and per-axis
+  quantized scales, activation/gradient streams, embedding/KV-cache pages,
+  attention masks, vocabulary-artifact binding, weight-delta descriptors, and
+  semantic/structured deltas. They are `specified, not implemented` in
+  `spec/WEFT-AI-CODEC.md` §6. The layouts now have an **additive** identity and
+  addressing layer outside mode 6; see WEFT-TENSOR below.
 - Cross-language: Rust→Go and Go→Rust decode gates pass; TENSOR, TOKENS, and
   QUANTIZED_TENSOR frames are byte-identical. Historical
   `017_unknown_mode_reserved8` (mode 8 reserved) is retained byte-for-byte and
   marked superseded by the new mode-9 reject vector.
+
+### WEFT-TENSOR — logical identity and region addressing (implemented, both codecs)
+
+- `spec/WEFT-TENSOR.md` defines a layout-independent identity:
+  `LogicalTensorRoot = H("weft/tensor/logical/v1", WCB({schema, dtype, shape,
+  element_count, values_hash}))` with
+  `values_hash = H("weft/tensor/values/v1", row-major element bytes)`.
+- Canonical `weft.tensor.layout.v1` descriptors for `row-major`,
+  `column-major`, `blocked`, and `sharded`; rank/zero/overflow/divisibility and
+  field-presence rules fail closed. Additive only: mode 6 stays `row_major`.
+- Physical arrangements and `read_region` report the number of physical units
+  touched, proving that a region inside one shard touches exactly one shard.
+- `weft.tensor.shard.v1` containers (`u32le || WCB || payload`, payload-hash
+  bound) and `shard_root`, which accepts shuffled input and reorders by `index`
+  deterministically; duplicate, missing, out-of-range, and inconsistent shards
+  are rejected. Rust and Go agree.
+- Conformance vectors `conformance/v1/tensor/` (3 valid logical, 10 logical
+  rejects, 4 valid layouts, 10 layout rejects, 2 shard sets with byte-identical
+  containers) are byte-identical in both repos. Cross gate:
+  `WeftCodec-Go/hack/tensor-cross.sh` (roots and containers byte-identical; each
+  language reassembles the other's shards). Bench receipt:
+  `bench/receipts/wefttensor-20261104T205020Z.json` (64 MiB bf16; in-memory,
+  synthetic, single host).
+- Not done: no FUSE/store/object-store binding of the layout layer; no
+  partially resident tensors, arbitrary irregular block lists, or padded
+  blocks.
 
 ### F7 — AI corpus and cost graph (implemented, synthetic)
 
@@ -1129,8 +1157,10 @@ multi-writer, physical rig).
    Prerequisite: modes 6/7/8 byte-identical across Rust and Go
    (`WeftCodec-Go/hack/cross.sh`) and the `specified, not implemented` list in
    `spec/WEFT-AI-CODEC.md` §5. No wire value exists for the remaining modes.
-7. **Layout-independent tensor identity.** Depends on item 6; no receipt and no
-   implementation claim.
+7. **Layout-independent tensor identity.** Implemented for the identity,
+   layout, region, and shard layers in both codecs (WEFT-TENSOR v1); no
+   FUSE/store binding yet, so this is not a topology-independent restore
+   receipt.
 8. **A real public model-family corpus.** Prerequisite: the synthetic `ai-v1`
    corpus and cost graph (`bench/receipts/ai-corpus-20261104T021627Z.json`,
    `bench/RESULTS-ai-v1.md`). `ai-v1` is synthetic; no public corpus or
