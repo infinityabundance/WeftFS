@@ -329,6 +329,43 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
   Golden causal vectors are `conformance/context/v1/causal_versions.json`.
 
+### Storage-path performance: extent COW and bounded open (implemented 2026-11-04)
+
+- **Extent-level COW range writes.** `Store::write_file`/`write_file_causal` no
+  longer buffer or rewrite the whole object. A range write reads the manifest
+  and only the chunks it touches; untouched `ChunkRef`s are reused verbatim and
+  their blobs are neither read nor rewritten. New chunks are content-addressed
+  and deduplicated; a byte-identical rewrite adds zero blobs and zero
+  manifests. Measured on a 64 MiB object, 64 KiB chunks, 20 × 4 KiB aligned
+  overwrites (release, rust court, medians): 33.01 ms vs 69.64 ms, `rchar`
+  64.1 MiB vs 128.0 MiB, peak RSS 3.8 MiB vs 131.7 MiB; `wchar` identical
+  (122,431 B) because both paths already dedupe unchanged chunks. Receipt
+  `bench/receipts/extent-cow-20261104T090112Z.json`. **Limit:** v1's
+  whole-file `ContentId` is a hash of every byte, so the digest pass remains
+  O(file size); the gain is in writes, read-verification, and memory. A
+  Merkle-root content identity that would make hashing O(changed chunks) is a
+  v2 format change, not claimed.
+- **Bounded replay / fast open.** `recovery::load_state_bounded` starts at the
+  selected head generation and walks parents by generation number, stopping at
+  the newest commit whose checkpoint verifies; it does not enumerate older
+  commit files. Any inconsistency falls back to the authoritative full-scan
+  recovery. Measured on a 10,000-generation store with `checkpoint_interval`
+  256 (release, rust court, tmpfs): open median 71.6 ms / p95 73.2 ms reading
+  **18** commit files, versus 3,789.1 ms / 3,892.0 ms reading 10,001 for the
+  forced full path. Receipt
+  `bench/receipts/fast-open-20261104T090945Z.json`.
+- **Semantics made explicit.** A bounded open records the note `bounded replay
+  resumed from the checkpoint at generation N; commit files below it were not
+  enumerated`, and `spec/WEFT-MODEL.md` now requires that note plus the
+  fallback rules. Older-history gaps below a checkpoint are therefore not
+  detected by open; `verify --full` still enumerates every commit and reports
+  them. Tests: `tests/extent_cow.rs` (6) and `tests/fast_open.rs` (3),
+  including corrupted-chain fallbacks and checkpoint corruption.
+- **Not claimed:** these are single-host, page-cache measurements on synthetic
+  fixtures, not device-level or fleet claims, and no group-commit or
+  write-batching change has been made (each mutation still pays its durable
+  commit).
+
 ### Contextual indexes for selector resolution (implemented 2026-11-04, in-memory)
 
 - **What it is:** `src/index.rs` `StateIndex` indexes attribute presence and

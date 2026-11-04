@@ -165,7 +165,19 @@ fn fast_open_matches_full_replay_and_reads_a_bounded_window() {
         "read-only fast open",
     );
     assert!(readonly.rejected_generations().is_empty());
-    assert!(readonly.recovery_notes().is_empty());
+    // Bounded replay must disclose that it stopped at a checkpoint rather than
+    // enumerating older commits.
+    assert_eq!(
+        readonly.recovery_notes().len(),
+        1,
+        "unexpected notes: {:?}",
+        readonly.recovery_notes()
+    );
+    assert!(
+        readonly.recovery_notes()[0].contains("bounded replay resumed from the checkpoint"),
+        "missing bounded-replay note: {:?}",
+        readonly.recovery_notes()
+    );
     assert!(
         readonly_reads <= INTERVAL + 2,
         "read-only open decoded {readonly_reads} commit files; expected the head-to-checkpoint window"
@@ -227,7 +239,10 @@ fn assert_fast_matches_full(dir: &Path) -> Store {
     );
     let filtered: Vec<String> = fast_notes
         .iter()
-        .filter(|note| !note.contains("fell back"))
+        .filter(|note| {
+            !note.contains("fell back")
+                && !note.contains("bounded replay resumed from the checkpoint")
+        })
         .cloned()
         .collect();
     assert_eq!(
@@ -336,6 +351,15 @@ fn open_stops_at_the_nearest_checkpoint_and_falls_back_when_it_is_corrupt() {
         store.current_state(),
         &oracle_state,
         "checkpoint-bounded open",
+    );
+    assert!(
+        store
+            .recovery_notes()
+            .iter()
+            .any(|note| note
+                .contains("bounded replay resumed from the checkpoint at generation 1280")),
+        "bounded replay must name the checkpoint it resumed from: {:?}",
+        store.recovery_notes()
     );
     assert!(
         reads <= 1_280 + 2,

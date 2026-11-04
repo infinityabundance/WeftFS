@@ -409,6 +409,7 @@ pub fn load_state_bounded(
     let mut seen: BTreeSet<Hash32> = BTreeSet::new();
     let mut steps = 0u64;
     let mut checkpoint_state: Option<State> = None;
+    let mut resumed_at_checkpoint: Option<u64> = None;
 
     loop {
         if !seen.insert(cursor_hash) {
@@ -441,8 +442,9 @@ pub fn load_state_bounded(
                     loaded.generation, state.generation
                 )));
             }
-            chain.push(loaded);
+            chain.push(loaded.clone());
             checkpoint_state = Some(state);
+            resumed_at_checkpoint = Some(loaded.generation);
             break;
         }
 
@@ -512,7 +514,20 @@ pub fn load_state_bounded(
     }
 
     validate_catalog(root, &state)?;
-    Ok((state, Vec::new()))
+    // Honest recovery note: a bounded open does not enumerate commit files
+    // below the checkpoint. The checkpoint state is hash-verified and its
+    // generation is matched, so the recovered state is exact for the head; but
+    // a gap in older history is not detected here. `verify --full` still
+    // enumerates every commit file and reports such gaps.
+    let notes = resumed_at_checkpoint
+        .map(|generation| {
+            vec![format!(
+                "bounded replay resumed from the checkpoint at generation {generation}; \
+                 commit files below it were not enumerated"
+            )]
+        })
+        .unwrap_or_default();
+    Ok((state, notes))
 }
 
 /// Check final-state referential integrity and content-file existence.

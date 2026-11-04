@@ -82,6 +82,23 @@ whose referenced object files all exist. Otherwise it falls back to the
 previous valid generation and reports the loss boundary. It never "repairs" by
 inventing data.
 
+Recovery MAY use a **bounded** replay window: start at the selected head
+generation, read `commits/<generation>.commit` downward, and stop at the newest
+commit whose `checkpoint` verifies (declared `generation` equal to the commit's
+generation, manifest hash and length valid). In that mode the implementation
+need not enumerate commit files below the checkpoint, because the checkpoint
+state is content-addressed, hash-verified, and pinned to that generation. The
+recovered state is therefore exact for the head.
+
+Bounded replay MUST be reported: an implementation that stops at a checkpoint
+MUST surface a recovery note naming the checkpoint generation and stating that
+older commit files were not enumerated. Any inconsistency found while walking
+the window (missing file, generation/name disagreement, hash or parent
+mismatch, truncated record, unverifiable or mislabelled checkpoint) MUST fall
+back to the full enumeration path, which is authoritative for its rejected set
+and notes. `verify --full` MUST enumerate every commit file and report gaps in
+older history that bounded open did not observe.
+
 ### 2.2 Commit record
 
 Canonical WCB map:
