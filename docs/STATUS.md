@@ -1363,3 +1363,77 @@ multi-writer, physical rig).
       q4_0 store representation; modes 12/13 are read-only in the store;
       region reads decode the whole delta/Huffman frame; the planner's decode
       estimate is not calibrated to a device.
+
+    ## 2026-11-04 — D1: provenance receipts and provenance-guided recovery
+
+    Provenance is now a first-class store object, and recovery is planned from
+    verified bytes, representation chains, and recorded computation.
+
+    - **Record:** `weft.provenance.v1` canonical WCB with `operation`, bounded
+      `params`, `inputs[{role,content,object}]`, sorted unique `outputs`,
+      `environment{tool,version,env_hash,...}`, `determinism`
+      (`exact|declared|unknown`), `principal{uid,gid}`, and `timestamp_ns`.
+      Inputs are strictly ordered by `(role, content)`; duplicate inputs or
+      outputs are `NonCanonical`. Bounds: params 64 KiB, environment 16 KiB,
+      1,024 inputs, 1,024 outputs, 1,024-byte text fields, 1 MiB record.
+      `ProvenanceId = H("weft/provenance/v1", WCB(record))`.
+    - **Storage/attachment:** the record is a content-addressed blob in the
+      manifest namespace under the provenance domain (never parsed as a
+      manifest). `record_provenance(outputs, record)` rejects any declared
+      output root that does not equal a supplied object's actual content root,
+      publishes the blob, then attaches `predicate="provenance"` value-target
+      relations (lowercase hex ProvenanceId) to every output in one commit.
+      API: `record_provenance`, `provenance_of`, `provenance_records_of`,
+      `provenance_ids_of`, `provenance_closure` (bounded, cycle-rejecting).
+    - **Retention:** GC marks a receipt, its declared inputs, and its outputs
+      while any output object that names it is retained; external inputs are
+      skipped. Object deletion now emits explicit `del_relation` ops for
+      relations whose subject is the removed object, so the last output
+      deletion releases the receipt and otherwise-unreferenced inputs. Replay
+      and cross-language state see the same explicit ops; `apply_op` was not
+      changed.
+    - **Verify:** `verify --full` validates the relation value target, subject
+      existence, blob hash/canonical re-encoding, and that the receipt still
+      declares the subject's current content root. Report field
+      `checked_provenance`. A rewrite without a new receipt is reported as
+      stale provenance.
+    - **Planner:** pure and deterministic. Eligibility is `available` for
+      fetch/decode; recompute additionally requires `determinism == "exact"`
+      and every input verified. Cost is the saturating sum of the declared
+      fetch/decode/recompute components; the winner minimises
+      `(cost, fetch < decode < recompute, name)`. With no eligible candidate it
+      returns `NoEligibleStrategy` naming every candidate and reason; there is
+      no fallback. `Store::recovery_candidates` offers fetch for raw chunked
+      manifests, decode for frame-backed codec/tensor manifests, and one
+      recompute candidate per attached receipt with verified-input checks.
+    - **CLI/spec:** `provenance record|show|closure`, `recover --plan` (prints
+      strategy and three cost components), and `spec/WEFT-PROVENANCE.md`.
+    - **Tests:** `tests/provenance.rs` 19/19 (round trip, order-independent
+      identity, unsorted/duplicate rejection, output mismatch without writing,
+      bounded params, atomic multi-output attachment, cost choice/component
+      sums, exact-determinism and missing-input exclusion, tie-break, typed
+      no-eligible error, closure/depth/cycle, GC retention and reclamation,
+      tampered record, stale output, malformed target, reopen). Rust
+      `cargo test --all-targets`: 135 passed / 0 failed / 0 ignored. FUSE
+      `cargo test --features fuse --all-targets`: 163 passed / 0 failed /
+      2 ignored (existing CAP_SETUID and kernel direct-I/O guards).
+    - **Bench:** `bench/receipts/provenance-20261104T234625Z.json`, bench court
+      `weft/bench-court:1` (3 GiB, 4 vCPU, 1024 pids, kernel
+      7.3.1-1-cachyos), synthetic 10 operations x 10 artefacts x 1 MiB
+      (104,857,600 logical bytes; 80 fetch-capable, 20 decode-capable), one
+      full operation (10 artefacts) unlinked and collected (141 blobs /
+      8,579,129 bytes), receipt retained by the harness. Injected plan
+      (fetch 10 ms/MiB, decode 30 ms, recompute 100 ms): 72 fetch / 18 decode /
+      10 recompute, 68.278 ms wall, 159,629,377 physical bytes, 2,260 ms
+      declared. Measured plan (warm-cache medians: fetch 316,801 ns across 72
+      artefacts, decode 374,398 ns across 18): same mix, 68.471 ms wall, 1,029
+      ms declared. Forced recompute: 100 recompute, 309.637 ms wall,
+      756,138,570 physical bytes, 10,000 ms declared. `verify --full` clean
+      with 90 checked provenance relations. Label: synthetic, warm-cache,
+      single host, no fleet claim.
+    - **Residual:** no Go `weft.provenance.v1` parity; the planner's store-side
+      fetch/decode availability is determined by representation (raw vs
+      frame-backed), so the bench's measured costs do not change the mix;
+      closure follows an explicit input object or a unique content-root match,
+      otherwise the input is an external leaf; a rewrite after recording makes
+      the receipt stale and `verify --full` reports it.

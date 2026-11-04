@@ -197,6 +197,9 @@ pub struct VerifyReport {
     /// Codec representations fully decoded and re-hashed by `verify --full`.
     pub checked_representations: u64,
     pub checked_capabilities: u64,
+    /// `provenance` relations validated (record hash, canonical form, and that
+    /// the record declares the subject object's content root).
+    pub checked_provenance: u64,
     pub rejected_generations: Vec<u64>,
     pub problems: Vec<VerifyProblem>,
 }
@@ -2273,7 +2276,7 @@ impl Store {
             .count();
         let mut ops = vec![Op::DelEntry(entry_id)];
         if remaining == 0 && !self.is_object_pinned(target) {
-            ops.push(Op::DeleteObject(target));
+            ops.extend(self.delete_object_ops(target));
         }
         self.commit_ops(ops, false)?;
         Ok(())
@@ -2312,7 +2315,7 @@ impl Store {
             .count();
         let mut ops = vec![Op::DelEntry(entry_id)];
         if remaining == 0 && !self.is_object_pinned(target) {
-            ops.push(Op::DeleteObject(target));
+            ops.extend(self.delete_object_ops(target));
         }
         self.commit_ops(ops, false)?;
         Ok(())
@@ -2413,7 +2416,7 @@ impl Store {
                 .filter(|entry| entry.target == existing.target && entry.id != existing.id)
                 .count();
             if remaining == 0 && !self.is_object_pinned(existing.target) {
-                ops.push(Op::DeleteObject(existing.target));
+                ops.extend(self.delete_object_ops(existing.target));
             }
         }
         if target_kind == ObjectKind::Dir && self.state.is_within(target, new_parent) {
@@ -2978,7 +2981,8 @@ impl Store {
             let has_children = self.state.entries.values().any(|entry| entry.parent == id);
             let exists = self.state.objects.contains_key(&id);
             if exists && !has_entry && !has_children && id != State::ROOT_ID {
-                self.commit_ops(vec![Op::DeleteObject(id)], false)?;
+                let ops = self.delete_object_ops(id);
+                self.commit_ops(ops, false)?;
             }
         }
         Ok(count)
@@ -3906,6 +3910,65 @@ impl Store {
                 }),
             }
         }
+
+        // Provenance receipts: the relation target must parse to a lowercase
+        // 32-byte identity, the blob must hash-verify and re-encode canonically,
+        // and the receipt must still declare the subject object's content root.
+        let mut provenance_cache: BTreeMap<Hash32, crate::provenance::ProvenanceRecord> =
+            BTreeMap::new();
+        for relation in state.relations.values() {
+            if relation.predicate != crate::provenance::PROVENANCE_PREDICATE {
+                continue;
+            }
+            report.checked_provenance += 1;
+            let id = match crate::provenance::provenance_id_from_relation(relation) {
+                Ok(id) => id,
+                Err(err) => {
+                    report.problems.push(VerifyProblem {
+                        class: err.class_name().to_owned(),
+                        detail: format!("provenance relation {}: {err}", relation.id),
+                    });
+                    continue;
+                }
+            };
+            let subject = match state.objects.get(&relation.subject) {
+                Some(record) => record,
+                None => {
+                    report.problems.push(VerifyProblem {
+                        class: "Corrupt".to_owned(),
+                        detail: format!(
+                            "provenance relation {} names missing subject object {}",
+                            relation.id, relation.subject
+                        ),
+                    });
+                    continue;
+                }
+            };
+            if !provenance_cache.contains_key(&id) {
+                match self.read_provenance(id) {
+                    Ok(record) => {
+                        provenance_cache.insert(id, record);
+                    }
+                    Err(err) => {
+                        report.problems.push(VerifyProblem {
+                            class: err.class_name().to_owned(),
+                            detail: format!("provenance {id}: {err}"),
+                        });
+                        continue;
+                    }
+                }
+            }
+            let record = &provenance_cache[&id];
+            if !record.outputs.contains(&subject.content) {
+                report.problems.push(VerifyProblem {
+                    class: "Corrupt".to_owned(),
+                    detail: format!(
+                        "provenance {id} does not declare the content root {} of object {}",
+                        subject.content, subject.id
+                    ),
+                });
+            }
+        }
     }
 
     /// Mark-and-sweep GC over unreachable chunks and manifests.
@@ -3949,7 +4012,13 @@ impl Store {
                 })
                 .collect();
             if !orphan_ids.is_empty() {
-                let ops: Vec<Op> = orphan_ids.iter().map(|id| Op::DeleteObject(*id)).collect();
+                // Relations whose subject is a removed object are dangling;
+                // delete them in the same commit so an orphan's provenance
+                // receipt and inputs can become unreachable.
+                let mut ops: Vec<Op> = Vec::new();
+                for id in &orphan_ids {
+                    ops.extend(self.delete_object_ops(*id));
+                }
                 self.commit_ops(ops, false)?;
                 report.removed_orphans = orphan_ids.iter().map(|id| id.to_hex()).collect();
             }
@@ -4114,6 +4183,22 @@ impl Store {
             ));
         }
         Ok(())
+    }
+
+    /// Ops that delete an object record and remove every relation whose subject
+    /// is that object. Explicit ops keep replay and cross-language state
+    /// identical; cascading inside `State::apply_op` would change the meaning of
+    /// already-published commits.
+    fn delete_object_ops(&self, id: Hash32) -> Vec<Op> {
+        let mut ops: Vec<Op> = self
+            .state
+            .relations
+            .values()
+            .filter(|relation| relation.subject == id)
+            .map(|relation| Op::DelRelation(relation.id))
+            .collect();
+        ops.push(Op::DeleteObject(id));
+        ops
     }
 
     pub(crate) fn require_dir(&self, id: Hash32) -> Result<()> {
@@ -5161,6 +5246,71 @@ fn mark_state(
             0,
             &mut seen,
         );
+    }
+
+    // Provenance receipts are retained exactly while an output object that
+    // names them is retained. The receipt itself and every declared input and
+    // output content root are marked, so recovery by `recompute` keeps the
+    // verified inputs and the recorded outputs alive. Missing external inputs
+    // (no local manifest) are skipped, not treated as errors.
+    let mut provenance_seen: BTreeSet<Hash32> = BTreeSet::new();
+    for relation in state.relations.values() {
+        if relation.predicate != crate::provenance::PROVENANCE_PREDICATE {
+            continue;
+        }
+        let id = match crate::provenance::provenance_id_from_relation(relation) {
+            Ok(id) => id,
+            Err(err) => {
+                problems.push(format!(
+                    "provenance relation {} has an invalid target: {err}",
+                    relation.id
+                ));
+                continue;
+            }
+        };
+        if !provenance_seen.insert(id) {
+            continue;
+        }
+        // Fail safe: keep the record blob even if it cannot be parsed.
+        manifests.insert(id);
+        match store.with_backend(|backend| crate::provenance::read_provenance_via(backend, id)) {
+            Ok(record) => {
+                for input in &record.inputs {
+                    let root = input
+                        .object
+                        .and_then(|object| state.objects.get(&object))
+                        .map(|object| object.content)
+                        .unwrap_or(input.content);
+                    mark_content_root_if_present(store, root, manifests, chunks, problems);
+                }
+                for output in &record.outputs {
+                    mark_content_root_if_present(store, *output, manifests, chunks, problems);
+                }
+            }
+            Err(err) => problems.push(format!("cannot read provenance {id}: {err}")),
+        }
+    }
+}
+
+/// Mark a content root only when its manifest is present locally. Provenance
+/// inputs may name external bytes; those are not GC roots in this store.
+fn mark_content_root_if_present(
+    store: &Store,
+    root: Hash32,
+    manifests: &mut BTreeSet<Hash32>,
+    chunks: &mut BTreeSet<Hash32>,
+    problems: &mut Vec<String>,
+) {
+    if root == Hash32::ZERO {
+        return;
+    }
+    match store.with_backend(|backend| backend.exists(&Key::manifest(root))) {
+        Ok(true) => {
+            let mut seen = BTreeSet::new();
+            mark_manifest_tree(store, root, manifests, chunks, problems, 0, &mut seen);
+        }
+        Ok(false) => {}
+        Err(err) => problems.push(format!("cannot stat manifest {root}: {err}")),
     }
 }
 

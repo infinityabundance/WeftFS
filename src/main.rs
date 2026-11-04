@@ -24,11 +24,16 @@ use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::identity::Hash32;
+use weftfs::provenance::{
+    choose_recovery, Determinism, ProvenanceEnvironment, ProvenanceInput, ProvenancePrincipal,
+    ProvenanceRecord, PROVENANCE_SCHEMA,
+};
 use weftfs::state::{object_causal_closure, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE};
 use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
 use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
+use weftfs::wcb_util as wu;
 use weftfs::wcb_util::value_to_json;
 
 #[derive(Parser)]
@@ -315,6 +320,28 @@ enum Command {
         #[command(subcommand)]
         command: UriCommand,
     },
+    /// Provenance receipts (record, show, transitive closure).
+    Provenance {
+        #[command(subcommand)]
+        command: ProvenanceCommand,
+    },
+    /// Plan recovery of an object from retained bytes, a representation chain,
+    /// or recomputation from verified inputs.
+    Recover {
+        target: String,
+        /// Print the chosen strategy and its cost components (required in v1).
+        #[arg(long)]
+        plan: bool,
+        /// Declared fetch cost (cost units; nanoseconds by convention).
+        #[arg(long = "fetch-cost", default_value_t = 0)]
+        fetch_cost: u64,
+        /// Declared decode cost.
+        #[arg(long = "decode-cost", default_value_t = 0)]
+        decode_cost: u64,
+        /// Declared recompute cost.
+        #[arg(long = "recompute-cost", default_value_t = 0)]
+        recompute_cost: u64,
+    },
     /// Mount the store over FUSE (requires the `fuse` feature).
     #[cfg(feature = "fuse")]
     Mount {
@@ -486,6 +513,27 @@ enum UriCommand {
     Canonicalize { uri: String },
     /// Show the authoritative URI for a stored name or address.
     Show { target: String },
+}
+
+#[derive(Subcommand)]
+enum ProvenanceCommand {
+    /// Record a provenance receipt and attach it to every output object.
+    Record {
+        /// JSON record file (`weft.provenance.v1` fields).
+        #[arg(long)]
+        record: PathBuf,
+        /// Output object path or identity (repeat for each output).
+        #[arg(long = "output", required = true)]
+        outputs: Vec<String>,
+    },
+    /// Show provenance records attached to an object.
+    Show { target: String },
+    /// Walk the transitive provenance closure.
+    Closure {
+        target: String,
+        #[arg(long, default_value_t = 8)]
+        depth: u32,
+    },
 }
 
 fn main() {
@@ -1314,6 +1362,7 @@ fn run(cli: Cli) -> Result<()> {
                     "checked_causal": report.checked_causal,
                     "checked_representations": report.checked_representations,
                     "checked_capabilities": report.checked_capabilities,
+                    "checked_provenance": report.checked_provenance,
                     "rejected_generations": report.rejected_generations,
                     "problems": problems,
                 }))
@@ -1329,6 +1378,7 @@ fn run(cli: Cli) -> Result<()> {
                 println!("checked_causal={}", report.checked_causal);
                 println!("checked_representations={}", report.checked_representations);
                 println!("checked_capabilities={}", report.checked_capabilities);
+                println!("checked_provenance={}", report.checked_provenance);
                 for problem in &report.problems {
                     println!("problem={}: {}", problem.class, problem.detail);
                 }
@@ -1388,6 +1438,29 @@ fn run(cli: Cli) -> Result<()> {
         Command::Context { command } => run_context(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
+        Command::Provenance { command } => run_provenance(&store, json, policy, command),
+        Command::Recover {
+            target,
+            plan,
+            fetch_cost,
+            decode_cost,
+            recompute_cost,
+        } => {
+            if !plan {
+                return Err(Error::invalid_argument("recover v1 implements --plan only"));
+            }
+            run_recover(
+                &store,
+                json,
+                policy,
+                &target,
+                weftfs::RecoveryCosts {
+                    fetch: fetch_cost,
+                    decode: decode_cost,
+                    recompute: recompute_cost,
+                },
+            )
+        }
         #[cfg(feature = "fuse")]
         Command::Mount {
             mountpoint,
@@ -2190,6 +2263,362 @@ fn run_causal(
             }
         }
     }
+}
+
+fn run_provenance(
+    store: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: ProvenanceCommand,
+) -> Result<()> {
+    match command {
+        ProvenanceCommand::Record { record, outputs } => {
+            let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
+            let text = fs::read_to_string(&record)
+                .map_err(|err| Error::io(format!("cannot read {}: {err}", record.display())))?;
+            let parsed: serde_json::Value = serde_json::from_str(&text)
+                .map_err(|err| Error::parse(format!("bad provenance JSON: {err}")))?;
+            let record = parse_provenance_record_json(&parsed)?;
+            let mut output_ids = Vec::with_capacity(outputs.len());
+            for target in &outputs {
+                output_ids.push(find_object_by_identity(&store, target)?.id);
+            }
+            let id = store.record_provenance(&output_ids, &record)?;
+            let ids: Vec<String> = output_ids.iter().map(|hash| hash.to_hex()).collect();
+            if json {
+                print_json(&json!({
+                    "provenance_id": id.to_hex(),
+                    "outputs": ids,
+                    "generation": store.generation(),
+                }))
+            } else {
+                println!("provenance_id={id}");
+                for output in &ids {
+                    println!("output={output}");
+                }
+                println!("generation={}", store.generation());
+                Ok(())
+            }
+        }
+        ProvenanceCommand::Show { target } => {
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
+            let object = find_object_by_identity(&store, &target)?;
+            let records = store.provenance_records_of(object.id)?;
+            if records.is_empty() {
+                return Err(Error::not_found("object has no provenance record"));
+            }
+            if json {
+                let items: Vec<_> = records
+                    .iter()
+                    .map(|(id, record)| {
+                        json!({
+                            "provenance_id": id.to_hex(),
+                            "record": value_to_json(&record.to_value()),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({
+                    "object_id": object.id.to_hex(),
+                    "content": object.content.to_hex(),
+                    "records": items,
+                }))
+            } else {
+                println!("object_id={}", object.id);
+                println!("content={}", object.content);
+                for (id, record) in &records {
+                    println!("provenance_id={id}");
+                    println!(
+                        "record={}",
+                        serde_json::to_string(&value_to_json(&record.to_value()))
+                            .unwrap_or_default()
+                    );
+                }
+                Ok(())
+            }
+        }
+        ProvenanceCommand::Closure { target, depth } => {
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
+            let object = find_object_by_identity(&store, &target)?;
+            let closure = store.provenance_closure(object.id, depth)?;
+            if json {
+                let nodes: Vec<_> = closure
+                    .nodes
+                    .iter()
+                    .map(|node| {
+                        json!({
+                            "depth": node.depth,
+                            "content": node.content.to_hex(),
+                            "object": node.object.map(|hash| hash.to_hex()),
+                            "role": node.role,
+                            "provenance": node.provenance.map(|hash| hash.to_hex()),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({
+                    "target": closure.target.to_hex(),
+                    "depth": closure.depth_limit,
+                    "nodes": nodes,
+                }))
+            } else {
+                println!("target={}", closure.target);
+                println!("depth={}", closure.depth_limit);
+                for node in &closure.nodes {
+                    println!(
+                        "node depth={} content={} object={} role={} provenance={}",
+                        node.depth,
+                        node.content,
+                        node.object
+                            .map(|hash| hash.to_hex())
+                            .unwrap_or_else(|| "-".to_owned()),
+                        node.role.as_deref().unwrap_or("-"),
+                        node.provenance
+                            .map(|hash| hash.to_hex())
+                            .unwrap_or_else(|| "-".to_owned()),
+                    );
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn run_recover(
+    store: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    target: &str,
+    costs: weftfs::RecoveryCosts,
+) -> Result<()> {
+    let store = open_store(store, OpenMode::ReadOnly, policy)?;
+    let object = find_object_by_identity(&store, target)?;
+    let candidates = store.recovery_candidates(object.id, costs)?;
+    let choice = choose_recovery(object.content, &candidates).map_err(Error::from)?;
+    if json {
+        let rendered: Vec<_> = candidates
+            .iter()
+            .map(|candidate| {
+                json!({
+                    "strategy": candidate.strategy.as_str(),
+                    "name": candidate.name,
+                    "available": candidate.available,
+                    "determinism": candidate.determinism.as_str(),
+                    "missing_inputs": candidate.missing_inputs.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
+                    "fetch_cost": candidate.fetch_cost,
+                    "decode_cost": candidate.decode_cost,
+                    "recompute_cost": candidate.recompute_cost,
+                    "total_cost": candidate.total_cost(),
+                    "eligible": candidate.rejection().is_none(),
+                    "rejection": candidate.rejection().map(|reason| reason.to_string()),
+                })
+            })
+            .collect();
+        print_json(&json!({
+            "object_id": object.id.to_hex(),
+            "content": object.content.to_hex(),
+            "strategy": choice.strategy.as_str(),
+            "name": choice.name,
+            "cost": choice.cost,
+            "fetch_cost": choice.fetch_cost,
+            "decode_cost": choice.decode_cost,
+            "recompute_cost": choice.recompute_cost,
+            "candidates": rendered,
+        }))
+    } else {
+        println!("object_id={}", object.id);
+        println!("content={}", object.content);
+        println!("strategy={}", choice.strategy.as_str());
+        println!("name={}", choice.name);
+        println!("cost={}", choice.cost);
+        println!("fetch_cost={}", choice.fetch_cost);
+        println!("decode_cost={}", choice.decode_cost);
+        println!("recompute_cost={}", choice.recompute_cost);
+        Ok(())
+    }
+}
+
+fn parse_provenance_record_json(value: &serde_json::Value) -> Result<ProvenanceRecord> {
+    let map = value
+        .as_object()
+        .ok_or_else(|| Error::invalid_argument("provenance record must be a JSON object"))?;
+    for key in map.keys() {
+        match key.as_str() {
+            "schema" | "operation" | "params" | "inputs" | "outputs" | "environment"
+            | "determinism" | "principal" | "timestamp_ns" => {}
+            other => {
+                return Err(Error::invalid_argument(format!(
+                    "unknown provenance record key `{other}`"
+                )))
+            }
+        }
+    }
+    if let Some(schema) = map.get("schema") {
+        let schema = schema
+            .as_str()
+            .ok_or_else(|| Error::invalid_argument("provenance schema must be text"))?;
+        if schema != PROVENANCE_SCHEMA {
+            return Err(Error::unsupported_version(format!(
+                "provenance schema `{schema}` is not `{PROVENANCE_SCHEMA}`"
+            )));
+        }
+    }
+    let operation = map
+        .get("operation")
+        .and_then(|item| item.as_str())
+        .ok_or_else(|| Error::invalid_argument("provenance record needs text `operation`"))?
+        .to_owned();
+    let params = match map.get("params") {
+        None => BTreeMap::new(),
+        Some(value) => match wu::json_to_value(value)? {
+            Value::Map(params) => params,
+            _ => {
+                return Err(Error::invalid_argument(
+                    "provenance params must be an object",
+                ))
+            }
+        },
+    };
+    let inputs = match map.get("inputs") {
+        None => Vec::new(),
+        Some(value) => {
+            let items = value
+                .as_array()
+                .ok_or_else(|| Error::invalid_argument("provenance inputs must be an array"))?;
+            let mut inputs = Vec::with_capacity(items.len());
+            for item in items {
+                let input = item
+                    .as_object()
+                    .ok_or_else(|| Error::invalid_argument("provenance input must be an object"))?;
+                for key in input.keys() {
+                    if !matches!(key.as_str(), "role" | "content" | "object") {
+                        return Err(Error::invalid_argument(format!(
+                            "unknown provenance input key `{key}`"
+                        )));
+                    }
+                }
+                let role = input
+                    .get("role")
+                    .and_then(|item| item.as_str())
+                    .ok_or_else(|| Error::invalid_argument("provenance input needs text `role`"))?
+                    .to_owned();
+                let content = input
+                    .get("content")
+                    .and_then(|item| item.as_str())
+                    .ok_or_else(|| {
+                        Error::invalid_argument("provenance input needs hex `content`")
+                    })?;
+                let content = Hash32::from_hex(content)?;
+                let object = match input.get("object") {
+                    None | Some(serde_json::Value::Null) => None,
+                    Some(serde_json::Value::String(text)) => Some(Hash32::from_hex(text)?),
+                    Some(_) => {
+                        return Err(Error::invalid_argument(
+                            "provenance input `object` must be hex or null",
+                        ))
+                    }
+                };
+                inputs.push(ProvenanceInput::new(role, content, object));
+            }
+            inputs
+        }
+    };
+    let outputs = match map.get("outputs") {
+        None => Vec::new(),
+        Some(value) => {
+            let items = value
+                .as_array()
+                .ok_or_else(|| Error::invalid_argument("provenance outputs must be an array"))?;
+            let mut outputs = Vec::with_capacity(items.len());
+            for item in items {
+                let text = item
+                    .as_str()
+                    .ok_or_else(|| Error::invalid_argument("provenance output must be hex"))?;
+                outputs.push(Hash32::from_hex(text)?);
+            }
+            outputs
+        }
+    };
+    let environment = match map.get("environment") {
+        Some(value) => {
+            let env = value.as_object().ok_or_else(|| {
+                Error::invalid_argument("provenance environment must be an object")
+            })?;
+            let tool = env
+                .get("tool")
+                .and_then(|item| item.as_str())
+                .ok_or_else(|| Error::invalid_argument("provenance environment needs text `tool`"))?
+                .to_owned();
+            let version = env
+                .get("version")
+                .and_then(|item| item.as_str())
+                .ok_or_else(|| {
+                    Error::invalid_argument("provenance environment needs text `version`")
+                })?
+                .to_owned();
+            let env_hash = match env.get("env_hash") {
+                None | Some(serde_json::Value::Null) => None,
+                Some(serde_json::Value::String(text)) => Some(Hash32::from_hex(text)?),
+                Some(_) => {
+                    return Err(Error::invalid_argument(
+                        "provenance environment `env_hash` must be hex or null",
+                    ))
+                }
+            };
+            let mut fields = BTreeMap::new();
+            for (key, value) in env {
+                if ProvenanceEnvironment::RESERVED.contains(&key.as_str()) {
+                    continue;
+                }
+                fields.insert(key.clone(), wu::json_to_value(value)?);
+            }
+            ProvenanceEnvironment {
+                tool,
+                version,
+                env_hash,
+                fields,
+            }
+        }
+        None => {
+            return Err(Error::invalid_argument(
+                "provenance record needs an `environment` object",
+            ))
+        }
+    };
+    let determinism = Determinism::parse(
+        map.get("determinism")
+            .and_then(|item| item.as_str())
+            .ok_or_else(|| Error::invalid_argument("provenance record needs text `determinism`"))?,
+    )?;
+    let principal = match map.get("principal") {
+        Some(value) => {
+            let principal = value
+                .as_object()
+                .ok_or_else(|| Error::invalid_argument("provenance principal must be an object"))?;
+            let uid = principal
+                .get("uid")
+                .and_then(|item| item.as_u64())
+                .ok_or_else(|| Error::invalid_argument("provenance principal needs u64 `uid`"))?;
+            let gid = principal
+                .get("gid")
+                .and_then(|item| item.as_u64())
+                .ok_or_else(|| Error::invalid_argument("provenance principal needs u64 `gid`"))?;
+            ProvenancePrincipal::new(uid, gid)
+        }
+        None => ProvenancePrincipal::new(0, 0),
+    };
+    let timestamp_ns = map
+        .get("timestamp_ns")
+        .and_then(|item| item.as_i64())
+        .ok_or_else(|| Error::invalid_argument("provenance record needs i64 `timestamp_ns`"))?;
+    ProvenanceRecord::new(
+        operation,
+        params,
+        inputs,
+        outputs,
+        environment,
+        determinism,
+        principal,
+        timestamp_ns,
+    )
 }
 
 fn run_uri(store: &PathBuf, json: bool, policy: OpenPolicy, command: UriCommand) -> Result<()> {

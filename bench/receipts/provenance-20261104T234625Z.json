@@ -1,0 +1,2577 @@
+{
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "f1d32e3ad42ebf172c65943f080b5cf32f51a7e3",
+    "revision_weftfs": "886bda530e436b4d1494b2d3b35729668af1db08"
+  },
+  "label": "Synthetic agent trace, single host, Docker bench court with hard memory/CPU/pids limits and bounded /tmp. Warm-cache measurements. Not a fleet, power-loss, or production claim.",
+  "measurements": {
+    "decode": {
+      "artifacts": 18,
+      "max_ns": 376662,
+      "mean_ns": 374504,
+      "median_ns": 374398,
+      "min_ns": 372776
+    },
+    "fetch": {
+      "artifacts": 72,
+      "max_ns": 380190,
+      "mean_ns": 321047,
+      "median_ns": 316801,
+      "min_ns": 312453
+    },
+    "note": "per-artefact medians of three warm-cache read_content samples"
+  },
+  "plans": [
+    {
+      "artifacts": 100,
+      "counts": {
+        "decode": 18,
+        "fetch": 72,
+        "recompute": 10
+      },
+      "declared_cost_ns": 2260000000,
+      "logical_bytes": 104857600,
+      "name": "injected",
+      "per_strategy": {
+        "decode": {
+          "count": 18,
+          "logical_bytes": 18874368,
+          "mean_wall_ns": 376980,
+          "physical_bytes_read": 43377,
+          "wall_ns": 6785641
+        },
+        "fetch": {
+          "count": 72,
+          "logical_bytes": 75497472,
+          "mean_wall_ns": 377078,
+          "physical_bytes_read": 75570480,
+          "wall_ns": 27149630
+        },
+        "recompute": {
+          "count": 10,
+          "logical_bytes": 10485760,
+          "mean_wall_ns": 3434274,
+          "physical_bytes_read": 84015520,
+          "wall_ns": 34342742
+        }
+      },
+      "physical_bytes_read": 159629377,
+      "plans": [
+        {
+          "artifact": "op0-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 0,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op0-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 0,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op0-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 1,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op1-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 1,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op1-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 2,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op2-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 2,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op2-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 3,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op3-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 3,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op3-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 4,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op4-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 4,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op4-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 5,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op5-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 5,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op5-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 6,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op6-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 6,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op6-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 7,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op7-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 7,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op7-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art0",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 8,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op8-art1",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art2",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art3",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art4",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art5",
+          "cost": 30000000,
+          "name": "decode",
+          "operation": 8,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op8-art6",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art7",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art8",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art9",
+          "cost": 10000000,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op9-art0",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art1",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art2",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art3",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art4",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art5",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art6",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art7",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art8",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art9",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        }
+      ],
+      "wall_ns": 68278013
+    },
+    {
+      "artifacts": 100,
+      "counts": {
+        "decode": 18,
+        "fetch": 72,
+        "recompute": 10
+      },
+      "declared_cost_ns": 1029856518,
+      "logical_bytes": 104857600,
+      "name": "measured",
+      "per_strategy": {
+        "decode": {
+          "count": 18,
+          "logical_bytes": 18874368,
+          "mean_wall_ns": 372077,
+          "physical_bytes_read": 43377,
+          "wall_ns": 6697398
+        },
+        "fetch": {
+          "count": 72,
+          "logical_bytes": 75497472,
+          "mean_wall_ns": 383331,
+          "physical_bytes_read": 75570480,
+          "wall_ns": 27599849
+        },
+        "recompute": {
+          "count": 10,
+          "logical_bytes": 10485760,
+          "mean_wall_ns": 3417419,
+          "physical_bytes_read": 84015520,
+          "wall_ns": 34174192
+        }
+      },
+      "physical_bytes_read": 159629377,
+      "plans": [
+        {
+          "artifact": "op0-art0",
+          "cost": 375190,
+          "name": "decode",
+          "operation": 0,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op0-art1",
+          "cost": 331980,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art2",
+          "cost": 333192,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art3",
+          "cost": 342669,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art4",
+          "cost": 326510,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art5",
+          "cost": 373757,
+          "name": "decode",
+          "operation": 0,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op0-art6",
+          "cost": 332169,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art7",
+          "cost": 375531,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art8",
+          "cost": 327872,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op0-art9",
+          "cost": 334644,
+          "name": "fetch",
+          "operation": 0,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art0",
+          "cost": 374398,
+          "name": "decode",
+          "operation": 1,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op1-art1",
+          "cost": 328923,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art2",
+          "cost": 331298,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art3",
+          "cost": 329565,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art4",
+          "cost": 329484,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art5",
+          "cost": 373066,
+          "name": "decode",
+          "operation": 1,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op1-art6",
+          "cost": 333493,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art7",
+          "cost": 380190,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art8",
+          "cost": 339022,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op1-art9",
+          "cost": 326038,
+          "name": "fetch",
+          "operation": 1,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art0",
+          "cost": 375481,
+          "name": "decode",
+          "operation": 2,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op2-art1",
+          "cost": 316630,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art2",
+          "cost": 327010,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art3",
+          "cost": 314196,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art4",
+          "cost": 314437,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art5",
+          "cost": 376403,
+          "name": "decode",
+          "operation": 2,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op2-art6",
+          "cost": 315498,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art7",
+          "cost": 317893,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art8",
+          "cost": 315639,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op2-art9",
+          "cost": 315960,
+          "name": "fetch",
+          "operation": 2,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art0",
+          "cost": 376522,
+          "name": "decode",
+          "operation": 3,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op3-art1",
+          "cost": 318094,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art2",
+          "cost": 318234,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art3",
+          "cost": 315519,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art4",
+          "cost": 317512,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art5",
+          "cost": 373237,
+          "name": "decode",
+          "operation": 3,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op3-art6",
+          "cost": 316941,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art7",
+          "cost": 317453,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art8",
+          "cost": 314437,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op3-art9",
+          "cost": 313044,
+          "name": "fetch",
+          "operation": 3,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art0",
+          "cost": 374669,
+          "name": "decode",
+          "operation": 4,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op4-art1",
+          "cost": 315248,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art2",
+          "cost": 314677,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art3",
+          "cost": 313014,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art4",
+          "cost": 313354,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art5",
+          "cost": 373707,
+          "name": "decode",
+          "operation": 4,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op4-art6",
+          "cost": 314747,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art7",
+          "cost": 316060,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art8",
+          "cost": 316130,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op4-art9",
+          "cost": 315488,
+          "name": "fetch",
+          "operation": 4,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art0",
+          "cost": 373357,
+          "name": "decode",
+          "operation": 5,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op5-art1",
+          "cost": 315018,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art2",
+          "cost": 316190,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art3",
+          "cost": 317723,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art4",
+          "cost": 314287,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art5",
+          "cost": 374048,
+          "name": "decode",
+          "operation": 5,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op5-art6",
+          "cost": 316971,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art7",
+          "cost": 322832,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art8",
+          "cost": 320167,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op5-art9",
+          "cost": 313856,
+          "name": "fetch",
+          "operation": 5,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art0",
+          "cost": 374369,
+          "name": "decode",
+          "operation": 6,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op6-art1",
+          "cost": 314537,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art2",
+          "cost": 317182,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art3",
+          "cost": 319256,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art4",
+          "cost": 312803,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art5",
+          "cost": 373127,
+          "name": "decode",
+          "operation": 6,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op6-art6",
+          "cost": 312453,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art7",
+          "cost": 316000,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art8",
+          "cost": 312694,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op6-art9",
+          "cost": 312663,
+          "name": "fetch",
+          "operation": 6,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art0",
+          "cost": 372776,
+          "name": "decode",
+          "operation": 7,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op7-art1",
+          "cost": 313796,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art2",
+          "cost": 318133,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art3",
+          "cost": 325538,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art4",
+          "cost": 312924,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art5",
+          "cost": 375360,
+          "name": "decode",
+          "operation": 7,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op7-art6",
+          "cost": 315519,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art7",
+          "cost": 317903,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art8",
+          "cost": 316801,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op7-art9",
+          "cost": 314417,
+          "name": "fetch",
+          "operation": 7,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art0",
+          "cost": 374950,
+          "name": "decode",
+          "operation": 8,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op8-art1",
+          "cost": 317593,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art2",
+          "cost": 314738,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art3",
+          "cost": 317572,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art4",
+          "cost": 316390,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art5",
+          "cost": 376662,
+          "name": "decode",
+          "operation": 8,
+          "removed": false,
+          "strategy": "decode"
+        },
+        {
+          "artifact": "op8-art6",
+          "cost": 314958,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art7",
+          "cost": 315849,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art8",
+          "cost": 315899,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op8-art9",
+          "cost": 322982,
+          "name": "fetch",
+          "operation": 8,
+          "removed": false,
+          "strategy": "fetch"
+        },
+        {
+          "artifact": "op9-art0",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art1",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art2",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art3",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art4",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art5",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art6",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art7",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art8",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art9",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        }
+      ],
+      "wall_ns": 68471439
+    },
+    {
+      "artifacts": 100,
+      "counts": {
+        "recompute": 100
+      },
+      "declared_cost_ns": 10000000000,
+      "logical_bytes": 104857600,
+      "name": "recompute_forced",
+      "per_strategy": {
+        "recompute": {
+          "count": 100,
+          "logical_bytes": 104857600,
+          "mean_wall_ns": 3096367,
+          "physical_bytes_read": 756138570,
+          "wall_ns": 309636776
+        }
+      },
+      "physical_bytes_read": 756138570,
+      "plans": [
+        {
+          "artifact": "op0-art0",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art1",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art2",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art3",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art4",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art5",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art6",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art7",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art8",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op0-art9",
+          "cost": 100000000,
+          "name": "recompute:b15a2e8efb8121dec03c3b79aac6bbc7f1c06977129c9ed29d1d0a68cb34bca3",
+          "operation": 0,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art0",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art1",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art2",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art3",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art4",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art5",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art6",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art7",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art8",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op1-art9",
+          "cost": 100000000,
+          "name": "recompute:99488e1ca44beffd6bda61d29449674ad0d76198d3cf7bfcb24c80240b875054",
+          "operation": 1,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art0",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art1",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art2",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art3",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art4",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art5",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art6",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art7",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art8",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op2-art9",
+          "cost": 100000000,
+          "name": "recompute:f0220afdea41134c9dca03dc9aff68d0eef5fbf312582ee2ac10ec443ef4f333",
+          "operation": 2,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art0",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art1",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art2",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art3",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art4",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art5",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art6",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art7",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art8",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op3-art9",
+          "cost": 100000000,
+          "name": "recompute:b16c435b80cb96085e54d62140cdb6ea9e134468a60eb58e65c891c7d389249a",
+          "operation": 3,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art0",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art1",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art2",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art3",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art4",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art5",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art6",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art7",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art8",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op4-art9",
+          "cost": 100000000,
+          "name": "recompute:46daff939b655230c81f85e58d4c970090035b58854f9642676af3446615bea9",
+          "operation": 4,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art0",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art1",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art2",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art3",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art4",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art5",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art6",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art7",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art8",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op5-art9",
+          "cost": 100000000,
+          "name": "recompute:a05e34e1bc050354c7adefcaa82ccb7938a5769177305ac8e3a822096d021233",
+          "operation": 5,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art0",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art1",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art2",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art3",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art4",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art5",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art6",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art7",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art8",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op6-art9",
+          "cost": 100000000,
+          "name": "recompute:129aa054215c915276d55cbe3c363971523968a0c4f3eab72f6d27d47647566a",
+          "operation": 6,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art0",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art1",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art2",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art3",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art4",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art5",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art6",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art7",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art8",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op7-art9",
+          "cost": 100000000,
+          "name": "recompute:3cff836418614481878e940a339205775092f0b36e1844441765aba99ecaea47",
+          "operation": 7,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art0",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art1",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art2",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art3",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art4",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art5",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art6",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art7",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art8",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op8-art9",
+          "cost": 100000000,
+          "name": "recompute:93099f2a1fd5886fcbd1d747d67f3698b7edc89fd1ad720bd5bcbadca1e81b63",
+          "operation": 8,
+          "removed": false,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art0",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art1",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art2",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art3",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art4",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art5",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art6",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art7",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art8",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        },
+        {
+          "artifact": "op9-art9",
+          "cost": 100000000,
+          "name": "recompute:c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+          "operation": 9,
+          "removed": true,
+          "strategy": "recompute"
+        }
+      ],
+      "wall_ns": 309636776
+    }
+  ],
+  "schema": "weft.provenance.bench.v1",
+  "verification": {
+    "checked_manifests": 90,
+    "checked_objects": 90,
+    "checked_provenance": 90,
+    "problems": [],
+    "verify_full_ok": true
+  },
+  "workload": {
+    "artifact_bytes": 1048576,
+    "artifacts": 100,
+    "artifacts_per_operation": 10,
+    "chunk_size": 65536,
+    "compressible_every": 5,
+    "decode_capable_artifacts": 20,
+    "fetch_capable_artifacts": 80,
+    "gc": {
+      "deleted_blobs": 141,
+      "deleted_bytes": 8579129
+    },
+    "injected_costs_ns": {
+      "decode": 30000000,
+      "fetch_per_mib": 10000000,
+      "recompute": 100000000
+    },
+    "logical_bytes": 104857600,
+    "operations": 10,
+    "provenance_records": 10,
+    "removed_artifacts": 10,
+    "removed_content_ids": [
+      "e620057ddf8ef45a5d00175d3de5d4066922dc949bd24c9b19508c190e5785b6",
+      "3ab8e4628bd561ea53e13e6941497ca913491ced43251bf865892765282fb84c",
+      "3ca8184849e36a8086954642684b57fe9970dd38440a9ff9890f5e55495b775a",
+      "bb137e11b1214e92c70b7bfb7f91da6d666f8fcbe54d514e4a7ab51eb0ef440c",
+      "c23acc7f6ce2565a62bb8a6f7a97381e014ba1804f4d7512ce67ec8dee881c3a",
+      "61161ea85d0511c1eff2f809c76206f45c61e5a7e976dffff9accceba87bac8f",
+      "2f9594235fc8b61284fafbd709f6a51b605cffb8124a1bf2e0dfee5eb1068fd9",
+      "cd1a0fb89c51cac53fe7b292ef2446475ce86cf522efd44d27659a3ca283ba7a",
+      "0ba350730b7d6dc59ea39bc50de85fb4e45634e265f366910f9af55a4b78a4e5",
+      "309d8f16fec5b929707dd3bdaa19d34a557e2209586526e104030dd35e8dcea1"
+    ],
+    "removed_operation": 9,
+    "removed_provenance": "c706d154983f11c6f1c913db657fd673559f96439de8f2609cb42590e6975289",
+    "representation": "codec-auto"
+  }
+}

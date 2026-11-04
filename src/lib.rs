@@ -28,6 +28,7 @@ pub mod format;
 pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
+pub mod provenance;
 pub mod recovery;
 pub mod representation;
 pub mod state;
@@ -42,6 +43,11 @@ pub use context::{CapabilityContext, ContextResolution, MaterializationReport, S
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
+pub use provenance::{
+    choose_recovery, Determinism, NoEligibleStrategy, ProvenanceClosure, ProvenanceEnvironment,
+    ProvenanceInput, ProvenanceNode, ProvenancePrincipal, ProvenanceRecord, RecoveryCandidate,
+    RecoveryChoice, RecoveryCosts, RecoveryRejection, RecoveryStrategy,
+};
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
     GcReport, LineageEntry, OpenMode, Options, RepresentationMode, SavedContext, SetAttr, StatFs,
