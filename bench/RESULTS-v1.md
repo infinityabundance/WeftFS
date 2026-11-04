@@ -424,21 +424,28 @@ No sample was deleted. The two receipts remain in `bench/receipts/`.
 
 ## 8. Explicit gaps (not measured, not claimed)
 
-- No external SQLite or graph/triple-store baseline for context queries. The
-  selector semantics have no controlled direct equivalent; no competitive
-  claim is made.
-- No ext4, XFS, Btrfs, or ZFS baseline. The court does not provide them.
-- No physical power-loss test. Crash evidence in this program remains
-  process-fault proxies (`WEFT_CRASH_PHASE`).
-- No energy or CPU-cycle measurement; no RAPL, no external power meter.
-- No direct-I/O filesystem measurement due to the known kernel 7.3 EIO
-  interaction; no cold-cache run; no multi-threaded or concurrent fio run.
+This section records the gaps of the first pass. The comparative pass
+(`bench/RESULTS-comparative-v1.md`, receipts dated `20261103T2321xxZ`) closes
+the external SQLite, ext4/XFS cold-cache, concurrent-fio, and matched Go/Rust
+codec gaps. Still open after that pass:
+
+- No physical power-loss test. Crash evidence remains a process-fault proxy
+  plus the F9 QEMU VM power-cut proxy; neither is physical media loss.
+- No Btrfs or ZFS baseline. ZFS was probed and is not installed in the vm
+  court; it is recorded as unavailable, not substituted.
+- No `perf` counters or RAPL energy. `perf` is not installed and no readable
+  `energy_uj` exists; CPU user/sys time is the supported metric and is not
+  called energy.
+- No direct-I/O filesystem measurement and no same-inode concurrent direct
+  I/O; the guest kernel is 6.1, so the host kernel 7.3 EIO interaction is not
+  exercised.
 - No metadata-storm workload (create/unlink/rename/mkdir/rmdir storms), no
-  open-unlinked, hardlink, symlink, or xattr throughput run in this pass.
-- No filesystem run at 8 MiB+ file sizes beyond the 8 MiB corpus, and no
-  ranged-read or streaming codec benchmark.
-- No Go/Rust codec performance comparison in a matched court in this pass; the
-  codec numbers are Rust WeftCodec only plus external CLI baselines.
+  open-unlinked, hardlink, symlink, or xattr throughput run in the comparative
+  pass.
+- No AI-corpus external SQLite/graph baseline, no dedicated graph database,
+  Neo4j, or SPARQL comparison, and no 10^5–10^6-object scaling.
+- No library-vs-library Go/Rust codec comparison; the matched court is
+  CLI-process based with the process overhead measured separately.
 - No multi-host, NUMA, or non-x86 measurement. All numbers are single-host,
   single-kernel, quota-limited container observations.
 

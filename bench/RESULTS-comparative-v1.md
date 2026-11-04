@@ -1,0 +1,464 @@
+# Comparative performance results — v1 (2026-11-03)
+
+**Status:** measured, single-host, court-bounded. This document reports scoped
+facts from four new courts: an external SQLite context/query baseline, a
+matched Rust/Go WeftCodec court, a guest cold-cache concurrent `fio` court with
+ext4/XFS baselines, and an energy/counter probe. It does **not** declare a
+winner, a record, a general speedup, or production readiness. Every number
+comes from a receipt in `bench/receipts/`; raw samples are in those receipts and
+raw logs sit beside them.
+
+The benchmark contract (`bench/CONTRACTS.md`) was fixed before these runs. No
+baseline was weakened after the fact, no failed case was deleted, and no unrun
+test is called passed.
+
+## 1. Evidence index
+
+| Run | Receipt | SHA-256 | Role |
+|---|---|---|---|
+| External SQLite, final | `bench/receipts/bench-external-20261103T232150Z.json` | `1c92b0a88c6e9f51a6196f0e6f96eb1edd2b10874b8d8d872d638268f460a61b` | Relational + adjacency baseline, 100/1,000/10,000 |
+| External corpus manifest | `bench/receipts/external-corpus-20261103T232150Z.json` | `491f121ccf73abbbe6025a528f400edcf7eb663f2c135974b7c6342db7c21914` | Exact payloads, ObjectIds, relations, snapshots, generations |
+| External raw log | `bench/receipts/bench-external-20261103T232150Z.log` | `7eb54f1d142876f58a8b687dc42da363b13df0aaf97ce6619cd4ec6aaf1a0311` | Commands and console output |
+| External SQLite, stability | `bench/receipts/bench-external-20261103T233736Z.json` | `28936be03cd75ab5b245faa1dc8dabe7f7361dc97988e24aa198abacb2af5c29` | Same-methodology stability comparison |
+| External stability log | `bench/receipts/bench-external-20261103T233736Z.log` | `a42a9825ccdfc1fa147664f681a954efe379188dc3677d246cb3efe55d659053` | Raw log |
+| Matched codec, final | `bench/receipts/bench-codec-matched-20261103T232158Z.json` | `7008187de4182b1c14b1e08089f34bb8db7eec1fc90460336c0e2e8e3c6e70db` | Rust vs Go CLI, 7 modes, encode/decode, CPU/RSS |
+| Matched codec, first | `bench/receipts/bench-codec-matched-20261103T225536Z.json` | `42a84fb74b1cb4804cfc37e7de604bc391125be11e4a05601496fbc9e323ab07` | Stability comparison |
+| Matched codec log | `bench/receipts/bench-codec-matched-20261103T232158Z.log` | `ee5bc747e9e3652990eea6fa3f82636273ed13a57eb3496a20c81185475070bb` | Raw court log |
+| Cold fio, final | `bench/receipts/bench-fs-cold-20261103T232216Z.json` | `b3b76b8b44d4e3d690c0da0077422fa247f2aa811a5edccca1edaa8962503fa5` | ext4/XFS/Rust/Go, cold/warm, 1/4/16 jobs |
+| Cold fio, stability | `bench/receipts/bench-fs-cold-20261103T233740Z.json` | `8e0dea0d2f84f9c619b991fec47a28510a9f0a5f2de5c18ff860387619262de1` | Same-methodology stability comparison |
+| Cold fio stability log | `bench/receipts/bench-fs-cold-20261103T233740Z.log` | `59456710e41fb22245265710786dd697f50b2de0608057c83ded689cea8bc296` | Raw log |
+| Cold fio log | `bench/receipts/bench-fs-cold-20261103T232216Z.log` | `66ff3df37e1b9bd39bc63938fd3498b3ccd71f41fbbddadee8fd769e55b69b04` | Raw court log |
+| Energy probe | `bench/receipts/energy-probe-20261103T225547Z.json` | `d92d74ee5c4f9a105e6faf564d37374dea39dccf6fdf7987e6538ba18c38c150` | `perf`/RAPL availability |
+| Rust store, current HEAD | `bench/receipts/bench-store-20261103T235127Z.json` | `f37b9c449c05e8f39f91fa51c9e8f40cc9f9e1ef0989372745a6aa16b69858c8` | Same-revision store side of §3.4 |
+
+The stability receipts (`bench-external-20261103T233736Z.json`,
+`bench-codec-matched-20261103T225536Z.json`,
+`bench-fs-cold-20261103T233740Z.json`) use the same code and method as their
+final counterparts; they are not headline results.
+
+## 2. Environment, revisions, and exact commands
+
+All execution ran inside `scripts/docker-court.sh`; no build, test, or
+benchmark ran on the host.
+
+- Host kernel `7.3.1-1-cachyos`; AMD Ryzen 7 9800X3D; 16 host CPUs, 4-CPU
+  quota; 131,565,228 KiB host `MemTotal`; Docker server `29.9.2`.
+- Court limits in every run: `--memory=3g --memory-swap=3g --pids-limit=1024
+  --cpus=4`, `--tmpfs /tmp:size=1g`, `no-new-privileges`, `cap-drop=ALL`.
+  `bench` adds `/dev/fuse` + `CAP_SYS_ADMIN` and labelled tmpfs mounts; `vm`
+  adds `/dev/kvm` when present.
+- Revisions recorded by the receipts: WeftFS
+  `2388352b36920feb7378d953b12dbcd0c30ed2b2`, WeftCodec
+  `ab50e8b182956444c6d3145299b24d46dad2aeea`, WeftCodec-Go
+  `ce2cff9283c2ccb841ee27ea5415ef3cb4691c6a`, WeftFS-Go
+  `209e4c30e3e4155ed631ef94a65059ca892fbaad`.
+- Bench court image `weft/bench-court:1`, id
+  `sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a`.
+- VM court image `weft/vm-court:1`, id
+  `sha256:526b2b9b284dd7d2c3e6ca87289dc42079b3efdf570bd3a4e6975bf2280c60d9`.
+- Guest: Debian kernel `6.1.0-54-amd64`, QEMU `7.2.22`, `fio-3.33`,
+  `mkfs.xfs 6.1.0`, KVM acceleration. Guest gets 4 vCPUs and 1,536 MiB; the
+  host court is still limited to 4 CPUs and 3 GiB.
+- External baseline: Python 3.11.2 with SQLite 3.40.1 linked into the
+  interpreter.
+
+Exact commands:
+
+```sh
+scripts/docker-court.sh bench "bash bench/scripts/run_external_bench.sh"
+scripts/docker-court.sh bench "bash bench/scripts/run_matched_codec_bench.sh"
+scripts/docker-court.sh bench "python3 bench/scripts/probe_energy.py --out bench/receipts/energy-probe-<UTC>.json"
+scripts/docker-court.sh vm \
+  "WEFT_FS_COLD_TARGETS=ext4,xfs,rust,go WEFT_FS_COLD_REPS=2 \
+   WEFT_FS_COLD_TIMEOUT=1800 bash bench/scripts/vm_fs_court.sh"
+```
+
+The external receipt records the exact Python command line, every schema and
+index statement, and every query with its parameters and `EXPLAIN QUERY PLAN`
+rows. The cold-fio receipt records every `fio` command line in
+`targets.*.commands` and every guest serial log path.
+
+## 3. External context/query baseline (SQLite)
+
+### 3.1 Corpus and schema
+
+`examples/bench_external_manifest.rs` emits the same definitions as
+`examples/bench_store.rs`: deterministic 32–256-byte payloads, ObjectIds from
+`weftfs::identity::object_id_from_seed` (`weft/object/v1` BLAKE3), the same
+`refers_to` ring, `tagged_as` even/odd tags (every fifth object untagged),
+`owner=team-3` edges, `objects-only`/`half`/`final` snapshots, and the same commit
+generations. Payloads are carried as hex in the manifest so the external
+baseline cannot silently drift. The manifest SHA-256 is in §1.
+
+Two SQLite variants were built at 100, 1,000, and 10,000 objects:
+
+- **relational**: `objects`, `relations`, `snapshots`, `payloads`; surrogate
+  relation ids.
+- **adjacency**: integer-keyed `nodes`, an adjacency `edges(src,label,dst,dst_value)`
+  table, `snapshots`, `payloads`. This is the **“SQLite relational/adjacency
+  baseline”**; it is **not** a dedicated graph database. No Neo4j, SPARQL, or
+  other graph/triple store was run.
+
+Indexes (created after bulk load and timed separately):
+
+```sql
+-- relational
+CREATE INDEX objects_kind ON objects(kind);
+CREATE INDEX objects_generation ON objects(generation);
+CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value);
+CREATE INDEX relations_subject_predicate ON relations(subject, predicate);
+-- adjacency
+CREATE INDEX nodes_kind ON nodes(kind);
+CREATE INDEX nodes_generation ON nodes(generation);
+CREATE INDEX edges_label_dst ON edges(label, dst);
+CREATE INDEX edges_label_value ON edges(label, dst_value);
+CREATE INDEX edges_src_label ON edges(src, label);
+```
+
+`PRAGMA journal_mode=WAL; synchronous=FULL; cache_size=-8000; mmap_size=0;
+temp_store=MEMORY`. Warm runs use 50 iterations (100/1,000) or 10 (10,000)
+after five warmups. Cold runs close the connection, apply
+`POSIX_FADV_DONTNEED` to the DB/WAL/SHM files, reopen, and time one query.
+This is **file-scoped page-cache eviction**, not a device-cache drop; the VM
+fio court performs a real guest `drop_caches`. Every result count was asserted
+(0, 1, n, even-tag, and one-hop) before a sample was accepted.
+
+### 3.2 Warm query medians (µs)
+
+| Objects | Variant | q0 tag absent | q1 relation incoming | qn kind=file | qeven tag | qhop one-hop | qoutgoing | snapshot resolve | snapshot visible |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | relational | 1.28 | 1.65 | 15.33 | 9.81 | 1.63 | 1.52 | 1.34 | 2.77 |
+| 100 | adjacency | 1.20 | 1.43 | 15.66 | 8.88 | 1.42 | 1.38 | 1.35 | 2.75 |
+| 1,000 | relational | 1.31 | 1.71 | 141.58 | 87.81 | 1.70 | 1.60 | 1.36 | 17.15 |
+| 1,000 | adjacency | 1.23 | 1.46 | 141.58 | 80.47 | 1.48 | 1.42 | 1.41 | 16.76 |
+| 10,000 | relational | 1.41 | 1.79 | 1,501.37 | 974.66 | 1.79 | 1.60 | 1.35 | 152.90 |
+| 10,000 | adjacency | 1.24 | 1.48 | 1,525.87 | 864.99 | 1.54 | 1.45 | 1.36 | 155.25 |
+
+Cold medians at 10,000, same column order (µs): relational `201.22, 578.85,
+5,070.26, 6,587.99, 579.51, 572.83, 133.01, 409.69`; adjacency `148.10, 439.66,
+4,761.73, 2,512.79, 381.19, 455.47, 142.91, 473.20`. The cold penalty is real
+for range scans and multi-result tags; point lookups remain sub-millisecond.
+
+### 3.3 Updates, index build, and bytes on disk
+
+| Objects | Variant | Bulk load ms | Index build ms | Index bytes | Churn add ms | Churn delete ms | Durable insert ms | Total bytes |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 100 | relational | 1.46 | 5.91 | 8,192 | 1.13 | 1.13 | 1.15 | 208,896 |
+| 100 | adjacency | 1.38 | 6.24 | 0 | 1.14 | 1.15 | 1.14 | 159,744 |
+| 1,000 | relational | 4.37 | 7.83 | 290,816 | 1.14 | 1.14 | 1.14 | 1,249,280 |
+| 1,000 | adjacency | 3.58 | 8.41 | 126,976 | 1.14 | 1.14 | 1.14 | 733,184 |
+| 10,000 | relational | 39.67 | 27.24 | 3,137,536 | 1.14 | 1.13 | 0.77 | 11,870,208 |
+| 10,000 | adjacency | 32.63 | 21.64 | 1,396,736 | 1.16 | 1.14 | 0.77 | 6,447,104 |
+
+“Durable insert” is a per-object insert with its own committed transaction and
+`fsync`, on a scratch table, sampled over the first 100 objects. “Bulk load” is
+one transaction and is not a durability equivalent of WeftFS per-object commits.
+Adjacency index bytes at 100 objects are zero because the new indexes fit in
+pages already allocated; this is recorded as measured, not rounded.
+
+### 3.4 Comparison with the Rust store
+
+The Rust store receipt is `bench/receipts/bench-store-20261103T235127Z.json`
+(revision `2388352`, same corpus definitions used by the manifest; wall time
+487.9 s, peak RSS 169,356 KiB). Medians:
+
+| Objects | Store q0 | Store q1 | Store qn | Store qeven | Store qhop | Store churn add/del | Store relation add | Store snapshot create | Store open/replay | Store bytes |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 26.9 µs | 25.3 µs | 21.0 µs | 31.6 µs | 25.8 µs | 2.29/2.28 ms | 2.28 ms | 4.51 ms | 6.51 ms | 183,562 |
+| 1,000 | 2.43 ms | 2.32 ms | 180.4 µs | 2.42 ms | 2.29 ms | 2.64/2.64 ms | 2.54 ms | 4.83 ms | 319.1 ms | 1,630,681 |
+| 10,000 | 494.4 ms | 465.7 ms | 1.90 ms | 487.4 ms | 457.6 ms | 5.94/6.02 ms | 4.68 ms | 7.87 ms | 32.83 s | 52,582,315 |
+
+Scoped facts, not a verdict:
+
+- SQLite point/relation/tag lookups are ~1.2–1.8 µs warm and ~0.15–0.58 ms
+  cold at 10,000; the Rust store’s equivalent relation/tag selectors are
+  ~457.6–494.4 ms because evaluation scans relations per object. This is the
+  largest published loss in this pass.
+- The n-result `kind == "file"` query is close: 1.90 ms in the store versus
+  1.50 ms relational / 1.53 ms adjacency at 10,000.
+- Relation insert/delete commits cost 5.94/6.02 ms in the store versus
+  1.14–1.16 ms in SQLite at 10,000. The store is committing a durable
+  transaction; SQLite is also `synchronous=FULL`, but its WAL commit is cheaper.
+- The store’s replay/open at 10,000 is 32.83 s versus a 27.24 ms SQLite index
+  build. These are not the same operation (the store validates every manifest
+  and commit), so the comparison is only an order-of-magnitude statement.
+- Whole-store bytes before verification are 52.58 MB at 10,000 versus 11.87 MB
+  (relational) and 6.45 MB (adjacency). The store also carries manifests,
+  commits, snapshots, and version records; SQLite carries only the listed
+  tables. This is a real space loss, not an equivalent-format comparison.
+- Snapshot resolve is only measured on the SQLite side (1.35 µs warm). The
+  store’s measured snapshot **create** is 4.53–6.95 ms; create and resolve are
+  not the same operation and are not presented as equivalent.
+- No authorization, Context Root, ambiguity, or evidence semantics are modelled
+  by either SQLite variant. This is a physical-access baseline only.
+
+## 4. Matched Rust/Go WeftCodec court
+
+Both implementations run as CLI processes under the same court limits, same
+fixtures, and default normative limits. Encode and decode are separate
+processes; wall time includes spawn, dynamic loading, argument parsing, file
+I/O, and codec work. Per-process CPU user/sys and max RSS come from `wait4`
+rusage. Every timed decode was compared byte-for-byte with the expected bytes;
+every frame was also cross-decoded by the other implementation. The final run
+used 7 iterations for 1–4 MiB fixtures and 15 for tensor/token fixtures.
+
+| Mode | Impl | Encode median ms | Encode p95 ms | Decode median ms | Decode p95 ms | Enc CPU ms | Dec CPU ms | Enc RSS KiB | Dec RSS KiB | Frame bytes |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| raw | Rust | 2.768 | 3.069 | 2.255 | 2.382 | 2.705 | 2.184 | 35,448 | 35,448 | 4,194,404 |
+| raw | Go | 2.476 | 2.565 | 2.048 | 2.301 | 3.687 | 3.351 | 42,812 | 42,812 | 4,194,404 |
+| zstd | Rust | 7.463 | 7.633 | 3.898 | 4.123 | 7.367 | 3.790 | 42,812 | 42,812 | 746,462 |
+| zstd | Go | 10.663 | 10.798 | 4.683 | 4.849 | 11.675 | 6.125 | 42,812 | 42,812 | 734,433 |
+| reference | Rust | 0.927 | 0.975 | 0.982 | 1.143 | 0.880 | 0.944 | 42,812 | 42,812 | 148 |
+| reference | Go | 0.951 | 1.053 | 0.873 | 1.110 | 1.289 | 1.420 | 42,812 | 42,812 | 148 |
+| delta | Rust | 37.699 | 38.550 | 1.609 | 1.661 | 37.543 | 1.511 | 82,088 | 42,812 | 80,070 |
+| delta | Go | 70.901 | 72.886 | 3.612 | 3.866 | 63.535 | 2.168 | 120,368 | 42,812 | 80,070 |
+| dictionary | Rust | 10.533 | 11.658 | 4.096 | 4.124 | 2.573 | 1.306 | 42,812 | 42,812 | 164,193 |
+| dictionary | Go | 3.930 | 12.642 | 1.941 | 3.115 | 4.320 | 2.425 | 42,812 | 42,812 | 167,755 |
+| tensor | Rust | 0.379 | 0.414 | 0.377 | 0.420 | 0.342 | 0.340 | 42,812 | 42,812 | 4,373 |
+| tensor | Go | 0.460 | 0.525 | 0.468 | 0.524 | 0.474 | 0.480 | 42,812 | 42,812 | 4,373 |
+| tokens | Rust | 0.423 | 0.452 | 0.391 | 0.413 | 0.392 | 0.355 | 42,812 | 42,812 | 10,728 |
+| tokens | Go | 0.788 | 0.851 | 0.499 | 0.551 | 0.828 | 0.545 | 42,812 | 42,812 | 10,728 |
+
+Cross-decode returned `true` in all 14 frame/direction cells (7 modes × 2
+directions). Process spawn overhead measured with `--help`: Rust 0.326 ms
+median wall, Go 0.387 ms; not subtracted. Go runtime threads can make process
+CPU exceed wall time; CPU time is not energy.
+
+Losses and scoped facts:
+
+- Rust encodes `zstd` 4 MiB in 7.46 ms versus Go 10.66 ms; Rust decodes in
+  3.90 ms versus 4.68 ms. Rust `delta` encode is 37.70 ms versus Go 70.90 ms,
+  and Rust `delta` decode 1.61 ms versus 3.61 ms. These are CLI-process
+  measurements, not library benchmarks.
+- Go produces a smaller `zstd` frame (734,433 vs 746,462 bytes) and a larger
+  `dictionary` frame (167,755 vs 164,193 bytes). Frame bytes are not a
+  speed claim.
+- Go is faster on this run for `raw` encode/decode and `dictionary` encode
+  median, but Rust is faster on `dictionary` decode and `tensor`/`tokens`.
+  `dictionary` Rust encode has a large wall/CPU gap (10.53 ms wall, 2.57 ms
+  CPU) and a 22% run-to-run change; the variance is published in §7, not
+  explained away.
+- Rust `delta` encode peaks at 82,088 KiB RSS; Go at 120,368 KiB.
+- No library-level Go/Rust codec comparison was run in this pass. The existing
+  in-process Rust codec receipt uses a different corpus and is not directly
+  comparable.
+
+## 5. Cold-cache and concurrent fio
+
+### 5.1 Rig and method
+
+A QEMU guest boots the Debian kernel/initramfs from the vm court image with a
+read-only ext4 root image built in the court. The root contains busybox, fio,
+both WeftFS CLIs, and only the kernel modules needed (`fuse.ko`, `xfs.ko`,
+`libcrc32c.ko`, `crc32c_generic.ko`, `crc32c-intel.ko`). The data disk is raw
+virtio-blk with QEMU `cache=none`; the results disk is a small ext4 image
+extracted with `debugfs` (no loop mount, no extra capability).
+
+- Cold: guest runs `sync; echo 3 > /proc/sys/vm/drop_caches` immediately before
+  the run. Warm: the next run on the same files with no drop.
+- `fio` psync, `direct=0` (buffered), `group_reporting`,
+  `percentile_list=50:95:99`, `randrepeat=1`. Sizes per job: 8 MiB sequential,
+  512 KiB random, 64 KiB with `--fsync=1`. Write workloads also use
+  `--end_fsync=1`; `fsync-write-4k` uses `--fsync=1`.
+- `numjobs` 1/4/16; two repetitions per cell. Medians are across the two
+  per-run values; each per-run value is retained in the receipt.
+- ext4 and XFS are guest-kernel 6.1.0-54-amd64. Rust and Go WeftFS are mounted
+  over FUSE inside the guest; the store and mount live on an ext4 data disk.
+  Mount options recorded in the receipt: Rust
+  `rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other`;
+  Go `rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,max_read=131072`.
+  The `allow_other`/`max_read` difference is an implementation default and is a
+  limitation of this comparison.
+- `fio` write buffers default to zeros; WeftFS chunk dedup can therefore reduce
+  stored bytes. This receipt measures latency/IOPS, **not** storage
+  amplification. Buffered-write IOPS are submission IOPS; `end_fsync` flushes
+  at job end, not per write.
+
+### 5.2 Results (medians of two repetitions)
+
+| Target | Workload | nj | Cold IOPS | Warm IOPS | Cold clat p50/p95/p99 µs | Warm clat p50/p95/p99 µs | Cold sync p99 µs |
+|---|---|---:|---:|---:|---|---|---:|
+| ext4 | fsync-write-4k | 1 | 586.1 | 701.0 | 6.1/18.3/18.3 | 4.6/9.0/9.0 | 2,736.1 |
+| ext4 | fsync-write-4k | 4 | 900.4 | 1,014.3 | 67.7/84.5/89.1 | 62.8/86.0/96.8 | 6,225.9 |
+| ext4 | fsync-write-4k | 16 | 3,204.5 | 3,202.0 | 80.9/135.9/235.0 | 71.0/160.8/243.7 | 8,011.8 |
+| ext4 | rand-read-4k | 1 | 9,494.5 | 9,494.5 | 96.8/121.9/154.6 | 96.8/117.8/173.1 | n/a |
+| ext4 | rand-read-4k | 4 | 39,384.6 | 39,384.6 | 34.6/99.3/119.8 | 33.8/99.3/110.6 | n/a |
+| ext4 | rand-read-4k | 16 | 146,285.7 | 146,285.7 | 54.5/154.6/350.2 | 57.3/151.6/350.2 | n/a |
+| ext4 | rand-write-4k | 1 | 37,333.3 | 42,666.7 | 0.6/1.1/1.5 | 0.7/1.1/1.4 | n/a |
+| ext4 | rand-write-4k | 4 | 100,571.4 | 115,200.0 | 0.7/1.1/4.6 | 0.6/1.1/2.6 | n/a |
+| ext4 | rand-write-4k | 16 | 274,285.7 | 227,555.6 | 0.7/1.3/6.8 | 0.6/1.1/6.4 | n/a |
+| ext4 | seq-read-1m | 1 | 1,400.0 | 1,400.0 | 656.4/1,642.5/1,642.5 | 674.8/1,669.1/1,669.1 | n/a |
+| ext4 | seq-read-1m | 4 | 3,607.8 | 3,508.8 | 1,043.5/3,026.9/3,625.0 | 878.6/2,977.8/4,616.2 | n/a |
+| ext4 | seq-read-1m | 16 | 5,760.0 | 6,568.4 | 1,671.2/6,750.2/7,979.0 | 1,255.4/6,225.9/7,602.2 | n/a |
+| ext4 | seq-write-1m | 1 | 1,142.9 | 1,071.4 | 132.1/167.9/167.9 | 143.4/176.1/176.1 | n/a |
+| ext4 | seq-write-1m | 4 | 2,084.0 | 1,830.1 | 194.6/282.1/294.9 | 150.5/237.6/244.2 | n/a |
+| ext4 | seq-write-1m | 16 | 2,783.9 | 2,876.8 | 177.2/299.0/479.2 | 180.2/290.8/358.4 | n/a |
+| xfs | fsync-write-4k | 1 | 692.8 | 888.9 | 5.6/12.4/12.4 | 4.2/11.9/11.9 | 2,707.5 |
+| xfs | fsync-write-4k | 4 | 1,357.2 | 1,777.8 | 7.0/17.2/25.2 | 6.2/13.3/26.1 | 5,505.0 |
+| xfs | fsync-write-4k | 16 | 1,846.4 | 2,491.3 | 7.0/19.2/27.9 | 6.9/18.7/26.2 | 25,395.2 |
+| xfs | rand-read-4k | 1 | 9,494.5 | 9,142.9 | 97.3/116.7/151.6 | 97.8/120.8/140.0 | n/a |
+| xfs | rand-read-4k | 4 | 39,384.6 | 39,384.6 | 35.3/100.4/117.2 | 38.7/103.9/125.7 | n/a |
+| xfs | rand-read-4k | 16 | 146,285.7 | 151,912.1 | 59.6/162.8/474.1 | 56.3/135.9/263.7 | n/a |
+| xfs | rand-write-4k | 1 | 48,000.0 | 42,666.7 | 0.6/1.1/4.4 | 0.6/1.0/1.2 | n/a |
+| xfs | rand-write-4k | 4 | 136,533.3 | 170,666.7 | 0.7/1.1/1.4 | 0.6/1.0/1.4 | n/a |
+| xfs | rand-write-4k | 16 | 316,952.4 | 341,333.3 | 0.6/1.1/5.7 | 0.6/1.1/2.7 | n/a |
+| xfs | seq-read-1m | 1 | 2,000.0 | 1,800.0 | 360.4/852.0/852.0 | 380.9/905.2/905.2 | n/a |
+| xfs | seq-read-1m | 4 | 4,571.4 | 4,571.4 | 464.9/1,564.7/1,646.6 | 490.5/1,409.0/1,564.7 | n/a |
+| xfs | seq-read-1m | 16 | 6,568.4 | 6,400.0 | 1,515.5/6,651.9/7,864.3 | 1,695.7/5,799.9/10,305.5 | n/a |
+| xfs | seq-write-1m | 1 | 1,333.3 | 1,333.3 | 117.5/142.6/142.6 | 116.7/134.4/134.4 | n/a |
+| xfs | seq-write-1m | 4 | 1,888.9 | 2,297.4 | 192.5/292.9/299.0 | 122.6/194.6/199.7 | n/a |
+| xfs | seq-write-1m | 16 | 2,702.2 | 2,915.1 | 170.0/284.7/531.5 | 162.8/265.7/311.3 | n/a |
+| rust | fsync-write-4k | 1 | 82.1 | 83.6 | 11,599.9/15,401.0/15,401.0 | 11,534.3/15,269.9/15,269.9 | 36.7 |
+| rust | fsync-write-4k | 4 | 81.9 | 55.1 | 35,127.3/50,855.9/60,686.3 | 34,603.0/247,595.0/522,059.8 | 34,275.3 |
+| rust | fsync-write-4k | 16 | 54.9 | 74.8 | 124,256.3/920,125.4/1,131,937.8 | 144,703.5/176,160.8/188,743.7 | 519,831.6 |
+| rust | rand-read-4k | 1 | 14,476.2 | 18,285.7 | 46.1/247.4/296.1 | 46.3/55.3/86.0 | n/a |
+| rust | rand-read-4k | 4 | 22,857.1 | 28,444.4 | 136.2/360.4/623.6 | 136.2/149.5/157.7 | n/a |
+| rust | rand-read-4k | 16 | 26,426.9 | 28,249.6 | 553.0/766.0/1,091.6 | 553.0/581.6/602.1 | n/a |
+| rust | rand-write-4k | 1 | 80.2 | 81.5 | 11,993.1/15,007.7/16,318.5 | 11,862.0/14,680.1/16,613.4 | n/a |
+| rust | rand-write-4k | 4 | 77.5 | 73.2 | 51,118.1/62,652.4/72,876.0 | 54,526.0/66,453.5/72,351.7 | n/a |
+| rust | rand-write-4k | 16 | 73.9 | 73.8 | 218,103.8/231,735.3/240,123.9 | 218,103.8/231,735.3/243,269.6 | n/a |
+| rust | seq-read-1m | 1 | 895.2 | 1,600.0 | 2,649.1/3,881.0/3,881.0 | 466.9/679.9/679.9 | n/a |
+| rust | seq-read-1m | 4 | 873.4 | 2,285.7 | 5,169.2/7,217.2/7,258.1 | 1,597.4/1,777.7/1,818.6 | n/a |
+| rust | seq-read-1m | 16 | 1,320.1 | 2,509.8 | 12,124.2/13,303.8/13,697.0 | 6,193.2/6,291.5/6,324.2 | n/a |
+| rust | seq-write-1m | 1 | 9.9 | 10.5 | 104,857.6/123,469.8/123,469.8 | 97,517.6/109,838.3/109,838.3 | n/a |
+| rust | seq-write-1m | 4 | 11.1 | 12.3 | 360,710.1/531,628.0/565,182.5 | 284,688.4/523,239.4/583,008.3 | n/a |
+| rust | seq-write-1m | 16 | 12.1 | 11.8 | 931,135.5/1,400,897.5/1,484,783.6 | 1,010,827.3/1,358,954.5/1,442,840.6 | n/a |
+| go | fsync-write-4k | 1 | 80.2 | 79.8 | 11,927.6/15,007.7/15,007.7 | 12,058.6/15,466.5/15,466.5 | 35.6 |
+| go | fsync-write-4k | 4 | 80.8 | 82.3 | 47,448.1/79,691.8/105,381.9 | 42,729.5/67,764.2/100,663.3 | 78.5 |
+| go | fsync-write-4k | 16 | 82.5 | 73.3 | 180,355.1/199,229.4/213,909.5 | 200,278.0/230,686.7/249,561.1 | 149.2 |
+| go | rand-read-4k | 1 | 6,909.1 | 8,266.7 | 100.9/357.9/588.8 | 101.9/191.5/289.3 | n/a |
+| go | rand-read-4k | 4 | 16,000.0 | 17,970.4 | 175.1/514.0/1,001.5 | 174.1/491.5/663.6 | n/a |
+| go | rand-read-4k | 16 | 20,086.2 | 19,520.7 | 442.4/2,474.0/3,899.4 | 469.0/2,408.4/4,137.0 | n/a |
+| go | rand-write-4k | 1 | 73.8 | 74.0 | 13,172.7/16,613.4/18,087.9 | 13,172.7/16,252.9/17,432.6 | n/a |
+| go | rand-write-4k | 4 | 50.5 | 67.1 | 60,293.1/523,501.6/657,719.3 | 61,866.0/105,381.9/121,110.5 | n/a |
+| go | rand-write-4k | 16 | 68.6 | 68.3 | 233,832.4/253,755.4/276,824.1 | 235,929.6/251,658.2/272,105.5 | n/a |
+| go | seq-read-1m | 1 | 231.9 | 307.7 | 5,595.1/6,414.3/6,414.3 | 3,113.0/3,670.0/3,670.0 | n/a |
+| go | seq-read-1m | 4 | 404.4 | 633.7 | 5,832.7/14,254.1/14,581.8 | 5,931.0/7,372.8/7,864.3 | n/a |
+| go | seq-read-1m | 16 | 783.1 | 917.6 | 15,859.7/26,607.6/33,751.0 | 15,663.1/22,675.5/27,394.0 | n/a |
+| go | seq-write-1m | 1 | 3.0 | 3.2 | 320,864.3/377,487.4/377,487.4 | 310,378.5/325,058.6/325,058.6 | n/a |
+| go | seq-write-1m | 4 | 3.2 | 3.1 | 1,216,348.2/1,308,622.8/1,325,400.1 | 1,300,234.2/1,358,954.5/1,375,731.7 | n/a |
+| go | seq-write-1m | 16 | 2.4 | 3.5 | 4,529,848.3/10,921,967.6/10,955,522.0 | 4,529,848.3/4,697,620.5/4,697,620.5 | n/a |
+
+### 5.3 Losses and limitations
+
+- WeftFS sequential 1 MiB writes are 9.9–12.1 IOPS (Rust) and 2.4–3.2 IOPS
+  (Go) versus 1,143–2,784 (ext4) and 1,333–2,702 (XFS). The store rewrites the
+  whole file and publishes a commit per write; the gap is two to three orders
+  of magnitude.
+- WeftFS 4 KiB random writes are 73.9–80.2 IOPS (Rust) and 50.5–68.6 IOPS (Go)
+  versus 37,333–316,952 IOPS for ext4/XFS. The ext4/XFS figure is buffered
+  submission throughput with an end-of-job flush; it is not a device write
+  rate. The WeftFS figure is its real FUSE write path.
+- `fsync`-per-write is 80–83 IOPS for both WeftFS implementations at `numjobs`
+  1, but tail latency explodes with concurrency: in the headline run Rust p99
+  reaches 1.13 s at `numjobs=16`, Go 214 ms; the stability run shows the same
+  tail instability. ext4/XFS sustain 586–3,205 / 693–2,846 IOPS with p99
+  between 12 µs and 25 ms. This is the most severe tail loss.
+- 4 KiB random reads: Rust is faster than ext4/XFS at `numjobs=1`
+  (14,476 vs 9,495 IOPS) but loses at `numjobs=16` (26,427 vs 146,286). Go is
+  slower than both baselines at every concurrency level.
+- Sequential reads: Rust cold reaches 873–1,320 IOPS and Go 232–783; warm
+  improves Rust to 1,600–2,510 and Go 308–918. ext4/XFS are 1,400–6,568.
+  Cold-cache penalty is visible and published.
+- ext4 versus XFS: XFS wins random writes and `fsync` at `numjobs=16` in this
+  guest; ext4 wins some cold read tails. No general ranking is claimed.
+- **ZFS:** not installed (`zfs`/`mkfs.zfs` absent); no ZFS run and no
+  comparison. This is a precise blocker, not a silent substitution.
+- **Btrfs:** not requested and not run.
+- The Rust and Go mounts do not have identical options (`allow_other` vs
+  `max_read=131072`); both are buffered FUSE mounts, but this is not a
+  perfectly controlled mount-option comparison.
+- FUSE direct I/O and same-inode concurrent direct I/O were not exercised.
+  The known kernel 7.3 direct-I/O EIO path is not part of this court; the guest
+  kernel is 6.1.0-54-amd64.
+- `fio` write buffers default to zeros, and WeftFS deduplicates chunks. The
+  write results measure the write/commit path, not storage growth.
+- Two repetitions per cell are enough for medians, not for trustworthy p99
+  tails; §7 quantifies the tail variance.
+
+## 6. Energy and CPU
+
+`bench/receipts/energy-probe-20261103T225547Z.json` records the attempt inside
+the bench court:
+
+- `perf` is **not installed**; `perf stat -e cycles,instructions,task-clock`
+  could not run. `kernel.perf_event_paranoid=2` is recorded.
+- `/sys/class/powercap/intel-rapl`, `intel-rapl:0`, and `intel-rapl:0:0`
+  exist, but no `energy_uj` file is readable; `readable_energy_files=0`.
+- cgroup `cpu.stat`, `cpu.max`, and `memory.current` are readable.
+
+Therefore the supported metric is CPU user and system time per process from
+`wait4` rusage, plus wall time and max RSS. **No joule, watt, package-power, or
+energy-efficiency number is reported or inferred.** CPU time is not energy.
+`perf` counters are also not claimed; the matched codec receipt records CPU
+time, not cycles or instructions. The fio receipt records fio's guest
+`usr_cpu`/`sys_cpu` percentages as reported by `fio`, which are CPU
+utilization, not energy.
+
+Scoped CPU observations from the matched codec court: Rust encode CPU total is
+2.71 ms (`raw`), 7.37 ms (`zstd`), 37.54 ms (`delta`), 2.57 ms
+(`dictionary`); Go is 3.69, 11.68, 63.54, 4.32 ms respectively. Rust decode
+CPU total is 2.18, 3.79, 1.51, 1.31 ms; Go is 3.35, 6.13, 2.17, 2.43 ms.
+These are CPU time, not energy, and include the CLI process overhead.
+
+## 7. Stability
+
+Two independent runs of each new court were compared by per-cell relative
+change (|a−b| / min(a,b)); no sample was removed.
+
+| Court | Metric | Cells | Median | p95 | Max |
+|---|---|---:|---:|---:|---:|
+| External SQLite | query median (warm + cold) | 96 | 4.6% | 33.4% | 68.5% |
+| Matched codec | encode/decode wall median | 28 | 2.9% | 33.5% | 40.0% |
+| Cold fio | IOPS median | 120 | 2.5% | 49.5% | 147.5% |
+| Cold fio | clat p50 median | 120 | 2.7% | 19.7% | 1,218.1% |
+| Cold fio | clat p99 median | 120 | 10.0% | 538.0% | 916.1% |
+
+The worst matched-codec change is Rust `raw` encode (3.876 → 2.768 ms, 40.0%)
+and Rust `raw` decode (3.011 → 2.255 ms, 33.5%); the first run followed a fresh
+codec build, the second reused the binary. The worst external change is
+adjacency/1,000 `qn_kind_file` cold (1.34 ms → 0.79 ms, 68.5%). The worst
+cold-fio change is ext4 `fsync-write-4k` `numjobs=4` warm p50 (62.85 ms →
+4.77 ms, 1,218%); p99 changed by up to 916% and is not stable in this rig.
+Tail metrics at high concurrency are reported as unstable, not as a result.
+
+## 8. Explicit gaps and what is not claimed
+
+- No physical power-loss, host page-cache loss, torn-sector, or device
+  write-cache-loss test. The VM power-cut court remains a QEMU proxy.
+- No ZFS baseline (not installed) and no Btrfs run.
+- No `perf` counters, RAPL energy, or external power meter.
+- No direct-I/O filesystem run and no same-inode concurrent direct I/O.
+- No metadata-storm, open-unlinked, hardlink, symlink, or xattr throughput run
+  in this comparative pass.
+- No AI-corpus external SQLite/graph baseline; the external baseline uses the
+  store corpus, not the F7 AI corpus.
+- No 10^5–10^6-object scaling; the external baseline stops at 10,000.
+- No dedicated graph database, Neo4j, or SPARQL comparison. The adjacency
+  variant is SQLite with an adjacency table.
+- No library-vs-library Go/Rust codec comparison; the matched court is
+  CLI-process to CLI-process, with process overhead measured and not
+  subtracted.
+- No multi-host, NUMA, non-x86, or different-kernel measurement. All numbers
+  are single-host, single-guest, quota-limited observations.
+- No claim that any implementation is “faster”, “smallest”, “production
+  ready”, or superior overall. The tables contain wins and losses for every
+  contestant; the losses are part of the result.
+
+## 9. Reproduction notes
+
+- The external corpus is regenerated by
+  `cargo build --release --example bench_external_manifest` plus the manifest
+  invocation in `bench/scripts/run_external_bench.sh`; the manifest hash must
+  match §1 for a byte-identical corpus.
+- Override external sizes with `WEFT_EXTERNAL_SIZES`, warm iterations with
+  `WEFT_EXTERNAL_WARM_ITERS`, cold iterations with `WEFT_EXTERNAL_COLD_ITERS`.
+- Matched codec iterations: `WEFT_MATCHED_ITERATIONS` (large fixtures) and
+  `WEFT_MATCHED_SMALL_ITERATIONS` (tensor/tokens). The harness is
+  `bench/matched/main.go`; it builds both CLIs from the checked-out revisions.
+- Cold fio targets: `WEFT_FS_COLD_TARGETS`; repetitions:
+  `WEFT_FS_COLD_REPS`; per-target timeout: `WEFT_FS_COLD_TIMEOUT`.
+  Raw fio JSON stays under `.docker-cache/vm-fs/<UTC>/extracted/`; the receipt
+  records each file name and every command line.
+- The vm court image must be rebuilt if `docker/vm.Dockerfile` changes; the
+  image id in the receipt identifies the exact image used.

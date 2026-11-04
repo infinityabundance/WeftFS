@@ -131,10 +131,37 @@ F7 AI-corpus pass (2026-11-03):
 - Not measured: external SQLite/graph/ext4/XFS AI-corpus baselines, trained
   zstd dictionaries, or 10^4–10^6-object scaling.
 
-Still not measured: external SQLite/graph-store baselines, ext4/XFS/Btrfs/ZFS
-baselines, physical power loss, energy, cold-cache and direct-I/O filesystem
-runs, metadata storms, concurrency sweeps, and a matched Go/Rust codec court.
-No headline performance claim is made from this first benchmark pass.
+Still not measured from the first pass: physical power loss, energy, and
+metadata storms. The comparative pass below adds external SQLite baselines,
+cold-cache and concurrent filesystem runs, a matched Go/Rust codec court, and
+an energy/counter probe. No headline performance claim is made.
+
+## 8.1 Comparative pass (2026-11-03)
+
+- External context/query baseline: `bench/receipts/bench-external-20261103T232150Z.json`
+  — schema-indexed SQLite relational and adjacency-table variants at
+  100/1,000/10,000 objects, using the exact `bench_store` corpus (ObjectIds,
+  payloads, relations, snapshots, generations). Indexes, query plans, warm and
+  cold (per-file `POSIX_FADV_DONTNEED`) samples, churn, index build, and bytes
+  are recorded. The adjacency variant is labelled “SQLite relational/adjacency
+  baseline”; no graph database was run.
+- Matched codec court: `bench/receipts/bench-codec-matched-20261103T232158Z.json`
+  — Rust and Go WeftCodec as CLI processes on identical RAW/ZSTD/REFERENCE/
+  DELTA/DICTIONARY/TENSOR/TOKENS fixtures, with medians, p95, CPU user/sys,
+  max RSS, frame bytes, per-iteration decode verification, and cross-decode.
+- Cold-cache concurrent fio: `bench/receipts/bench-fs-cold-20261103T232216Z.json`
+  — QEMU guest with a genuine guest `drop_caches` cold run, `numjobs` 1/4/16,
+  ext4 and XFS baselines plus Rust and Go WeftFS over FUSE, two repetitions
+  per cell. ZFS is recorded as unavailable (not installed).
+- Energy/counter probe: `bench/receipts/energy-probe-20261103T225547Z.json`
+  — `perf` is not installed and no readable RAPL `energy_uj` exists in the
+  court; CPU user/sys from rusage is the supported metric. CPU time is not
+  energy.
+- Analysis, every loss, and the stability table: `bench/RESULTS-comparative-v1.md`.
+
+Remaining gaps: physical power loss, host/device cache loss, a ZFS run,
+`perf`/RAPL energy, direct I/O, metadata storms, AI-corpus external baselines,
+and 10^5–10^6-object scaling.
 
 ## 9. F5 proof courts (B1–B4)
 

@@ -21,6 +21,7 @@ RUN apt-get update \
       qemu-system-x86 qemu-utils \
       busybox-static e2fsprogs cpio gzip xz-utils zstd \
       linux-image-amd64 initramfs-tools kmod \
+      fio xfsprogs libfuse3-dev fuse3 python3 \
       jq util-linux coreutils procps \
  && rm -rf /var/lib/apt/lists/*
 

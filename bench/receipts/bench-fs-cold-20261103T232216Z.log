@@ -1,0 +1,30 @@
+cold-cache fio court: image=weft/vm-court:1 kernel=7.3.1-1-cachyos
+targets=ext4,xfs,rust,go reps=2 timeout_s=1800
+building Rust WeftFS (fuse)
+    Finished `release` profile [optimized] target(s) in 0.02s
+building Go WeftFS (CGO disabled)
+guest kernel: /boot/vmlinuz-6.1.0-54-amd64 (6.1.0-54-amd64)
+guest initramfs: /boot/initrd.img-6.1.0-54-amd64
+qemu: QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)
+fio: fio-3.33
+mkfs.xfs: mkfs.xfs version 6.1.0
+root image: /work/.docker-cache/vm-fs/20261103T232216Z/root.img (805306368 bytes)
+ext4 base: /work/.docker-cache/vm-fs/20261103T232216Z/data-ext4.img; xfs base: /work/.docker-cache/vm-fs/20261103T232216Z/data-xfs.img (ok=1)
+accel=kvm cpu=host smp=4 guest_mem=1536M
+== target ext4 ==
+extracted results for ext4 to /work/.docker-cache/vm-fs/20261103T232216Z/extracted/ext4
+target ext4 exit=0 accel=kvm
+== target xfs ==
+extracted results for xfs to /work/.docker-cache/vm-fs/20261103T232216Z/extracted/xfs
+target xfs exit=0 accel=kvm
+== target rust ==
+extracted results for rust to /work/.docker-cache/vm-fs/20261103T232216Z/extracted/rust
+target rust exit=0 accel=kvm
+== target go ==
+extracted results for go to /work/.docker-cache/vm-fs/20261103T232216Z/extracted/go
+target go exit=0 accel=kvm
+wrote /work/bench/receipts/bench-fs-cold-20261103T232216Z.json
+cold fs receipt: /work/bench/receipts/bench-fs-cold-20261103T232216Z.json
+raw log: /work/bench/receipts/bench-fs-cold-20261103T232216Z.log
+b3b76b8b44d4e3d690c0da0077422fa247f2aa811a5edccca1edaa8962503fa5  /work/bench/receipts/bench-fs-cold-20261103T232216Z.json
+97414c559f84b67eefee01ba3b05ddb98a8a0f6aeb355e1dc1be20d182197a4b  /work/bench/receipts/bench-fs-cold-20261103T232216Z.log

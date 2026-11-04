@@ -11,7 +11,13 @@ twelve-step showcase receipt is
 The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
 `bench/receipts/bench-store-20261103T175920Z.json`, and
 `bench/receipts/bench-fs-20261103T180751Z.json`; the analysis, losses, and
-gaps are in `bench/RESULTS-v1.md`. The F2 receipt is
+gaps are in `bench/RESULTS-v1.md`. The comparative pass receipts are
+`bench/receipts/bench-external-20261103T232150Z.json`,
+`bench/receipts/bench-codec-matched-20261103T232158Z.json`,
+`bench/receipts/bench-fs-cold-20261103T232216Z.json`,
+`bench/receipts/bench-store-20261103T235127Z.json` (same-revision store side),
+and `bench/receipts/energy-probe-20261103T225547Z.json`; analysis is
+`bench/RESULTS-comparative-v1.md`. The F2 receipt is
 `bench/receipts/f2-20261103T205045Z.json` with its raw log beside it. The F3
 receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/ambiguity-20261103T210633Z.json` (4/4),
@@ -368,6 +374,44 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   `bench/scripts/compare_bench.py` compares two receipts for stability.
   `bench/RESULTS-v1.md` publishes every loss and the explicit gaps.
 
+### P7 comparative pass — external SQLite, matched codec, cold-cache fio (implemented)
+
+- External context/query baseline: `bench-external-20261103T232150Z.json`
+  (plus corpus manifest `external-corpus-20261103T232150Z.json`). Schema-indexed
+  SQLite relational and adjacency-table variants at 100/1,000/10,000 objects
+  using the exact `bench_store` payloads, ObjectIds, relations, snapshots, and
+  generations. Warm and cold (per-file page-cache eviction) samples, query
+  plans, churn, index build time/bytes, and bytes on disk are recorded. The
+  adjacency variant is labelled “SQLite relational/adjacency baseline”; no
+  Neo4j/SPARQL/dedicated graph database was run.
+- Same-revision store baseline for the comparison: `bench-store-20261103T235127Z.json`
+  at HEAD `2388352` (487.9 s wall, peak RSS 169,356 KiB), 100/1,000/10,000
+  objects, with the query/churn/snapshot/open/bytes medians used in
+  `bench/RESULTS-comparative-v1.md` §3.4.
+- Matched Rust/Go WeftCodec court: `bench-codec-matched-20261103T232158Z.json`
+  (first run `T225536Z` retained for stability). RAW/ZSTD/REFERENCE/DELTA/
+  DICTIONARY/TENSOR/TOKENS as CLI processes, medians and p95, CPU user/sys,
+  max RSS, frame bytes, per-iteration decode verification, and cross-decode in
+  both directions. Process overhead measured separately (Rust 0.326 ms, Go
+  0.387 ms) and not subtracted; no library-vs-library comparison is claimed.
+- Cold-cache concurrent fio: `bench-fs-cold-20261103T232216Z.json` (stability
+  run `T233740Z`). QEMU guest with a genuine guest
+  `sync; echo 3 > /proc/sys/vm/drop_caches` cold run, `numjobs` 1/4/16,
+  ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. ZFS
+  is recorded as unavailable (not installed). The Rust and Go mounts differ in
+  `allow_other`/`max_read` defaults; that is published as a limitation.
+- Energy/counter probe: `energy-probe-20261103T225547Z.json`. `perf` is not
+  installed and no readable RAPL `energy_uj` exists in the bench court;
+  CPU user/sys from `wait4` rusage is the supported metric. CPU time is not
+  called energy. No joule/watt/cycles claim is made.
+- Analysis: `bench/RESULTS-comparative-v1.md` contains the exact commands,
+  environments, revisions, tables, every loss, stability deltas, and explicit
+  limits. Scoped examples: SQLite point lookups are ~1.2–1.8 µs warm at 10,000
+  versus ~457.6–494.4 ms for the store’s relation/tag selectors; WeftFS
+  sequential 1 MiB writes are 9.9–12.1 IOPS (Rust) and 2.4–3.2 IOPS (Go)
+  versus 1,143–2,784 (ext4) and 1,333–2,702 (XFS); Rust `fsync`-write p99
+  reaches 1.13 s at `numjobs=16`. No winner or world-record claim is made.
+
 ### F5 — proof courts (B1–B4)
 
 The F5 code revision is parent `9d767d5`, `WeftCodec` `127bc85`,
@@ -497,12 +541,13 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 
 ## 4. What is **not** done (ranked)
 
-1. **Remaining benchmark gaps** (P7): no external SQLite/graph-store baseline,
-   no ext4/XFS/Btrfs/ZFS baseline, no physical power-loss or energy
-   measurement, no cold-cache/direct-I/O filesystem run, no metadata-storm or
-   concurrency sweep, and no matched Go/Rust codec performance court. The
-   codec/store/fio benchmarks themselves ran to completion in this pass; see
-   `bench/RESULTS-v1.md` §8 for the exact list.
+1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
+   SQLite, ext4/XFS cold-cache, concurrent-fio, and matched Go/Rust codec gaps
+   (`bench/RESULTS-comparative-v1.md`). Still open: physical power loss and
+   host/device cache loss, ZFS (not installed) and Btrfs, `perf`/RAPL energy,
+   direct-I/O and same-inode direct I/O, metadata storms, AI-corpus external
+   baselines, 10^5–10^6-object scaling, and a library-vs-library codec court.
+   See `bench/RESULTS-v1.md` §8 and `bench/RESULTS-comparative-v1.md` §8.
 2. **Formal model coverage beyond the commit/recovery abstraction.** The F9 TLA+
    model checks bounded commit/recovery safety, durability, and replay
    idempotence, but not checkpoints, GC, capability filtering, selector
@@ -544,10 +589,11 @@ gaps (checkpoints, GC, capabilities, multi-writer, physical rig).
 
 ## 5. Next work queue (dependency order)
 
-1. Close the P7 benchmark gaps in `bench/RESULTS-v1.md` §8: external
-   SQLite/graph-store baselines, an ext4/XFS/ZFS court, cold-cache and
-   direct-I/O runs, metadata storms, concurrency, and a matched Go/Rust codec
-   court. Then add the eight-component economic profile.
+1. Close the remaining P7 gaps in `bench/RESULTS-comparative-v1.md` §8:
+   physical power loss, ZFS/Btrfs, `perf`/RAPL energy, direct I/O, metadata
+   storms, AI-corpus external baselines, 10^5–10^6-object scaling, and a
+   library-vs-library codec court. Then add the eight-component economic
+   profile.
 2. Extend the TLA+ model to checkpoints, GC reachability, capability
    filtering, and multi-writer refusal; add a refinement mapping to the Rust
    and Go state machines. The current F9 model covers commit/recovery only.

@@ -1,0 +1,6237 @@
+{
+  "schema": "weft-external-bench-v1",
+  "kind": "external-sqlite-baseline",
+  "generated_at_unix": 1793748111,
+  "wall_time_s": 1.638622760772705,
+  "environment": {
+    "uname": {
+      "system": "Linux",
+      "node": "fb41ba69c68f",
+      "release": "7.3.1-1-cachyos",
+      "version": "#1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000",
+      "machine": "x86_64",
+      "processor": ""
+    },
+    "kernel": "7.3.1-1-cachyos",
+    "nproc": 16,
+    "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "mem_total_kib": 131565228,
+    "python": "3.11.2 (main, Oct  7 2026, 12:35:07) [GCC 12.2.0]",
+    "sqlite_version": "3.40.1",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_cpus": "4",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "revision_weftfs": "2388352b36920feb7378d953b12dbcd0c30ed2b2",
+    "revision_weftfs_go": "209e4c30e3e4155ed631ef94a65059ca892fbaad",
+    "revision_weftcodec": "ab50e8b182956444c6d3145299b24d46dad2aeea",
+    "revision_weftcodec_go": "ce2cff9283c2ccb841ee27ea5415ef3cb4691c6a"
+  },
+  "corpus_manifest": "bench/receipts/external-corpus-20261103T232150Z.json",
+  "corpus_manifest_sha256": "491f121ccf73abbbe6025a528f400edcf7eb663f2c135974b7c6342db7c21914",
+  "command": "bench/external/sqlite_baseline.py --manifest bench/receipts/external-corpus-20261103T232150Z.json --out bench/receipts/bench-external-20261103T232150Z.json --sizes 100,1000,10000 --work-dir /work/.docker-cache/bench-external --warm-iterations 0 --cold-iterations 5",
+  "method": {
+    "engine": "Python 3 stdlib sqlite3 (SQLite linked into the interpreter)",
+    "journal_mode": "WAL",
+    "synchronous": "FULL",
+    "cache_size_kib": 8000,
+    "mmap_size": 0,
+    "warm": "repeated executions on one open connection after 5 warmups",
+    "cold": "close connection, POSIX_FADV_DONTNEED on db/-wal/-shm, reopen, then one query",
+    "adjacency_label": "SQLite relational/adjacency baseline; not a dedicated graph database",
+    "no_graph_db_claim": "No Neo4j, SPARQL, or other graph/triple store was run.",
+    "same_corpus": "Payload bytes, ObjectIds, relations, tags, snapshot names, and commit generations come from examples/bench_external_manifest.rs, which uses the same definitions as examples/bench_store.rs.",
+    "durability": "WAL + synchronous=FULL; each churn insert/delete is its own committed transaction.",
+    "cold_limitation": "Cold uses per-file page-cache eviction, not a device cache drop; the VM fio court performs a guest drop_caches."
+  },
+  "results": [
+    {
+      "variant": "relational",
+      "size": 100,
+      "db_path": "/work/.docker-cache/bench-external/relational-100.sqlite",
+      "schema_sql": "\nCREATE TABLE objects (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE relations (\n  id INTEGER PRIMARY KEY,\n  subject TEXT NOT NULL,\n  predicate TEXT NOT NULL,\n  target_kind TEXT NOT NULL,\n  target_value TEXT NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  object_id TEXT PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX objects_kind ON objects(kind)",
+        "CREATE INDEX objects_generation ON objects(generation)",
+        "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+        "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+      ],
+      "build_ns": 134102970,
+      "load": {
+        "object_bulk_load_ns": 1457206,
+        "relation_bulk_load_ns": 1015573,
+        "durable_insert_ns": [
+          1150134,
+          1139464,
+          1134534,
+          1126490,
+          1131740,
+          1146688,
+          1138432,
+          1131289,
+          1166966,
+          1142149,
+          1198874,
+          1129946,
+          1132331,
+          1140156,
+          1129135,
+          1132401,
+          1136058,
+          1132250,
+          1149873,
+          1131620,
+          1128604,
+          1140015,
+          1132662,
+          1121511,
+          1124025,
+          1132341,
+          1125708,
+          1137861,
+          1126329,
+          1138923,
+          1136839,
+          1138151,
+          1144263,
+          1188034,
+          1138953,
+          1135106,
+          1186361,
+          1144603,
+          1141027,
+          1161575,
+          1156356,
+          1206599,
+          1190510,
+          1149934,
+          1148821,
+          1148661,
+          1166965,
+          1196821,
+          1145526,
+          1135306,
+          1126870,
+          1156096,
+          1138051,
+          1224162,
+          1744081,
+          1740425,
+          1772874,
+          1727049,
+          1735445,
+          1731087,
+          1749341,
+          1737449,
+          1182264,
+          1153430,
+          1158279,
+          1151547,
+          1164771,
+          1149502,
+          1150434,
+          1140486,
+          1139204,
+          1134375,
+          1139364,
+          1150314,
+          1281348,
+          1129316,
+          1152398,
+          1146777,
+          1136799,
+          1139403,
+          1150003,
+          1134635,
+          1139704,
+          1135748,
+          1147469,
+          1147709,
+          1147038,
+          1145956,
+          1148161,
+          1136689,
+          1139424,
+          1158490,
+          1151647,
+          1139665,
+          1150494,
+          1145234,
+          1148020,
+          1202151,
+          1151367,
+          1150855
+        ],
+        "rows": {
+          "objects": 100,
+          "relations": 207,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "objects_kind",
+            "ns": 2279108,
+            "sql": "CREATE INDEX objects_kind ON objects(kind)"
+          },
+          {
+            "index": "objects_generation",
+            "ns": 1072239,
+            "sql": "CREATE INDEX objects_generation ON objects(generation)"
+          },
+          {
+            "index": "relations_predicate_target",
+            "ns": 1294693,
+            "sql": "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)"
+          },
+          {
+            "index": "relations_subject_predicate",
+            "ns": 1267032,
+            "sql": "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+          }
+        ],
+        "total_ns": 5913072,
+        "bytes_before": 196608,
+        "bytes_after": 204800,
+        "index_bytes": 8192,
+        "files": {
+          "relational-100.sqlite": 172032,
+          "relational-100.sqlite-wal": 0,
+          "relational-100.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX objects_kind ON objects(kind)",
+          "CREATE INDEX objects_generation ON objects(generation)",
+          "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+          "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1263,
+            "median_ns": 1283.0,
+            "mean_ns": 1308.74,
+            "p95_ns": 1413,
+            "p99_ns": 1764,
+            "max_ns": 1764,
+            "stdev_ns": 76.12852553412552,
+            "raw_ns": [
+              1263,
+              1272,
+              1272,
+              1272,
+              1272,
+              1272,
+              1273,
+              1273,
+              1273,
+              1273,
+              1273,
+              1273,
+              1282,
+              1282,
+              1282,
+              1282,
+              1282,
+              1282,
+              1282,
+              1282,
+              1283,
+              1283,
+              1283,
+              1283,
+              1283,
+              1283,
+              1283,
+              1283,
+              1283,
+              1292,
+              1292,
+              1292,
+              1292,
+              1302,
+              1302,
+              1302,
+              1302,
+              1302,
+              1303,
+              1303,
+              1303,
+              1303,
+              1322,
+              1373,
+              1383,
+              1383,
+              1403,
+              1413,
+              1442,
+              1764
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 145260,
+            "median_ns": 151332,
+            "mean_ns": 354626.8,
+            "p95_ns": 1151807,
+            "p99_ns": 1151807,
+            "max_ns": 1151807,
+            "stdev_ns": 398727.2121886842,
+            "raw_ns": [
+              145260,
+              149519,
+              151332,
+              175216,
+              1151807
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 180627,
+            "median_ns": 193651,
+            "mean_ns": 4942329.2,
+            "p95_ns": 23921372,
+            "p99_ns": 23921372,
+            "max_ns": 23921372,
+            "stdev_ns": 9489531.475295361,
+            "raw_ns": [
+              180627,
+              193230,
+              193651,
+              222766,
+              23921372
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "6e49003bad272b9947abbf9f6d9303726c881d33079f64b069933cbe4d8c65bf"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1623,
+            "median_ns": 1653.0,
+            "mean_ns": 1656.84,
+            "p95_ns": 1703,
+            "p99_ns": 1813,
+            "max_ns": 1813,
+            "stdev_ns": 30.706585612861616,
+            "raw_ns": [
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1653,
+              1653,
+              1653,
+              1653,
+              1653,
+              1653,
+              1653,
+              1653,
+              1663,
+              1663,
+              1663,
+              1663,
+              1673,
+              1673,
+              1673,
+              1673,
+              1673,
+              1673,
+              1673,
+              1683,
+              1683,
+              1683,
+              1683,
+              1694,
+              1703,
+              1704,
+              1813
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 382432,
+            "median_ns": 385789,
+            "mean_ns": 387995.0,
+            "p95_ns": 400096,
+            "p99_ns": 400096,
+            "max_ns": 400096,
+            "stdev_ns": 6219.412287346771,
+            "raw_ns": [
+              382432,
+              384887,
+              385789,
+              386771,
+              400096
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 168404,
+            "median_ns": 204712,
+            "mean_ns": 202519.6,
+            "p95_ns": 229067,
+            "p99_ns": 229067,
+            "max_ns": 229067,
+            "stdev_ns": 23802.347620350392,
+            "raw_ns": [
+              168404,
+              183472,
+              204712,
+              226943,
+              229067
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT id FROM objects WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 15218,
+            "median_ns": 15329.0,
+            "mean_ns": 15404.3,
+            "p95_ns": 15619,
+            "p99_ns": 17853,
+            "max_ns": 17853,
+            "stdev_ns": 372.19168448529314,
+            "raw_ns": [
+              15218,
+              15228,
+              15238,
+              15258,
+              15258,
+              15258,
+              15259,
+              15268,
+              15278,
+              15279,
+              15279,
+              15289,
+              15289,
+              15299,
+              15299,
+              15299,
+              15299,
+              15308,
+              15308,
+              15308,
+              15309,
+              15318,
+              15318,
+              15328,
+              15329,
+              15329,
+              15338,
+              15339,
+              15348,
+              15349,
+              15359,
+              15359,
+              15369,
+              15369,
+              15378,
+              15379,
+              15379,
+              15388,
+              15389,
+              15389,
+              15399,
+              15399,
+              15408,
+              15419,
+              15428,
+              15469,
+              15569,
+              15619,
+              16070,
+              17853
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 247021,
+            "median_ns": 250727,
+            "mean_ns": 251396.4,
+            "p95_ns": 259583,
+            "p99_ns": 259583,
+            "max_ns": 259583,
+            "stdev_ns": 4329.377303954923,
+            "raw_ns": [
+              247021,
+              248784,
+              250727,
+              250867,
+              259583
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 168323,
+            "median_ns": 174636,
+            "mean_ns": 176110.0,
+            "p95_ns": 191056,
+            "p99_ns": 191056,
+            "max_ns": 191056,
+            "stdev_ns": 8264.227465407761,
+            "raw_ns": [
+              168323,
+              168844,
+              174636,
+              177691,
+              191056
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "even"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 9668,
+            "median_ns": 9808.0,
+            "mean_ns": 9845.34,
+            "p95_ns": 9998,
+            "p99_ns": 11742,
+            "max_ns": 11742,
+            "stdev_ns": 282.5914089281555,
+            "raw_ns": [
+              9668,
+              9668,
+              9688,
+              9688,
+              9698,
+              9698,
+              9698,
+              9708,
+              9708,
+              9719,
+              9728,
+              9748,
+              9768,
+              9768,
+              9778,
+              9779,
+              9788,
+              9788,
+              9788,
+              9789,
+              9789,
+              9798,
+              9798,
+              9799,
+              9808,
+              9808,
+              9809,
+              9818,
+              9828,
+              9828,
+              9828,
+              9829,
+              9838,
+              9838,
+              9838,
+              9848,
+              9849,
+              9849,
+              9858,
+              9859,
+              9859,
+              9868,
+              9869,
+              9908,
+              9918,
+              9928,
+              9958,
+              9998,
+              10039,
+              11742
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 399144,
+            "median_ns": 420975,
+            "mean_ns": 459683.0,
+            "p95_ns": 547350,
+            "p99_ns": 547350,
+            "max_ns": 547350,
+            "stdev_ns": 64641.215477433594,
+            "raw_ns": [
+              399144,
+              402320,
+              420975,
+              528626,
+              547350
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 166240,
+            "median_ns": 193401,
+            "mean_ns": 186660.2,
+            "p95_ns": 201045,
+            "p99_ns": 201045,
+            "max_ns": 201045,
+            "stdev_ns": 12876.016641803473,
+            "raw_ns": [
+              166240,
+              177381,
+              193401,
+              195234,
+              201045
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "c66178070cf4c546801f4b1b034aae1f95510837391d7acf4eec39235cd25b2b"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1603,
+            "median_ns": 1633.0,
+            "mean_ns": 1644.26,
+            "p95_ns": 1753,
+            "p99_ns": 1794,
+            "max_ns": 1794,
+            "stdev_ns": 39.85062609294865,
+            "raw_ns": [
+              1603,
+              1613,
+              1613,
+              1613,
+              1613,
+              1613,
+              1613,
+              1613,
+              1613,
+              1613,
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1623,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1633,
+              1634,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1643,
+              1644,
+              1653,
+              1653,
+              1663,
+              1663,
+              1673,
+              1673,
+              1693,
+              1733,
+              1753,
+              1773,
+              1794
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 358459,
+            "median_ns": 371693,
+            "mean_ns": 373871.0,
+            "p95_ns": 388394,
+            "p99_ns": 388394,
+            "max_ns": 388394,
+            "stdev_ns": 10353.083849752207,
+            "raw_ns": [
+              358459,
+              369158,
+              371693,
+              381651,
+              388394
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 161681,
+            "median_ns": 174456,
+            "mean_ns": 176979.8,
+            "p95_ns": 209119,
+            "p99_ns": 209119,
+            "max_ns": 209119,
+            "stdev_ns": 17289.918003275783,
+            "raw_ns": [
+              161681,
+              162112,
+              174456,
+              177531,
+              209119
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT target_value FROM relations WHERE subject=? AND predicate=?",
+          "params": [
+            "6e49003bad272b9947abbf9f6d9303726c881d33079f64b069933cbe4d8c65bf",
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1492,
+            "median_ns": 1523.0,
+            "mean_ns": 2085.32,
+            "p95_ns": 3346,
+            "p99_ns": 18655,
+            "max_ns": 18655,
+            "stdev_ns": 2428.936256388792,
+            "raw_ns": [
+              1492,
+              1493,
+              1493,
+              1493,
+              1503,
+              1503,
+              1503,
+              1503,
+              1503,
+              1512,
+              1513,
+              1513,
+              1513,
+              1513,
+              1513,
+              1513,
+              1513,
+              1513,
+              1513,
+              1523,
+              1523,
+              1523,
+              1523,
+              1523,
+              1523,
+              1523,
+              1532,
+              1533,
+              1533,
+              1543,
+              1543,
+              1553,
+              1553,
+              1553,
+              1583,
+              1583,
+              1593,
+              1593,
+              1643,
+              1723,
+              1743,
+              2305,
+              2385,
+              2414,
+              2504,
+              2534,
+              2595,
+              3346,
+              4448,
+              18655
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 365441,
+            "median_ns": 369188,
+            "mean_ns": 374452.0,
+            "p95_ns": 387893,
+            "p99_ns": 387893,
+            "max_ns": 387893,
+            "stdev_ns": 8982.631997360239,
+            "raw_ns": [
+              365441,
+              367335,
+              369188,
+              382403,
+              387893
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 150009,
+            "median_ns": 171179,
+            "mean_ns": 172769.6,
+            "p95_ns": 185986,
+            "p99_ns": 185986,
+            "max_ns": 185986,
+            "stdev_ns": 13209.28368383388,
+            "raw_ns": [
+              150009,
+              170748,
+              171179,
+              185926,
+              185986
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1312,
+            "median_ns": 1343.0,
+            "mean_ns": 1402.98,
+            "p95_ns": 1553,
+            "p99_ns": 3446,
+            "max_ns": 3446,
+            "stdev_ns": 297.98499895128947,
+            "raw_ns": [
+              1312,
+              1313,
+              1322,
+              1322,
+              1322,
+              1322,
+              1323,
+              1323,
+              1323,
+              1332,
+              1332,
+              1332,
+              1332,
+              1333,
+              1333,
+              1333,
+              1333,
+              1333,
+              1342,
+              1342,
+              1342,
+              1342,
+              1342,
+              1342,
+              1343,
+              1343,
+              1343,
+              1343,
+              1352,
+              1352,
+              1353,
+              1353,
+              1353,
+              1353,
+              1353,
+              1362,
+              1363,
+              1372,
+              1373,
+              1382,
+              1382,
+              1383,
+              1392,
+              1412,
+              1413,
+              1422,
+              1453,
+              1553,
+              1673,
+              3446
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 141063,
+            "median_ns": 147084,
+            "mean_ns": 183486.0,
+            "p95_ns": 340685,
+            "p99_ns": 340685,
+            "max_ns": 340685,
+            "stdev_ns": 78644.69709268388,
+            "raw_ns": [
+              141063,
+              141353,
+              147084,
+              147245,
+              340685
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 149709,
+            "median_ns": 169035,
+            "mean_ns": 165081.8,
+            "p95_ns": 179194,
+            "p99_ns": 179194,
+            "max_ns": 179194,
+            "stdev_ns": 10615.714868062349,
+            "raw_ns": [
+              149709,
+              156362,
+              169035,
+              171109,
+              179194
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM objects WHERE generation<=?",
+          "params": [
+            207
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 2745,
+            "median_ns": 2775.0,
+            "mean_ns": 2780.62,
+            "p95_ns": 2836,
+            "p99_ns": 2986,
+            "max_ns": 2986,
+            "stdev_ns": 37.95570576342904,
+            "raw_ns": [
+              2745,
+              2745,
+              2745,
+              2755,
+              2755,
+              2755,
+              2756,
+              2756,
+              2756,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2766,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2775,
+              2776,
+              2785,
+              2785,
+              2785,
+              2786,
+              2786,
+              2795,
+              2805,
+              2805,
+              2806,
+              2825,
+              2825,
+              2836,
+              2876,
+              2986
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 75120,
+            "median_ns": 79027,
+            "mean_ns": 82171.2,
+            "p95_ns": 95638,
+            "p99_ns": 95638,
+            "max_ns": 95638,
+            "stdev_ns": 7339.151051722535,
+            "raw_ns": [
+              75120,
+              77144,
+              79027,
+              83927,
+              95638
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 148637,
+            "median_ns": 151552,
+            "mean_ns": 154990.8,
+            "p95_ns": 167883,
+            "p99_ns": 167883,
+            "max_ns": 167883,
+            "stdev_ns": 6804.759258048737,
+            "raw_ns": [
+              148637,
+              151402,
+              151552,
+              155480,
+              167883
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING INDEX objects_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_subject_predicate (subject=? AND predicate=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING COVERING INDEX objects_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 25,
+        "add": {
+          "samples": 25,
+          "min_ns": 1115489,
+          "median_ns": 1132601,
+          "mean_ns": 1198669.16,
+          "p95_ns": 1222168,
+          "p99_ns": 2648096,
+          "max_ns": 2648096,
+          "stdev_ns": 296556.08588793856,
+          "raw_ns": [
+            1115489,
+            1120829,
+            1122072,
+            1126309,
+            1126390,
+            1126510,
+            1128113,
+            1128644,
+            1129916,
+            1130407,
+            1131770,
+            1131780,
+            1132601,
+            1133012,
+            1133052,
+            1134444,
+            1137541,
+            1144503,
+            1145916,
+            1147790,
+            1153961,
+            1155063,
+            1160353,
+            1222168,
+            2648096
+          ]
+        },
+        "delete": {
+          "samples": 25,
+          "min_ns": 1116801,
+          "median_ns": 1131569,
+          "mean_ns": 1138218.4,
+          "p95_ns": 1197432,
+          "p99_ns": 1240683,
+          "max_ns": 1240683,
+          "stdev_ns": 26031.908891973326,
+          "raw_ns": [
+            1116801,
+            1120258,
+            1121470,
+            1127311,
+            1127983,
+            1128724,
+            1129355,
+            1129396,
+            1129575,
+            1129826,
+            1130147,
+            1130978,
+            1131569,
+            1131689,
+            1131820,
+            1131990,
+            1132541,
+            1132761,
+            1132771,
+            1133072,
+            1134735,
+            1135427,
+            1167146,
+            1197432,
+            1240683
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 208896,
+        "files": {
+          "relational-100.sqlite": 176128,
+          "relational-100.sqlite-wal": 0,
+          "relational-100.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 100,
+          "relations": 207,
+          "snapshots": 3
+        }
+      }
+    },
+    {
+      "variant": "adjacency",
+      "size": 100,
+      "db_path": "/work/.docker-cache/bench-external/adjacency-100.sqlite",
+      "schema_sql": "\nCREATE TABLE nodes (\n  id INTEGER PRIMARY KEY,\n  object_id TEXT NOT NULL UNIQUE,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE edges (\n  id INTEGER PRIMARY KEY,\n  src INTEGER NOT NULL,\n  label TEXT NOT NULL,\n  dst INTEGER,\n  dst_value TEXT,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  node_id INTEGER PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX nodes_kind ON nodes(kind)",
+        "CREATE INDEX nodes_generation ON nodes(generation)",
+        "CREATE INDEX edges_label_dst ON edges(label, dst)",
+        "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+        "CREATE INDEX edges_src_label ON edges(src, label)"
+      ],
+      "build_ns": 133107875,
+      "load": {
+        "object_bulk_load_ns": 1376856,
+        "relation_bulk_load_ns": 1325962,
+        "durable_insert_ns": [
+          1126289,
+          1131339,
+          1154232,
+          1144764,
+          1125337,
+          1119978,
+          1130718,
+          1116251,
+          1117844,
+          1125087,
+          1115630,
+          1128133,
+          1124967,
+          1126440,
+          1304151,
+          1130918,
+          1119967,
+          2536538,
+          1147580,
+          1143091,
+          1123985,
+          1125378,
+          1158310,
+          1135507,
+          1127742,
+          1126970,
+          1135647,
+          1131780,
+          1124456,
+          1126470,
+          1135486,
+          1133853,
+          1119547,
+          1184267,
+          1541002,
+          1548075,
+          1578432,
+          1539270,
+          1540421,
+          1547715,
+          1543027,
+          1537306,
+          1142319,
+          1148921,
+          1154412,
+          1138202,
+          1142750,
+          1116041,
+          1137711,
+          1139634,
+          1136258,
+          1134966,
+          1138613,
+          1156636,
+          1140537,
+          1137370,
+          1122883,
+          1135586,
+          1135376,
+          1140236,
+          1138973,
+          1132011,
+          1137350,
+          1128514,
+          1143001,
+          1261963,
+          1134134,
+          1138553,
+          1139724,
+          1138232,
+          1119908,
+          1121741,
+          1141017,
+          1186472,
+          1250772,
+          1177996,
+          1136278,
+          1139935,
+          1144223,
+          1150134,
+          1149343,
+          1148411,
+          1138783,
+          1135536,
+          1149472,
+          1641159,
+          1150084,
+          1134886,
+          1133383,
+          1129896,
+          1143271,
+          1186321,
+          1187774,
+          1149213,
+          1151386,
+          1146477,
+          1205076,
+          1161695,
+          1153440,
+          1190940
+        ],
+        "rows": {
+          "objects": 100,
+          "relations": 207,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "nodes_kind",
+            "ns": 2188238,
+            "sql": "CREATE INDEX nodes_kind ON nodes(kind)"
+          },
+          {
+            "index": "nodes_generation",
+            "ns": 1009201,
+            "sql": "CREATE INDEX nodes_generation ON nodes(generation)"
+          },
+          {
+            "index": "edges_label_dst",
+            "ns": 1022696,
+            "sql": "CREATE INDEX edges_label_dst ON edges(label, dst)"
+          },
+          {
+            "index": "edges_label_value",
+            "ns": 1014260,
+            "sql": "CREATE INDEX edges_label_value ON edges(label, dst_value)"
+          },
+          {
+            "index": "edges_src_label",
+            "ns": 1002138,
+            "sql": "CREATE INDEX edges_src_label ON edges(src, label)"
+          }
+        ],
+        "total_ns": 6236533,
+        "bytes_before": 159744,
+        "bytes_after": 159744,
+        "index_bytes": 0,
+        "files": {
+          "adjacency-100.sqlite": 126976,
+          "adjacency-100.sqlite-wal": 0,
+          "adjacency-100.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX nodes_kind ON nodes(kind)",
+          "CREATE INDEX nodes_generation ON nodes(generation)",
+          "CREATE INDEX edges_label_dst ON edges(label, dst)",
+          "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+          "CREATE INDEX edges_src_label ON edges(src, label)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1182,
+            "median_ns": 1202.5,
+            "mean_ns": 1216.88,
+            "p95_ns": 1263,
+            "p99_ns": 1402,
+            "max_ns": 1402,
+            "stdev_ns": 38.25265480982986,
+            "raw_ns": [
+              1182,
+              1182,
+              1182,
+              1182,
+              1192,
+              1192,
+              1192,
+              1192,
+              1192,
+              1192,
+              1192,
+              1192,
+              1193,
+              1193,
+              1193,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1202,
+              1203,
+              1203,
+              1212,
+              1212,
+              1212,
+              1212,
+              1213,
+              1213,
+              1222,
+              1222,
+              1222,
+              1223,
+              1223,
+              1232,
+              1232,
+              1233,
+              1242,
+              1242,
+              1243,
+              1243,
+              1252,
+              1263,
+              1263,
+              1342,
+              1402
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 78847,
+            "median_ns": 95458,
+            "mean_ns": 91450.6,
+            "p95_ns": 102972,
+            "p99_ns": 102972,
+            "max_ns": 102972,
+            "stdev_ns": 9835.50325301151,
+            "raw_ns": [
+              78847,
+              80721,
+              95458,
+              99255,
+              102972
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 120134,
+            "median_ns": 125975,
+            "mean_ns": 141790.6,
+            "p95_ns": 198721,
+            "p99_ns": 198721,
+            "max_ns": 198721,
+            "stdev_ns": 29489.202801025327,
+            "raw_ns": [
+              120134,
+              122098,
+              125975,
+              142025,
+              198721
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            1
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1402,
+            "median_ns": 1433.0,
+            "mean_ns": 1445.66,
+            "p95_ns": 1523,
+            "p99_ns": 1814,
+            "max_ns": 1814,
+            "stdev_ns": 57.88354170228356,
+            "raw_ns": [
+              1402,
+              1403,
+              1412,
+              1413,
+              1413,
+              1422,
+              1422,
+              1422,
+              1422,
+              1422,
+              1422,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1432,
+              1432,
+              1432,
+              1432,
+              1432,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1442,
+              1442,
+              1442,
+              1443,
+              1443,
+              1443,
+              1443,
+              1443,
+              1452,
+              1453,
+              1453,
+              1453,
+              1462,
+              1463,
+              1463,
+              1503,
+              1523,
+              1523,
+              1814
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 242722,
+            "median_ns": 269983,
+            "mean_ns": 265462.6,
+            "p95_ns": 291433,
+            "p99_ns": 291433,
+            "max_ns": 291433,
+            "stdev_ns": 16786.98689580712,
+            "raw_ns": [
+              242722,
+              252451,
+              269983,
+              270724,
+              291433
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 128189,
+            "median_ns": 144219,
+            "mean_ns": 154678.4,
+            "p95_ns": 201175,
+            "p99_ns": 201175,
+            "max_ns": 201175,
+            "stdev_ns": 28059.29370173098,
+            "raw_ns": [
+              128189,
+              128480,
+              144219,
+              171329,
+              201175
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT object_id FROM nodes WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 15459,
+            "median_ns": 15659.5,
+            "mean_ns": 15725.7,
+            "p95_ns": 15959,
+            "p99_ns": 18043,
+            "max_ns": 18043,
+            "stdev_ns": 353.55006717578203,
+            "raw_ns": [
+              15459,
+              15469,
+              15509,
+              15519,
+              15549,
+              15559,
+              15569,
+              15579,
+              15589,
+              15599,
+              15600,
+              15609,
+              15609,
+              15619,
+              15620,
+              15639,
+              15639,
+              15639,
+              15639,
+              15649,
+              15649,
+              15649,
+              15650,
+              15659,
+              15659,
+              15660,
+              15669,
+              15669,
+              15679,
+              15680,
+              15689,
+              15690,
+              15709,
+              15709,
+              15709,
+              15720,
+              15739,
+              15740,
+              15740,
+              15749,
+              15750,
+              15759,
+              15769,
+              15779,
+              15809,
+              15809,
+              15889,
+              15959,
+              16240,
+              18043
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 279191,
+            "median_ns": 343531,
+            "mean_ns": 344291.8,
+            "p95_ns": 453775,
+            "p99_ns": 453775,
+            "max_ns": 453775,
+            "stdev_ns": 60237.88637527051,
+            "raw_ns": [
+              279191,
+              300500,
+              343531,
+              344462,
+              453775
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 123811,
+            "median_ns": 143438,
+            "mean_ns": 170678.2,
+            "p95_ns": 246249,
+            "p99_ns": 246249,
+            "max_ns": 246249,
+            "stdev_ns": 46651.97429219904,
+            "raw_ns": [
+              123811,
+              136544,
+              143438,
+              203349,
+              246249
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "even"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 8766,
+            "median_ns": 8876.0,
+            "mean_ns": 8906.2,
+            "p95_ns": 8987,
+            "p99_ns": 10560,
+            "max_ns": 10560,
+            "stdev_ns": 243.29077253360845,
+            "raw_ns": [
+              8766,
+              8767,
+              8777,
+              8786,
+              8796,
+              8796,
+              8797,
+              8797,
+              8806,
+              8817,
+              8826,
+              8827,
+              8836,
+              8836,
+              8837,
+              8846,
+              8847,
+              8856,
+              8856,
+              8856,
+              8866,
+              8867,
+              8867,
+              8867,
+              8876,
+              8876,
+              8877,
+              8886,
+              8886,
+              8887,
+              8887,
+              8887,
+              8896,
+              8897,
+              8906,
+              8906,
+              8907,
+              8907,
+              8907,
+              8917,
+              8927,
+              8927,
+              8937,
+              8937,
+              8966,
+              8967,
+              8986,
+              8987,
+              9016,
+              10560
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 304117,
+            "median_ns": 312613,
+            "mean_ns": 356466.4,
+            "p95_ns": 431965,
+            "p99_ns": 431965,
+            "max_ns": 431965,
+            "stdev_ns": 57839.473073671754,
+            "raw_ns": [
+              304117,
+              311370,
+              312613,
+              422267,
+              431965
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 122729,
+            "median_ns": 125094,
+            "mean_ns": 125784.8,
+            "p95_ns": 132056,
+            "p99_ns": 132056,
+            "max_ns": 132056,
+            "stdev_ns": 3356.1937607951063,
+            "raw_ns": [
+              122729,
+              123110,
+              125094,
+              125935,
+              132056
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            51
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1403,
+            "median_ns": 1423.0,
+            "mean_ns": 1428.1,
+            "p95_ns": 1463,
+            "p99_ns": 1503,
+            "max_ns": 1503,
+            "stdev_ns": 20.01724256734678,
+            "raw_ns": [
+              1403,
+              1403,
+              1403,
+              1412,
+              1412,
+              1412,
+              1412,
+              1412,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1422,
+              1422,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1432,
+              1432,
+              1432,
+              1432,
+              1432,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1442,
+              1443,
+              1443,
+              1443,
+              1452,
+              1453,
+              1462,
+              1463,
+              1493,
+              1503
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 254725,
+            "median_ns": 283439,
+            "mean_ns": 275137.0,
+            "p95_ns": 291203,
+            "p99_ns": 291203,
+            "max_ns": 291203,
+            "stdev_ns": 13991.322110508356,
+            "raw_ns": [
+              254725,
+              262499,
+              283439,
+              283819,
+              291203
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 115154,
+            "median_ns": 117469,
+            "mean_ns": 118640.8,
+            "p95_ns": 126666,
+            "p99_ns": 126666,
+            "max_ns": 126666,
+            "stdev_ns": 4166.2821507910385,
+            "raw_ns": [
+              115154,
+              115695,
+              117469,
+              118220,
+              126666
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT dst FROM edges WHERE src=? AND label=?",
+          "params": [
+            1,
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1353,
+            "median_ns": 1383.0,
+            "mean_ns": 1390.84,
+            "p95_ns": 1442,
+            "p99_ns": 1513,
+            "max_ns": 1513,
+            "stdev_ns": 27.12368706499911,
+            "raw_ns": [
+              1353,
+              1353,
+              1362,
+              1363,
+              1363,
+              1363,
+              1372,
+              1372,
+              1372,
+              1373,
+              1373,
+              1373,
+              1373,
+              1382,
+              1382,
+              1382,
+              1382,
+              1382,
+              1382,
+              1382,
+              1383,
+              1383,
+              1383,
+              1383,
+              1383,
+              1383,
+              1383,
+              1383,
+              1383,
+              1392,
+              1393,
+              1393,
+              1393,
+              1393,
+              1393,
+              1393,
+              1393,
+              1402,
+              1402,
+              1402,
+              1402,
+              1403,
+              1403,
+              1412,
+              1413,
+              1423,
+              1433,
+              1442,
+              1463,
+              1513
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 257170,
+            "median_ns": 263922,
+            "mean_ns": 272638.2,
+            "p95_ns": 296753,
+            "p99_ns": 296753,
+            "max_ns": 296753,
+            "stdev_ns": 15208.556715217917,
+            "raw_ns": [
+              257170,
+              261277,
+              263922,
+              284069,
+              296753
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 113963,
+            "median_ns": 116427,
+            "mean_ns": 118627.0,
+            "p95_ns": 126195,
+            "p99_ns": 126195,
+            "max_ns": 126195,
+            "stdev_ns": 4891.095296556795,
+            "raw_ns": [
+              113963,
+              114062,
+              116427,
+              122488,
+              126195
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1322,
+            "median_ns": 1352.0,
+            "mean_ns": 1381.42,
+            "p95_ns": 1413,
+            "p99_ns": 2745,
+            "max_ns": 2745,
+            "stdev_ns": 196.08060485422826,
+            "raw_ns": [
+              1322,
+              1322,
+              1332,
+              1332,
+              1332,
+              1332,
+              1332,
+              1333,
+              1333,
+              1333,
+              1333,
+              1342,
+              1342,
+              1342,
+              1342,
+              1342,
+              1343,
+              1343,
+              1343,
+              1343,
+              1343,
+              1343,
+              1343,
+              1343,
+              1352,
+              1352,
+              1352,
+              1352,
+              1353,
+              1353,
+              1353,
+              1353,
+              1353,
+              1353,
+              1362,
+              1362,
+              1363,
+              1363,
+              1363,
+              1363,
+              1372,
+              1372,
+              1373,
+              1383,
+              1383,
+              1403,
+              1412,
+              1413,
+              1423,
+              2745
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 159297,
+            "median_ns": 167523,
+            "mean_ns": 166436.6,
+            "p95_ns": 170388,
+            "p99_ns": 170388,
+            "max_ns": 170388,
+            "stdev_ns": 3793.7454105408815,
+            "raw_ns": [
+              159297,
+              166491,
+              167523,
+              168484,
+              170388
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 109224,
+            "median_ns": 115034,
+            "mean_ns": 116245.0,
+            "p95_ns": 123581,
+            "p99_ns": 123581,
+            "max_ns": 123581,
+            "stdev_ns": 5540.231367009866,
+            "raw_ns": [
+              109224,
+              111769,
+              115034,
+              121617,
+              123581
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM nodes WHERE generation<=?",
+          "params": [
+            207
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 2594,
+            "median_ns": 2755.0,
+            "mean_ns": 3295.68,
+            "p95_ns": 4308,
+            "p99_ns": 18985,
+            "max_ns": 18985,
+            "stdev_ns": 2596.2712218872666,
+            "raw_ns": [
+              2594,
+              2595,
+              2604,
+              2604,
+              2605,
+              2605,
+              2615,
+              2615,
+              2615,
+              2615,
+              2615,
+              2615,
+              2625,
+              2625,
+              2635,
+              2635,
+              2635,
+              2655,
+              2665,
+              2665,
+              2715,
+              2725,
+              2745,
+              2745,
+              2755,
+              2755,
+              2755,
+              2756,
+              2756,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2765,
+              2775,
+              2775,
+              2785,
+              2795,
+              2795,
+              2815,
+              2815,
+              2855,
+              2875,
+              3597,
+              4278,
+              4308,
+              11832,
+              18985
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 101770,
+            "median_ns": 106098,
+            "mean_ns": 105132.0,
+            "p95_ns": 107200,
+            "p99_ns": 107200,
+            "max_ns": 107200,
+            "stdev_ns": 2115.04297828673,
+            "raw_ns": [
+              101770,
+              103593,
+              106098,
+              106999,
+              107200
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 113732,
+            "median_ns": 115646,
+            "mean_ns": 116804.0,
+            "p95_ns": 119964,
+            "p99_ns": 119964,
+            "max_ns": 119964,
+            "stdev_ns": 2630.492273320718,
+            "raw_ns": [
+              113732,
+              114764,
+              115646,
+              119914,
+              119964
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING INDEX nodes_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_src_label (src=? AND label=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING COVERING INDEX nodes_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 25,
+        "add": {
+          "samples": 25,
+          "min_ns": 1121822,
+          "median_ns": 1142009,
+          "mean_ns": 1250734.76,
+          "p95_ns": 1562784,
+          "p99_ns": 2725410,
+          "max_ns": 2725410,
+          "stdev_ns": 321968.6891712646,
+          "raw_ns": [
+            1121822,
+            1132411,
+            1133804,
+            1137330,
+            1138973,
+            1139714,
+            1139715,
+            1140406,
+            1140486,
+            1140987,
+            1141127,
+            1141558,
+            1142009,
+            1145124,
+            1145485,
+            1152088,
+            1154312,
+            1155253,
+            1156095,
+            1159792,
+            1275768,
+            1309862,
+            1536054,
+            1562784,
+            2725410
+          ]
+        },
+        "delete": {
+          "samples": 25,
+          "min_ns": 1131819,
+          "median_ns": 1146508,
+          "mean_ns": 1187897.56,
+          "p95_ns": 1539780,
+          "p99_ns": 1582480,
+          "max_ns": 1582480,
+          "stdev_ns": 113728.35308825324,
+          "raw_ns": [
+            1131819,
+            1131940,
+            1134114,
+            1137010,
+            1138682,
+            1138803,
+            1138873,
+            1139324,
+            1139424,
+            1139734,
+            1140516,
+            1141799,
+            1146508,
+            1150093,
+            1151236,
+            1151437,
+            1154071,
+            1161144,
+            1161225,
+            1166555,
+            1223010,
+            1228270,
+            1229592,
+            1539780,
+            1582480
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 159744,
+        "files": {
+          "adjacency-100.sqlite": 126976,
+          "adjacency-100.sqlite-wal": 0,
+          "adjacency-100.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 100,
+          "relations": 207,
+          "snapshots": 3
+        }
+      }
+    },
+    {
+      "variant": "relational",
+      "size": 1000,
+      "db_path": "/work/.docker-cache/bench-external/relational-1000.sqlite",
+      "schema_sql": "\nCREATE TABLE objects (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE relations (\n  id INTEGER PRIMARY KEY,\n  subject TEXT NOT NULL,\n  predicate TEXT NOT NULL,\n  target_kind TEXT NOT NULL,\n  target_value TEXT NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  object_id TEXT PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX objects_kind ON objects(kind)",
+        "CREATE INDEX objects_generation ON objects(generation)",
+        "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+        "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+      ],
+      "build_ns": 134911887,
+      "load": {
+        "object_bulk_load_ns": 4369625,
+        "relation_bulk_load_ns": 2650621,
+        "durable_insert_ns": [
+          1146837,
+          1129315,
+          1138522,
+          1167897,
+          1138773,
+          1134816,
+          1202542,
+          1133323,
+          1137200,
+          1123084,
+          1130227,
+          1941429,
+          1136338,
+          1135997,
+          1136870,
+          1130898,
+          1149863,
+          1184308,
+          1137711,
+          1136218,
+          1131530,
+          1145225,
+          1151086,
+          1170983,
+          1143952,
+          1152799,
+          1130378,
+          1136248,
+          1133042,
+          1143521,
+          1142509,
+          1137049,
+          1153289,
+          1140526,
+          1134355,
+          1131960,
+          1146478,
+          1135106,
+          1215125,
+          1140866,
+          1144453,
+          1133012,
+          1137490,
+          1136960,
+          1131930,
+          1144433,
+          1172856,
+          1175190,
+          1143431,
+          1140486,
+          1126901,
+          1141788,
+          1147218,
+          1173237,
+          1176012,
+          1143001,
+          1158149,
+          1139164,
+          1143562,
+          1142199,
+          1190569,
+          1155164,
+          1141498,
+          1138963,
+          1132822,
+          1259869,
+          1120679,
+          1133133,
+          1159361,
+          1166684,
+          1144533,
+          1184027,
+          1174389,
+          1170521,
+          1148280,
+          1152257,
+          1141418,
+          1141508,
+          1141388,
+          1136178,
+          1136459,
+          1134545,
+          1138322,
+          1139013,
+          1145024,
+          1144313,
+          1139073,
+          1138172,
+          1131038,
+          1132090,
+          1137260,
+          1152288,
+          1168237,
+          1144643,
+          1150805,
+          1129476,
+          1132381,
+          1128414,
+          1144544,
+          1133994
+        ],
+        "rows": {
+          "objects": 1000,
+          "relations": 2067,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "objects_kind",
+            "ns": 2541187,
+            "sql": "CREATE INDEX objects_kind ON objects(kind)"
+          },
+          {
+            "index": "objects_generation",
+            "ns": 1353142,
+            "sql": "CREATE INDEX objects_generation ON objects(generation)"
+          },
+          {
+            "index": "relations_predicate_target",
+            "ns": 2105645,
+            "sql": "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)"
+          },
+          {
+            "index": "relations_subject_predicate",
+            "ns": 1828649,
+            "sql": "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+          }
+        ],
+        "total_ns": 7828623,
+        "bytes_before": 954368,
+        "bytes_after": 1245184,
+        "index_bytes": 290816,
+        "files": {
+          "relational-1000.sqlite": 1212416,
+          "relational-1000.sqlite-wal": 0,
+          "relational-1000.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX objects_kind ON objects(kind)",
+          "CREATE INDEX objects_generation ON objects(generation)",
+          "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+          "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1283,
+            "median_ns": 1312.0,
+            "mean_ns": 1319.04,
+            "p95_ns": 1372,
+            "p99_ns": 1533,
+            "max_ns": 1533,
+            "stdev_ns": 39.59896968356626,
+            "raw_ns": [
+              1283,
+              1283,
+              1292,
+              1292,
+              1292,
+              1292,
+              1292,
+              1292,
+              1293,
+              1302,
+              1302,
+              1302,
+              1302,
+              1302,
+              1302,
+              1302,
+              1303,
+              1303,
+              1303,
+              1303,
+              1303,
+              1303,
+              1303,
+              1312,
+              1312,
+              1312,
+              1312,
+              1312,
+              1312,
+              1313,
+              1313,
+              1313,
+              1313,
+              1313,
+              1313,
+              1313,
+              1322,
+              1322,
+              1322,
+              1322,
+              1323,
+              1332,
+              1343,
+              1343,
+              1353,
+              1362,
+              1372,
+              1372,
+              1422,
+              1533
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 137787,
+            "median_ns": 160750,
+            "mean_ns": 156089.0,
+            "p95_ns": 166200,
+            "p99_ns": 166200,
+            "max_ns": 166200,
+            "stdev_ns": 10412.305258683113,
+            "raw_ns": [
+              137787,
+              151652,
+              160750,
+              164056,
+              166200
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 115185,
+            "median_ns": 122829,
+            "mean_ns": 130621.4,
+            "p95_ns": 161651,
+            "p99_ns": 161651,
+            "max_ns": 161651,
+            "stdev_ns": 16568.5328089122,
+            "raw_ns": [
+              115185,
+              120384,
+              122829,
+              133058,
+              161651
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "a65210d6525ef08993a75ea4726348480053cdb629e1e151b54921184e3ccb93"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1683,
+            "median_ns": 1714.0,
+            "mean_ns": 1731.48,
+            "p95_ns": 1864,
+            "p99_ns": 2024,
+            "max_ns": 2024,
+            "stdev_ns": 55.2120421647307,
+            "raw_ns": [
+              1683,
+              1693,
+              1693,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1704,
+              1713,
+              1713,
+              1713,
+              1713,
+              1713,
+              1713,
+              1713,
+              1713,
+              1714,
+              1714,
+              1714,
+              1714,
+              1723,
+              1723,
+              1723,
+              1723,
+              1723,
+              1723,
+              1723,
+              1723,
+              1723,
+              1724,
+              1724,
+              1724,
+              1724,
+              1733,
+              1733,
+              1743,
+              1744,
+              1753,
+              1753,
+              1763,
+              1834,
+              1864,
+              1864,
+              2024
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 372164,
+            "median_ns": 376922,
+            "mean_ns": 386127.6,
+            "p95_ns": 428378,
+            "p99_ns": 428378,
+            "max_ns": 428378,
+            "stdev_ns": 21220.44844577984,
+            "raw_ns": [
+              372164,
+              375059,
+              376922,
+              378115,
+              428378
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 114233,
+            "median_ns": 117960,
+            "mean_ns": 118687.2,
+            "p95_ns": 124251,
+            "p99_ns": 124251,
+            "max_ns": 124251,
+            "stdev_ns": 3273.8393607506155,
+            "raw_ns": [
+              114233,
+              117449,
+              117960,
+              119543,
+              124251
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT id FROM objects WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 140792,
+            "median_ns": 141578.5,
+            "mean_ns": 143470.44,
+            "p95_ns": 155139,
+            "p99_ns": 178253,
+            "max_ns": 178253,
+            "stdev_ns": 6480.235357330781,
+            "raw_ns": [
+              140792,
+              140853,
+              140863,
+              140893,
+              141023,
+              141053,
+              141063,
+              141063,
+              141083,
+              141123,
+              141163,
+              141183,
+              141224,
+              141253,
+              141293,
+              141313,
+              141353,
+              141394,
+              141413,
+              141494,
+              141504,
+              141504,
+              141534,
+              141543,
+              141563,
+              141594,
+              141695,
+              141704,
+              141704,
+              141775,
+              141804,
+              141845,
+              141854,
+              141924,
+              141984,
+              142004,
+              142065,
+              142075,
+              142185,
+              142205,
+              142586,
+              143057,
+              143377,
+              143979,
+              144319,
+              144360,
+              154478,
+              155139,
+              165017,
+              178253
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 1822016,
+            "median_ns": 1838587,
+            "mean_ns": 2122620.6,
+            "p95_ns": 2862165,
+            "p99_ns": 2862165,
+            "max_ns": 2862165,
+            "stdev_ns": 406580.2225886547,
+            "raw_ns": [
+              1822016,
+              1825423,
+              1838587,
+              2264912,
+              2862165
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 123871,
+            "median_ns": 175858,
+            "mean_ns": 165358.4,
+            "p95_ns": 198841,
+            "p99_ns": 198841,
+            "max_ns": 198841,
+            "stdev_ns": 31454.57775014632,
+            "raw_ns": [
+              123871,
+              132557,
+              175858,
+              195665,
+              198841
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "even"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 87303,
+            "median_ns": 87808.5,
+            "mean_ns": 88611.0,
+            "p95_ns": 89898,
+            "p99_ns": 104495,
+            "max_ns": 104495,
+            "stdev_ns": 3068.2478517877266,
+            "raw_ns": [
+              87303,
+              87412,
+              87483,
+              87483,
+              87513,
+              87513,
+              87543,
+              87563,
+              87573,
+              87614,
+              87664,
+              87683,
+              87693,
+              87694,
+              87704,
+              87723,
+              87734,
+              87734,
+              87743,
+              87753,
+              87763,
+              87764,
+              87784,
+              87794,
+              87803,
+              87814,
+              87814,
+              87844,
+              87854,
+              87863,
+              87894,
+              87964,
+              88014,
+              88014,
+              88044,
+              88044,
+              88054,
+              88065,
+              88134,
+              88175,
+              88205,
+              88365,
+              88425,
+              89437,
+              89557,
+              89697,
+              89737,
+              89898,
+              102110,
+              104495
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 742515,
+            "median_ns": 1058303,
+            "mean_ns": 933432.2,
+            "p95_ns": 1062120,
+            "p99_ns": 1062120,
+            "max_ns": 1062120,
+            "stdev_ns": 155876.99665236048,
+            "raw_ns": [
+              742515,
+              742544,
+              1058303,
+              1061679,
+              1062120
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 145892,
+            "median_ns": 159477,
+            "mean_ns": 278350.6,
+            "p95_ns": 481377,
+            "p99_ns": 481377,
+            "max_ns": 481377,
+            "stdev_ns": 153726.47079094738,
+            "raw_ns": [
+              145892,
+              154017,
+              159477,
+              450990,
+              481377
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "232d128947f63e48a66c128e5c7f4e7159b6f219d1b708e730d0e0d8ab2ebddf"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1673,
+            "median_ns": 1703.0,
+            "mean_ns": 1714.04,
+            "p95_ns": 1824,
+            "p99_ns": 1863,
+            "max_ns": 1863,
+            "stdev_ns": 40.585199272641255,
+            "raw_ns": [
+              1673,
+              1673,
+              1674,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1683,
+              1693,
+              1693,
+              1693,
+              1694,
+              1694,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1703,
+              1713,
+              1713,
+              1713,
+              1713,
+              1714,
+              1723,
+              1723,
+              1724,
+              1724,
+              1724,
+              1733,
+              1733,
+              1734,
+              1744,
+              1753,
+              1753,
+              1773,
+              1794,
+              1824,
+              1824,
+              1863
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 375070,
+            "median_ns": 375991,
+            "mean_ns": 383959.8,
+            "p95_ns": 416687,
+            "p99_ns": 416687,
+            "max_ns": 416687,
+            "stdev_ns": 16374.13676991859,
+            "raw_ns": [
+              375070,
+              375299,
+              375991,
+              376752,
+              416687
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 114934,
+            "median_ns": 124412,
+            "mean_ns": 188040.4,
+            "p95_ns": 447414,
+            "p99_ns": 447414,
+            "max_ns": 447414,
+            "stdev_ns": 129780.04766927773,
+            "raw_ns": [
+              114934,
+              123089,
+              124412,
+              130353,
+              447414
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT target_value FROM relations WHERE subject=? AND predicate=?",
+          "params": [
+            "a65210d6525ef08993a75ea4726348480053cdb629e1e151b54921184e3ccb93",
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1553,
+            "median_ns": 1603.0,
+            "mean_ns": 1641.06,
+            "p95_ns": 1683,
+            "p99_ns": 3176,
+            "max_ns": 3176,
+            "stdev_ns": 232.0975148509781,
+            "raw_ns": [
+              1553,
+              1563,
+              1563,
+              1572,
+              1573,
+              1573,
+              1573,
+              1573,
+              1573,
+              1573,
+              1573,
+              1573,
+              1583,
+              1583,
+              1583,
+              1583,
+              1583,
+              1583,
+              1583,
+              1593,
+              1593,
+              1593,
+              1593,
+              1593,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1603,
+              1613,
+              1613,
+              1623,
+              1633,
+              1643,
+              1643,
+              1653,
+              1673,
+              1673,
+              1683,
+              2104,
+              3176
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 372104,
+            "median_ns": 377253,
+            "mean_ns": 377692.4,
+            "p95_ns": 382083,
+            "p99_ns": 382083,
+            "max_ns": 382083,
+            "stdev_ns": 3367.8015143413663,
+            "raw_ns": [
+              372104,
+              376983,
+              377253,
+              380039,
+              382083
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 113712,
+            "median_ns": 119152,
+            "mean_ns": 118965.6,
+            "p95_ns": 124191,
+            "p99_ns": 124191,
+            "max_ns": 124191,
+            "stdev_ns": 3359.153500511699,
+            "raw_ns": [
+              113712,
+              118030,
+              119152,
+              119743,
+              124191
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1342,
+            "median_ns": 1363.0,
+            "mean_ns": 1410.06,
+            "p95_ns": 1492,
+            "p99_ns": 2956,
+            "max_ns": 2956,
+            "stdev_ns": 223.73899168450723,
+            "raw_ns": [
+              1342,
+              1342,
+              1343,
+              1343,
+              1343,
+              1352,
+              1352,
+              1352,
+              1352,
+              1352,
+              1352,
+              1352,
+              1353,
+              1353,
+              1353,
+              1353,
+              1353,
+              1362,
+              1363,
+              1363,
+              1363,
+              1363,
+              1363,
+              1363,
+              1363,
+              1363,
+              1372,
+              1373,
+              1373,
+              1373,
+              1373,
+              1382,
+              1382,
+              1383,
+              1392,
+              1392,
+              1392,
+              1393,
+              1393,
+              1403,
+              1403,
+              1412,
+              1413,
+              1413,
+              1422,
+              1433,
+              1482,
+              1492,
+              1493,
+              2956
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 162072,
+            "median_ns": 169996,
+            "mean_ns": 168624.0,
+            "p95_ns": 172231,
+            "p99_ns": 172231,
+            "max_ns": 172231,
+            "stdev_ns": 3561.5927335954625,
+            "raw_ns": [
+              162072,
+              167933,
+              169996,
+              170888,
+              172231
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 110646,
+            "median_ns": 112009,
+            "mean_ns": 114663.8,
+            "p95_ns": 124582,
+            "p99_ns": 124582,
+            "max_ns": 124582,
+            "stdev_ns": 5150.315501015448,
+            "raw_ns": [
+              110646,
+              111338,
+              112009,
+              114744,
+              124582
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM objects WHERE generation<=?",
+          "params": [
+            2037
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 17082,
+            "median_ns": 17152.0,
+            "mean_ns": 17437.0,
+            "p95_ns": 18244,
+            "p99_ns": 24446,
+            "max_ns": 24446,
+            "stdev_ns": 1266.3684613887065,
+            "raw_ns": [
+              17082,
+              17082,
+              17102,
+              17102,
+              17112,
+              17112,
+              17112,
+              17112,
+              17122,
+              17122,
+              17122,
+              17122,
+              17122,
+              17122,
+              17122,
+              17122,
+              17132,
+              17132,
+              17132,
+              17132,
+              17142,
+              17142,
+              17142,
+              17152,
+              17152,
+              17152,
+              17152,
+              17152,
+              17152,
+              17162,
+              17162,
+              17162,
+              17172,
+              17172,
+              17172,
+              17173,
+              17182,
+              17182,
+              17192,
+              17192,
+              17222,
+              17223,
+              17232,
+              17242,
+              17243,
+              17252,
+              17573,
+              18244,
+              22592,
+              24446
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 181678,
+            "median_ns": 205483,
+            "mean_ns": 205238.6,
+            "p95_ns": 223928,
+            "p99_ns": 223928,
+            "max_ns": 223928,
+            "stdev_ns": 13812.543090973508,
+            "raw_ns": [
+              181678,
+              203149,
+              205483,
+              211955,
+              223928
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 121777,
+            "median_ns": 142596,
+            "mean_ns": 148699.2,
+            "p95_ns": 191988,
+            "p99_ns": 191988,
+            "max_ns": 191988,
+            "stdev_ns": 23238.786710153352,
+            "raw_ns": [
+              121777,
+              141163,
+              142596,
+              145972,
+              191988
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING INDEX objects_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_subject_predicate (subject=? AND predicate=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING COVERING INDEX objects_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 25,
+        "add": {
+          "samples": 25,
+          "min_ns": 1119977,
+          "median_ns": 1140125,
+          "mean_ns": 1209390.8,
+          "p95_ns": 1230153,
+          "p99_ns": 2749134,
+          "max_ns": 2749134,
+          "stdev_ns": 315140.72213587374,
+          "raw_ns": [
+            1119977,
+            1123634,
+            1126821,
+            1129956,
+            1130057,
+            1130468,
+            1130558,
+            1132471,
+            1134054,
+            1135717,
+            1136308,
+            1136949,
+            1140125,
+            1143442,
+            1143552,
+            1146106,
+            1146377,
+            1147359,
+            1151747,
+            1155524,
+            1158139,
+            1159902,
+            1196240,
+            1230153,
+            2749134
+          ]
+        },
+        "delete": {
+          "samples": 25,
+          "min_ns": 1122623,
+          "median_ns": 1135857,
+          "mean_ns": 1146645.4,
+          "p95_ns": 1231396,
+          "p99_ns": 1232397,
+          "max_ns": 1232397,
+          "stdev_ns": 27654.291789883177,
+          "raw_ns": [
+            1122623,
+            1126780,
+            1127572,
+            1129295,
+            1131539,
+            1131800,
+            1133152,
+            1133222,
+            1133492,
+            1134465,
+            1134936,
+            1135487,
+            1135857,
+            1137250,
+            1142029,
+            1143922,
+            1144023,
+            1145805,
+            1147539,
+            1147840,
+            1149593,
+            1151777,
+            1182344,
+            1231396,
+            1232397
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 1249280,
+        "files": {
+          "relational-1000.sqlite": 1216512,
+          "relational-1000.sqlite-wal": 0,
+          "relational-1000.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 1000,
+          "relations": 2067,
+          "snapshots": 3
+        }
+      }
+    },
+    {
+      "variant": "adjacency",
+      "size": 1000,
+      "db_path": "/work/.docker-cache/bench-external/adjacency-1000.sqlite",
+      "schema_sql": "\nCREATE TABLE nodes (\n  id INTEGER PRIMARY KEY,\n  object_id TEXT NOT NULL UNIQUE,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE edges (\n  id INTEGER PRIMARY KEY,\n  src INTEGER NOT NULL,\n  label TEXT NOT NULL,\n  dst INTEGER,\n  dst_value TEXT,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  node_id INTEGER PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX nodes_kind ON nodes(kind)",
+        "CREATE INDEX nodes_generation ON nodes(generation)",
+        "CREATE INDEX edges_label_dst ON edges(label, dst)",
+        "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+        "CREATE INDEX edges_src_label ON edges(src, label)"
+      ],
+      "build_ns": 135181480,
+      "load": {
+        "object_bulk_load_ns": 3575274,
+        "relation_bulk_load_ns": 2872224,
+        "durable_insert_ns": [
+          1159622,
+          1135747,
+          1135767,
+          1137891,
+          1137100,
+          1135287,
+          1134936,
+          1129205,
+          1134305,
+          1128814,
+          1135486,
+          1134094,
+          1132451,
+          1130137,
+          1140817,
+          1125538,
+          1151035,
+          1133803,
+          1137531,
+          1128263,
+          1138573,
+          1126029,
+          1135076,
+          1138251,
+          1130417,
+          1127723,
+          1128493,
+          1144764,
+          1130537,
+          1135947,
+          1136770,
+          1125798,
+          1127261,
+          1123685,
+          1134515,
+          1125488,
+          1198203,
+          1532697,
+          1526776,
+          1530122,
+          1530163,
+          1522137,
+          1516527,
+          1530413,
+          1522558,
+          1133794,
+          1127682,
+          1129586,
+          1141869,
+          1126901,
+          1135537,
+          1125137,
+          1134154,
+          1148331,
+          1133633,
+          1132230,
+          1164070,
+          1136569,
+          1231185,
+          1136008,
+          1137651,
+          1138392,
+          1139053,
+          1141748,
+          1134805,
+          1251473,
+          1127632,
+          1136990,
+          1132541,
+          1136459,
+          1139795,
+          1146577,
+          1160072,
+          1433522,
+          1173968,
+          1147269,
+          1143051,
+          1134044,
+          1136318,
+          1129215,
+          1133784,
+          1139905,
+          1140096,
+          1372158,
+          1140737,
+          1124466,
+          1135256,
+          1129225,
+          1114177,
+          1134405,
+          1137791,
+          1141798,
+          1132371,
+          1131750,
+          1153591,
+          1138582,
+          1135797,
+          1129826,
+          1124787,
+          1142029
+        ],
+        "rows": {
+          "objects": 1000,
+          "relations": 2067,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "nodes_kind",
+            "ns": 2461458,
+            "sql": "CREATE INDEX nodes_kind ON nodes(kind)"
+          },
+          {
+            "index": "nodes_generation",
+            "ns": 1300384,
+            "sql": "CREATE INDEX nodes_generation ON nodes(generation)"
+          },
+          {
+            "index": "edges_label_dst",
+            "ns": 1605032,
+            "sql": "CREATE INDEX edges_label_dst ON edges(label, dst)"
+          },
+          {
+            "index": "edges_label_value",
+            "ns": 1583873,
+            "sql": "CREATE INDEX edges_label_value ON edges(label, dst_value)"
+          },
+          {
+            "index": "edges_src_label",
+            "ns": 1455112,
+            "sql": "CREATE INDEX edges_src_label ON edges(src, label)"
+          }
+        ],
+        "total_ns": 8405859,
+        "bytes_before": 593920,
+        "bytes_after": 720896,
+        "index_bytes": 126976,
+        "files": {
+          "adjacency-1000.sqlite": 688128,
+          "adjacency-1000.sqlite-wal": 0,
+          "adjacency-1000.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX nodes_kind ON nodes(kind)",
+          "CREATE INDEX nodes_generation ON nodes(generation)",
+          "CREATE INDEX edges_label_dst ON edges(label, dst)",
+          "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+          "CREATE INDEX edges_src_label ON edges(src, label)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1202,
+            "median_ns": 1233.0,
+            "mean_ns": 1240.68,
+            "p95_ns": 1273,
+            "p99_ns": 1432,
+            "max_ns": 1432,
+            "stdev_ns": 34.411300469467875,
+            "raw_ns": [
+              1202,
+              1212,
+              1212,
+              1212,
+              1212,
+              1213,
+              1213,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1222,
+              1223,
+              1223,
+              1232,
+              1232,
+              1232,
+              1232,
+              1233,
+              1233,
+              1233,
+              1242,
+              1242,
+              1242,
+              1242,
+              1242,
+              1242,
+              1242,
+              1242,
+              1243,
+              1243,
+              1243,
+              1243,
+              1252,
+              1253,
+              1262,
+              1262,
+              1272,
+              1272,
+              1272,
+              1273,
+              1273,
+              1312,
+              1432
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 144199,
+            "median_ns": 148507,
+            "mean_ns": 148915.6,
+            "p95_ns": 153586,
+            "p99_ns": 153586,
+            "max_ns": 153586,
+            "stdev_ns": 3688.096777472088,
+            "raw_ns": [
+              144199,
+              145702,
+              148507,
+              152584,
+              153586
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 135032,
+            "median_ns": 150240,
+            "mean_ns": 200401.6,
+            "p95_ns": 400196,
+            "p99_ns": 400196,
+            "max_ns": 400196,
+            "stdev_ns": 100922.76574608922,
+            "raw_ns": [
+              135032,
+              139971,
+              150240,
+              176569,
+              400196
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            1
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1442,
+            "median_ns": 1463.0,
+            "mean_ns": 1477.54,
+            "p95_ns": 1573,
+            "p99_ns": 1694,
+            "max_ns": 1694,
+            "stdev_ns": 43.91000341607821,
+            "raw_ns": [
+              1442,
+              1443,
+              1443,
+              1443,
+              1443,
+              1452,
+              1452,
+              1452,
+              1452,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1462,
+              1462,
+              1462,
+              1462,
+              1462,
+              1462,
+              1463,
+              1463,
+              1463,
+              1463,
+              1463,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1473,
+              1482,
+              1482,
+              1483,
+              1483,
+              1483,
+              1523,
+              1523,
+              1532,
+              1543,
+              1573,
+              1593,
+              1694
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 369789,
+            "median_ns": 385689,
+            "mean_ns": 391998.8,
+            "p95_ns": 423069,
+            "p99_ns": 423069,
+            "max_ns": 423069,
+            "stdev_ns": 17705.87936703512,
+            "raw_ns": [
+              369789,
+              384988,
+              385689,
+              396459,
+              423069
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 112540,
+            "median_ns": 131825,
+            "mean_ns": 128667.8,
+            "p95_ns": 144860,
+            "p99_ns": 144860,
+            "max_ns": 144860,
+            "stdev_ns": 11608.3901622921,
+            "raw_ns": [
+              112540,
+              118801,
+              131825,
+              135313,
+              144860
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT object_id FROM nodes WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 140512,
+            "median_ns": 141579.0,
+            "mean_ns": 143179.5,
+            "p95_ns": 158014,
+            "p99_ns": 175657,
+            "max_ns": 175657,
+            "stdev_ns": 5884.543092713317,
+            "raw_ns": [
+              140512,
+              140633,
+              140692,
+              140812,
+              140873,
+              140912,
+              140983,
+              141023,
+              141033,
+              141033,
+              141073,
+              141093,
+              141103,
+              141123,
+              141153,
+              141173,
+              141194,
+              141224,
+              141253,
+              141283,
+              141293,
+              141354,
+              141364,
+              141494,
+              141574,
+              141584,
+              141624,
+              141634,
+              141674,
+              141694,
+              141744,
+              141754,
+              141825,
+              141874,
+              142005,
+              142015,
+              142065,
+              142385,
+              142506,
+              142636,
+              142846,
+              142966,
+              143127,
+              143328,
+              143818,
+              145230,
+              147214,
+              158014,
+              160499,
+              175657
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 1199656,
+            "median_ns": 1337503,
+            "mean_ns": 1310274.4,
+            "p95_ns": 1341441,
+            "p99_ns": 1341441,
+            "max_ns": 1341441,
+            "stdev_ns": 55412.04518730562,
+            "raw_ns": [
+              1199656,
+              1331933,
+              1337503,
+              1340839,
+              1341441
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 126185,
+            "median_ns": 132086,
+            "mean_ns": 146539.0,
+            "p95_ns": 202167,
+            "p99_ns": 202167,
+            "max_ns": 202167,
+            "stdev_ns": 28544.23805253873,
+            "raw_ns": [
+              126185,
+              127778,
+              132086,
+              144479,
+              202167
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "even"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 79147,
+            "median_ns": 80465.0,
+            "mean_ns": 83584.7,
+            "p95_ns": 93774,
+            "p99_ns": 111909,
+            "max_ns": 111909,
+            "stdev_ns": 6465.506112440077,
+            "raw_ns": [
+              79147,
+              79278,
+              79287,
+              79408,
+              79498,
+              79508,
+              79518,
+              79558,
+              79568,
+              79608,
+              79609,
+              79618,
+              79639,
+              79639,
+              79808,
+              79818,
+              79859,
+              79929,
+              80029,
+              80250,
+              80340,
+              80350,
+              80380,
+              80450,
+              80460,
+              80470,
+              80470,
+              80470,
+              80511,
+              80530,
+              80600,
+              80720,
+              80790,
+              81702,
+              82103,
+              82243,
+              86661,
+              89216,
+              89226,
+              89246,
+              89466,
+              89717,
+              89777,
+              89818,
+              90499,
+              91430,
+              92633,
+              93774,
+              100698,
+              111909
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 752522,
+            "median_ns": 789853,
+            "mean_ns": 787009.0,
+            "p95_ns": 813546,
+            "p99_ns": 813546,
+            "max_ns": 813546,
+            "stdev_ns": 20254.92504059198,
+            "raw_ns": [
+              752522,
+              781297,
+              789853,
+              797827,
+              813546
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 134360,
+            "median_ns": 251198,
+            "mean_ns": 241626.2,
+            "p95_ns": 369408,
+            "p99_ns": 369408,
+            "max_ns": 369408,
+            "stdev_ns": 78081.0390924711,
+            "raw_ns": [
+              134360,
+              194142,
+              251198,
+              259023,
+              369408
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            501
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1432,
+            "median_ns": 1482.0,
+            "mean_ns": 1485.18,
+            "p95_ns": 1573,
+            "p99_ns": 1703,
+            "max_ns": 1703,
+            "stdev_ns": 44.54511870003267,
+            "raw_ns": [
+              1432,
+              1442,
+              1443,
+              1452,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1453,
+              1462,
+              1462,
+              1463,
+              1463,
+              1463,
+              1463,
+              1463,
+              1463,
+              1463,
+              1472,
+              1473,
+              1473,
+              1482,
+              1482,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1483,
+              1492,
+              1492,
+              1493,
+              1493,
+              1512,
+              1513,
+              1513,
+              1513,
+              1523,
+              1533,
+              1533,
+              1573,
+              1603,
+              1703
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 238174,
+            "median_ns": 376261,
+            "mean_ns": 356083.8,
+            "p95_ns": 428800,
+            "p99_ns": 428800,
+            "max_ns": 428800,
+            "stdev_ns": 63358.89655099748,
+            "raw_ns": [
+              238174,
+              359610,
+              376261,
+              377574,
+              428800
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 113512,
+            "median_ns": 147164,
+            "mean_ns": 155357.8,
+            "p95_ns": 216474,
+            "p99_ns": 216474,
+            "max_ns": 216474,
+            "stdev_ns": 33560.0863908304,
+            "raw_ns": [
+              113512,
+              146934,
+              147164,
+              152705,
+              216474
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT dst FROM edges WHERE src=? AND label=?",
+          "params": [
+            1,
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1392,
+            "median_ns": 1423.0,
+            "mean_ns": 1430.72,
+            "p95_ns": 1493,
+            "p99_ns": 1553,
+            "max_ns": 1553,
+            "stdev_ns": 30.826637831589743,
+            "raw_ns": [
+              1392,
+              1402,
+              1402,
+              1402,
+              1403,
+              1403,
+              1403,
+              1403,
+              1403,
+              1403,
+              1403,
+              1412,
+              1412,
+              1413,
+              1413,
+              1413,
+              1413,
+              1413,
+              1422,
+              1422,
+              1422,
+              1422,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1423,
+              1432,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1442,
+              1442,
+              1442,
+              1443,
+              1443,
+              1443,
+              1443,
+              1453,
+              1453,
+              1463,
+              1463,
+              1473,
+              1493,
+              1533,
+              1553
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 356394,
+            "median_ns": 366133,
+            "mean_ns": 378627.8,
+            "p95_ns": 440371,
+            "p99_ns": 440371,
+            "max_ns": 440371,
+            "stdev_ns": 31168.379986133383,
+            "raw_ns": [
+              356394,
+              361263,
+              366133,
+              368978,
+              440371
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 120775,
+            "median_ns": 132146,
+            "mean_ns": 142609.6,
+            "p95_ns": 185736,
+            "p99_ns": 185736,
+            "max_ns": 185736,
+            "stdev_ns": 24511.207302782946,
+            "raw_ns": [
+              120775,
+              121396,
+              132146,
+              152995,
+              185736
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 1353,
+            "median_ns": 1412.0,
+            "mean_ns": 1447.78,
+            "p95_ns": 1533,
+            "p99_ns": 3046,
+            "max_ns": 3046,
+            "stdev_ns": 231.2790773070491,
+            "raw_ns": [
+              1353,
+              1372,
+              1372,
+              1372,
+              1382,
+              1382,
+              1383,
+              1383,
+              1383,
+              1383,
+              1392,
+              1392,
+              1392,
+              1392,
+              1393,
+              1393,
+              1393,
+              1393,
+              1393,
+              1393,
+              1402,
+              1403,
+              1403,
+              1403,
+              1412,
+              1412,
+              1413,
+              1413,
+              1413,
+              1422,
+              1423,
+              1423,
+              1423,
+              1423,
+              1432,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1433,
+              1443,
+              1443,
+              1453,
+              1453,
+              1463,
+              1513,
+              1533,
+              1533,
+              3046
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 151492,
+            "median_ns": 169697,
+            "mean_ns": 166061.6,
+            "p95_ns": 171890,
+            "p99_ns": 171890,
+            "max_ns": 171890,
+            "stdev_ns": 7600.0260683763445,
+            "raw_ns": [
+              151492,
+              165759,
+              169697,
+              171470,
+              171890
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 104504,
+            "median_ns": 113562,
+            "mean_ns": 114910.0,
+            "p95_ns": 125935,
+            "p99_ns": 125935,
+            "max_ns": 125935,
+            "stdev_ns": 7042.70411134814,
+            "raw_ns": [
+              104504,
+              112439,
+              113562,
+              118110,
+              125935
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM nodes WHERE generation<=?",
+          "params": [
+            2037
+          ],
+          "warm": {
+            "samples": 50,
+            "min_ns": 16701,
+            "median_ns": 16761.0,
+            "mean_ns": 16800.1,
+            "p95_ns": 16851,
+            "p99_ns": 18184,
+            "max_ns": 18184,
+            "stdev_ns": 201.1616514149752,
+            "raw_ns": [
+              16701,
+              16731,
+              16731,
+              16732,
+              16732,
+              16741,
+              16741,
+              16741,
+              16741,
+              16741,
+              16741,
+              16741,
+              16742,
+              16742,
+              16751,
+              16751,
+              16751,
+              16751,
+              16751,
+              16752,
+              16761,
+              16761,
+              16761,
+              16761,
+              16761,
+              16761,
+              16771,
+              16771,
+              16771,
+              16771,
+              16772,
+              16781,
+              16781,
+              16781,
+              16782,
+              16782,
+              16791,
+              16801,
+              16801,
+              16801,
+              16802,
+              16802,
+              16802,
+              16811,
+              16821,
+              16851,
+              16851,
+              16851,
+              16902,
+              18184
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 210603,
+            "median_ns": 213919,
+            "mean_ns": 213239.6,
+            "p95_ns": 215973,
+            "p99_ns": 215973,
+            "max_ns": 215973,
+            "stdev_ns": 1959.8252575165982,
+            "raw_ns": [
+              210603,
+              211434,
+              213919,
+              214269,
+              215973
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 115315,
+            "median_ns": 118030,
+            "mean_ns": 117922.0,
+            "p95_ns": 120305,
+            "p99_ns": 120305,
+            "max_ns": 120305,
+            "stdev_ns": 1884.7699063811476,
+            "raw_ns": [
+              115315,
+              116357,
+              118030,
+              119603,
+              120305
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING INDEX nodes_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_src_label (src=? AND label=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING COVERING INDEX nodes_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 25,
+        "add": {
+          "samples": 25,
+          "min_ns": 1124426,
+          "median_ns": 1140085,
+          "mean_ns": 1276481.48,
+          "p95_ns": 1605954,
+          "p99_ns": 3296896,
+          "max_ns": 3296896,
+          "stdev_ns": 434326.51106034225,
+          "raw_ns": [
+            1124426,
+            1124937,
+            1126931,
+            1129766,
+            1133603,
+            1133653,
+            1134194,
+            1135537,
+            1136138,
+            1137560,
+            1138663,
+            1139344,
+            1140085,
+            1141237,
+            1142259,
+            1142500,
+            1144724,
+            1145996,
+            1146387,
+            1156005,
+            1189637,
+            1528810,
+            1536795,
+            1605954,
+            3296896
+          ]
+        },
+        "delete": {
+          "samples": 25,
+          "min_ns": 1119667,
+          "median_ns": 1138703,
+          "mean_ns": 1200510.56,
+          "p95_ns": 1530864,
+          "p99_ns": 1541193,
+          "max_ns": 1541193,
+          "stdev_ns": 140012.8726990715,
+          "raw_ns": [
+            1119667,
+            1124365,
+            1126230,
+            1127662,
+            1129485,
+            1130388,
+            1130687,
+            1134425,
+            1136458,
+            1137981,
+            1138433,
+            1138672,
+            1138703,
+            1142840,
+            1142870,
+            1144554,
+            1146266,
+            1147118,
+            1150905,
+            1153991,
+            1195548,
+            1475931,
+            1527528,
+            1530864,
+            1541193
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 733184,
+        "files": {
+          "adjacency-1000.sqlite": 700416,
+          "adjacency-1000.sqlite-wal": 0,
+          "adjacency-1000.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 1000,
+          "relations": 2067,
+          "snapshots": 3
+        }
+      }
+    },
+    {
+      "variant": "relational",
+      "size": 10000,
+      "db_path": "/work/.docker-cache/bench-external/relational-10000.sqlite",
+      "schema_sql": "\nCREATE TABLE objects (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE relations (\n  id INTEGER PRIMARY KEY,\n  subject TEXT NOT NULL,\n  predicate TEXT NOT NULL,\n  target_kind TEXT NOT NULL,\n  target_value TEXT NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  object_id TEXT PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX objects_kind ON objects(kind)",
+        "CREATE INDEX objects_generation ON objects(generation)",
+        "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+        "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+      ],
+      "build_ns": 146416353,
+      "load": {
+        "object_bulk_load_ns": 39673335,
+        "relation_bulk_load_ns": 16270560,
+        "durable_insert_ns": [
+          1067760,
+          1046921,
+          1044667,
+          1043024,
+          1045309,
+          1051911,
+          1054315,
+          1059806,
+          797878,
+          783260,
+          766809,
+          765376,
+          768031,
+          766889,
+          763293,
+          764475,
+          766579,
+          763243,
+          768222,
+          764475,
+          763594,
+          765337,
+          765006,
+          763253,
+          766088,
+          762472,
+          764225,
+          770696,
+          790905,
+          767591,
+          763874,
+          766950,
+          766840,
+          764816,
+          760407,
+          763543,
+          769114,
+          762311,
+          768202,
+          766609,
+          765867,
+          771067,
+          780064,
+          794802,
+          771448,
+          761940,
+          762802,
+          763052,
+          765688,
+          769945,
+          783511,
+          767681,
+          761599,
+          770186,
+          765026,
+          763543,
+          772260,
+          762441,
+          766078,
+          888557,
+          760628,
+          769404,
+          762792,
+          764034,
+          765117,
+          763934,
+          762562,
+          765006,
+          762932,
+          766239,
+          765677,
+          771007,
+          791065,
+          782349,
+          766459,
+          764676,
+          812675,
+          767711,
+          765527,
+          765196,
+          763954,
+          764726,
+          762782,
+          763574,
+          766158,
+          766659,
+          766850,
+          764455,
+          766629,
+          763252,
+          766458,
+          766940,
+          764485,
+          766419,
+          763704,
+          765086,
+          766669,
+          764796,
+          765276,
+          764214
+        ],
+        "rows": {
+          "objects": 10000,
+          "relations": 20667,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "objects_kind",
+            "ns": 4086227,
+            "sql": "CREATE INDEX objects_kind ON objects(kind)"
+          },
+          {
+            "index": "objects_generation",
+            "ns": 3111209,
+            "sql": "CREATE INDEX objects_generation ON objects(generation)"
+          },
+          {
+            "index": "relations_predicate_target",
+            "ns": 10428200,
+            "sql": "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)"
+          },
+          {
+            "index": "relations_subject_predicate",
+            "ns": 9616015,
+            "sql": "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+          }
+        ],
+        "total_ns": 27241651,
+        "bytes_before": 8720384,
+        "bytes_after": 11857920,
+        "index_bytes": 3137536,
+        "files": {
+          "relational-10000.sqlite": 11825152,
+          "relational-10000.sqlite-wal": 0,
+          "relational-10000.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX objects_kind ON objects(kind)",
+          "CREATE INDEX objects_generation ON objects(generation)",
+          "CREATE INDEX relations_predicate_target ON relations(predicate, target_kind, target_value)",
+          "CREATE INDEX relations_subject_predicate ON relations(subject, predicate)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1372,
+            "median_ns": 1407.5,
+            "mean_ns": 1451.6,
+            "p95_ns": 1733,
+            "p99_ns": 1733,
+            "max_ns": 1733,
+            "stdev_ns": 101.16540910805432,
+            "raw_ns": [
+              1372,
+              1392,
+              1393,
+              1402,
+              1403,
+              1412,
+              1433,
+              1473,
+              1503,
+              1733
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 194072,
+            "median_ns": 201215,
+            "mean_ns": 206302.4,
+            "p95_ns": 228275,
+            "p99_ns": 228275,
+            "max_ns": 228275,
+            "stdev_ns": 12881.986983381097,
+            "raw_ns": [
+              194072,
+              195013,
+              201215,
+              212937,
+              228275
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 162673,
+            "median_ns": 182901,
+            "mean_ns": 189857.8,
+            "p95_ns": 219469,
+            "p99_ns": 219469,
+            "max_ns": 219469,
+            "stdev_ns": 24864.05371937569,
+            "raw_ns": [
+              162673,
+              165509,
+              182901,
+              218737,
+              219469
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "b6957fa920bbf26481e2fb5de8e2d4e3efc03de7445eeb2f03d6596d8273331d"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1783,
+            "median_ns": 1794.0,
+            "mean_ns": 1815.4,
+            "p95_ns": 1943,
+            "p99_ns": 1943,
+            "max_ns": 1943,
+            "stdev_ns": 47.16608951354776,
+            "raw_ns": [
+              1783,
+              1783,
+              1793,
+              1793,
+              1794,
+              1794,
+              1794,
+              1824,
+              1853,
+              1943
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 572577,
+            "median_ns": 578849,
+            "mean_ns": 579041.2,
+            "p95_ns": 588266,
+            "p99_ns": 588266,
+            "max_ns": 588266,
+            "stdev_ns": 5960.409697327861,
+            "raw_ns": [
+              572577,
+              572888,
+              578849,
+              582626,
+              588266
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 163224,
+            "median_ns": 169666,
+            "mean_ns": 177809.2,
+            "p95_ns": 213718,
+            "p99_ns": 213718,
+            "max_ns": 213718,
+            "stdev_ns": 18320.141412117977,
+            "raw_ns": [
+              163224,
+              167843,
+              169666,
+              174595,
+              213718
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT id FROM objects WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1493784,
+            "median_ns": 1501373.5,
+            "mean_ns": 1504303.9,
+            "p95_ns": 1515736,
+            "p99_ns": 1515736,
+            "max_ns": 1515736,
+            "stdev_ns": 7662.875105989918,
+            "raw_ns": [
+              1493784,
+              1496379,
+              1498413,
+              1498653,
+              1501118,
+              1501629,
+              1511958,
+              1512549,
+              1512820,
+              1515736
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 4673251,
+            "median_ns": 5070261,
+            "mean_ns": 5041902.6,
+            "p95_ns": 5289471,
+            "p99_ns": 5289471,
+            "max_ns": 5289471,
+            "stdev_ns": 232498.35568072303,
+            "raw_ns": [
+              4673251,
+              4903901,
+              5070261,
+              5272629,
+              5289471
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 175407,
+            "median_ns": 220561,
+            "mean_ns": 215800.4,
+            "p95_ns": 245368,
+            "p99_ns": 245368,
+            "max_ns": 245368,
+            "stdev_ns": 26529.148509516846,
+            "raw_ns": [
+              175407,
+              196787,
+              220561,
+              240879,
+              245368
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "tagged_as",
+            "value",
+            "even"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 972523,
+            "median_ns": 974657.0,
+            "mean_ns": 975921.2,
+            "p95_ns": 985697,
+            "p99_ns": 985697,
+            "max_ns": 985697,
+            "stdev_ns": 3636.2746265924416,
+            "raw_ns": [
+              972523,
+              972993,
+              973825,
+              974096,
+              974296,
+              975018,
+              975879,
+              976841,
+              978044,
+              985697
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 6229923,
+            "median_ns": 6587991,
+            "mean_ns": 6536340.2,
+            "p95_ns": 6725477,
+            "p99_ns": 6725477,
+            "max_ns": 6725477,
+            "stdev_ns": 176001.5961273079,
+            "raw_ns": [
+              6229923,
+              6468167,
+              6587991,
+              6670143,
+              6725477
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 196186,
+            "median_ns": 215962,
+            "mean_ns": 214371.6,
+            "p95_ns": 227504,
+            "p99_ns": 227504,
+            "max_ns": 227504,
+            "stdev_ns": 10894.183486613396,
+            "raw_ns": [
+              196186,
+              209711,
+              215962,
+              222495,
+              227504
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT subject FROM relations WHERE predicate=? AND target_kind=? AND target_value=?",
+          "params": [
+            "refers_to",
+            "object",
+            "bfcd637fe49d890e2980c192cd09bc79371671753330df022f55dafa666778bc"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1763,
+            "median_ns": 1793.0,
+            "mean_ns": 1813.3,
+            "p95_ns": 1944,
+            "p99_ns": 1944,
+            "max_ns": 1944,
+            "stdev_ns": 51.577223655408204,
+            "raw_ns": [
+              1763,
+              1774,
+              1783,
+              1783,
+              1783,
+              1803,
+              1813,
+              1824,
+              1863,
+              1944
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 568650,
+            "median_ns": 579510,
+            "mean_ns": 580962.8,
+            "p95_ns": 593005,
+            "p99_ns": 593005,
+            "max_ns": 593005,
+            "stdev_ns": 8081.068132369631,
+            "raw_ns": [
+              568650,
+              578198,
+              579510,
+              585451,
+              593005
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 166341,
+            "median_ns": 182510,
+            "mean_ns": 189190.8,
+            "p95_ns": 227675,
+            "p99_ns": 227675,
+            "max_ns": 227675,
+            "stdev_ns": 22287.073772929456,
+            "raw_ns": [
+              166341,
+              170648,
+              182510,
+              198780,
+              227675
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT target_value FROM relations WHERE subject=? AND predicate=?",
+          "params": [
+            "b6957fa920bbf26481e2fb5de8e2d4e3efc03de7445eeb2f03d6596d8273331d",
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1553,
+            "median_ns": 1598.0,
+            "mean_ns": 1615.9,
+            "p95_ns": 1723,
+            "p99_ns": 1723,
+            "max_ns": 1723,
+            "stdev_ns": 46.321593236847974,
+            "raw_ns": [
+              1553,
+              1592,
+              1593,
+              1593,
+              1593,
+              1603,
+              1603,
+              1633,
+              1673,
+              1723
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 572127,
+            "median_ns": 572828,
+            "mean_ns": 577342.4,
+            "p95_ns": 586013,
+            "p99_ns": 586013,
+            "max_ns": 586013,
+            "stdev_ns": 5933.917950224793,
+            "raw_ns": [
+              572127,
+              572737,
+              572828,
+              583007,
+              586013
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 160850,
+            "median_ns": 173303,
+            "mean_ns": 177422.6,
+            "p95_ns": 196205,
+            "p99_ns": 196205,
+            "max_ns": 196205,
+            "stdev_ns": 14225.556110043643,
+            "raw_ns": [
+              160850,
+              164857,
+              173303,
+              191898,
+              196205
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1332,
+            "median_ns": 1352.5,
+            "mean_ns": 1362.4,
+            "p95_ns": 1412,
+            "p99_ns": 1412,
+            "max_ns": 1412,
+            "stdev_ns": 24.824181758922084,
+            "raw_ns": [
+              1332,
+              1342,
+              1343,
+              1352,
+              1352,
+              1353,
+              1363,
+              1373,
+              1402,
+              1412
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 131105,
+            "median_ns": 133008,
+            "mean_ns": 136949.2,
+            "p95_ns": 146803,
+            "p99_ns": 146803,
+            "max_ns": 146803,
+            "stdev_ns": 6198.122406019423,
+            "raw_ns": [
+              131105,
+              132156,
+              133008,
+              141674,
+              146803
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 141233,
+            "median_ns": 152855,
+            "mean_ns": 153470.0,
+            "p95_ns": 170278,
+            "p99_ns": 170278,
+            "max_ns": 170278,
+            "stdev_ns": 9501.06665590764,
+            "raw_ns": [
+              141233,
+              149158,
+              152855,
+              153826,
+              170278
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM objects WHERE generation<=?",
+          "params": [
+            20337
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 152655,
+            "median_ns": 152900.0,
+            "mean_ns": 153211.6,
+            "p95_ns": 154909,
+            "p99_ns": 154909,
+            "max_ns": 154909,
+            "stdev_ns": 696.7743106630726,
+            "raw_ns": [
+              152655,
+              152825,
+              152855,
+              152865,
+              152885,
+              152915,
+              152915,
+              153095,
+              154197,
+              154909
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 398242,
+            "median_ns": 409693,
+            "mean_ns": 408881.8,
+            "p95_ns": 414262,
+            "p99_ns": 414262,
+            "max_ns": 414262,
+            "stdev_ns": 5763.133224210595,
+            "raw_ns": [
+              398242,
+              408521,
+              409693,
+              413691,
+              414262
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 156902,
+            "median_ns": 178282,
+            "mean_ns": 176570.8,
+            "p95_ns": 191026,
+            "p99_ns": 191026,
+            "max_ns": 191026,
+            "stdev_ns": 11004.594956653335,
+            "raw_ns": [
+              156902,
+              177761,
+              178282,
+              178883,
+              191026
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING INDEX objects_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_predicate_target (predicate=? AND target_kind=? AND target_value=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH relations USING INDEX relations_subject_predicate (subject=? AND predicate=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH objects USING COVERING INDEX objects_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 10,
+        "add": {
+          "samples": 10,
+          "min_ns": 1125859,
+          "median_ns": 1141187.5,
+          "mean_ns": 1458064.1,
+          "p95_ns": 4319943,
+          "p99_ns": 4319943,
+          "max_ns": 4319943,
+          "stdev_ns": 954017.4021159625,
+          "raw_ns": [
+            1125859,
+            1127933,
+            1129516,
+            1134575,
+            1139725,
+            1142650,
+            1147038,
+            1155504,
+            1157898,
+            4319943
+          ]
+        },
+        "delete": {
+          "samples": 10,
+          "min_ns": 1123234,
+          "median_ns": 1132827.0,
+          "mean_ns": 1134605.2,
+          "p95_ns": 1158079,
+          "p99_ns": 1158079,
+          "max_ns": 1158079,
+          "stdev_ns": 9561.291751641093,
+          "raw_ns": [
+            1123234,
+            1125158,
+            1128324,
+            1130728,
+            1132782,
+            1132872,
+            1134786,
+            1136538,
+            1143551,
+            1158079
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 11870208,
+        "files": {
+          "relational-10000.sqlite": 11837440,
+          "relational-10000.sqlite-wal": 0,
+          "relational-10000.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 10000,
+          "relations": 20667,
+          "snapshots": 3
+        }
+      }
+    },
+    {
+      "variant": "adjacency",
+      "size": 10000,
+      "db_path": "/work/.docker-cache/bench-external/adjacency-10000.sqlite",
+      "schema_sql": "\nCREATE TABLE nodes (\n  id INTEGER PRIMARY KEY,\n  object_id TEXT NOT NULL UNIQUE,\n  name TEXT NOT NULL UNIQUE,\n  kind TEXT NOT NULL,\n  content_hash TEXT NOT NULL,\n  size INTEGER NOT NULL,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE edges (\n  id INTEGER PRIMARY KEY,\n  src INTEGER NOT NULL,\n  label TEXT NOT NULL,\n  dst INTEGER,\n  dst_value TEXT,\n  generation INTEGER NOT NULL\n);\nCREATE TABLE snapshots (\n  name TEXT PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  object_count INTEGER NOT NULL\n);\nCREATE TABLE payloads (\n  node_id INTEGER PRIMARY KEY,\n  bytes BLOB NOT NULL\n);\n",
+      "index_sql": [
+        "CREATE INDEX nodes_kind ON nodes(kind)",
+        "CREATE INDEX nodes_generation ON nodes(generation)",
+        "CREATE INDEX edges_label_dst ON edges(label, dst)",
+        "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+        "CREATE INDEX edges_src_label ON edges(src, label)"
+      ],
+      "build_ns": 143158170,
+      "load": {
+        "object_bulk_load_ns": 32626418,
+        "relation_bulk_load_ns": 18619359,
+        "durable_insert_ns": [
+          783491,
+          767170,
+          766108,
+          765437,
+          765387,
+          766269,
+          765887,
+          768994,
+          780485,
+          787508,
+          769474,
+          768402,
+          759526,
+          765798,
+          762271,
+          765718,
+          763643,
+          764956,
+          770436,
+          763934,
+          763624,
+          765898,
+          763453,
+          764495,
+          763884,
+          764234,
+          765947,
+          832331,
+          1053855,
+          1044537,
+          1046461,
+          1041442,
+          1047813,
+          1049717,
+          1043435,
+          1043265,
+          1049436,
+          1037705,
+          1041752,
+          1042323,
+          1043315,
+          1047964,
+          1047582,
+          1040810,
+          765437,
+          764395,
+          767030,
+          762992,
+          764775,
+          763353,
+          762642,
+          768403,
+          776217,
+          775886,
+          763042,
+          765036,
+          770426,
+          765878,
+          764275,
+          762942,
+          763754,
+          764185,
+          763603,
+          761971,
+          761670,
+          765046,
+          768061,
+          792757,
+          768162,
+          1018098,
+          763564,
+          764696,
+          758925,
+          770516,
+          766309,
+          764345,
+          760849,
+          763473,
+          765487,
+          762210,
+          765046,
+          766158,
+          763393,
+          899997,
+          765197,
+          763433,
+          763012,
+          763012,
+          763664,
+          764755,
+          765747,
+          768673,
+          765106,
+          764165,
+          765407,
+          763844,
+          764505,
+          760889,
+          763172,
+          762432
+        ],
+        "rows": {
+          "objects": 10000,
+          "relations": 20667,
+          "snapshots": 3
+        }
+      },
+      "index_build": {
+        "indexes": [
+          {
+            "index": "nodes_kind",
+            "ns": 3942540,
+            "sql": "CREATE INDEX nodes_kind ON nodes(kind)"
+          },
+          {
+            "index": "nodes_generation",
+            "ns": 2178982,
+            "sql": "CREATE INDEX nodes_generation ON nodes(generation)"
+          },
+          {
+            "index": "edges_label_dst",
+            "ns": 5319346,
+            "sql": "CREATE INDEX edges_label_dst ON edges(label, dst)"
+          },
+          {
+            "index": "edges_label_value",
+            "ns": 5973045,
+            "sql": "CREATE INDEX edges_label_value ON edges(label, dst_value)"
+          },
+          {
+            "index": "edges_src_label",
+            "ns": 4224965,
+            "sql": "CREATE INDEX edges_src_label ON edges(src, label)"
+          }
+        ],
+        "total_ns": 21638878,
+        "bytes_before": 5038080,
+        "bytes_after": 6434816,
+        "index_bytes": 1396736,
+        "files": {
+          "adjacency-10000.sqlite": 6402048,
+          "adjacency-10000.sqlite-wal": 0,
+          "adjacency-10000.sqlite-shm": 32768
+        },
+        "sql": [
+          "CREATE INDEX nodes_kind ON nodes(kind)",
+          "CREATE INDEX nodes_generation ON nodes(generation)",
+          "CREATE INDEX edges_label_dst ON edges(label, dst)",
+          "CREATE INDEX edges_label_value ON edges(label, dst_value)",
+          "CREATE INDEX edges_src_label ON edges(src, label)"
+        ]
+      },
+      "queries": {
+        "q0_tag_absent": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "absent_tag"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1222,
+            "median_ns": 1242.0,
+            "mean_ns": 1274.3,
+            "p95_ns": 1492,
+            "p99_ns": 1492,
+            "max_ns": 1492,
+            "stdev_ns": 79.84365973576111,
+            "raw_ns": [
+              1222,
+              1223,
+              1232,
+              1232,
+              1242,
+              1242,
+              1253,
+              1262,
+              1343,
+              1492
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 137126,
+            "median_ns": 148097,
+            "mean_ns": 148867.8,
+            "p95_ns": 160940,
+            "p99_ns": 160940,
+            "max_ns": 160940,
+            "stdev_ns": 8161.941322994181,
+            "raw_ns": [
+              137126,
+              144149,
+              148097,
+              154027,
+              160940
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 125744,
+            "median_ns": 164396,
+            "mean_ns": 159134.6,
+            "p95_ns": 195535,
+            "p99_ns": 195535,
+            "max_ns": 195535,
+            "stdev_ns": 25475.236388304624,
+            "raw_ns": [
+              125744,
+              135723,
+              164396,
+              174275,
+              195535
+            ]
+          }
+        },
+        "q1_relation_incoming": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            1
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1453,
+            "median_ns": 1483.0,
+            "mean_ns": 1495.8,
+            "p95_ns": 1623,
+            "p99_ns": 1623,
+            "max_ns": 1623,
+            "stdev_ns": 46.09077998906072,
+            "raw_ns": [
+              1453,
+              1462,
+              1473,
+              1473,
+              1483,
+              1483,
+              1483,
+              1512,
+              1513,
+              1623
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 431014,
+            "median_ns": 439660,
+            "mean_ns": 517390.6,
+            "p95_ns": 823625,
+            "p99_ns": 823625,
+            "max_ns": 823625,
+            "stdev_ns": 153354.42400869954,
+            "raw_ns": [
+              431014,
+              436194,
+              439660,
+              456460,
+              823625
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 125975,
+            "median_ns": 140301,
+            "mean_ns": 154135.4,
+            "p95_ns": 196336,
+            "p99_ns": 196336,
+            "max_ns": 196336,
+            "stdev_ns": 28000.51538525675,
+            "raw_ns": [
+              125975,
+              130003,
+              140301,
+              178062,
+              196336
+            ]
+          }
+        },
+        "qn_kind_file": {
+          "query": "SELECT object_id FROM nodes WHERE kind=?",
+          "params": [
+            "file"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1516417,
+            "median_ns": 1525874.0,
+            "mean_ns": 1547595.7,
+            "p95_ns": 1635339,
+            "p99_ns": 1635339,
+            "max_ns": 1635339,
+            "stdev_ns": 37950.46386817953,
+            "raw_ns": [
+              1516417,
+              1518951,
+              1522568,
+              1524862,
+              1525633,
+              1526115,
+              1550019,
+              1556050,
+              1600003,
+              1635339
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 4648305,
+            "median_ns": 4761726,
+            "mean_ns": 4936041.4,
+            "p95_ns": 5846549,
+            "p99_ns": 5846549,
+            "max_ns": 5846549,
+            "stdev_ns": 457883.66939850565,
+            "raw_ns": [
+              4648305,
+              4659236,
+              4761726,
+              4764391,
+              5846549
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 132186,
+            "median_ns": 179685,
+            "mean_ns": 170133.0,
+            "p95_ns": 201606,
+            "p99_ns": 201606,
+            "max_ns": 201606,
+            "stdev_ns": 27631.62529421677,
+            "raw_ns": [
+              132186,
+              143187,
+              179685,
+              194001,
+              201606
+            ]
+          }
+        },
+        "qeven_tag": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst_value=?",
+          "params": [
+            "tagged_as",
+            "even"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 856908,
+            "median_ns": 864992.0,
+            "mean_ns": 881205.6,
+            "p95_ns": 951974,
+            "p99_ns": 951974,
+            "max_ns": 951974,
+            "stdev_ns": 32995.817471916045,
+            "raw_ns": [
+              856908,
+              856937,
+              861125,
+              863771,
+              863910,
+              866074,
+              866676,
+              886703,
+              937978,
+              951974
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 2489871,
+            "median_ns": 2512794,
+            "mean_ns": 2822010.4,
+            "p95_ns": 3639564,
+            "p99_ns": 3639564,
+            "max_ns": 3639564,
+            "stdev_ns": 447131.5462458895,
+            "raw_ns": [
+              2489871,
+              2499620,
+              2512794,
+              2968203,
+              3639564
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 155220,
+            "median_ns": 169115,
+            "mean_ns": 167243.8,
+            "p95_ns": 183171,
+            "p99_ns": 183171,
+            "max_ns": 183171,
+            "stdev_ns": 9920.925347970318,
+            "raw_ns": [
+              155220,
+              158286,
+              169115,
+              170427,
+              183171
+            ]
+          }
+        },
+        "qhop_relation": {
+          "query": "SELECT src FROM edges WHERE label=? AND dst=?",
+          "params": [
+            "refers_to",
+            5001
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1503,
+            "median_ns": 1543.0,
+            "mean_ns": 1552.0,
+            "p95_ns": 1633,
+            "p99_ns": 1633,
+            "max_ns": 1633,
+            "stdev_ns": 37.8021163428716,
+            "raw_ns": [
+              1503,
+              1513,
+              1523,
+              1543,
+              1543,
+              1543,
+              1553,
+              1563,
+              1603,
+              1633
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 366914,
+            "median_ns": 381190,
+            "mean_ns": 385011.4,
+            "p95_ns": 404534,
+            "p99_ns": 404534,
+            "max_ns": 404534,
+            "stdev_ns": 12764.272757975677,
+            "raw_ns": [
+              366914,
+              379557,
+              381190,
+              392862,
+              404534
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 126787,
+            "median_ns": 150551,
+            "mean_ns": 146553.2,
+            "p95_ns": 163144,
+            "p99_ns": 163144,
+            "max_ns": 163144,
+            "stdev_ns": 14437.467456586699,
+            "raw_ns": [
+              126787,
+              132727,
+              150551,
+              159557,
+              163144
+            ]
+          }
+        },
+        "qoutgoing_hop": {
+          "query": "SELECT dst FROM edges WHERE src=? AND label=?",
+          "params": [
+            1,
+            "refers_to"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1422,
+            "median_ns": 1453.0,
+            "mean_ns": 1475.8,
+            "p95_ns": 1693,
+            "p99_ns": 1693,
+            "max_ns": 1693,
+            "stdev_ns": 76.16009453775645,
+            "raw_ns": [
+              1422,
+              1423,
+              1432,
+              1443,
+              1443,
+              1463,
+              1463,
+              1473,
+              1503,
+              1693
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 442495,
+            "median_ns": 455469,
+            "mean_ns": 459386.6,
+            "p95_ns": 480446,
+            "p99_ns": 480446,
+            "max_ns": 480446,
+            "stdev_ns": 13195.396691270786,
+            "raw_ns": [
+              442495,
+              451312,
+              455469,
+              467211,
+              480446
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 122178,
+            "median_ns": 131595,
+            "mean_ns": 146022.4,
+            "p95_ns": 178313,
+            "p99_ns": 178313,
+            "max_ns": 178313,
+            "stdev_ns": 24317.77978845931,
+            "raw_ns": [
+              122178,
+              125354,
+              131595,
+              172672,
+              178313
+            ]
+          }
+        },
+        "qsnapshot_resolve": {
+          "query": "SELECT generation, object_count FROM snapshots WHERE name=?",
+          "params": [
+            "half"
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 1322,
+            "median_ns": 1362.5,
+            "mean_ns": 1363.6,
+            "p95_ns": 1423,
+            "p99_ns": 1423,
+            "max_ns": 1423,
+            "stdev_ns": 30.16686924425536,
+            "raw_ns": [
+              1322,
+              1322,
+              1343,
+              1352,
+              1352,
+              1373,
+              1373,
+              1383,
+              1393,
+              1423
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 138008,
+            "median_ns": 142907,
+            "mean_ns": 150769.0,
+            "p95_ns": 170798,
+            "p99_ns": 170798,
+            "max_ns": 170798,
+            "stdev_ns": 12402.971144044479,
+            "raw_ns": [
+              138008,
+              142605,
+              142907,
+              159527,
+              170798
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 119633,
+            "median_ns": 148307,
+            "mean_ns": 144876.2,
+            "p95_ns": 169015,
+            "p99_ns": 169015,
+            "max_ns": 169015,
+            "stdev_ns": 17747.845338519266,
+            "raw_ns": [
+              119633,
+              130664,
+              148307,
+              156762,
+              169015
+            ]
+          }
+        },
+        "qsnapshot_visible": {
+          "query": "SELECT count(*) FROM nodes WHERE generation<=?",
+          "params": [
+            20337
+          ],
+          "warm": {
+            "samples": 10,
+            "min_ns": 155169,
+            "median_ns": 155254.5,
+            "mean_ns": 155537.0,
+            "p95_ns": 156873,
+            "p99_ns": 156873,
+            "max_ns": 156873,
+            "stdev_ns": 592.2742607947774,
+            "raw_ns": [
+              155169,
+              155180,
+              155219,
+              155229,
+              155250,
+              155259,
+              155279,
+              155370,
+              156542,
+              156873
+            ]
+          },
+          "cold": {
+            "samples": 5,
+            "min_ns": 422348,
+            "median_ns": 473202,
+            "mean_ns": 492788.6,
+            "p95_ns": 579951,
+            "p99_ns": 579951,
+            "max_ns": 579951,
+            "stdev_ns": 54042.181105503136,
+            "raw_ns": [
+              422348,
+              465447,
+              473202,
+              522995,
+              579951
+            ]
+          },
+          "cold_open": {
+            "samples": 5,
+            "min_ns": 125655,
+            "median_ns": 126777,
+            "mean_ns": 136446.6,
+            "p95_ns": 175136,
+            "p99_ns": 175136,
+            "max_ns": 175136,
+            "stdev_ns": 19361.624772730207,
+            "raw_ns": [
+              125655,
+              126496,
+              126777,
+              128169,
+              175136
+            ]
+          }
+        }
+      },
+      "query_plans": {
+        "q0_tag_absent": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "q1_relation_incoming": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qn_kind_file": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING INDEX nodes_kind (kind=?)"
+          ]
+        ],
+        "qeven_tag": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_value (label=? AND dst_value=?)"
+          ]
+        ],
+        "qhop_relation": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_label_dst (label=? AND dst=?)"
+          ]
+        ],
+        "qoutgoing_hop": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH edges USING INDEX edges_src_label (src=? AND label=?)"
+          ]
+        ],
+        "qsnapshot_resolve": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH snapshots USING INDEX sqlite_autoindex_snapshots_1 (name=?)"
+          ]
+        ],
+        "qsnapshot_visible": [
+          [
+            3,
+            0,
+            0,
+            "SEARCH nodes USING COVERING INDEX nodes_generation (generation<?)"
+          ]
+        ]
+      },
+      "churn": {
+        "rounds": 10,
+        "add": {
+          "samples": 10,
+          "min_ns": 1136498,
+          "median_ns": 1156190.0,
+          "mean_ns": 1367467.1,
+          "p95_ns": 3272150,
+          "p99_ns": 3272150,
+          "max_ns": 3272150,
+          "stdev_ns": 635009.4503214027,
+          "raw_ns": [
+            1136498,
+            1142009,
+            1147108,
+            1151616,
+            1153109,
+            1159271,
+            1163870,
+            1171264,
+            1177776,
+            3272150
+          ]
+        },
+        "delete": {
+          "samples": 10,
+          "min_ns": 1134796,
+          "median_ns": 1141979.0,
+          "mean_ns": 1150577.8,
+          "p95_ns": 1181202,
+          "p99_ns": 1181202,
+          "max_ns": 1181202,
+          "stdev_ns": 16068.077649799929,
+          "raw_ns": [
+            1134796,
+            1137511,
+            1137600,
+            1141147,
+            1141488,
+            1142470,
+            1151346,
+            1161014,
+            1177204,
+            1181202
+          ]
+        }
+      },
+      "disk": {
+        "total_bytes": 6447104,
+        "files": {
+          "adjacency-10000.sqlite": 6414336,
+          "adjacency-10000.sqlite-wal": 0,
+          "adjacency-10000.sqlite-shm": 32768
+        },
+        "row_counts": {
+          "objects": 10000,
+          "relations": 20667,
+          "snapshots": 3
+        }
+      }
+    }
+  ]
+}

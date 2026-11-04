@@ -1,0 +1,3407 @@
+{
+  "contestants": [
+    {
+      "id": "rust",
+      "binary": "/work/.docker-cache/target-weftcodec/release/weftcodec",
+      "binary_bytes": 3285720,
+      "binary_sha256": "942af19adbcb6f283b064372093173c97d2210075402e812036675378d690954"
+    },
+    {
+      "id": "go",
+      "binary": "/work/.docker-cache/bench-matched/20261103T232158Z/bin/go-weftcodec",
+      "binary_bytes": 4543691,
+      "binary_sha256": "e5aa08e0762aa90b2667023cbcdf84945b52b10ef81d22ce9b5466a6ff75bb5b"
+    }
+  ],
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "go": "go version go1.23.12 linux/amd64",
+    "kernel": "7.3.1-1-cachyos",
+    "mem_total_kib": 131565228,
+    "nproc": 16,
+    "revision_weftcodec": "ab50e8b182956444c6d3145299b24d46dad2aeea",
+    "revision_weftcodec_go": "ce2cff9283c2ccb841ee27ea5415ef3cb4691c6a",
+    "revision_weftfs": "2388352b36920feb7378d953b12dbcd0c30ed2b2",
+    "revision_weftfs_go": "209e4c30e3e4155ed631ef94a65059ca892fbaad",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "uname": "Linux bcd9604ac919 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux"
+  },
+  "fixtures": [
+    {
+      "name": "raw_4m",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/raw_4m",
+      "bytes": 4194304,
+      "sha256": "3ab3c85bc72ddba53776b4e28779649a5912e61df7f6f239f1ca583dae66a4cd"
+    },
+    {
+      "name": "zstd_4m",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/zstd_4m",
+      "bytes": 4194304,
+      "sha256": "14b40f1db0b383926d670903918c90fe60991be2a3ab6eaa0810b4d1796b44a0"
+    },
+    {
+      "name": "ref_base_1m",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/ref_base_1m",
+      "bytes": 1048576,
+      "sha256": "88522757eb23b59e9e44c050e1b16de3ef267537d44288bfa25b241624013f7d"
+    },
+    {
+      "name": "ref_target_1m",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/ref_target_1m",
+      "bytes": 1048576,
+      "sha256": "99d8aa65cb0139ed6c72dfaeae32eb818c8b82bd5176d6725b77b074a72ef828"
+    },
+    {
+      "name": "dict_64k",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/dict_64k",
+      "bytes": 65536,
+      "sha256": "dad963566c51027e35ec36d849c5e7728947477c9d5621c80da3623ef7890b7a"
+    },
+    {
+      "name": "dict_target_1m",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/dict_target_1m",
+      "bytes": 1048576,
+      "sha256": "780b2600bcb0519a06249cd3425512e4398f75a9000ceb8b7f59faa38f9b52aa"
+    },
+    {
+      "name": "tensor_f32_16k",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/tensor_f32_16k",
+      "bytes": 4096,
+      "sha256": "5b1349802e94b5f891ca92b16dcf071e785577431ea504eb1ee3d32089ab4488"
+    },
+    {
+      "name": "tokens_4096",
+      "path": "/work/.docker-cache/bench-matched/20261103T232158Z/fixtures/tokens_4096",
+      "bytes": 23164,
+      "sha256": "07979437a49ba3109399704f4fedf87da0863a82da2b1d3eb2d5311f182c509c"
+    }
+  ],
+  "kind": "matched-go-rust-codec-performance",
+  "method": {
+    "cpu_note": "Go runtime threads can make process CPU time exceed wall time; CPU time is not energy",
+    "cpu_source": "wait4 rusage (user + system CPU time of the child process); cpu_total is their per-sample sum",
+    "cross_decode": "each frame is decoded by the other implementation and compared with the same expected bytes",
+    "execution": "one CLI process per encode and per decode for both implementations",
+    "iterations_large": 7,
+    "iterations_small": 15,
+    "library_comparison": "no library harness is used in this court; the existing in-process Rust codec receipt uses a different corpus and is not directly comparable",
+    "limits": "both CLIs use the default normative Limits; no limit flag is set",
+    "process_overhead": "measured separately with --help; not subtracted from encode/decode wall times",
+    "rss_source": "wait4 rusage ru_maxrss in KiB",
+    "units": "wall/cpu values are nanoseconds; maxrss values are KiB",
+    "verification": "every timed decode is compared byte-for-byte with the fixture before its sample is accepted",
+    "wall_includes": "process spawn, dynamic loading, argument parsing, file I/O, and codec work"
+  },
+  "modes": [
+    {
+      "mode": "raw",
+      "fixture": "raw_4m",
+      "expected_sha256": "3ab3c85bc72ddba53776b4e28779649a5912e61df7f6f239f1ca583dae66a4cd",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 2779000,
+              "mean": 1015285.7142857143,
+              "median": 1194000,
+              "min": 0,
+              "p95": 2779000,
+              "raw": [
+                0,
+                0,
+                0,
+                1194000,
+                1231000,
+                1903000,
+                2779000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 3809000,
+              "mean": 3605428.5714285714,
+              "median": 3687000,
+              "min": 3269000,
+              "p95": 3809000,
+              "raw": [
+                3269000,
+                3452000,
+                3576000,
+                3687000,
+                3716000,
+                3729000,
+                3809000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 3716000,
+              "mean": 2590142.8571428573,
+              "median": 2456000,
+              "min": 950000,
+              "p95": 3716000,
+              "raw": [
+                950000,
+                1906000,
+                2382000,
+                2456000,
+                3269000,
+                3452000,
+                3716000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 2565422,
+              "mean": 2446280,
+              "median": 2476416,
+              "min": 2259341,
+              "p95": 2565422,
+              "raw": [
+                2259341,
+                2381690,
+                2428948,
+                2476416,
+                2491875,
+                2520268,
+                2565422
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 1882000,
+              "mean": 1201285.7142857143,
+              "median": 1576000,
+              "min": 0,
+              "p95": 1882000,
+              "raw": [
+                0,
+                635000,
+                848000,
+                1576000,
+                1681000,
+                1787000,
+                1882000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 3728000,
+              "mean": 3396428.5714285714,
+              "median": 3351000,
+              "min": 3190000,
+              "p95": 3728000,
+              "raw": [
+                3190000,
+                3216000,
+                3351000,
+                3351000,
+                3361000,
+                3578000,
+                3728000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 3361000,
+              "mean": 2195142.8571428573,
+              "median": 1846000,
+              "min": 1640000,
+              "p95": 3361000,
+              "raw": [
+                1640000,
+                1670000,
+                1791000,
+                1846000,
+                2503000,
+                2555000,
+                3361000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 2300618,
+              "mean": 2054537,
+              "median": 2047717,
+              "min": 1895444,
+              "p95": 2300618,
+              "raw": [
+                1895444,
+                1938253,
+                1959122,
+                2047717,
+                2047957,
+                2192648,
+                2300618
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404
+          ],
+          "decode_verified": true,
+          "expected_sha256": "3ab3c85bc72ddba53776b4e28779649a5912e61df7f6f239f1ca583dae66a4cd",
+          "frame_sha256": "22c1ce22e6e01d432e5f626cf3f1121428efc31d345b4805b340e1e9862638f0"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 2900000,
+              "mean": 1737428.5714285714,
+              "median": 1981000,
+              "min": 0,
+              "p95": 2900000,
+              "raw": [
+                0,
+                906000,
+                1164000,
+                1981000,
+                2546000,
+                2665000,
+                2900000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 2975000,
+              "mean": 2706142.8571428573,
+              "median": 2705000,
+              "min": 2320000,
+              "p95": 2975000,
+              "raw": [
+                2320000,
+                2546000,
+                2665000,
+                2705000,
+                2832000,
+                2900000,
+                2975000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 2832000,
+              "mean": 968714.2857142857,
+              "median": 994000,
+              "min": 0,
+              "p95": 2832000,
+              "raw": [
+                0,
+                0,
+                0,
+                994000,
+                1156000,
+                1799000,
+                2832000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 39688,
+              "mean": 34337.71428571428,
+              "median": 35448,
+              "min": 27252,
+              "p95": 39688,
+              "raw": [
+                27252,
+                27252,
+                31348,
+                35448,
+                39688,
+                39688,
+                39688
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 3069352,
+              "mean": 2777553.5714285714,
+              "median": 2768271,
+              "min": 2389915,
+              "p95": 3069352,
+              "raw": [
+                2389915,
+                2600998,
+                2751610,
+                2768271,
+                2895618,
+                2967111,
+                3069352
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 2319000,
+              "mean": 1575142.857142857,
+              "median": 2117000,
+              "min": 0,
+              "p95": 2319000,
+              "raw": [
+                0,
+                1056000,
+                1134000,
+                2117000,
+                2184000,
+                2216000,
+                2319000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 2319000,
+              "mean": 2183142.8571428573,
+              "median": 2184000,
+              "min": 2061000,
+              "p95": 2319000,
+              "raw": [
+                2061000,
+                2112000,
+                2117000,
+                2184000,
+                2216000,
+                2273000,
+                2319000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 2061000,
+              "mean": 608000,
+              "median": 0,
+              "min": 0,
+              "p95": 2061000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                1056000,
+                1139000,
+                2061000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 39688,
+              "mean": 34337.71428571428,
+              "median": 35448,
+              "min": 27252,
+              "p95": 39688,
+              "raw": [
+                27252,
+                27252,
+                31348,
+                35448,
+                39688,
+                39688,
+                39688
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 2382101,
+              "mean": 2245325.5714285714,
+              "median": 2255204,
+              "min": 2120082,
+              "p95": 2382101,
+              "raw": [
+                2120082,
+                2169664,
+                2173351,
+                2255204,
+                2279900,
+                2336977,
+                2382101
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404,
+            4194404
+          ],
+          "decode_verified": true,
+          "expected_sha256": "3ab3c85bc72ddba53776b4e28779649a5912e61df7f6f239f1ca583dae66a4cd",
+          "frame_sha256": "22c1ce22e6e01d432e5f626cf3f1121428efc31d345b4805b340e1e9862638f0"
+        }
+      },
+      "dependency_count": {
+        "go": 0,
+        "rust": 0
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "zstd",
+      "fixture": "zstd_4m",
+      "expected_sha256": "14b40f1db0b383926d670903918c90fe60991be2a3ab6eaa0810b4d1796b44a0",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 2288000,
+              "mean": 882571.4285714285,
+              "median": 911000,
+              "min": 0,
+              "p95": 2288000,
+              "raw": [
+                0,
+                0,
+                0,
+                911000,
+                1033000,
+                1946000,
+                2288000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 11918000,
+              "mean": 11660714.285714285,
+              "median": 11675000,
+              "min": 11359000,
+              "p95": 11918000,
+              "raw": [
+                11359000,
+                11445000,
+                11634000,
+                11675000,
+                11752000,
+                11842000,
+                11918000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 11918000,
+              "mean": 10778142.857142856,
+              "median": 10931000,
+              "min": 9157000,
+              "p95": 11918000,
+              "raw": [
+                9157000,
+                9729000,
+                10326000,
+                10931000,
+                11634000,
+                11752000,
+                11918000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 10797949,
+              "mean": 10628987.714285715,
+              "median": 10662546,
+              "min": 10423250,
+              "p95": 10797949,
+              "raw": [
+                10423250,
+                10491387,
+                10548263,
+                10662546,
+                10736343,
+                10743176,
+                10797949
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 3779000,
+              "mean": 1716142.857142857,
+              "median": 1493000,
+              "min": 0,
+              "p95": 3779000,
+              "raw": [
+                0,
+                1104000,
+                1225000,
+                1493000,
+                2008000,
+                2404000,
+                3779000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 6329000,
+              "mean": 6151142.857142857,
+              "median": 6125000,
+              "min": 5964000,
+              "p95": 6329000,
+              "raw": [
+                5964000,
+                6021000,
+                6024000,
+                6125000,
+                6293000,
+                6302000,
+                6329000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 6302000,
+              "mean": 4435000,
+              "median": 4471000,
+              "min": 2514000,
+              "p95": 6302000,
+              "raw": [
+                2514000,
+                3620000,
+                4013000,
+                4471000,
+                4900000,
+                5225000,
+                6302000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 4849149,
+              "mean": 4671523.857142857,
+              "median": 4682709,
+              "min": 4486474,
+              "p95": 4849149,
+              "raw": [
+                4486474,
+                4501521,
+                4581230,
+                4682709,
+                4784539,
+                4815045,
+                4849149
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            734433,
+            734433,
+            734433,
+            734433,
+            734433,
+            734433,
+            734433
+          ],
+          "decode_verified": true,
+          "expected_sha256": "14b40f1db0b383926d670903918c90fe60991be2a3ab6eaa0810b4d1796b44a0",
+          "frame_sha256": "133ea67a3eaff4d59790a88e098e5e279c592fc45624fda9699cc49e434479bd"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 2794000,
+              "mean": 1286571.4285714286,
+              "median": 1080000,
+              "min": 0,
+              "p95": 2794000,
+              "raw": [
+                0,
+                1038000,
+                1052000,
+                1080000,
+                1193000,
+                1849000,
+                2794000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 7563000,
+              "mean": 7387714.285714285,
+              "median": 7367000,
+              "min": 7253000,
+              "p95": 7563000,
+              "raw": [
+                7253000,
+                7342000,
+                7358000,
+                7367000,
+                7377000,
+                7454000,
+                7563000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 7358000,
+              "mean": 6101142.857142857,
+              "median": 6215000,
+              "min": 4660000,
+              "p95": 7358000,
+              "raw": [
+                4660000,
+                5528000,
+                6149000,
+                6215000,
+                6315000,
+                6483000,
+                7358000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 7632948,
+              "mean": 7473537,
+              "median": 7463072,
+              "min": 7338450,
+              "p95": 7632948,
+              "raw": [
+                7338450,
+                7440520,
+                7443345,
+                7463072,
+                7469353,
+                7527071,
+                7632948
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 3692000,
+              "mean": 2366857.1428571427,
+              "median": 2529000,
+              "min": 559000,
+              "p95": 3692000,
+              "raw": [
+                559000,
+                1527000,
+                1889000,
+                2529000,
+                2915000,
+                3457000,
+                3692000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 4036000,
+              "mean": 3776000,
+              "median": 3790000,
+              "min": 3457000,
+              "p95": 4036000,
+              "raw": [
+                3457000,
+                3692000,
+                3779000,
+                3790000,
+                3818000,
+                3860000,
+                4036000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 3231000,
+              "mean": 1409142.857142857,
+              "median": 1507000,
+              "min": 0,
+              "p95": 3231000,
+              "raw": [
+                0,
+                0,
+                945000,
+                1507000,
+                1890000,
+                2291000,
+                3231000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 4122946,
+              "mean": 3858072.1428571427,
+              "median": 3898367,
+              "min": 3540200,
+              "p95": 4122946,
+              "raw": [
+                3540200,
+                3749189,
+                3837945,
+                3898367,
+                3909067,
+                3948791,
+                4122946
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            746462,
+            746462,
+            746462,
+            746462,
+            746462,
+            746462,
+            746462
+          ],
+          "decode_verified": true,
+          "expected_sha256": "14b40f1db0b383926d670903918c90fe60991be2a3ab6eaa0810b4d1796b44a0",
+          "frame_sha256": "e5cad44ce805a6cf01f8add00f7ce7379a7a0556886b208e687eb8f125f6c9ac"
+        }
+      },
+      "dependency_count": {
+        "go": 0,
+        "rust": 0
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "reference",
+      "fixture": "ref_base_1m",
+      "expected_sha256": "88522757eb23b59e9e44c050e1b16de3ef267537d44288bfa25b241624013f7d",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 1323000,
+              "mean": 189000,
+              "median": 0,
+              "min": 0,
+              "p95": 1323000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1323000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 1616000,
+              "mean": 1350000,
+              "median": 1289000,
+              "min": 1226000,
+              "p95": 1616000,
+              "raw": [
+                1226000,
+                1240000,
+                1254000,
+                1289000,
+                1323000,
+                1502000,
+                1616000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 1616000,
+              "mean": 1161000,
+              "median": 1254000,
+              "min": 0,
+              "p95": 1616000,
+              "raw": [
+                0,
+                1226000,
+                1240000,
+                1254000,
+                1289000,
+                1502000,
+                1616000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 1052953,
+              "mean": 938329.1428571428,
+              "median": 951453,
+              "min": 826060,
+              "p95": 1052953,
+              "raw": [
+                826060,
+                859062,
+                871414,
+                951453,
+                958727,
+                1048635,
+                1052953
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 1446000,
+              "mean": 607000,
+              "median": 0,
+              "min": 0,
+              "p95": 1446000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                1362000,
+                1441000,
+                1446000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 1490000,
+              "mean": 1408571.4285714286,
+              "median": 1420000,
+              "min": 1315000,
+              "p95": 1490000,
+              "raw": [
+                1315000,
+                1362000,
+                1386000,
+                1420000,
+                1441000,
+                1446000,
+                1490000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 1490000,
+              "mean": 801571.4285714285,
+              "median": 1315000,
+              "min": 0,
+              "p95": 1490000,
+              "raw": [
+                0,
+                0,
+                0,
+                1315000,
+                1386000,
+                1420000,
+                1490000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 1110169,
+              "mean": 924951.2857142857,
+              "median": 872988,
+              "min": 840838,
+              "p95": 1110169,
+              "raw": [
+                840838,
+                871384,
+                872937,
+                872988,
+                903093,
+                1003250,
+                1110169
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            148,
+            148,
+            148,
+            148,
+            148,
+            148,
+            148
+          ],
+          "decode_verified": true,
+          "expected_sha256": "88522757eb23b59e9e44c050e1b16de3ef267537d44288bfa25b241624013f7d",
+          "frame_sha256": "6d2c67fa701a7a064290cc1cd43d73562cd2a1bfa43a09849e0e7929632268fc"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 929000,
+              "mean": 505857.14285714284,
+              "median": 849000,
+              "min": 0,
+              "p95": 929000,
+              "raw": [
+                0,
+                0,
+                0,
+                849000,
+                863000,
+                900000,
+                929000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 929000,
+              "mean": 876285.7142857143,
+              "median": 880000,
+              "min": 807000,
+              "p95": 929000,
+              "raw": [
+                807000,
+                849000,
+                863000,
+                880000,
+                900000,
+                906000,
+                929000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 906000,
+              "mean": 370428.5714285714,
+              "median": 0,
+              "min": 0,
+              "p95": 906000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                807000,
+                880000,
+                906000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 975398,
+              "mean": 923271,
+              "median": 926898,
+              "min": 848472,
+              "p95": 975398,
+              "raw": [
+                848472,
+                888356,
+                915296,
+                926898,
+                952295,
+                956182,
+                975398
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 944000,
+              "mean": 509000,
+              "median": 863000,
+              "min": 0,
+              "p95": 944000,
+              "raw": [
+                0,
+                0,
+                0,
+                863000,
+                877000,
+                879000,
+                944000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 1082000,
+              "mean": 941142.8571428572,
+              "median": 944000,
+              "min": 863000,
+              "p95": 1082000,
+              "raw": [
+                863000,
+                877000,
+                879000,
+                944000,
+                948000,
+                995000,
+                1082000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 1082000,
+              "mean": 432142.85714285716,
+              "median": 0,
+              "min": 0,
+              "p95": 1082000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                948000,
+                995000,
+                1082000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 1142790,
+              "mean": 989580.1428571428,
+              "median": 981840,
+              "min": 907211,
+              "p95": 1142790,
+              "raw": [
+                907211,
+                920566,
+                928340,
+                981840,
+                996407,
+                1049907,
+                1142790
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            148,
+            148,
+            148,
+            148,
+            148,
+            148,
+            148
+          ],
+          "decode_verified": true,
+          "expected_sha256": "88522757eb23b59e9e44c050e1b16de3ef267537d44288bfa25b241624013f7d",
+          "frame_sha256": "6d2c67fa701a7a064290cc1cd43d73562cd2a1bfa43a09849e0e7929632268fc"
+        }
+      },
+      "dependency_count": {
+        "go": 1,
+        "rust": 1
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "delta",
+      "fixture": "ref_target_1m",
+      "expected_sha256": "99d8aa65cb0139ed6c72dfaeae32eb818c8b82bd5176d6725b77b074a72ef828",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 6021000,
+              "mean": 4481857.142857143,
+              "median": 4949000,
+              "min": 2844000,
+              "p95": 6021000,
+              "raw": [
+                2844000,
+                3475000,
+                3962000,
+                4949000,
+                5048000,
+                5074000,
+                6021000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 64569000,
+              "mean": 62773857.14285714,
+              "median": 63535000,
+              "min": 60624000,
+              "p95": 64569000,
+              "raw": [
+                60624000,
+                60918000,
+                61951000,
+                63535000,
+                63770000,
+                64050000,
+                64569000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 60926000,
+              "mean": 58292000,
+              "median": 58548000,
+              "min": 55844000,
+              "p95": 60926000,
+              "raw": [
+                55844000,
+                57149000,
+                57989000,
+                58548000,
+                58586000,
+                59002000,
+                60926000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 120540,
+              "mean": 120388.57142857143,
+              "median": 120368,
+              "min": 120284,
+              "p95": 120540,
+              "raw": [
+                120284,
+                120332,
+                120352,
+                120368,
+                120380,
+                120464,
+                120540
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 72886407,
+              "mean": 70774735,
+              "median": 70900986,
+              "min": 67822487,
+              "p95": 72886407,
+              "raw": [
+                67822487,
+                68979104,
+                70862724,
+                70900986,
+                71965831,
+                72005606,
+                72886407
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 2219000,
+              "mean": 622857.1428571428,
+              "median": 0,
+              "min": 0,
+              "p95": 2219000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                2141000,
+                2219000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 2253000,
+              "mean": 2127428.5714285714,
+              "median": 2168000,
+              "min": 1947000,
+              "p95": 2253000,
+              "raw": [
+                1947000,
+                1979000,
+                2141000,
+                2168000,
+                2185000,
+                2219000,
+                2253000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 2253000,
+              "mean": 1504571.4285714286,
+              "median": 1979000,
+              "min": 0,
+              "p95": 2253000,
+              "raw": [
+                0,
+                0,
+                1947000,
+                1979000,
+                2168000,
+                2185000,
+                2253000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 3865956,
+              "mean": 3348195.8571428573,
+              "median": 3612234,
+              "min": 2759444,
+              "p95": 3865956,
+              "raw": [
+                2759444,
+                2762560,
+                2802084,
+                3612234,
+                3800484,
+                3834609,
+                3865956
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            80070,
+            80070,
+            80070,
+            80070,
+            80070,
+            80070,
+            80070
+          ],
+          "decode_verified": true,
+          "expected_sha256": "99d8aa65cb0139ed6c72dfaeae32eb818c8b82bd5176d6725b77b074a72ef828",
+          "frame_sha256": "03c387afa2714c71052773a5ba6a248d544f5c804e262d948d49c0b5f967f266"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 6015000,
+              "mean": 4213714.285714285,
+              "median": 4936000,
+              "min": 2069000,
+              "p95": 6015000,
+              "raw": [
+                2069000,
+                3125000,
+                3283000,
+                4936000,
+                5011000,
+                5057000,
+                6015000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 38426000,
+              "mean": 37324571.428571425,
+              "median": 37543000,
+              "min": 36077000,
+              "p95": 38426000,
+              "raw": [
+                36077000,
+                36150000,
+                37086000,
+                37543000,
+                37885000,
+                38105000,
+                38426000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 34822000,
+              "mean": 33110857.14285714,
+              "median": 33369000,
+              "min": 31066000,
+              "p95": 34822000,
+              "raw": [
+                31066000,
+                31071000,
+                32607000,
+                33369000,
+                34081000,
+                34760000,
+                34822000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 82172,
+              "mean": 82041.14285714286,
+              "median": 82088,
+              "min": 81856,
+              "p95": 82172,
+              "raw": [
+                81856,
+                81948,
+                81988,
+                82088,
+                82104,
+                82132,
+                82172
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 38549680,
+              "mean": 37486976.28571428,
+              "median": 37698995,
+              "min": 36207624,
+              "p95": 38549680,
+              "raw": [
+                36207624,
+                36404582,
+                37248304,
+                37698995,
+                38033678,
+                38265971,
+                38549680
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 1556000,
+              "mean": 804571.4285714285,
+              "median": 1135000,
+              "min": 0,
+              "p95": 1556000,
+              "raw": [
+                0,
+                0,
+                0,
+                1135000,
+                1412000,
+                1529000,
+                1556000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 1556000,
+              "mean": 1493714.2857142857,
+              "median": 1511000,
+              "min": 1412000,
+              "p95": 1556000,
+              "raw": [
+                1412000,
+                1448000,
+                1489000,
+                1511000,
+                1511000,
+                1529000,
+                1556000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 1511000,
+              "mean": 689142.8571428572,
+              "median": 376000,
+              "min": 0,
+              "p95": 1511000,
+              "raw": [
+                0,
+                0,
+                0,
+                376000,
+                1448000,
+                1489000,
+                1511000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 1660535,
+              "mean": 1590585,
+              "median": 1609400,
+              "min": 1504074,
+              "p95": 1660535,
+              "raw": [
+                1504074,
+                1513121,
+                1581578,
+                1609400,
+                1623837,
+                1641550,
+                1660535
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            80070,
+            80070,
+            80070,
+            80070,
+            80070,
+            80070,
+            80070
+          ],
+          "decode_verified": true,
+          "expected_sha256": "99d8aa65cb0139ed6c72dfaeae32eb818c8b82bd5176d6725b77b074a72ef828",
+          "frame_sha256": "03c387afa2714c71052773a5ba6a248d544f5c804e262d948d49c0b5f967f266"
+        }
+      },
+      "dependency_count": {
+        "go": 1,
+        "rust": 1
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "dictionary",
+      "fixture": "dict_target_1m",
+      "expected_sha256": "780b2600bcb0519a06249cd3425512e4398f75a9000ceb8b7f59faa38f9b52aa",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 1775000,
+              "mean": 804428.5714285715,
+              "median": 1016000,
+              "min": 0,
+              "p95": 1775000,
+              "raw": [
+                0,
+                0,
+                0,
+                1016000,
+                1362000,
+                1478000,
+                1775000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 4443000,
+              "mean": 4265714.285714285,
+              "median": 4320000,
+              "min": 4057000,
+              "p95": 4443000,
+              "raw": [
+                4057000,
+                4079000,
+                4151000,
+                4320000,
+                4370000,
+                4440000,
+                4443000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 4370000,
+              "mean": 3461285.714285714,
+              "median": 3041000,
+              "min": 2668000,
+              "p95": 4370000,
+              "raw": [
+                2668000,
+                2789000,
+                2962000,
+                3041000,
+                4079000,
+                4320000,
+                4370000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 12641705,
+              "mean": 6256581.428571428,
+              "median": 3929796,
+              "min": 3798581,
+              "p95": 12641705,
+              "raw": [
+                3798581,
+                3816154,
+                3824319,
+                3929796,
+                4059026,
+                11726489,
+                12641705
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 2531000,
+              "mean": 970285.7142857143,
+              "median": 786000,
+              "min": 0,
+              "p95": 2531000,
+              "raw": [
+                0,
+                0,
+                0,
+                786000,
+                1117000,
+                2358000,
+                2531000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 2747000,
+              "mean": 2444714.285714286,
+              "median": 2425000,
+              "min": 2232000,
+              "p95": 2747000,
+              "raw": [
+                2232000,
+                2358000,
+                2363000,
+                2425000,
+                2457000,
+                2531000,
+                2747000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 2747000,
+              "mean": 1474428.5714285714,
+              "median": 1577000,
+              "min": 0,
+              "p95": 2747000,
+              "raw": [
+                0,
+                0,
+                1115000,
+                1577000,
+                2425000,
+                2457000,
+                2747000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 3114526,
+              "mean": 2244255.285714286,
+              "median": 1941179,
+              "min": 1848075,
+              "p95": 3114526,
+              "raw": [
+                1848075,
+                1852965,
+                1906795,
+                1941179,
+                2011290,
+                3034957,
+                3114526
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            167755,
+            167755,
+            167755,
+            167755,
+            167755,
+            167755,
+            167755
+          ],
+          "decode_verified": true,
+          "expected_sha256": "780b2600bcb0519a06249cd3425512e4398f75a9000ceb8b7f59faa38f9b52aa",
+          "frame_sha256": "6d76b75c488dc7b3c59e3d4c6ca2cf79977238f1a9235a055f9d14cc80e09113"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 1709000,
+              "mean": 850571.4285714285,
+              "median": 866000,
+              "min": 0,
+              "p95": 1709000,
+              "raw": [
+                0,
+                0,
+                765000,
+                866000,
+                1258000,
+                1356000,
+                1709000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 2711000,
+              "mean": 2595142.8571428573,
+              "median": 2573000,
+              "min": 2504000,
+              "p95": 2711000,
+              "raw": [
+                2504000,
+                2542000,
+                2548000,
+                2573000,
+                2610000,
+                2678000,
+                2711000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 2542000,
+              "mean": 1744571.4285714286,
+              "median": 1744000,
+              "min": 864000,
+              "p95": 2542000,
+              "raw": [
+                864000,
+                1290000,
+                1355000,
+                1744000,
+                1913000,
+                2504000,
+                2542000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 11658031,
+              "mean": 10030071.57142857,
+              "median": 10533235,
+              "min": 8606985,
+              "p95": 11658031,
+              "raw": [
+                8606985,
+                8630679,
+                9615535,
+                10533235,
+                10566547,
+                10599489,
+                11658031
+              ],
+              "samples": 7
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 1491000,
+              "mean": 592285.7142857143,
+              "median": 0,
+              "min": 0,
+              "p95": 1491000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                1306000,
+                1349000,
+                1491000
+              ],
+              "samples": 7
+            },
+            "cpu_total": {
+              "max": 1491000,
+              "mean": 1328857.142857143,
+              "median": 1306000,
+              "min": 1242000,
+              "p95": 1491000,
+              "raw": [
+                1242000,
+                1243000,
+                1250000,
+                1306000,
+                1349000,
+                1421000,
+                1491000
+              ],
+              "samples": 7
+            },
+            "cpu_user": {
+              "max": 1421000,
+              "mean": 736571.4285714285,
+              "median": 1242000,
+              "min": 0,
+              "p95": 1421000,
+              "raw": [
+                0,
+                0,
+                0,
+                1242000,
+                1243000,
+                1250000,
+                1421000
+              ],
+              "samples": 7
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 7
+            },
+            "wall": {
+              "max": 4123757,
+              "mean": 3673469.1428571427,
+              "median": 4095534,
+              "min": 3066717,
+              "p95": 4123757,
+              "raw": [
+                3066717,
+                3093957,
+                3113164,
+                4095534,
+                4110101,
+                4111054,
+                4123757
+              ],
+              "samples": 7
+            }
+          },
+          "frame_bytes": [
+            164193,
+            164193,
+            164193,
+            164193,
+            164193,
+            164193,
+            164193
+          ],
+          "decode_verified": true,
+          "expected_sha256": "780b2600bcb0519a06249cd3425512e4398f75a9000ceb8b7f59faa38f9b52aa",
+          "frame_sha256": "4b8adbde46ccfff11fce721942fb13a401a2e9e9bdd5e91bbc93e16d6e5103a7"
+        }
+      },
+      "dependency_count": {
+        "go": 1,
+        "rust": 1
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "tensor",
+      "fixture": "tensor_f32_16k",
+      "expected_sha256": "5b1349802e94b5f891ca92b16dcf071e785577431ea504eb1ee3d32089ab4488",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 518000,
+              "mean": 34533.333333333336,
+              "median": 0,
+              "min": 0,
+              "p95": 0,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                518000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 518000,
+              "mean": 476733.3333333333,
+              "median": 474000,
+              "min": 446000,
+              "p95": 502000,
+              "raw": [
+                446000,
+                451000,
+                453000,
+                454000,
+                457000,
+                469000,
+                472000,
+                474000,
+                474000,
+                485000,
+                497000,
+                498000,
+                501000,
+                502000,
+                518000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 502000,
+              "mean": 442200,
+              "median": 472000,
+              "min": 0,
+              "p95": 501000,
+              "raw": [
+                0,
+                446000,
+                451000,
+                453000,
+                454000,
+                457000,
+                469000,
+                472000,
+                474000,
+                474000,
+                485000,
+                497000,
+                498000,
+                501000,
+                502000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 528335,
+              "mean": 468984.3333333333,
+              "median": 459928,
+              "min": 433448,
+              "p95": 524878,
+              "raw": [
+                433448,
+                434570,
+                436955,
+                441383,
+                450440,
+                450540,
+                457653,
+                459928,
+                461700,
+                481358,
+                481527,
+                488251,
+                503799,
+                524878,
+                528335
+              ],
+              "samples": 15
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 519000,
+              "mean": 198666.66666666666,
+              "median": 0,
+              "min": 0,
+              "p95": 518000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                443000,
+                495000,
+                496000,
+                509000,
+                518000,
+                519000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 594000,
+              "mean": 483466.6666666667,
+              "median": 480000,
+              "min": 424000,
+              "p95": 519000,
+              "raw": [
+                424000,
+                434000,
+                443000,
+                451000,
+                455000,
+                463000,
+                480000,
+                480000,
+                491000,
+                495000,
+                496000,
+                509000,
+                518000,
+                519000,
+                594000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 594000,
+              "mean": 284800,
+              "median": 434000,
+              "min": 0,
+              "p95": 491000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                424000,
+                434000,
+                451000,
+                455000,
+                463000,
+                480000,
+                480000,
+                491000,
+                594000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 581374,
+              "mean": 466050.8,
+              "median": 468262,
+              "min": 409233,
+              "p95": 523526,
+              "raw": [
+                409233,
+                409634,
+                423269,
+                428819,
+                429331,
+                439730,
+                459677,
+                468262,
+                470107,
+                472170,
+                475085,
+                493029,
+                507516,
+                523526,
+                581374
+              ],
+              "samples": 15
+            }
+          },
+          "frame_bytes": [
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373
+          ],
+          "decode_verified": true,
+          "expected_sha256": "5b1349802e94b5f891ca92b16dcf071e785577431ea504eb1ee3d32089ab4488",
+          "frame_sha256": "e466df3e09114e1cded0c0a44c45d9a6666a94fe3c80d57771fe47339baed072"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 379000,
+              "mean": 70333.33333333333,
+              "median": 0,
+              "min": 0,
+              "p95": 342000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                334000,
+                342000,
+                379000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 384000,
+              "mean": 346733.3333333333,
+              "median": 342000,
+              "min": 317000,
+              "p95": 379000,
+              "raw": [
+                317000,
+                323000,
+                323000,
+                332000,
+                333000,
+                333000,
+                334000,
+                342000,
+                344000,
+                353000,
+                367000,
+                368000,
+                369000,
+                379000,
+                384000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 384000,
+              "mean": 276400,
+              "median": 333000,
+              "min": 0,
+              "p95": 369000,
+              "raw": [
+                0,
+                0,
+                0,
+                317000,
+                323000,
+                323000,
+                332000,
+                333000,
+                333000,
+                344000,
+                353000,
+                367000,
+                368000,
+                369000,
+                384000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 417678,
+              "mean": 381878.4,
+              "median": 378816,
+              "min": 343060,
+              "p95": 414272,
+              "raw": [
+                343060,
+                355263,
+                362877,
+                366283,
+                366713,
+                367976,
+                370540,
+                378816,
+                382943,
+                394625,
+                399685,
+                402941,
+                404504,
+                414272,
+                417678
+              ],
+              "samples": 15
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 415000,
+              "mean": 96733.33333333333,
+              "median": 0,
+              "min": 0,
+              "p95": 352000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                341000,
+                343000,
+                352000,
+                415000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 415000,
+              "mean": 348266.6666666667,
+              "median": 340000,
+              "min": 309000,
+              "p95": 390000,
+              "raw": [
+                309000,
+                325000,
+                328000,
+                330000,
+                334000,
+                337000,
+                339000,
+                340000,
+                341000,
+                343000,
+                352000,
+                359000,
+                382000,
+                390000,
+                415000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 390000,
+              "mean": 251533.33333333334,
+              "median": 330000,
+              "min": 0,
+              "p95": 382000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                309000,
+                325000,
+                328000,
+                330000,
+                334000,
+                337000,
+                339000,
+                340000,
+                359000,
+                382000,
+                390000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 441293,
+              "mean": 382870.8,
+              "median": 377483,
+              "min": 336487,
+              "p95": 420364,
+              "raw": [
+                336487,
+                362505,
+                362596,
+                363838,
+                366513,
+                371964,
+                373305,
+                377483,
+                385328,
+                386791,
+                388734,
+                389315,
+                416546,
+                420364,
+                441293
+              ],
+              "samples": 15
+            }
+          },
+          "frame_bytes": [
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373,
+            4373
+          ],
+          "decode_verified": true,
+          "expected_sha256": "5b1349802e94b5f891ca92b16dcf071e785577431ea504eb1ee3d32089ab4488",
+          "frame_sha256": "e466df3e09114e1cded0c0a44c45d9a6666a94fe3c80d57771fe47339baed072"
+        }
+      },
+      "dependency_count": {
+        "go": 0,
+        "rust": 0
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    },
+    {
+      "mode": "tokens",
+      "fixture": "tokens_4096",
+      "expected_sha256": "ffcd0d03d1f3cc529a5ae93181707f0a7cc37591cc1284840d331821988cacf1",
+      "contestants": {
+        "go": {
+          "encode": {
+            "cpu_sys": {
+              "max": 836000,
+              "mean": 166200,
+              "median": 0,
+              "min": 0,
+              "p95": 829000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                828000,
+                829000,
+                836000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 874000,
+              "mean": 818333.3333333334,
+              "median": 828000,
+              "min": 757000,
+              "p95": 856000,
+              "raw": [
+                757000,
+                765000,
+                770000,
+                784000,
+                812000,
+                824000,
+                827000,
+                828000,
+                829000,
+                835000,
+                836000,
+                838000,
+                840000,
+                856000,
+                874000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 874000,
+              "mean": 652133.3333333334,
+              "median": 812000,
+              "min": 0,
+              "p95": 856000,
+              "raw": [
+                0,
+                0,
+                0,
+                757000,
+                765000,
+                770000,
+                784000,
+                812000,
+                824000,
+                827000,
+                835000,
+                838000,
+                840000,
+                856000,
+                874000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 857589,
+              "mean": 785661.3333333334,
+              "median": 788460,
+              "min": 725232,
+              "p95": 851237,
+              "raw": [
+                725232,
+                732155,
+                749978,
+                755087,
+                764956,
+                780435,
+                784994,
+                788460,
+                788690,
+                792227,
+                793660,
+                807445,
+                812775,
+                851237,
+                857589
+              ],
+              "samples": 15
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 554000,
+              "mean": 106866.66666666667,
+              "median": 0,
+              "min": 0,
+              "p95": 537000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                512000,
+                537000,
+                554000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 631000,
+              "mean": 545866.6666666666,
+              "median": 545000,
+              "min": 487000,
+              "p95": 604000,
+              "raw": [
+                487000,
+                501000,
+                508000,
+                512000,
+                514000,
+                525000,
+                537000,
+                545000,
+                550000,
+                552000,
+                554000,
+                576000,
+                592000,
+                604000,
+                631000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 631000,
+              "mean": 439000,
+              "median": 525000,
+              "min": 0,
+              "p95": 604000,
+              "raw": [
+                0,
+                0,
+                0,
+                487000,
+                501000,
+                508000,
+                514000,
+                525000,
+                545000,
+                550000,
+                552000,
+                576000,
+                592000,
+                604000,
+                631000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 603735,
+              "mean": 510178.3333333333,
+              "median": 498519,
+              "min": 459426,
+              "p95": 550577,
+              "raw": [
+                459426,
+                471609,
+                480977,
+                482199,
+                484072,
+                495654,
+                496846,
+                498519,
+                507426,
+                516542,
+                517816,
+                538574,
+                548703,
+                550577,
+                603735
+              ],
+              "samples": 15
+            }
+          },
+          "frame_bytes": [
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728
+          ],
+          "decode_verified": true,
+          "expected_sha256": "ffcd0d03d1f3cc529a5ae93181707f0a7cc37591cc1284840d331821988cacf1",
+          "frame_sha256": "26ed9fee6edeb659fd13323707c7fe70591d111ea149905928a4d9e944e235ec"
+        },
+        "rust": {
+          "encode": {
+            "cpu_sys": {
+              "max": 383000,
+              "mean": 25533.333333333332,
+              "median": 0,
+              "min": 0,
+              "p95": 0,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                383000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 414000,
+              "mean": 392933.3333333333,
+              "median": 392000,
+              "min": 381000,
+              "p95": 410000,
+              "raw": [
+                381000,
+                383000,
+                384000,
+                384000,
+                385000,
+                386000,
+                388000,
+                392000,
+                393000,
+                393000,
+                394000,
+                400000,
+                407000,
+                410000,
+                414000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 414000,
+              "mean": 367400,
+              "median": 392000,
+              "min": 0,
+              "p95": 410000,
+              "raw": [
+                0,
+                381000,
+                384000,
+                384000,
+                385000,
+                386000,
+                388000,
+                392000,
+                393000,
+                393000,
+                394000,
+                400000,
+                407000,
+                410000,
+                414000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 452153,
+              "mean": 426701.4666666667,
+              "median": 423269,
+              "min": 409112,
+              "p95": 451612,
+              "raw": [
+                409112,
+                409965,
+                412529,
+                414112,
+                414212,
+                416216,
+                422969,
+                423269,
+                426014,
+                430793,
+                435612,
+                439970,
+                441984,
+                451612,
+                452153
+              ],
+              "samples": 15
+            }
+          },
+          "decode": {
+            "cpu_sys": {
+              "max": 358000,
+              "mean": 94933.33333333333,
+              "median": 0,
+              "min": 0,
+              "p95": 358000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                353000,
+                355000,
+                358000,
+                358000
+              ],
+              "samples": 15
+            },
+            "cpu_total": {
+              "max": 401000,
+              "mean": 358333.3333333333,
+              "median": 355000,
+              "min": 345000,
+              "p95": 376000,
+              "raw": [
+                345000,
+                347000,
+                348000,
+                349000,
+                353000,
+                354000,
+                355000,
+                355000,
+                357000,
+                358000,
+                358000,
+                358000,
+                361000,
+                376000,
+                401000
+              ],
+              "samples": 15
+            },
+            "cpu_user": {
+              "max": 401000,
+              "mean": 263400,
+              "median": 349000,
+              "min": 0,
+              "p95": 376000,
+              "raw": [
+                0,
+                0,
+                0,
+                0,
+                345000,
+                347000,
+                348000,
+                349000,
+                354000,
+                355000,
+                357000,
+                358000,
+                361000,
+                376000,
+                401000
+              ],
+              "samples": 15
+            },
+            "maxrss_kib": {
+              "max": 42812,
+              "mean": 42812,
+              "median": 42812,
+              "min": 42812,
+              "p95": 42812,
+              "raw": [
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812,
+                42812
+              ],
+              "samples": 15
+            },
+            "wall": {
+              "max": 440050,
+              "mean": 392772.8,
+              "median": 390598,
+              "min": 370351,
+              "p95": 413180,
+              "raw": [
+                370351,
+                374488,
+                380198,
+                382533,
+                383084,
+                383615,
+                386982,
+                390598,
+                391540,
+                396268,
+                396349,
+                396850,
+                405506,
+                413180,
+                440050
+              ],
+              "samples": 15
+            }
+          },
+          "frame_bytes": [
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728,
+            10728
+          ],
+          "decode_verified": true,
+          "expected_sha256": "ffcd0d03d1f3cc529a5ae93181707f0a7cc37591cc1284840d331821988cacf1",
+          "frame_sha256": "26ed9fee6edeb659fd13323707c7fe70591d111ea149905928a4d9e944e235ec"
+        }
+      },
+      "dependency_count": {
+        "go": 0,
+        "rust": 0
+      },
+      "cross_decode": {
+        "go_frame_by_rust": true,
+        "rust_frame_by_go": true
+      }
+    }
+  ],
+  "notes": [
+    "Both contestants are CLI processes; no library harness is used, so wall times include a constant process overhead measured separately.",
+    "CPU user/sys is CPU time, not energy. No perf counters or RAPL reading is claimed.",
+    "TENSOR and TOKENS expected bytes are the raw payload and the canonical token payload respectively; both implementations must decode to the same bytes.",
+    "Cross-decode is re-checked here for every frame; it is performance evidence, not a conformance court.",
+    "No result is extrapolated to a different corpus, mount, or machine."
+  ],
+  "process_overhead": {
+    "go": {
+      "wall": {
+        "max": 440602,
+        "mean": 393297.8,
+        "median": 386781,
+        "min": 360622,
+        "p95": 433549,
+        "raw": [
+          360622,
+          362285,
+          367224,
+          370030,
+          375470,
+          377073,
+          382022,
+          386781,
+          390207,
+          401248,
+          413921,
+          417879,
+          420554,
+          433549,
+          440602
+        ],
+        "samples": 15
+      },
+      "cpu_user": {
+        "max": 434000,
+        "mean": 287733.3333333333,
+        "median": 376000,
+        "min": 0,
+        "p95": 433000,
+        "raw": [
+          0,
+          0,
+          0,
+          0,
+          365000,
+          367000,
+          374000,
+          376000,
+          380000,
+          381000,
+          387000,
+          397000,
+          422000,
+          433000,
+          434000
+        ],
+        "samples": 15
+      },
+      "cpu_sys": {
+        "max": 446000,
+        "mean": 110666.66666666667,
+        "median": 0,
+        "min": 0,
+        "p95": 412000,
+        "raw": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          392000,
+          410000,
+          412000,
+          446000
+        ],
+        "samples": 15
+      },
+      "maxrss_kib": {
+        "max": 42812,
+        "mean": 42812,
+        "median": 42812,
+        "min": 42812,
+        "p95": 42812,
+        "raw": [
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812
+        ],
+        "samples": 15
+      }
+    },
+    "rust": {
+      "wall": {
+        "max": 368767,
+        "mean": 327662.13333333336,
+        "median": 326429,
+        "min": 297554,
+        "p95": 360542,
+        "raw": [
+          297554,
+          301582,
+          307052,
+          307203,
+          308154,
+          308786,
+          321530,
+          326429,
+          332200,
+          341466,
+          341908,
+          345043,
+          346716,
+          360542,
+          368767
+        ],
+        "samples": 15
+      },
+      "cpu_user": {
+        "max": 313000,
+        "mean": 190666.66666666666,
+        "median": 274000,
+        "min": 0,
+        "p95": 297000,
+        "raw": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          271000,
+          274000,
+          274000,
+          280000,
+          282000,
+          286000,
+          289000,
+          294000,
+          297000,
+          313000
+        ],
+        "samples": 15
+      },
+      "cpu_sys": {
+        "max": 332000,
+        "mean": 104066.66666666667,
+        "median": 0,
+        "min": 0,
+        "p95": 328000,
+        "raw": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          295000,
+          296000,
+          310000,
+          328000,
+          332000
+        ],
+        "samples": 15
+      },
+      "maxrss_kib": {
+        "max": 42812,
+        "mean": 42812,
+        "median": 42812,
+        "min": 42812,
+        "p95": 42812,
+        "raw": [
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812,
+          42812
+        ],
+        "samples": 15
+      }
+    }
+  },
+  "schema": "weft-codec-matched-bench-v1"
+}
