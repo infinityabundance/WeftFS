@@ -74,6 +74,24 @@ docker pull ghcr.io/infinityabundance/weftfs-go:v0.3.0
 SYS_ADMIN`; codec and store-only commands do not. See
 [`docs/containers.md`](docs/containers.md).
 
+## Rust crates
+
+Published on crates.io:
+
+```toml
+[dependencies]
+weftcodec = "0.3.0"
+weftfs = "0.3.0"
+```
+
+```sh
+cargo add weftcodec@0.3.0
+cargo add weftfs@0.3.0
+```
+
+`weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the
+transactional store plus FUSE frontend (the `fuse` feature enables mounting).
+
 ## Testing: Docker only
 
 All builds and tests execute inside minimal official images. The host runs
