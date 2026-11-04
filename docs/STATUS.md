@@ -48,8 +48,10 @@ lying-fsync device model). The block-layer lying-disk matrix is
 silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5;
 blkdebug write/flush error 10/10 blocked at ext4 mount). The host-cache probe is
 `bench/receipts/hostcache-probe-20261104T072314Z.json` (global drop refused:
-`Read-only file system`). The B2 10,000-iteration receipt is
-`bench/receipts/crash-torture-20261104T013521Z.json`. The counter/energy probe is
+`Read-only file system`). The B2 100,000-iteration receipt is
+`bench/receipts/crash-torture-20261104T104233Z.json` (raw log and TSV stored
+losslessly as `.zst` beside it; the 10,000-iteration receipt
+`crash-torture-20261104T013521Z.json` is retained). The counter/energy probe is
 `bench/receipts/perf-counters-20261104T015026Z.json` (perf counters available;
 RAPL energy still unreadable). The whole-disk ZFS/Btrfs fio run is
 `bench/receipts/bench-fs-cold-20261104T071922Z.json` (ext4/XFS/Btrfs/ZFS,
@@ -753,15 +755,19 @@ sha256, symlink targets, and xattrs. This is a self-written fsx-style harness,
 not `pjdfstest`/`fsstress` (not installed in the court; no substitute run is
 claimed).
 
-**B2 — crash-consistency torture (10,000/10,000 pass).**
-`bench/receipts/crash-torture-20261104T013521Z.json`. The harness now uses a
-fresh three-generation store per iteration, a pre-generated payload pool, and a
-clean fast path for `verify --full`; the old-or-new/partial and phase-specific
-assertions are unchanged (`WEFT_CRASH_FRESH_STORE=0` retains the historical
-growing-store mode). Result: 10,000 iterations, 10,000 completed, 0 failures,
-0 bad verify states; observed old 6,667 / new 3,333 / partial or missing 0;
-verify clean 6,667 / accepted unpublished-tail 3,333; phases 3,334/3,333/3,333;
-507,885 ms, **19.7 iterations/s**. Alternating Rust/Go writers and readers; every
+**B2 — crash-consistency torture (100,000/100,000 pass).**
+`bench/receipts/crash-torture-20261104T104233Z.json` (18 MB; log and TSV stored
+losslessly as `.zst`). The harness uses a fresh three-generation store per
+iteration, a pre-generated payload pool, and a clean fast path for
+`verify --full`; the old-or-new/partial and phase-specific assertions are
+unchanged (`WEFT_CRASH_FRESH_STORE=0` retains the historical growing-store
+mode). Result: 100,000 iterations, 100,000 completed, 0 failures, 0 bad verify
+states; observed old 66,667 / new 33,333 / partial or missing 0; verify clean
+66,667 / accepted unpublished-tail 33,333; phases 33,334/33,333/33,333;
+5,196,158 ms (86 min 36 s), **19.2 iterations/s**. Every iteration was
+recomputed from the 14,822,217-byte NDJSON independently of the harness
+counters. The 10,000-iteration receipt `crash-torture-20261104T013521Z.json`
+is retained. Alternating Rust/Go writers and readers; every
 crash followed by the other implementation's `verify --full`, exact `/f` byte
 check, and exact `/` listing. This remains a **process-fault proxy**, not
 physical power loss. The earlier 1,000-iteration receipt

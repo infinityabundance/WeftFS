@@ -37,7 +37,7 @@ tested in the Docker court.
 | P7 | Bench courts, receipt bundle, showcase, release | **Released v0.3.0; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio` comparative suites all exist. Latest full verification: `bench/receipts/verify-20261104T022254Z.json` (18/18). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md) and [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md); no headline performance claim is made. See [`docs/RELEASE-v0.3.0.md`](docs/RELEASE-v0.3.0.md). |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 | F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; ≥3 concurrent read-only mounts; ambiguity fails closed and lists every ObjectId; 100-version time-travel demo; Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4), `replay-bundle-20261103T210824Z.json` (4/4). Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
-| F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **10,000/10,000 crash iterations at 19.7 it/s** (6,667 old / 3,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T013521Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
+| F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **100,000/100,000 crash iterations at 19.2 it/s** (66,667 old / 33,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T104233Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
 | F6 | AI codec v1: exact tensor + token modes, cross-language | **Implemented (subset)** — `TENSOR` (6, row-major little-endian, nine dtypes) and `TOKEN_SEQUENCE` (7, u64 zigzag-delta LEB128) with canonical WCB descriptors, limits, 20 new vectors, rejects, CLI, and byte-identical Rust↔Go frames. Blocked/column-major/sharded/quantized layouts, activation/gradient streams, KV-cache pages, masks, weight-delta descriptors, and semantic deltas are `specified, not implemented` with no wire value. See `spec/WEFT-AI-CODEC.md`. |
 | F7 | AI corpus + cost graph (C1/C2) | **Implemented (synthetic)** — 60-file deterministic `bench/corpora/ai-v1` (CC0-1.0, 1.94 MB source / 1.52 MB visible), four strategies with whole-object accounting, cold dependency-DAG latency, and depth. Receipt `ai-corpus-20261103T220113Z.json`; results, every loss, and caveats in [`bench/RESULTS-ai-v1.md`](bench/RESULTS-ai-v1.md). No Meta/production data and no superiority claim. |
 | F8 | Product/identity hooks: Buck2 CAS, spec-as-code types, agent memory | **Implemented (prototype)** — Buck2 CAS prototype (15/15), generated Rust/Go identity types with a drift court, agent-memory replay demo (7/7), and `QUANTIZED_TENSOR` mode 8 byte-identical Rust↔Go. Not a Buck2 plugin and not REAPI; see [`docs/STATUS.md`](docs/STATUS.md). |
@@ -206,8 +206,8 @@ scripts/docker-court.sh fuse "bash bench/scripts/posix_torture.sh"
 
 # B2: process-fault crash proxy through WEFT_CRASH_PHASE (default 1,000)
 scripts/docker-court.sh fuse "bash bench/scripts/crash_torture.sh"
-# 10,000-iteration run (2026-11-04: 10,000/10,000, 19.7 it/s)
-scripts/docker-court.sh fuse "WEFT_CRASH_ITERATIONS=10000 bash bench/scripts/crash_torture.sh"
+# 100,000-iteration run (2026-11-04: 100,000/100,000, 19.2 it/s, 86 min)
+scripts/docker-court.sh fuse "WEFT_CRASH_ITERATIONS=100000 bash bench/scripts/crash_torture.sh"
 
 # B3: package and independently verify a receipt bundle
 scripts/package-receipts.sh
@@ -226,9 +226,9 @@ Honest gaps:
   the same verbs in `verbs_test.go`.
 - The crash court aborts the process at a publication boundary; it is **not**
   physical power loss and does not drop caches or simulate torn sectors. The
-  10,000-iteration run completed in 507.9 s (19.7/s) after switching to a fresh
-  three-generation store per iteration; the old-or-new/partial checks are
-  unchanged.
+  100,000-iteration run completed in 5,196.2 s (19.2/s) after switching to a
+  fresh three-generation store per iteration; the old-or-new/partial checks are
+  unchanged. The 10,000-iteration receipt (507.9 s, 19.7/s) is retained.
 - The bundle records `dmesg: unavailable (no CAP_SYSLOG)` when the packaging
   user lacks the capability. It is not signed; it is self-verifying against its
   own checksums and, with `--repo-root`, against git revisions.
