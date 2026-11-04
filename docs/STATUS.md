@@ -65,8 +65,11 @@ in `verification/README.md`.
 | `WeftCodec-Go` | `1a48394` | independent Go codec |
 | `WeftFS-Go` | `e4c5f04` | independent Go store + FUSE |
 
-All work is on `staging`. `main` holds the P0 foundation only. The research
-directory and `AGENTS.md` are gitignored, per operator directive.
+These are the revisions pinned by the latest full verification receipt; later
+commits (documentation, tests, packaging) may be ahead of them without a new
+full receipt. `staging` and `main` are synchronized and pushed for all four
+repositories; `v0.3.0` tags exist in each. The research directory and
+`AGENTS.md` are gitignored, per operator directive.
 
 ## 2. What is implemented and tested
 
@@ -293,7 +296,16 @@ directory and `AGENTS.md` are gitignored, per operator directive.
   capability budgets. No truncation policy exists in v1: exceeding a bound is
   `LimitExceeded`, never a silent truncation. `max_bytes` bounds materialized
   bytes, `max_results` bounds returned results, `max_depth` is one-hop, and
-  `max_work` is deterministic objects-inspected plus relation-edges.
+  `max_work` is deterministic **authorized** objects inspected plus **visible**
+  relation edges. Authorization and namespace-root readability are decided
+  before work accounting, and `max_work`/`max_depth` failures emit fixed,
+  non-disclosing messages (`resolver work budget exceeded`,
+  `traversal depth exceeds max_depth`). This closes a real defect: the earlier
+  implementation counted the whole state (including unauthorized objects and
+  relations) and echoed the count. Proven by
+  `tests/capability_nondisclosure.rs`: two stores with identical authorized
+  views and different hidden populations return identical results, work units,
+  and budget outcomes.
 - **Causal identity:** `--causal` computes explicit parents plus the available
   transitive closure with a visited set (cycles terminate), stores the four
   reserved attrs, publishes the closure record content-addressed, and includes

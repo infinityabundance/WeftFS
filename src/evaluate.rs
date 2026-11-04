@@ -18,7 +18,7 @@ use weftcodec::context::Budget;
 use weftcodec::selector::{CmpOp, Expr, Field, Literal, OrderItem, Selector};
 use weftcodec::wcb::Value;
 
-use crate::auth::{can_read, Principal};
+use crate::auth::{can_read, relation_visible, Principal};
 use crate::context::CapabilityContext;
 use crate::error::{Error, Result};
 use crate::identity::Hash32;
@@ -123,13 +123,32 @@ pub(crate) fn resolve_state(
     )
 }
 
-/// Deterministic work units for the v1 resolver: authorized objects inspected
-/// plus relation edges traversed. `max_work` is checked against this value
-/// before evaluation.
-pub fn work_units(selector: &Selector, state: &State) -> u64 {
-    let objects = state.objects.len() as u64;
+/// Deterministic work units for the v1 resolver: **authorized** objects
+/// inspected plus visible relation edges traversed. Unauthorized state never
+/// contributes to the count, so budget behavior cannot disclose its size.
+pub fn work_units(selector: &Selector, state: &State, principal: &Principal) -> u64 {
+    let objects = state
+        .objects
+        .values()
+        .filter(|record| can_read(record, principal))
+        .count() as u64;
     let relations = if selector_has_relations(&selector.predicate) {
-        state.relations.len() as u64
+        state
+            .relations
+            .values()
+            .filter(|relation| {
+                let subject = state.objects.get(&relation.subject);
+                let target_visible = match relation.target {
+                    crate::state::RelationTarget::Object(id) => state
+                        .objects
+                        .get(&id)
+                        .map(|record| can_read(record, principal))
+                        .unwrap_or(false),
+                    crate::state::RelationTarget::Value(_) => true,
+                };
+                relation_visible(subject, target_visible, principal)
+            })
+            .count() as u64
     } else {
         0
     };
@@ -202,28 +221,6 @@ pub(crate) fn resolve_state_with_budget(
             ));
         }
     }
-    if let Some(budget) = budget {
-        let work = work_units(selector, state);
-        if let Some(max) = budget.max_work {
-            if work > max {
-                return Err(Error::limit_exceeded(format!(
-                    "resolver work {work} exceeds max_work {max}"
-                )));
-            }
-        }
-        if let Some(max) = budget.max_depth {
-            let depth = if selector_has_relations(&selector.predicate) {
-                1
-            } else {
-                0
-            };
-            if depth > max {
-                return Err(Error::limit_exceeded(format!(
-                    "traversal depth {depth} exceeds max_depth {max}"
-                )));
-            }
-        }
-    }
     let root = state
         .objects
         .get(&State::ROOT_ID)
@@ -233,13 +230,37 @@ pub(crate) fn resolve_state_with_budget(
             "principal cannot read the namespace root",
         ));
     }
+
+    // Authorization happens before work accounting. This is the only universe
+    // the resolver may inspect, so budget failures reveal nothing about
+    // unauthorized objects or relations.
+    let authorized: Vec<&ObjectRecord> = state
+        .objects
+        .values()
+        .filter(|record| can_read(record, principal))
+        .collect();
+    if let Some(budget) = budget {
+        let work = work_units(selector, state, principal);
+        if let Some(max) = budget.max_work {
+            if work > max {
+                return Err(Error::limit_exceeded("resolver work budget exceeded"));
+            }
+        }
+        if let Some(max) = budget.max_depth {
+            let depth = if selector_has_relations(&selector.predicate) {
+                1
+            } else {
+                0
+            };
+            if depth > max {
+                return Err(Error::limit_exceeded("traversal depth exceeds max_depth"));
+            }
+        }
+    }
     let selector_id = selector.selector_id_with_limits(limits)?;
 
     let mut matches: Vec<(ObjectRecord, Vec<EvidenceEntry>)> = Vec::new();
-    for record in state.objects.values() {
-        if !can_read(record, principal) {
-            continue;
-        }
+    for record in authorized {
         if let Some(evidence) = eval_expr(&selector.predicate, record, state, principal) {
             matches.push((record.clone(), evidence));
         }

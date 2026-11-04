@@ -714,7 +714,7 @@ impl Store {
         if resolution.selector_id != root.selector_id {
             return Err(Error::corrupt("resolution changed the selector identity"));
         }
-        let work_units = crate::evaluate::work_units(&selector, &snapshot_state);
+        let work_units = crate::evaluate::work_units(&selector, &snapshot_state, principal);
         Ok(ContextResolution {
             stored,
             selector,
