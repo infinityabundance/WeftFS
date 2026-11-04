@@ -129,11 +129,12 @@ identical and pushed in all four repositories).
   `weft/quantized-tensor/payload/v1` hash binding. Finite positive scale and
   dtype-range zero point are enforced; three valid and eight reject vectors;
   Rust↔Go frames are byte-identical.
+- `FLOAT_TENSOR` (mode 9, added 2026-11-04): zstd-compressed exponent plane plus raw sign+mantissa plane, bit-exact including NaN payloads, infinities, signed zeros and denormals; 3 valid + 8 reject vectors; Rust↔Go decode-equivalent (exponent-plane zstd bytes differ).
 - **Not implemented and not allocated a wire value:** blocked/column-major/
   sharded layouts, i4 nibble packing and per-axis quantized scales,
   activation/gradient streams, embedding/KV-cache pages, attention masks,
   vocabulary-artifact binding, weight-delta descriptors, and semantic/structured
-  deltas. They are `specified, not implemented` in `spec/WEFT-AI-CODEC.md` §5.
+  deltas. They are `specified, not implemented` in `spec/WEFT-AI-CODEC.md` §6.
 - Cross-language: Rust→Go and Go→Rust decode gates pass; TENSOR, TOKENS, and
   QUANTIZED_TENSOR frames are byte-identical. Historical
   `017_unknown_mode_reserved8` (mode 8 reserved) is retained byte-for-byte and
