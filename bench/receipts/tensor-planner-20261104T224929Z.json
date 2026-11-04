@@ -1,0 +1,127 @@
+{
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "cpu_limit": "4",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "memory_limit": "3g",
+    "pids_limit": "1024",
+    "revision_weftcodec": "f1d32e3ad42ebf172c65943f080b5cf32f51a7e3",
+    "revision_weftfs": "383459bce5a9570cef3542aca200e133a72b26bf"
+  },
+  "label": "synthetic model family, single host court, no fleet claim",
+  "runs": [
+    {
+      "ingest_ms": 8218.072,
+      "ingest_objects_per_second": 9.735,
+      "lambda_ns": 0,
+      "peak_rss_kib": 51680,
+      "physical": {
+        "data_bytes": 15917707,
+        "index_bytes": 1254160,
+        "store_total_bytes": 17248898
+      },
+      "planner": "zstd",
+      "restore": [
+        {
+          "objects": 80,
+          "objects_per_second": 856.509,
+          "wall_ms": 93.402,
+          "workers": 1
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 1650.204,
+          "wall_ms": 48.479,
+          "workers": 2
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 3082.2,
+          "wall_ms": 25.955,
+          "workers": 4
+        }
+      ],
+      "verify_ok": true
+    },
+    {
+      "ingest_ms": 24374.49,
+      "ingest_objects_per_second": 3.282,
+      "lambda_ns": 0,
+      "peak_rss_kib": 52164,
+      "physical": {
+        "data_bytes": 11187086,
+        "index_bytes": 1982980,
+        "store_total_bytes": 13271871
+      },
+      "planner": "bytes",
+      "restore": [
+        {
+          "objects": 80,
+          "objects_per_second": 44.727,
+          "wall_ms": 1788.624,
+          "workers": 1
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 88.29,
+          "wall_ms": 906.102,
+          "workers": 2
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 171.251,
+          "wall_ms": 467.151,
+          "workers": 4
+        }
+      ],
+      "verify_ok": true
+    },
+    {
+      "ingest_ms": 7770.032,
+      "ingest_objects_per_second": 10.296,
+      "lambda_ns": 100000,
+      "peak_rss_kib": 52148,
+      "physical": {
+        "data_bytes": 83985344,
+        "index_bytes": 1978004,
+        "store_total_bytes": 86064491
+      },
+      "planner": "latency",
+      "restore": [
+        {
+          "objects": 80,
+          "objects_per_second": 2173.547,
+          "wall_ms": 36.806,
+          "workers": 1
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 3674.264,
+          "wall_ms": 21.773,
+          "workers": 2
+        },
+        {
+          "objects": 80,
+          "objects_per_second": 5484.378,
+          "wall_ms": 14.587,
+          "workers": 4
+        }
+      ],
+      "verify_ok": true
+    }
+  ],
+  "schema": "weft.tensor-planner.bench.v1",
+  "workload": {
+    "change_percent_per_step": 1,
+    "checkpoints": 10,
+    "dtype": "bf16",
+    "shape": [
+      512,
+      1024
+    ],
+    "tensor_bytes": 1048576,
+    "tensors_per_checkpoint": 8
+  }
+}

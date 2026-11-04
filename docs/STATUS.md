@@ -1348,17 +1348,17 @@ multi-writer, physical rig).
       drops stale tensor identity). Full Rust
       `cargo test --all-targets`: 112 passed / 0 failed. FUSE `--features fuse
       --all-targets`: 140 passed / 2 ignored.
-    - **Bench:** `bench/receipts/tensor-planner-20261104T224237Z.json`,
+    - **Bench:** `bench/receipts/tensor-planner-20261104T224929Z.json`,
       synthetic 10 checkpoints x 8 tensors x 1 MiB bf16, 1% change per step,
       bench court (`weft/bench-court:1`, 3 GiB, 4 vCPU, kernel
       7.3.1-1-cachyos), labelled single-host/no-fleet. Physical data bytes /
-      ingest / restore (1 worker): zstd 15,917,707 / 8.72 s / 91 ms; bytes-only
-      planner 11,191,832 / 26.39 s / 1.81 s; latency-weighted planner
-      83,985,344 / 8.40 s / 37 ms. Restore with 2/4 workers: zstd 47/25 ms,
-      bytes 913/483 ms, latency 21/15 ms; all three verify clean. The bytes
-      planner saves 29.7% physical bytes at ~3x ingest and ~20x restore cost
-      (delta chains are decoded per read); the latency planner is fastest to
-      restore at 5.3x the physical bytes.
+      ingest / restore (1 worker): zstd 15,917,707 / 8.22 s / 93 ms; bytes-only
+      planner 11,187,086 / 24.37 s / 1.79 s; latency-weighted planner
+      83,985,344 / 7.77 s / 37 ms. Restore with 2/4 workers: zstd 48/26 ms,
+      bytes 906/467 ms, latency 22/15 ms; peak RSS 51,680/52,164/52,148 KiB;
+      all three verify clean. The bytes planner saves 29.7% physical bytes at
+      ~3x ingest and ~19x restore cost (delta chains are decoded per read); the
+      latency planner is fastest to restore at 5.3x the physical bytes.
     - **Residual:** Go store parity for `kind:"tensor"`; multi-shard objects;
       q4_0 store representation; modes 12/13 are read-only in the store;
       region reads decode the whole delta/Huffman frame; the planner's decode

@@ -353,14 +353,16 @@ weftfs --store DIR cat /w --region 0,0:2,512
 weftfs --store DIR verify --full
 ```
 
-Measured bench (`bench/receipts/tensor-planner-20261104T224237Z.json`, synthetic
+Measured bench (`bench/receipts/tensor-planner-20261104T224929Z.json`, synthetic
 10 checkpoints x 8 tensors x 1 MiB bf16, 1% change per step, single host court,
-no fleet claim): independent ZSTD 15,917,707 physical bytes / 8.7 s ingest /
-91 ms restore (1 worker); bytes-only planner 11,191,832 bytes / 26.4 s / 1.81 s;
-latency-weighted planner 83,985,344 bytes / 8.4 s / 37 ms. The bytes-only
-planner saves 29.7% physical bytes but its delta chains and semantic candidate
-search cost ~3x ingest and ~20x restore; the latency-weighted planner trades
-5.3x physical space for the fastest restore. Both planner runs verify clean.
+no fleet claim): independent ZSTD 15,917,707 physical bytes / 8.22 s ingest /
+93 ms restore (1 worker); bytes-only planner 11,187,086 bytes / 24.37 s /
+1.79 s; latency-weighted planner 83,985,344 bytes / 7.77 s / 37 ms. Restore
+with 2/4 workers was 48/26 ms (zstd), 906/467 ms (bytes), and 22/15 ms
+(latency); peak RSS 51,680/52,164/52,148 KiB. The bytes-only planner saves
+29.7% physical bytes but its delta chains and semantic candidate search cost
+~3x ingest and ~19x restore; the latency-weighted planner trades 5.3x physical
+space for the fastest restore. All three planner runs verify clean.
 
 ---
 
