@@ -1,0 +1,2978 @@
+{
+  "corpora": [
+    {
+      "blake3": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "bytes": 0,
+      "description": "empty input",
+      "name": "empty",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/empty.input",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blake3": "ccf16c98eb29a27917e7fb2cc561c90ed0f8eb3b5d025581cca9a8f44e8a7e1d",
+      "bytes": 1,
+      "description": "single byte",
+      "name": "one_byte",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/one_byte.input",
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+    },
+    {
+      "blake3": "fb8328cbd7c8e8d2da1680820a90688d39128dc4a3a25d13d927ea4b4d4055b7",
+      "bytes": 4194304,
+      "description": "incompressible random",
+      "name": "random_4m",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/random_4m.input",
+      "sha256": "3ab3c85bc72ddba53776b4e28779649a5912e61df7f6f239f1ca583dae66a4cd"
+    },
+    {
+      "blake3": "4525a453015cc839754462a9c04ab24e84d21d692160f59ccc3711357fc9bc52",
+      "bytes": 4194304,
+      "description": "single repeated pattern",
+      "name": "repetitive_4m",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/repetitive_4m.input",
+      "sha256": "caebabe3052110e66ff5ac49bdcaa7e170f69d0f37e6d674f3ac508fc4f9cc0b"
+    },
+    {
+      "blake3": "1c86d21ba2d5694bab1e238d21f4d98614f89654ecf4058e1fc1d091419fbf8f",
+      "bytes": 1048576,
+      "description": "base for the near-duplicate pair",
+      "name": "near_dup_base_1m",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/near_dup_base_1m.input",
+      "sha256": "88522757eb23b59e9e44c050e1b16de3ef267537d44288bfa25b241624013f7d"
+    },
+    {
+      "blake3": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "bytes": 1048576,
+      "description": "base with 1% single-byte edits",
+      "name": "near_dup_1pct",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/near_dup_1pct.input",
+      "sha256": "a75e2824885626db088a4a9ac59898860f78e042dc646678ebb6103df7b3605a"
+    },
+    {
+      "blake3": "1809120394d356ea3e7147b84357065387af092e16079b5050115c5a8ab2abf4",
+      "bytes": 4194304,
+      "description": "source-like text",
+      "name": "source_text_4m",
+      "path": "/tmp/weft-codec-ext-19-1793727010826912701/source_text_4m.input",
+      "sha256": "b15a07d8fb2c27af0297c01a6cbfc9f29c67e2ff42978279041845e0dd5822d9"
+    }
+  ],
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:165bafbe79ff54a41fae8db8b524a3183956e3e43e3211d01823680bba1403cd",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "host_mem_total_kib": 131565228,
+    "kernel": "7.3.1-1-cachyos",
+    "nproc": 4,
+    "revision_weftcodec": "a60d9f55bc38e209c6e0cbef2e04ac7b9eb7d1fe",
+    "revision_weftcodec_go": "b2beeab4b0da0401006984214dcfd6602be795a5",
+    "revision_weftfs": "0329934026e513a59308f1c260a71641da9c1b01",
+    "revision_weftfs_go": "09abca73a1a60a43423c116c40b2eea6ce6f776c",
+    "uname": "Linux 82d73df145f1 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux"
+  },
+  "external": [
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        336938,
+        281135,
+        276175,
+        292606,
+        293197,
+        305209,
+        290953
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        358459,
+        306151,
+        295060,
+        285763,
+        319666,
+        313405,
+        309858
+      ],
+      "input_bytes": 0,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        330777,
+        287727,
+        296023,
+        276847,
+        268290,
+        282617,
+        274552
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        283870,
+        329455,
+        296964,
+        288278,
+        300200,
+        277017,
+        335766
+      ],
+      "input_bytes": 0,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        297775,
+        285884,
+        298186,
+        319496,
+        314897,
+        294309,
+        342048
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        296483,
+        306772,
+        310960,
+        345905,
+        358368,
+        302996,
+        283860
+      ],
+      "input_bytes": 0,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        138147,
+        167983,
+        179104,
+        139761,
+        136334,
+        140813,
+        135102
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        145832,
+        147906,
+        154158,
+        166641,
+        144269,
+        178213,
+        140823
+      ],
+      "input_bytes": 0,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        223366,
+        169376,
+        182681,
+        169245,
+        174646,
+        165959,
+        166280
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        205083,
+        189504,
+        194723,
+        194333,
+        187089,
+        193812,
+        190485
+      ],
+      "input_bytes": 0,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "corpus": "empty",
+      "decode_ns": [
+        156191,
+        152614,
+        152053,
+        151944,
+        151152,
+        178032,
+        156903
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        195865,
+        170228,
+        184324,
+        165909,
+        173504,
+        167362,
+        177932
+      ],
+      "input_bytes": 0,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        296323,
+        300470,
+        294900,
+        301022,
+        274432,
+        286435,
+        316150
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        343491,
+        291564,
+        289891,
+        312934,
+        291815,
+        286785,
+        295862
+      ],
+      "input_bytes": 1,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        279251,
+        266668,
+        368137,
+        291334,
+        282938,
+        273650,
+        273440
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        315739,
+        266047,
+        296584,
+        292185,
+        320919,
+        319807,
+        279070
+      ],
+      "input_bytes": 1,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        281766,
+        260466,
+        285062,
+        284380,
+        272789,
+        339834,
+        284852
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        297535,
+        278720,
+        284932,
+        288499,
+        284952,
+        298507,
+        289630
+      ],
+      "input_bytes": 1,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        174195,
+        136775,
+        135352,
+        158005,
+        131305,
+        137306,
+        137927
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        168795,
+        145211,
+        168805,
+        144781,
+        139039,
+        139851,
+        137717
+      ],
+      "input_bytes": 1,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        182651,
+        170759,
+        186188,
+        191116,
+        176149,
+        222886,
+        175037
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        193140,
+        247041,
+        189073,
+        219490,
+        202447,
+        185276,
+        187790
+      ],
+      "input_bytes": 1,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "corpus": "one_byte",
+      "decode_ns": [
+        168614,
+        157303,
+        163986,
+        157434,
+        156512,
+        158035,
+        173313
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        189073,
+        179335,
+        176199,
+        169897,
+        171700,
+        187960,
+        175267
+      ],
+      "input_bytes": 1,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        4194414,
+        4194414,
+        4194414,
+        4194414,
+        4194414,
+        4194414,
+        4194414
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        1213384,
+        1122474,
+        929765,
+        1108087,
+        1189780,
+        1249801,
+        1260842
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        2515683,
+        2269885,
+        2328634,
+        1936462,
+        1964586,
+        2496397,
+        1919852
+      ],
+      "input_bytes": 4194304,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        1250543,
+        1215057,
+        1294134,
+        1277553,
+        967916,
+        1283595,
+        1258458
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        10285359,
+        9481358,
+        9756562,
+        9449540,
+        9530010,
+        9483854,
+        9621380
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413,
+        4194413
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        1786323,
+        1722484,
+        1841275,
+        1850623,
+        1907128,
+        1832369,
+        1988550
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        139928689,
+        130256224,
+        134459175,
+        127979206,
+        126944696,
+        128439956,
+        137204568
+      ],
+      "input_bytes": 4194304,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        4194978,
+        4194978,
+        4194978,
+        4194978,
+        4194978,
+        4194978,
+        4194978
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        9769627,
+        10996726,
+        9773033,
+        9883780,
+        9797258,
+        9662608,
+        9605390
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        66305644,
+        68628397,
+        66582791,
+        66408315,
+        66378290,
+        66462085,
+        66392466
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        4194576,
+        4194576,
+        4194576,
+        4194576,
+        4194576,
+        4194576,
+        4194576
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        2103173,
+        2373368,
+        2303889,
+        2352189,
+        2332362,
+        2543004,
+        2524280
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        517711744,
+        565812242,
+        574129108,
+        550122198,
+        571061153,
+        551572844,
+        548199189
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        4194313,
+        4194313,
+        4194313,
+        4194313,
+        4194313,
+        4194313,
+        4194313
+      ],
+      "corpus": "random_4m",
+      "decode_ns": [
+        1518834,
+        1756276,
+        1828230,
+        1411112,
+        1627867,
+        1544201,
+        1718616
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        15844039,
+        16095869,
+        15971717,
+        16219540,
+        15903831,
+        15744002,
+        15271190
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        449,
+        449,
+        449,
+        449,
+        449,
+        449,
+        449
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        1765834,
+        1556434,
+        1519004,
+        1542818,
+        1541425,
+        1714739,
+        1507813
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        1552487,
+        1463871,
+        1500991,
+        1266333,
+        1506561,
+        1307830,
+        1424528
+      ],
+      "input_bytes": 4194304,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        448,
+        448,
+        448,
+        448,
+        448,
+        448,
+        448
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        1622808,
+        1597590,
+        1496061,
+        1576842,
+        1561293,
+        1522871,
+        1676027
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        2502459,
+        2683526,
+        2680741,
+        2455951,
+        2406089,
+        2437547,
+        2076484
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        412,
+        412,
+        412,
+        412,
+        412,
+        412,
+        412
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        1520196,
+        1600115,
+        1599013,
+        1616396,
+        1504367,
+        1564289,
+        1476084
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        4242636,
+        3836638,
+        4126618,
+        3885859,
+        3983201,
+        3719499,
+        4032303
+      ],
+      "input_bytes": 4194304,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        12296,
+        12296,
+        12296,
+        12296,
+        12296,
+        12296,
+        12296
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        8185602,
+        8154494,
+        8180321,
+        8147180,
+        8131791,
+        8270670,
+        8238180
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        13066207,
+        12963676,
+        13095492,
+        13204274,
+        12962523,
+        13085303,
+        13065506
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        792,
+        792,
+        792,
+        792,
+        792,
+        792,
+        792
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        3585840,
+        3706565,
+        3641464,
+        3930693,
+        3493287,
+        3508515,
+        3590879
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        27738320,
+        26294667,
+        27152536,
+        26440098,
+        26302100,
+        30267208,
+        26292372
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        104,
+        104,
+        104,
+        104,
+        104,
+        104,
+        104
+      ],
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        2699076,
+        2637420,
+        2688676,
+        3039501,
+        2507237,
+        2861308,
+        2748128
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        3666650,
+        3397578,
+        2766471,
+        3942205,
+        3039170,
+        3371530,
+        3661551
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        696469,
+        692292,
+        670121,
+        638331,
+        661855,
+        644222,
+        617312
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        1263848,
+        1122484,
+        1144916,
+        987342,
+        1099661,
+        1112595,
+        1071609
+      ],
+      "input_bytes": 1048576,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        634033,
+        622601,
+        728129,
+        627851,
+        619786,
+        684327,
+        701699
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        4529481,
+        3797004,
+        4008148,
+        3956922,
+        3362613,
+        4132320,
+        3942044
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        713231,
+        656815,
+        705196,
+        740502,
+        708431,
+        716777,
+        806285
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        28919404,
+        29236626,
+        30303405,
+        30067475,
+        29649045,
+        28266385,
+        28763062
+      ],
+      "input_bytes": 1048576,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048777,
+        1048777,
+        1048777,
+        1048777,
+        1048777,
+        1048777,
+        1048777
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        2658831,
+        2848705,
+        2553043,
+        2584131,
+        2534859,
+        2506025,
+        2660965
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        17515889,
+        17333197,
+        16698764,
+        16788241,
+        17137713,
+        16791757,
+        16815993
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        881054,
+        1046723,
+        992581,
+        1101936,
+        1016837,
+        926619,
+        1048837
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        132426651,
+        129014776,
+        132543219,
+        131564292,
+        152350572,
+        132103819,
+        134676058
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581
+      ],
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        836020,
+        726405,
+        679377,
+        826632,
+        640034,
+        710425,
+        702190
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        4394959,
+        4297477,
+        3916096,
+        4650566,
+        4909259,
+        4281668,
+        3734908
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        723169,
+        699896,
+        633312,
+        742425,
+        688224,
+        701037,
+        662977
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        1247878,
+        1153282,
+        1048436,
+        1090124,
+        1153182,
+        1221028,
+        1284948
+      ],
+      "input_bytes": 1048576,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        626740,
+        716908,
+        631318,
+        679438,
+        616390,
+        715505,
+        709273
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        3926376,
+        3957042,
+        3877354,
+        3930984,
+        4035659,
+        3935813,
+        4570396
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613,
+        1048613
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        814299,
+        697171,
+        742185,
+        820330,
+        825600,
+        833014,
+        824138
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        30102771,
+        30610078,
+        29214504,
+        30504731,
+        29627655,
+        30194502,
+        29433232
+      ],
+      "input_bytes": 1048576,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048774,
+        1048774,
+        1048774,
+        1048774,
+        1048774,
+        1048774,
+        1048774
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        2672727,
+        2592236,
+        2471240,
+        2526624,
+        2548535,
+        2526844,
+        2608827
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        16584110,
+        16630466,
+        16895160,
+        16584401,
+        16612042,
+        16889490,
+        16613474
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688,
+        1048688
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        962266,
+        893487,
+        973967,
+        888278,
+        1025754,
+        1006258,
+        1050319
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        121542184,
+        128909248,
+        132256924,
+        128018386,
+        121201238,
+        129418709,
+        127144266
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581,
+        1048581
+      ],
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        861807,
+        708151,
+        630477,
+        587637,
+        716396,
+        644062,
+        718801
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        4859396,
+        4029147,
+        4797981,
+        3861645,
+        3752260,
+        3749034,
+        4488884
+      ],
+      "input_bytes": 1048576,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -3 -q -c <input> > <output>",
+      "compressed_bytes": [
+        763396,
+        763396,
+        763396,
+        763396,
+        763396,
+        763396,
+        763396
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        2741725,
+        2706339,
+        2666254,
+        2663930,
+        2803942,
+        2511045,
+        2460029
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        9163916,
+        8685665,
+        8313981,
+        8796992,
+        8796181,
+        8238921,
+        8565149
+      ],
+      "input_bytes": 4194304,
+      "level": 3,
+      "tool": "zstd",
+      "tool_id": "zstd-3"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -9 -q -c <input> > <output>",
+      "compressed_bytes": [
+        665991,
+        665991,
+        665991,
+        665991,
+        665991,
+        665991,
+        665991
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        2710938,
+        2505795,
+        2633353,
+        2856690,
+        2648341,
+        2623945,
+        2858163
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        31059035,
+        30943880,
+        30320026,
+        30392381,
+        31987256,
+        30420614,
+        31142190
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "zstd",
+      "tool_id": "zstd-9"
+    },
+    {
+      "available": true,
+      "command_decode": "zstd -d -q -c <compressed> > <output>",
+      "command_encode": "zstd -19 -q -c <input> > <output>",
+      "compressed_bytes": [
+        573917,
+        573917,
+        573917,
+        573917,
+        573917,
+        573917,
+        573917
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        2714354,
+        2906452,
+        2743288,
+        2665333,
+        2747495,
+        2789754,
+        2742948
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        823495132,
+        791010717,
+        810639205,
+        796977606,
+        781438294,
+        780202467,
+        773047398
+      ],
+      "input_bytes": 4194304,
+      "level": 19,
+      "tool": "zstd",
+      "tool_id": "zstd-19"
+    },
+    {
+      "available": true,
+      "command_decode": "gzip -d -c <compressed> > <output>",
+      "command_encode": "gzip -9 -c <input> > <output>",
+      "compressed_bytes": [
+        662053,
+        662053,
+        662053,
+        662053,
+        662053,
+        662053,
+        662053
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        11365023,
+        11378438,
+        11453428,
+        11496388,
+        11425977,
+        11486961,
+        11417942
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        153455651,
+        153719563,
+        153631739,
+        153490005,
+        153384688,
+        157289193,
+        153498861
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "gzip",
+      "tool_id": "gzip-9"
+    },
+    {
+      "available": true,
+      "command_decode": "xz -d -c <compressed> > <output>",
+      "command_encode": "xz -9 -c <input> > <output>",
+      "compressed_bytes": [
+        572700,
+        572700,
+        572700,
+        572700,
+        572700,
+        572700,
+        572700
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        22924088,
+        22935960,
+        22795928,
+        22996483,
+        23716996,
+        23518216,
+        22950788
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        515362011,
+        531569056,
+        516301011,
+        512922647,
+        533081866,
+        519869047,
+        510690381
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "xz",
+      "tool_id": "xz-9"
+    },
+    {
+      "available": true,
+      "command_decode": "brotli -d -c <compressed> > <output>",
+      "command_encode": "brotli -q 9 -c <input> > <output>",
+      "compressed_bytes": [
+        649512,
+        649512,
+        649512,
+        649512,
+        649512,
+        649512,
+        649512
+      ],
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        5510450,
+        5173922,
+        5211682,
+        4955175,
+        5483350,
+        5374176,
+        5551617
+      ],
+      "decode_verified": true,
+      "encode_ns": [
+        86548536,
+        84592718,
+        85840846,
+        85242820,
+        85553099,
+        84184045,
+        87182840
+      ],
+      "input_bytes": 4194304,
+      "level": 9,
+      "tool": "brotli",
+      "tool_id": "brotli-9"
+    }
+  ],
+  "iterations": 7,
+  "kind": "codec-external-baselines",
+  "notes": [
+    "External command times include process spawn and file I/O; they are not library-only measurements.",
+    "WeftCodec frame bytes include the WFT1 framing overhead. `marginal_bytes` counts only the frame; `whole_object_bytes` adds the base or dictionary bytes required to decode DELTA/DICTIONARY/REFERENCE.",
+    "`auto` mirrors the codec CLI candidate rule (RAW, ZSTD, DELTA/REFERENCE when a base is supplied, DICTIONARY when a dictionary is supplied) and picks the smallest frame with mode-byte tie-break.",
+    "Every decode was compared byte-for-byte with the input before its sample was accepted.",
+    "No `winner` field is emitted. See bench/RESULTS-v1.md for scoped analysis and losses."
+  ],
+  "schema": "weft-codec-bench-ext-v1",
+  "scratch_dir": "/tmp/weft-codec-ext-19-1793727010826912701",
+  "tools": {
+    "brotli": "brotli 1.0.9",
+    "fio": "fio-3.33",
+    "gzip": "gzip 1.12",
+    "sha256sum": "sha256sum (GNU coreutils) 9.1",
+    "sqlite3": "3.40.1 2022-12-28 14:03:47 df5c253c0b3dd24916e4ec7cf77d3db5294cc9fd45ae7b9c5e82ad8197f3alt1",
+    "xz": "xz (XZ Utils) 5.4.1",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "vm_hwm_kib": 131380,
+  "weftcodec": [
+    {
+      "applicable": false,
+      "corpus": "empty",
+      "input_bytes": 0,
+      "mode": "delta",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": false,
+      "corpus": "empty",
+      "input_bytes": 0,
+      "mode": "dictionary",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "empty",
+      "decode_ns": [
+        181,
+        150,
+        141,
+        150,
+        151,
+        140,
+        140
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        291,
+        180,
+        181,
+        180,
+        180,
+        171,
+        180
+      ],
+      "frame_bytes": 100,
+      "input_bytes": 0,
+      "level": 0,
+      "marginal_bytes": 100,
+      "mode": "raw",
+      "whole_object_bytes": 100
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "empty",
+      "decode_ns": [
+        421,
+        331,
+        230,
+        230,
+        231,
+        230,
+        230
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        551,
+        451,
+        411,
+        421,
+        421,
+        410,
+        391
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "level": 3,
+      "marginal_bytes": 109,
+      "mode": "zstd",
+      "whole_object_bytes": 109
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "empty",
+      "decode_ns": [
+        371,
+        240,
+        231,
+        230,
+        230,
+        231,
+        240
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        461,
+        451,
+        421,
+        410,
+        401,
+        401,
+        401
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "level": 9,
+      "marginal_bytes": 109,
+      "mode": "zstd",
+      "whole_object_bytes": 109
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "empty",
+      "decode_ns": [
+        290,
+        240,
+        231,
+        240,
+        241,
+        241,
+        240
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        1964,
+        481,
+        440,
+        431,
+        431,
+        421,
+        431
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "level": 19,
+      "marginal_bytes": 109,
+      "mode": "zstd",
+      "whole_object_bytes": 109
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "empty",
+      "decode_ns": [
+        170,
+        160,
+        150,
+        140,
+        150,
+        150,
+        141
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        772,
+        611,
+        631,
+        611,
+        601,
+        581,
+        582
+      ],
+      "frame_bytes": 100,
+      "input_bytes": 0,
+      "level": 3,
+      "marginal_bytes": 100,
+      "mode": "auto",
+      "whole_object_bytes": 100
+    },
+    {
+      "applicable": false,
+      "corpus": "one_byte",
+      "input_bytes": 1,
+      "mode": "delta",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": false,
+      "corpus": "one_byte",
+      "input_bytes": 1,
+      "mode": "dictionary",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "one_byte",
+      "decode_ns": [
+        200,
+        160,
+        150,
+        150,
+        151,
+        150,
+        150
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        310,
+        181,
+        190,
+        190,
+        191,
+        190,
+        191
+      ],
+      "frame_bytes": 101,
+      "input_bytes": 1,
+      "level": 0,
+      "marginal_bytes": 101,
+      "mode": "raw",
+      "whole_object_bytes": 101
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "one_byte",
+      "decode_ns": [
+        401,
+        331,
+        300,
+        251,
+        230,
+        241,
+        240
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        591,
+        441,
+        431,
+        421,
+        431,
+        430,
+        431
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "level": 3,
+      "marginal_bytes": 110,
+      "mode": "zstd",
+      "whole_object_bytes": 110
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "one_byte",
+      "decode_ns": [
+        400,
+        291,
+        250,
+        260,
+        251,
+        320,
+        241
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        601,
+        491,
+        471,
+        451,
+        461,
+        461,
+        461
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "level": 9,
+      "marginal_bytes": 110,
+      "mode": "zstd",
+      "whole_object_bytes": 110
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "one_byte",
+      "decode_ns": [
+        320,
+        261,
+        240,
+        241,
+        240,
+        231,
+        240
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        2716,
+        581,
+        501,
+        501,
+        511,
+        491,
+        480
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "level": 19,
+      "marginal_bytes": 110,
+      "mode": "zstd",
+      "whole_object_bytes": 110
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "one_byte",
+      "decode_ns": [
+        191,
+        170,
+        160,
+        150,
+        150,
+        150,
+        150
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        2114,
+        691,
+        661,
+        652,
+        641,
+        661,
+        651
+      ],
+      "frame_bytes": 101,
+      "input_bytes": 1,
+      "level": 3,
+      "marginal_bytes": 101,
+      "mode": "auto",
+      "whole_object_bytes": 101
+    },
+    {
+      "applicable": false,
+      "corpus": "random_4m",
+      "input_bytes": 4194304,
+      "mode": "delta",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": false,
+      "corpus": "random_4m",
+      "input_bytes": 4194304,
+      "mode": "dictionary",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "random_4m",
+      "decode_ns": [
+        514559,
+        507767,
+        506445,
+        505904,
+        504762,
+        495856,
+        503880
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        685639,
+        671222,
+        671874,
+        671853,
+        668988,
+        761321,
+        675710
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "level": 0,
+      "marginal_bytes": 4194404,
+      "mode": "raw",
+      "whole_object_bytes": 4194404
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "random_4m",
+      "decode_ns": [
+        500173,
+        496527,
+        497869,
+        496055,
+        507777,
+        496356,
+        573941
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        951345,
+        943611,
+        941105,
+        942168,
+        942419,
+        959881,
+        950864
+      ],
+      "frame_bytes": 4194510,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 4194510,
+      "mode": "zstd",
+      "whole_object_bytes": 4194510
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "random_4m",
+      "decode_ns": [
+        505483,
+        593457,
+        497609,
+        498911,
+        496106,
+        504160,
+        497077
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        2277750,
+        2127298,
+        1971739,
+        2039175,
+        2223498,
+        2154600,
+        2138790
+      ],
+      "frame_bytes": 4194509,
+      "input_bytes": 4194304,
+      "level": 9,
+      "marginal_bytes": 4194509,
+      "mode": "zstd",
+      "whole_object_bytes": 4194509
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "random_4m",
+      "decode_ns": [
+        602173,
+        504912,
+        574412,
+        529848,
+        500433,
+        564643,
+        605310
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        104124420,
+        102435279,
+        103346419,
+        105011415,
+        105349085,
+        102577584,
+        105652611
+      ],
+      "frame_bytes": 4194509,
+      "input_bytes": 4194304,
+      "level": 19,
+      "marginal_bytes": 4194509,
+      "mode": "zstd",
+      "whole_object_bytes": 4194509
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "random_4m",
+      "decode_ns": [
+        508249,
+        498670,
+        499592,
+        622160,
+        496767,
+        548714,
+        497458
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        1701285,
+        1592140,
+        1588423,
+        1679814,
+        1873726,
+        1632967,
+        1591729
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 4194404,
+      "mode": "auto",
+      "whole_object_bytes": 4194404
+    },
+    {
+      "applicable": false,
+      "corpus": "repetitive_4m",
+      "input_bytes": 4194304,
+      "mode": "delta",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": false,
+      "corpus": "repetitive_4m",
+      "input_bytes": 4194304,
+      "mode": "dictionary",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        518838,
+        511434,
+        539717,
+        513057,
+        516083,
+        516133,
+        512827
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        762382,
+        675340,
+        670291,
+        672966,
+        681281,
+        676462,
+        674579
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "level": 0,
+      "marginal_bytes": 4194404,
+      "mode": "raw",
+      "whole_object_bytes": 4194404
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        607383,
+        603956,
+        607433,
+        604247,
+        604046,
+        605289,
+        603516
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        702631,
+        687423,
+        753656,
+        706789,
+        683555,
+        684657,
+        736053
+      ],
+      "frame_bytes": 545,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 545,
+      "mode": "zstd",
+      "whole_object_bytes": 545
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        614176,
+        615738,
+        614847,
+        613705,
+        625787,
+        619916,
+        615789
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        2318606,
+        2545229,
+        2296414,
+        2380191,
+        2337771,
+        2375833,
+        2268352
+      ],
+      "frame_bytes": 5475,
+      "input_bytes": 4194304,
+      "level": 9,
+      "marginal_bytes": 5475,
+      "mode": "zstd",
+      "whole_object_bytes": 5475
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        607984,
+        603766,
+        600892,
+        605009,
+        603015,
+        600630,
+        679668
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        4691422,
+        4439542,
+        4422912,
+        4476441,
+        4504333,
+        4421078,
+        4530803
+      ],
+      "frame_bytes": 508,
+      "input_bytes": 4194304,
+      "level": 19,
+      "marginal_bytes": 508,
+      "mode": "zstd",
+      "whole_object_bytes": 508
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        604397,
+        603987,
+        619656,
+        606592,
+        607303,
+        604287,
+        605360
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        1383791,
+        1356030,
+        1346071,
+        1344348,
+        1345460,
+        1345080,
+        1343647
+      ],
+      "frame_bytes": 545,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 545,
+      "mode": "auto",
+      "whole_object_bytes": 545
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        128891,
+        130433,
+        128349,
+        187610,
+        128429,
+        129621,
+        128099
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        218978,
+        168805,
+        170749,
+        168254,
+        168003,
+        168134,
+        168094
+      ],
+      "frame_bytes": 1048676,
+      "input_bytes": 1048576,
+      "level": 0,
+      "marginal_bytes": 1048676,
+      "mode": "raw",
+      "whole_object_bytes": 1048676
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        130774,
+        131285,
+        129281,
+        129561,
+        129471,
+        129161,
+        129281
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        247331,
+        241260,
+        240209,
+        342389,
+        271426,
+        245177,
+        239537
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        129231,
+        446473,
+        130032,
+        129842,
+        131506,
+        129662,
+        129492
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        877947,
+        681933,
+        680499,
+        681611,
+        679267,
+        680650,
+        766590
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 9,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        150010,
+        129812,
+        131165,
+        129151,
+        129141,
+        128901,
+        128720
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        27112893,
+        24556895,
+        24503865,
+        24211069,
+        24275229,
+        24087829,
+        24359156
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 19,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "delta",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        377725,
+        296954,
+        294941,
+        296473,
+        294118,
+        294118,
+        299078
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        36992034,
+        34758306,
+        35118148,
+        35025134,
+        35076069,
+        37178151,
+        36797380
+      ],
+      "frame_bytes": 153,
+      "input_bytes": 1048576,
+      "level": 0,
+      "marginal_bytes": 153,
+      "mode": "delta",
+      "whole_object_bytes": 1048729
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "dictionary",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        348069,
+        312182,
+        312082,
+        312303,
+        321089,
+        311251,
+        312363
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        1513834,
+        1465103,
+        1557306,
+        1467398,
+        1469992,
+        1461817,
+        1506270
+      ],
+      "frame_bytes": 1194,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 1194,
+      "mode": "dictionary",
+      "whole_object_bytes": 1049770
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "reference",
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        313485,
+        282487,
+        283128,
+        281174,
+        281054,
+        280894,
+        282427
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        39885182,
+        40300997,
+        41257392,
+        39403232,
+        39281866,
+        38950918,
+        38469300
+      ],
+      "frame_bytes": 148,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 148,
+      "mode": "auto",
+      "whole_object_bytes": 1048724
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        133790,
+        130834,
+        130403,
+        131265,
+        130614,
+        130654,
+        131525
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        219960,
+        173965,
+        173644,
+        173704,
+        173363,
+        173264,
+        175407
+      ],
+      "frame_bytes": 1048676,
+      "input_bytes": 1048576,
+      "level": 0,
+      "marginal_bytes": 1048676,
+      "mode": "raw",
+      "whole_object_bytes": 1048676
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        134040,
+        129892,
+        129261,
+        129521,
+        129001,
+        131244,
+        129472
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        260567,
+        290822,
+        298878,
+        275664,
+        255527,
+        255808,
+        259023
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        135332,
+        129141,
+        128940,
+        130383,
+        129301,
+        130474,
+        128680
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        777921,
+        706559,
+        706688,
+        703352,
+        706569,
+        802186,
+        689647
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 9,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        155820,
+        130643,
+        129602,
+        129091,
+        129231,
+        129181,
+        129111
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        26579287,
+        24651410,
+        24511700,
+        24503414,
+        24129146,
+        24510808,
+        24301869
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "level": 19,
+      "marginal_bytes": 1048709,
+      "mode": "zstd",
+      "whole_object_bytes": 1048709
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "delta",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        488100,
+        427728,
+        416167,
+        408052,
+        408452,
+        405206,
+        405236
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        36379130,
+        36253306,
+        38056730,
+        38082928,
+        36842425,
+        36714515,
+        38106183
+      ],
+      "frame_bytes": 79984,
+      "input_bytes": 1048576,
+      "level": 0,
+      "marginal_bytes": 79984,
+      "mode": "delta",
+      "whole_object_bytes": 1128560
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "dictionary",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        468695,
+        441023,
+        430242,
+        421356,
+        417779,
+        414614,
+        408663
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        1769481,
+        1861753,
+        1726742,
+        1716402,
+        1783607,
+        1711534,
+        1759542
+      ],
+      "frame_bytes": 24733,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 24733,
+      "mode": "dictionary",
+      "whole_object_bytes": 1073309
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "dictionary",
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        495805,
+        440572,
+        429612,
+        421827,
+        416938,
+        412018,
+        410677
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 1048576,
+      "encode_ns": [
+        39605890,
+        40053655,
+        40208895,
+        39539156,
+        41159299,
+        40512712,
+        40496312
+      ],
+      "frame_bytes": 24733,
+      "input_bytes": 1048576,
+      "level": 3,
+      "marginal_bytes": 24733,
+      "mode": "auto",
+      "whole_object_bytes": 1073309
+    },
+    {
+      "applicable": false,
+      "corpus": "source_text_4m",
+      "input_bytes": 4194304,
+      "mode": "delta",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": false,
+      "corpus": "source_text_4m",
+      "input_bytes": 4194304,
+      "mode": "dictionary",
+      "reason": "no base or dictionary is defined for this corpus"
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "raw",
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        518848,
+        512385,
+        517675,
+        521433,
+        515832,
+        513287,
+        514610
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        751172,
+        675370,
+        675670,
+        676983,
+        675050,
+        675971,
+        681171
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "level": 0,
+      "marginal_bytes": 4194404,
+      "mode": "raw",
+      "whole_object_bytes": 4194404
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        1783768,
+        1734957,
+        1717955,
+        1790490,
+        1745927,
+        1708838,
+        1706965
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        6412192,
+        6336953,
+        6398016,
+        6239972,
+        6318788,
+        6351319,
+        6232728
+      ],
+      "frame_bytes": 762372,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 762372,
+      "mode": "zstd",
+      "whole_object_bytes": 762372
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        1840604,
+        1771825,
+        1686146,
+        1702245,
+        1676267,
+        1678431,
+        1676268
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        27167054,
+        26788146,
+        27036781,
+        26831227,
+        26917999,
+        26860191,
+        26828932
+      ],
+      "frame_bytes": 667412,
+      "input_bytes": 4194304,
+      "level": 9,
+      "marginal_bytes": 667412,
+      "mode": "zstd",
+      "whole_object_bytes": 667412
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        1703258,
+        1538520,
+        1541055,
+        1420470,
+        1415320,
+        1412355,
+        1413597
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        668211723,
+        691800730,
+        702874148,
+        690558591,
+        701724861,
+        706316808,
+        709490046
+      ],
+      "frame_bytes": 577018,
+      "input_bytes": 4194304,
+      "level": 19,
+      "marginal_bytes": 577018,
+      "mode": "zstd",
+      "whole_object_bytes": 577018
+    },
+    {
+      "applicable": true,
+      "chosen_mode": "zstd",
+      "corpus": "source_text_4m",
+      "decode_ns": [
+        1960187,
+        1720089,
+        1795750,
+        1781244,
+        1829583,
+        1706624,
+        1705833
+      ],
+      "decode_verified": true,
+      "dependency_bytes": 0,
+      "encode_ns": [
+        7443747,
+        7034875,
+        7261076,
+        7193390,
+        7232302,
+        7210662,
+        7007373
+      ],
+      "frame_bytes": 762372,
+      "input_bytes": 4194304,
+      "level": 3,
+      "marginal_bytes": 762372,
+      "mode": "auto",
+      "whole_object_bytes": 762372
+    }
+  ]
+}

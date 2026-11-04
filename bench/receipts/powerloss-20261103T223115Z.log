@@ -1,0 +1,160 @@
+== WeftFS power-loss court ==
+started: 2026-11-03T22:31:15Z
+kernel: Linux 4b25dbfab01d 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux
+court image: weft/vm-court:1 (sha256:3972a9004bbac6ce16c38ffde945575608fa6799cee60447607ab604a400cbfb)
+limits: memory=3g swap=3g cpus=4 pids=1024 tmpfs_tmp=1g
+iterations=1 seed=20261103 cache=writeback guest_mem=512M kill_delay_ms=100..200
+qemu: QEMU emulator version 7.2.22 (Debian 1:7.2+dfsg-7+deb12u18+b3)
+building Rust CLI
+   Compiling weftfs v0.1.0 (/work)
+    Finished `release` profile [optimized] target(s) in 2.52s
+building Go CLI (CGO disabled, static)
+building read-only guest root filesystem
+guest kernel: /boot/vmlinuz-6.1.0-54-amd64
+guest initramfs: /boot/initrd.img-6.1.0-54-amd64 (30382096 bytes)
+iteration 1: outcome=fail recovered=4 go=0 last_returned=4 delay=194ms commits=2
+===== combined serial logs =====
+===== iter 1 write =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=write
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=write weft.iters=100000
+GUEST_MOUNT_OK
+generation=1
+snapshot_root=6bcc33de4c63d784b0e67740ac40a3743df3c134c1e585196955fee791f7dec1
+69f8b55aed4e8b4b46cea91ab8023755db4298d1629e7c1bbcbb1c433e5ed910
+GUEST_WRITING pid=1
+COMMIT i=1 gen=3
+COMMIT i=2 gen=4
+===== iter 1 verify =====
+Loading, please wait...
+Starting systemd-udevd version 252.39-1~deb12u2
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Warning: fsck not present, so skipping root file system
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+mount: mounting /run on /root/run failed: No such file or directory
+GUEST_BOOT kernel=6.1.0-54-amd64 mode=verify
+GUEST_CMDLINE root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+GUEST_MOUNT_OK
+VERIFY_BEGIN
+RS_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 4,
+  "objects": 2,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "3f5004fe4107569156568624ce7da78b6158a5780529b511765786a7ff9ea11b",
+  "snapshots": 0
+}
+RS_VERIFY {
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 16,
+  "checked_commits": 4,
+  "checked_context_roots": 0,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "3f5004fe4107569156568624ce7da78b6158a5780529b511765786a7ff9ea11b",
+  "full": true,
+  "generation": 4,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+GO_INFO {
+  "entries": 1,
+  "format": "weftfs-store 1",
+  "generation": 4,
+  "objects": 2,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "3f5004fe4107569156568624ce7da78b6158a5780529b511765786a7ff9ea11b",
+  "snapshots": {}
+}
+GO_VERIFY {
+  "OK": true,
+  "Full": true,
+  "Generation": 4,
+  "Commit": [
+    63,
+    80,
+    4,
+    254,
+    65,
+    7,
+    86,
+    145,
+    86,
+    86,
+    134,
+    36,
+    206,
+    125,
+    167,
+    139,
+    97,
+    88,
+    165,
+    120,
+    5,
+    41,
+    181,
+    17,
+    118,
+    87,
+    134,
+    167,
+    255,
+    158,
+    161,
+    27
+  ],
+  "CheckedCommits": 4,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 16,
+  "CheckedContextRoots": 0,
+  "CheckedCausal": 0,
+  "CheckedCapabilities": 0,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+RS_SUMMARY gen=4 root=3f5004fe4107569156568624ce7da78b6158a5780529b511765786a7ff9ea11b ok=1 status=0
+RS_REJECTED 
+GO_SUMMARY gen= root=3f5004fe4107569156568624ce7da78b6158a5780529b511765786a7ff9ea11b ok=1 status=0
+GO_REJECTED 
+RS_CAT_STATUS 0
+RS_CAT_SIZE 1048576
+RS_CAT_SHA ea37189ede6d1a996a3b9c9dd9c78ce0967bcdc30df93ae71ab20c7f41027be4
+GO_CAT_STATUS 0
+GO_CAT_SIZE 1048576
+GO_CAT_SHA ea37189ede6d1a996a3b9c9dd9c78ce0967bcdc30df93ae71ab20c7f41027be4
+GUEST_DMESG_EXT4_BEGIN
+[    0.000000] Command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.006217] Kernel command line: root=/dev/vda ro rootfstype=ext4 rootwait console=ttyS0,115200 panic=-1 loglevel=4 weft.mode=verify weft.iters=100000
+[    0.536725] EXT4-fs (vda): mounted filesystem with ordered data mode. Quota mode: none.
+[    0.562290] EXT4-fs (vdb): recovery complete
+[    0.563131] EXT4-fs (vdb): mounted filesystem with ordered data mode. Quota mode: none.
+GUEST_DMESG_EXT4_END
+VERIFY_DONE
+[    0.624756] reboot: Power down
+receipt: bench/receipts/powerloss-20261103T223115Z.json
+raw log: bench/receipts/powerloss-20261103T223115Z.log
+PL_FAIL failed iterations or blocked rig

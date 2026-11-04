@@ -1,0 +1,372 @@
+{
+  "schema": "weftfs.replay-bundle.receipt/1",
+  "generated_at": "2026-11-03T21:08:24Z",
+  "run": {
+    "started_at": "2026-11-03T21:08:24Z",
+    "finished_at": "2026-11-03T21:08:25Z",
+    "duration_ms": 1000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "bcedd2635a478658487b9767cdf9cccf484896fb"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "7693ad4674e707597326adfd7860e891d6fe72cc"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "6571308223e1d7066a4a369fe5cf2c4efa36488a"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "83c2b6af0e9cb8726ac3c5f2bf73e486585715e1"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "store",
+      "title": "Deterministic store with two Context Roots",
+      "status": "pass",
+      "notes": "contexts demo=79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993 other=a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --fixed-timestamp-ns 1767225600000000000 create /a.txt --text alpha --seed replay-a --attr project=demo",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --fixed-timestamp-ns 1767225600000000000 create /b.txt --text beta --seed replay-b --attr project=demo",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --fixed-timestamp-ns 1767225600000000000 create /c.txt --text gamma --seed replay-c --attr project=other",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --fixed-timestamp-ns 1767225600000000000 snapshot create s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --json --fixed-timestamp-ns 1767225600000000000 context create --name demo --selector select attrs.project == \"demo\" --snapshot s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --json --fixed-timestamp-ns 1767225600000000000 context create --name other --selector select attrs.project == \"other\" --snapshot s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --json --fixed-timestamp-ns 1767225600000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-a exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-c exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-demo exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-other exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "verify-source exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "source store verifies before export",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "export",
+      "title": "Rust writes the self-contained bundle",
+      "status": "pass",
+      "notes": "bundle=940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2 bytes=6657",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/replay-bundle-8-20261103T210824Z --json --fixed-timestamp-ns 1767225600000000000 export-bundle --out /work/bench/bundles/weft-receipt.tar.zst --source-revision WeftFS=bcedd2635a478658487b9767cdf9cccf484896fb",
+        "/work/.docker-cache/f3-demos/bin/jsonq /work/.docker-cache/f3-demos/bundle-inspect-8-20261103T210824Z/manifest.json schema"
+      ],
+      "assertions": [
+        {
+          "name": "export exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "bundle path exists",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "bundle sha256 matches the file",
+          "expected": "940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2",
+          "actual": "940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2",
+          "pass": true
+        },
+        {
+          "name": "manifest.json present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "replay.sh present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "README present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "store commits present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "store objects present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "store manifests present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "store refs present",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "manifest-schema exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "manifest schema",
+          "expected": "weftfs.replay-bundle/1",
+          "actual": "weftfs.replay-bundle/1",
+          "pass": true
+        },
+        {
+          "name": "manifest records two contexts",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "manifest records a context graph",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "manifest records source revisions",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "manifest",
+          "content": "{\n  \"bundle_format\": \"tar+zstd\",\n  \"context_graph\": [\n    {\n      \"predicate\": \"context_root\",\n      \"relation_id\": \"a4251c599ba66536e152ab86fc0bff3b113adb89c4295062af85b389e33d4735\",\n      \"subject\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"target\": {\n        \"value\": \"demo\"\n      }\n    },\n    {\n      \"predicate\": \"context_root\",\n      \"relation_id\": \"c02616dc719e5db87aa53dcf682b08d46aa4537fc32b6d93ac994c9f3a60c058\",\n      \"subject\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"target\": {\n        \"value\": \"other\"\n      }\n    }\n  ],\n  \"contexts\": [\n    {\n      \"context_root_id\": \"79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993\",\n      \"files\": [\n        {\n          \"content_hash\": \"a36ebe673301d32de171d304007cfe4d93db975109dd043f6540458f1d45176c\",\n          \"content_id\": \"2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b\",\n          \"kind\": \"file\",\n          \"object_id\": \"1dbfe17ad9e2f27156066a2e094073c47a57ba8018367e1ab26433eb68459a2d\",\n          \"path\": \"a.txt\",\n          \"sha256\": \"8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8\",\n          \"size\": 5,\n          \"version_id\": \"187f312e2471b5f36ff67048b319c577768972a04535ab5fe747b6e04d95029c\"\n        },\n        {\n          \"content_hash\": \"5d02ce022776b89446e37b44ed485954c7516581026a8b0d15f1efe12b741708\",\n          \"content_id\": \"1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870\",\n          \"kind\": \"file\",\n          \"object_id\": \"9dceae384dbe293b981082e13be19fd561d2992264151fd7488b86e5a46a14f7\",\n          \"path\": \"b.txt\",\n          \"sha256\": \"f44e64e75f3948e9f73f8dfa94721c4ce8cbb4f265c4790c702b2d41cfbf2753\",\n          \"size\": 4,\n          \"version_id\": \"64640ef60e66c2e567b5cd7972019c4d9b375ade9b76518f12f45a1174216d89\"\n        }\n      ],\n      \"matched_count\": 2,\n      \"name\": \"demo\",\n      \"ordering\": \"selector_then_object_id\",\n      \"record_hex\": \"0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065b08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a656374050464656d6f0508736e617073686f74062074a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc505096e616d657370616365050764656661756c74050b73656c6563746f725f696406201b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d\",\n      \"resolver\": \"weft-resolver-v1\",\n      \"returned\": 2,\n      \"selector_id\": \"1b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d\",\n      \"snapshot_id\": \"74a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc5\",\n      \"truncated\": false,\n      \"uri\": \"weft://default/c/79d561d4c89904f05db06a331dfbb670aaddf774b1d86cb04d53b2a7bd3a3993\"\n    },\n    {\n      \"context_root_id\": \"a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323\",\n      \"files\": [\n        {\n          \"content_hash\": \"58d10150aa001f322d6f44474c134a085f5fa0a65da9235894202678e5c483e4\",\n          \"content_id\": \"77dabfe74fa4db6ac49cf5907fb814e6b7b96a5a51f27bfc8958ced4d2ddc494\",\n          \"kind\": \"file\",\n          \"object_id\": \"366284944f9cff2e51d96652df625e5b4795052d52c66e944dcec394cfe0696b\",\n          \"path\": \"c.txt\",\n          \"sha256\": \"be9d587defa1f0c09ef49eb17e206983a5f8f8289e4281860bd0ee5a19592c67\",\n          \"size\": 5,\n          \"version_id\": \"c90b1db1f88ca8397cf8c8069843e287640012c26ae918bf802c5120d55cec16\"\n        }\n      ],\n      \"matched_count\": 1,\n      \"name\": \"other\",\n      \"ordering\": \"selector_then_object_id\",\n      \"record_hex\": \"0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050d61747472732e70726f6a65637405056f746865720508736e617073686f74062074a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc505096e616d657370616365050764656661756c74050b73656c6563746f725f69640620acc90da52dc7c4889d909d7c817d00ec412ebebad80f91a829f6a9170ed2b605\",\n      \"resolver\": \"weft-resolver-v1\",\n      \"returned\": 1,\n      \"selector_id\": \"acc90da52dc7c4889d909d7c817d00ec412ebebad80f91a829f6a9170ed2b605\",\n      \"snapshot_id\": \"74a35e831bbc24ccc0a5003d19b32e6840394dfc7015e7a2f57b49eed5d78fc5\",\n      \"truncated\": false,\n      \"uri\": \"weft://default/c/a1959f093bd9aec3f06f875e4f6dfdf60b55aeb7329ddfa9607b8d1df9490323\"\n    }\n  ],\n  \"court_command\": \"scripts/docker-court.sh fuse \\\"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\\\"\",\n  \"schema\": \"weftfs.replay-bundle/1\",\n  \"source_revisions\": {\n    \"WeftCodec\": \"6571308223e1d7066a4a369fe5cf2c4efa36488a\",\n    \"WeftCodec-Go\": \"83c2b6af0e9cb8726ac3c5f2bf73e486585715e1\",\n    \"WeftFS\": \"bcedd2635a478658487b9767cdf9cccf484896fb\",\n    \"WeftFS-Go\": \"7693ad4674e707597326adfd7860e891d6fe72cc\"\n  },\n  \"store\": {\n    \"format\": \"weftfs-store 1\",\n    \"generation\": 7,\n    \"head\": \"7bd4ba9669b0ac5a72a3268bb1860896ce010a260a930124864261d7596d59ec\"\n  },\n  \"store_entries\": [\n    {\n      \"bytes\": 5,\n      \"path\": \"store/objects/58/58d10150aa001f322d6f44474c134a085f5fa0a65da9235894202678e5c483e4\",\n      \"sha256\": \"be9d587defa1f0c09ef49eb17e206983a5f8f8289e4281860bd0ee5a19592c67\"\n    },\n    {\n      \"bytes\": 4,\n      \"path\": \"store/objects/5d/5d02ce022776b89446e37b44ed485954c7516581026a8b0d15f1efe12b741708\",\n      \"sha256\": \"f44e64e75f3948e9f73f8dfa94721c4ce8cbb4f265c4790c702b2d41cfbf2753\"\n    },\n    {\n      \"bytes\": 5,\n      \"path\": \"store/objects/a3/a36ebe673301d32de171d304007cfe4d93db975109dd043f6540458f1d45176c\",\n      \"sha256\": \"8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8\"\n    },\n    {\n      \"bytes\": 159,\n      \"path\": \"store/manifests/77/77dabfe74fa4db6ac49cf5907fb814e6b7b96a5a51f27bfc8958ced4d2ddc494\",\n      \"sha256\": \"1f2d2b89adc9806fe57afb1da4c75ce67c16ecd971db90faf1da4538a276a359\"\n    },\n    {\n      \"bytes\": 159,\n      \"path\": \"store/manifests/1f/1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870\",\n      \"sha256\": \"00990b8241b067c3766ded606f78e9db3fea270bc6de3d6905110cb861fe51bc\"\n    },\n    {\n      \"bytes\": 159,\n      \"path\": \"store/manifests/2e/2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b\",\n      \"sha256\": \"937e696193bd0c687dd01d721efcb1942258145e5fa783590b81154cc4f3818d\"\n    },\n    {\n      \"bytes\": 15,\n      \"path\": \"store/FORMAT\",\n      \"sha256\": \"ffeb5334366dd5df92008c5fa5559e5da019178fe2917115b28f97fdea4ba686\"\n    },\n    {\n      \"bytes\": 626,\n      \"path\": \"store/commits/4.commit\",\n      \"sha256\": \"82e7c1de2c2b56062076a443cfddb887bf9e4a7e5092782b8f9a13cb390ae56c\"\n    },\n    {\n      \"bytes\": 216,\n      \"path\": \"store/commits/5.commit\",\n      \"sha256\": \"5565f66a45a9b7dad36b1f967b234c06f523191152026cd5991b40efe66adbb1\"\n    },\n    {\n      \"bytes\": 625,\n      \"path\": \"store/commits/3.commit\",\n      \"sha256\": \"5e4e95a5e0a3ca4f7dc773c9e46aacd975ba94f368cdf2d47e6cb9d3ac979c27\"\n    },\n    {\n      \"bytes\": 424,\n      \"path\": \"store/commits/1.commit\",\n      \"sha256\": \"30a3ea1f803eb1b2cd777bdda0c4ea7991dc2f763fe639235ae4f201c00d2cbc\"\n    },\n    {\n      \"bytes\": 625,\n      \"path\": \"store/commits/2.commit\",\n      \"sha256\": \"d740235a824c07ade35f10c9b231bac57afca6d1e4bcc3ad534a91279147cc24\"\n    },\n    {\n      \"bytes\": 1064,\n      \"path\": \"store/commits/6.commit\",\n      \"sha256\": \"9786cb5365b5125d36dbc437276a2e5e406a3fbaf245d627c8a259cbb48d56a2\"\n    },\n    {\n      \"bytes\": 1067,\n      \"path\": \"store/commits/7.commit\",\n      \"sha256\": \"932697e148d9cbb741aaf69eb81d3cae8e97f755dcdff635455b808583a6ccd9\"\n    },\n    {\n      \"bytes\": 65,\n      \"path\": \"store/refs/snapshots/s1\",\n      \"sha256\": \"ce818947d6350eefc341703c30f27a68c814a00ca1dd8964e4b48593a64b4d30\"\n    },\n    {\n      \"bytes\": 8192,\n      \"path\": \"store/superblock\",\n      \"sha256\": \"6e9643240b4446fb73482ede0e55fc14a7246bae80238dcb3b840a4734434a37\"\n    },\n    {\n      \"bytes\": 0,\n      \"path\": \"store/LOCK\",\n      \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n    }\n  ]\n}\n"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "replay-bundle",
+          "path": "bench/bundles/weft-receipt.tar.zst",
+          "sha256": "940579db909ba8a3360f73377448ce90df455278a37c5a0b02f6bb7a584bdbd2"
+        }
+      ]
+    },
+    {
+      "id": "go-replay",
+      "title": "Go extracts, verifies, resolves, and materializes every hash",
+      "status": "pass",
+      "notes": "Go verified every store entry and materialized hash",
+      "commands": [
+        "bash /work/scripts/replay-bundle.sh --bundle /work/bench/bundles/weft-receipt.tar.zst --out /work/.docker-cache/f3-demos/replay-out-8-20261103T210824Z"
+      ],
+      "assertions": [
+        {
+          "name": "replay exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replay exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replay reports ok",
+          "expected": "contains <replay: ok>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "Go verify --full OK",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go manifest verification ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go checked store entries",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go checked both contexts",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "Go checked context files",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go resolved identities",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "Go found no mismatches",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "go-verify",
+          "content": "{\n  \"OK\": true,\n  \"Full\": true,\n  \"Generation\": 7,\n  \"Commit\": [\n    123,\n    212,\n    186,\n    150,\n    105,\n    176,\n    172,\n    90,\n    114,\n    163,\n    38,\n    139,\n    177,\n    134,\n    8,\n    150,\n    206,\n    1,\n    10,\n    38,\n    10,\n    147,\n    1,\n    36,\n    134,\n    66,\n    97,\n    215,\n    89,\n    109,\n    89,\n    236\n  ],\n  \"CheckedCommits\": 7,\n  \"CheckedObjects\": 3,\n  \"CheckedManifests\": 3,\n  \"CheckedChunks\": 3,\n  \"CheckedContextRoots\": 2,\n  \"CheckedCausal\": 0,\n  \"CheckedCapabilities\": 0,\n  \"RejectedGenerations\": [],\n  \"Problems\": null\n}\n"
+        },
+        {
+          "label": "go-manifest-verification",
+          "content": "{\n  \"ok\": true,\n  \"schema\": \"weftfs.replay-bundle/1\",\n  \"store_entries_checked\": 17,\n  \"contexts_checked\": 2,\n  \"context_files_checked\": 3,\n  \"resolved_ids_checked\": 2,\n  \"mismatches\": [],\n  \"materialized_dir\": \"/work/.docker-cache/f3-demos/replay-out-8-20261103T210824Z/materialized\"\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "reproduction",
+      "title": "One-command reproduction recorded",
+      "status": "pass",
+      "notes": "reproduction command and embedded replay script recorded",
+      "commands": [
+        "scripts/docker-court.sh fuse \"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\""
+      ],
+      "assertions": [
+        {
+          "name": "one-command reproduction",
+          "expected": "scripts/docker-court.sh fuse \"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\"",
+          "actual": "scripts/docker-court.sh fuse \"bash scripts/replay-bundle.sh --bundle bench/bundles/weft-receipt.tar.zst --out /tmp/replay-out\"",
+          "pass": true
+        },
+        {
+          "name": "embedded replay.sh checks checks.sha256",
+          "expected": "contains <sha256sum -c checks.sha256>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "embedded replay.sh materializes",
+          "expected": "contains <context materialize>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "README names the court command",
+          "expected": "contains <docker-court.sh fuse>",
+          "actual": "<match>",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "Rust writes the bundle; Go extracts/opens/verifies/materializes it with no Rust at Go runtime",
+    "bundle format is tar+zstd; no compression fallback exists"
+  ],
+  "summary": {
+    "total": 4,
+    "pass": 4,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

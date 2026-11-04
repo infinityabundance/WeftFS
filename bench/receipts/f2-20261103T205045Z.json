@@ -1,0 +1,119 @@
+{
+  "schema": "weftfs.f2.receipt/1",
+  "generated_at_utc": "2026-11-03T20:50:45Z",
+  "phase": "F2",
+  "revisions": {
+    "WeftFS": "35152b86cc2a65ad3b9c48f8c9ce61e7bbf2d29c",
+    "WeftFS-Go": "46c4405e3301470c2bcf71853e53b8fff28b8dfd",
+    "WeftCodec": "6571308223e1d7066a4a369fe5cf2c4efa36488a",
+    "WeftCodec-Go": "83c2b6af0e9cb8726ac3c5f2bf73e486585715e1"
+  },
+  "court_run_revisions": {
+    "full_suite": {
+      "WeftFS": "92754d113087a7f99bd70d7165a96a90c30f1ea0",
+      "WeftFS-Go": "ac0b4094587ff44dc754ec86c5290ef0c73885d0"
+    },
+    "post_change_targeted_rerun": {
+      "WeftFS": "35152b86cc2a65ad3b9c48f8c9ce61e7bbf2d29c",
+      "WeftFS-Go": "46c4405e3301470c2bcf71853e53b8fff28b8dfd",
+      "change": "context create --causal now records the computed transitive closure",
+      "commands": [
+        "cargo test --features fuse --test context --test cli",
+        "cargo build --release --features fuse --locked --bin weftfs && cd /work/WeftFS-Go && go test -race ./..."
+      ],
+      "result": "pass"
+    }
+  },
+  "environment": {
+    "court_runner": "scripts/docker-court.sh",
+    "limits": {
+      "memory": "3g",
+      "memory_swap": "3g",
+      "pids_limit": 1024,
+      "cpus": 4,
+      "tmpfs_tmp": "1g"
+    },
+    "rust_court_image": "weft/rust-court:1",
+    "rust_court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "go_court_image": "weft/go-court:1",
+    "go_court_image_id": "sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab",
+    "fuse_court_image": "weft/fuse-court:1",
+    "fuse_court_image_id": "sha256:dd4598a79572b7de0ceeda9345c5d9290c65be95c821e35f2640e327e42192d2",
+    "kernel": "7.3.1-1-cachyos",
+    "docker_server": "29.9.2",
+    "docker_client": "29.1.5"
+  },
+  "commands": [
+    {
+      "command": "scripts/docker-court.sh fuse \"cargo test --features fuse --all-targets\"",
+      "result": "pass",
+      "observed": {
+        "passed": 70,
+        "failed": 0,
+        "ignored": 2,
+        "ignored_reasons": [
+          "ownership test needs CAP_SETUID (court has cap-drop=ALL)",
+          "kernel 7.3 + fuser 0.15.1 same-inode direct-I/O EIO; documented in docs/fuse-status.md"
+        ],
+        "new_suites": {
+          "tests/context.rs": 12,
+          "tests/cli.rs": 5
+        }
+      }
+    },
+    {
+      "command": "scripts/docker-court.sh fuse \"cargo build --release --features fuse --locked --bin weftfs\"",
+      "result": "pass"
+    },
+    {
+      "command": "scripts/docker-court.sh fuse \"cd /work/WeftFS-Go && go test -race ./...\"",
+      "result": "pass",
+      "observed": {
+        "packages": ["store", "fusefs", "auth", "model", "resolver", "cmd/weftfs", "werr"],
+        "store": "ok",
+        "fusefs": "ok"
+      }
+    },
+    {
+      "command": "scripts/docker-court.sh go \"cd /work/WeftFS-Go && go vet ./... && CGO_ENABLED=0 go build ./...\"",
+      "result": "pass"
+    },
+    {
+      "command": "scripts/docker-court.sh go \"cd /work/WeftFS-Go && gofmt -l .\"",
+      "result": "pass",
+      "observed": "no files listed"
+    }
+  ],
+  "cross_language_matrix": {
+    "rust_store_read_by_go": {
+      "context_resolution": "pass",
+      "causal_version_and_closure": "pass",
+      "stored_capability_and_bound_root": "pass",
+      "materialization": "pass",
+      "verify_full": "pass"
+    },
+    "go_store_read_by_rust": {
+      "context_resolution": "pass",
+      "causal_version_and_closure": "pass",
+      "stored_capability_and_bound_root": "pass",
+      "materialization": "pass",
+      "verify_full": "pass"
+    },
+    "golden_vectors": "conformance/context/v1/causal_versions.json asserted by tests/context.rs and store/context_test.go"
+  },
+  "budget_policy": {
+    "truncation_policy": "none in v1",
+    "overrun_class": "LimitExceeded",
+    "max_bytes": "materialized bytes",
+    "max_results": "returned results",
+    "max_depth": "one hop in v1",
+    "max_work_unit": "authorized objects inspected plus relation edges traversed"
+  },
+  "not_claimed": [
+    "cryptographic capability unforgeability",
+    "constant-time authorization",
+    "distributed or federated capability revocation",
+    "formal model checking of enforcement or resolution",
+    "full capability-scoped POSIX context mounts (F3)"
+  ]
+}

@@ -1,0 +1,300 @@
+#!/usr/bin/env bash
+# Shared driver for the F3 demo courts.
+#
+# Every demo runs only inside the OOM-protected FUSE court:
+#   scripts/docker-court.sh fuse "bash scripts/demo-<name>.sh"
+#
+# The driver records commands, machine-checked assertions, observed outputs,
+# environment, repository revisions, and court limits as a TSV stream. The
+# stdlib-only Go receipt generator turns that stream into the JSON receipt.
+set -Eeuo pipefail
+
+ROOT=/work
+RECEIPTS="$ROOT/bench/receipts"
+SCRATCH="${WEFT_DEMO_SCRATCH:-$ROOT/.docker-cache/f3-demos}"
+BIN="$SCRATCH/bin"
+STORES="$SCRATCH/stores"
+FIXTURES="$SCRATCH/fixtures"
+MOUNT_ROOT=/mnt/weft-fuse
+TARGET="${CARGO_TARGET_DIR:-$ROOT/target}"
+TARGET_DEBUG="$TARGET/debug"
+RUSTFS="$BIN/weftfs"
+GOFS="$BIN/go-weftfs"
+JSONQ="$BIN/jsonq"
+RECEIPTGEN="$BIN/receiptgen"
+
+TS1=1767225600000000000          # 2026-01-01T00:00:00Z
+TS2=1767225660000000000          # 2026-01-01T00:01:00Z
+TS3=1767225720000000000          # 2026-01-01T00:02:00Z
+UTC="$(date -u +%Y%m%dT%H%M%SZ)"
+RUN_ID="$$-$UTC"
+BASE=""
+RECEIPT=""
+LOG=""
+RESULTS=""
+STEP_ID=""
+STEP_DIR=""
+STEP_FAILED=0
+IN_STEP=0
+FAILED_STEPS=0
+FINALIZED=0
+FINAL_ALL_PASS=false
+MOUNT_PATHS=()
+MOUNT_PIDS=()
+RUN_OUT=""
+RUN_ERR=""
+RUN_STATUS=0
+
+mkdir -p "$BIN" "$STORES" "$FIXTURES" "$RECEIPTS" "$SCRATCH/steps"
+
+log() { printf '%s\n' "$*" >&2; }
+b64s() { printf '%s' "$1" | base64 -w0; }
+b64f() { base64 -w0 < "$1"; }
+rel() { realpath --relative-to="$ROOT" "$1"; }
+sha256_file() { sha256sum "$1" | awk '{print $1}'; }
+jsonq() { "$JSONQ" "$@"; }
+
+note() {
+  printf 'N\t%s\n' "$(b64s "$1")" >> "$RESULTS"
+  log "NOTE: $1"
+}
+
+meta() { printf 'M\t%s\t%s\n' "$1" "$(b64s "$2")" >> "$RESULTS"; }
+repo() { printf 'R\t%s\t%s\n' "$1" "$(b64s "$2")" >> "$RESULTS"; }
+artifact_local() {
+  local kind="$1" path="$2"
+  printf 'T\t%s\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$kind")" \
+    "$(b64s "$(rel "$path")")" "$(b64s "$(sha256_file "$path")")" >> "$RESULTS"
+}
+record_cmd() {
+  printf 'C\t%s\t%s\n' "$STEP_ID" "$(b64s "$*")" >> "$RESULTS"
+  log "CMD[$STEP_ID]: $*"
+}
+record_assert() {
+  local name="$1" expected="$2" actual="$3" pass="$4"
+  printf 'A\t%s\t%s\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$name")" "$(b64s "$expected")" \
+    "$(b64s "$actual")" "$pass" >> "$RESULTS"
+  if [ "$pass" != true ]; then
+    STEP_FAILED=1
+    log "ASSERT FAIL [$STEP_ID] $name: expected=<$expected> actual=<$actual>"
+  fi
+}
+assert_eq() {
+  if [ "$2" = "$3" ]; then record_assert "$1" "$2" "$3" true; else record_assert "$1" "$2" "$3" false; fi
+}
+assert_ne() {
+  if [ "$2" != "$3" ]; then record_assert "$1" "different from $3" "$2" true; else record_assert "$1" "different from $3" "$2" false; fi
+}
+assert_contains() {
+  case "$2" in
+    *"$3"*) record_assert "$1" "contains <$3>" "<match>" true ;;
+    *) record_assert "$1" "contains <$3>" "$2" false ;;
+  esac
+}
+assert_not_exists() {
+  if [ -e "$2" ]; then record_assert "$1" absent "present: $2" false; else record_assert "$1" absent absent true; fi
+}
+assert_sha256() {
+  local name="$1" file="$2" expected="$3" actual
+  if [ ! -e "$file" ]; then record_assert "$name" "$expected" "missing: $file" false; return; fi
+  actual="$(sha256_file "$file")"
+  if [ "$expected" = "$actual" ]; then record_assert "$name sha256" "$expected" "$actual" true; else record_assert "$name sha256" "$expected" "$actual" false; fi
+}
+assert_file_eq() {
+  local name="$1" left="$2" right="$3" left_sha right_sha
+  left_sha="$(sha256_file "$left")"; right_sha="$(sha256_file "$right")"
+  if [ "$left_sha" = "$right_sha" ] && cmp -s "$left" "$right"; then
+    record_assert "$name" "identical" "identical" true
+  else
+    record_assert "$name" "identical" "different" false
+  fi
+}
+save_out() {
+  local label="$1" file="${2:-$RUN_OUT}"
+  printf 'O\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$label")" "$(b64f "$file")" >> "$RESULTS"
+}
+run_any() {
+  local label="$1"; shift
+  record_cmd "$*"
+  local out="$STEP_DIR/$label.out" err="$STEP_DIR/$label.err"
+  if "$@" >"$out" 2>"$err"; then RUN_STATUS=0; else RUN_STATUS=$?; fi
+  RUN_OUT="$out"; RUN_ERR="$err"
+  cat "$out" >> "$STEP_DIR/stdout.log"; cat "$err" >> "$STEP_DIR/stderr.log"
+  cat "$out" >> "$LOG"; cat "$err" >> "$LOG"
+  return 0
+}
+run_ok() { local label="$1"; shift; run_any "$label" "$@"; assert_eq "$label exit" 0 "$RUN_STATUS"; }
+run_expect_fail() {
+  local label="$1"; shift; run_any "$label" "$@"
+  if [ "$RUN_STATUS" -ne 0 ]; then record_assert "$label exit" nonzero nonzero true; else record_assert "$label exit" nonzero 0 false; fi
+}
+step_begin() {
+  STEP_ID="$1"; STEP_DIR="$SCRATCH/steps/$RUN_ID/$STEP_ID"
+  mkdir -p "$STEP_DIR"; STEP_FAILED=0; IN_STEP=1
+  printf 'S\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$2")" "$(b64s "${3:-}")" >> "$RESULTS"
+  log ""; log "===== STEP $STEP_ID: $2 ====="
+}
+step_end() {
+  local status="$1" notes="${2:-}"
+  if [ "$STEP_FAILED" -ne 0 ]; then status=fail; fi
+  if [ "$status" != pass ]; then FAILED_STEPS=$((FAILED_STEPS + 1)); fi
+  printf 'E\t%s\t%s\t%s\n' "$STEP_ID" "$(b64s "$status")" "$(b64s "$notes")" >> "$RESULTS"
+  log "----- STEP $STEP_ID: $status $notes"; IN_STEP=0
+}
+
+cleanup_mounts() {
+  local index
+  if [ "${#MOUNT_PATHS[@]}" -gt 0 ]; then
+    for index in "${!MOUNT_PATHS[@]}"; do
+      local mount="${MOUNT_PATHS[$index]}"
+      if mountpoint -q "$mount" 2>/dev/null; then
+        fusermount3 -u "$mount" 2>/dev/null || umount -l "$mount" 2>/dev/null || true
+      fi
+      rmdir "$mount" 2>/dev/null || true
+    done
+  fi
+  if [ "${#MOUNT_PIDS[@]}" -gt 0 ]; then
+    for index in "${!MOUNT_PIDS[@]}"; do kill "${MOUNT_PIDS[$index]}" 2>/dev/null || true; done
+    for index in "${!MOUNT_PIDS[@]}"; do wait "${MOUNT_PIDS[$index]}" 2>/dev/null || true; done
+  fi
+  MOUNT_PATHS=(); MOUNT_PIDS=()
+}
+wait_mount() {
+  local mount="$1" tries=0
+  while [ "$tries" -lt 300 ]; do
+    mountpoint -q "$mount" 2>/dev/null && return 0
+    sleep 0.05; tries=$((tries + 1))
+  done
+  return 1
+}
+# start_mount <rust|go> <store> <mount> [mount flags...]
+start_mount() {
+  local impl="$1" store="$2" mount="$3"; shift 3
+  mkdir -p "$mount"
+  MOUNT_PATHS+=("$mount")
+  local logfile="$SCRATCH/mount-$RUN_ID-$(basename "$mount").log"
+  case "$impl" in
+    rust)
+      "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount \
+        --mountpoint "$mount" --foreground "$@" >"$logfile" 2>&1 &
+      ;;
+    go)
+      "$GOFS" --store "$store" mount --mountpoint "$mount" "$@" >"$logfile" 2>&1 &
+      ;;
+    *) echo "unknown mount implementation $impl" >&2; return 1 ;;
+  esac
+  local pid=$!
+  MOUNT_PIDS+=("$pid")
+  if ! wait_mount "$mount"; then
+    log "mount failed at $mount; daemon log:"; cat "$logfile" >&2 || true
+    return 1
+  fi
+  record_cmd "$impl mount $store -> $mount $*"
+}
+stop_mount() {
+  local mount="$1"
+  if mountpoint -q "$mount" 2>/dev/null; then
+    fusermount3 -u "$mount" 2>/dev/null || umount -l "$mount" 2>/dev/null || true
+  fi
+  local tries=0
+  while mountpoint -q "$mount" 2>/dev/null && [ "$tries" -lt 100 ]; do sleep 0.05; tries=$((tries + 1)); done
+  mountpoint -q "$mount" 2>/dev/null && return 1
+  return 0
+}
+listing_digest() {
+  local mount="$1"
+  ( cd "$mount" && find . -mindepth 1 -not -path './.weft*' -printf '%y %p\n' | LC_ALL=C sort | sha256sum | awk '{print $1}' )
+}
+
+build_tools() {
+  log "===== BUILD ====="
+  ( cd "$ROOT" && cargo build --quiet --features fuse --bin weftfs )
+  ( cd "$ROOT/WeftFS-Go" && CGO_ENABLED=0 go build -o "$GOFS" ./cmd/weftfs )
+  ( cd /tmp && GO111MODULE=off go build -o "$JSONQ" "$ROOT/scripts/showcase/jsonq.go" )
+  ( cd /tmp && GO111MODULE=off go build -o "$RECEIPTGEN" "$ROOT/scripts/showcase/receiptgen.go" )
+  cp "$TARGET_DEBUG/weftfs" "$RUSTFS"
+  [ -x "$RUSTFS" ] && [ -x "$GOFS" ] && [ -x "$JSONQ" ] && [ -x "$RECEIPTGEN" ]
+}
+
+demo_finalize() {
+  if [ "$FINALIZED" = 1 ]; then return 0; fi
+  FINALIZED=1
+  set +e
+  cleanup_mounts
+  local finished duration
+  finished="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  duration=$(( ( $(date +%s) - DEMO_START_EPOCH ) * 1000 ))
+  meta run.finished_at "$finished"
+  meta run.duration_ms "$duration"
+  if [ -x "$RECEIPTGEN" ]; then
+    WEFT_RECEIPT_SCHEMA="$DEMO_SCHEMA" "$RECEIPTGEN" < "$RESULTS" > "$RECEIPT"
+    cp "$RESULTS" "$RECEIPTS/$BASE.results.tsv"
+    FINAL_ALL_PASS="$("$JSONQ" "$RECEIPT" summary.all_pass 2>/dev/null || echo false)"
+    log "summary: pass=$("$JSONQ" "$RECEIPT" summary.pass 2>/dev/null || echo 0) fail=$("$JSONQ" "$RECEIPT" summary.fail 2>/dev/null || echo 0) blocked=$("$JSONQ" "$RECEIPT" summary.blocked 2>/dev/null || echo 0) all_pass=$FINAL_ALL_PASS"
+  else
+    log "ERROR: receipt generator missing; no receipt written"
+  fi
+  log "receipt: $RECEIPT"
+  log "raw log: $LOG"
+  return 0
+}
+
+on_error() {
+  trap - ERR
+  set +e
+  local line="$1"
+  if [ "$IN_STEP" = 1 ] && [ -n "$STEP_ID" ]; then
+    record_assert "unexpected shell error at line $line" "no shell error" error false
+    step_end fail "unexpected shell error at line $line"
+  else
+    log "unexpected shell error at line $line (outside a step)"
+  fi
+  demo_finalize
+  trap - EXIT
+  exit 1
+}
+
+# demo_init <schema> <receipt-prefix> <title>
+demo_init() {
+  DEMO_SCHEMA="$1"
+  local prefix="$2" title="$3"
+  BASE="${WEFT_DEMO_RECEIPT_NAME:-$prefix-$UTC}"
+  RECEIPT="$RECEIPTS/$BASE.json"
+  LOG="$RECEIPTS/$BASE.log"
+  RESULTS="$SCRATCH/results-$RUN_ID.tsv"
+  DEMO_START_EPOCH="$(date +%s)"
+  : > "$RESULTS"
+  exec > >(tee -a "$LOG") 2>&1
+  trap 'on_error $LINENO' ERR
+  trap 'demo_finalize' EXIT
+  meta generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  meta run.started_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  meta demo.title "$title"
+  meta env.court fuse
+  meta env.image "${WEFT_COURT_IMAGE:-unknown}"
+  meta env.image_id "${WEFT_COURT_IMAGE_ID:-unknown}"
+  meta env.kernel "$(uname -srm)"
+  meta env.arch "$(uname -m)"
+  meta env.rustc "$(rustc --version 2>/dev/null || echo unknown)"
+  meta env.go "$(go version 2>/dev/null || echo unknown)"
+  meta env.fusermount3 "$(fusermount3 --version 2>&1 | head -1 || echo unknown)"
+  meta env.tar "$(tar --version 2>&1 | head -1 || echo unknown)"
+  meta env.zstd "$(zstd --version 2>&1 | head -1 || echo unknown)"
+  meta env.limit_memory "${WEFT_COURT_MEMORY:-unknown}"
+  meta env.limit_memory_swap "${WEFT_COURT_MEMORY:-unknown}"
+  meta env.limit_pids "${WEFT_COURT_PIDS:-unknown}"
+  meta env.limit_cpus "${WEFT_COURT_CPUS:-unknown}"
+  meta env.tmpfs_tmp "1g"
+  meta env.tmpfs_fuse "512m"
+  meta env.cap_drop "ALL"
+  meta env.cap_add "SYS_ADMIN"
+  meta env.device "/dev/fuse"
+  meta env.fixed_timestamps "$TS1,$TS2,$TS3"
+  meta env.scratch "$(rel "$SCRATCH")"
+  repo WeftFS "${WEFT_REPO_WEFTFS:-unknown}"
+  repo WeftFS-Go "${WEFT_REPO_WEFTFS_GO:-unknown}"
+  repo WeftCodec "${WEFT_REPO_WEFTCODEC:-unknown}"
+  repo WeftCodec-Go "${WEFT_REPO_WEFTCODEC_GO:-unknown}"
+  build_tools
+  log "receipt: $RECEIPT"
+}

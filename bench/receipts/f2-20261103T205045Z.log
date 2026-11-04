@@ -1,0 +1,57 @@
+F2 verification raw log (abridged; full output was displayed in the courts)
+
+Revisions (final)
+  WeftFS     35152b86cc2a65ad3b9c48f8c9ce61e7bbf2d29c
+  WeftFS-Go  46c4405e3301470c2bcf71853e53b8fff28b8dfd
+  WeftCodec  6571308223e1d7066a4a369fe5cf2c4efa36488a
+  WeftCodec-Go 83c2b6af0e9cb8726ac3c5f2bf73e486585715e1
+
+Full-suite court runs were at:
+  WeftFS     92754d113087a7f99bd70d7165a96a90c30f1ea0
+  WeftFS-Go  ac0b4094587ff44dc754ec86c5290ef0c73885d0
+After the final follow-up (context --causal records the computed transitive
+closure), the targeted Rust context/cli suite and the full Go -race suite were
+rerun and passed.
+
+Court limits: --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4
+Kernel: 7.3.1-1-cachyos
+Rust court image: sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d
+Go court image:   sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab
+FUSE court image: sha256:dd4598a79572b7de0ceeda9345c5d9290c65be95c821e35f2640e327e42192d2
+
+$ scripts/docker-court.sh fuse "cargo test --features fuse --all-targets"
+  tests/context.rs: 12 passed, 0 failed
+  tests/cli.rs: 5 passed, 0 failed
+  tests/fuse_posix.rs: 9 passed, 1 ignored (CAP_SETUID)
+  tests/fuse_concurrency.rs: 0 passed, 1 ignored (kernel/fuser EIO)
+  aggregate: 70 passed, 0 failed, 2 ignored
+
+$ scripts/docker-court.sh fuse "cargo build --release --features fuse --locked --bin weftfs"
+  Finished `release` profile [optimized] target(s)
+
+$ scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race ./..."
+  ok  github.com/infinityabundance/WeftFS-Go/fusefs
+  ok  github.com/infinityabundance/WeftFS-Go/store
+  (auth, model, resolver, cmd/weftfs, werr: no test files)
+
+  New Go tests that passed:
+    TestContextCreateResolveMaterializeCardinality
+    TestContextSnapshotPinningAndReplacement
+    TestContextCapabilityAndBudgetEnforcement
+    TestCapabilityHashParticipatesInIdentity
+    TestCausalBytesOnlyAndCausalExact
+    TestCausalTransitiveAndCycle
+    TestMaterializationMismatchLeavesNoOutput
+    TestGoldenCausalVectorsMatchBothLanguages
+    TestContextCausalCapabilityHandoffRustThenGo
+    TestContextCausalCapabilityHandoffGoThenRust
+
+$ scripts/docker-court.sh go "cd /work/WeftFS-Go && go vet ./... && CGO_ENABLED=0 go build ./..."
+  clean, no output
+
+$ scripts/docker-court.sh go "cd /work/WeftFS-Go && gofmt -l ."
+  no files listed
+
+Note: cargo fmt is unavailable in the Rust court image (rustfmt component is
+not installed), so formatting was not machine-checked. This is recorded as an
+environment limitation, not a pass.

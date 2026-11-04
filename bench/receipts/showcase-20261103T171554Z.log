@@ -1,0 +1,1790 @@
+NOTE: all builds and executions run inside weft/fuse-court:1 under the Docker court limits recorded in environment
+NOTE: fixtures are deterministic: fixed seed strings, fixed clock 1767225600000000000 ns, and xorshift64* byte generation
+NOTE: step 9 is a process-fault proxy (WEFT_CRASH_PHASE); it is not a physical power-loss test
+===== BUILD =====
+NOTE: build: (cd WeftCodec && cargo build --quiet --bin weftcodec)
+NOTE: build: cargo build --quiet --features fuse --bin weftfs
+NOTE: build: cargo build --quiet --example codec_cycle_probe
+NOTE: build: (cd WeftFS-Go && CGO_ENABLED=0 go build ./cmd/weftfs)
+
+===== STEP 1: Ingest two byte-identical objects with distinct logical identities and contextual relationships =====
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /ctx --seed ctx-dir
+ec661d518bdf2d47347454035a8f38e4c81c1d479514de5a30025ea22193492a
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /left --seed left-dir
+c1535ad115ff666926f2c5d47893564ddcb2285706c95489c965eac6ea0dadf4
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 mkdir /right --seed right-dir
+4cf1a389ee6de64fcd19464a131b6825ce2a66e3c3dc35c27e2f7cc0a334abe0
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /left/doc.txt --file /work/.docker-cache/showcase/fixtures/shared.bin --seed obj-left-doc
+67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /right/doc.txt --file /work/.docker-cache/showcase/fixtures/shared.bin --seed obj-right-doc
+7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /ctx/left --text left context --seed ctx-left
+48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 create /ctx/right --text right context --seed ctx-right
+b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /left/doc.txt
+{
+  "attrs": {},
+  "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+  "size": 18,
+  "uid": 0,
+  "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+}
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /right/doc.txt
+{
+  "attrs": {},
+  "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba",
+  "size": 18,
+  "uid": 0,
+  "version_id": "2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5"
+}
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /ctx/left
+{
+  "attrs": {},
+  "content_id": "36fcb0c2dc18bb0e455a60885a900b6d2d5e61417108370df8beb9e0ccc8f2fb",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+  "size": 12,
+  "uid": 0,
+  "version_id": "a886e29544cd9a9500e4e3ad0e90cbe19ffc789e42e84900241549f5b377a21c"
+}
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /ctx/right
+{
+  "attrs": {},
+  "content_id": "3afb3577409bfe84af7fcd7b8e40f33fc39e753199e75a105cde3953bc5526b0",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+  "size": 13,
+  "uid": 0,
+  "version_id": "3151669fded4c2701fa0bd71750cef2e18faccb0bcf241e8ee39137439e34252"
+}
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate in_context --object 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3
+fe0f78117ee6a9bcf24dd5274196cee30f8972270364106dd485b05e30a8b57c
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate in_context --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc
+fd6521c78f1cb7c7a10fe3a89ef739488b2eebad6e5eea11abcc76f728017121
+CMD[1]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba --predicate in_context --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc
+44b41eca18db849fcd7254fd17eea4a19320658c9c924afd749b88db3c1e2300
+CMD[1]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s1 --json stat /left/doc.txt
+{
+  "chunk_size": 65536,
+  "chunks": 1,
+  "content": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "content_hash": "5e5774360d05ce0dd851ad1a5f7acaa89524120def17bde0334e2cd0630925c8",
+  "gid": 0,
+  "kind": "file",
+  "mode": "0644",
+  "mtime_ns": 1767225600000000000,
+  "nlink": 1,
+  "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+  "size": 18,
+  "uid": 0,
+  "version": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+}
+----- STEP 1: pass left=67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 right=7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba content=abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913
+
+===== STEP 2: Directed context graph cycle is accepted; codec dependency cycle is rejected =====
+CMD[2]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3 --predicate depends_on --object b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc
+1e44236945addda192514825e3953d7ab98e1b9e09eb583c56991821179b3162
+CMD[2]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc --predicate depends_on --object 48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3
+117589ab7ef82a7ec09bb8c2df04a62745b75b53bcd6b96564d608f98fb2c885
+CMD[2]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(depends_on, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "depends_on",
+          "kind": "relation",
+          "value": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+        }
+      ],
+      "object_id": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "36fcb0c2dc18bb0e455a60885a900b6d2d5e61417108370df8beb9e0ccc8f2fb",
+      "kind": "file",
+      "object_id": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+      "path": "/ctx/left",
+      "size": 12,
+      "version_id": "a886e29544cd9a9500e4e3ad0e90cbe19ffc789e42e84900241549f5b377a21c"
+    }
+  ],
+  "selector_id": "4345bf2bbb1141d9da82576737f0f6194c5ea7730ec806f0c35a80daf29cf032",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[2]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(depends_on, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "depends_on",
+          "kind": "relation",
+          "value": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3"
+        }
+      ],
+      "object_id": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "3afb3577409bfe84af7fcd7b8e40f33fc39e753199e75a105cde3953bc5526b0",
+      "kind": "file",
+      "object_id": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+      "path": "/ctx/right",
+      "size": 13,
+      "version_id": "3151669fded4c2701fa0bd71750cef2e18faccb0bcf241e8ee39137439e34252"
+    }
+  ],
+  "selector_id": "3084542db8277e76a96ec454407a8d7af5b0e70d5c68dac183d4a93ab53dd79f",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[2]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.raw.wft --mode raw
+CMD[2]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/rev1.bin
+CMD[2]: /work/.docker-cache/showcase/bin/weftcodec archive create --output /work/.docker-cache/showcase/fixtures/acyclic.wfa /work/.docker-cache/showcase/fixtures/rev1.raw.wft /work/.docker-cache/showcase/fixtures/rev2.delta.wft
+CMD[2]: /work/.docker-cache/showcase/bin/weftcodec archive decode --input /work/.docker-cache/showcase/fixtures/acyclic.wfa --out-dir /work/.docker-cache/showcase/fixtures/acyclic-out
+540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392 418411
+89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7 418400
+CMD[2]: /work/.docker-cache/target-rust/debug/examples/codec_cycle_probe --out /work/.docker-cache/showcase/fixtures/cycle
+cycle_a_hash=0101010101010101010101010101010101010101010101010101010101010101 cycle_b_hash=0202020202020202020202020202020202020202020202020202020202020202
+CMD[2]: /work/.docker-cache/showcase/bin/weftcodec archive create --output /work/.docker-cache/showcase/fixtures/cycle.wfa /work/.docker-cache/showcase/fixtures/cycle/cycle-a.wft /work/.docker-cache/showcase/fixtures/cycle/cycle-b.wft
+DependencyCycle: archive dependency graph contains a cycle
+----- STEP 2: pass context cycle accepted; codec cycle rejected
+
+===== STEP 3: Query by two independent relationships; one object in multiple contexts with no byte duplication =====
+CMD[3]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "in_context",
+          "kind": "relation",
+          "value": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3"
+        }
+      ],
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+      "path": "/left/doc.txt",
+      "size": 18,
+      "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+    }
+  ],
+  "selector_id": "f161c00a208ff1f24a99abe1ce9d0de10463fb08569dfb3a9a8142ef37cf197b",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[3]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "in_context",
+          "kind": "relation",
+          "value": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+        }
+      ],
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868"
+    },
+    {
+      "entries": [
+        {
+          "field": "in_context",
+          "kind": "relation",
+          "value": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+        }
+      ],
+      "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba"
+    }
+  ],
+  "matched_count": 2,
+  "results": [
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+      "path": "/left/doc.txt",
+      "size": 18,
+      "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+    },
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba",
+      "path": "/right/doc.txt",
+      "size": 18,
+      "version_id": "2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5"
+    }
+  ],
+  "selector_id": "987e31be795161567e43d81e52e9a9f8bb620309239150b444f5a0cc5d4eb2c8",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[3]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3) and relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "in_context",
+          "kind": "relation",
+          "value": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3"
+        },
+        {
+          "field": "in_context",
+          "kind": "relation",
+          "value": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+        }
+      ],
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+      "path": "/left/doc.txt",
+      "size": 18,
+      "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+    }
+  ],
+  "selector_id": "51415fa4041a851c3f755073ffeaa61d8cc29c1a8285fa6852301e4547f1faae",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+----- STEP 3: pass object 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 appears in both contexts; one chunk
+
+===== STEP 4: Resolve an ambiguous selector: full authorized set plus explicit Ambiguous error for require-one =====
+CMD[4]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query select kind == "file"
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "kind",
+          "kind": "attr",
+          "value": "file"
+        }
+      ],
+      "object_id": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3"
+    },
+    {
+      "entries": [
+        {
+          "field": "kind",
+          "kind": "attr",
+          "value": "file"
+        }
+      ],
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868"
+    },
+    {
+      "entries": [
+        {
+          "field": "kind",
+          "kind": "attr",
+          "value": "file"
+        }
+      ],
+      "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba"
+    },
+    {
+      "entries": [
+        {
+          "field": "kind",
+          "kind": "attr",
+          "value": "file"
+        }
+      ],
+      "object_id": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc"
+    }
+  ],
+  "matched_count": 4,
+  "results": [
+    {
+      "content_id": "36fcb0c2dc18bb0e455a60885a900b6d2d5e61417108370df8beb9e0ccc8f2fb",
+      "kind": "file",
+      "object_id": "48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3",
+      "path": "/ctx/left",
+      "size": 12,
+      "version_id": "a886e29544cd9a9500e4e3ad0e90cbe19ffc789e42e84900241549f5b377a21c"
+    },
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+      "path": "/left/doc.txt",
+      "size": 18,
+      "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+    },
+    {
+      "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+      "kind": "file",
+      "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba",
+      "path": "/right/doc.txt",
+      "size": 18,
+      "version_id": "2fd8740914a6a39b7ea17d457899ccec97492bd94e139b7f868429369136a9e5"
+    },
+    {
+      "content_id": "3afb3577409bfe84af7fcd7b8e40f33fc39e753199e75a105cde3953bc5526b0",
+      "kind": "file",
+      "object_id": "b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc",
+      "path": "/ctx/right",
+      "size": 13,
+      "version_id": "3151669fded4c2701fa0bd71750cef2e18faccb0bcf241e8ee39137439e34252"
+    }
+  ],
+  "selector_id": "195e975f9203fd933f0765a1ac56729258a326b708c864a85b0e34a5f109aa70",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[4]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query --require-one select kind == "file"
+Ambiguous: selector matched 4 authorized objects; require_one needs exactly 1
+CMD[4]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 query --require-one select relation(in_context, obj:48209e8d52a9b9b21170082baa5637a6c6a9371408f1d7f649a5dda02fc1b8c3) and relation(in_context, obj:b12f28203702989a77d5e877f33112f2b61b9f794ad89d1c2b814c905641cdcc)
+{
+  "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "matched_count": 1,
+  "namespace": "default",
+  "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+  "selector_id": "51415fa4041a851c3f755073ffeaa61d8cc29c1a8285fa6852301e4547f1faae",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b",
+  "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+}
+----- STEP 4: pass ambiguous count=4; require-one rejected
+
+===== STEP 5: Pin an exact (snapshot, object, version); rename, retag, and unrelated writes cannot change the pinned read =====
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 snapshot create pinned-v1
+{
+  "generation": 14,
+  "name": "pinned-v1",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b"
+}
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 pin --snapshot pinned-v1 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868
+{
+  "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "namespace": "default",
+  "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+  "snapshot_id": "b83d45303406a2d39ee764fd274c3544b460914e786bc8adc5377ec1594c439b",
+  "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+}
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 cat /left/doc.txt
+shared payload v1
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 rename /left/doc.txt /left/renamed.txt
+renamed /left/doc.txt -> /left/renamed.txt
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 write /right/doc.txt --offset 0 --text unrelated change\n
+9701455ac02ea8b0b3b15bd6ef5b0462d5574452cdc5b24a214aa1db1a56a518
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --fixed-timestamp-ns 1767225600000000000 relation add --subject 67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868 --predicate tagged_as --value pinned-retag
+95c26c8255302f98544f471c6563cd4242e9b13b189ba2ed8bd9e2dd69ab87ef
+CMD[5]: cat /mnt/weft-fuse/showcase-5/left/doc.txt
+shared payload v1
+CMD[5]: cat /mnt/weft-fuse/showcase-5/left/renamed.txt
+cat: /mnt/weft-fuse/showcase-5/left/renamed.txt: No such file or directory
+CMD[5]: fusermount3 -u /mnt/weft-fuse/showcase-5
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /left/renamed.txt
+{
+  "attrs": {},
+  "content_id": "abf97b1005e5497bd18e20e7d6ee368031cb02ed8b3358a9313e0c23acb65913",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "67bda39245614aa4e77c32539da72d0a3fea6acc1df36e1a055a20e123abf868",
+  "size": 18,
+  "uid": 0,
+  "version_id": "799cbf866e57ebc39dc68c03421f8f975707bcda8c5a1d2ec5ece98a3899e888"
+}
+CMD[5]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s1 --json --fixed-timestamp-ns 1767225600000000000 stat /right/doc.txt
+{
+  "attrs": {},
+  "content_id": "b5d9c533cbec3eac5c1aa8f46f003f36e803576d4905e635824bdfaa5bdea259",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "7f3b9be4e408dc4c706d2d8b8708976fc80c0c42ff53468fed81dcc6e2bb58ba",
+  "size": 18,
+  "uid": 0,
+  "version_id": "9701455ac02ea8b0b3b15bd6ef5b0462d5574452cdc5b24a214aa1db1a56a518"
+}
+----- STEP 5: pass pinned read byte-identical after rename/retag/unrelated write
+
+===== STEP 6: Modify through the Rust FUSE mount, update metadata/relation atomically, open the new version via a fresh selector =====
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 create /mutable.txt --text version one\n --seed obj-mutable
+e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 stat /mutable.txt
+{
+  "attrs": {},
+  "content_id": "7b40e265d46f48cda2155dbb4773804c5f05e10dbff4f280465faa38bdeb9957",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472",
+  "size": 13,
+  "uid": 0,
+  "version_id": "e347135ccf3457834d5b7b6f2404fe6852e0fac76d8e35b387f37aab4b056c7b"
+}
+CMD[6]: printf 'version two through fuse\n' > /mnt/weft-fuse/showcase-6/mutable.txt
+CMD[6]: setfattr -n user.reviewed -v yes /mnt/weft-fuse/showcase-6/mutable.txt
+CMD[6]: getfattr --only-values -n user.reviewed /mnt/weft-fuse/showcase-6/mutable.txt
+yesgetfattr: Removing leading '/' from absolute path names
+CMD[6]: cat /mnt/weft-fuse/showcase-6/mutable.txt
+version two through fuse
+CMD[6]: fusermount3 -u /mnt/weft-fuse/showcase-6
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --fixed-timestamp-ns 1767225600000000000 relation add --subject /mutable.txt --predicate tagged_as --value reviewed
+cba51ef1ecacf00c5787b3d374a883cabc479e73b6c8c49c943ee95a68012add
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 query select tag("reviewed")
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "tagged_as",
+          "kind": "tag",
+          "value": "reviewed"
+        }
+      ],
+      "object_id": "e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "ed7249a70a332c6c24867d683daed53c4c129a67e29608a3f66080690a98a69a",
+      "kind": "file",
+      "object_id": "e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472",
+      "path": "/mutable.txt",
+      "size": 25,
+      "version_id": "c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037"
+    }
+  ],
+  "selector_id": "412fb9f838eb9f475dc8f3c78b6f439578ef1727568b0808d307c730a11cf4a8",
+  "snapshot_id": "d466ea946551bf8c4180a48466404ca85392c4e749b03333868ca45c5e4a37eb"
+}
+CMD[6]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s6 --json --fixed-timestamp-ns 1767225600000000000 stat /mutable.txt
+{
+  "attrs": {
+    "xattr.user.reviewed": "796573"
+  },
+  "content_id": "ed7249a70a332c6c24867d683daed53c4c129a67e29608a3f66080690a98a69a",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "e6de2a0a81d8a66cb207632b7f1d5c238985b2335a9005ebfbaf4ab4f122e472",
+  "size": 25,
+  "uid": 0,
+  "version_id": "c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037"
+}
+----- STEP 6: pass FUSE write+xattr committed; fresh selector sees version c587f9dd3d72d9160a7c8faa23e4996d630a851aefeb39ad3ffc1e33923a4037
+
+===== STEP 7: Encode a revision with a verified base and dictionary, decode exactly, and report whole-store accounting =====
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.raw.wft --mode raw
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.zstd.wft --mode zstd
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.raw.wft --mode raw
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --mode zstd
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/rev1.bin
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.dict.wft --mode dictionary --dict /work/.docker-cache/showcase/fixtures/rev1.bin
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev1.bin --output /work/.docker-cache/showcase/fixtures/rev1.reference.wft --mode reference --base /work/.docker-cache/showcase/fixtures/rev1.bin
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/rev2.bin --output /work/.docker-cache/showcase/fixtures/rev2.auto.wft --mode auto --base /work/.docker-cache/showcase/fixtures/rev1.bin --dict /work/.docker-cache/showcase/fixtures/rev1.bin
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.delta.wft --json
+{
+  "body_len": 124,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7",
+  "decoded_len": 418400,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 418411,
+      "dep_domain": 0,
+      "dep_flags": 1,
+      "hash": "540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 272,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "delta",
+  "mode_value": 3,
+  "table_len": 48
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.dict.wft --json
+{
+  "body_len": 173,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7",
+  "decoded_len": 418400,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 418411,
+      "dep_domain": 2,
+      "dep_flags": 1,
+      "hash": "540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [
+    "DICT_RAW"
+  ],
+  "flags": 4,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 321,
+  "level": 3,
+  "magic": "WFT1",
+  "mode": "dictionary",
+  "mode_value": 4,
+  "table_len": 48
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.raw.wft --json
+{
+  "body_len": 418400,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7",
+  "decoded_len": 418400,
+  "dep_count": 0,
+  "dependencies": [],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [],
+  "features": 0,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 418500,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "raw",
+  "mode_value": 0,
+  "table_len": 0
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --json
+{
+  "body_len": 13638,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7",
+  "decoded_len": 418400,
+  "dep_count": 0,
+  "dependencies": [],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [],
+  "features": 0,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 13738,
+  "level": 3,
+  "magic": "WFT1",
+  "mode": "zstd",
+  "mode_value": 1,
+  "table_len": 0
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev1.reference.wft --json
+{
+  "body_len": 0,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392",
+  "decoded_len": 418411,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 418411,
+      "dep_domain": 0,
+      "dep_flags": 1,
+      "hash": "540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 148,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "reference",
+  "mode_value": 2,
+  "table_len": 48
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/rev2.auto.wft --json
+{
+  "body_len": 124,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7",
+  "decoded_len": 418400,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 418411,
+      "dep_domain": 0,
+      "dep_flags": 1,
+      "hash": "540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 272,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "delta",
+  "mode_value": 3,
+  "table_len": 48
+}
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev2.delta.wft --deps /work/.docker-cache/showcase/fixtures/deps
+OK mode=delta decoded_len=418400 content_hash=89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7 chunks=0 dependencies=1
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev2.dict.wft --deps /work/.docker-cache/showcase/fixtures/deps
+OK mode=dictionary decoded_len=418400 content_hash=89d0cea1f8729610f38898c0ab68ce77942f8d1dade4b58fe21d3df6a7c0bcf7 chunks=0 dependencies=1
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec verify /work/.docker-cache/showcase/fixtures/rev1.reference.wft --deps /work/.docker-cache/showcase/fixtures/deps
+OK mode=reference decoded_len=418411 content_hash=540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392 chunks=0 dependencies=1
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.raw.wft --output /work/.docker-cache/showcase/steps/7/rev2.raw.dec
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.zstd.wft --output /work/.docker-cache/showcase/steps/7/rev2.zstd.dec
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/7/rev2.delta.dec --deps /work/.docker-cache/showcase/fixtures/deps
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.dict.wft --output /work/.docker-cache/showcase/steps/7/rev2.dict.dec --deps /work/.docker-cache/showcase/fixtures/deps
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev1.reference.wft --output /work/.docker-cache/showcase/steps/7/rev1.reference.dec --deps /work/.docker-cache/showcase/fixtures/deps
+CMD[7]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.auto.wft --output /work/.docker-cache/showcase/steps/7/rev2.auto.dec --deps /work/.docker-cache/showcase/fixtures/deps
+NOTE: step 7 accounting is incremental and whole-pair: base bytes are counted once, not hidden
+NOTE: step 7 delta_wins_incremental=true dictionary_wins_incremental=true
+----- STEP 7: pass delta_win=true dict_win=true auto=delta
+
+===== STEP 8: Create with Rust, open/verify/read with Go, modify with Go, then verify/read with Rust =====
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 mkdir /docs --seed docs-dir
+363ca30fe61f17cbd89c1cdbe97272587020189a21fce6c9efd5272152090ad8
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /alpha.txt --text alpha v1 from rust\n --seed rust-alpha
+3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /beta.txt --text beta v1 from rust\n --seed rust-beta
+212a591cfd5b05a2fce1865ce6fde2c83938b5c53e65abd9990cbd3ce12c87cc
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 snapshot create r1
+803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 info
+{
+  "entries": 3,
+  "format": "weftfs-store 1",
+  "generation": 5,
+  "objects": 4,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "571e932070458bf8f99ac98f04ee2a38a4feabff5e5fdee42a1554980451d385",
+  "snapshots": 1
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /alpha.txt
+{
+  "attrs": {},
+  "content_id": "c1e609d428922be7a997df14809b28d9c4c55d8de1e5bfad123b9cb7f04720b4",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+  "size": 20,
+  "uid": 0,
+  "version_id": "9b11834063cafd06811d5dbb8b899381357d21d122a81c8f06517fefcda7503c"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /beta.txt
+{
+  "attrs": {},
+  "content_id": "5e1ca04ad0f56b358ff2b2318a384e5d6c10e155fe60fbd2cc93569afc816fb5",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "212a591cfd5b05a2fce1865ce6fde2c83938b5c53e65abd9990cbd3ce12c87cc",
+  "size": 19,
+  "uid": 0,
+  "version_id": "3f20e185c1df335050224ba33432bc2b44bee98f93def0a62a375bbafb3059a4"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json info
+{
+  "entries": 3,
+  "format": "weftfs-store 1",
+  "generation": 5,
+  "objects": 4,
+  "recovery_notes": null,
+  "rejected_generations": null,
+  "relations": 0,
+  "snapshot_root": "571e932070458bf8f99ac98f04ee2a38a4feabff5e5fdee42a1554980451d385",
+  "snapshots": {
+    "r1": "803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435"
+  }
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 5,
+  "Commit": [
+    87,
+    30,
+    147,
+    32,
+    112,
+    69,
+    139,
+    248,
+    249,
+    154,
+    201,
+    143,
+    4,
+    238,
+    42,
+    56,
+    164,
+    254,
+    171,
+    255,
+    94,
+    95,
+    222,
+    228,
+    42,
+    21,
+    84,
+    152,
+    4,
+    81,
+    211,
+    133
+  ],
+  "CheckedCommits": 5,
+  "CheckedObjects": 2,
+  "CheckedManifests": 2,
+  "CheckedChunks": 2,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /alpha.txt
+alpha v1 from rust\nCMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /alpha.txt
+{
+  "chunk_size": 65536,
+  "chunks": 1,
+  "content": "c1e609d428922be7a997df14809b28d9c4c55d8de1e5bfad123b9cb7f04720b4",
+  "content_hash": "be4342dbcc7e7e6b71e3be62402cb81a3c40edd958145195cc4e7853395ee196",
+  "gid": 0,
+  "kind": "file",
+  "mode": "0644",
+  "mtime_ns": 1767225600000000000,
+  "nlink": 1,
+  "object_id": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+  "size": 20,
+  "uid": 0,
+  "version": "9b11834063cafd06811d5dbb8b899381357d21d122a81c8f06517fefcda7503c"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /beta.txt
+{
+  "chunk_size": 65536,
+  "chunks": 1,
+  "content": "5e1ca04ad0f56b358ff2b2318a384e5d6c10e155fe60fbd2cc93569afc816fb5",
+  "content_hash": "5fd9d246db444e4206d192688edafa9115f0b9d5df85cedffa102d9413964ecd",
+  "gid": 0,
+  "kind": "file",
+  "mode": "0644",
+  "mtime_ns": 1767225600000000000,
+  "nlink": 1,
+  "object_id": "212a591cfd5b05a2fce1865ce6fde2c83938b5c53e65abd9990cbd3ce12c87cc",
+  "size": 19,
+  "uid": 0,
+  "version": "3f20e185c1df335050224ba33432bc2b44bee98f93def0a62a375bbafb3059a4"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 write /alpha.txt --offset 0 --text alpha v2 from go
+db32991098507fb8fa3a876d3fef702fd0be76cdd6fc43b58846ce5ed3dde184
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 create /gamma.txt --text gamma from go\n --seed go-gamma
+1ee3929faa3dfbe8dacb07653ceb5790013537291612f25bed901d8c133202c2
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 snapshot create r2
+5901d769f2b0154532bfcd3819a16a7b9654e5ddc54639bf9df98fb4b2f63b31
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /alpha.txt
+alpha v2 from gost\nCMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 cat /gamma.txt
+gamma from go\nCMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /alpha.txt
+{
+  "chunk_size": 65536,
+  "chunks": 1,
+  "content": "9ab4c4e97f958d5da490765adf8b848dbc872da056622e742b616eaf3c06eacf",
+  "content_hash": "580aa8baf6bea7e623b00e1fb437bb0ac0c7426eb28796d1c3ec544e4d8b1c9d",
+  "gid": 0,
+  "kind": "file",
+  "mode": "0644",
+  "mtime_ns": 1767225600000000000,
+  "nlink": 1,
+  "object_id": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+  "size": 20,
+  "uid": 0,
+  "version": "db32991098507fb8fa3a876d3fef702fd0be76cdd6fc43b58846ce5ed3dde184"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json snapshot list
+{
+  "r1": "803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435",
+  "r2": "5901d769f2b0154532bfcd3819a16a7b9654e5ddc54639bf9df98fb4b2f63b31"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s8 --json stat /gamma.txt
+{
+  "chunk_size": 65536,
+  "chunks": 1,
+  "content": "065b918a5c8ea168f19d06d87eb9d254a8e79b96253d5c5ef63f937abd323adb",
+  "content_hash": "5f4fb6dfb01db0e7426511308f1747ad657df58ebb7070e5ad15816d5761051e",
+  "gid": 0,
+  "kind": "file",
+  "mode": "0644",
+  "mtime_ns": 1767225600000000000,
+  "nlink": 1,
+  "object_id": "1ee3929faa3dfbe8dacb07653ceb5790013537291612f25bed901d8c133202c2",
+  "size": 15,
+  "uid": 0,
+  "version": "e20cdb674f5c4f2341348520b049e7bbcfe4ab9301ea1ddb20f6a7d08e2e4227"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 info
+{
+  "entries": 4,
+  "format": "weftfs-store 1",
+  "generation": 8,
+  "objects": 5,
+  "recovery_notes": [],
+  "rejected_generations": [],
+  "relations": 0,
+  "snapshot_root": "219da94f9afdd3fb1575997590f45146e1f7db8ae62beec266fda6e1da7c044b",
+  "snapshots": 2
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 verify --full
+{
+  "checked_chunks": 3,
+  "checked_commits": 8,
+  "checked_manifests": 3,
+  "checked_objects": 3,
+  "commit": "219da94f9afdd3fb1575997590f45146e1f7db8ae62beec266fda6e1da7c044b",
+  "full": true,
+  "generation": 8,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 cat /alpha.txt
+alpha v2 from gost\nCMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --fixed-timestamp-ns 1767225600000000000 cat /gamma.txt
+gamma from go\nCMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /alpha.txt
+{
+  "attrs": {},
+  "content_id": "9ab4c4e97f958d5da490765adf8b848dbc872da056622e742b616eaf3c06eacf",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "3b7301c681b6428f064eec16b88110dbdf3e17855b8c8c0b484e4ea6390b2fd5",
+  "size": 20,
+  "uid": 0,
+  "version_id": "db32991098507fb8fa3a876d3fef702fd0be76cdd6fc43b58846ce5ed3dde184"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 stat /gamma.txt
+{
+  "attrs": {},
+  "content_id": "065b918a5c8ea168f19d06d87eb9d254a8e79b96253d5c5ef63f937abd323adb",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "1ee3929faa3dfbe8dacb07653ceb5790013537291612f25bed901d8c133202c2",
+  "size": 15,
+  "uid": 0,
+  "version_id": "e20cdb674f5c4f2341348520b049e7bbcfe4ab9301ea1ddb20f6a7d08e2e4227"
+}
+CMD[8]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s8 --json --fixed-timestamp-ns 1767225600000000000 snapshot list
+{
+  "snapshots": {
+    "r1": "803c9e5a4ae8f33161cb3da2393ec3a288b449ea21b8892396bccb6a07d68435",
+    "r2": "5901d769f2b0154532bfcd3819a16a7b9654e5ddc54639bf9df98fb4b2f63b31"
+  }
+}
+----- STEP 8: pass Rust→Go→Rust byte equality and snapshot agreement
+
+===== STEP 9: Crash each daemon at configured persistence boundaries; independent verify --full; old-or-new whole state only =====
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_objects
+52401960760adc9f2ff16503e4f4da9c9083b21df84935de4459434f243ce1ce
+CMD[9]: env WEFT_CRASH_PHASE=after_objects /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  3813 Aborted                 (core dumped) "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects cat /f
+oldCMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 2,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "213f19429c41d08b1fa6e1751afd64f71d9ac6a3b50b6e91f933e7247eeddde0",
+  "full": true,
+  "generation": 2,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_objects --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 2,
+  "Commit": [
+    33,
+    63,
+    25,
+    66,
+    156,
+    65,
+    208,
+    139,
+    31,
+    166,
+    225,
+    117,
+    26,
+    253,
+    100,
+    247,
+    29,
+    154,
+    198,
+    163,
+    181,
+    11,
+    110,
+    145,
+    249,
+    51,
+    231,
+    36,
+    126,
+    237,
+    221,
+    224
+  ],
+  "CheckedCommits": 2,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_commit_file
+88e3e063003f941008de341a435fe32d47ac6bf28fd4c8b4d14c7e89f7238392
+CMD[9]: env WEFT_CRASH_PHASE=after_commit_file /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  3974 Aborted                 (core dumped) "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file cat /f
+oldCMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 3,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "244eaf4b57b55414c635f5f7f3f2403b44dc9f6bfbde746486e2e37521309c6f",
+  "full": true,
+  "generation": 2,
+  "ok": false,
+  "problems": [
+    {
+      "class": "Corrupt",
+      "detail": "commit file for generation 3 exists above the highest published superblock generation 2"
+    }
+  ],
+  "rejected_generations": []
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_commit_file --json verify --full
+{
+  "OK": false,
+  "Full": true,
+  "Generation": 2,
+  "Commit": [
+    36,
+    78,
+    175,
+    75,
+    87,
+    181,
+    84,
+    20,
+    198,
+    53,
+    245,
+    247,
+    243,
+    242,
+    64,
+    59,
+    68,
+    220,
+    159,
+    107,
+    251,
+    222,
+    116,
+    100,
+    134,
+    226,
+    227,
+    117,
+    33,
+    48,
+    156,
+    111
+  ],
+  "CheckedCommits": 3,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": [
+    {
+      "Class": "Corrupt",
+      "Detail": "commit file for generation 3 exists above the highest published superblock generation 2"
+    }
+  ]
+}
+Corrupt: verification found 1 problem(s)
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-rust-after_superblock_write
+0f188a0d9fb93811732be02df50d9d0a0796f4a60479f149f1be0246ca20293b
+CMD[9]: env WEFT_CRASH_PHASE=after_superblock_write /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  4150 Aborted                 (core dumped) "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write cat /f
+new content 0123456789CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 3,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "9a6a5bb85540b0713afa4b9d0a11c8188b9df2541b23377aec6bae1c22bdb05d",
+  "full": true,
+  "generation": 3,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-rust-after_superblock_write --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 3,
+  "Commit": [
+    154,
+    106,
+    91,
+    184,
+    85,
+    64,
+    176,
+    113,
+    58,
+    250,
+    75,
+    157,
+    10,
+    17,
+    200,
+    24,
+    139,
+    157,
+    242,
+    84,
+    27,
+    35,
+    55,
+    122,
+    236,
+    107,
+    174,
+    28,
+    34,
+    189,
+    176,
+    93
+  ],
+  "CheckedCommits": 3,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_objects
+ca6bc2c129dcad153e4c71f433dda3463c9005a0ea7a7ea2a22d7c633af7c8ad
+CMD[9]: env WEFT_CRASH_PHASE=after_objects /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  4329 Killed                  "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects cat /f
+oldCMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 2,
+  "Commit": [
+    37,
+    103,
+    60,
+    45,
+    3,
+    5,
+    17,
+    103,
+    7,
+    209,
+    34,
+    125,
+    180,
+    39,
+    17,
+    154,
+    69,
+    222,
+    96,
+    133,
+    216,
+    192,
+    211,
+    106,
+    91,
+    246,
+    116,
+    62,
+    131,
+    73,
+    206,
+    253
+  ],
+  "CheckedCommits": 2,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_objects --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 2,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "25673c2d0305116707d1227db427119a45de6085d8c0d36a5bf6743e8349cefd",
+  "full": true,
+  "generation": 2,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_commit_file
+09691d34f46a5b60cc63a58fd35f1a855f4e1e5717772aa4a9427e6f99d15d7c
+CMD[9]: env WEFT_CRASH_PHASE=after_commit_file /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  4505 Killed                  "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file cat /f
+oldCMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --json verify --full
+{
+  "OK": false,
+  "Full": true,
+  "Generation": 2,
+  "Commit": [
+    195,
+    20,
+    244,
+    78,
+    117,
+    224,
+    13,
+    59,
+    133,
+    25,
+    111,
+    29,
+    158,
+    120,
+    209,
+    58,
+    230,
+    7,
+    126,
+    185,
+    168,
+    96,
+    202,
+    105,
+    0,
+    171,
+    91,
+    254,
+    103,
+    28,
+    57,
+    56
+  ],
+  "CheckedCommits": 3,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": [
+    {
+      "Class": "Corrupt",
+      "Detail": "commit file for generation 3 exists above the highest published superblock generation 2"
+    }
+  ]
+}
+Corrupt: verification found 1 problem(s)
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_commit_file --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 3,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "c314f44e75e00d3b85196f1d9e78d13ae6077eb9a860ca6900ab5bfe671c3938",
+  "full": true,
+  "generation": 2,
+  "ok": false,
+  "problems": [
+    {
+      "class": "Corrupt",
+      "detail": "commit file for generation 3 exists above the highest published superblock generation 2"
+    }
+  ],
+  "rejected_generations": []
+}
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 create /f --text old --seed obj-go-after_superblock_write
+5d0a7d7de4b613f658d8abf769bd5547402db6e8043b0d7f5abeed90d0f23b7d
+CMD[9]: env WEFT_CRASH_PHASE=after_superblock_write /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --fixed-timestamp-ns 1767225600000000000 write /f --offset 0 --text new content 0123456789
+scripts/showcase.sh: line 176:  4697 Killed                  "$@" > "$out" 2> "$err"
+CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write cat /f
+new content 0123456789CMD[9]: /work/.docker-cache/showcase/bin/go-weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --json verify --full
+{
+  "OK": true,
+  "Full": true,
+  "Generation": 3,
+  "Commit": [
+    217,
+    236,
+    230,
+    134,
+    166,
+    79,
+    48,
+    106,
+    241,
+    16,
+    25,
+    89,
+    58,
+    219,
+    28,
+    158,
+    73,
+    57,
+    34,
+    56,
+    107,
+    230,
+    83,
+    157,
+    149,
+    71,
+    88,
+    241,
+    41,
+    171,
+    54,
+    51
+  ],
+  "CheckedCommits": 3,
+  "CheckedObjects": 1,
+  "CheckedManifests": 1,
+  "CheckedChunks": 1,
+  "RejectedGenerations": [],
+  "Problems": null
+}
+CMD[9]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s9-go-after_superblock_write --json verify --full
+{
+  "checked_chunks": 1,
+  "checked_commits": 3,
+  "checked_manifests": 1,
+  "checked_objects": 1,
+  "commit": "d9ece686a64f306af11019593adb1c9e493922386be6539d954758f129ab3633",
+  "full": true,
+  "generation": 3,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+NOTE: step 9 is a process-fault proxy: WEFT_CRASH_PHASE kills the CLI at a publication boundary; it is not a power-loss claim
+----- STEP 9: pass process-fault proxy (WEFT_CRASH_PHASE), not physical power loss; old-or-new whole bytes; no partial file
+
+===== STEP 10: Unauthorized relation traversal, dependency fetch, and selector enumeration disclose nothing =====
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /public.txt --text public data --seed pub
+e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /private.txt --text TOPSECRET private payload --mode 0600 --seed priv
+8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /acl.txt --text acl protected payload --mode 0644 --attr-u64-list weft.acl.read=0 --seed acl
+c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 create /secret-ctx --text secret context --mode 0600 --seed secretctx
+b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /public.txt
+{
+  "attrs": {},
+  "content_id": "8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6",
+  "size": 11,
+  "uid": 0,
+  "version_id": "9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /private.txt
+{
+  "attrs": {},
+  "content_id": "1eac10dcfbf798052b937e9b0a3ebce0f112481442cf9a450d3bd9fc4c44c95b",
+  "gid": 0,
+  "kind": "file",
+  "mode": 384,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b",
+  "size": 25,
+  "uid": 0,
+  "version_id": "3906b4922f2e619bb90c23572b5d09241fb12264ad1434b54ddb2b6e0096c6c8"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /acl.txt
+{
+  "attrs": {
+    "weft.acl.read": [
+      0
+    ]
+  },
+  "content_id": "fc8449f4ce6ad709bc4df5f1c9604fe32c710b6aafb9220566fcce850dfd192f",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c",
+  "size": 21,
+  "uid": 0,
+  "version_id": "1656db6bb10b7d4a742300d9b674e2c345a978bbcba2106c387b74e3527475eb"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 stat /secret-ctx
+{
+  "attrs": {},
+  "content_id": "e270bc2145df0675ca0b272fae40f24c361476aa1bd998942d55c979db81c141",
+  "gid": 0,
+  "kind": "file",
+  "mode": 384,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb",
+  "size": 14,
+  "uid": 0,
+  "version_id": "1b66757e632bc2771412bd103cf307efaf2869d92b69b4251e2c5447e78a58cf"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 relation add --subject 8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b --predicate hidden_link --object b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb
+50ef8d98cadb30eb1ece70566bb7de807149da320be0ef232d847ecc80215435
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --fixed-timestamp-ns 1767225600000000000 relation add --subject e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6 --predicate points_to --object 8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b
+716830e504c142d8e93fec1602f0f6476098af458c4414bff8375df201b37891
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select true
+{
+  "evidence": [
+    {
+      "entries": [],
+      "object_id": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "entries": [],
+      "object_id": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b"
+    },
+    {
+      "entries": [],
+      "object_id": "b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb"
+    },
+    {
+      "entries": [],
+      "object_id": "c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c"
+    },
+    {
+      "entries": [],
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6"
+    }
+  ],
+  "matched_count": 5,
+  "results": [
+    {
+      "content_id": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "kind": "dir",
+      "object_id": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "/",
+      "size": 0,
+      "version_id": "4e8347014366d8e7f2661972a5f541012c448fb5bab544f80f4d8f84f25ceedc"
+    },
+    {
+      "content_id": "1eac10dcfbf798052b937e9b0a3ebce0f112481442cf9a450d3bd9fc4c44c95b",
+      "kind": "file",
+      "object_id": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b",
+      "path": "/private.txt",
+      "size": 25,
+      "version_id": "3906b4922f2e619bb90c23572b5d09241fb12264ad1434b54ddb2b6e0096c6c8"
+    },
+    {
+      "content_id": "e270bc2145df0675ca0b272fae40f24c361476aa1bd998942d55c979db81c141",
+      "kind": "file",
+      "object_id": "b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb",
+      "path": "/secret-ctx",
+      "size": 14,
+      "version_id": "1b66757e632bc2771412bd103cf307efaf2869d92b69b4251e2c5447e78a58cf"
+    },
+    {
+      "content_id": "fc8449f4ce6ad709bc4df5f1c9604fe32c710b6aafb9220566fcce850dfd192f",
+      "kind": "file",
+      "object_id": "c6f9368aa26fb6f51b369c1e24d6e3ec1a98ffd661aeafc4d1da6ee0ace2cb3c",
+      "path": "/acl.txt",
+      "size": 21,
+      "version_id": "1656db6bb10b7d4a742300d9b674e2c345a978bbcba2106c387b74e3527475eb"
+    },
+    {
+      "content_id": "8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921",
+      "kind": "file",
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6",
+      "path": "/public.txt",
+      "size": 11,
+      "version_id": "9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773"
+    }
+  ],
+  "selector_id": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select true
+{
+  "evidence": [
+    {
+      "entries": [],
+      "object_id": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "entries": [],
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6"
+    }
+  ],
+  "matched_count": 2,
+  "results": [
+    {
+      "content_id": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "kind": "dir",
+      "object_id": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "/",
+      "size": 0,
+      "version_id": "4e8347014366d8e7f2661972a5f541012c448fb5bab544f80f4d8f84f25ceedc"
+    },
+    {
+      "content_id": "8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921",
+      "kind": "file",
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6",
+      "path": "/public.txt",
+      "size": 11,
+      "version_id": "9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773"
+    }
+  ],
+  "selector_id": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select relation(hidden_link, obj:b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "hidden_link",
+          "kind": "relation",
+          "value": "b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb"
+        }
+      ],
+      "object_id": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "1eac10dcfbf798052b937e9b0a3ebce0f112481442cf9a450d3bd9fc4c44c95b",
+      "kind": "file",
+      "object_id": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b",
+      "path": "/private.txt",
+      "size": 25,
+      "version_id": "3906b4922f2e619bb90c23572b5d09241fb12264ad1434b54ddb2b6e0096c6c8"
+    }
+  ],
+  "selector_id": "ffd7f0948a4fa012de7d893d2efd1c33aa44b01b0c111f896141d809e96a2ec6",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select relation(hidden_link, obj:b39b7431880a920b0bc7cc798f07098921be981377c1efabcacebfb080e080fb)
+{
+  "evidence": [],
+  "matched_count": 0,
+  "results": [],
+  "selector_id": "ffd7f0948a4fa012de7d893d2efd1c33aa44b01b0c111f896141d809e96a2ec6",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 0 --gid 0 select relation(points_to, obj:8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b)
+{
+  "evidence": [
+    {
+      "entries": [
+        {
+          "field": "points_to",
+          "kind": "relation",
+          "value": "8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b"
+        }
+      ],
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6"
+    }
+  ],
+  "matched_count": 1,
+  "results": [
+    {
+      "content_id": "8eecf6de1c316a6a1f86427af51a1a1560e2a9d26b54eadc45e75c00048aa921",
+      "kind": "file",
+      "object_id": "e59509409963d7d842c14e38a84d6521bc5cc5f45290642e00843c329e5940d6",
+      "path": "/public.txt",
+      "size": 11,
+      "version_id": "9cdd5bd59dcd848ec57f367218e0c1cc6858610607a4012d328843303ab56773"
+    }
+  ],
+  "selector_id": "b2cdf958c93bb237ac257d0941ab5f30213cefb3f9713395012a2c9e968dfd47",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftfs --store /work/.docker-cache/showcase/stores/s10 --json --fixed-timestamp-ns 1767225600000000000 query --uid 1000 --gid 1000 select relation(points_to, obj:8dbe263ead4fbd1b39b8046f871051cd7898c25749c3e89afa5183ebce8cd02b)
+{
+  "evidence": [],
+  "matched_count": 0,
+  "results": [],
+  "selector_id": "b2cdf958c93bb237ac257d0941ab5f30213cefb3f9713395012a2c9e968dfd47",
+  "snapshot_id": "884f51d855e0f9fc2a8ffcc280aa3e1e5e07b63b025d12acce79f12da08ee029"
+}
+CMD[10]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/10/no-deps.dec
+DependencyMissing: dependency 540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392 not in map
+CMD[10]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.delta.wft --output /work/.docker-cache/showcase/steps/10/wrong-deps.dec --deps /work/.docker-cache/showcase/fixtures/wrong-deps
+DependencyMismatch: dependency file /work/.docker-cache/showcase/fixtures/wrong-deps/540ff769811dbf2e3c48c82aca1f61ee906f45be69adbf7815d1335a246c0392 has length 418400 but declared 418411
+NOTE: the WeftCodec CLI has no remote fetch policy; missing or unverifiable dependencies fail closed (DependencyMissing/DependencyMismatch). DependencyDenied is an API-level class and is not claimed by this CLI step
+----- STEP 10: pass authorized-only counts; relation and dependency denials fail closed; codec CLI has no remote fetch policy
+
+===== STEP 11: Negative workload: unrelated high-entropy data gives no context gain; auto selects RAW or ZSTD =====
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-base.bin --output /work/.docker-cache/showcase/fixtures/entropy-base.raw.wft --mode raw
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.raw.wft --mode raw
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.zstd.wft --mode zstd
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.delta.wft --mode delta --base /work/.docker-cache/showcase/fixtures/entropy-base.bin
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.dict.wft --mode dictionary --dict /work/.docker-cache/showcase/fixtures/entropy-base.bin
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec encode --input /work/.docker-cache/showcase/fixtures/entropy-target.bin --output /work/.docker-cache/showcase/fixtures/entropy-target.auto.wft --mode auto --base /work/.docker-cache/showcase/fixtures/entropy-base.bin --dict /work/.docker-cache/showcase/fixtures/entropy-base.bin
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.auto.wft --json
+{
+  "body_len": 65536,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "48e4b61f3366d84368de42efa4fb8f172165f76426119011f7d1688f222ffd23",
+  "decoded_len": 65536,
+  "dep_count": 0,
+  "dependencies": [],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [],
+  "features": 0,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 65636,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "raw",
+  "mode_value": 0,
+  "table_len": 0
+}
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.delta.wft --json
+{
+  "body_len": 65540,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "48e4b61f3366d84368de42efa4fb8f172165f76426119011f7d1688f222ffd23",
+  "decoded_len": 65536,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 65536,
+      "dep_domain": 0,
+      "dep_flags": 1,
+      "hash": "3a2f371774b98d27ba4a51a5596e9199b3159f8b53f773930e5320ead69c1b28"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 65688,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "delta",
+  "mode_value": 3,
+  "table_len": 48
+}
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.dict.wft --json
+{
+  "body_len": 65546,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "48e4b61f3366d84368de42efa4fb8f172165f76426119011f7d1688f222ffd23",
+  "decoded_len": 65536,
+  "dep_count": 1,
+  "dependencies": [
+    {
+      "codec_hint": 0,
+      "decoded_len": 65536,
+      "dep_domain": 2,
+      "dep_flags": 1,
+      "hash": "3a2f371774b98d27ba4a51a5596e9199b3159f8b53f773930e5320ead69c1b28"
+    }
+  ],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [
+    "DEPENDENCIES"
+  ],
+  "features": 1,
+  "flag_names": [
+    "DICT_RAW"
+  ],
+  "flags": 4,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 65694,
+  "level": 3,
+  "magic": "WFT1",
+  "mode": "dictionary",
+  "mode_value": 4,
+  "table_len": 48
+}
+CMD[11]: /work/.docker-cache/showcase/bin/weftcodec inspect /work/.docker-cache/showcase/fixtures/entropy-target.raw.wft --json
+{
+  "body_len": 65536,
+  "chunk_count": 0,
+  "chunks": [],
+  "content_hash": "48e4b61f3366d84368de42efa4fb8f172165f76426119011f7d1688f222ffd23",
+  "decoded_len": 65536,
+  "dep_count": 0,
+  "dependencies": [],
+  "domain": 0,
+  "domain_name": "payload",
+  "feature_names": [],
+  "features": 0,
+  "flag_names": [],
+  "flags": 0,
+  "format_major": 1,
+  "format_minor": 0,
+  "frame_len": 65636,
+  "level": 0,
+  "magic": "WFT1",
+  "mode": "raw",
+  "mode_value": 0,
+  "table_len": 0
+}
+NOTE: step 11 negative result: context conditioning gives no gain on unrelated high-entropy data; auto selected raw
+----- STEP 11: pass negative result: auto=raw; no context gain; context-free size=65636
+
+===== STEP 12: Emit the receipt bundle proving every assertion, including negative results and exact commands =====
+CMD[12]: /work/.docker-cache/showcase/bin/weftcodec decode --input /work/.docker-cache/showcase/fixtures/rev2.raw.wft --output /work/.docker-cache/showcase/steps/12/final-check.dec
+----- STEP 12: pass receipt and raw log paths recorded
+summary: pass=12 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/showcase-20261103T171554Z.json
+raw log: /work/bench/receipts/showcase-20261103T171554Z.log

@@ -1,0 +1,722 @@
+{
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision": "a60d9f55bc38e209c6e0cbef2e04ac7b9eb7d1fe"
+  },
+  "iterations": 7,
+  "kind": "codec-microbench",
+  "note": "Frame bytes include WFT1 framing. ZSTD results use the codec's own zstd mode as the context-free control, not an external zstd binary. No throughput claim is made beyond these raw samples.",
+  "results": [
+    {
+      "corpus": "empty",
+      "decode_ns": [
+        201,
+        140,
+        140,
+        140,
+        140,
+        150,
+        151
+      ],
+      "encode_ns": [
+        922,
+        200,
+        181,
+        170,
+        201,
+        180,
+        180
+      ],
+      "frame_bytes": 100,
+      "input_bytes": 0,
+      "input_hash": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "empty",
+      "decode_ns": [
+        301,
+        241,
+        240,
+        231,
+        230,
+        240,
+        230
+      ],
+      "encode_ns": [
+        1613,
+        531,
+        451,
+        421,
+        411,
+        401,
+        400
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "input_hash": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "empty",
+      "decode_ns": [
+        320,
+        241,
+        240,
+        231,
+        230,
+        241,
+        230
+      ],
+      "encode_ns": [
+        2965,
+        591,
+        451,
+        431,
+        421,
+        401,
+        411
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "input_hash": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "empty",
+      "decode_ns": [
+        300,
+        251,
+        240,
+        231,
+        240,
+        231,
+        230
+      ],
+      "encode_ns": [
+        3446,
+        521,
+        451,
+        461,
+        451,
+        431,
+        421
+      ],
+      "frame_bytes": 109,
+      "input_bytes": 0,
+      "input_hash": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "one_byte",
+      "decode_ns": [
+        171,
+        190,
+        161,
+        150,
+        150,
+        151,
+        150
+      ],
+      "encode_ns": [
+        421,
+        180,
+        180,
+        190,
+        191,
+        190,
+        180
+      ],
+      "frame_bytes": 101,
+      "input_bytes": 1,
+      "input_hash": "ccf16c98eb29a27917e7fb2cc561c90ed0f8eb3b5d025581cca9a8f44e8a7e1d",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "one_byte",
+      "decode_ns": [
+        451,
+        311,
+        280,
+        251,
+        250,
+        291,
+        260
+      ],
+      "encode_ns": [
+        1092,
+        591,
+        491,
+        471,
+        471,
+        501,
+        491
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "input_hash": "ccf16c98eb29a27917e7fb2cc561c90ed0f8eb3b5d025581cca9a8f44e8a7e1d",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "one_byte",
+      "decode_ns": [
+        320,
+        311,
+        291,
+        340,
+        251,
+        280,
+        251
+      ],
+      "encode_ns": [
+        882,
+        501,
+        491,
+        471,
+        471,
+        481,
+        471
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "input_hash": "ccf16c98eb29a27917e7fb2cc561c90ed0f8eb3b5d025581cca9a8f44e8a7e1d",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "one_byte",
+      "decode_ns": [
+        341,
+        321,
+        270,
+        251,
+        250,
+        251,
+        351
+      ],
+      "encode_ns": [
+        931,
+        581,
+        541,
+        521,
+        511,
+        501,
+        501
+      ],
+      "frame_bytes": 110,
+      "input_bytes": 1,
+      "input_hash": "ccf16c98eb29a27917e7fb2cc561c90ed0f8eb3b5d025581cca9a8f44e8a7e1d",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": 109
+    },
+    {
+      "corpus": "random_4m",
+      "decode_ns": [
+        499542,
+        503110,
+        513729,
+        499131,
+        498861,
+        499713,
+        496417
+      ],
+      "encode_ns": [
+        1295189,
+        651076,
+        651426,
+        650725,
+        649092,
+        650674,
+        650734
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "input_hash": "fb8328cbd7c8e8d2da1680820a90688d39128dc4a3a25d13d927ea4b4d4055b7",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "random_4m",
+      "decode_ns": [
+        501356,
+        498701,
+        496837,
+        498371,
+        496537,
+        498992,
+        496406
+      ],
+      "encode_ns": [
+        961936,
+        946347,
+        998714,
+        962477,
+        942320,
+        947048,
+        945485
+      ],
+      "frame_bytes": 4194510,
+      "input_bytes": 4194304,
+      "input_hash": "fb8328cbd7c8e8d2da1680820a90688d39128dc4a3a25d13d927ea4b4d4055b7",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": 206
+    },
+    {
+      "corpus": "random_4m",
+      "decode_ns": [
+        501957,
+        496567,
+        498701,
+        497068,
+        499332,
+        497028,
+        501797
+      ],
+      "encode_ns": [
+        2436830,
+        2177105,
+        2137410,
+        2209325,
+        2159942,
+        1961381,
+        2017035
+      ],
+      "frame_bytes": 4194509,
+      "input_bytes": 4194304,
+      "input_hash": "fb8328cbd7c8e8d2da1680820a90688d39128dc4a3a25d13d927ea4b4d4055b7",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": 205
+    },
+    {
+      "corpus": "random_4m",
+      "decode_ns": [
+        599630,
+        545579,
+        495565,
+        501566,
+        494774,
+        499322,
+        493761
+      ],
+      "encode_ns": [
+        99218066,
+        103361232,
+        106823234,
+        108186219,
+        108830451,
+        107424046,
+        107485019
+      ],
+      "frame_bytes": 4194509,
+      "input_bytes": 4194304,
+      "input_hash": "fb8328cbd7c8e8d2da1680820a90688d39128dc4a3a25d13d927ea4b4d4055b7",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": 205
+    },
+    {
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        495826,
+        493371,
+        496447,
+        494383,
+        501536,
+        495365,
+        506515
+      ],
+      "encode_ns": [
+        708503,
+        649964,
+        650154,
+        648540,
+        649443,
+        650414,
+        649373
+      ],
+      "frame_bytes": 4194404,
+      "input_bytes": 4194304,
+      "input_hash": "4525a453015cc839754462a9c04ab24e84d21d692160f59ccc3711357fc9bc52",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        799262,
+        925759,
+        607835,
+        606653,
+        608095,
+        604469,
+        611642
+      ],
+      "encode_ns": [
+        781889,
+        684207,
+        684688,
+        684047,
+        682114,
+        733369,
+        685981
+      ],
+      "frame_bytes": 545,
+      "input_bytes": 4194304,
+      "input_hash": "4525a453015cc839754462a9c04ab24e84d21d692160f59ccc3711357fc9bc52",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": -4193759
+    },
+    {
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        618996,
+        617833,
+        616641,
+        615549,
+        615830,
+        615038,
+        615780
+      ],
+      "encode_ns": [
+        2766846,
+        2288142,
+        2350708,
+        2292861,
+        2365146,
+        2329740,
+        2291528
+      ],
+      "frame_bytes": 5475,
+      "input_bytes": 4194304,
+      "input_hash": "4525a453015cc839754462a9c04ab24e84d21d692160f59ccc3711357fc9bc52",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": -4188829
+    },
+    {
+      "corpus": "repetitive_4m",
+      "decode_ns": [
+        623594,
+        605530,
+        611010,
+        602004,
+        607434,
+        602685,
+        605831
+      ],
+      "encode_ns": [
+        4799621,
+        4814548,
+        4664799,
+        4664800,
+        4681309,
+        4623371,
+        4613814
+      ],
+      "frame_bytes": 508,
+      "input_bytes": 4194304,
+      "input_hash": "4525a453015cc839754462a9c04ab24e84d21d692160f59ccc3711357fc9bc52",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": -4193796
+    },
+    {
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        128800,
+        128711,
+        128710,
+        128900,
+        131155,
+        128811,
+        132668
+      ],
+      "encode_ns": [
+        191257,
+        167012,
+        166902,
+        166801,
+        168645,
+        166882,
+        166641
+      ],
+      "frame_bytes": 1048676,
+      "input_bytes": 1048576,
+      "input_hash": "1c86d21ba2d5694bab1e238d21f4d98614f89654ecf4058e1fc1d091419fbf8f",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        130424,
+        130343,
+        129873,
+        130043,
+        129972,
+        130925,
+        129321
+      ],
+      "encode_ns": [
+        243726,
+        242062,
+        238795,
+        263953,
+        239097,
+        241521,
+        238475
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "1c86d21ba2d5694bab1e238d21f4d98614f89654ecf4058e1fc1d091419fbf8f",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        130573,
+        128961,
+        129091,
+        130403,
+        132237,
+        129432,
+        129101
+      ],
+      "encode_ns": [
+        733610,
+        684358,
+        738689,
+        699937,
+        682844,
+        683737,
+        680009
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "1c86d21ba2d5694bab1e238d21f4d98614f89654ecf4058e1fc1d091419fbf8f",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_base_1m",
+      "decode_ns": [
+        146193,
+        130513,
+        130143,
+        130904,
+        129953,
+        130253,
+        129672
+      ],
+      "encode_ns": [
+        24386438,
+        24173631,
+        24101316,
+        24414911,
+        24059388,
+        24034973,
+        24110032
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "1c86d21ba2d5694bab1e238d21f4d98614f89654ecf4058e1fc1d091419fbf8f",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        132498,
+        131034,
+        131125,
+        131275,
+        130313,
+        131035,
+        130413
+      ],
+      "encode_ns": [
+        200955,
+        173805,
+        171831,
+        172151,
+        171721,
+        171560,
+        171380
+      ],
+      "frame_bytes": 1048676,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 0,
+      "mode": "raw",
+      "overhead_bytes": 100
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        133229,
+        130784,
+        130814,
+        129962,
+        132828,
+        138027,
+        138028
+      ],
+      "encode_ns": [
+        261739,
+        258121,
+        255817,
+        258252,
+        255698,
+        255647,
+        255457
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 3,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        134381,
+        130825,
+        131255,
+        130494,
+        130904,
+        130834,
+        171751
+      ],
+      "encode_ns": [
+        819540,
+        715826,
+        722168,
+        708954,
+        711859,
+        701670,
+        709715
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 9,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        145131,
+        131165,
+        131476,
+        133299,
+        131205,
+        130393,
+        131105
+      ],
+      "encode_ns": [
+        24085476,
+        23911702,
+        23864965,
+        23408031,
+        23586615,
+        23364060,
+        23893308
+      ],
+      "frame_bytes": 1048709,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 19,
+      "mode": "zstd",
+      "overhead_bytes": 133
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        487380,
+        427979,
+        811084,
+        536231,
+        439090,
+        408253,
+        406839
+      ],
+      "encode_ns": [
+        35630350,
+        36636849,
+        37059157,
+        36489674,
+        37172088,
+        38033557,
+        36882929
+      ],
+      "frame_bytes": 79984,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 0,
+      "mode": "delta",
+      "overhead_bytes": -968592
+    },
+    {
+      "corpus": "near_dup_1pct",
+      "decode_ns": [
+        460930,
+        441555,
+        765409,
+        520031,
+        450752,
+        416908,
+        412300
+      ],
+      "encode_ns": [
+        1795542,
+        1778450,
+        1859171,
+        1862688,
+        1736041,
+        1731894,
+        1734317
+      ],
+      "frame_bytes": 24733,
+      "input_bytes": 1048576,
+      "input_hash": "63dcd5897097053c66d14d0b84b20c179f6fc3c4e853254ed7436abe29ea90f8",
+      "level": 3,
+      "mode": "dictionary",
+      "overhead_bytes": -1023843
+    }
+  ],
+  "schema": "weft-codec-bench-v1",
+  "vm_hwm_kib": 121716
+}

@@ -1,0 +1,408 @@
+=== rust_codec ===
++ exec docker run --rm --init --name weft-rust-court-448388 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo test --all-targets --quiet'
+
+running 35 tests
+...................................
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== rust_store ===
++ exec docker run --rm --init --name weft-rust-court-448697 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo test --all-targets --quiet'
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== go_codec ===
++ exec docker run --rm --init --name weft-go-court-449009 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && go test ./...'
+ok  	github.com/infinityabundance/WeftCodec-Go/archive	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/cmd/weftcodec	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/conformance	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/context	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/dependency	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/frame	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/hash	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/limits	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/modes	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/selector	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/stream	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/varint	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/werrors	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/wcb	(cached)
+=== rust_fuse ===
++ exec docker run --rm --init --name weft-fuse-court-449303 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:dd4598a79572b7de0ceeda9345c5d9290c65be95c821e35f2640e327e42192d2 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo test --features fuse --all-targets -- --test-threads=1'
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (.docker-cache/target-rust/debug/deps/weftfs-5861f998acd67324)
+
+running 3 tests
+test fuse::tests::context_names_are_deterministic_and_unique ... ok
+test fuse::tests::escape_is_reversible_and_safe ... ok
+test fuse::tests::inode_mapping_is_stable_and_collision_safe ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (.docker-cache/target-rust/debug/deps/weftfs-14521e401d1ec8f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/bounded_recovery.rs (.docker-cache/target-rust/debug/deps/bounded_recovery-1cb440870004f10b)
+
+running 3 tests
+test every_generation_corruption_recovers_the_previous_whole_state ... ok
+test replay_is_idempotent_without_corruption ... ok
+test superblock_slot_corruption_falls_back_to_the_other_slot ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/cli.rs (.docker-cache/target-rust/debug/deps/cli-54f8005389bb5344)
+
+running 4 tests
+test cli_conformance_store_is_deterministic ... ok
+test cli_conformance_store_needs_no_store_flag ... ok
+test cli_errors_print_normative_class ... ok
+test cli_verbs_and_query_json_contract ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/crash_proxy.rs (.docker-cache/target-rust/debug/deps/crash_proxy-e1adbb21583057ea)
+
+running 3 tests
+test crash_after_superblock_publish_yields_new_state ... ok
+test crash_before_commit_file_keeps_old_state ... ok
+test crash_never_leaves_a_partial_file ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests/fuse_concurrency.rs (.docker-cache/target-rust/debug/deps/fuse_concurrency-4e600e8fcd8d502b)
+
+running 1 test
+test concurrent_readers_and_one_writer_see_whole_versions ... ignored, kernel 7.3 + fuser 0.15.1 direct-I/O EIO under same-inode read/write; see docs/fuse-status.md
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_crash.rs (.docker-cache/target-rust/debug/deps/fuse_crash-2a64f37edfddb96b)
+
+running 3 tests
+test crash_after_commit_file_keeps_old_state_and_reports_unpublished_tail ... ok
+test crash_after_objects_loses_the_write_and_verifies_clean ... ok
+test crash_after_superblock_write_publishes_new_state ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests/fuse_posix.rs (.docker-cache/target-rust/debug/deps/fuse_posix-9fa90262ed462c94)
+
+running 10 tests
+test byte_names_are_preserved_and_ordered ... ok
+test exact_id_surface_and_saved_context_views ... ok
+test lseek_fallocate_and_copy_file_range ... ok
+test permissions_with_allow_other ... ignored, the fuse court runs with cap-drop=ALL (no CAP_SETUID), so setpriv cannot switch to uid 65534; kernel default_permissions ownership checks need a court with CAP_SETUID
+test posix_basic_matrix ... ok
+test rename_semantics_and_renameat2_flags ... ok
+test snapshot_mount_shows_pinned_bytes_and_is_read_only ... ok
+test sparse_writes_large_files_ranges_and_open_unlinked ... ok
+test statfs_reports_state_derived_counters ... ok
+test xattrs_through_syscalls_and_tools ... ok
+
+test result: ok. 9 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.96s
+
+     Running tests/recovery.rs (.docker-cache/target-rust/debug/deps/recovery-2cf97cd1c8206945)
+
+running 11 tests
+test both_slots_zero_fails_closed ... ok
+test checkpoint_survives_reopen_and_corrupt_checkpoint_is_ignored ... ok
+test commit_crc_flip_falls_back ... ok
+test corrupt_manifest_falls_back_and_full_verify_reports ... ok
+test corrupted_superblock_slot_falls_back_to_the_other_slot ... ok
+test missing_chunk_falls_back_and_verify_reports_it ... ok
+test publication_crash_tail_above_superblock_is_not_visible ... ok
+test rejected_generations_are_never_deleted ... ok
+test truncated_commit_file_falls_back ... ok
+test verify_reports_healthy_store_as_ok ... ok
+test writer_after_rejected_generation_does_not_overwrite_it ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/store_core.rs (.docker-cache/target-rust/debug/deps/store_core-0f5950f46ed94818)
+
+running 11 tests
+test authorization_filters_results_counts_and_evidence ... ok
+test conformance_fixture_is_deterministic_and_small ... ok
+test empty_files_and_range_reads ... ok
+test gc_mark_sweep_removes_only_unreachable_blobs ... ok
+test init_create_reopen_roundtrip ... ok
+test overwrite_range_truncate_and_snapshot_reads ... ok
+test relations_cycles_tags_one_hop_and_cardinality ... ok
+test rename_hardlink_unlink_snapshot_and_gc_retention ... ok
+test setattr_and_symlink_metadata ... ok
+test single_writer_lock_and_read_only_open ... ok
+test snapshots_are_stable_and_selectors_follow_the_pin ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/store_extensions.rs (.docker-cache/target-rust/debug/deps/store_extensions-17ca9be17c37ac1d)
+
+running 10 tests
+test contexts_are_snapshot_scoped_and_round_trip_through_replay ... ok
+test gc_retains_pinned_content_and_sweeps_it_after_unpin ... ok
+test nlink_and_statfs_counters_derive_from_state ... ok
+test open_handle_pins_keep_unlinked_content_readable ... ok
+test orphan_object_records_left_by_a_crash_are_removed_by_gc_apply ... ok
+test rename_hardlink_identity_and_exchange ... ok
+test rename_replaces_files_and_empty_directories_atomically ... ok
+test rmdir_removes_empty_directories_and_rejects_non_empty ... ok
+test saved_contexts_are_relations_with_canonical_selector_hex ... ok
+test xattrs_are_stored_per_spec_and_survive_reopen ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec.rs (.docker-cache/target-rust/debug/examples/bench_codec-6fe8228b80629d5f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec_ext.rs (.docker-cache/target-rust/debug/examples/bench_codec_ext-0c252a34e340d896)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_fs_receipt.rs (.docker-cache/target-rust/debug/examples/bench_fs_receipt-b325aa523c076242)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_store.rs (.docker-cache/target-rust/debug/examples/bench_store-dfc26d51bf955dc3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/codec_cycle_probe.rs (.docker-cache/target-rust/debug/examples/codec_cycle_probe-116f4a8601bf304e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== go_store_and_fuse ===
++ exec docker run --rm --init --name weft-fuse-court-449803 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:dd4598a79572b7de0ceeda9345c5d9290c65be95c821e35f2640e327e42192d2 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && go test -race ./... -count=1'
+?   	github.com/infinityabundance/WeftFS-Go/auth	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/weftfs	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/model	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/resolver	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/fusefs	1.171s
+?   	github.com/infinityabundance/WeftFS-Go/werr	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/store	1.531s
+=== codec_cross_rust_encode ===
++ exec docker run --rm --init --name weft-rust-court-450398 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/cross.sh rust-gen'
+rust-gen: wrote 8 frames to /work/.docker-cache/cross/rust
+=== codec_cross_go_all ===
++ exec docker run --rm --init --name weft-go-court-450608 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/cross.sh go-build && bash hack/cross.sh go-gen && bash hack/cross.sh go-decode'
+go-build: wrote /work/.docker-cache/weftcodec-go
+go-gen: wrote 8 frames to /work/.docker-cache/cross/go
+go-decode: decoded 8 Rust frames
+=== codec_cross_rust_decode ===
++ exec docker run --rm --init --name weft-rust-court-450966 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/cross.sh rust-decode'
+rust-decode: decoded 8 Go frames
+=== codec_cross_compare ===
++ exec docker run --rm --init --name weft-go-court-451152 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/cross.sh compare'
+== decode equivalence ==
+PASS rust->go  raw
+PASS go->rust  raw
+PASS rust->go  raw_empty
+PASS go->rust  raw_empty
+PASS rust->go  raw_chunked
+PASS go->rust  raw_chunked
+PASS rust->go  zstd
+PASS go->rust  zstd
+PASS rust->go  reference
+PASS go->rust  reference
+PASS rust->go  delta
+PASS go->rust  delta
+PASS rust->go  dictionary
+PASS go->rust  dictionary
+PASS rust->go  structured
+PASS go->rust  structured
+== deterministic frame bytes (Go == Rust) ==
+PASS identical raw
+PASS identical raw_empty
+PASS identical raw_chunked
+PASS identical reference
+PASS identical delta
+PASS identical structured
+== zstd/dictionary are decode-equivalence modes ==
+NOTE differing bytes zstd (allowed by spec §12)
+NOTE differing bytes dictionary (allowed by spec §12)
+cross-language gate: all checks passed
+=== spec_drift ===
++ exec docker run --rm --init --name weft-rust-court-451361 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; bash scripts/check-spec-drift.sh'
+spec drift: OK (24 file comparisons across 3 repos)
+=== context_cross_rust_gen ===
++ exec docker run --rm --init --name weft-rust-court-451624 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-gen'
+rust-gen: wrote 4 context cases and one causal case to /work/.docker-cache/context-cross/rust
+=== context_cross_go_gen ===
++ exec docker run --rm --init --name weft-go-court-451821 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/context-cross.sh go-build && bash hack/context-cross.sh go-gen && bash hack/context-cross.sh go-parse-rust'
+go-build: wrote /work/.docker-cache/weftcodec-go
+go-gen: wrote 4 context cases and one causal case to /work/.docker-cache/context-cross/go
+/work/.docker-cache/weftcodec-go parsed 4 rust descriptors -> go-parsed
+=== context_cross_rust_parse ===
++ exec docker run --rm --init --name weft-rust-court-452156 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:c96472367ec767612a78d1809c2a8c8cf9244c4ed9757dbe1bd821eb3a723b9d -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-parse-go'
+/work/.docker-cache/target-rust/release/weftcodec parsed 4 go descriptors -> rust-parsed
+=== context_cross_compare ===
++ exec docker run --rm --init --name weft-go-court-452339 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:8ad3371429d7396bb322e49ee70e5449ce41ee036281611d5e720b2c27fe82ab -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=b56d1e1b3814faa56b68f18bdc167cb553ff3dc1 -e WEFT_REPO_WEFTFS_GO=378b878ffea377bd7abf3d2875a1b95177b37d02 -e WEFT_REPO_WEFTCODEC=cdd579c85fa76d4bff79ac957b69a0d6b7cd5960 -e WEFT_REPO_WEFTCODEC_GO=eece0ae1d0075d4966f2ca2bb666152091ef386c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/context-cross.sh compare'
+== ContextRootId equality (id JSON) ==
+PASS id true 53f70ff51a49496af01dc87e7002fa7ef7fe1ab5c192bdb326d0868b1f01a41a
+PASS id filter 04f53b8eb98d9c3603d60f61075ee7f7cdafc08baef95f5ae9d58ad8bf4a5f66
+PASS id escaping b04f7965b473527ee5276eb53f96cf432f38018ecc5d984fb207776050d10f46
+PASS id resolver c76f19307e87ab4c7097b1019f27a698223b20be1d6cacd3fb26607d247a411e
+== authoritative URI equality ==
+PASS uri true
+PASS uri filter
+PASS uri escaping
+PASS uri resolver
+== descriptor equality ==
+PASS descriptor true
+PASS descriptor filter
+PASS descriptor escaping
+PASS descriptor resolver
+== cross parse: Go canonicalizes Rust descriptors ==
+PASS go-parse-rust true
+PASS go-parse-rust filter
+PASS go-parse-rust escaping
+PASS go-parse-rust resolver
+== cross parse: Rust canonicalizes Go descriptors ==
+PASS rust-parse-go true
+PASS rust-parse-go filter
+PASS rust-parse-go escaping
+PASS rust-parse-go resolver
+== causal closure equality ==
+PASS causal 58f09b15991e2de83a8f689327a928d31e3df8c80cf44562293377316b6c92ae
+PASS causal canonical bytes
+context cross-language gate: all checks passed

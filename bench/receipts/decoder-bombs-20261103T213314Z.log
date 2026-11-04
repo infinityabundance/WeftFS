@@ -1,0 +1,87 @@
+decoder-bomb court
+stamp: 20261103T213314Z
+vectors: /work/WeftCodec/conformance/v1/adversarial
+mirror: /work/WeftCodec-Go/conformance/v1/adversarial
+rust binary: /work/.docker-cache/target-rust/release/weftcodec
+go binary: /work/.docker-cache/f5/bin/weftcodec-go
+command: scripts/docker-court.sh bench "bash bench/scripts/run_decoder_bomb_court.sh"
+timeout: 10s per CLI invocation; repeat: 2
+
+building Rust release CLI
+building Go CLI
+building court runner
+
+decoder bomb court: 36 vectors, repeat=2, timeout=10s
+declared_10gib                             run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2772KiB go_rss=  4744KiB
+declared_10gib                             run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3012KiB go_rss=  4616KiB
+zstd_expansion_low_limit                   run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3092KiB go_rss=  4744KiB
+zstd_expansion_low_limit                   run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3180KiB go_rss=  4620KiB
+zstd_output_length_mismatch                run0 rust=Corrupt            go=Corrupt            rust_rss=  3396KiB go_rss=  4740KiB
+zstd_output_length_mismatch                run1 rust=Corrupt            go=Corrupt            rust_rss=  3244KiB go_rss=  4744KiB
+zstd_declared_4gib_body_one_byte           run0 rust=Corrupt            go=Corrupt            rust_rss=  3380KiB go_rss=  4748KiB
+zstd_declared_4gib_body_one_byte           run1 rust=Corrupt            go=Corrupt            rust_rss=  3500KiB go_rss=  4720KiB
+delta_copy_offset_overflow                 run0 rust=Malformed          go=Malformed          rust_rss=  2944KiB go_rss=  4616KiB
+delta_copy_offset_overflow                 run1 rust=Malformed          go=Malformed          rust_rss=  3248KiB go_rss=  4744KiB
+delta_insert_length_overflow               run0 rust=Malformed          go=Malformed          rust_rss=  3308KiB go_rss=  4564KiB
+delta_insert_length_overflow               run1 rust=Malformed          go=Malformed          rust_rss=  3152KiB go_rss=  4744KiB
+delta_op_count_limit                       run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3144KiB go_rss=  4744KiB
+delta_op_count_limit                       run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3028KiB go_rss=  4744KiB
+dependency_depth_chain                     run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3052KiB go_rss=  4744KiB
+dependency_depth_chain                     run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2940KiB go_rss=  4744KiB
+dependency_cycle_frame_source              run0 rust=DependencyCycle    go=DependencyCycle    rust_rss=  3212KiB go_rss=  4684KiB
+dependency_cycle_frame_source              run1 rust=DependencyCycle    go=DependencyCycle    rust_rss=  3164KiB go_rss=  4748KiB
+dependency_cycle_archive                   run0 rust=DependencyCycle    go=DependencyCycle    rust_rss=  3276KiB go_rss=  4612KiB
+dependency_cycle_archive                   run1 rust=DependencyCycle    go=DependencyCycle    rust_rss=  3196KiB go_rss=  4616KiB
+dependency_count_limit                     run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3156KiB go_rss=  4744KiB
+dependency_count_limit                     run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3156KiB go_rss=  4624KiB
+chunk_extent_overflow                      run0 rust=Malformed          go=Malformed          rust_rss=  3052KiB go_rss=  4744KiB
+chunk_extent_overflow                      run1 rust=Malformed          go=Malformed          rust_rss=  3116KiB go_rss=  4744KiB
+chunk_overlap                              run0 rust=Malformed          go=Malformed          rust_rss=  3124KiB go_rss=  4680KiB
+chunk_overlap                              run1 rust=Malformed          go=Malformed          rust_rss=  3180KiB go_rss=  4744KiB
+chunk_gap                                  run0 rust=Malformed          go=Malformed          rust_rss=  3144KiB go_rss=  4740KiB
+chunk_gap                                  run1 rust=Malformed          go=Malformed          rust_rss=  3252KiB go_rss=  4744KiB
+chunk_count_limit                          run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2984KiB go_rss=  4744KiB
+chunk_count_limit                          run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3164KiB go_rss=  4748KiB
+length_arithmetic_overflow                 run0 rust=Malformed          go=Malformed          rust_rss=  3152KiB go_rss=  4744KiB
+length_arithmetic_overflow                 run1 rust=Malformed          go=Malformed          rust_rss=  3204KiB go_rss=  4612KiB
+unknown_mode                               run0 rust=UnsupportedMode    go=UnsupportedMode    rust_rss=  3188KiB go_rss=  4744KiB
+unknown_mode                               run1 rust=UnsupportedMode    go=UnsupportedMode    rust_rss=  2952KiB go_rss=  4740KiB
+unknown_critical_flag                      run0 rust=UnsupportedFeature go=UnsupportedFeature rust_rss=  3120KiB go_rss=  4680KiB
+unknown_critical_flag                      run1 rust=UnsupportedFeature go=UnsupportedFeature rust_rss=  2872KiB go_rss=  4744KiB
+unknown_critical_feature                   run0 rust=UnsupportedFeature go=UnsupportedFeature rust_rss=  3212KiB go_rss=  4744KiB
+unknown_critical_feature                   run1 rust=UnsupportedFeature go=UnsupportedFeature rust_rss=  2980KiB go_rss=  4740KiB
+non_minimal_varint_structured              run0 rust=NonCanonical       go=NonCanonical       rust_rss=  3152KiB go_rss=  4616KiB
+non_minimal_varint_structured              run1 rust=NonCanonical       go=NonCanonical       rust_rss=  3116KiB go_rss=  4432KiB
+overflow_varint_structured                 run0 rust=Malformed          go=Malformed          rust_rss=  3140KiB go_rss=  4568KiB
+overflow_varint_structured                 run1 rust=Malformed          go=Malformed          rust_rss=  3180KiB go_rss=  4428KiB
+wcb_depth_limit                            run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2944KiB go_rss=  4620KiB
+wcb_depth_limit                            run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3128KiB go_rss=  4464KiB
+wcb_item_limit                             run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3148KiB go_rss=  4612KiB
+wcb_item_limit                             run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3188KiB go_rss=  4744KiB
+selector_depth_limit                       run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3072KiB go_rss=  4556KiB
+selector_depth_limit                       run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3164KiB go_rss=  4592KiB
+selector_input_limit                       run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2820KiB go_rss=  4152KiB
+selector_input_limit                       run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3072KiB go_rss=  4612KiB
+archive_entry_count_limit                  run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3152KiB go_rss=  4592KiB
+archive_entry_count_limit                  run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3048KiB go_rss=  4616KiB
+archive_non_topological                    run0 rust=Malformed          go=Malformed          rust_rss=  3092KiB go_rss=  4612KiB
+archive_non_topological                    run1 rust=Malformed          go=Malformed          rust_rss=  3324KiB go_rss=  4576KiB
+archive_entry_count_absurd                 run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3120KiB go_rss=  4612KiB
+archive_entry_count_absurd                 run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3116KiB go_rss=  4616KiB
+dictionary_mismatch                        run0 rust=DependencyMismatch go=DependencyMismatch rust_rss=  3144KiB go_rss=  4612KiB
+dictionary_mismatch                        run1 rust=DependencyMismatch go=DependencyMismatch rust_rss=  3120KiB go_rss=  4740KiB
+dictionary_size_limit                      run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3036KiB go_rss=  4620KiB
+dictionary_size_limit                      run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3060KiB go_rss=  4748KiB
+reference_total_fetch_limit                run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3188KiB go_rss=  4744KiB
+reference_total_fetch_limit                run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3032KiB go_rss=  4744KiB
+032_truncated_frame_99                     run0 rust=Malformed          go=Malformed          rust_rss=  3164KiB go_rss=  4744KiB
+032_truncated_frame_99                     run1 rust=Malformed          go=Malformed          rust_rss=  3196KiB go_rss=  4740KiB
+033_truncated_frame_50                     run0 rust=Malformed          go=Malformed          rust_rss=  3312KiB go_rss=  4744KiB
+033_truncated_frame_50                     run1 rust=Malformed          go=Malformed          rust_rss=  3128KiB go_rss=  4744KiB
+034_empty_frame                            run0 rust=Malformed          go=Malformed          rust_rss=  3104KiB go_rss=  4748KiB
+034_empty_frame                            run1 rust=Malformed          go=Malformed          rust_rss=  2964KiB go_rss=  4740KiB
+frame_size_limit                           run0 rust=LimitExceeded      go=LimitExceeded      rust_rss=  2996KiB go_rss=  4612KiB
+frame_size_limit                           run1 rust=LimitExceeded      go=LimitExceeded      rust_rss=  3076KiB go_rss=  4496KiB
+archive_truncated_short                    run0 rust=Malformed          go=Malformed          rust_rss=  3048KiB go_rss=  4616KiB
+archive_truncated_short                    run1 rust=Malformed          go=Malformed          rust_rss=  3008KiB go_rss=  4612KiB
+summary: pass=36 fail=0 mirror_identical=true receipt=/work/bench/receipts/decoder-bombs-20261103T213314Z.json

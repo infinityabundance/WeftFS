@@ -1,0 +1,2010 @@
+{
+  "schema": "weftfs.decoder-bombs.receipt/1",
+  "generated_at": "20261103T213314Z",
+  "environment": {
+    "schema": "weftfs.decoder-bombs.receipt/1",
+    "generated_at": "20261103T213314Z",
+    "court": "bench",
+    "kernel": "7.3.1-1-cachyos",
+    "arch": "amd64",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "docker_server": "29.9.2",
+    "docker_client": "29.1.5",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024",
+    "tmpfs_tmp": "1g",
+    "go_version": "go1.23.12",
+    "rustc_version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "repositories": {
+      "WeftCodec": "127bc85e7c20c2744e9285c8a50ba524f6e3eda7",
+      "WeftCodec-Go": "71066cf1bbc8065c57278144e1e87ccf099ede33",
+      "WeftFS": "9d767d57aa9e91dcf1acdbe666addd8d9d5085e0",
+      "WeftFS-Go": "7693ad4674e707597326adfd7860e891d6fe72cc"
+    }
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": "4",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "no_new_privileges": true,
+    "pids": "1024",
+    "tmpfs_tmp": "1g"
+  },
+  "vectors_dir": "/work/WeftCodec/conformance/v1/adversarial",
+  "mirror_dir": "/work/WeftCodec-Go/conformance/v1/adversarial",
+  "timeout_seconds": 10,
+  "repeat": 2,
+  "results": [
+    {
+      "name": "declared_10gib",
+      "description": "Declared decoded length is 10 GiB; default max_decoded_bytes (4 GiB) must reject before allocation.",
+      "verb": "decode",
+      "sha256": "cd478a49f36aa16d83dcdc578e1b7d183a0127ff11d0e209fb53cee67a033215",
+      "expected_class": "LimitExceeded",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 10737418240 exceeds limit 4294967296\n",
+          "max_rss_kb": 2772,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 10737418240 exceeds limit 4294967296\n",
+          "max_rss_kb": 3012,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 10737418240 exceeds limit 4294967296\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 10737418240 exceeds limit 4294967296\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "zstd_expansion_low_limit",
+      "description": "4 MiB of repeating bytes compressed with zstd, decoded under --max-decoded-bytes 1 MiB.",
+      "verb": "decode",
+      "sha256": "79778641636fcaed363843a2b8170cdfffc231ea9fd5fa27898b9ddd431b4d74",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-decoded-bytes": "1048576"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 4194304 exceeds limit 1048576\n",
+          "max_rss_kb": 3092,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 4194304 exceeds limit 1048576\n",
+          "max_rss_kb": 3180,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 4194304 exceeds limit 1048576\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: decoded data length 4194304 exceeds limit 1048576\n",
+          "max_rss_kb": 4620,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "zstd_output_length_mismatch",
+      "description": "Zstd body expands to 4096 bytes while decoded_len declares 1024.",
+      "verb": "decode",
+      "sha256": "1a14a00f82c0b34656cd0859d6d2dad9d2ef80d4e7da825723385cb546fd85b3",
+      "expected_class": "Corrupt",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1025 differs from declared 1024\n",
+          "max_rss_kb": 3396,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1025 differs from declared 1024\n",
+          "max_rss_kb": 3244,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1025 differs from declared 1024\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1025 differs from declared 1024\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "zstd_declared_4gib_body_one_byte",
+      "description": "Tiny zstd body declares a 4 GiB output. Must fail Corrupt without preallocating the declared length.",
+      "verb": "decode",
+      "sha256": "23115d720354f8fa522224feca8703ca4d525fd7f72f7d1ad765c0b862c5c3e5",
+      "expected_class": "Corrupt",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1 differs from declared 4294967296\n",
+          "max_rss_kb": 3380,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1 differs from declared 4294967296\n",
+          "max_rss_kb": 3500,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1 differs from declared 4294967296\n",
+          "max_rss_kb": 4748,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Corrupt",
+          "stderr_tail": "Corrupt: zstd output length 1 differs from declared 4294967296\n",
+          "max_rss_kb": 4720,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "delta_copy_offset_overflow",
+      "description": "DELTA COPY uses offset u64::MAX and length 2; offset+length overflows.",
+      "verb": "decode",
+      "sha256": "3f99a938eb9031ab3ecea4f73958cc1e0a83f1c5fe6853deb24380c9dd4e0733",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta COPY offset+length overflow\n",
+          "max_rss_kb": 2944,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta COPY offset+length overflow\n",
+          "max_rss_kb": 3248,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta COPY offset+length overflow\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta COPY offset+length overflow\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "delta_insert_length_overflow",
+      "description": "DELTA INSERT length u64::MAX overflows the body extent.",
+      "verb": "decode",
+      "sha256": "658ee34abb9f7e7289d0195ea10fec082979b1d892cfb8e1e91ee65e47bc9842",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta INSERT extent overflow\n",
+          "max_rss_kb": 3308,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: delta INSERT extent overflow\n",
+          "max_rss_kb": 3152,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: LimitExceeded: delta INSERT length length 18446744073709551615 does not fit int\n",
+          "max_rss_kb": 4564,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: LimitExceeded: delta INSERT length length 18446744073709551615 does not fit int\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "delta_op_count_limit",
+      "description": "Five DELTA operations decoded under --max-delta-ops 2.",
+      "verb": "decode",
+      "sha256": "1db853cbfbc0fe0fe5537acf1672baecabf68a02c8e5f91b7670927558efe10b",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-delta-ops": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: delta op count 3 exceeds limit 2\n",
+          "max_rss_kb": 3144,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: delta op count 3 exceeds limit 2\n",
+          "max_rss_kb": 3028,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: delta op count 3 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: delta op count 3 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dependency_depth_chain",
+      "description": "Root DELTA depends on a five-frame chain; --max-dependency-depth 2 must reject.",
+      "verb": "decode",
+      "sha256": "f3d2cfb022724814816f66ed17282a4e30d9ffbb216da6d6f81fb0985c9a6245",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-dependency-depth": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency depth 3 exceeds limit 2\n",
+          "max_rss_kb": 3052,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency depth 3 exceeds limit 2\n",
+          "max_rss_kb": 2940,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency depth 3 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency depth 3 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dependency_cycle_frame_source",
+      "description": "REFERENCE frame whose dependency is its own content hash; DAG decode must report DependencyCycle.",
+      "verb": "decode",
+      "sha256": "396a77370e7b3582f535b29527e491c66e07f11645d31a3430996aeec7f191a2",
+      "expected_class": "DependencyCycle",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: dependency cycle re-entered frame e28ba38a5c5afc3bbdf58c9782e1ab712b47cc41aae51f5e9533f8605112cc4e\n",
+          "max_rss_kb": 3212,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: dependency cycle re-entered frame e28ba38a5c5afc3bbdf58c9782e1ab712b47cc41aae51f5e9533f8605112cc4e\n",
+          "max_rss_kb": 3164,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: dependency cycle re-entered frame e28ba38a5c5afc3bbdf58c9782e1ab712b47cc41aae51f5e9533f8605112cc4e\n",
+          "max_rss_kb": 4684,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: dependency cycle re-entered frame e28ba38a5c5afc3bbdf58c9782e1ab712b47cc41aae51f5e9533f8605112cc4e\n",
+          "max_rss_kb": 4748,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dependency_cycle_archive",
+      "description": "archive create receives two REFERENCE frames that depend on each other; cycle must be rejected.",
+      "verb": "archive-create",
+      "sha256": "4c15c8e90d9b67eaa0a5e8acd58e99bab56dc2e14484f969c8015e30f9f27329",
+      "expected_class": "DependencyCycle",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: archive dependency graph contains a cycle\n",
+          "max_rss_kb": 3276,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: archive dependency graph contains a cycle\n",
+          "max_rss_kb": 3196,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: archive dependency graph contains a cycle\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyCycle",
+          "stderr_tail": "DependencyCycle: archive dependency graph contains a cycle\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dependency_count_limit",
+      "description": "Three dependency entries decoded under --max-dependency-count 2.",
+      "verb": "decode",
+      "sha256": "2c95c2c2696abfc865796342e06b7b78d7280bffa957d977a986455327a58ecf",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-dependency-count": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency count length 3 exceeds limit 2\n",
+          "max_rss_kb": 3156,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency count length 3 exceeds limit 2\n",
+          "max_rss_kb": 3156,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency count length 3 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dependency count length 3 exceeds limit 2\n",
+          "max_rss_kb": 4624,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "chunk_extent_overflow",
+      "description": "One chunk claims four encoded bytes while the body is empty.",
+      "verb": "decode",
+      "sha256": "414e5820476074872d3a3a37aa65e790bc551d3efe550b53e298478752e4a2d1",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk extents end at 4 but body_len is 0\n",
+          "max_rss_kb": 3052,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk extents end at 4 but body_len is 0\n",
+          "max_rss_kb": 3116,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk extents end at 4 but body_len is 0\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk extents end at 4 but body_len is 0\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "chunk_overlap",
+      "description": "Two chunks both start at offset zero.",
+      "verb": "decode",
+      "sha256": "a3bbab603891a8c31f2fb0a29760f9d31108e55de094d70c019b95667b80eefe",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 0 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 3124,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 0 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 3180,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 0 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 4680,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 0 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "chunk_gap",
+      "description": "Second chunk starts after a one-byte gap.",
+      "verb": "decode",
+      "sha256": "f30d7c062371fd2b434cda0d880c769b4b91726ec1024ae3e8b2254851b13aef",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 2 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 3144,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 2 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 3252,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 2 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: chunk 1 starts at 2 but expected 1 (gap or overlap)\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "chunk_count_limit",
+      "description": "Four chunks decoded under --max-chunks 2.",
+      "verb": "decode",
+      "sha256": "9d92017e1ee13b1a398b9f118b87a61fc549807993cf3e3e8dddfa26b4309c97",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-chunks": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: chunk count length 4 exceeds limit 2\n",
+          "max_rss_kb": 2984,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: chunk count length 4 exceeds limit 2\n",
+          "max_rss_kb": 3164,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: chunk count length 4 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: chunk count length 4 exceeds limit 2\n",
+          "max_rss_kb": 4748,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "length_arithmetic_overflow",
+      "description": "body_len u64::MAX overflows the header-derived frame length.",
+      "verb": "decode",
+      "sha256": "8389671fcb8d45342bc7a0619328c13323f7b3ead628ee5ff275d5a9d427b2de",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length overflow\n",
+          "max_rss_kb": 3152,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length overflow\n",
+          "max_rss_kb": 3204,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: LimitExceeded: frame length overflow\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: LimitExceeded: frame length overflow\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "unknown_mode",
+      "description": "Mode byte 0xff is not a v1 mode.",
+      "verb": "decode",
+      "sha256": "f7bf9964388442ab7875f49538fd8bef29b534f37029deb3a93ee0fdece94426",
+      "expected_class": "UnsupportedMode",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedMode",
+          "stderr_tail": "UnsupportedMode: experimental mode 255 must not be persisted\n",
+          "max_rss_kb": 3188,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedMode",
+          "stderr_tail": "UnsupportedMode: experimental mode 255 must not be persisted\n",
+          "max_rss_kb": 2952,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedMode",
+          "stderr_tail": "UnsupportedMode: experimental mode 255 must not be persisted\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedMode",
+          "stderr_tail": "UnsupportedMode: experimental mode 255 must not be persisted\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "unknown_critical_flag",
+      "description": "Undefined critical header flag bit 0x0010.",
+      "verb": "decode",
+      "sha256": "a30d207af59f956ec8f9e0d373080cb6a8c6fe0d1eaefa6ca32178552e4b0bab",
+      "expected_class": "UnsupportedFeature",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical flag bits 0x0010\n",
+          "max_rss_kb": 3120,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical flag bits 0x0010\n",
+          "max_rss_kb": 2872,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical flag bits 0x0010\n",
+          "max_rss_kb": 4680,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical flag bits 0x0010\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "unknown_critical_feature",
+      "description": "Undefined critical feature bit 0x0004.",
+      "verb": "decode",
+      "sha256": "d1679af717a33f586602197ea6fc38b4612798b45323969e3aa0f57994170fee",
+      "expected_class": "UnsupportedFeature",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical feature bits 0x0004\n",
+          "max_rss_kb": 3212,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical feature bits 0x0004\n",
+          "max_rss_kb": 2980,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical feature bits 0x0004\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "UnsupportedFeature",
+          "stderr_tail": "UnsupportedFeature: unknown critical feature bits 0x0004\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "non_minimal_varint_structured",
+      "description": "WCB text length uses a non-minimal varint (0x80 0x00).",
+      "verb": "decode",
+      "sha256": "5e7da90ddd73a3c20bfb620a1913d00946f2a3f345aa9672bbde377ddc9f8779",
+      "expected_class": "NonCanonical",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "NonCanonical",
+          "stderr_tail": "NonCanonical: non-minimal varint\n",
+          "max_rss_kb": 3152,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "NonCanonical",
+          "stderr_tail": "NonCanonical: non-minimal varint\n",
+          "max_rss_kb": 3116,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "NonCanonical",
+          "stderr_tail": "NonCanonical: non-minimal varint\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "NonCanonical",
+          "stderr_tail": "NonCanonical: non-minimal varint\n",
+          "max_rss_kb": 4432,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "overflow_varint_structured",
+      "description": "WCB varint has ten bytes with a tenth byte above 0x01.",
+      "verb": "decode",
+      "sha256": "d1e86f349108ebc4fa800b4ba40fb9208692718e964fc29619177667c2ba92ef",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: varint overflows u64\n",
+          "max_rss_kb": 3140,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: varint overflows u64\n",
+          "max_rss_kb": 3180,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: varint overflows u64\n",
+          "max_rss_kb": 4568,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: varint overflows u64\n",
+          "max_rss_kb": 4428,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "wcb_depth_limit",
+      "description": "Eight nested WCB arrays decoded under --max-structured-depth 4.",
+      "verb": "decode",
+      "sha256": "2298ad4534c8481db8bf32f5b2c6ce30da9a78ad295327c3c457d901aeb1290d",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-structured-depth": "4"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 2944,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 3128,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 4620,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 4464,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "wcb_item_limit",
+      "description": "Ten WCB items decoded under --max-structured-items 2.",
+      "verb": "decode",
+      "sha256": "788ab1cad56e7b1ee0722368631c2b71d1e1f807aa3b4fa2763609a652b8eca2",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-structured-items": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB array count 10 exceeds limit 2\n",
+          "max_rss_kb": 3148,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB array count 10 exceeds limit 2\n",
+          "max_rss_kb": 3188,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB array count 10 exceeds limit 2\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: WCB array count 10 exceeds limit 2\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "selector_depth_limit",
+      "description": "One hundred nested NOT operators under --max-selector-depth 4.",
+      "verb": "selector-id",
+      "sha256": "820319bcdfc98e73fa8a9d6ba947716dd5a1e78df0a03ad45e91613ce16d1b3d",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-selector-depth": "4"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: selector nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 3072,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: selector nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 3164,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: selector nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 4556,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: selector nesting depth 5 exceeds limit 4\n",
+          "max_rss_kb": 4592,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "selector_input_limit",
+      "description": "Selector source above 100 KiB under --max-selector-bytes 1024.",
+      "verb": "selector-id",
+      "sha256": "9c0eeeefa2df3f74b05b5a80ae93f11bc3fff0320826ffaca47405ead17baff4",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-selector-bytes": "1024"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-3391676792/input.bin has 102411 bytes, limit 1024\n",
+          "max_rss_kb": 2820,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-3391676792/input.bin has 102411 bytes, limit 1024\n",
+          "max_rss_kb": 3072,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-3391676792/input.bin has 102411 bytes, limit 1024\n",
+          "max_rss_kb": 4152,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-3391676792/input.bin has 102411 bytes, limit 1024\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "archive_entry_count_limit",
+      "description": "Three-entry archive decoded under --max-archive-entries 2.",
+      "verb": "archive-decode",
+      "sha256": "c0269821203d0e0481c338d2ee827be812d0daf0ef923bc3b173e16042bf560a",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-archive-entries": "2"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 3 exceeds limit 2\n",
+          "max_rss_kb": 3152,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 3 exceeds limit 2\n",
+          "max_rss_kb": 3048,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 3 exceeds limit 2\n",
+          "max_rss_kb": 4592,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 3 exceeds limit 2\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "archive_non_topological",
+      "description": "Archive lists a DELTA frame before the base frame it depends on.",
+      "verb": "archive-decode",
+      "sha256": "41d1c580b992c9e20ca7a4b03d9d01dcc01301a7bf7bbd26491b00f5b936fdbd",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive entry 0 depends on a frame that appears later (not topological)\n",
+          "max_rss_kb": 3092,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive entry 0 depends on a frame that appears later (not topological)\n",
+          "max_rss_kb": 3324,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive entry 0 depends on a frame that appears later (not topological)\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive entry 0 depends on a frame that appears later (not topological)\n",
+          "max_rss_kb": 4576,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "archive_entry_count_absurd",
+      "description": "Archive header declares 4,294,967,295 entries with no table.",
+      "verb": "archive-decode",
+      "sha256": "0edb0fdc681e656d3df1256556fa9f1f30bd0d3161e47aee4b7805cbfd9aeb7c",
+      "expected_class": "LimitExceeded",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 4294967295 exceeds limit 1000000\n",
+          "max_rss_kb": 3120,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 4294967295 exceeds limit 1000000\n",
+          "max_rss_kb": 3116,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 4294967295 exceeds limit 1000000\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: archive entry count length 4294967295 exceeds limit 1000000\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dictionary_mismatch",
+      "description": "DICTIONARY resolver returns bytes that do not hash to the declared dependency hash.",
+      "verb": "decode",
+      "sha256": "eccc94ca26240ffb76ec0d08fa327ec93e48aad2daf81015743b8e282c7a1170",
+      "expected_class": "DependencyMismatch",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "DependencyMismatch",
+          "stderr_tail": "DependencyMismatch: resolved dependency ac5b0d30e1443d4f8b80c833c6cddd9b473b38fe9aecb1144174531457b12d78 fails hash verification\n",
+          "max_rss_kb": 3144,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyMismatch",
+          "stderr_tail": "DependencyMismatch: resolved dependency ac5b0d30e1443d4f8b80c833c6cddd9b473b38fe9aecb1144174531457b12d78 fails hash verification\n",
+          "max_rss_kb": 3120,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "DependencyMismatch",
+          "stderr_tail": "DependencyMismatch: resolved dependency ac5b0d30e1443d4f8b80c833c6cddd9b473b38fe9aecb1144174531457b12d78 fails hash verification\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "DependencyMismatch",
+          "stderr_tail": "DependencyMismatch: resolved dependency ac5b0d30e1443d4f8b80c833c6cddd9b473b38fe9aecb1144174531457b12d78 fails hash verification\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "dictionary_size_limit",
+      "description": "Dependency declares a 1024-byte dictionary under --max-dictionary-bytes 16.",
+      "verb": "decode",
+      "sha256": "bc8c4a604e4e2f69f8886d21de87c1f364e005a7759b6d5874a688f13f09da61",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-dictionary-bytes": "16"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dictionary length 1024 exceeds limit 16\n",
+          "max_rss_kb": 3036,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dictionary length 1024 exceeds limit 16\n",
+          "max_rss_kb": 3060,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dictionary length 1024 exceeds limit 16\n",
+          "max_rss_kb": 4620,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: dictionary length 1024 exceeds limit 16\n",
+          "max_rss_kb": 4748,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "reference_total_fetch_limit",
+      "description": "Root frame fits the fetch bound but the dependency frame pushes the total over it.",
+      "verb": "decode",
+      "sha256": "f6d26793df6e28f83e857e2574a77f032a4149357e580efc155f630a03b4f1a8",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-total-fetched-bytes": "158"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: total fetched bytes 274 exceed limit 158\n",
+          "max_rss_kb": 3188,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: total fetched bytes 274 exceed limit 158\n",
+          "max_rss_kb": 3032,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: total fetched bytes length 274 exceeds limit 158\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: total fetched bytes length 274 exceeds limit 158\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "032_truncated_frame_99",
+      "description": "Frame input truncated below the 100-byte minimum.",
+      "verb": "decode",
+      "sha256": "bfcbc412ae8a9946b5eca5c960cb8d80be226847e8b0c9a7c5232980eee35168",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 99 is below the minimum 100\n",
+          "max_rss_kb": 3164,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 99 is below the minimum 100\n",
+          "max_rss_kb": 3196,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 99 is below the minimum 100\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 99 is below the minimum 100\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "033_truncated_frame_50",
+      "description": "Frame input truncated below the 100-byte minimum.",
+      "verb": "decode",
+      "sha256": "9de2932182d8ef3e28e6a75b5fc97841f7e89842605475d7ae0d87db620e26da",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 50 is below the minimum 100\n",
+          "max_rss_kb": 3312,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 50 is below the minimum 100\n",
+          "max_rss_kb": 3128,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 50 is below the minimum 100\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 50 is below the minimum 100\n",
+          "max_rss_kb": 4744,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "034_empty_frame",
+      "description": "Frame input truncated below the 100-byte minimum.",
+      "verb": "decode",
+      "sha256": "7003ec2d867861b953e119c52e89d17e602e5c9994cbc3a70b09c50ecba1f708",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 0 is below the minimum 100\n",
+          "max_rss_kb": 3104,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 0 is below the minimum 100\n",
+          "max_rss_kb": 2964,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 0 is below the minimum 100\n",
+          "max_rss_kb": 4748,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: frame length 0 is below the minimum 100\n",
+          "max_rss_kb": 4740,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "frame_size_limit",
+      "description": "A valid frame above --max-frame-bytes 50.",
+      "verb": "decode",
+      "sha256": "487df0716de38dab48079fc8f26ef89b6cfd6f4d0ea2d1a3ea7290698a237c06",
+      "expected_class": "LimitExceeded",
+      "flags": {
+        "--max-frame-bytes": "50"
+      },
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-766010967/input.bin has 119 bytes, limit 50\n",
+          "max_rss_kb": 2996,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-766010967/input.bin has 119 bytes, limit 50\n",
+          "max_rss_kb": 3076,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-766010967/input.bin has 119 bytes, limit 50\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "LimitExceeded",
+          "stderr_tail": "LimitExceeded: /tmp/weft-bomb-766010967/input.bin has 119 bytes, limit 50\n",
+          "max_rss_kb": 4496,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    },
+    {
+      "name": "archive_truncated_short",
+      "description": "Archive shorter than its header and trailer.",
+      "verb": "archive-decode",
+      "sha256": "c1edd0419e1af4bb106203a01398a140ab0a31393c802ce21ae775ddb10e2147",
+      "expected_class": "Malformed",
+      "rust": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive is shorter than its header and trailer\n",
+          "max_rss_kb": 3048,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive is shorter than its header and trailer\n",
+          "max_rss_kb": 3008,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "go": [
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive is shorter than its header and trailer\n",
+          "max_rss_kb": 4616,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        },
+        {
+          "exit_code": 1,
+          "class": "Malformed",
+          "stderr_tail": "Malformed: archive is shorter than its header and trailer\n",
+          "max_rss_kb": 4612,
+          "wall_seconds": 0,
+          "timed_out": false,
+          "oom_killed": false,
+          "output_created": false
+        }
+      ],
+      "classes_stable": true,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 36,
+    "pass": 36,
+    "fail": 0,
+    "all_pass": true,
+    "expected_class_counts": {
+      "Corrupt": 2,
+      "DependencyCycle": 2,
+      "DependencyMismatch": 1,
+      "LimitExceeded": 15,
+      "Malformed": 12,
+      "NonCanonical": 1,
+      "UnsupportedFeature": 2,
+      "UnsupportedMode": 1
+    },
+    "mirror_identical": true,
+    "at_least_20_vectors": true,
+    "minimum_required": 20
+  }
+}

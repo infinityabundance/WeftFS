@@ -1,0 +1,328 @@
+{
+  "schema": "weftfs.ambiguity.receipt/1",
+  "generated_at": "2026-11-03T21:06:33Z",
+  "run": {
+    "started_at": "2026-11-03T21:06:33Z",
+    "finished_at": "2026-11-03T21:06:33Z",
+    "duration_ms": 0
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "f3d1bc166f11e206ca58d54514b754ab36b70599"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "acf6df6b8358cfd86662cc7f80e20616a276e525"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "6571308223e1d7066a4a369fe5cf2c4efa36488a"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "83c2b6af0e9cb8726ac3c5f2bf73e486585715e1"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "store",
+      "title": "Two objects with different content roots under one selector",
+      "status": "pass",
+      "notes": "a=b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497/2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b b=e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8/1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870 ctx=0a5177ed737290a9206b982c1975a346d48dd88342be3792c15422d2f5fd3b49",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /a.txt --text alpha --seed amb-a --attr group=ambiguous",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /b.txt --text beta --seed amb-b --attr group=ambiguous",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 create /unique.txt --text unique --seed amb-u --attr group=unique",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 snapshot create s1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 stat /a.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 stat /b.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 context create --name ambiguous --selector select attrs.group == \"ambiguous\" --snapshot s1"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-a exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-unique exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-a exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "the two objects have distinct ObjectIds",
+          "expected": "different from e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8",
+          "actual": "b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497",
+          "pass": true
+        },
+        {
+          "name": "the two objects have distinct content roots",
+          "expected": "different from 1f994041162353c3db0ab98e05b5728ac1a5b6a3472ffee141e4034fd3694870",
+          "actual": "2e9eaf97ad12680806bc975e864d775d186a4d9739d951497604c2b3b4c14d0b",
+          "pass": true
+        },
+        {
+          "name": "ctx-create exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "full-query",
+      "title": "The full query returns the complete ordered set",
+      "status": "pass",
+      "notes": "ordered set = b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497, e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 query select attrs.group == \"ambiguous\""
+      ],
+      "assertions": [
+        {
+          "name": "query-all exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "matched_count",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "returned length",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "result 0 is one of the two ids",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "result 1 is the other id",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "the ordered set contains both objects",
+          "expected": "different from e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8",
+          "actual": "b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "singular",
+      "title": "Singular access fails closed with Ambiguous and lists both ids",
+      "status": "pass",
+      "notes": "require-one rejected 2 matches; no output path",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 query select attrs.group == \"ambiguous\" --require-one",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z --json --fixed-timestamp-ns 1767225600000000000 context materialize ambiguous --require-one --out /work/.docker-cache/f3-demos/singular-8-20261103T210633Z"
+      ],
+      "assertions": [
+        {
+          "name": "query-one exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "singular class is Ambiguous",
+          "expected": "contains <Ambiguous>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "singular error lists the first id",
+          "expected": "contains <b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "singular error lists the second id",
+          "expected": "contains <e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "materialize-one exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "singular materialize class is Ambiguous",
+          "expected": "contains <Ambiguous>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "singular materialize lists both ids",
+          "expected": "contains <b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "singular materialize produced no output",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "singular-error",
+          "content": "Ambiguous: selector matched 2 authorized objects; require_one needs exactly 1 (object_ids: b30798c77fd24d45730ed32f35944594a2723632e73901d0f8febae8ac523497,e27fc8154538113566274625fc284fd5a8e0e794a91bdd519466119ea9b975c8)\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "context-mount",
+      "title": "The Context mount lists both results; lookup is exact",
+      "status": "pass",
+      "notes": "mount listing has 2 results; single-name lookup returns <a.txt--b30798c7> only",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/ambiguity-8-20261103T210633Z -> /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity --context ambiguous",
+        "ls /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity",
+        "cat /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity/a.txt--b30798c7",
+        "cat /mnt/weft-fuse/f3-8-20261103T210633Z-ambiguity/b.txt--e27fc815"
+      ],
+      "assertions": [
+        {
+          "name": "context mount lists both results",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        },
+        {
+          "name": "mount lists a.txt with its ObjectId suffix",
+          "expected": "contains <a.txt--b30798c7>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "mount lists b.txt with its ObjectId suffix",
+          "expected": "contains <b.txt--e27fc815>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "cat-a exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount reads a.txt exactly",
+          "expected": "alpha",
+          "actual": "alpha",
+          "pass": true
+        },
+        {
+          "name": "cat-b exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount reads b.txt exactly",
+          "expected": "beta",
+          "actual": "beta",
+          "pass": true
+        },
+        {
+          "name": "single-name lookup returns one name (not a set query)",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "ls",
+          "content": "a.txt--b30798c7\nb.txt--e27fc815\n"
+        }
+      ],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "baseline note: 'ls | head -1' is a single-name lookup, not a set query; no competitor behavior is measured or claimed"
+  ],
+  "summary": {
+    "total": 4,
+    "pass": 4,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

@@ -1,0 +1,1001 @@
+{
+  "schema": "weftfs.time-travel.receipt/1",
+  "generated_at": "2026-11-03T21:06:33Z",
+  "run": {
+    "started_at": "2026-11-03T21:06:33Z",
+    "finished_at": "2026-11-03T21:06:35Z",
+    "duration_ms": 2000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:fa560f948542bffe8e8dac70f3738dfdfb344ec916fdfca9ffdf09187ee235c7",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "f3d1bc166f11e206ca58d54514b754ab36b70599"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "acf6df6b8358cfd86662cc7f80e20616a276e525"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "6571308223e1d7066a4a369fe5cf2c4efa36488a"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "83c2b6af0e9cb8726ac3c5f2bf73e486585715e1"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "versions",
+      "title": "100 committed versions of one path with snapshots at 1, 50, 100",
+      "status": "pass",
+      "notes": "object=bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d snapshots=v1,v50,v100",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225601000000000 create /history.txt --text version-1\n --seed history-v1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --json --fixed-timestamp-ns 1767225601000000000 stat /history.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225601000000000 snapshot create v1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225602000000000 write /history.txt --text version-2\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225603000000000 write /history.txt --text version-3\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225604000000000 write /history.txt --text version-4\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225605000000000 write /history.txt --text version-5\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225606000000000 write /history.txt --text version-6\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225607000000000 write /history.txt --text version-7\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225608000000000 write /history.txt --text version-8\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225609000000000 write /history.txt --text version-9\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225610000000000 write /history.txt --text version-10\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225611000000000 write /history.txt --text version-11\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225612000000000 write /history.txt --text version-12\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225613000000000 write /history.txt --text version-13\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225614000000000 write /history.txt --text version-14\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225615000000000 write /history.txt --text version-15\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225616000000000 write /history.txt --text version-16\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225617000000000 write /history.txt --text version-17\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225618000000000 write /history.txt --text version-18\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225619000000000 write /history.txt --text version-19\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225620000000000 write /history.txt --text version-20\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225621000000000 write /history.txt --text version-21\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225622000000000 write /history.txt --text version-22\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225623000000000 write /history.txt --text version-23\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225624000000000 write /history.txt --text version-24\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225625000000000 write /history.txt --text version-25\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225626000000000 write /history.txt --text version-26\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225627000000000 write /history.txt --text version-27\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225628000000000 write /history.txt --text version-28\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225629000000000 write /history.txt --text version-29\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225630000000000 write /history.txt --text version-30\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225631000000000 write /history.txt --text version-31\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225632000000000 write /history.txt --text version-32\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225633000000000 write /history.txt --text version-33\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225634000000000 write /history.txt --text version-34\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225635000000000 write /history.txt --text version-35\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225636000000000 write /history.txt --text version-36\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225637000000000 write /history.txt --text version-37\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225638000000000 write /history.txt --text version-38\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225639000000000 write /history.txt --text version-39\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225640000000000 write /history.txt --text version-40\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225641000000000 write /history.txt --text version-41\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225642000000000 write /history.txt --text version-42\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225643000000000 write /history.txt --text version-43\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225644000000000 write /history.txt --text version-44\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225645000000000 write /history.txt --text version-45\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225646000000000 write /history.txt --text version-46\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225647000000000 write /history.txt --text version-47\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225648000000000 write /history.txt --text version-48\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225649000000000 write /history.txt --text version-49\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225650000000000 write /history.txt --text version-50\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225650000000000 snapshot create v50",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225651000000000 write /history.txt --text version-51\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225652000000000 write /history.txt --text version-52\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225653000000000 write /history.txt --text version-53\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225654000000000 write /history.txt --text version-54\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225655000000000 write /history.txt --text version-55\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225656000000000 write /history.txt --text version-56\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225657000000000 write /history.txt --text version-57\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225658000000000 write /history.txt --text version-58\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225659000000000 write /history.txt --text version-59\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225660000000000 write /history.txt --text version-60\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225661000000000 write /history.txt --text version-61\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225662000000000 write /history.txt --text version-62\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225663000000000 write /history.txt --text version-63\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225664000000000 write /history.txt --text version-64\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225665000000000 write /history.txt --text version-65\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225666000000000 write /history.txt --text version-66\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225667000000000 write /history.txt --text version-67\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225668000000000 write /history.txt --text version-68\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225669000000000 write /history.txt --text version-69\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225670000000000 write /history.txt --text version-70\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225671000000000 write /history.txt --text version-71\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225672000000000 write /history.txt --text version-72\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225673000000000 write /history.txt --text version-73\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225674000000000 write /history.txt --text version-74\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225675000000000 write /history.txt --text version-75\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225676000000000 write /history.txt --text version-76\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225677000000000 write /history.txt --text version-77\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225678000000000 write /history.txt --text version-78\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225679000000000 write /history.txt --text version-79\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225680000000000 write /history.txt --text version-80\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225681000000000 write /history.txt --text version-81\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225682000000000 write /history.txt --text version-82\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225683000000000 write /history.txt --text version-83\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225684000000000 write /history.txt --text version-84\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225685000000000 write /history.txt --text version-85\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225686000000000 write /history.txt --text version-86\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225687000000000 write /history.txt --text version-87\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225688000000000 write /history.txt --text version-88\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225689000000000 write /history.txt --text version-89\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225690000000000 write /history.txt --text version-90\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225691000000000 write /history.txt --text version-91\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225692000000000 write /history.txt --text version-92\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225693000000000 write /history.txt --text version-93\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225694000000000 write /history.txt --text version-94\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225695000000000 write /history.txt --text version-95\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225696000000000 write /history.txt --text version-96\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225697000000000 write /history.txt --text version-97\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225698000000000 write /history.txt --text version-98\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225699000000000 write /history.txt --text version-99\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225700000000000 write /history.txt --text version-100\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225700000000000 snapshot create v100",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --json --fixed-timestamp-ns 1767225700000000000 snapshot list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --json --fixed-timestamp-ns 1767225700000000000 info"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-v1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-v1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-v1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v3 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v4 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v5 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v6 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v7 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v8 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v9 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v10 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v11 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v12 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v13 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v14 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v15 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v16 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v17 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v18 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v19 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v20 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v21 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v22 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v23 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v24 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v25 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v26 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v27 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v28 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v29 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v30 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v31 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v32 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v33 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v34 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v35 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v36 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v37 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v38 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v39 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v40 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v41 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v42 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v43 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v44 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v45 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v46 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v47 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v48 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v49 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v50 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-v50 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v51 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v52 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v53 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v54 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v55 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v56 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v57 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v58 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v59 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v60 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v61 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v62 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v63 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v64 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v65 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v66 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v67 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v68 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v69 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v70 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v71 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v72 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v73 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v74 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v75 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v76 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v77 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v78 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v79 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v80 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v81 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v82 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v83 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v84 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v85 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v86 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v87 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v88 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v89 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v90 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v91 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v92 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v93 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v94 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v95 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v96 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v97 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v98 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v99 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-v100 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-v100 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snap-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "three snapshots exist",
+          "expected": "3",
+          "actual": "3",
+          "pass": true
+        },
+        {
+          "name": "info exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "info",
+          "content": "{\n  \"entries\": 1,\n  \"format\": \"weftfs-store 1\",\n  \"generation\": 104,\n  \"objects\": 2,\n  \"recovery_notes\": [],\n  \"rejected_generations\": [],\n  \"relations\": 0,\n  \"snapshot_root\": \"053d99935b42709afdcbfe26299177e6e044059d97afb96239f0d6d837de328c\",\n  \"snapshots\": 3\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "mount-snapshots",
+      "title": "Three snapshots mounted simultaneously (Rust + Go)",
+      "status": "pass",
+      "notes": "each mount serves its pinned snapshot exactly",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z -> /mnt/weft-fuse/f3-845-20261103T210633Z-v1 --snapshot v1",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z -> /mnt/weft-fuse/f3-845-20261103T210633Z-v50 --snapshot v50",
+        "go mount /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z -> /mnt/weft-fuse/f3-845-20261103T210633Z-v100 --snapshot v100",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v1/history.txt",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v50/history.txt",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v100/history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "v1 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "v50 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "v100 historical bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "v1-read",
+          "content": "version-1\n"
+        },
+        {
+          "label": "v50-read",
+          "content": "version-50\n"
+        },
+        {
+          "label": "v100-read",
+          "content": "version-100\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "rename-retag-live",
+      "title": "Rename and retag the live path; historical mounts stay pinned",
+      "status": "pass",
+      "notes": "historical reads unchanged after live rename/retag",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --json --fixed-timestamp-ns 1767225701000000000 stat /history.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225701000000000 rename /history.txt /history-renamed.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --fixed-timestamp-ns 1767225701000000000 relation add --subject bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d --predicate tagged_as --value retagged-after-snapshot",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z --json --fixed-timestamp-ns 1767225701000000000 stat /history-renamed.txt",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v1/history.txt (after live rename/retag)",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v50/history.txt (after live rename/retag)",
+        "cat /mnt/weft-fuse/f3-845-20261103T210633Z-v100/history.txt (after live rename/retag)"
+      ],
+      "assertions": [
+        {
+          "name": "stat-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rename does not change ObjectId",
+          "expected": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "actual": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "pass": true
+        },
+        {
+          "name": "rename-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "retag-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-renamed exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "live path keeps ObjectId after rename/retag",
+          "expected": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "actual": "bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d",
+          "pass": true
+        },
+        {
+          "name": "v1 unchanged after live rename/retag",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "v50 unchanged after live rename/retag",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "v100 unchanged after live rename/retag",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "historical mount does not see the renamed path",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "live-view",
+      "title": "The live store reflects the rename; historical snapshots do not",
+      "status": "pass",
+      "notes": "live rename applied; snapshots unchanged",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z cat /history-renamed.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/time-travel-845-20261103T210633Z cat /history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "cat-live-renamed exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "live path reads the latest bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "cat-live-old-path exit",
+          "expected": "nonzero",
+          "actual": "nonzero",
+          "pass": true
+        },
+        {
+          "name": "live old path is gone",
+          "expected": "contains <NotFound>",
+          "actual": "<match>",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "no io_uring/EKBLOOM acceleration: not implemented; time travel is correctness-only in this stage"
+  ],
+  "summary": {
+    "total": 4,
+    "pass": 4,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

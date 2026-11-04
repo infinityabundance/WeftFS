@@ -1,0 +1,89 @@
+{
+  "schema": "weft-energy-probe-v1",
+  "generated_at_unix": 1793746548,
+  "environment": {
+    "kernel": "7.3.1-1-cachyos",
+    "uname": {
+      "system": "Linux",
+      "node": "e05f08c51447",
+      "release": "7.3.1-1-cachyos",
+      "version": "#1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000",
+      "machine": "x86_64",
+      "processor": ""
+    },
+    "python": "3.11.2 (main, Oct  7 2026, 12:35:07) [GCC 12.2.0]",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_cpus": "4",
+    "court_pids": "1024",
+    "revision_weftfs": "2388352b36920feb7378d953b12dbcd0c30ed2b2",
+    "revision_weftcodec": "ab50e8b182956444c6d3145299b24d46dad2aeea"
+  },
+  "perf": {
+    "installed": false,
+    "which": null,
+    "perf_event_paranoid": "2",
+    "stat_cycles_instructions_task_clock": {
+      "command": [
+        "perf",
+        "stat",
+        "-e",
+        "cycles,instructions,task-clock",
+        "--",
+        "true"
+      ],
+      "available": false,
+      "reason": "perf not installed"
+    },
+    "stat_software_task_clock": {
+      "command": [
+        "perf",
+        "stat",
+        "-e",
+        "task-clock",
+        "--",
+        "true"
+      ],
+      "available": false,
+      "reason": "perf not installed"
+    }
+  },
+  "rapl_powercap": {
+    "directory_exists": true,
+    "entries": [
+      {
+        "path": "/sys/class/powercap/intel-rapl",
+        "energy_uj": "absent",
+        "energy_uj_exists": false,
+        "name": null
+      },
+      {
+        "path": "/sys/class/powercap/intel-rapl:0",
+        "energy_uj": "absent",
+        "energy_uj_exists": false,
+        "name": null
+      },
+      {
+        "path": "/sys/class/powercap/intel-rapl:0:0",
+        "energy_uj": "absent",
+        "energy_uj_exists": false,
+        "name": null
+      }
+    ],
+    "readable_energy_files": 0
+  },
+  "other": {
+    "cpu_scaling_governor": "performance",
+    "cgroup_cpu_stat": "usage_usec 30925\nuser_usec 20957\nsystem_usec 9967\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cgroup_cpu_max": "400000 100000",
+    "cgroup_memory_current": "8589312",
+    "schedstat": "15444248 12915 11"
+  },
+  "conclusion": {
+    "supported_metric": "CPU user and system time per process from wait4 rusage (nanoseconds), plus wall time and max RSS",
+    "energy_measured": false,
+    "why": "perf counters and RAPL energy_uj were probed inside this court; the fields above record exactly what was available",
+    "not_claimed": "CPU time is not energy; no joule, watt, or package-power number is reported or inferred"
+  }
+}
