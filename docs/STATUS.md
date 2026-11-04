@@ -692,10 +692,11 @@ Limits are configurable through the ten requested `decode` flags (plus
 structured-item, selector-depth/operand, and archive-entry bounds); defaults
 remain the normative spec values.
 
-**B5 — deterministic differential fuzz (1,000,000 inputs; 544 zstd divergences found).**
-`bench/receipts/fuzz-diff-20261104T102754Z.json`. A shared seed corpus of 44
-valid WFT1 frames (RAW, ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR,
-TOKEN_SEQUENCE, QUANTIZED_TENSOR, chunked) lives in
+**B5 — deterministic differential fuzz (1,000,000 inputs; 0 mismatches).**
+`bench/receipts/fuzz-diff-20261104T103431Z.json` (direct run) and
+`bench/receipts/fuzz-diff-20261104T103623Z.json` (inside `verify-all`). A shared
+seed corpus of 44 valid WFT1 frames (RAW, ZSTD, REFERENCE, DELTA, DICTIONARY,
+STRUCTURED, TENSOR, TOKEN_SEQUENCE, QUANTIZED_TENSOR, chunked) lives in
 `conformance/fuzz/v1/seeds.txt`. Identical xorshift64* generators in Rust
 (`WeftCodec/examples/fuzz_differential.rs`) and Go
 (`WeftCodec-Go/cmd/fuzzdiff`) produce 1,000,000 inputs with a fixed split:
@@ -709,23 +710,35 @@ critical flag, non-canonical STRUCTURED body), and 1/8 clean seeds. Both
 decoders ran with `Limits::default()` inside the unchanged hard-limited courts;
 corpus hash `4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5`
 (BLAKE3-256 over `LE64(len) || input` per input) matched before comparison.
-Result lines: 1,000,000 each, 0 panics, **544 mismatches** (451 Rust `ok` / Go
-`Corrupt`, 93 Rust `Corrupt` / Go `ok`), all confined to zstd edge cases: Rust
-accepts a zstd frame declaring content size 2 that yields 0 bytes while Go
-rejects it, and Go accepts an empty zstd body with `decoded_len = 0` while Rust
-rejects it. First mismatch: index 614, input prefix `5746543101000004`, Rust
-`ok 9959…71cb`, Go `Corrupt`. Classes are otherwise identical: Rust ok 172,745,
-Corrupt 174,564; Go ok 172,387, Corrupt 174,922; both Malformed 466,432,
-NonCanonical 67,975, DependencyMissing 35,987, LimitExceeded 16,900,
-DependencyMismatch 14,081, UnsupportedMode 12,608, UnsupportedFeature 12,347,
-DependencyCycle 12,349, DependencyDenied 12,313, UnsupportedVersion 1,699.
-Peak RSS was 17,600 KiB (Rust) and 140,708 KiB (Go); elapsed 1,273 ms and
-1,987 ms. The court therefore **fails its zero-mismatch bar** and is retained as
-the evidence for a real cross-language zstd divergence, not papered over. It is
-not coverage-guided fuzzing and not a substitute for the curated B1
-decoder-bomb vectors. Wired into `scripts/verify-all.sh` as `fuzz_diff`;
-the full 19-court verification receipt was not regenerated as part of this
-change.
+
+Normative zstd preamble rule (WEFTCODEC-FORMAT §3, applied identically in Rust
+and Go to ZSTD, DICTIONARY, and every chunked ZSTD chunk): the payload MUST be
+a complete well-formed zstd stream; an empty payload is `Malformed` even when
+`decoded_len == 0`; if the zstd frame header declares a content size it MUST
+equal `decoded_len` (`Corrupt` otherwise, even when the actual byte count
+matches); and the actual decompressed length MUST equal `decoded_len`
+(`Corrupt` otherwise). Both languages enforce this with existing dependencies:
+Rust `zstd::zstd_safe::get_frame_content_size` and Go `zstd.Header.Decode`
+(`HasFCS`/`FrameContentSize`) from klauspost/compress v1.17.11. The Go encoder
+now sets `zstd.WithZeroFrames(true)` so empty plaintext emits a valid minimal
+frame instead of an empty body. New reject vectors
+`038_zstd_empty_body` (`Malformed`) and
+`039_zstd_content_size_mismatch` (`Corrupt`) are byte-identical in both repos.
+
+Result lines: 1,000,000 each, 0 panics, **0 mismatches**, identical class
+distributions: ok 172,294, Corrupt 174,899, Malformed 466,548, NonCanonical
+67,975, DependencyMissing 35,987, LimitExceeded 16,900, DependencyMismatch
+14,081, UnsupportedMode 12,608, UnsupportedFeature 12,347, DependencyCycle
+12,349, DependencyDenied 12,313, UnsupportedVersion 1,699. Peak RSS 6,304 KiB
+(Rust) and 205,888 KiB (Go), inside the 256 MiB bar; elapsed 1,205 ms and
+1,964 ms, total 7,000 ms. The historical failing receipt
+`bench/receipts/fuzz-diff-20261104T102754Z.json` (544 mismatches: 451 Rust ok /
+Go Corrupt on a zstd frame declaring content size 2 while yielding 0 bytes, 93
+Rust Corrupt / Go ok on an empty zstd body with `decoded_len = 0`) is retained
+as the evidence that motivated the rule. The court is not coverage-guided
+fuzzing and not a substitute for the curated B1 decoder-bomb vectors. Wired
+into `scripts/verify-all.sh`; `verify-20261104T103447Z.json` passes all 19
+courts including `fuzz_diff`.
 
 **B4 — randomized POSIX torture (6/6 pass).**
 `bench/receipts/posix-torture-20261103T213317Z.json`. Seeds 1–3, both
