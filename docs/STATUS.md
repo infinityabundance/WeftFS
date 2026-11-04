@@ -40,7 +40,7 @@ it (whole-pair-aware planner); analysis, losses, and caveats are in
 `bench/receipts/buck2-cas-20261104T022511Z.json` (15/15 prototype assertions)
 and `bench/receipts/agent-memory-20261104T022512Z.json` (7/7 simulated-timestamp
 months-later replay). Generated-type drift is `scripts/gen-types.sh --check`,
-wired into `verify-all`.
+wired into `verify-all`. FLOAT_TENSOR (mode 9) now encodes its exponent plane with `huffman-canonical-v1`: `cargo test --all-targets` (133 tests) and `go test ./...` pass in the Docker courts, and `WeftCodec-Go/hack/cross.sh compare` reports `PASS identical float_tensor`, `float_tensor_single`, and `float_tensor_uniform`; this change is on `staging` and is not yet represented in a full `verify-all` receipt.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
 `bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`),
