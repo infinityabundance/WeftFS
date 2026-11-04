@@ -329,6 +329,34 @@ repositories; `v0.3.0` tags exist in each. The research directory and
   `go vet ./...` and `CGO_ENABLED=0 go build ./...` pass in the Go court.
   Golden causal vectors are `conformance/context/v1/causal_versions.json`.
 
+### Contextual indexes for selector resolution (implemented 2026-11-04, in-memory)
+
+- **What it is:** `src/index.rs` `StateIndex` indexes attribute presence and
+  scalar equality (`objects_with_attr`, `objects_by_attr_eq`), outgoing
+  relations per `(subject, predicate)`, and `tagged_as` value edges. Candidate
+  sets are computed per AST node (`And` intersects, `Or` unions, `Not` uses the
+  authorized-set difference only when the inner set is exact) and intersect the
+  authorized universe computed before evaluation.
+- **Semantics:** candidate narrowing only — `eval_expr` remains authoritative and
+  confirms every candidate, so results, evidence, ordering, `matched_count`, and
+  ambiguity are identical to the index-free scan. This is enforced by the
+  differential court `tests/index_equivalence.rs` (3 randomized states, seeds
+  11/29/47, 315 selector/view comparisons, 1,566 assertions, compared against a
+  retained scan oracle).
+- **Cache:** bounded 8-entry LRU keyed by the snapshot commit hash that produced
+  the state; the guard fails closed with `Corrupt` if the index does not
+  describe the state (never a silent under-selection).
+- **Measured:** synthetic in-memory state, 10,000 objects + 10,000 relations,
+  100 queries per kind, release, medians. Relation 132.795 ms → 0.689 ms warm
+  (13.028 ms cold); tag 148.015 ms → 2.051 ms warm (14.044 ms cold); attr-eq
+  1.640 ms → 1.239 ms warm. Receipt
+  `bench/receipts/index-bench-20261104T085157Z.json`; labelled as a resolver-only
+  synthetic measurement, not disk/FUSE/end-to-end.
+- **Not claimed:** the index is **not persisted on disk** and is not yet
+  snapshot-incremental; it is rebuilt from the replayed state on first use per
+  commit. Cold resolution therefore still pays one O(objects+relations) build.
+  On-disk, generation-keyed index segments and replay-skipping are future work.
+
 ### F3 — Context mounts, ambiguity court, time travel, and replay bundle (Rust + Go)
 
 - **`mount --context NAME|weft://...`** (both frontends) makes the resolved
@@ -804,4 +832,10 @@ multi-writer, physical rig).
    Online GC is implemented and opt-in.
 5. F3 follow-ups: partitioned replay bundles, a long-horizon agent-memory
    retention measurement, and any future acceleration (none is claimed now).
-6. Only then consider a `staging` → `main` merge and a versioned release.
+6. Contextual-index follow-ups: persist generation-keyed index segments so a
+   cold open does not rebuild from replay, make index maintenance incremental
+   per commit, add range/ordered indexes for `lt/le/gt/ge`, and re-measure at
+   10^5–10^6 objects. The current index is in-memory and rebuild-on-first-use.
+7. `v0.3.0` was released (per-repo GHCR images, crates.io crates, GitHub
+   releases). The next versioned release should be cut only after items 1–6
+   either close or are explicitly recorded as accepted gaps with receipts.
