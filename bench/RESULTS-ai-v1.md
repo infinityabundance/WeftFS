@@ -260,20 +260,10 @@ and cold numbers so the tradeoff is visible.
 
 ## 9. CDC details, chunk-size sweep, and why it lost
 
-> **Superseded sentence (retained for the record):** "Dedup found almost
-> nothing because the synthetic near-duplicates are **localized edits**, not
-> identical chunks; the revisions shift byte offsets, so the content-defined
-> boundaries rarely reproduce identical chunk spans." Both mechanisms in that
-> sentence are contradicted by measurement: boundaries mostly *do* reproduce,
-> and the revisions never shift offsets before EOF (every edit is a same-length
-> in-place overwrite; each revision appends only at the end). The measured
-> explanation replaces it below (2026-11-04).
-
-Default chunking: gear hash, min 2 KiB, average 8 KiB (`mask = 2^13 − 1`), max
-32 KiB. Default run: 146 unique chunks, 585,400 compressed unique bytes,
-17,694 bytes of index/manifest overhead, 603,094 physical bytes, **+4.74%**
-over forced zstd. That negative result stands; the *reason* in the original
-sentence did not.
+An earlier version of this section attributed the CDC loss to byte-offset
+shifts. That explanation is withdrawn: it is contradicted by the corpus
+(no mid-file insertions) and by the sweep in 9.1 (boundaries mostly
+coincide). The measured explanation is edit density and is given in 9.2.
 
 ### 9.1 Sweep: average chunk size 8 KiB → 512 B
 
@@ -343,7 +333,7 @@ window; at these edit densities most boundaries survive.
 2. **Offsets do not shift.** Every edit is a same-length in-place overwrite and
 each revision appends only at EOF, so no matched chunk sits at a different
 absolute offset: 0 of 11 matched chunks at 8 KiB, 0 of 1,057 at 512 B. "The
-revisions shift byte offsets" is simply not true of this corpus.
+edits move the offsets of matched chunks" is simply not true of this corpus.
 3. **Edit density decides reuse.** Whether a chunk is reusable is whether it
 contains an edit. Checkpoints carry ~1 edit per 333 B, so even a 512 B chunk
 averages ~1.5 edits; agent revisions carry 7 discrete 32 B edits per 49 KiB, so
