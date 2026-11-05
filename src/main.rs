@@ -204,6 +204,10 @@ enum Command {
         /// Explicit semantic candidate ObjectIds (comma-separated hex).
         #[arg(long)]
         candidates: Option<String>,
+        /// Tile extents for a mode-15 `TENSOR_TILED` write (comma-separated).
+        /// Also selects the tiled strategy explicitly.
+        #[arg(long = "tile-shape")]
+        tile_shape: Option<String>,
     },
     /// Write file bytes to stdout.
     Cat {
@@ -618,9 +622,12 @@ enum CheckpointCommand {
         /// Glob filter on tensor names (repeatable; default all tensors).
         #[arg(long = "tensor-filter", value_name = "GLOB")]
         tensor_filters: Vec<String>,
-        /// Per-shard physical strategy: tensor-sharded, zstd, or raw.
+        /// Per-shard physical strategy: tensor-sharded, tensor-tiled, zstd, or raw.
         #[arg(long = "shard-strategy", default_value = "tensor-sharded")]
         shard_strategy: String,
+        /// Tile extents for mode 15 (`A,B,...`). Implies tensor-tiled shards.
+        #[arg(long = "tile-shape", value_name = "A,B,...")]
+        tile_shape: Option<String>,
     },
     /// Restore a checkpoint, one tensor, or one tensor region into the store.
     Restore {
@@ -1166,6 +1173,7 @@ fn run(cli: Cli) -> Result<()> {
             strategy,
             semantic_policy,
             candidates,
+            tile_shape,
         } => {
             let bytes = read_input(text, input_file)?;
             let causal = parse_causal_entries(causal.as_deref())?;
@@ -1194,6 +1202,10 @@ fn run(cli: Cli) -> Result<()> {
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                         candidates: parse_object_ids(candidates.as_deref())?,
                         ..TensorPlanOptions::default()
+                    },
+                    tile_shape: match tile_shape.as_deref() {
+                        Some(text) => Some(parse_u64_list(text, "--tile-shape")?),
+                        None => None,
                     },
                 };
                 let (parent, name) = split_path(&path)?;
@@ -2185,14 +2197,37 @@ fn run_checkpoint(
             axis,
             tensor_filters,
             shard_strategy,
+            tile_shape,
         } => {
             let started = std::time::Instant::now();
             let source = resolve_checkpoint_source(from_dir.as_deref(), file.as_deref())?;
+            let mut strategy = ShardStrategy::parse(&shard_strategy)?;
+            let tile_shape = match tile_shape.as_deref() {
+                Some(text) => Some(parse_u64_list(text, "--tile-shape")?),
+                None => None,
+            };
+            if tile_shape.is_some() {
+                match strategy {
+                    ShardStrategy::TensorSharded => strategy = ShardStrategy::TensorTiled,
+                    ShardStrategy::TensorTiled => {}
+                    other => {
+                        return Err(Error::invalid_argument(format!(
+                            "--tile-shape requires tensor-tiled shards; --shard-strategy {} cannot carry a tile grid",
+                            other.as_str()
+                        )))
+                    }
+                }
+            } else if strategy == ShardStrategy::TensorTiled {
+                return Err(Error::invalid_argument(
+                    "--shard-strategy tensor-tiled requires --tile-shape A,B,...",
+                ));
+            }
             let options = CheckpointWriteOptions {
                 shards,
                 axis,
                 filters: tensor_filters,
-                strategy: ShardStrategy::parse(&shard_strategy)?,
+                strategy,
+                tile_shape,
             };
             let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
             let report = store.write_checkpoint(&name, &source, &options)?;
@@ -2211,6 +2246,7 @@ fn run_checkpoint(
                     "shards": options.shards,
                     "axis": options.axis,
                     "shard_strategy": options.strategy.as_str(),
+                    "tile_shape": options.tile_shape,
                     "total_element_bytes": report.total_element_bytes,
                     "shard_objects": report.shard_objects,
                     "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,

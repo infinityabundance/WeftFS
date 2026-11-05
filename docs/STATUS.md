@@ -2021,3 +2021,65 @@ staging (this commit), both buildable and testable only through
   still one durable write per touched chunk, which is why group commit helps
   metadata far more than content writes. This is a process-fault crash proxy,
   not a physical power-loss claim.
+
+## Subphase Q2 — independently decodable tensor tiles (mode 15)
+
+Implemented at WeftFS `staging` (this commit), WeftCodec `staging` and
+WeftCodec-Go `staging` (this commit), all buildable and testable only through
+`scripts/docker-court.sh`.
+
+- **New payload mode 15 `TENSOR_TILED`** (`weft.ai.tensor_tiled.v1`,
+  `WEFT-AI-CODEC` §16). Mode 10 is unchanged. A tensor is split into a
+  rank-equal, exactly dividing tile grid; every tile stores its canonical
+  row-major bytes as byte planes, each plane coded independently with
+  `huffman-canonical-v1`. The descriptor records `tile_shape`, `tile_counts`,
+  and per-tile `{index, dims, offset, compressed_len, element_len, tile_root}`.
+  `tile_root = H("weft/tensor/tile/v1", WCB({dtype, dims, element_len,
+  values_hash}))`; the whole-tensor `LogicalTensorRoot` is unchanged, so tiling
+  is a physical representation, not a new identity.
+- **Region API in both codecs.** `read_region(descriptor, region)` returns the
+  region's canonical row-major bytes and `tiles_touched`, decoding and
+  verifying only intersecting tiles. `read_region_with` additionally lets a
+  range reader supply the stored tile bytes, so the WeftFS store reads only the
+  descriptor prefix and the intersecting tiles' byte ranges from the backend.
+  Full decode still verifies every tile root, the logical root, the frame
+  trailer, and the content hash.
+- **Checkpoint integration.** `checkpoint write --tile-shape A,B,...` writes
+  mode-15 shard objects (mode 10 stays the default). A non-dividing tile shape
+  is rejected with "no silent padding"; a tiled strategy without a tile shape
+  is rejected. Restore detects the shard's representation and uses element
+  coordinates for tiled shards; region restores report `units_touched` as the
+  number of decoded tiles.
+- **Tests.** Rust codec `cargo test --all-targets`: 194 passed, 0 failed,
+  including `tests/tensor_tiled.rs` (7: roundtrips, region counts, encoder
+  rejects, committed-vector replay 3 valid + 8 rejects). Go codec `go test
+  ./...`: all packages pass, including `modes/tensor_tiled_test.go` and
+  `conformance/tensor_tiled_test.go` (11 vectors replayed byte-exactly).
+  Rust WeftFS `cargo test --all-targets`: 203 passed, 0 failed;
+  `tests/checkpoint_tiles.rs` (3) proves exact whole-checkpoint restore, tiled
+  region accuracy, two touched tiles for the sampled window, and lower backend
+  bytes than mode 10. FUSE all-targets: 237 passed, 0 failed, 2 ignored
+  (pre-existing). Go store/fuse `go test -race -count=1 ./store ./fusefs`
+  passes.
+- **Conformance.** `conformance/v1/tensor-tiled/` has 3 valid + 8 reject
+  vectors, byte-identical in both codec repositories. The cross gate prints
+  `YES byte-identical tensor_tiled_bf16` and `YES byte-identical
+  tensor_tiled_fp32`, and both directions decode to the original bytes.
+- **Measurement.** `bench/receipts/tensor-tiles-20261105T222109Z.json`
+  (single-host fuse court, one real Qwen2.5-0.5B BF16 tensor
+  `model.layers.0.mlp.down_proj.weight`, shape `[896, 4864]`, tile `[32, 256]`,
+  10 reps per row, in-process store API). 100-row slice: mode-10 129.2 ms →
+  mode-15 12.0 ms (10.8×), backend bytes 7,213,077 → 934,413 (−87.0%), touched
+  units 1 shard → 76 tiles. 1-row slice: 127.6 ms → 3.1 ms (40.6×), bytes
+  7,213,077 → 281,816 (−96.1%), units 1 → 19. The restored 100-row slices are
+  byte-identical between the two strategies. After a tiled restore, the mount
+  was read by the unmodified `safetensors` 0.8.0 + NumPy 2.4.6 + ml_dtypes
+  0.6.0 loader: 1/1 tensor materialised, tensor SHA-256 equal to the source
+  (`db708f9a…d572c6`), 5/5 court checks pass.
+- **Residual.** Tiles are full-size only (no partial boundary tiles); the
+  descriptor grows with tile count; a prefix range read deliberately skips the
+  whole-frame trailer/content-hash check and relies on per-tile roots; the
+  benchmark is one host, one public tensor, and a warm in-process store, not a
+  fleet or remote-object-store claim; WeftFS-Go does not implement
+  `weft.checkpoint.v1` and therefore does not yet write or read tiled
+  checkpoints.

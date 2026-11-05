@@ -313,6 +313,7 @@ impl TensorRepresentation {
             "kv-cache" => Some(12),
             "activation" => Some(13),
             "semantic-delta" => Some(14),
+            "tensor-tiled" => Some(15),
             _ => None,
         }
     }
@@ -325,6 +326,7 @@ impl TensorRepresentation {
             12 => Some("kv-cache"),
             13 => Some("activation"),
             14 => Some("semantic-delta"),
+            15 => Some("tensor-tiled"),
             _ => None,
         }
     }

@@ -51,6 +51,7 @@ MODE_NAMES = {
     12: "kv_cache",
     13: "activation_stream",
     14: "semantic_delta",
+    15: "tensor_tiled",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -62,6 +63,7 @@ CODEC_DIRS = {
     "kv-cache": ("frame", "kv_cache", 12, "kv_cache"),
     "activation-stream": ("frame", "activation_stream", 13, "activation_stream"),
     "semantic-delta": ("frame", "semantic_delta", 14, "semantic_delta"),
+    "tensor-tiled": ("frame", "tensor_tiled", 15, "frame"),
     "structured": ("wcb", None, None, "wcb"),
     "selectors": ("selector", None, None, "selector"),
     "context": ("context", "context_root", None, "context"),

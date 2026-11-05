@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "3c981f03fca856c0632ec48d5be166a1ae6513f87b393f934f3555482c2c0bda",
+  "aggregate_sha256": "753c8b3e2cbd76e1270b3ea194890100d16783ad9c73fae09a50a5532897ff30",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 174,
+    "frame": 186,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
-      "aggregate_sha256_from": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
-      "aggregate_sha256_to": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
-      "common_files": 288,
+      "aggregate_sha256_common": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
+      "aggregate_sha256_from": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
+      "aggregate_sha256_to": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
+      "common_files": 300,
       "differing": [],
-      "files_from": 288,
-      "files_to": 288,
+      "files_from": 300,
+      "files_to": 300,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -334,10 +334,27 @@
       ]
     },
     "15": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/tensor-tiled/001_tiled_bf16_4x4.json",
+        "WeftCodec/conformance/v1/tensor-tiled/002_tiled_fp32_2x2x2.json",
+        "WeftCodec/conformance/v1/tensor-tiled/003_tiled_f16_single_tile.json",
+        "WeftCodec/conformance/v1/tensor-tiled/101_non_dividing_tile_shape.json",
+        "WeftCodec/conformance/v1/tensor-tiled/102_tile_count_mismatch.json",
+        "WeftCodec/conformance/v1/tensor-tiled/103_overlapping_tile_offsets.json",
+        "WeftCodec/conformance/v1/tensor-tiled/104_tile_root_mismatch.json",
+        "WeftCodec/conformance/v1/tensor-tiled/105_payload_length_mismatch.json",
+        "WeftCodec/conformance/v1/tensor-tiled/106_unknown_tile_codec.json",
+        "WeftCodec/conformance/v1/tensor-tiled/107_zero_dimension.json",
+        "WeftCodec/conformance/v1/tensor-tiled/108_logical_root_mismatch.json"
+      ]
+    },
+    "16": {
       "error": 1,
       "valid": 0,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json"
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json"
       ]
     },
     "2": {
@@ -466,7 +483,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 295,
+  "vector_count": 307,
   "vectors": [
     {
       "expect": {
@@ -1767,13 +1784,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved15.json"
       ],
       "mode": 15,
-      "mode_name": null,
+      "mode_name": "tensor_tiled",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json",
-      "sha256": "8343a78b81a58dbaeb8e673b09876ed08624cf177a67048994846ad34bcca514",
+      "sha256": "ca9eb08180c9e05932e1d14b66b72ab72c962ecd8bdfa4afd47603069a93bb94",
+      "superseded_by": "017_unknown_mode_reserved16",
       "supersedes": [
         "017_unknown_mode_reserved14"
       ],
       "vector_name": "017_unknown_mode_reserved15"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved16.json"
+      ],
+      "mode": 16,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json",
+      "sha256": "f9657ceee0c3c5103ec4feb7901c68b473727c681036a767e995db285a67969e",
+      "supersedes": [
+        "017_unknown_mode_reserved15"
+      ],
+      "vector_name": "017_unknown_mode_reserved16"
     },
     {
       "expect": {
@@ -4084,6 +4119,177 @@
       "path": "WeftCodec/conformance/v1/structured/020_depth_limit.json",
       "sha256": "ebeed01a43b421ed8b47bf16f2fb64f16b6ec85abadab077a960658476d8af9f",
       "vector_name": "depth_limit"
+    },
+    {
+      "expect": {
+        "content_root": "35153c5803d64f741aa02b737cb4cf0f300207f1613f09ffcc4e90668c151118",
+        "decoded_sha256": "cc6a84643457dbf8cb7bbfd5ac91393643de84b7c73047e785c49a23cecc0a18",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/001_tiled_bf16_4x4.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/001_tiled_bf16_4x4.json",
+      "sha256": "44ce99d56432fbcfc27612de593df1faace9f3cf728122256bf7bf5537ff5eae",
+      "subkind": "tensor_tiled",
+      "vector_name": "001_tiled_bf16_4x4"
+    },
+    {
+      "expect": {
+        "content_root": "2608e85fdb57a59180e410b4d2c7687d6f94c5c7f47dcb928f8ded28655ad06e",
+        "decoded_sha256": "a6d3dd386f1d0be29d79f0e6b3422d9a62f198621d49142c8e8648c3d83bf14a",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/002_tiled_fp32_2x2x2.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/002_tiled_fp32_2x2x2.json",
+      "sha256": "df073b04b6e322b6e6dd64893fb776395a900b8eadd092cf49a6dadda193c11e",
+      "subkind": "tensor_tiled",
+      "vector_name": "002_tiled_fp32_2x2x2"
+    },
+    {
+      "expect": {
+        "content_root": "833426ce7c4baf5e1b8de7691c6aff366695bdb6e6272d84f23de3f2dc9f2195",
+        "decoded_sha256": "4458199158774caf147be50e4d47c65eacb312cdae5c9cc4490323fa9bc85978",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/003_tiled_f16_single_tile.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/003_tiled_f16_single_tile.json",
+      "sha256": "a687a4d03f86944fe79872232f8d5ccc4f0166b987e7224f47037f127552bf0c",
+      "subkind": "tensor_tiled",
+      "vector_name": "003_tiled_f16_single_tile"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/101_non_dividing_tile_shape.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/101_non_dividing_tile_shape.json",
+      "sha256": "401516a81e5c4d48c970211bb8c110c81423f99147646d1c13dc30f10f571bb6",
+      "subkind": "tensor_tiled",
+      "vector_name": "101_non_dividing_tile_shape"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/102_tile_count_mismatch.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/102_tile_count_mismatch.json",
+      "sha256": "aea2616f26c6b44cd3c9b77a069ee7a6a7ccc7e3fe756d6316336f1111330a94",
+      "subkind": "tensor_tiled",
+      "vector_name": "102_tile_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/103_overlapping_tile_offsets.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/103_overlapping_tile_offsets.json",
+      "sha256": "29de0cc5ee44b0d540e71a116549eca028229fccb58f796378605f1276b85361",
+      "subkind": "tensor_tiled",
+      "vector_name": "103_overlapping_tile_offsets"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/104_tile_root_mismatch.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/104_tile_root_mismatch.json",
+      "sha256": "59d92533da834c4dc7b78f431e137123392d55e6771ead19f0754bc39873185b",
+      "subkind": "tensor_tiled",
+      "vector_name": "104_tile_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/105_payload_length_mismatch.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/105_payload_length_mismatch.json",
+      "sha256": "4c707448d726e8b588dd49cf1ee89fab533d85d4c48e0f7459662a7ce087a619",
+      "subkind": "tensor_tiled",
+      "vector_name": "105_payload_length_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/106_unknown_tile_codec.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/106_unknown_tile_codec.json",
+      "sha256": "03868a00ef5b4e6c3a2f200d29fef7e752c88873c92574bef2b5c42f15499c22",
+      "subkind": "tensor_tiled",
+      "vector_name": "106_unknown_tile_codec"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/107_zero_dimension.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/107_zero_dimension.json",
+      "sha256": "aa5a91abebaf8d1e2954ed46cf39bff7589c35ac88665641c612086df559f0e1",
+      "subkind": "tensor_tiled",
+      "vector_name": "107_zero_dimension"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor-tiled/108_logical_root_mismatch.json"
+      ],
+      "mode": 15,
+      "mode_name": "tensor_tiled",
+      "path": "WeftCodec/conformance/v1/tensor-tiled/108_logical_root_mismatch.json",
+      "sha256": "e31cb46f4e94cf7a316d049ec40bd1513182ba3095aed20a8724ee1a87fc4657",
+      "subkind": "tensor_tiled",
+      "vector_name": "108_logical_root_mismatch"
     },
     {
       "expect": {

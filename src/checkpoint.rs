@@ -58,6 +58,8 @@ pub type Sha256Digest = [u8; 32];
 pub enum ShardStrategy {
     /// Mode 10 `TENSOR_SHARDED` with a `q8_0` byte-word transport.
     TensorSharded,
+    /// Mode 15 `TENSOR_TILED` over the shard's logical dtype.
+    TensorTiled,
     /// One ZSTD frame per shard (exact fallback).
     Zstd,
     /// Raw chunks per shard (exact fallback).
@@ -68,10 +70,11 @@ impl ShardStrategy {
     pub fn parse(text: &str) -> Result<Self> {
         match text {
             "tensor-sharded" => Ok(ShardStrategy::TensorSharded),
+            "tensor-tiled" => Ok(ShardStrategy::TensorTiled),
             "zstd" => Ok(ShardStrategy::Zstd),
             "raw" => Ok(ShardStrategy::Raw),
             other => Err(Error::invalid_argument(format!(
-                "--shard-strategy must be `tensor-sharded`, `zstd`, or `raw` (got `{other}`)"
+                "--shard-strategy must be `tensor-sharded`, `tensor-tiled`, `zstd`, or `raw` (got `{other}`)"
             ))),
         }
     }
@@ -79,6 +82,7 @@ impl ShardStrategy {
     pub fn as_str(self) -> &'static str {
         match self {
             ShardStrategy::TensorSharded => "tensor-sharded",
+            ShardStrategy::TensorTiled => "tensor-tiled",
             ShardStrategy::Zstd => "zstd",
             ShardStrategy::Raw => "raw",
         }
@@ -93,6 +97,8 @@ pub struct CheckpointWriteOptions {
     /// Glob patterns matched against tensor names; empty selects every tensor.
     pub filters: Vec<String>,
     pub strategy: ShardStrategy,
+    /// Tile extents for `ShardStrategy::TensorTiled` (mode 15).
+    pub tile_shape: Option<Vec<u64>>,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -102,6 +108,7 @@ impl Default for CheckpointWriteOptions {
             axis: 0,
             filters: Vec::new(),
             strategy: ShardStrategy::TensorSharded,
+            tile_shape: None,
         }
     }
 }
@@ -690,6 +697,30 @@ fn byte_shape(shape: &[u64], element_bytes: u64) -> Result<Vec<u64>> {
     Ok(out)
 }
 
+fn validate_tile_shape(shape: &[u64], tile_shape: &[u64]) -> Result<()> {
+    if tile_shape.len() != shape.len() {
+        return Err(Error::invalid_argument(format!(
+            "--tile-shape rank {} does not equal the shard rank {} (no silent padding)",
+            tile_shape.len(),
+            shape.len()
+        )));
+    }
+    for (axis, (extent, tile)) in shape.iter().zip(tile_shape.iter()).enumerate() {
+        if *tile == 0 {
+            return Err(Error::invalid_argument(format!(
+                "--tile-shape axis {axis} must be greater than zero"
+            )));
+        }
+        if *extent % *tile != 0 {
+            return Err(Error::invalid_argument(format!(
+                "--tile-shape axis {axis} extent {tile} does not divide shard extent {extent} \
+                 (no silent padding)"
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn ensure_dir(store: &mut Store, parent: Hash32, name: &[u8]) -> Result<Hash32> {
     match store.lookup(parent, name) {
         Ok(id) => {
@@ -819,6 +850,29 @@ impl Store {
                     ),
                 ));
             }
+            if options.strategy == ShardStrategy::TensorTiled {
+                let tile = options.tile_shape.as_ref().ok_or_else(|| {
+                    Error::invalid_argument(
+                        "--shard-strategy tensor-tiled requires --tile-shape A,B,...",
+                    )
+                })?;
+                for shard_index in 0..options.shards {
+                    let shard_shape =
+                        tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
+                    validate_tile_shape(&shard_shape, tile).map_err(|err| {
+                        Error::new(
+                            err.class(),
+                            format!(
+                                "tensor `{}` shard shape {:?} cannot be tiled {:?}: {}",
+                                tensor.name,
+                                shard_shape,
+                                tile,
+                                err.message()
+                            ),
+                        )
+                    })?;
+                }
+            }
         }
 
         let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
@@ -855,33 +909,57 @@ impl Store {
                         &limits,
                     )?;
                     let object_name = shard_object_name(tensor_index, shard_index);
-                    let (store_dtype, store_shape, hint) = match options.strategy {
+                    let (store_dtype, store_shape, hint, tile_shape) = match options.strategy {
                         // A q8_0 object treats every payload byte as a
                         // quantized word, so the mode-10 round trip is exact.
                         // The transport shape doubles the last logical
                         // dimension by the element size, keeping the payload's
                         // row-major byte order addressable.
                         ShardStrategy::TensorSharded => (
-                            "q8_0",
+                            "q8_0".to_owned(),
                             byte_shape(&shard_shape, physical.element_size())?,
                             TensorStrategy::TensorSharded,
+                            None,
                         ),
-                        ShardStrategy::Zstd => {
-                            (dtype.as_str(), shard_shape.clone(), TensorStrategy::Zstd)
+                        // Mode 15 carries the shard under its real dtype and
+                        // shape; tile coordinates are logical coordinates.
+                        ShardStrategy::TensorTiled => {
+                            let tile = options.tile_shape.clone().ok_or_else(|| {
+                                Error::invalid_argument(
+                                    "tensor-tiled checkpoint shards require --tile-shape",
+                                )
+                            })?;
+                            validate_tile_shape(&shard_shape, &tile)?;
+                            (
+                                dtype.as_str().to_owned(),
+                                shard_shape.clone(),
+                                TensorStrategy::TensorTiled,
+                                Some(tile),
+                            )
                         }
-                        ShardStrategy::Raw => {
-                            (dtype.as_str(), shard_shape.clone(), TensorStrategy::Raw)
-                        }
+                        ShardStrategy::Zstd => (
+                            dtype.as_str().to_owned(),
+                            shard_shape.clone(),
+                            TensorStrategy::Zstd,
+                            None,
+                        ),
+                        ShardStrategy::Raw => (
+                            dtype.as_str().to_owned(),
+                            shard_shape.clone(),
+                            TensorStrategy::Raw,
+                            None,
+                        ),
                     };
                     let spec = TensorWriteSpec {
                         strategy_hint: Some(hint),
+                        tile_shape,
                         ..TensorWriteSpec::default()
                     };
                     let id = store
                         .write_tensor_file_with_spec(
                             dir,
                             object_name.as_bytes(),
-                            store_dtype,
+                            &store_dtype,
                             &store_shape,
                             &shard_bytes,
                             &TensorLayoutSpec::row_major(),
@@ -892,6 +970,9 @@ impl Store {
                                 ShardStrategy::TensorSharded => {
                                     " (mode 10 needs a shard byte length divisible by 16; \
                                      choose --shard-strategy zstd otherwise)"
+                                }
+                                ShardStrategy::TensorTiled => {
+                                    " (mode 15 needs a tile shape that divides every shard extent)"
                                 }
                                 _ => "",
                             };
@@ -1565,26 +1646,35 @@ impl Store {
                     let local = Region::new(local_start, local_end);
                     // Confirm the shard entry still resolves to the recorded
                     // object, then take the region through the stored object.
-                    // The store verifies the shard's own mode-10 root while
-                    // decoding it.
+                    // Mode 10 stores a q8_0 byte transport addressed in byte
+                    // coordinates; mode 15 stores the shard's real dtype and
+                    // shape and is addressed in logical coordinates.
                     self.verify_shard_entry(checkpoint, tensor, shard, state, snapshot)?;
+                    let store_meta = match state {
+                        Some(state) => self.tensor_metadata_at(state, shard.object_id)?,
+                        None => self.tensor_metadata(shard.object_id)?,
+                    };
                     let local_extent = local.extent();
                     let expected_len = tc::payload_len(checked_product(&local_extent)?, physical)?;
                     let rank = local_extent.len();
-                    let mut byte_start = local.start.clone();
-                    let mut byte_end = local.end.clone();
-                    let last = rank - 1;
-                    let esize = element_bytes as u64;
-                    byte_start[last] = byte_start[last]
-                        .checked_mul(esize)
-                        .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
-                    byte_end[last] = byte_end[last]
-                        .checked_mul(esize)
-                        .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
-                    let byte_region = Region::new(byte_start, byte_end);
-                    let read = self
-                        .read_tensor_region(shard.object_id, &byte_region)
-                        .map_err(|err| context(&tensor.name, shard, err))?;
+                    let read = if store_meta.strategy == "tensor-tiled" {
+                        self.read_tensor_region(shard.object_id, &local)
+                            .map_err(|err| context(&tensor.name, shard, err))?
+                    } else {
+                        let mut byte_start = local.start.clone();
+                        let mut byte_end = local.end.clone();
+                        let last = rank - 1;
+                        let esize = element_bytes as u64;
+                        byte_start[last] = byte_start[last]
+                            .checked_mul(esize)
+                            .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
+                        byte_end[last] = byte_end[last]
+                            .checked_mul(esize)
+                            .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
+                        let byte_region = Region::new(byte_start, byte_end);
+                        self.read_tensor_region(shard.object_id, &byte_region)
+                            .map_err(|err| context(&tensor.name, shard, err))?
+                    };
                     if read.bytes.len() as u64 != expected_len {
                         return Err(context(
                             &tensor.name,

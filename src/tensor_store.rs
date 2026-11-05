@@ -66,6 +66,8 @@ pub enum TensorStrategy {
     Zstd,
     /// One mode-10 `TENSOR_SHARDED` frame.
     TensorSharded,
+    /// One mode-15 `TENSOR_TILED` frame.
+    TensorTiled,
     /// One mode-11 `WEIGHT_DELTA` frame against the causal parent.
     WeightDelta,
     /// One mode-14 `SEMANTIC_DELTA` frame against a same-semantic-root base.
@@ -83,6 +85,7 @@ impl TensorStrategy {
             TensorStrategy::Raw => "raw",
             TensorStrategy::Zstd => "zstd",
             TensorStrategy::TensorSharded => "tensor-sharded",
+            TensorStrategy::TensorTiled => "tensor-tiled",
             TensorStrategy::WeightDelta => "weight-delta",
             TensorStrategy::SemanticDelta => "semantic-delta",
             TensorStrategy::KvCache => "kv-cache",
@@ -96,6 +99,7 @@ impl TensorStrategy {
             "raw" => Ok(TensorStrategy::Raw),
             "zstd" => Ok(TensorStrategy::Zstd),
             "tensor-sharded" => Ok(TensorStrategy::TensorSharded),
+            "tensor-tiled" => Ok(TensorStrategy::TensorTiled),
             "weight-delta" => Ok(TensorStrategy::WeightDelta),
             "semantic-delta" => Ok(TensorStrategy::SemanticDelta),
             "kv-cache" => Ok(TensorStrategy::KvCache),
@@ -111,6 +115,7 @@ impl TensorStrategy {
         match self {
             TensorStrategy::Raw | TensorStrategy::Zstd => None,
             TensorStrategy::TensorSharded => Some(10),
+            TensorStrategy::TensorTiled => Some(15),
             TensorStrategy::WeightDelta => Some(11),
             TensorStrategy::KvCache => Some(12),
             TensorStrategy::Activation => Some(13),
@@ -435,6 +440,9 @@ pub struct TensorWriteSpec {
     pub causal: Vec<Hash32>,
     /// Planner options.
     pub plan: TensorPlanOptions,
+    /// Tile extents for a mode-15 `TENSOR_TILED` write. `None` never offers
+    /// the tiled strategy; the caller opts in explicitly.
+    pub tile_shape: Option<Vec<u64>>,
 }
 
 /// One priced planner candidate.
@@ -496,7 +504,9 @@ fn estimated_decode_ns(strategy: TensorStrategy, size: u64) -> u64 {
     match strategy {
         TensorStrategy::Raw => size / 200 + 20_000,
         TensorStrategy::Zstd => size + 50_000,
-        TensorStrategy::TensorSharded => size.saturating_mul(4) + 100_000,
+        TensorStrategy::TensorSharded | TensorStrategy::TensorTiled => {
+            size.saturating_mul(4) + 100_000
+        }
         TensorStrategy::WeightDelta => size.saturating_mul(3) + 100_000,
         TensorStrategy::SemanticDelta => size.saturating_mul(3) + 150_000,
         TensorStrategy::KvCache | TensorStrategy::Activation => size + 100_000,
@@ -604,8 +614,15 @@ impl Store {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize(dtype, shape, bytes)?;
-        let prepared =
-            self.prepare_candidates(dtype, shape, &logical, layout, &spec.causal, &spec.plan)?;
+        let prepared = self.prepare_candidates(
+            dtype,
+            shape,
+            &logical,
+            layout,
+            &spec.causal,
+            &spec.plan,
+            spec.tile_shape.as_deref(),
+        )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
             .artifact
@@ -656,7 +673,8 @@ impl Store {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize(dtype, shape, bytes)?;
-        let prepared = self.prepare_candidates(dtype, shape, &logical, layout, causal, options)?;
+        let prepared =
+            self.prepare_candidates(dtype, shape, &logical, layout, causal, options, None)?;
         let chosen = self.choose_candidate(&prepared, None)?;
         let mut runner_up: Option<&PreparedCandidate> = None;
         let mut applicable: Vec<&PreparedCandidate> = prepared
@@ -697,10 +715,27 @@ impl Store {
 
     /// Read a logical hyper-rectangle of a tensor object in row-major order.
     ///
-    /// Delta and Huffman frames are not independently seekable, so the whole
-    /// object is decoded before the region is sliced; the returned region is
-    /// exact and the touched-unit count is one.
+    /// A mode-15 `TENSOR_TILED` object reads only the byte ranges of the tiles
+    /// the region intersects and decodes only those tiles. Every other tensor
+    /// representation is not independently seekable, so the whole object is
+    /// decoded before the region is sliced; the returned region is exact and
+    /// the touched-unit count is one.
     pub fn read_tensor_region(&self, id: Hash32, region: &Region) -> Result<RegionRead> {
+        let record = self.object_meta(id)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        if let Some(rep) = &manifest.representation {
+            if rep.kind == RepresentationKind::Tensor {
+                if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 15 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        return self.read_tiled_region(frame_id, tensor, region);
+                    }
+                }
+            }
+        }
         let meta = self.tensor_metadata(id)?;
         let bytes = self.read_object(id)?;
         let physical = meta
@@ -711,6 +746,119 @@ impl Store {
         tensor
             .read_region_with_limits(region, &Limits::default())
             .map_err(Error::from)
+    }
+
+    /// Region read for a mode-15 object using per-tile backend range reads.
+    ///
+    /// Only the frame prefix (header plus descriptor) and the stored ranges of
+    /// intersecting tiles are read. Each decoded tile is verified against its
+    /// own `tile_root`; the descriptor's dtype, shape and logical root are
+    /// checked against the representation manifest before any tile is read.
+    fn read_tiled_region(
+        &self,
+        frame_id: Hash32,
+        tensor: &TensorRepresentation,
+        region: &Region,
+    ) -> Result<RegionRead> {
+        let limits = Limits::default();
+        let key = crate::backend::Key::manifest(frame_id);
+
+        // Probe the fixed header plus the 4-byte descriptor length.
+        let probe = self.with_backend(|backend| backend.read(&key, 0, 100))?;
+        if probe.len() < 100 {
+            return Err(Error::corrupt(
+                "mode-15 frame is shorter than its header and descriptor length",
+            ));
+        }
+        let (header, _) = weftcodec::frame::parse_prefix(&probe, &limits)?;
+        if header.mode != Mode::TensorTiled {
+            return Err(Error::corrupt(format!(
+                "tensor representation mode 15 has frame mode `{}`",
+                header.mode.as_str()
+            )));
+        }
+        if header.table_len != 0 || header.dep_count != 0 || header.chunk_count != 0 {
+            return Err(Error::corrupt(
+                "mode-15 frame must not carry dependency or chunk tables",
+            ));
+        }
+        // AI-mode frames have table_len 0, so the body starts at byte 96.
+        let meta_len = u64::from(u32::from_le_bytes([
+            probe[96], probe[97], probe[98], probe[99],
+        ]));
+        if meta_len
+            .checked_add(4)
+            .map(|end| end > header.body_len)
+            .unwrap_or(true)
+        {
+            return Err(Error::corrupt(
+                "mode-15 descriptor length extends past the frame body",
+            ));
+        }
+        weftcodec::limits::check_len(meta_len, limits.max_string_bytes, "mode-15 descriptor")?;
+        let prefix_len = 96u64
+            .checked_add(4)
+            .and_then(|value| value.checked_add(meta_len))
+            .ok_or_else(|| Error::limit_exceeded("mode-15 prefix length overflows"))?;
+        let prefix = if probe.len() as u64 >= prefix_len {
+            probe
+        } else {
+            self.with_backend(|backend| backend.read(&key, 0, prefix_len))?
+        };
+        if prefix.len() as u64 != prefix_len {
+            return Err(Error::corrupt("mode-15 frame prefix is truncated"));
+        }
+        let descriptor_bytes = &prefix[100..];
+        let stored_payload_len = header.body_len - 4 - meta_len;
+        let meta = weftcodec::modes::parse_tiled_descriptor(
+            descriptor_bytes,
+            header.decoded_len,
+            stored_payload_len,
+            &limits,
+        )?;
+        let physical = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("mode-15 dtype has no element layout"))?;
+        if meta.dtype != physical {
+            return Err(Error::corrupt(format!(
+                "mode-15 dtype `{}` disagrees with manifest dtype `{}`",
+                meta.dtype.as_str(),
+                tensor.dtype.as_str()
+            )));
+        }
+        if meta.shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-15 shape disagrees with the representation manifest",
+            ));
+        }
+        if meta.logical_root != tensor.logical_root {
+            return Err(Error::corrupt(
+                "mode-15 logical_root disagrees with the manifest logical_root",
+            ));
+        }
+        let payload_base = prefix_len;
+        let mut captured: Option<Error> = None;
+        let outcome = weftcodec::modes::read_region_with(&meta, region, &limits, |entry| {
+            let offset = payload_base
+                .checked_add(entry.offset)
+                .ok_or_else(|| weftcodec::Error::corrupt("tile offset overflows"))?;
+            match self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len)) {
+                Ok(bytes) => Ok(bytes),
+                Err(err) => {
+                    captured = Some(err);
+                    Err(weftcodec::Error::corrupt("tile range read failed"))
+                }
+            }
+        });
+        match outcome {
+            Ok((bytes, tiles)) => Ok(RegionRead {
+                shape: region.extent(),
+                bytes,
+                units_touched: tiles,
+            }),
+            Err(err) => Err(captured.unwrap_or_else(|| Error::from(err))),
+        }
     }
 
     /// Recompute and verify an object's `LogicalTensorRoot`.
@@ -942,6 +1090,7 @@ impl Store {
             &meta.layout,
             &causal,
             &spec.plan,
+            None,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -984,6 +1133,7 @@ impl Store {
         layout: &TensorLayoutSpec,
         causal: &[Hash32],
         options: &TensorPlanOptions,
+        tile_shape: Option<&[u64]>,
     ) -> Result<Vec<PreparedCandidate>> {
         let limits = Limits::default();
         let size = logical.len() as u64;
@@ -1114,6 +1264,49 @@ impl Store {
                     dtype.as_str()
                 ),
             ));
+        }
+
+        // Mode 15 tensor-tiled. The tiled representation is never planned
+        // implicitly: a caller must name the tile shape, so existing objects
+        // stay on mode 10 / zstd / raw.
+        match tile_shape {
+            Some(tile_shape) => {
+                match self.prepare_mode15(dtype, shape, logical, tile_shape, &limits) {
+                    Ok((frame, root)) => {
+                        let physical = frame.len() as u64;
+                        let estimate = estimated_decode_ns(TensorStrategy::TensorTiled, size);
+                        out.push(PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::TensorTiled,
+                                applicable: true,
+                                detail: format!("one mode-15 frame tiled {:?}", tile_shape),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                cost: Some(price(physical, estimate, options.lambda_ns)),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "tensor-tiled".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 15,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: root,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                            }),
+                        });
+                    }
+                    Err(err) => out.push(skipped(TensorStrategy::TensorTiled, err.to_string())),
+                }
+            }
+            None => out.push(skipped(
+                TensorStrategy::TensorTiled,
+                "no tile shape supplied".to_owned(),
+            )),
         }
 
         // Mode 11 weight-delta against the causal parent.
@@ -1247,6 +1440,31 @@ impl Store {
             limits,
         )?;
         Ok((frame, root))
+    }
+
+    fn prepare_mode15(
+        &self,
+        dtype: TensorElementDtype,
+        shape: &[u64],
+        logical: &[u8],
+        tile_shape: &[u64],
+        limits: &Limits,
+    ) -> Result<(Vec<u8>, Hash32)> {
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::invalid_argument(format!(
+                "dtype `{}` has no element layout for mode 15",
+                dtype.as_str()
+            ))
+        })?;
+        let frame = weftcodec::encode_tiled_tensor(logical, physical, shape, tile_shape, limits)?;
+        let parsed = Frame::parse(&frame, limits)?;
+        let meta = weftcodec::tiled_tensor_metadata(&parsed, limits)?;
+        if meta.shape != shape {
+            return Err(Error::corrupt(
+                "mode-15 shape disagrees with the write shape",
+            ));
+        }
+        Ok((frame, meta.logical_root))
     }
 
     fn prepare_delta(
@@ -1651,6 +1869,7 @@ impl Store {
             12 => Mode::KvCache,
             13 => Mode::ActivationStream,
             14 => Mode::SemanticDelta,
+            15 => Mode::TensorTiled,
             other => {
                 return Err(Error::corrupt(format!(
                     "tensor_mode {other} is not a defined tensor frame mode"
@@ -1670,6 +1889,7 @@ impl Store {
             14 => self.decode_delta(&frame, tensor, rep, &limits, depth, seen, true)?,
             12 => self.decode_kv_page(&frame, tensor, &limits)?,
             13 => self.decode_activation(&frame, tensor, &limits)?,
+            15 => self.decode_mode15(&frame, tensor, manifest, &limits)?,
             _ => unreachable!("checked above"),
         };
         if logical.len() as u64 != manifest.size || logical.len() as u64 != rep.decoded_size {
@@ -1751,6 +1971,44 @@ impl Store {
             ));
         }
         Ok(words.iter().map(|word| *word as u8).collect())
+    }
+
+    fn decode_mode15(
+        &self,
+        frame: &Frame<'_>,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        limits: &Limits,
+    ) -> Result<Vec<u8>> {
+        let meta = weftcodec::tiled_tensor_metadata(frame, limits)?;
+        let physical = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("mode-15 dtype has no element layout"))?;
+        if meta.dtype != physical {
+            return Err(Error::corrupt(format!(
+                "mode-15 dtype `{}` disagrees with manifest dtype `{}`",
+                meta.dtype.as_str(),
+                tensor.dtype.as_str()
+            )));
+        }
+        if meta.shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-15 shape disagrees with the representation manifest",
+            ));
+        }
+        if meta.logical_root != tensor.logical_root {
+            return Err(Error::corrupt(
+                "mode-15 logical_root disagrees with the manifest logical_root",
+            ));
+        }
+        let logical = weftcodec::decode_tiled_tensor(frame, limits)?;
+        if logical.len() as u64 != manifest.size {
+            return Err(Error::corrupt(
+                "mode-15 decoded length disagrees with the manifest",
+            ));
+        }
+        Ok(logical)
     }
 
     #[allow(clippy::too_many_arguments)]
