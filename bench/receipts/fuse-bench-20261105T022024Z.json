@@ -1,0 +1,2121 @@
+{
+  "cells": {
+    "1_metadata": {
+      "params": {
+        "dirs": 200,
+        "files": 2000,
+        "files_per_dir": 10
+      },
+      "targets": {
+        "ext4": {
+          "reps": [
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 6855825,
+                  "p50_ns": 3125,
+                  "p95_ns": 5029,
+                  "p99_ns": 8166,
+                  "mean_ns": 3427.9125
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 814261,
+                  "p50_ns": 371,
+                  "p95_ns": 511,
+                  "p99_ns": 581,
+                  "mean_ns": 407.1305
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 559507,
+                  "p50_ns": 2675,
+                  "p95_ns": 2905,
+                  "p99_ns": 4779,
+                  "mean_ns": 2797.535
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 3179873,
+                  "p50_ns": 1543,
+                  "p95_ns": 1764,
+                  "p99_ns": 1954,
+                  "mean_ns": 1589.9365
+                }
+              },
+              "rep": 1
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 6302291,
+                  "p50_ns": 2966,
+                  "p95_ns": 4067,
+                  "p99_ns": 7224,
+                  "mean_ns": 3151.1455
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 806832,
+                  "p50_ns": 380,
+                  "p95_ns": 531,
+                  "p99_ns": 631,
+                  "mean_ns": 403.416
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 638629,
+                  "p50_ns": 2685,
+                  "p95_ns": 2976,
+                  "p99_ns": 5310,
+                  "mean_ns": 3193.145
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 3331852,
+                  "p50_ns": 1593,
+                  "p95_ns": 1884,
+                  "p99_ns": 3156,
+                  "mean_ns": 1665.926
+                }
+              },
+              "rep": 2
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 7024319,
+                  "p50_ns": 3186,
+                  "p95_ns": 4599,
+                  "p99_ns": 9738,
+                  "mean_ns": 3512.1595
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 980030,
+                  "p50_ns": 441,
+                  "p95_ns": 601,
+                  "p99_ns": 781,
+                  "mean_ns": 490.015
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 578089,
+                  "p50_ns": 2755,
+                  "p95_ns": 3086,
+                  "p99_ns": 4839,
+                  "mean_ns": 2890.445
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 3298469,
+                  "p50_ns": 1613,
+                  "p95_ns": 1893,
+                  "p99_ns": 2064,
+                  "mean_ns": 1649.2345
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "latency": {
+              "create": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 3125,
+                "p95_ns": 4599,
+                "p99_ns": 8166,
+                "mean_ns": 3427.9125
+              },
+              "readdir": {
+                "op": "median-across-reps",
+                "count": 200,
+                "total_ns": 0,
+                "p50_ns": 2685,
+                "p95_ns": 2976,
+                "p99_ns": 4839,
+                "mean_ns": 2890.445
+              },
+              "stat": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 380,
+                "p95_ns": 531,
+                "p99_ns": 631,
+                "mean_ns": 407.1305
+              },
+              "unlink": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 1593,
+                "p95_ns": 1884,
+                "p99_ns": 2064,
+                "mean_ns": 1649.2345
+              }
+            },
+            "ops_per_s": {
+              "create": 291722.73212924774,
+              "readdir": 345967.4894350178,
+              "stat": 2456214.8991539567,
+              "unlink": 606341.9119597607
+            }
+          }
+        },
+        "go": {
+          "reps": [
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 6758197451,
+                  "p50_ns": 3198511,
+                  "p95_ns": 4365333,
+                  "p99_ns": 9938326,
+                  "mean_ns": 3379098.7255
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 356688206,
+                  "p50_ns": 175660,
+                  "p95_ns": 186060,
+                  "p99_ns": 241083,
+                  "mean_ns": 178344.103
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 82884615,
+                  "p50_ns": 367781,
+                  "p95_ns": 408157,
+                  "p99_ns": 684757,
+                  "mean_ns": 414423.075
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 6410877150,
+                  "p50_ns": 3089405,
+                  "p95_ns": 4146352,
+                  "p99_ns": 4853210,
+                  "mean_ns": 3205438.575
+                }
+              },
+              "rep": 1
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 6591710135,
+                  "p50_ns": 3121315,
+                  "p95_ns": 4173853,
+                  "p99_ns": 5113918,
+                  "mean_ns": 3295855.0675
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 349352537,
+                  "p50_ns": 171933,
+                  "p95_ns": 184877,
+                  "p99_ns": 216907,
+                  "mean_ns": 174676.2685
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 75723962,
+                  "p50_ns": 365116,
+                  "p95_ns": 392738,
+                  "p99_ns": 695446,
+                  "mean_ns": 378619.81
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 6365837834,
+                  "p50_ns": 3080347,
+                  "p95_ns": 4081688,
+                  "p99_ns": 4690864,
+                  "mean_ns": 3182918.917
+                }
+              },
+              "rep": 2
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 6654425693,
+                  "p50_ns": 3162728,
+                  "p95_ns": 4189406,
+                  "p99_ns": 7731425,
+                  "mean_ns": 3327212.8465
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 349518578,
+                  "p50_ns": 172023,
+                  "p95_ns": 185498,
+                  "p99_ns": 223790,
+                  "mean_ns": 174759.289
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 76710486,
+                  "p50_ns": 370967,
+                  "p95_ns": 404329,
+                  "p99_ns": 668094,
+                  "mean_ns": 383552.43
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 6338047060,
+                  "p50_ns": 3081926,
+                  "p95_ns": 4054302,
+                  "p99_ns": 4711565,
+                  "mean_ns": 3169023.53
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "latency": {
+              "create": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 3162728,
+                "p95_ns": 4189406,
+                "p99_ns": 7731425,
+                "mean_ns": 3327212.8465
+              },
+              "readdir": {
+                "op": "median-across-reps",
+                "count": 200,
+                "total_ns": 0,
+                "p50_ns": 367781,
+                "p95_ns": 404329,
+                "p99_ns": 684757,
+                "mean_ns": 383552.43
+              },
+              "stat": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 172023,
+                "p95_ns": 185498,
+                "p99_ns": 223790,
+                "mean_ns": 174759.289
+              },
+              "unlink": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 3081926,
+                "p95_ns": 4081688,
+                "p99_ns": 4711565,
+                "mean_ns": 3182918.917
+              }
+            },
+            "ops_per_s": {
+              "create": 300.551857105244,
+              "readdir": 2607.2054868743758,
+              "stat": 5722.156491492707,
+              "unlink": 314.1770262066654
+            }
+          }
+        },
+        "rust": {
+          "reps": [
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 12710358079,
+                  "p50_ns": 6043700,
+                  "p95_ns": 8289462,
+                  "p99_ns": 9433481,
+                  "mean_ns": 6355179.0395
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 90229873,
+                  "p50_ns": 42780,
+                  "p95_ns": 50936,
+                  "p99_ns": 58660,
+                  "mean_ns": 45114.9365
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 17038682,
+                  "p50_ns": 82746,
+                  "p95_ns": 96221,
+                  "p99_ns": 121459,
+                  "mean_ns": 85193.41
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 12588958954,
+                  "p50_ns": 6020686,
+                  "p95_ns": 8077011,
+                  "p99_ns": 9288038,
+                  "mean_ns": 6294479.477
+                }
+              },
+              "rep": 1
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 23602108422,
+                  "p50_ns": 6048852,
+                  "p95_ns": 10739516,
+                  "p99_ns": 125767091,
+                  "mean_ns": 11801054.211
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 88083112,
+                  "p50_ns": 42270,
+                  "p95_ns": 50575,
+                  "p99_ns": 63169,
+                  "mean_ns": 44041.556
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 16692196,
+                  "p50_ns": 82134,
+                  "p95_ns": 88827,
+                  "p99_ns": 96131,
+                  "mean_ns": 83460.98
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 12531758695,
+                  "p50_ns": 6008184,
+                  "p95_ns": 8078894,
+                  "p99_ns": 9026713,
+                  "mean_ns": 6265879.3475
+                }
+              },
+              "rep": 2
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 12636507043,
+                  "p50_ns": 6031606,
+                  "p95_ns": 8143022,
+                  "p99_ns": 9153448,
+                  "mean_ns": 6318253.5215
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 90607133,
+                  "p50_ns": 42269,
+                  "p95_ns": 51957,
+                  "p99_ns": 61204,
+                  "mean_ns": 45303.5665
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 17160968,
+                  "p50_ns": 84278,
+                  "p95_ns": 98144,
+                  "p99_ns": 107362,
+                  "mean_ns": 85804.84
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 12581322274,
+                  "p50_ns": 6021295,
+                  "p95_ns": 8006073,
+                  "p99_ns": 8977938,
+                  "mean_ns": 6290661.137
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "latency": {
+              "create": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 6043700,
+                "p95_ns": 8289462,
+                "p99_ns": 9433481,
+                "mean_ns": 6355179.0395
+              },
+              "readdir": {
+                "op": "median-across-reps",
+                "count": 200,
+                "total_ns": 0,
+                "p50_ns": 82746,
+                "p95_ns": 96221,
+                "p99_ns": 107362,
+                "mean_ns": 85193.41
+              },
+              "stat": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 42270,
+                "p95_ns": 50936,
+                "p99_ns": 61204,
+                "mean_ns": 45114.9365
+              },
+              "unlink": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 6020686,
+                "p95_ns": 8077011,
+                "p99_ns": 9026713,
+                "mean_ns": 6290661.137
+              }
+            },
+            "ops_per_s": {
+              "create": 157.35197919438568,
+              "readdir": 11737.997105644674,
+              "stat": 22165.608057544312,
+              "unlink": 158.96580315195573
+            }
+          }
+        },
+        "tmpfs": {
+          "reps": [
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 4013551,
+                  "p50_ns": 1763,
+                  "p95_ns": 4589,
+                  "p99_ns": 6011,
+                  "mean_ns": 2006.7755
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 753450,
+                  "p50_ns": 361,
+                  "p95_ns": 441,
+                  "p99_ns": 541,
+                  "mean_ns": 376.725
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 422167,
+                  "p50_ns": 2014,
+                  "p95_ns": 2284,
+                  "p99_ns": 4078,
+                  "mean_ns": 2110.835
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 1483996,
+                  "p50_ns": 671,
+                  "p95_ns": 912,
+                  "p99_ns": 962,
+                  "mean_ns": 741.998
+                }
+              },
+              "rep": 1
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 3964705,
+                  "p50_ns": 1764,
+                  "p95_ns": 3587,
+                  "p99_ns": 6261,
+                  "mean_ns": 1982.3525
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 909074,
+                  "p50_ns": 391,
+                  "p95_ns": 551,
+                  "p99_ns": 661,
+                  "mean_ns": 454.537
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 432915,
+                  "p50_ns": 2073,
+                  "p95_ns": 2374,
+                  "p99_ns": 3948,
+                  "mean_ns": 2164.575
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 1408725,
+                  "p50_ns": 682,
+                  "p95_ns": 812,
+                  "p99_ns": 902,
+                  "mean_ns": 704.3625
+                }
+              },
+              "rep": 2
+            },
+            {
+              "raw": {
+                "kind": "meta",
+                "dirs": 200,
+                "files_per_dir": 10,
+                "create": {
+                  "op": "create",
+                  "count": 2000,
+                  "total_ns": 3811553,
+                  "p50_ns": 1723,
+                  "p95_ns": 3527,
+                  "p99_ns": 5721,
+                  "mean_ns": 1905.7765
+                },
+                "stat": {
+                  "op": "stat",
+                  "count": 2000,
+                  "total_ns": 837678,
+                  "p50_ns": 361,
+                  "p95_ns": 521,
+                  "p99_ns": 601,
+                  "mean_ns": 418.839
+                },
+                "readdir": {
+                  "op": "readdir",
+                  "count": 200,
+                  "total_ns": 428969,
+                  "p50_ns": 2064,
+                  "p95_ns": 2335,
+                  "p99_ns": 3667,
+                  "mean_ns": 2144.845
+                },
+                "unlink": {
+                  "op": "unlink",
+                  "count": 2000,
+                  "total_ns": 1412943,
+                  "p50_ns": 681,
+                  "p95_ns": 832,
+                  "p99_ns": 941,
+                  "mean_ns": 706.4715
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "latency": {
+              "create": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 1763,
+                "p95_ns": 3587,
+                "p99_ns": 6011,
+                "mean_ns": 1982.3525
+              },
+              "readdir": {
+                "op": "median-across-reps",
+                "count": 200,
+                "total_ns": 0,
+                "p50_ns": 2064,
+                "p95_ns": 2335,
+                "p99_ns": 3948,
+                "mean_ns": 2144.845
+              },
+              "stat": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 361,
+                "p95_ns": 521,
+                "p99_ns": 601,
+                "mean_ns": 418.839
+              },
+              "unlink": {
+                "op": "median-across-reps",
+                "count": 2000,
+                "total_ns": 0,
+                "p50_ns": 681,
+                "p95_ns": 832,
+                "p99_ns": 941,
+                "mean_ns": 706.4715
+              }
+            },
+            "ops_per_s": {
+              "create": 504451.1508422443,
+              "readdir": 466234.1567805599,
+              "stat": 2387552.257550037,
+              "unlink": 1415485.2672754668
+            }
+          }
+        }
+      }
+    },
+    "2_fio": {
+      "params": {
+        "direct": 0,
+        "iodepth": 1,
+        "ioengine": "psync",
+        "numjobs": 1,
+        "randwrite_bs": "4k",
+        "randwrite_io_size": "512K",
+        "seqwrite_bs": "1M",
+        "seqwrite_io_size": "64M",
+        "size": "256M"
+      },
+      "targets": {
+        "ext4": {
+          "randwrite-4k": {
+            "reps": [
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 1192,
+                "p95_ns": 2008,
+                "p99_ns": 7008,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 1192,
+                            "95.000000": 2008,
+                            "99.000000": 7008
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 1176,
+                "p95_ns": 2096,
+                "p99_ns": 3120,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 1176,
+                            "95.000000": 2096,
+                            "99.000000": 3120
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 1176,
+                "p95_ns": 2024,
+                "p99_ns": 5920,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 1176,
+                            "95.000000": 2024,
+                            "99.000000": 5920
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 128000,
+              "mb_s": 500,
+              "p50_ns": 1176,
+              "p95_ns": 2024,
+              "p99_ns": 5920
+            }
+          },
+          "seqwrite-1m": {
+            "reps": [
+              {
+                "bw_kib_s": 9362285,
+                "iops": 9142.857143,
+                "mb_s": 9142.8564453125,
+                "p50_ns": 94720,
+                "p95_ns": 125440,
+                "p99_ns": 148480,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9142.857143,
+                        "bw": 9362285,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 94720,
+                            "95.000000": 125440,
+                            "99.000000": 148480
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 9362285,
+                "iops": 9142.857143,
+                "mb_s": 9142.8564453125,
+                "p50_ns": 93696,
+                "p95_ns": 116224,
+                "p99_ns": 144384,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9142.857143,
+                        "bw": 9362285,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 93696,
+                            "95.000000": 116224,
+                            "99.000000": 144384
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 10922666,
+                "iops": 10666.666667,
+                "mb_s": 10666.666015625,
+                "p50_ns": 78336,
+                "p95_ns": 83456,
+                "p99_ns": 117248,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 10666.666667,
+                        "bw": 10922666,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 78336,
+                            "95.000000": 83456,
+                            "99.000000": 117248
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 9142.857143,
+              "mb_s": 9142.8564453125,
+              "p50_ns": 93696,
+              "p95_ns": 116224,
+              "p99_ns": 144384
+            }
+          }
+        },
+        "go": {
+          "randwrite-4k": {
+            "reps": [
+              {
+                "bw_kib_s": 10,
+                "iops": 2.516168,
+                "mb_s": 0.009765625,
+                "p50_ns": 396361728,
+                "p95_ns": 421527552,
+                "p99_ns": 425721856,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 2.516168,
+                        "bw": 10,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 396361728,
+                            "95.000000": 421527552,
+                            "99.000000": 425721856
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 10,
+                "iops": 2.537216,
+                "mb_s": 0.009765625,
+                "p50_ns": 392167424,
+                "p95_ns": 404750336,
+                "p99_ns": 425721856,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 2.537216,
+                        "bw": 10,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 392167424,
+                            "95.000000": 404750336,
+                            "99.000000": 425721856
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 10,
+                "iops": 2.548633,
+                "mb_s": 0.009765625,
+                "p50_ns": 392167424,
+                "p95_ns": 396361728,
+                "p99_ns": 396361728,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 2.548633,
+                        "bw": 10,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 392167424,
+                            "95.000000": 396361728,
+                            "99.000000": 396361728
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 2.537216,
+              "mb_s": 0.009765625,
+              "p50_ns": 392167424,
+              "p95_ns": 404750336,
+              "p99_ns": 425721856
+            }
+          },
+          "seqwrite-1m": {
+            "reps": [
+              {
+                "bw_kib_s": 321,
+                "iops": 0.313782,
+                "mb_s": 0.3134765625,
+                "p50_ns": 3170893824,
+                "p95_ns": 3204448256,
+                "p99_ns": 3238002688,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 0.313782,
+                        "bw": 321,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 3170893824,
+                            "95.000000": 3204448256,
+                            "99.000000": 3238002688
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 321,
+                "iops": 0.313742,
+                "mb_s": 0.3134765625,
+                "p50_ns": 3170893824,
+                "p95_ns": 3271557120,
+                "p99_ns": 3372220416,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 0.313742,
+                        "bw": 321,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 3170893824,
+                            "95.000000": 3271557120,
+                            "99.000000": 3372220416
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 322,
+                "iops": 0.314767,
+                "mb_s": 0.314453125,
+                "p50_ns": 3170893824,
+                "p95_ns": 3238002688,
+                "p99_ns": 3305111552,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 0.314767,
+                        "bw": 322,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 3170893824,
+                            "95.000000": 3238002688,
+                            "99.000000": 3305111552
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 0.313782,
+              "mb_s": 0.3134765625,
+              "p50_ns": 3170893824,
+              "p95_ns": 3238002688,
+              "p99_ns": 3305111552
+            }
+          }
+        },
+        "rust": {
+          "randwrite-4k": {
+            "reps": [
+              {
+                "bw_kib_s": 36,
+                "iops": 9.249892,
+                "mb_s": 0.03515625,
+                "p50_ns": 108527616,
+                "p95_ns": 111673344,
+                "p99_ns": 112721920,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9.249892,
+                        "bw": 36,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 108527616,
+                            "95.000000": 111673344,
+                            "99.000000": 112721920
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 37,
+                "iops": 9.371111,
+                "mb_s": 0.0361328125,
+                "p50_ns": 106430464,
+                "p95_ns": 109576192,
+                "p99_ns": 110624768,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9.371111,
+                        "bw": 37,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 106430464,
+                            "95.000000": 109576192,
+                            "99.000000": 110624768
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 37,
+                "iops": 9.397254,
+                "mb_s": 0.0361328125,
+                "p50_ns": 106430464,
+                "p95_ns": 109576192,
+                "p99_ns": 109576192,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9.397254,
+                        "bw": 37,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 106430464,
+                            "95.000000": 109576192,
+                            "99.000000": 109576192
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 9.371111,
+              "mb_s": 0.0361328125,
+              "p50_ns": 106430464,
+              "p95_ns": 109576192,
+              "p99_ns": 110624768
+            }
+          },
+          "seqwrite-1m": {
+            "reps": [
+              {
+                "bw_kib_s": 6934,
+                "iops": 6.77177,
+                "mb_s": 6.771484375,
+                "p50_ns": 147849216,
+                "p95_ns": 154140672,
+                "p99_ns": 158334976,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 6.77177,
+                        "bw": 6934,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 147849216,
+                            "95.000000": 154140672,
+                            "99.000000": 158334976
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 7083,
+                "iops": 6.917423,
+                "mb_s": 6.9169921875,
+                "p50_ns": 143654912,
+                "p95_ns": 147849216,
+                "p99_ns": 149946368,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 6.917423,
+                        "bw": 7083,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 143654912,
+                            "95.000000": 147849216,
+                            "99.000000": 149946368
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 7087,
+                "iops": 6.921164,
+                "mb_s": 6.9208984375,
+                "p50_ns": 143654912,
+                "p95_ns": 147849216,
+                "p99_ns": 149946368,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 6.921164,
+                        "bw": 7087,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 143654912,
+                            "95.000000": 147849216,
+                            "99.000000": 149946368
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 6.917423,
+              "mb_s": 6.9169921875,
+              "p50_ns": 143654912,
+              "p95_ns": 147849216,
+              "p99_ns": 149946368
+            }
+          }
+        },
+        "tmpfs": {
+          "randwrite-4k": {
+            "reps": [
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 692,
+                "p95_ns": 1020,
+                "p99_ns": 1176,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 692,
+                            "95.000000": 1020,
+                            "99.000000": 1176
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 852,
+                "p95_ns": 1256,
+                "p99_ns": 1336,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 852,
+                            "95.000000": 1256,
+                            "99.000000": 1336
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 512000,
+                "iops": 128000,
+                "mb_s": 500,
+                "p50_ns": 692,
+                "p95_ns": 996,
+                "p99_ns": 1048,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 128000,
+                        "bw": 512000,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 692,
+                            "95.000000": 996,
+                            "99.000000": 1048
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 128000,
+              "mb_s": 500,
+              "p50_ns": 692,
+              "p95_ns": 1020,
+              "p99_ns": 1176
+            }
+          },
+          "seqwrite-1m": {
+            "reps": [
+              {
+                "bw_kib_s": 9362285,
+                "iops": 9142.857143,
+                "mb_s": 9142.8564453125,
+                "p50_ns": 90624,
+                "p95_ns": 118272,
+                "p99_ns": 193536,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9142.857143,
+                        "bw": 9362285,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 90624,
+                            "95.000000": 118272,
+                            "99.000000": 193536
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 1
+              },
+              {
+                "bw_kib_s": 9362285,
+                "iops": 9142.857143,
+                "mb_s": 9142.8564453125,
+                "p50_ns": 92672,
+                "p95_ns": 109056,
+                "p99_ns": 123392,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 9142.857143,
+                        "bw": 9362285,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 92672,
+                            "95.000000": 109056,
+                            "99.000000": 123392
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 2
+              },
+              {
+                "bw_kib_s": 10922666,
+                "iops": 10666.666667,
+                "mb_s": 10666.666015625,
+                "p50_ns": 78336,
+                "p95_ns": 114176,
+                "p99_ns": 144384,
+                "raw": {
+                  "jobs": [
+                    {
+                      "write": {
+                        "iops": 10666.666667,
+                        "bw": 10922666,
+                        "clat_ns": {
+                          "percentile": {
+                            "50.000000": 78336,
+                            "95.000000": 114176,
+                            "99.000000": 144384
+                          }
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      },
+                      "read": {
+                        "iops": 0,
+                        "bw": 0,
+                        "clat_ns": {
+                          "percentile": null
+                        },
+                        "lat_ns": {
+                          "percentile": null
+                        }
+                      }
+                    }
+                  ]
+                },
+                "rep": 3
+              }
+            ],
+            "median": {
+              "iops": 9142.857143,
+              "mb_s": 9142.8564453125,
+              "p50_ns": 90624,
+              "p95_ns": 114176,
+              "p99_ns": 144384
+            }
+          }
+        }
+      }
+    },
+    "3_small_overwrite": {
+      "params": {
+        "block_bytes": 4096,
+        "count": 500,
+        "file_size": "128M",
+        "sync_per_op": true,
+        "targets": "WeftFS (Rust and Go) only"
+      },
+      "targets": {
+        "go": {
+          "reps": [
+            {
+              "ops_per_s": 2.4917634282084933,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 200661103835,
+                  "p50_ns": 400388269,
+                  "p95_ns": 405772276,
+                  "p99_ns": 427397227,
+                  "mean_ns": 401322207.67
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 11333939,
+                  "p50_ns": 21911,
+                  "p95_ns": 29805,
+                  "p99_ns": 36057,
+                  "mean_ns": 22667.878
+                }
+              },
+              "rep": 1
+            },
+            {
+              "ops_per_s": 2.5403123584513807,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 196826188849,
+                  "p50_ns": 392304581,
+                  "p95_ns": 407136264,
+                  "p99_ns": 427493602,
+                  "mean_ns": 393652377.698
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 11561502,
+                  "p50_ns": 22141,
+                  "p95_ns": 31088,
+                  "p99_ns": 36618,
+                  "mean_ns": 23123.004
+                }
+              },
+              "rep": 2
+            },
+            {
+              "ops_per_s": 2.555839526172168,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 195630435667,
+                  "p50_ns": 390337060,
+                  "p95_ns": 396603573,
+                  "p99_ns": 417573697,
+                  "mean_ns": 391260871.334
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 11299481,
+                  "p50_ns": 21801,
+                  "p95_ns": 29735,
+                  "p99_ns": 35665,
+                  "mean_ns": 22598.962
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "ops_per_s": 2.5403123584513807,
+            "sync": {
+              "op": "median-across-reps",
+              "count": 500,
+              "total_ns": 0,
+              "p50_ns": 21911,
+              "p95_ns": 29805,
+              "p99_ns": 36057,
+              "mean_ns": 22667.878
+            },
+            "total": {
+              "op": "median-across-reps",
+              "count": 500,
+              "total_ns": 0,
+              "p50_ns": 392304581,
+              "p95_ns": 405772276,
+              "p99_ns": 427397227,
+              "mean_ns": 393652377.698
+            }
+          }
+        },
+        "rust": {
+          "reps": [
+            {
+              "ops_per_s": 8.445591836403786,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 59202482157,
+                  "p50_ns": 118028303,
+                  "p95_ns": 122019747,
+                  "p99_ns": 123616276,
+                  "mean_ns": 118404964.314
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 6883272,
+                  "p50_ns": 13064,
+                  "p95_ns": 18835,
+                  "p99_ns": 24226,
+                  "mean_ns": 13766.544
+                }
+              },
+              "rep": 1
+            },
+            {
+              "ops_per_s": 9.220527965051645,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 54226829732,
+                  "p50_ns": 108216010,
+                  "p95_ns": 111487971,
+                  "p99_ns": 113105639,
+                  "mean_ns": 108453659.464
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 7239620,
+                  "p50_ns": 12834,
+                  "p95_ns": 18415,
+                  "p99_ns": 26178,
+                  "mean_ns": 14479.24
+                }
+              },
+              "rep": 2
+            },
+            {
+              "ops_per_s": 9.223155202845794,
+              "raw": {
+                "kind": "overwrite",
+                "file_size": 134217728,
+                "count": 500,
+                "block_bytes": 4096,
+                "total": {
+                  "op": "overwrite",
+                  "count": 500,
+                  "total_ns": 54211383090,
+                  "p50_ns": 108166511,
+                  "p95_ns": 111572350,
+                  "p99_ns": 113299964,
+                  "mean_ns": 108422766.18
+                },
+                "sync": {
+                  "op": "sync",
+                  "count": 500,
+                  "total_ns": 6808203,
+                  "p50_ns": 12924,
+                  "p95_ns": 19016,
+                  "p99_ns": 26019,
+                  "mean_ns": 13616.406
+                }
+              },
+              "rep": 3
+            }
+          ],
+          "median": {
+            "ops_per_s": 9.220527965051645,
+            "sync": {
+              "op": "median-across-reps",
+              "count": 500,
+              "total_ns": 0,
+              "p50_ns": 12924,
+              "p95_ns": 18835,
+              "p99_ns": 26019,
+              "mean_ns": 13766.544
+            },
+            "total": {
+              "op": "median-across-reps",
+              "count": 500,
+              "total_ns": 0,
+              "p50_ns": 108216010,
+              "p95_ns": 111572350,
+              "p99_ns": 113299964,
+              "mean_ns": 108453659.464
+            }
+          }
+        }
+      }
+    },
+    "4_cold_mount": {
+      "max": {
+        "mount_ms": 478.604,
+        "readdir_ms": 461.575792
+      },
+      "median": {
+        "entries": 10001,
+        "mount_ms": 472.424,
+        "readdir_ms": 455.035599
+      },
+      "params": {
+        "context": "saved Context Root over all 10,000 objects",
+        "objects": 10000,
+        "reps": 3
+      },
+      "reps": [
+        {
+          "rep": 1,
+          "mount_ms": 472.377,
+          "entries": 10001,
+          "readdir_ns": 446264265
+        },
+        {
+          "rep": 2,
+          "mount_ms": 472.424,
+          "entries": 10001,
+          "readdir_ns": 455035599
+        },
+        {
+          "rep": 3,
+          "mount_ms": 478.604,
+          "entries": 10001,
+          "readdir_ns": 461575792
+        }
+      ]
+    }
+  },
+  "commands": "cargo build --release --features fuse --bin weftfs\n(cd WeftFS-Go \u0026\u0026 CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/go-weftfs ./cmd/weftfs)\n(cd .docker-cache/fuse-bench/helpers \u0026\u0026 CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/metaops metaops.go)\n(cd .docker-cache/fuse-bench/helpers \u0026\u0026 CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/assemble assemble.go)\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 init\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/rust --foreground\n/work/.docker-cache/fuse-bench/run/bin/go-weftfs --store /work/.docker-cache/fuse-bench/run/store-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/go \n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r1 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r1 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r1 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r2 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r2 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r2 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r3 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r3 200 10\n/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r3 200 10\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99\nfio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99\nfio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat 500 4096\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat 500 4096\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat 500 4096\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat 500 4096\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat 500 4096\ntruncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat\n/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat 500 4096\ncargo build --offline --release --manifest-path /work/.docker-cache/fuse-bench/builder/Cargo.toml\n/work/.docker-cache/target-rust/release/weft-fuse-bench-builder --store /work/.docker-cache/fuse-bench/run/store-context --count 10000\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context snapshot create all\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context context create --name all --selector 'select attrs.bench == \"fuse-v05\"' --snapshot all\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all\n",
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "fio_direct": "0",
+    "fio_size": "256M",
+    "memory": "131565228 kB",
+    "nproc": "16",
+    "overwrite_bytes": "128M",
+    "overwrite_count": "500",
+    "page_cache_dropped": "false",
+    "randwrite_io_size": "512K",
+    "reps": "3",
+    "revision_weftcodec": "90d9c13e8a4702c131aaeac4e6d18fc439392ae3",
+    "revision_weftcodec_go": "cf62bb151275401f0a6556e33c9f9fc993cc3c31",
+    "revision_weftfs": "8c8e5a3b8e5d872103f172e192621b8eb945c415",
+    "revision_weftfs_go": "1c990705209cde372cd072440a3b171e56e4cdcf",
+    "seqwrite_io_size": "64M",
+    "uname": "Linux bbe19fb3ef95 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux"
+  },
+  "fio_version": "fio-3.33",
+  "generated_at": "2026-11-05T02:51:00Z",
+  "go_error": "",
+  "go_status": "ok",
+  "kind": "mounted-filesystem-end-to-end",
+  "label": "single host, synthetic deterministic fixtures, buffered I/O; page caches not dropped; observations are not hardware-independent claims",
+  "limitations": [
+    "tmpfs is a REFERENCE ONLY: no durability, no FUSE layer, not an equivalent filesystem. No superiority claim follows.",
+    "ext4 is the host ext4 filesystem behind the /work bind mount. It is not a dedicated block device passed to the container, so host activity and host page cache apply.",
+    "fio runs buffered (direct=0). Direct I/O is not benchmarked: same-inode concurrent direct I/O on this kernel/fuser can return EIO (docs/fuse-status.md).",
+    "4 KiB random write samples 512 KiB of I/O (128 I/Os) and 1 MiB sequential write samples 64 MiB (64 I/Os) inside a 256 MiB file layout. The Go write path costs O(file size) per write, so full-size sampling exceeds the 30-minute court. IOPS is the real FUSE path; total bytes are bounded and stated.",
+    "Cell 3 uses a sparse 128 MiB file created by ftruncate so file preparation does not dominate the court; every timed 4 KiB overwrite still goes through the real write path and fsync.",
+    "Cell 4 measures mount-to-ready as 'mount visible and a root getattr succeeds' and the first readdir of the context root. The backing store files are not cold.",
+    "Three repetitions give scoped medians and within-run percentiles, not a confidence interval.",
+    "No physical power-loss durability is tested here.",
+    "Rust and Go are independent daemons over the same on-disk format; differences include implementation, not just language."
+  ],
+  "mounts": {
+    "context": "target=context\npath=/work/.docker-cache/fuse-bench/run/mnt/context\nstat_fs_type=fuseblk\nstat_fs_blocks=10075\n/work/.docker-cache/fuse-bench/run/mnt/context weftfs fuse   ro,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other\n699 1031 0:77 / /work/.docker-cache/fuse-bench/run/mnt/context ro,nosuid,nodev,relatime - fuse weftfs ro,user_id=0,group_id=0,default_permissions,allow_other\n",
+    "ext4": "target=ext4\npath=/work/.docker-cache/fuse-bench/run/ext4\nstat_fs_type=ext2/ext3\nstat_fs_blocks=348236417\n/work  /dev/nvme1n1p1[/WeftFS] ext4   rw,relatime\n",
+    "go": "target=go\npath=/work/.docker-cache/fuse-bench/run/mnt/go\nstat_fs_type=fuseblk\nstat_fs_blocks=1\n/work/.docker-cache/fuse-bench/run/mnt/go weftfs fuse.weftfs rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,max_read=131072\n698 1031 0:76 / /work/.docker-cache/fuse-bench/run/mnt/go rw,nosuid,nodev,relatime - fuse.weftfs weftfs rw,user_id=0,group_id=0,default_permissions,max_read=131072\n",
+    "rust": "target=rust\npath=/work/.docker-cache/fuse-bench/run/mnt/rust\nstat_fs_type=fuseblk\nstat_fs_blocks=1\n/work/.docker-cache/fuse-bench/run/mnt/rust weftfs fuse   rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other\n697 1031 0:75 / /work/.docker-cache/fuse-bench/run/mnt/rust rw,nosuid,nodev,relatime - fuse weftfs rw,user_id=0,group_id=0,default_permissions,allow_other\n",
+    "tmpfs": "target=tmpfs\npath=/mnt/weft-bench/tmpfs-fuse-bench\nstat_fs_type=tmpfs\nstat_fs_blocks=262144\n/mnt/weft-bench tmpfs  tmpfs  rw,nosuid,nodev,noexec,relatime,size=1048576k,mode=755,inode64,huge=advise\n"
+  },
+  "notes": [
+    "All runs are inside one OOM-limited bench court (memory==swap, pids, cpus, bounded /tmp).",
+    "Raw per-repetition observations are embedded; raw fio JSON is embedded per repetition.",
+    "No `winner` field is emitted. See bench/RESULTS-fuse-v0.5.md for scoped analysis and losses.",
+    "Helper programs (metadata/overwrite driver and receipt assembler) are generated under .docker-cache; product code is unchanged."
+  ],
+  "page_cache": {
+    "dropped": false,
+    "reason": "/proc/sys/vm/drop_caches is not writable in this court; no host cache is dropped. See bench/RESULTS-fuse-v0.5.md.",
+    "state": {
+      "cell_1": "entries are created and removed inside the timed loop; first repetition is cold for the mount, later repetitions reuse warm metadata caches",
+      "cell_2": "fio is buffered (direct=0); file data may sit in the page cache; end-of-job flush is included in runtime",
+      "cell_3": "the 128 MiB file is created with ftruncate (sparse) before the timed overwrites; each overwrite allocates its touched chunks",
+      "cell_4": "FUSE caches are empty after each unmount; the backing store files are warm in the host page cache"
+    }
+  },
+  "schema": "weft-fuse-bench-v1"
+}

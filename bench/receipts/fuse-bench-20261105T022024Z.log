@@ -1,0 +1,1842 @@
++ trap cleanup EXIT
+++ uname -r
++ log 'fuse bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3'
++ printf '%s\n' 'fuse bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3'
+fuse bench: image=weft/bench-court:1 kernel=7.3.1-1-cachyos reps=3
++ fio --version
+++ uname -a
++ echo 'uname=Linux bbe19fb3ef95 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 06:43:52 +0000 x86_64 GNU/Linux'
+++ nproc
++ echo nproc=16
+++ awk '-F: ' '/model name/ {print $2; exit}' /proc/cpuinfo
++ echo 'cpu=AMD Ryzen 7 9800X3D 8-Core Processor'
+++ awk '/MemTotal/ {print $2" kB"; exit}' /proc/meminfo
++ echo 'memory=131565228 kB'
++ echo court_image=weft/bench-court:1
++ echo court_image_id=sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a
++ echo court_kernel=7.3.1-1-cachyos
++ echo court_memory=3g
++ echo court_cpus=4
++ echo court_pids=1024
++ echo docker_client=29.1.5
++ echo docker_server=29.9.2
++ echo revision_weftfs=8c8e5a3b8e5d872103f172e192621b8eb945c415
++ echo revision_weftfs_go=1c990705209cde372cd072440a3b171e56e4cdcf
++ echo revision_weftcodec=90d9c13e8a4702c131aaeac4e6d18fc439392ae3
++ echo revision_weftcodec_go=cf62bb151275401f0a6556e33c9f9fc993cc3c31
++ echo page_cache_dropped=false
++ echo fio_direct=0
++ echo reps=3
++ echo fio_size=256M
++ echo randwrite_io_size=512K
++ echo seqwrite_io_size=64M
++ echo overwrite_bytes=128M
++ echo overwrite_count=500
++ record_cmd 'cargo build --release --features fuse --bin weftfs'
++ printf '%s\n' 'cargo build --release --features fuse --bin weftfs'
++ cargo build --release --features fuse --bin weftfs
+    Finished `release` profile [optimized] target(s) in 0.01s
++ TARGET=/work/.docker-cache/target-rust/release
++ RUSTFS=/work/.docker-cache/target-rust/release/weftfs
++ '[' -x /work/.docker-cache/target-rust/release/weftfs ']'
++ record_cmd '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/go-weftfs ./cmd/weftfs)'
++ printf '%s\n' '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/go-weftfs ./cmd/weftfs)'
++ GO_STATUS=ok
++ GOFS=/work/.docker-cache/fuse-bench/run/bin/go-weftfs
++ record_cmd '(cd .docker-cache/fuse-bench/helpers && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/metaops metaops.go)'
++ printf '%s\n' '(cd .docker-cache/fuse-bench/helpers && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/metaops metaops.go)'
++ cd /work/.docker-cache/fuse-bench/helpers
++ CGO_ENABLED=0
++ go build -o /work/.docker-cache/fuse-bench/run/bin/metaops metaops.go
++ record_cmd '(cd .docker-cache/fuse-bench/helpers && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/assemble assemble.go)'
++ printf '%s\n' '(cd .docker-cache/fuse-bench/helpers && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-bench/run/bin/assemble assemble.go)'
++ cd /work/.docker-cache/fuse-bench/helpers
++ CGO_ENABLED=0
++ go build -o /work/.docker-cache/fuse-bench/run/bin/assemble assemble.go
++ '[' 0 = 1 ']'
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 init'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 init'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-bench/run/store-rust /work/.docker-cache/fuse-bench/run/mnt/rust rust --foreground
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-bench/run/store-rust mnt=/work/.docker-cache/fuse-bench/run/mnt/rust name=rust extra=--foreground
++ mkdir -p /work/.docker-cache/fuse-bench/run/mnt/rust
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/rust --foreground'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/rust --foreground'
++ local pid=142
++ MOUNT_PIDS+=("$pid")
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/rust
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/rust --foreground
++ kill -0 142
++ tries=1
++ '[' 1 -gt 600 ']'
++ sleep 0.05
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/rust
++ stat -c %i /work/.docker-cache/fuse-bench/run/mnt/rust
++ return 0
++ mountinfo rust /work/.docker-cache/fuse-bench/run/mnt/rust
++ local name=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ local out=/work/.docker-cache/fuse-bench/run/raw/mountinfo-rust.txt
++ echo target=rust
++ echo path=/work/.docker-cache/fuse-bench/run/mnt/rust
+++ stat -f -c %T /work/.docker-cache/fuse-bench/run/mnt/rust
++ echo stat_fs_type=fuseblk
+++ stat -f -c %b /work/.docker-cache/fuse-bench/run/mnt/rust
++ echo stat_fs_blocks=1
++ findmnt -T /work/.docker-cache/fuse-bench/run/mnt/rust -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /work/.docker-cache/fuse-bench/run/mnt/rust ' /proc/self/mountinfo
++ GO_MNT_ACTIVE=0
++ '[' ok = ok ']'
++ /work/.docker-cache/fuse-bench/run/bin/go-weftfs --store /work/.docker-cache/fuse-bench/run/store-go --fixed-timestamp-ns 1767225600000000000 init
++ start_mount /work/.docker-cache/fuse-bench/run/bin/go-weftfs /work/.docker-cache/fuse-bench/run/store-go /work/.docker-cache/fuse-bench/run/mnt/go go
++ local cli=/work/.docker-cache/fuse-bench/run/bin/go-weftfs store=/work/.docker-cache/fuse-bench/run/store-go mnt=/work/.docker-cache/fuse-bench/run/mnt/go name=go extra=
++ mkdir -p /work/.docker-cache/fuse-bench/run/mnt/go
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/go-weftfs --store /work/.docker-cache/fuse-bench/run/store-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/go '
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/go-weftfs --store /work/.docker-cache/fuse-bench/run/store-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/go '
++ local pid=162
++ MOUNT_PIDS+=("$pid")
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/go
++ /work/.docker-cache/fuse-bench/run/bin/go-weftfs --store /work/.docker-cache/fuse-bench/run/store-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/go
++ kill -0 162
++ tries=1
++ '[' 1 -gt 600 ']'
++ sleep 0.05
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/go
++ stat -c %i /work/.docker-cache/fuse-bench/run/mnt/go
++ return 0
++ GO_MNT_ACTIVE=1
++ mountinfo go /work/.docker-cache/fuse-bench/run/mnt/go
++ local name=go dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ local out=/work/.docker-cache/fuse-bench/run/raw/mountinfo-go.txt
++ echo target=go
++ echo path=/work/.docker-cache/fuse-bench/run/mnt/go
+++ stat -f -c %T /work/.docker-cache/fuse-bench/run/mnt/go
++ echo stat_fs_type=fuseblk
+++ stat -f -c %b /work/.docker-cache/fuse-bench/run/mnt/go
++ echo stat_fs_blocks=1
++ findmnt -T /work/.docker-cache/fuse-bench/run/mnt/go -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /work/.docker-cache/fuse-bench/run/mnt/go ' /proc/self/mountinfo
++ mountinfo ext4 /work/.docker-cache/fuse-bench/run/ext4
++ local name=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4
++ local out=/work/.docker-cache/fuse-bench/run/raw/mountinfo-ext4.txt
++ echo target=ext4
++ echo path=/work/.docker-cache/fuse-bench/run/ext4
+++ stat -f -c %T /work/.docker-cache/fuse-bench/run/ext4
++ echo stat_fs_type=ext2/ext3
+++ stat -f -c %b /work/.docker-cache/fuse-bench/run/ext4
++ echo stat_fs_blocks=348236417
++ findmnt -T /work/.docker-cache/fuse-bench/run/ext4 -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /work/.docker-cache/fuse-bench/run/ext4 ' /proc/self/mountinfo
++ true
++ mountinfo tmpfs /mnt/weft-bench/tmpfs-fuse-bench
++ local name=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench
++ local out=/work/.docker-cache/fuse-bench/run/raw/mountinfo-tmpfs.txt
++ echo target=tmpfs
++ echo path=/mnt/weft-bench/tmpfs-fuse-bench
+++ stat -f -c %T /mnt/weft-bench/tmpfs-fuse-bench
++ echo stat_fs_type=tmpfs
+++ stat -f -c %b /mnt/weft-bench/tmpfs-fuse-bench
++ echo stat_fs_blocks=262144
++ findmnt -T /mnt/weft-bench/tmpfs-fuse-bench -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /mnt/weft-bench/tmpfs-fuse-bench ' /proc/self/mountinfo
++ true
++ printf 'go_status=%s\n' ok
+++ seq 1 3
++ for rep in $(seq 1 "$REPS")
++ '[' 1 -eq 0 ']'
++ order=(rust ext4 tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go ext4 tmpfs)
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ root=/work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r1
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ root=/work/.docker-cache/fuse-bench/run/mnt/go/meta-r1
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r1 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r1 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r1 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/go/meta-r1
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ root=/work/.docker-cache/fuse-bench/run/ext4/meta-r1
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r1 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r1 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r1 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/ext4/meta-r1
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ root=/mnt/weft-bench/tmpfs-fuse-bench/meta-r1
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r1 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r1 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r1 200 10
++ rmdir /mnt/weft-bench/tmpfs-fuse-bench/meta-r1
++ log 'fuse bench: metadata repetition 1/3 complete'
++ printf '%s\n' 'fuse bench: metadata repetition 1/3 complete'
+fuse bench: metadata repetition 1/3 complete
++ for rep in $(seq 1 "$REPS")
++ '[' 0 -eq 0 ']'
++ order=(tmpfs ext4 rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs ext4 go rust)
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ root=/mnt/weft-bench/tmpfs-fuse-bench/meta-r2
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r2 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r2 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r2 200 10
++ rmdir /mnt/weft-bench/tmpfs-fuse-bench/meta-r2
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ root=/work/.docker-cache/fuse-bench/run/ext4/meta-r2
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r2 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r2 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r2 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/ext4/meta-r2
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ root=/work/.docker-cache/fuse-bench/run/mnt/go/meta-r2
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r2 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r2 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r2 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/go/meta-r2
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ root=/work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r2
++ log 'fuse bench: metadata repetition 2/3 complete'
++ printf '%s\n' 'fuse bench: metadata repetition 2/3 complete'
+fuse bench: metadata repetition 2/3 complete
++ for rep in $(seq 1 "$REPS")
++ '[' 1 -eq 0 ']'
++ order=(rust ext4 tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go ext4 tmpfs)
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ root=/work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/rust/meta-r3
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ root=/work/.docker-cache/fuse-bench/run/mnt/go/meta-r3
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r3 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r3 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/mnt/go/meta-r3 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/mnt/go/meta-r3
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ root=/work/.docker-cache/fuse-bench/run/ext4/meta-r3
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r3 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r3 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /work/.docker-cache/fuse-bench/run/ext4/meta-r3 200 10
++ rmdir /work/.docker-cache/fuse-bench/run/ext4/meta-r3
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ root=/mnt/weft-bench/tmpfs-fuse-bench/meta-r3
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r3 200 10'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r3 200 10'
++ /work/.docker-cache/fuse-bench/run/bin/metaops meta /mnt/weft-bench/tmpfs-fuse-bench/meta-r3 200 10
++ rmdir /mnt/weft-bench/tmpfs-fuse-bench/meta-r3
++ log 'fuse bench: metadata repetition 3/3 complete'
++ printf '%s\n' 'fuse bench: metadata repetition 3/3 complete'
+fuse bench: metadata repetition 3/3 complete
+++ seq 1 3
++ for rep in $(seq 1 "$REPS")
++ '[' 1 -eq 0 ']'
++ order=(rust ext4 tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go ext4 tmpfs)
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r1.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r1.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r1.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r1.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r1.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r1.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r1.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r1.json ']'
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ log 'fuse bench: fio repetition 1/3 complete'
++ printf '%s\n' 'fuse bench: fio repetition 1/3 complete'
+fuse bench: fio repetition 1/3 complete
++ for rep in $(seq 1 "$REPS")
++ '[' 0 -eq 0 ']'
++ order=(tmpfs ext4 rust)
++ '[' 1 = 1 ']'
++ order=(tmpfs ext4 go rust)
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r2.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r2.json ']'
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r2.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r2.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r2.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r2.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r2.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r2.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ log 'fuse bench: fio repetition 2/3 complete'
++ printf '%s\n' 'fuse bench: fio repetition 2/3 complete'
+fuse bench: fio repetition 2/3 complete
++ for rep in $(seq 1 "$REPS")
++ '[' 1 -eq 0 ']'
++ order=(rust ext4 tmpfs)
++ '[' 1 = 1 ']'
++ order=(rust go ext4 tmpfs)
++ for target in "${order[@]}"
++ '[' rust = go ']'
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-randwrite-4k-r3.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio rust /work/.docker-cache/fuse-bench/run/mnt/rust seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json
++ local target=rust dir=/work/.docker-cache/fuse-bench/run/mnt/rust workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/rust --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-rust-seqwrite-1m-r3.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/rust
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/rust/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' go = go ']'
++ '[' 1 '!=' 1 ']'
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-randwrite-4k-r3.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio go /work/.docker-cache/fuse-bench/run/mnt/go seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json
++ local target=go dir=/work/.docker-cache/fuse-bench/run/mnt/go workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/mnt/go --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-go-seqwrite-1m-r3.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/mnt/go
++ local dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/mnt/go/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' ext4 = go ']'
+++ target_dir ext4
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/ext4
++ dir=/work/.docker-cache/fuse-bench/run/ext4
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-randwrite-4k-r3.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio ext4 /work/.docker-cache/fuse-bench/run/ext4 seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json
++ local target=ext4 dir=/work/.docker-cache/fuse-bench/run/ext4 workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/work/.docker-cache/fuse-bench/run/ext4 --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-ext4-seqwrite-1m-r3.json ']'
++ reset_fio_target /work/.docker-cache/fuse-bench/run/ext4
++ local dir=/work/.docker-cache/fuse-bench/run/ext4
++ rm -f /work/.docker-cache/fuse-bench/run/ext4/seqwrite-1m.dat /work/.docker-cache/fuse-bench/run/ext4/randwrite-4k.dat
++ for target in "${order[@]}"
++ '[' tmpfs = go ']'
+++ target_dir tmpfs
+++ case "$1" in
+++ echo /mnt/weft-bench/tmpfs-fuse-bench
++ dir=/mnt/weft-bench/tmpfs-fuse-bench
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench randwrite-4k /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=randwrite-4k raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=randwrite
++ bs=4k
++ size=256M
++ io_size=--io_size=512K
++ record_cmd 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=randwrite-4k --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=randwrite-4k.dat --rw=randwrite --bs=4k --size=256M --io_size=512K --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-randwrite-4k-r3.json ']'
++ for workload in randwrite-4k seqwrite-1m
++ run_fio tmpfs /mnt/weft-bench/tmpfs-fuse-bench seqwrite-1m /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json
++ local target=tmpfs dir=/mnt/weft-bench/tmpfs-fuse-bench workload=seqwrite-1m raw=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json
++ local rw bs size io_size
++ case "$workload" in
++ rw=write
++ bs=1M
++ size=256M
++ io_size=--io_size=64M
++ record_cmd 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ printf '%s\n' 'fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99'
++ fio --name=seqwrite-1m --directory=/mnt/weft-bench/tmpfs-fuse-bench --filename=seqwrite-1m.dat --rw=write --bs=1M --size=256M --io_size=64M --randseed=1234 --ioengine=psync --direct=0 --numjobs=1 --iodepth=1 --group_reporting --output-format=json --output=/work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json --eta=never --percentile_list=50:95:99
++ '[' -s /work/.docker-cache/fuse-bench/run/raw/fio-tmpfs-seqwrite-1m-r3.json ']'
++ reset_fio_target /mnt/weft-bench/tmpfs-fuse-bench
++ local dir=/mnt/weft-bench/tmpfs-fuse-bench
++ rm -f /mnt/weft-bench/tmpfs-fuse-bench/seqwrite-1m.dat /mnt/weft-bench/tmpfs-fuse-bench/randwrite-4k.dat
++ log 'fuse bench: fio repetition 3/3 complete'
++ printf '%s\n' 'fuse bench: fio repetition 3/3 complete'
+fuse bench: fio repetition 3/3 complete
+++ seq 1 3
++ for rep in $(seq 1 "$REPS")
++ order=(rust)
++ '[' 1 = 1 ']'
++ order=(rust go)
++ '[' 1 -eq 0 ']'
++ for impl in "${order[@]}"
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ file=/work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-1.dat
++ for impl in "${order[@]}"
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ file=/work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-1.dat
++ log 'fuse bench: overwrite repetition 1/3 complete'
++ printf '%s\n' 'fuse bench: overwrite repetition 1/3 complete'
+fuse bench: overwrite repetition 1/3 complete
++ for rep in $(seq 1 "$REPS")
++ order=(rust)
++ '[' 1 = 1 ']'
++ order=(rust go)
++ '[' 0 -eq 0 ']'
++ '[' 1 = 1 ']'
++ order=(go rust)
++ for impl in "${order[@]}"
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ file=/work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-2.dat
++ for impl in "${order[@]}"
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ file=/work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-2.dat
++ log 'fuse bench: overwrite repetition 2/3 complete'
++ printf '%s\n' 'fuse bench: overwrite repetition 2/3 complete'
+fuse bench: overwrite repetition 2/3 complete
++ for rep in $(seq 1 "$REPS")
++ order=(rust)
++ '[' 1 = 1 ']'
++ order=(rust go)
++ '[' 1 -eq 0 ']'
++ for impl in "${order[@]}"
+++ target_dir rust
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/rust
++ dir=/work/.docker-cache/fuse-bench/run/mnt/rust
++ file=/work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/rust/overwrite-3.dat
++ for impl in "${order[@]}"
+++ target_dir go
+++ case "$1" in
+++ echo /work/.docker-cache/fuse-bench/run/mnt/go
++ dir=/work/.docker-cache/fuse-bench/run/mnt/go
++ file=/work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat
++ record_cmd 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat'
++ truncate -s 128M /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat
++ record_cmd '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat 500 4096'
++ printf '%s\n' '/work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat 500 4096'
++ /work/.docker-cache/fuse-bench/run/bin/metaops overwrite /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat 500 4096
++ rm -f /work/.docker-cache/fuse-bench/run/mnt/go/overwrite-3.dat
++ log 'fuse bench: overwrite repetition 3/3 complete'
++ printf '%s\n' 'fuse bench: overwrite repetition 3/3 complete'
+fuse bench: overwrite repetition 3/3 complete
++ mkdir -p /work/.docker-cache/fuse-bench/builder/src
++ cat
++ cat
++ record_cmd 'cargo build --offline --release --manifest-path /work/.docker-cache/fuse-bench/builder/Cargo.toml'
++ printf '%s\n' 'cargo build --offline --release --manifest-path /work/.docker-cache/fuse-bench/builder/Cargo.toml'
++ BUILD_TARGET=/work/.docker-cache/target-rust
++ CARGO_TARGET_DIR=/work/.docker-cache/target-rust
++ cargo build --offline --release --manifest-path /work/.docker-cache/fuse-bench/builder/Cargo.toml
+   Compiling weft-fuse-bench-builder v0.0.0 (/work/.docker-cache/fuse-bench/builder)
+    Finished `release` profile [optimized] target(s) in 0.26s
++ BUILDER=/work/.docker-cache/target-rust/release/weft-fuse-bench-builder
++ '[' -x /work/.docker-cache/target-rust/release/weft-fuse-bench-builder ']'
++ record_cmd '/work/.docker-cache/target-rust/release/weft-fuse-bench-builder --store /work/.docker-cache/fuse-bench/run/store-context --count 10000'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weft-fuse-bench-builder --store /work/.docker-cache/fuse-bench/run/store-context --count 10000'
+++ now_ns
+++ date +%s%N
++ CTX_BUILD_START=1793846965658090762
++ /work/.docker-cache/target-rust/release/weft-fuse-bench-builder --store /work/.docker-cache/fuse-bench/run/store-context --count 10000
++ tee /work/.docker-cache/fuse-bench/run/raw/context-build.txt
+created=10000 head=958c58a20af88fcf1c1aa51b3eefb387c5c8c46ca677b19e522d55729e58b39b
+++ now_ns
+++ date +%s%N
++ CTX_BUILD_END=1793847075276358644
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context snapshot create all'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context snapshot create all'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context snapshot create all
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context context create --name all --selector '\''select attrs.bench == "fuse-v05"'\'' --snapshot all'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context context create --name all --selector '\''select attrs.bench == "fuse-v05"'\'' --snapshot all'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context context create --name all --selector 'select attrs.bench == "fuse-v05"' --snapshot all
+++ now_ns
+++ date +%s%N
++ CTX_SETUP_END=1793847075705641073
++ printf 'store_build_ms=%s\ncontext_setup_ms=%s\n' 109618 429
+++ seq 1 3
++ for rep in $(seq 1 "$REPS")
++ mnt=/work/.docker-cache/fuse-bench/run/mnt/context
++ mkdir -p /work/.docker-cache/fuse-bench/run/mnt/context
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
+++ now_ns
+++ date +%s%N
++ start=1793847075706873946
++ pid=880
++ MOUNT_PIDS+=("$pid")
++ ready=0
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all
+++ seq 1 1200
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ stat -c %i /work/.docker-cache/fuse-bench/run/mnt/context
++ ready=1
++ break
+++ now_ns
+++ date +%s%N
++ end=1793847076179250665
++ '[' 1 '!=' 1 ']'
+++ awk -v a=1793847075706873946 -v b=1793847076179250665 'BEGIN {printf "%.3f", (b-a)/1000000}'
++ printf '%s\n' 472.377
++ '[' 1 = 1 ']'
++ mountinfo context /work/.docker-cache/fuse-bench/run/mnt/context
++ local name=context dir=/work/.docker-cache/fuse-bench/run/mnt/context
++ local out=/work/.docker-cache/fuse-bench/run/raw/mountinfo-context.txt
++ echo target=context
++ echo path=/work/.docker-cache/fuse-bench/run/mnt/context
+++ stat -f -c %T /work/.docker-cache/fuse-bench/run/mnt/context
++ echo stat_fs_type=fuseblk
+++ stat -f -c %b /work/.docker-cache/fuse-bench/run/mnt/context
++ echo stat_fs_blocks=10075
++ findmnt -T /work/.docker-cache/fuse-bench/run/mnt/context -o TARGET,SOURCE,FSTYPE,OPTIONS -n
++ grep ' /work/.docker-cache/fuse-bench/run/mnt/context ' /proc/self/mountinfo
++ /work/.docker-cache/fuse-bench/run/bin/metaops readdir-one /work/.docker-cache/fuse-bench/run/mnt/context
++ fusermount3 -u /work/.docker-cache/fuse-bench/run/mnt/context
++ kill 880
++ wait 880
++ true
++ sleep 0.2
++ log 'fuse bench: context mount repetition 1/3 complete'
++ printf '%s\n' 'fuse bench: context mount repetition 1/3 complete'
+fuse bench: context mount repetition 1/3 complete
++ for rep in $(seq 1 "$REPS")
++ mnt=/work/.docker-cache/fuse-bench/run/mnt/context
++ mkdir -p /work/.docker-cache/fuse-bench/run/mnt/context
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
+++ now_ns
+++ date +%s%N
++ start=1793847076834049082
++ pid=1067
++ MOUNT_PIDS+=("$pid")
++ ready=0
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all
+++ seq 1 1200
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ stat -c %i /work/.docker-cache/fuse-bench/run/mnt/context
++ ready=1
++ break
+++ now_ns
+++ date +%s%N
++ end=1793847077306473516
++ '[' 1 '!=' 1 ']'
+++ awk -v a=1793847076834049082 -v b=1793847077306473516 'BEGIN {printf "%.3f", (b-a)/1000000}'
++ printf '%s\n' 472.424
++ '[' 2 = 1 ']'
++ /work/.docker-cache/fuse-bench/run/bin/metaops readdir-one /work/.docker-cache/fuse-bench/run/mnt/context
++ fusermount3 -u /work/.docker-cache/fuse-bench/run/mnt/context
++ kill 1067
++ wait 1067
++ true
++ sleep 0.2
++ log 'fuse bench: context mount repetition 2/3 complete'
++ printf '%s\n' 'fuse bench: context mount repetition 2/3 complete'
+fuse bench: context mount repetition 2/3 complete
++ for rep in $(seq 1 "$REPS")
++ mnt=/work/.docker-cache/fuse-bench/run/mnt/context
++ mkdir -p /work/.docker-cache/fuse-bench/run/mnt/context
++ record_cmd '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all'
+++ now_ns
+++ date +%s%N
++ start=1793847077967624294
++ pid=1248
++ MOUNT_PIDS+=("$pid")
++ ready=0
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-bench/run/store-context --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-bench/run/mnt/context --foreground --context all
+++ seq 1 1200
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ sleep 0.005
++ for i in $(seq 1 1200)
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ stat -c %i /work/.docker-cache/fuse-bench/run/mnt/context
++ ready=1
++ break
+++ now_ns
+++ date +%s%N
++ end=1793847078446228357
++ '[' 1 '!=' 1 ']'
+++ awk -v a=1793847077967624294 -v b=1793847078446228357 'BEGIN {printf "%.3f", (b-a)/1000000}'
++ printf '%s\n' 478.604
++ '[' 3 = 1 ']'
++ /work/.docker-cache/fuse-bench/run/bin/metaops readdir-one /work/.docker-cache/fuse-bench/run/mnt/context
++ fusermount3 -u /work/.docker-cache/fuse-bench/run/mnt/context
++ kill 1248
++ wait 1248
++ true
++ sleep 0.2
++ log 'fuse bench: context mount repetition 3/3 complete'
++ printf '%s\n' 'fuse bench: context mount repetition 3/3 complete'
+fuse bench: context mount repetition 3/3 complete
+++ date -u +%Y-%m-%dT%H:%M:%SZ
++ export WEFT_RECEIPT_STAMP=2026-11-05T02:51:19Z
++ WEFT_RECEIPT_STAMP=2026-11-05T02:51:19Z
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_META_DIRS=
++ WEFT_FUSE_META_DIRS=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_META_PER=
++ WEFT_FUSE_META_PER=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_FIO_SIZE=
++ WEFT_FUSE_FIO_SIZE=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_RAND_IO=
++ WEFT_FUSE_RAND_IO=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_SEQ_IO=
++ WEFT_FUSE_SEQ_IO=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_OVER_BYTES=
++ WEFT_FUSE_OVER_BYTES=
++ for var in WEFT_FUSE_META_DIRS WEFT_FUSE_META_PER WEFT_FUSE_FIO_SIZE WEFT_FUSE_RAND_IO WEFT_FUSE_SEQ_IO WEFT_FUSE_OVER_BYTES WEFT_FUSE_OVER_COUNT
++ export WEFT_FUSE_OVER_COUNT=
++ WEFT_FUSE_OVER_COUNT=
++ /work/.docker-cache/fuse-bench/run/bin/assemble /work/.docker-cache/fuse-bench/run/raw /work/bench/receipts/fuse-bench-20261105T022024Z.json
+wrote /work/bench/receipts/fuse-bench-20261105T022024Z.json
++ echo 'fuse receipt: /work/bench/receipts/fuse-bench-20261105T022024Z.json'
+fuse receipt: /work/bench/receipts/fuse-bench-20261105T022024Z.json
++ echo 'raw log: /work/bench/receipts/fuse-bench-20261105T022024Z.log'
+raw log: /work/bench/receipts/fuse-bench-20261105T022024Z.log
++ sha256sum /work/bench/receipts/fuse-bench-20261105T022024Z.json /work/bench/receipts/fuse-bench-20261105T022024Z.log
+4d7f463a80aa50af6b44d38544204244890c5174063a78872d7eac8baf75af23  /work/bench/receipts/fuse-bench-20261105T022024Z.json
+37f37767b965351d0611c3306357483b1ccd87ec13644f3867b40ddd121b11ed  /work/bench/receipts/fuse-bench-20261105T022024Z.log
++ cleanup
++ set +e
++ for mnt in "$RUST_MNT" "$GO_MNT" "$CTX_MNT"
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/rust
++ fusermount3 -u /work/.docker-cache/fuse-bench/run/mnt/rust
++ for mnt in "$RUST_MNT" "$GO_MNT" "$CTX_MNT"
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/go
++ fusermount3 -u /work/.docker-cache/fuse-bench/run/mnt/go
++ for mnt in "$RUST_MNT" "$GO_MNT" "$CTX_MNT"
++ mountpoint -q /work/.docker-cache/fuse-bench/run/mnt/context
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 142
++ wait 142
++ true
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 162
++ wait 162
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 880
++ true
++ wait 880
++ true
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1067
++ true
++ wait 1067
++ true
++ for pid in "${MOUNT_PIDS[@]:-}"
++ kill 1248
++ true
++ wait 1248
++ true
+
+# post-run note 2026-11-05T02:52:43Z: the receipt assembler's fio filename parser split target/workload on the wrong hyphen, so the first assembly (sha256 4d7f463a80aa50af6b44d38544204244890c5174063a78872d7eac8baf75af23) had an empty cell 2. The parser was fixed and the receipt was re-assembled from this run's unmodified raw directory; no measurement was rerun or edited.
+4445b1554e4779cd23e70ed98c8f841eae31efeb5d766eaed01029807ae2f835  /work/bench/receipts/fuse-bench-20261105T022024Z.json
