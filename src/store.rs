@@ -27,8 +27,12 @@ use crate::format::{
 };
 use crate::identity::{self, Hash32};
 use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
+use crate::quota::{
+    normalize_policy, QuotaBudget, QuotaCounters, QuotaPrincipal, QuotaRecord, QuotaState,
+};
 use crate::recovery::{self, BlobKind};
 use crate::representation::{self, MAX_CODEC_DEPENDENCY_DEPTH};
+use crate::state::ATTR_TENANT;
 use crate::state::{
     derive_entry_id, derive_version_id, derive_version_id_with_identity, validate_name_bytes,
     validate_snapshot_name, EntryRecord, ObjectKind, ObjectRecord, Op, RelationKind,
@@ -129,6 +133,10 @@ pub struct Options {
     /// A DELTA frame must be at least this percent smaller than the ZSTD frame
     /// to be selected. `0` disables the margin (any strictly smaller DELTA wins).
     pub codec_delta_margin_percent: u8,
+    /// Write budgets to install (or replace) on open. An empty list leaves the
+    /// persisted policy untouched. A writable open with a non-empty list is an
+    /// admin operation: it rewrites the `quota` record, retaining usage.
+    pub quotas: Vec<QuotaBudget>,
 }
 
 impl Default for Options {
@@ -143,6 +151,7 @@ impl Default for Options {
             representation: RepresentationMode::Raw,
             codec_min_bytes: DEFAULT_CODEC_MIN_BYTES,
             codec_delta_margin_percent: DEFAULT_CODEC_DELTA_MARGIN_PERCENT,
+            quotas: Vec::new(),
         }
     }
 }
@@ -226,6 +235,19 @@ pub struct GcReport {
     pub problems: Vec<String>,
 }
 
+/// Result of [`Store::merge_branches`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MergeReport {
+    pub left: Hash32,
+    pub right: Hash32,
+    /// Non-root paths in the union (identical paths counted once).
+    pub paths: u64,
+    pub added_objects: u64,
+    pub added_entries: u64,
+    pub head: Hash32,
+    pub generation: u64,
+}
+
 /// Diagnostics for the advisory on-disk selector index. It is never consulted
 /// for correctness; tests and benchmarks use it to prove that a reopen loaded
 /// a persisted segment rather than rebuilding from state.
@@ -268,6 +290,112 @@ pub struct SavedContext {
     pub selector_hex: String,
     pub selector_id: Hash32,
     pub relation_id: Hash32,
+}
+
+// ---------------------------------------------------------------------------
+// Branch merge helpers
+// ---------------------------------------------------------------------------
+
+/// Maximum number of non-root paths collected from one branch state.
+pub const MAX_MERGE_PATHS: usize = 1_000_000;
+
+#[derive(Clone, Debug)]
+struct PathNode {
+    id: Hash32,
+    record: ObjectRecord,
+}
+
+/// Every path reachable from the root in `state`, keyed by absolute byte path
+/// (`/`, `/a`, `/a/b`) in ascending order. A path that cannot be formed (a
+/// missing object, a cycle, a parent name collision) is `Corrupt`, never
+/// silently dropped.
+fn collect_state_paths(state: &State) -> Result<BTreeMap<Vec<u8>, PathNode>> {
+    let root = state
+        .objects
+        .get(&State::ROOT_ID)
+        .ok_or_else(|| Error::corrupt("state has no namespace root"))?;
+    let mut out: BTreeMap<Vec<u8>, PathNode> = BTreeMap::new();
+    out.insert(
+        b"/".to_vec(),
+        PathNode {
+            id: State::ROOT_ID,
+            record: root.clone(),
+        },
+    );
+    let mut queue: std::collections::VecDeque<(Vec<u8>, Hash32)> =
+        std::collections::VecDeque::new();
+    queue.push_back((b"/".to_vec(), State::ROOT_ID));
+    let mut visited: BTreeSet<Hash32> = BTreeSet::new();
+    visited.insert(State::ROOT_ID);
+    while let Some((parent_path, parent_id)) = queue.pop_front() {
+        let mut children: Vec<&EntryRecord> = state
+            .entries
+            .values()
+            .filter(|entry| entry.parent == parent_id)
+            .collect();
+        children.sort_by(|a, b| a.name.cmp(&b.name));
+        for entry in children {
+            let record = state
+                .objects
+                .get(&entry.target)
+                .ok_or_else(|| Error::corrupt("directory entry targets a missing object"))?;
+            let mut path = parent_path.clone();
+            if path.as_slice() != b"/" {
+                path.push(b'/');
+            }
+            path.extend_from_slice(&entry.name);
+            if out.len() >= MAX_MERGE_PATHS {
+                return Err(Error::limit_exceeded(format!(
+                    "branch has more than {MAX_MERGE_PATHS} paths"
+                )));
+            }
+            out.insert(
+                path.clone(),
+                PathNode {
+                    id: entry.target,
+                    record: record.clone(),
+                },
+            );
+            if record.kind == ObjectKind::Dir && visited.insert(entry.target) {
+                queue.push_back((path, entry.target));
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Union-merge identity of one path: kinds agree and the content identity is
+/// equal. For a directory that is always true. Metadata (mode, uid, gid, mtime,
+/// xattrs) is deliberately not part of this test.
+fn same_path_content(left: &PathNode, right: &PathNode) -> bool {
+    if left.record.kind != right.record.kind {
+        return false;
+    }
+    match left.record.kind {
+        ObjectKind::Dir => true,
+        ObjectKind::File => {
+            left.record.content == right.record.content && left.record.size == right.record.size
+        }
+        ObjectKind::Symlink => left.record.symlink_target() == right.record.symlink_target(),
+    }
+}
+
+/// Split `/a/b` into (`/a`, `b`); the root has no name.
+fn split_path(path: &[u8]) -> Result<(Vec<u8>, &[u8])> {
+    if path == b"/" {
+        return Err(Error::invalid_argument("the root path has no name"));
+    }
+    let position = path
+        .iter()
+        .rposition(|byte| *byte == b'/')
+        .ok_or_else(|| Error::corrupt("absolute path has no separator"))?;
+    let parent = path[..position].to_vec();
+    let parent = if parent.is_empty() {
+        b"/".to_vec()
+    } else {
+        parent
+    };
+    Ok((parent, &path[position + 1..]))
 }
 
 fn crash_point(phase: &str) {
@@ -347,6 +475,18 @@ pub struct Store {
     index_cache: Mutex<StateIndexCache>,
     /// Advisory index diagnostics and reject/write-failure notes.
     index_stats: Mutex<IndexStats>,
+    /// Write-budget policy and cumulative admitted usage, derived from the
+    /// committed state and the published commit chain.
+    quota: QuotaState,
+    /// Lazily built set of chunk/manifest blob hashes reachable from committed
+    /// state, with their on-disk byte lengths. Quota charging consults it so
+    /// reused content costs zero. Derived data only; rebuilt on demand.
+    blob_index: BTreeMap<Hash32, u64>,
+    blob_index_ready: bool,
+    /// Pre-group object records for ids touched by the open group. Needed so a
+    /// group commit's quota delta is measured against the state before the
+    /// group, not the live state that already contains the ops.
+    group_pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
 }
 
 impl Store {
@@ -415,8 +555,15 @@ impl Store {
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
             index_stats: Mutex::new(IndexStats::default()),
+            quota: QuotaState::default(),
+            blob_index: BTreeMap::new(),
+            blob_index_ready: false,
+            group_pre_objects: BTreeMap::new(),
         };
         store.write_genesis()?;
+        if !store.options.quotas.is_empty() {
+            store.install_quota_policy(store.options.quotas.clone())?;
+        }
         store.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
         Ok(store)
     }
@@ -488,7 +635,7 @@ impl Store {
             .max(recovery.highest_file_generation)
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
-        Ok(Store {
+        let mut store = Store {
             root,
             mode,
             options: Options::default(),
@@ -508,7 +655,13 @@ impl Store {
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
             index_stats: Mutex::new(IndexStats::default()),
-        })
+            quota: QuotaState::default(),
+            blob_index: BTreeMap::new(),
+            blob_index_ready: false,
+            group_pre_objects: BTreeMap::new(),
+        };
+        store.load_quota_record();
+        Ok(store)
     }
 
     /// Open with explicit runtime options (chunk size affects new writes only;
@@ -530,6 +683,9 @@ impl Store {
     ) -> Result<Store> {
         validate_options(&options)?;
         let mut store = Self::open_impl(path, mode, false, backend_kind)?;
+        if !options.quotas.is_empty() {
+            store.install_quota_policy(options.quotas.clone())?;
+        }
         store.options = options;
         Ok(store)
     }
@@ -3156,6 +3312,195 @@ impl Store {
         Ok(pinned)
     }
 
+    /// Resolve a snapshot name or an on-chain commit hex to its commit hash.
+    /// A commit that is not reachable from the recovered head is `NotFound`
+    /// (an unpublished crash-tail file is never addressable).
+    pub fn resolve_snapshot_ref(&self, reference: &str) -> Result<Hash32> {
+        if let Some(commit) = self.state.snapshots.get(reference) {
+            return Ok(*commit);
+        }
+        if let Ok(hash) = Hash32::from_hex(reference) {
+            if self.is_published_ancestor(hash)? {
+                return Ok(hash);
+            }
+            return Err(Error::not_found(
+                "commit is not on the published parent chain",
+            ));
+        }
+        Err(Error::not_found("no such snapshot or commit"))
+    }
+
+    /// Branch an existing snapshot: create `name` pointing at the source
+    /// snapshot's commit. History is never rewritten; the new ref is just
+    /// another name for the same immutable commit, so later writes cannot move
+    /// either ref.
+    pub fn snapshot_branch(&mut self, source: &str, name: &str) -> Result<Hash32> {
+        self.require_writable()?;
+        validate_snapshot_name(name)?;
+        if self.state.snapshots.contains_key(name) {
+            return Err(Error::exists("snapshot name already exists"));
+        }
+        let commit = self.resolve_snapshot_ref(source)?;
+        self.commit_ops(
+            vec![Op::SetSnapshot {
+                name: name.to_owned(),
+                commit,
+            }],
+            false,
+        )?;
+        self.write_snapshot_pointer(name, commit)?;
+        Ok(commit)
+    }
+
+    /// Union-merge two snapshot refs (or commits) into a new commit on the live
+    /// head.
+    ///
+    /// This is deliberately a **union merge**, not a three-way content merge.
+    /// Every path present in either input is copied when the live head does not
+    /// already have it. A path present in both inputs, or already present at
+    /// the head, must have identical content (for a regular file: the frozen
+    /// `ContentId` and size; for a symlink: the target); otherwise the merge
+    /// fails closed with `Conflict` naming the path and publishes nothing.
+    /// Metadata of a path that already exists at the head is never overwritten.
+    pub fn merge_branches(&mut self, left: &str, right: &str) -> Result<MergeReport> {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "merge cannot run inside a group commit",
+            ));
+        }
+        let left_commit = self.resolve_snapshot_ref(left)?;
+        let right_commit = self.resolve_snapshot_ref(right)?;
+        let left_state = self.state_at(left_commit)?;
+        let right_state = self.state_at(right_commit)?;
+        let head_paths = collect_state_paths(&self.state)?;
+        let left_paths = collect_state_paths(&left_state)?;
+        let right_paths = collect_state_paths(&right_state)?;
+
+        // Reject overlapping content first, so no blob or commit is written for
+        // a merge that cannot succeed.
+        for (path, node) in &left_paths {
+            if let Some(other) = right_paths.get(path) {
+                if !same_path_content(node, other) {
+                    return Err(Error::conflict(format!(
+                        "path `{}` has different content in the two branches",
+                        String::from_utf8_lossy(path)
+                    )));
+                }
+            }
+        }
+        for (path, node) in left_paths.iter().chain(right_paths.iter()) {
+            if let Some(existing) = head_paths.get(path) {
+                if !same_path_content(existing, node) {
+                    return Err(Error::conflict(format!(
+                        "path `{}` already exists with different content",
+                        String::from_utf8_lossy(path)
+                    )));
+                }
+            }
+        }
+
+        // Union in ascending path order so parents always precede children.
+        let mut union: BTreeMap<Vec<u8>, PathNode> = BTreeMap::new();
+        for (path, node) in &left_paths {
+            union.insert(path.clone(), node.clone());
+        }
+        for (path, node) in &right_paths {
+            union.entry(path.clone()).or_insert_with(|| node.clone());
+        }
+
+        let mut ops: Vec<Op> = Vec::new();
+        let mut merged: BTreeMap<Vec<u8>, Hash32> = BTreeMap::new();
+        merged.insert(b"/".to_vec(), State::ROOT_ID);
+        let mut added_objects = 0u64;
+        let mut added_entries = 0u64;
+        let mut new_ids: BTreeSet<Hash32> = BTreeSet::new();
+        for (path, node) in &union {
+            if path.as_slice() == b"/" {
+                continue;
+            }
+            if let Some(existing) = head_paths.get(path) {
+                merged.insert(path.clone(), existing.id);
+                continue;
+            }
+            let (parent_path, name) = split_path(path)?;
+            let parent_id = match merged.get(&parent_path) {
+                Some(id) => *id,
+                None => {
+                    return Err(Error::conflict(format!(
+                        "merge would place `{}` under a missing parent",
+                        String::from_utf8_lossy(path)
+                    )))
+                }
+            };
+            let parent = self
+                .state
+                .objects
+                .get(&parent_id)
+                .ok_or_else(|| Error::corrupt("merged parent object is missing"))?;
+            if parent.kind != ObjectKind::Dir {
+                return Err(Error::conflict(format!(
+                    "merge needs `{}` to be a directory",
+                    String::from_utf8_lossy(&parent_path)
+                )));
+            }
+            // Reuse the source object id when it is free or names an identical
+            // record; otherwise copy the record under a deterministic merge id.
+            let mut record = node.record.clone();
+            match self.state.objects.get(&record.id) {
+                None if !new_ids.contains(&record.id) => {
+                    new_ids.insert(record.id);
+                }
+                Some(existing) if existing == &record => {}
+                _ => {
+                    let mut seed = b"weft/merge/v1".to_vec();
+                    seed.extend_from_slice(path);
+                    seed.extend_from_slice(record.content.as_bytes());
+                    record.id = identity::h(identity::OBJECT_DOMAIN, &seed);
+                    if new_ids.contains(&record.id) {
+                        return Err(Error::corrupt("merge id derivation collided"));
+                    }
+                    new_ids.insert(record.id);
+                }
+            }
+            if !self.state.objects.contains_key(&record.id) {
+                ops.push(Op::PutObject(record.clone()));
+                ops.push(Op::SetTip {
+                    object: record.id,
+                    version: record.version,
+                });
+                added_objects += 1;
+            }
+            let entry = EntryRecord {
+                id: derive_entry_id(parent_id, name)?,
+                parent: parent_id,
+                name: name.to_vec(),
+                target: record.id,
+            };
+            if !self.state.entries.contains_key(&entry.id) {
+                ops.push(Op::PutEntry(entry));
+                added_entries += 1;
+            }
+            merged.insert(path.clone(), record.id);
+        }
+
+        let head = if ops.is_empty() {
+            self.head
+        } else {
+            self.commit_ops(ops, false)?
+        };
+        Ok(MergeReport {
+            left: left_commit,
+            right: right_commit,
+            paths: u64::try_from(union.len().saturating_sub(1))
+                .map_err(|_| Error::limit_exceeded("path count does not fit u64"))?,
+            added_objects,
+            added_entries,
+            head,
+            generation: self.generation,
+        })
+    }
+
     /// Snapshot names and pinned commit hashes.
     pub fn snapshot_list(&self) -> Vec<(String, Hash32)> {
         self.state
@@ -3261,9 +3606,14 @@ impl Store {
                 "group commit cannot be nested inside another group",
             ));
         }
+        // Snapshot the committed blob set while the live state still equals it.
+        if self.quota.enforced() {
+            self.ensure_blob_index()?;
+        }
         self.group_depth = 1;
         self.pending_ops.clear();
         self.group_undo.clear();
+        self.group_pre_objects.clear();
         self.group_force_checkpoint = false;
 
         // Roll back on panic as well as on `Err`, so a panicking closure cannot
@@ -3283,13 +3633,14 @@ impl Store {
 
         let ops = std::mem::take(&mut self.pending_ops);
         let undo = std::mem::take(&mut self.group_undo);
+        let pre_objects = std::mem::take(&mut self.group_pre_objects);
         let force_checkpoint = std::mem::replace(&mut self.group_force_checkpoint, false);
         self.group_depth = 0;
 
         if ops.is_empty() {
             return Ok((value, self.head));
         }
-        match self.publish_staged(ops, force_checkpoint) {
+        match self.publish_staged(ops, pre_objects, force_checkpoint) {
             Ok(hash) => Ok((value, hash)),
             Err(err) => {
                 // Nothing is published on an error return, so the in-memory
@@ -3589,6 +3940,21 @@ impl Store {
                     });
                 }
             }
+        }
+
+        // A present-but-unusable quota record is reported: enforcement fails
+        // closed, so verification must not claim the store is fully healthy.
+        if self.quota.record_present && !self.quota.valid {
+            report.problems.push(VerifyProblem {
+                class: "Corrupt".to_owned(),
+                detail: format!(
+                    "quota usage record is unusable: {}",
+                    self.quota
+                        .reason
+                        .clone()
+                        .unwrap_or_else(|| "no reason recorded".to_owned())
+                ),
+            });
         }
 
         report.ok = report.problems.is_empty();
@@ -4203,6 +4569,501 @@ impl Store {
         Ok(report)
     }
 
+    // ---- write budgets (quotas) -----------------------------------------
+
+    /// The configured budgets, sorted by canonical principal key.
+    pub fn quota_policy(&self) -> Vec<QuotaBudget> {
+        self.quota.policy.values().cloned().collect()
+    }
+
+    /// True when at least one budget is configured and enforced.
+    pub fn quota_enforced(&self) -> bool {
+        self.quota.enforced()
+    }
+
+    /// Cumulative admitted usage for one principal. Budgets of other
+    /// principals are never returned by this method.
+    pub fn quota_usage(&self, principal: &QuotaPrincipal) -> QuotaCounters {
+        self.quota.usage.get(principal).copied().unwrap_or_default()
+    }
+
+    /// The budget for one principal, if configured.
+    pub fn quota_budget(&self, principal: &QuotaPrincipal) -> Option<QuotaBudget> {
+        self.quota.policy.get(principal).cloned()
+    }
+
+    /// Why the persisted record is not usable, if it is not. Writes fail
+    /// closed while this is `Some` and a budget is configured.
+    pub fn quota_problem(&self) -> Option<&str> {
+        self.quota.reason.as_deref()
+    }
+
+    /// Install or replace the budget policy (admin operation). Usage counters
+    /// are retained when the existing record is valid; otherwise cumulative
+    /// usage is recomputed from the published commit chain before the new
+    /// policy is written.
+    pub fn install_quota_policy(&mut self, budgets: Vec<QuotaBudget>) -> Result<()> {
+        self.require_writable()?;
+        let budgets = normalize_policy(budgets)?;
+        let needs_replay = !self.quota.valid || !self.quota.record_present;
+        let mut policy = BTreeMap::new();
+        for budget in budgets {
+            policy.insert(budget.principal.clone(), budget);
+        }
+        self.quota.policy = policy;
+        if needs_replay {
+            let (usage, blobs) = self.replay_quota_usage()?;
+            self.quota.usage = usage;
+            self.blob_index = blobs;
+            self.blob_index_ready = true;
+        }
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+        self.quota.valid = true;
+        self.quota.reason = None;
+        self.persist_quota_record()?;
+        self.quota.record_present = true;
+        Ok(())
+    }
+
+    /// Zero every usage counter (explicit admin operation). The policy is
+    /// unchanged and no content is touched.
+    pub fn quota_reset(&mut self) -> Result<()> {
+        self.require_writable()?;
+        self.quota.usage.clear();
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+        self.quota.valid = true;
+        self.quota.reason = None;
+        self.persist_quota_record()?;
+        self.quota.record_present = true;
+        Ok(())
+    }
+
+    /// Recompute cumulative usage from the published commit chain and rewrite
+    /// the record (explicit admin operation). Returns the number of commits
+    /// replayed. Data is never modified.
+    pub fn quota_rebuild(&mut self) -> Result<u64> {
+        self.require_writable()?;
+        if self.quota.policy.is_empty() && self.quota.record_present {
+            // A corrupt record hides the policy. Rebuilding with an empty policy
+            // would silently disable enforcement, so this fails closed instead.
+            return Err(Error::corrupt(
+                "quota record is unusable and no policy is known; re-run with `--quota` to install one",
+            ));
+        }
+        let (usage, blobs, commits) = self.replay_quota_usage_with_count()?;
+        self.quota.usage = usage;
+        self.blob_index = blobs;
+        self.blob_index_ready = true;
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+        self.quota.valid = true;
+        self.quota.reason = None;
+        self.persist_quota_record()?;
+        self.quota.record_present = true;
+        Ok(commits)
+    }
+
+    /// Load the persisted quota record. A missing record means "no policy, no
+    /// usage". A record that cannot be decoded or that does not name the
+    /// committed head marks the runtime state invalid: quota-enforcing writes
+    /// then fail closed until `quota rebuild`.
+    fn load_quota_record(&mut self) {
+        let bytes = match self.with_backend(|backend| backend.read_all(&Key::quota())) {
+            Ok(bytes) => bytes,
+            Err(err) if err.class() == crate::error::Class::NotFound => {
+                self.quota = QuotaState::default();
+                return;
+            }
+            Err(err) => {
+                self.quota.record_present = true;
+                self.quota.valid = false;
+                self.quota.reason = Some(format!("cannot read the quota record: {err}"));
+                return;
+            }
+        };
+        match QuotaRecord::decode_bytes(&bytes) {
+            Ok(record) => {
+                self.quota.record_present = true;
+                self.quota.policy = record
+                    .budgets
+                    .into_iter()
+                    .map(|budget| (budget.principal.clone(), budget))
+                    .collect();
+                self.quota.usage = record.usage.into_iter().collect();
+                self.quota.generation = record.generation;
+                self.quota.commit = record.commit;
+                if record.generation != self.generation || record.commit != self.head {
+                    self.quota.valid = false;
+                    self.quota.reason = Some(format!(
+                        "quota record names generation {} ({}), committed head is generation {} ({})",
+                        record.generation, record.commit, self.generation, self.head
+                    ));
+                } else {
+                    self.quota.valid = true;
+                    self.quota.reason = None;
+                }
+            }
+            Err(err) => {
+                self.quota.record_present = true;
+                self.quota.valid = false;
+                self.quota.reason = Some(format!("quota record is unusable: {err}"));
+            }
+        }
+    }
+
+    fn persist_quota_record(&self) -> Result<()> {
+        let record = QuotaRecord {
+            generation: self.quota.generation,
+            commit: self.quota.commit,
+            budgets: self.quota.policy.values().cloned().collect(),
+            usage: self
+                .quota
+                .usage
+                .iter()
+                .map(|(p, c)| (p.clone(), *c))
+                .collect(),
+        }
+        .normalize()?;
+        let bytes = record.encode_bytes()?;
+        self.with_backend_mut(|backend| {
+            let capabilities = backend.capabilities();
+            capabilities.require_atomic_publish("quota record publication")?;
+            capabilities.require_durable_fsync("quota record publication")?;
+            backend.put_replace(&Key::quota(), &bytes)
+        })?;
+        self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))
+    }
+
+    /// Recompute usage from the published commit chain only (never from
+    /// unpublished commit files, rejected generations, or process memory).
+    fn replay_quota_usage(
+        &self,
+    ) -> Result<(
+        BTreeMap<QuotaPrincipal, QuotaCounters>,
+        BTreeMap<Hash32, u64>,
+    )> {
+        let (usage, blobs, _) = self.replay_quota_usage_with_count()?;
+        Ok((usage, blobs))
+    }
+
+    fn replay_quota_usage_with_count(
+        &self,
+    ) -> Result<(
+        BTreeMap<QuotaPrincipal, QuotaCounters>,
+        BTreeMap<Hash32, u64>,
+        u64,
+    )> {
+        let index = self.with_backend(|backend| recovery::commit_index_via(backend, u64::MAX))?;
+        let mut chain: Vec<crate::format::Commit> = Vec::new();
+        let mut cursor = Some(self.head);
+        let mut seen = BTreeSet::new();
+        while let Some(hash) = cursor {
+            if !seen.insert(hash) {
+                return Err(Error::corrupt("commit chain contains a cycle"));
+            }
+            let loaded = index.get(&hash).ok_or_else(|| {
+                Error::corrupt(format!("commit {hash} is missing from the published chain"))
+            })?;
+            chain.push(loaded.commit.clone());
+            cursor = loaded.commit.parent;
+        }
+        chain.reverse();
+
+        let mut state = State::default();
+        let mut usage: BTreeMap<QuotaPrincipal, QuotaCounters> = BTreeMap::new();
+        let mut blobs: BTreeMap<Hash32, u64> = BTreeMap::new();
+        let mut commits = 0u64;
+        for commit in &chain {
+            let pre: BTreeMap<Hash32, Option<ObjectRecord>> = commit
+                .ops
+                .iter()
+                .filter_map(|op| match op {
+                    Op::PutObject(record) => {
+                        Some((record.id, state.objects.get(&record.id).cloned()))
+                    }
+                    _ => None,
+                })
+                .collect();
+            let (charges, additions) = self.compute_quota_charges(&commit.ops, &pre, &blobs)?;
+            for (principal, counters) in charges {
+                usage.entry(principal).or_default().add(&counters)?;
+            }
+            blobs.extend(additions);
+            state.apply_ops(&commit.ops)?;
+            commits += 1;
+        }
+        Ok((usage, blobs, commits))
+    }
+
+    /// Sum the blob bytes reachable from committed state into `index`.
+    fn ensure_blob_index(&mut self) -> Result<()> {
+        if self.blob_index_ready {
+            return Ok(());
+        }
+        if self.group_depth != 0 {
+            // Live group state already contains uncommitted objects, so it is
+            // not a valid basis for "already reachable from committed state".
+            // `group` builds the index before opening the closure.
+            return Err(Error::corrupt(
+                "quota blob index cannot be built from live group state",
+            ));
+        }
+        let mut index = BTreeMap::new();
+        let mut seen = BTreeSet::new();
+        let manifests: Vec<Hash32> = self
+            .state
+            .objects
+            .values()
+            .filter(|record| record.kind == ObjectKind::File)
+            .map(|record| record.content)
+            .collect();
+        for manifest in manifests {
+            let mut additions = BTreeMap::new();
+            self.collect_manifest_blobs(manifest, &index, &mut additions, &mut seen, 0)?;
+            index.extend(additions);
+        }
+        self.blob_index = index;
+        self.blob_index_ready = true;
+        Ok(())
+    }
+
+    /// Walk one manifest tree, inserting the blobs that are not already in
+    /// `index` into `additions` and returning the added byte count. `seen`
+    /// guards against cycles and duplicate counting inside one commit.
+    fn collect_manifest_blobs(
+        &self,
+        manifest_id: Hash32,
+        index: &BTreeMap<Hash32, u64>,
+        additions: &mut BTreeMap<Hash32, u64>,
+        seen: &mut BTreeSet<Hash32>,
+        depth: usize,
+    ) -> Result<u64> {
+        if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+            return Err(Error::corrupt(
+                "manifest tree exceeds the codec dependency depth bound",
+            ));
+        }
+        if !seen.insert(manifest_id) {
+            return Ok(0);
+        }
+        if index.contains_key(&manifest_id) || additions.contains_key(&manifest_id) {
+            return Ok(0);
+        }
+        let bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                manifest_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
+        let size = bytes.len() as u64;
+        let value = crate::wcb_util::decode(&bytes)?;
+        let manifest = Manifest::from_wcb(&value)?;
+        additions.insert(manifest_id, size);
+        let mut total = size;
+        if let Some(representation) = &manifest.representation {
+            if representation.kind == RepresentationKind::Codec
+                || representation.kind == RepresentationKind::Tensor
+            {
+                if let Some(frame) = representation.frame {
+                    if !index.contains_key(&frame) && !additions.contains_key(&frame) {
+                        let frame_len =
+                            self.with_backend(|backend| backend.len(&Key::manifest(frame)))?;
+                        additions.insert(frame, frame_len);
+                        total += frame_len;
+                    }
+                }
+                for dependency in &representation.dependencies {
+                    total += self.collect_manifest_blobs(
+                        *dependency,
+                        index,
+                        additions,
+                        seen,
+                        depth + 1,
+                    )?;
+                }
+                return Ok(total);
+            }
+        }
+        for chunk in &manifest.chunks {
+            if index.contains_key(&chunk.hash) || additions.contains_key(&chunk.hash) {
+                continue;
+            }
+            additions.insert(chunk.hash, chunk.len);
+            total += chunk.len;
+        }
+        Ok(total)
+    }
+
+    /// Attribute the additions one commit would make. `pre` holds the object
+    /// record that existed for every written id before the commit (or `None`),
+    /// and `index` is the blob set reachable from committed state.
+    fn compute_quota_charges(
+        &self,
+        ops: &[Op],
+        pre: &BTreeMap<Hash32, Option<ObjectRecord>>,
+        index: &BTreeMap<Hash32, u64>,
+    ) -> Result<(
+        BTreeMap<QuotaPrincipal, QuotaCounters>,
+        BTreeMap<Hash32, u64>,
+    )> {
+        let mut charges: BTreeMap<QuotaPrincipal, QuotaCounters> = BTreeMap::new();
+        let mut additions: BTreeMap<Hash32, u64> = BTreeMap::new();
+        let mut seen: BTreeSet<Hash32> = BTreeSet::new();
+        for op in ops {
+            let Op::PutObject(record) = op else {
+                continue;
+            };
+            if record.id == State::ROOT_ID {
+                continue;
+            }
+            let previous = pre.get(&record.id).and_then(|value| value.as_ref());
+            if previous == Some(record) {
+                continue;
+            }
+            let mut principals: Vec<QuotaPrincipal> = vec![QuotaPrincipal::Posix {
+                uid: record.uid,
+                gid: record.gid,
+            }];
+            if let Some(Value::Str(tenant)) = record.attrs.get(ATTR_TENANT) {
+                if !tenant.is_empty() {
+                    principals.push(QuotaPrincipal::Tenant(tenant.clone()));
+                }
+            }
+            let record_bytes = crate::wcb_util::encode(&record.to_value())?.len() as u64;
+            let mut content_bytes = 0u64;
+            let content_changed = previous
+                .map(|prior| prior.content != record.content || prior.kind != record.kind)
+                .unwrap_or(true);
+            if record.kind == ObjectKind::File && content_changed {
+                content_bytes = self.collect_manifest_blobs(
+                    record.content,
+                    index,
+                    &mut additions,
+                    &mut seen,
+                    0,
+                )?;
+            }
+            let delta = QuotaCounters {
+                used_bytes: record_bytes
+                    .checked_add(content_bytes)
+                    .ok_or_else(|| Error::limit_exceeded("quota charge overflow"))?,
+                used_objects: u64::from(previous.is_none()),
+            };
+            for principal in principals {
+                charges.entry(principal).or_default().add(&delta)?;
+            }
+        }
+        Ok((charges, additions))
+    }
+
+    /// Pre-commit view of the object records touched by `ops` in live state.
+    pub(crate) fn quota_pre_map_live(&self, ops: &[Op]) -> BTreeMap<Hash32, Option<ObjectRecord>> {
+        let mut map = BTreeMap::new();
+        for op in ops {
+            if let Op::PutObject(record) = op {
+                map.entry(record.id)
+                    .or_insert_with(|| self.state.objects.get(&record.id).cloned());
+            }
+        }
+        map
+    }
+
+    /// Enforce every configured budget for one commit. Returns the accepted
+    /// charges and the new blob sizes to fold into the index after publication,
+    /// or `None` when no budget is configured. Nothing is written here; a denial
+    /// leaves generation, head, and state untouched.
+    pub(crate) fn quota_preflight(
+        &mut self,
+        ops: &[Op],
+        pre: &BTreeMap<Hash32, Option<ObjectRecord>>,
+    ) -> Result<
+        Option<(
+            BTreeMap<QuotaPrincipal, QuotaCounters>,
+            BTreeMap<Hash32, u64>,
+        )>,
+    > {
+        if !self.quota.enforced() {
+            if self.quota.record_present && !self.quota.valid {
+                // A present but unusable record hides the policy. Refusing is
+                // the only non-silent behaviour: the operator must re-supply
+                // the budgets (`--quota`) or repair the record.
+                return Err(Error::corrupt(
+                    "quota usage record is unusable; re-run with `--quota` to install a policy",
+                ));
+            }
+            return Ok(None);
+        }
+        if !self.quota.valid {
+            return Err(Error::corrupt(
+                "quota usage record is inconsistent with committed state; run `quota rebuild`",
+            ));
+        }
+        self.ensure_blob_index()?;
+        let index = std::mem::take(&mut self.blob_index);
+        let result = self.compute_quota_charges(ops, pre, &index);
+        self.blob_index = index;
+        let (charges, additions) = result?;
+        for (principal, budget) in &self.quota.policy {
+            let delta = charges.get(principal).copied().unwrap_or_default();
+            let used = self.quota.usage.get(principal).copied().unwrap_or_default();
+            let bytes = used
+                .used_bytes
+                .checked_add(delta.used_bytes)
+                .ok_or_else(|| Error::limit_exceeded("quota byte counter overflow"))?;
+            let objects = used
+                .used_objects
+                .checked_add(delta.used_objects)
+                .ok_or_else(|| Error::limit_exceeded("quota object counter overflow"))?;
+            if bytes > budget.max_new_bytes || objects > budget.max_objects {
+                // Fixed, non-disclosing text: no usage, no limits, no principal.
+                return Err(Error::budget_exceeded("write budget exceeded"));
+            }
+        }
+        Ok(Some((charges, additions)))
+    }
+
+    /// Fold an accepted commit's charges into the record and publish it. The
+    /// commit is already durable; a record write failure marks the runtime state
+    /// invalid (later writes fail closed) instead of pretending the commit did
+    /// not happen.
+    pub(crate) fn record_quota_after_commit(
+        &mut self,
+        charges: BTreeMap<QuotaPrincipal, QuotaCounters>,
+        additions: BTreeMap<Hash32, u64>,
+    ) {
+        for (principal, counters) in charges {
+            match self
+                .quota
+                .usage
+                .entry(principal)
+                .or_default()
+                .add(&counters)
+            {
+                Ok(()) => {}
+                Err(err) => {
+                    self.quota.valid = false;
+                    self.quota.reason = Some(format!("quota usage overflow: {err}"));
+                    return;
+                }
+            }
+        }
+        self.blob_index.extend(additions);
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+        if let Err(err) = self.persist_quota_record() {
+            self.quota.valid = false;
+            self.quota.reason = Some(format!("cannot persist the quota record: {err}"));
+            self.notes.push(format!(
+                "commit {} published but the quota record was not updated: {err} (writes fail closed until `quota rebuild`)",
+                self.head
+            ));
+        }
+    }
+
     // ---- internals -------------------------------------------------------
 
     /// Current store clock in UTC nanoseconds (the fixed fixture clock when
@@ -4347,6 +5208,13 @@ impl Store {
         next_state.apply_ops(&ops)?;
         next_state.generation = new_generation;
 
+        // Write-budget admission happens before any commit bytes exist. A denial
+        // returns `BudgetExceeded` and leaves generation, head, and state
+        // exactly as they were; content blobs already stored are unreferenced
+        // and reclaimable by GC.
+        let quota_pre = self.quota_pre_map_live(&ops);
+        let quota = self.quota_preflight(&ops, &quota_pre)?;
+
         let interval = self.options.checkpoint_interval;
         let wants_checkpoint = force_checkpoint || (interval > 0 && new_generation % interval == 0);
         let checkpoint = if wants_checkpoint {
@@ -4378,6 +5246,9 @@ impl Store {
         // Advisory only: the commit is already durable and visible. A failed
         // index write is recorded and ignored.
         self.persist_index_after_commit(hash, &self.state);
+        if let Some((charges, additions)) = quota {
+            self.record_quota_after_commit(charges, additions);
+        }
         Ok(hash)
     }
 
@@ -4405,10 +5276,13 @@ impl Store {
     /// Record the pre-op value of every state key `op` can touch.
     fn journal(&mut self, op: &Op) {
         match op {
-            Op::PutObject(record) => self.group_undo.push(Undo::Object(
-                record.id,
-                self.state.objects.get(&record.id).cloned(),
-            )),
+            Op::PutObject(record) => {
+                let previous = self.state.objects.get(&record.id).cloned();
+                self.group_pre_objects
+                    .entry(record.id)
+                    .or_insert_with(|| previous.clone());
+                self.group_undo.push(Undo::Object(record.id, previous))
+            }
             Op::DeleteObject(id) => {
                 self.group_undo
                     .push(Undo::Object(*id, self.state.objects.get(id).cloned()));
@@ -4446,6 +5320,7 @@ impl Store {
         let undo = std::mem::take(&mut self.group_undo);
         self.rollback(&undo);
         self.pending_ops.clear();
+        self.group_pre_objects.clear();
         self.group_force_checkpoint = false;
         self.group_depth = 0;
     }
@@ -4479,16 +5354,27 @@ impl Store {
 
     /// Publish the buffered ops as exactly one commit. The live state already
     /// contains every op, so unlike [`Store::commit_ops`] nothing is replayed.
-    fn publish_staged(&mut self, ops: Vec<Op>, force_checkpoint: bool) -> Result<Hash32> {
+    /// `pre_objects` holds the object records that existed before the group for
+    /// every id the group wrote; the quota delta is measured against it.
+    fn publish_staged(
+        &mut self,
+        ops: Vec<Op>,
+        pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
+        force_checkpoint: bool,
+    ) -> Result<Hash32> {
         let new_generation = self.next_generation;
         let next_generation = new_generation
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        let quota = self.quota_preflight(&ops, &pre_objects)?;
         let previous_state_generation = self.state.generation;
         self.state.generation = new_generation;
         match self.try_publish_staged(new_generation, ops, force_checkpoint) {
             Ok(hash) => {
                 self.next_generation = next_generation;
+                if let Some((charges, additions)) = quota {
+                    self.record_quota_after_commit(charges, additions);
+                }
                 Ok(hash)
             }
             Err(err) => {
@@ -5216,6 +6102,8 @@ fn validate_options(options: &Options) -> Result<()> {
             "codec_delta_margin_percent must be at most 90",
         ));
     }
+    // Reject duplicate principals before any store I/O.
+    normalize_policy(options.quotas.clone())?;
     Ok(())
 }
 

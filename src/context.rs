@@ -26,7 +26,7 @@ use weftcodec::capability::{
 use weftcodec::context::{
     Budget, CapabilityScope, CausalClosure, ContextRoot, ContextUri, IdentityMode,
 };
-use weftcodec::selector::{Expr, Selector};
+use weftcodec::selector::{CmpOp, Expr, Field, Literal, Selector};
 use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
@@ -43,6 +43,16 @@ use crate::state::{
     CONTEXT_ROOT_URI_ATTR,
 };
 use crate::store::Store;
+
+/// Reserved predicate recording context lineage: `derived_from` from the new
+/// Context Root to the source Context Root name.
+pub const CONTEXT_LINEAGE_PREDICATE: &str = "derived_from";
+/// Attribute naming the derived (new) context on a lineage relation.
+pub const CONTEXT_LINEAGE_CONTEXT_ATTR: &str = "weft.context";
+/// Attribute naming the new Context Root id on a lineage relation.
+pub const CONTEXT_LINEAGE_CONTEXT_ID_ATTR: &str = "weft.context_id";
+/// Attribute naming the source Context Root id on a lineage relation.
+pub const CONTEXT_LINEAGE_SOURCE_ID_ATTR: &str = "weft.source_context_id";
 
 static MATERIALIZE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -511,6 +521,72 @@ impl Store {
         // Keep the id check honest even when the encoder changed.
         debug_assert_eq!(stored_id, root.id()?);
         Ok(relation.id)
+    }
+
+    /// Branch a Context Root: persist a new root pinned to the source root's
+    /// commit, optionally narrowing it with `task` and `model` attribute
+    /// equality, and record a `derived_from` lineage relation to the source.
+    ///
+    /// The fork commit is the source root's pinned snapshot, so later writes on
+    /// the live head never move the branch. The lineage relation is published in
+    /// the same group commit as the new root; a failure publishes neither.
+    pub fn branch_context_root(
+        &mut self,
+        source: &str,
+        name: &str,
+        task: Option<&str>,
+        model: Option<&str>,
+        replace: bool,
+    ) -> Result<StoredContextRoot> {
+        self.require_writable_context()?;
+        crate::state::validate_snapshot_name(name)?;
+        let stored = self.load_context_root(source)?;
+        let mut selector = stored.root.selector()?;
+        if let Some(task) = task {
+            selector.predicate = conjoin_attribute(selector.predicate.clone(), "task", task);
+        }
+        if let Some(model) = model {
+            selector.predicate = conjoin_attribute(selector.predicate.clone(), "model", model);
+        }
+        let root = ContextRoot::new(
+            &selector,
+            stored.root.snapshot,
+            &stored.root.resolver,
+            stored.root.causal.clone(),
+            stored.root.capability_hash,
+            stored.root.budget.clone(),
+        )?;
+        let new_id = root.id()?;
+        let source_name = stored.name.clone();
+        let source_id = stored.context_root_id;
+        self.group(|store| {
+            store.save_context_root(name, &root, None, replace)?;
+            let mut attrs = BTreeMap::new();
+            attrs.insert(
+                CONTEXT_LINEAGE_CONTEXT_ATTR.to_owned(),
+                Value::Str(name.to_owned()),
+            );
+            attrs.insert(
+                CONTEXT_LINEAGE_CONTEXT_ID_ATTR.to_owned(),
+                Value::Str(new_id.to_hex()),
+            );
+            attrs.insert(
+                CONTEXT_LINEAGE_SOURCE_ID_ATTR.to_owned(),
+                Value::Str(source_id.to_hex()),
+            );
+            let relation = RelationRecord::new(
+                State::ROOT_ID,
+                CONTEXT_LINEAGE_PREDICATE,
+                RelationTarget::Value(Value::Str(source_name)),
+                None,
+                attrs,
+            )?;
+            if !store.current_state().relations.contains_key(&relation.id) {
+                store.commit_ops_context(vec![crate::state::Op::PutRelation(relation)], false)?;
+            }
+            Ok(())
+        })?;
+        self.load_context_root(name)
     }
 
     /// Delete a named Context Root.
@@ -1465,6 +1541,25 @@ fn write_manifest(path: &Path, manifest: &serde_json::Value) -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Conjoin `attrs.<field> == value` onto a selector predicate, flattening an
+/// existing `and` so the result stays canonical (nested same-op nodes are
+/// rejected by the canonical decoder).
+fn conjoin_attribute(predicate: Expr, field: &str, value: &str) -> Expr {
+    let comparison = Expr::Compare {
+        field: Field::new(vec!["attrs".to_owned(), field.to_owned()]),
+        op: CmpOp::Eq,
+        value: Literal::Str(value.to_owned()),
+    };
+    match predicate {
+        Expr::True => comparison,
+        Expr::And(mut items) => {
+            items.push(comparison);
+            Expr::And(items)
+        }
+        other => Expr::And(vec![other, comparison]),
+    }
 }
 
 pub(crate) fn is_context_root_relation(relation: &RelationRecord) -> bool {

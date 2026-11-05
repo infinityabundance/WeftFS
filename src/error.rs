@@ -49,6 +49,10 @@ pub enum Class {
     Parse,
     /// Selector schema string is not `weft.selector.v1`.
     UnknownSchema,
+    /// A configured write budget would be exceeded by the commit.
+    BudgetExceeded,
+    /// A union merge found the same path with different content.
+    Conflict,
     /// Transport/read/write failure.
     Io,
 }
@@ -76,6 +80,8 @@ impl Class {
             Class::UnsupportedVersion => "UnsupportedVersion",
             Class::Parse => "Parse",
             Class::UnknownSchema => "UnknownSchema",
+            Class::BudgetExceeded => "BudgetExceeded",
+            Class::Conflict => "Conflict",
             Class::Io => "Io",
         }
     }
@@ -171,6 +177,12 @@ impl Error {
     }
     pub fn unknown_schema(message: impl Into<String>) -> Self {
         Self::new(Class::UnknownSchema, message)
+    }
+    pub fn budget_exceeded(message: impl Into<String>) -> Self {
+        Self::new(Class::BudgetExceeded, message)
+    }
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::new(Class::Conflict, message)
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)

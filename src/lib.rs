@@ -30,6 +30,7 @@ pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
 pub mod provenance;
+pub mod quota;
 pub mod recovery;
 pub mod representation;
 pub mod safetensors;

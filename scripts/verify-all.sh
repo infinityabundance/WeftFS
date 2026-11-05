@@ -38,7 +38,7 @@ run_court go "go_codec" \
 run_court fuse "rust_fuse" \
   "cargo test --features fuse --all-targets -- --test-threads=1"
 run_court fuse "go_store_and_fuse" \
-  "cd WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && go test -race ./... -count=1"
+  "cargo build --release --features fuse --bin weftfs && cd WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && WEFTFS_RUST_BIN=/work/.docker-cache/target-rust/release/weftfs go test -race ./... -count=1"
 
 # Cross-language codec gate: Rust encodes, Go decodes; Go encodes, Rust
 # decodes; deterministic metadata bytes are compared.

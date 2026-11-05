@@ -63,6 +63,9 @@ pub enum KeyKind {
     /// A physical entry that does not follow the kind's naming rule. Only
     /// produced by `list_prefix`, so garbage collection can report it.
     Other,
+    /// `quota` store-root record: the persisted write-budget policy and the
+    /// usage counters derived from committed state.
+    Quota,
 }
 
 impl KeyKind {
@@ -81,6 +84,7 @@ impl KeyKind {
             KeyKind::Tag => "tag",
             KeyKind::Tmp => "tmp",
             KeyKind::Other => "other",
+            KeyKind::Quota => "quota",
         }
     }
 }
@@ -114,6 +118,8 @@ pub enum Key {
     Tmp {
         name: String,
     },
+    /// The single mutable `quota` record at the store root.
+    Quota,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -169,6 +175,10 @@ impl Key {
         Key::Tmp { name: name.into() }
     }
 
+    pub fn quota() -> Key {
+        Key::Quota
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -186,6 +196,7 @@ impl Key {
             Key::SnapshotRef { .. } => KeyKind::SnapshotRef,
             Key::Tag { .. } => KeyKind::Tag,
             Key::Tmp { .. } => KeyKind::Tmp,
+            Key::Quota => KeyKind::Quota,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -239,6 +250,7 @@ impl Key {
             Key::SnapshotRef { name } => format!("refs/snapshots/{name}"),
             Key::Tag { name } => format!("refs/tags/{name}"),
             Key::Tmp { name } => format!("tmp/{name}"),
+            Key::Quota => "quota".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -425,6 +437,12 @@ pub trait StorageBackend: Send {
     /// different bytes is an error; identical bytes are a no-op.
     fn put_atomic(&mut self, key: &Key, bytes: &[u8]) -> Result<()>;
 
+    /// Atomically **replace** a mutable store record (only the `quota` record
+    /// uses this). A reader observes either the complete previous bytes or the
+    /// complete new bytes, never a partial write. The bytes are fully fsynced
+    /// before the replacement becomes visible.
+    fn put_replace(&mut self, key: &Key, bytes: &[u8]) -> Result<()>;
+
     /// Create an object of `len` zero bytes. Fails if the key exists.
     fn create_zeroed(&mut self, key: &Key, len: u64) -> Result<()>;
 
@@ -532,6 +550,7 @@ impl LocalBackend {
             Key::SnapshotRef { name } => self.root.join("refs").join("snapshots").join(name),
             Key::Tag { name } => self.root.join("refs").join("tags").join(name),
             Key::Tmp { name } => self.root.join("tmp").join(name),
+            Key::Quota => self.root.join("quota"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -546,6 +565,7 @@ impl LocalBackend {
             KeyKind::SnapshotRef => Some(self.root.join("refs").join("snapshots")),
             KeyKind::Tag => Some(self.root.join("refs").join("tags")),
             KeyKind::Tmp => Some(self.root.join("tmp")),
+            KeyKind::Quota => Some(self.root.clone()),
             _ => None,
         }
     }
@@ -723,6 +743,50 @@ impl StorageBackend for LocalBackend {
 
     fn put_atomic(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
         self.publish_file(key, bytes)
+    }
+
+    fn put_replace(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
+        let capabilities = self.capabilities.clone();
+        capabilities.require_atomic_publish("mutable record publication")?;
+        capabilities.require_durable_fsync("mutable record publication")?;
+        if bytes.len() as u64 > capabilities.max_object_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "object is {} bytes, above the backend's {}-byte bound",
+                bytes.len(),
+                capabilities.max_object_bytes
+            )));
+        }
+        self.ensure_parent(key)?;
+        let final_path = self.path(key);
+        let parent = final_path
+            .parent()
+            .ok_or_else(|| Error::io("key path has no parent"))?
+            .to_path_buf();
+        let tmp = self.tmp_path("replace");
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&tmp)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
+        file.write_all(bytes)?;
+        file.sync_all()?;
+        drop(file);
+        fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
+        // rename(2) atomically replaces the previous record on POSIX.
+        fs::rename(&tmp, &final_path).map_err(|err| {
+            fs::remove_file(&tmp).ok();
+            Error::io(format!("cannot replace {}: {err}", final_path.display()))
+        })?;
+        fsync_dir(&parent)?;
+        self.stats.writes.fetch_add(1, Ordering::Relaxed);
+        self.stats
+            .bytes_written
+            .fetch_add(bytes.len() as u64, Ordering::Relaxed);
+        self.stats
+            .rename_publications
+            .fetch_add(1, Ordering::Relaxed);
+        Ok(())
     }
 
     fn create_zeroed(&mut self, key: &Key, len: u64) -> Result<()> {
@@ -944,6 +1008,13 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
         KeyKind::SnapshotRef => Some(Key::snapshot_ref(name)),
         KeyKind::Tag => Some(Key::tag(name)),
         KeyKind::Tmp => Some(Key::tmp(name)),
+        KeyKind::Quota => {
+            if name == "quota" {
+                Some(Key::quota())
+            } else {
+                None
+            }
+        }
         _ => None,
     }
 }
@@ -1002,6 +1073,7 @@ impl ObjectBackend {
             Key::Index { commit } => format!("i-{}.idx", commit.to_hex()),
             Key::SnapshotRef { name } => format!("s-{name}"),
             Key::Tag { name } => format!("t-{name}"),
+            Key::Quota => "q-quota".to_owned(),
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
             Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
@@ -1314,6 +1386,49 @@ impl StorageBackend for ObjectBackend {
         self.publish(key, bytes)
     }
 
+    fn put_replace(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
+        // Only the mutable `quota` record takes this path. It still uses a fully
+        // written and fsynced temporary name, then `rename(2)` so a reader sees
+        // the old bytes or the new bytes, never a torn record.
+        let capabilities = self.capabilities();
+        capabilities.require_atomic_publish("mutable record publication")?;
+        capabilities.require_durable_fsync("mutable record publication")?;
+        if bytes.len() as u64 > capabilities.max_object_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "object is {} bytes, above the backend's {}-byte bound",
+                bytes.len(),
+                capabilities.max_object_bytes
+            )));
+        }
+        self.ensure_parent(key)?;
+        let final_path = self.path(key);
+        let parent = final_path
+            .parent()
+            .ok_or_else(|| Error::io("key path has no parent"))?
+            .to_path_buf();
+        let tmp = self.tmp_path("replace");
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&tmp)
+            .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
+        file.write_all(bytes)?;
+        file.sync_all()?;
+        drop(file);
+        fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
+        fs::rename(&tmp, &final_path).map_err(|err| {
+            fs::remove_file(&tmp).ok();
+            Error::io(format!("cannot replace {}: {err}", final_path.display()))
+        })?;
+        fsync_dir(&parent)?;
+        self.stats.writes.fetch_add(1, Ordering::Relaxed);
+        self.stats
+            .bytes_written
+            .fetch_add(bytes.len() as u64, Ordering::Relaxed);
+        Ok(())
+    }
+
     fn create_zeroed(&mut self, key: &Key, len: u64) -> Result<()> {
         let bytes = vec![
             0u8;
@@ -1524,6 +1639,12 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
             let name = name.strip_prefix("t-")?;
             return Some(Key::tag(name));
         }
+        KeyKind::Quota => {
+            if name == "q-quota" {
+                return Some(Key::quota());
+            }
+            return None;
+        }
         _ => return None,
     };
     let hash = Hash32::from_lower_hex(hex).ok()?;
@@ -1538,6 +1659,9 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
 }
 
 fn known_object_name(name: &str) -> bool {
+    if name == "q-quota" {
+        return true;
+    }
     if Hash32::from_lower_hex(name).is_ok() {
         return true;
     }

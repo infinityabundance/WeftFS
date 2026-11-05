@@ -34,6 +34,7 @@ use weftfs::provenance::{
     choose_recovery, Determinism, ProvenanceEnvironment, ProvenanceInput, ProvenancePrincipal,
     ProvenanceRecord, PROVENANCE_SCHEMA,
 };
+use weftfs::quota::{parse_quota_file, QuotaPrincipal};
 use weftfs::state::{
     object_causal_closure, ObjectKind, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE,
 };
@@ -83,6 +84,15 @@ struct Cli {
         allow_hyphen_values = true
     )]
     codec_min_bytes: Option<String>,
+    /// Write budget, repeatable: `uid:GID:BYTES:OBJECTS` or
+    /// `tenant:NAME:BYTES:OBJECTS`. Supplying any budget on a writable open
+    /// installs (or replaces) the store's policy; omitting it enforces the
+    /// persisted policy unchanged.
+    #[arg(long = "quota", global = true, value_name = "SPEC")]
+    quotas: Vec<String>,
+    /// Read write budgets from a file (one `--quota` directive per line).
+    #[arg(long = "quota-file", global = true, value_name = "FILE")]
+    quota_file: Option<PathBuf>,
     #[command(subcommand)]
     command: Command,
 }
@@ -134,6 +144,10 @@ enum Command {
         /// `causal_exact`; omitted means `bytes_only`.
         #[arg(long)]
         causal: Option<String>,
+        /// Attribute the new object to a tenant write budget. Stored as the
+        /// reserved `weft.tenant` object attribute.
+        #[arg(long)]
+        tenant: Option<String>,
     },
     /// Overwrite a byte range (single atomic commit).
     Write {
@@ -352,6 +366,18 @@ enum Command {
         #[command(subcommand)]
         command: ProvenanceCommand,
     },
+    /// Write budgets: show the caller's own usage, and admin operations.
+    Quota {
+        #[command(subcommand)]
+        command: QuotaCommand,
+    },
+    /// Union-merge two snapshot refs (or commits) into the live head.
+    Merge {
+        /// Left branch: snapshot name or commit hex.
+        left: String,
+        /// Right branch: snapshot name or commit hex.
+        right: String,
+    },
     /// Plan recovery of an object from retained bytes, a representation chain,
     /// or recomputation from verified inputs.
     Recover {
@@ -454,8 +480,31 @@ enum RelationCommand {
 enum SnapshotCommand {
     /// Create a snapshot name.
     Create { name: String },
+    /// Branch an existing snapshot (or commit) under a new name. History is not
+    /// rewritten.
+    Branch { source: String, name: String },
     /// List snapshots.
     List,
+}
+
+#[derive(Subcommand)]
+enum QuotaCommand {
+    /// Show the caller's own usage and configured budget only. Usage of other
+    /// principals is never disclosed.
+    Show {
+        #[arg(long, default_value_t = 0)]
+        uid: u64,
+        #[arg(long, default_value_t = 0)]
+        gid: u64,
+        /// Show the tenant budget instead of the POSIX principal.
+        #[arg(long)]
+        tenant: Option<String>,
+    },
+    /// Admin: zero every usage counter (policy and content unchanged).
+    Reset,
+    /// Admin: recompute usage from the published commit chain and rewrite the
+    /// record.
+    Rebuild,
 }
 
 #[derive(Subcommand)]
@@ -566,6 +615,20 @@ enum ContextCommand {
     },
     /// List stored Context Roots.
     List,
+    /// Branch a Context Root: pin a new root to the source root's commit,
+    /// optionally narrowing it with `--task`/`--model`, and record
+    /// `derived_from` lineage.
+    Branch {
+        source: String,
+        name: String,
+        #[arg(long)]
+        task: Option<String>,
+        #[arg(long)]
+        model: Option<String>,
+        /// Replace an existing same-name root.
+        #[arg(long)]
+        replace: bool,
+    },
     /// Show the stored record and identity.
     Show { target: String },
     /// Resolve a Context Root to its ordered result set.
@@ -734,20 +797,22 @@ impl CliBackend {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 struct OpenPolicy {
     fixed_timestamp_ns: Option<i64>,
     representation: RepresentationMode,
     codec_min_bytes: u64,
     backend: CliBackend,
+    quotas: Vec<weftfs::quota::QuotaBudget>,
 }
 
 impl OpenPolicy {
-    fn options(self) -> Options {
+    fn options(&self) -> Options {
         Options {
             fixed_timestamp_ns: self.fixed_timestamp_ns,
             representation: self.representation,
             codec_min_bytes: self.codec_min_bytes,
+            quotas: self.quotas.clone(),
             ..Options::default()
         }
     }
@@ -792,13 +857,29 @@ fn run(cli: Cli) -> Result<()> {
         representation,
         backend,
         codec_min_bytes,
+        quotas,
+        quota_file,
         command,
     } = cli;
+    let mut budgets: Vec<weftfs::quota::QuotaBudget> = quotas
+        .iter()
+        .map(|text| weftfs::quota::parse_budget(text))
+        .collect::<Result<Vec<_>>>()?;
+    if let Some(path) = quota_file {
+        let contents = fs::read_to_string(&path).map_err(|err| {
+            Error::invalid_argument(format!(
+                "cannot read --quota-file {}: {err}",
+                path.display()
+            ))
+        })?;
+        budgets.extend(parse_quota_file(&contents)?);
+    }
     let policy = OpenPolicy {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
         backend: parse_backend(&backend)?,
+        quotas: budgets,
     };
     let needs_store = !matches!(
         command,
@@ -831,6 +912,7 @@ fn run(cli: Cli) -> Result<()> {
                 fixed_timestamp_ns: policy.fixed_timestamp_ns,
                 representation: policy.representation,
                 codec_min_bytes: policy.codec_min_bytes,
+                quotas: policy.quotas.clone(),
                 ..Options::default()
             };
             let store = Store::init_with_backend(&store, options, policy.backend.kind())?;
@@ -846,7 +928,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Info | Command::Open => {
-            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy.clone())?;
             let state = store.current_state();
             if json {
                 print_json(&json!({
@@ -894,10 +976,14 @@ fn run(cli: Cli) -> Result<()> {
             attr_u64_lists,
             seed,
             causal,
+            tenant,
         } => {
             let (default_uid, default_gid) = current_ids();
             let bytes = read_input(text, input_file)?;
-            let attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints, &attr_u64_lists)?;
+            let mut attrs = parse_attrs(&attrs, &attr_bytes, &attr_ints, &attr_u64_lists)?;
+            if let Some(tenant) = tenant {
+                attrs.insert(weftfs::state::ATTR_TENANT.to_owned(), Value::Str(tenant));
+            }
             let mode = parse_mode(&mode)?;
             let causal = parse_causal_entries(causal.as_deref())?;
             let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
@@ -1491,6 +1577,21 @@ fn run(cli: Cli) -> Result<()> {
                     Ok(())
                 }
             }
+            SnapshotCommand::Branch { source, name } => {
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+                let pinned = store.snapshot_branch(&source, &name)?;
+                if json {
+                    print_json(&json!({
+                        "name": name,
+                        "source": source,
+                        "snapshot_id": pinned.to_hex(),
+                        "generation": store.generation(),
+                    }))
+                } else {
+                    println!("{pinned}");
+                    Ok(())
+                }
+            }
             SnapshotCommand::List => {
                 let store = open_store(&store, OpenMode::ReadOnly, policy)?;
                 let snapshots = store.snapshot_list();
@@ -1508,6 +1609,91 @@ fn run(cli: Cli) -> Result<()> {
                 }
             }
         },
+        Command::Quota { command } => match command {
+            QuotaCommand::Show { uid, gid, tenant } => {
+                let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+                let principal = match tenant {
+                    Some(name) => QuotaPrincipal::Tenant(name),
+                    None => QuotaPrincipal::Posix { uid, gid },
+                };
+                if let Some(problem) = store.quota_problem() {
+                    return Err(Error::corrupt(format!(
+                        "quota usage record is unusable: {problem}"
+                    )));
+                }
+                let usage = store.quota_usage(&principal);
+                let budget = store.quota_budget(&principal);
+                if json {
+                    print_json(&json!({
+                        "principal": principal.display(),
+                        "configured": budget.is_some(),
+                        "used_bytes": usage.used_bytes,
+                        "used_objects": usage.used_objects,
+                        "max_new_bytes": budget.as_ref().map(|b| b.max_new_bytes),
+                        "max_objects": budget.as_ref().map(|b| b.max_objects),
+                    }))
+                } else {
+                    println!("principal={}", principal.display());
+                    println!("configured={}", budget.is_some());
+                    println!("used_bytes={}", usage.used_bytes);
+                    println!("used_objects={}", usage.used_objects);
+                    if let Some(budget) = budget {
+                        println!("max_new_bytes={}", budget.max_new_bytes);
+                        println!("max_objects={}", budget.max_objects);
+                    }
+                    Ok(())
+                }
+            }
+            QuotaCommand::Reset => {
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+                store.quota_reset()?;
+                if json {
+                    print_json(&json!({"reset": true, "generation": store.generation()}))
+                } else {
+                    println!("reset=true");
+                    Ok(())
+                }
+            }
+            QuotaCommand::Rebuild => {
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+                let commits = store.quota_rebuild()?;
+                if json {
+                    print_json(&json!({
+                        "rebuilt": true,
+                        "commits": commits,
+                        "generation": store.generation(),
+                    }))
+                } else {
+                    println!("rebuilt=true");
+                    println!("commits={commits}");
+                    Ok(())
+                }
+            }
+        },
+        Command::Merge { left, right } => {
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+            let report = store.merge_branches(&left, &right)?;
+            if json {
+                print_json(&json!({
+                    "left": report.left.to_hex(),
+                    "right": report.right.to_hex(),
+                    "paths": report.paths,
+                    "added_objects": report.added_objects,
+                    "added_entries": report.added_entries,
+                    "merged" : report.head.to_hex(),
+                    "generation": report.generation,
+                }))
+            } else {
+                println!("left={}", report.left);
+                println!("right={}", report.right);
+                println!("paths={}", report.paths);
+                println!("added_objects={}", report.added_objects);
+                println!("added_entries={}", report.added_entries);
+                println!("merged={}", report.head);
+                println!("generation={}", report.generation);
+                Ok(())
+            }
+        }
         Command::Pin { target, snapshot } => {
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = resolve_object(&store, &target)?;
@@ -1886,7 +2072,7 @@ fn run_checkpoint(
                 }
             }
             let report = {
-                let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+                let store = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
                 let file = fs::File::create(&spool_path)
                     .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
                 let mut writer = std::io::BufWriter::new(file);
@@ -2905,8 +3091,36 @@ fn run_context(
                 Ok(())
             }
         }
+        ContextCommand::Branch {
+            source,
+            name,
+            task,
+            model,
+            replace,
+        } => {
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+            let stored = store.branch_context_root(
+                &source,
+                &name,
+                task.as_deref(),
+                model.as_deref(),
+                replace,
+            )?;
+            if json {
+                let mut output = context_root_json(&stored)?;
+                output["generation"] = json!(store.generation());
+                output["derived_from"] = json!(source);
+                print_json(&output)
+            } else {
+                println!("context_root_id={}", stored.context_root_id);
+                println!("uri={}", stored.uri);
+                println!("snapshot_id={}", stored.root.snapshot);
+                println!("derived_from={source}");
+                Ok(())
+            }
+        }
         ContextCommand::List => {
-            let store = open_store(store, OpenMode::ReadOnly, policy)?;
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let contexts = store.list_context_roots()?;
             if json {
                 let items: Vec<_> = contexts

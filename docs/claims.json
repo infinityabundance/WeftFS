@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87\u00d7",
+    "value": "7.87×",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -530,7 +530,7 @@
   {
     "id": "p2_delta_restore_loss",
     "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-    "value": "44.0\u00d7",
+    "value": "44.0×",
     "locations": [
       "bench/RESULTS-float-tensor-real.md",
       "docs/STATUS.md"
@@ -621,6 +621,60 @@
       "docs/STATUS.md"
     ],
     "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p5a_quota_denial_text",
+    "claim": "The quota documentation states the fixed, non-disclosing denial message.",
+    "value": "write budget exceeded",
+    "locations": [
+      "docs/quota-branching.md",
+      "spec/WEFT-QUOTA.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p5a_quota_record_magic",
+    "claim": "The normative spec gives the quota record magic.",
+    "value": "WFQ1",
+    "locations": [
+      "spec/WEFT-QUOTA.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p5a_union_merge_not_three_way",
+    "claim": "The spec and docs state that merge is a union merge, not a three-way content merge.",
+    "value": "three-way content merge",
+    "locations": [
+      "spec/WEFT-QUOTA.md",
+      "docs/quota-branching.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p5a_branch_source_commit",
+    "claim": "Results and status record the unchanged s5000 commit from the 10,000-version branch demo.",
+    "value": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "locations": [
+      "bench/RESULTS-quota-branch.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/branching-20261105T070415Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p5a_quota_overhead_p50",
+    "claim": "Results and status record the measured p50 per-commit latency with budgets.",
+    "value": "13.74",
+    "locations": [
+      "bench/RESULTS-quota-branch.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T070251Z.json",
     "kind": "present"
   }
 ]

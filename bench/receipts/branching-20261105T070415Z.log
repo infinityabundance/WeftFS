@@ -1,0 +1,225 @@
+===== BUILD =====
+receipt: /work/bench/receipts/branching-20261105T070415Z.json
+
+===== STEP versions: 10000 versions with a snapshot every 500 =====
+CMD[versions]: weftfs create /history.txt --attr task=agent-43 --seed history-v1
+CMD[versions]: weftfs write /history.txt (versions 2..10000)
+CMD[versions]: weftfs snapshot create s<n> for n in 1,500,..,10000
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767225601000000000 create /history.txt --text branch-test version-1
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+ --attr task=agent-43 --seed history-v1
+bf0ad44e7b878b2626c8141dcb3f79438ceadb3d33dc2bd61a4bba529602a72d
+CMD[versions]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767225601000000000 snapshot create s1
+33ccc6de48d63b313c2386977c7d87b53c08867d4f4269a7d55896b4b1182086
+----- STEP versions: pass versions=10000 snapshots=21 ingest_ms=239770
+
+===== STEP snapshot-identities: Record the source and descendant snapshot commits =====
+CMD[snapshot-identities]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235600000000000 snapshot list
+{
+  "snapshots": {
+    "s1": "33ccc6de48d63b313c2386977c7d87b53c08867d4f4269a7d55896b4b1182086",
+    "s1000": "3862b490391e243e92382e7b234298eb776a91bdea908a3cb1d22e9a082453f8",
+    "s10000": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+    "s1500": "1fd86fb8b5c8080ef8eeab6b703cf3e61184f6c64c3288a54bc2ef806c014a13",
+    "s2000": "37db4d6050d6f031056ac425a9018ac93898ede11c46a255056d22a824f6f926",
+    "s2500": "f23f58e9a69231d1bc7233583730027754fd71e613788a227173d9d6cb5054c2",
+    "s3000": "a71c405a45a8fc32345d8d1bf7156a2758833f807fb8d8eff7c58640dfb9bfe4",
+    "s3500": "ce33143b70b27cbb23779fdfc806563075e6039d58fc135310866fb8de8c3b1e",
+    "s4000": "2231f8272fda436e8a04e4579aeed15cf857e29202a9d30c2c5ae47ef5560148",
+    "s4500": "f8bfe76cffb2554c783e343ec374062b5ef6e280691d58aee84f7938dda9423e",
+    "s500": "75fb4c20cbc7c460a696c12ff4f09b4536b9118c291c2575048f68baacb8cde9",
+    "s5000": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "s5500": "9a41b6164a379fefb969b75d9496c783b4ed69d5390a46cca4497c44a8db518a",
+    "s6000": "c9a7a3e1b4dfd032e517a2fa9913ff958a52a173d372b41d9964378c51cdad43",
+    "s6500": "34749c18a90bd899567ae9767e1410b0248c528ae1a96d1fc40bfe4747d2675a",
+    "s7000": "9a51876aa95ceb96fb2872bad83859be06056fd112fe0846c91ba47aa56a5e1f",
+    "s7500": "8d3f8df713976793e7388c440a738c07d7c0ea18b14d9cb8bced374c0201a232",
+    "s8000": "edbfe700288da54999b86b406e9f5b20ae580ed3188f02bb411407d11cc373f0",
+    "s8500": "71b142218d525d0d740aa6f76f0954052de919624952415f5d4d3cfe4788e1e1",
+    "s9000": "c59a1cf6257c69a76fbb39386b95fd1471bfeb79d1919fe2a474252b72d61847",
+    "s9500": "09389721e646a5f52f0659ecf2409e54267cf5a7253fe29a6b7a35a9fbf37605"
+  }
+}
+CMD[snapshot-identities]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235600000000000 verify --full
+ok=true
+full=true
+generation=10022
+checked_commits=10022
+checked_objects=1
+checked_manifests=40
+checked_chunks=1
+checked_context_roots=0
+checked_causal=0
+checked_representations=0
+checked_capabilities=0
+checked_capability_envelopes=0
+checked_provenance=0
+----- STEP snapshot-identities: pass source=72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d
+
+===== STEP branch: Branch s5000 and persist a Context Root at the fork commit =====
+CMD[branch]: weftfs snapshot branch s5000 by:task=agent-43
+CMD[branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235600000000000 snapshot branch s5000 by:task=agent-43
+{
+  "generation": 10023,
+  "name": "by:task=agent-43",
+  "snapshot_id": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+  "source": "s5000"
+}
+CMD[branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235600000000000 snapshot list
+{
+  "snapshots": {
+    "by:task=agent-43": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "s1": "33ccc6de48d63b313c2386977c7d87b53c08867d4f4269a7d55896b4b1182086",
+    "s1000": "3862b490391e243e92382e7b234298eb776a91bdea908a3cb1d22e9a082453f8",
+    "s10000": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+    "s1500": "1fd86fb8b5c8080ef8eeab6b703cf3e61184f6c64c3288a54bc2ef806c014a13",
+    "s2000": "37db4d6050d6f031056ac425a9018ac93898ede11c46a255056d22a824f6f926",
+    "s2500": "f23f58e9a69231d1bc7233583730027754fd71e613788a227173d9d6cb5054c2",
+    "s3000": "a71c405a45a8fc32345d8d1bf7156a2758833f807fb8d8eff7c58640dfb9bfe4",
+    "s3500": "ce33143b70b27cbb23779fdfc806563075e6039d58fc135310866fb8de8c3b1e",
+    "s4000": "2231f8272fda436e8a04e4579aeed15cf857e29202a9d30c2c5ae47ef5560148",
+    "s4500": "f8bfe76cffb2554c783e343ec374062b5ef6e280691d58aee84f7938dda9423e",
+    "s500": "75fb4c20cbc7c460a696c12ff4f09b4536b9118c291c2575048f68baacb8cde9",
+    "s5000": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "s5500": "9a41b6164a379fefb969b75d9496c783b4ed69d5390a46cca4497c44a8db518a",
+    "s6000": "c9a7a3e1b4dfd032e517a2fa9913ff958a52a173d372b41d9964378c51cdad43",
+    "s6500": "34749c18a90bd899567ae9767e1410b0248c528ae1a96d1fc40bfe4747d2675a",
+    "s7000": "9a51876aa95ceb96fb2872bad83859be06056fd112fe0846c91ba47aa56a5e1f",
+    "s7500": "8d3f8df713976793e7388c440a738c07d7c0ea18b14d9cb8bced374c0201a232",
+    "s8000": "edbfe700288da54999b86b406e9f5b20ae580ed3188f02bb411407d11cc373f0",
+    "s8500": "71b142218d525d0d740aa6f76f0954052de919624952415f5d4d3cfe4788e1e1",
+    "s9000": "c59a1cf6257c69a76fbb39386b95fd1471bfeb79d1919fe2a474252b72d61847",
+    "s9500": "09389721e646a5f52f0659ecf2409e54267cf5a7253fe29a6b7a35a9fbf37605"
+  }
+}
+CMD[branch]: weftfs context create --name fork-5000 --selector 'select attrs.task == "agent-43"' --snapshot s5000
+CMD[branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235600000000000 context create --name fork-5000 --selector select attrs.task == "agent-43" --snapshot s5000
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b05086167656e742d34330508736e617073686f74062072ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d05096e616d657370616365050764656661756c74050b73656c6563746f725f69640620f48abe8670f060f5f1fa516b013883c412b722428296e5be6b3f851db12e66e1",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "9fe3bb6165c98a9a1eb0bd99dad0461f5bbb6ecd38f2962d1f6207972f018ce4",
+  "generation": 10024,
+  "name": "fork-5000",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "08e8fdccf11a54b835bdc5b1d41b3894fc7c4ae8fcf08a2ab6b385fb5815d388",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b05086167656e742d3433",
+  "selector_id": "f48abe8670f060f5f1fa516b013883c412b722428296e5be6b3f851db12e66e1",
+  "snapshot_id": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+  "uri": "weft://default/c/9fe3bb6165c98a9a1eb0bd99dad0461f5bbb6ecd38f2962d1f6207972f018ce4"
+}
+CMD[branch]: weftfs context branch fork-5000 by:task=agent-43 --task agent-43
+CMD[branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235600000000000 context branch fork-5000 by:task=agent-43 --task agent-43
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f7206860108030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507020503616e64070207030507617474725f6571050a61747472732e7461736b05086167656e742d343307030507617474725f6571050a61747472732e7461736b05086167656e742d34330508736e617073686f74062072ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d05096e616d657370616365050764656661756c74050b73656c6563746f725f69640620ba59bf623c4a88ab52a2a42bb7b7242857e71d529facd3125059a7efead10b71",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "0c3918b7fbfeb356e168fbb0e7adf4875781efe3ef87a3cd58f2a81e324fe575",
+  "derived_from": "fork-5000",
+  "generation": 10025,
+  "name": "by:task=agent-43",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "5904d1ec2a208646c525950884673565a62771c24f676b17bf51265c348a88b6",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507020503616e64070207030507617474725f6571050a61747472732e7461736b05086167656e742d343307030507617474725f6571050a61747472732e7461736b05086167656e742d3433",
+  "selector_id": "ba59bf623c4a88ab52a2a42bb7b7242857e71d529facd3125059a7efead10b71",
+  "snapshot_id": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+  "uri": "weft://default/c/0c3918b7fbfeb356e168fbb0e7adf4875781efe3ef87a3cd58f2a81e324fe575"
+}
+----- STEP branch: pass context=0c3918b7fbfeb356e168fbb0e7adf4875781efe3ef87a3cd58f2a81e324fe575
+
+===== STEP write-after-branch: Five new versions after the branch =====
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235601000000000 write /history.txt --text branch-test version-10001
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+a6e4c06512451aab06cdc75b78ad0f56f1a6313b2e4d87d55778cf8672afc6e1
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235602000000000 write /history.txt --text branch-test version-10002
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+73e3c68f43d66e6962807eeab59a1c097a6b7f8b73339749dad970ecb6810307
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235603000000000 write /history.txt --text branch-test version-10003
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+ec9a6592b84d5197435857b8a0522d92a413eb81e31097e8934a096a1dc5764d
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235604000000000 write /history.txt --text branch-test version-10004
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+8c07357303d53b0fcde76db918af70970d871d78ec92e3e67800578ae6e4758a
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235605000000000 write /history.txt --text branch-test version-10005
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+
+30af8290e1b616e4fcdc26e5a45cdfd65f0bc9f0196996135a443a47ed0cd623
+CMD[write-after-branch]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235605000000000 cat /history.txt
+branch-test version-10005
+padding-0123456789abcdef0123456789abcdef0123456789abcdef
+----- STEP write-after-branch: pass live version=10005
+
+===== STEP source-unchanged: Source and descendant commits are byte-identical after the writes =====
+CMD[source-unchanged]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --json --fixed-timestamp-ns 1767235605000000000 snapshot list
+{
+  "snapshots": {
+    "by:task=agent-43": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "s1": "33ccc6de48d63b313c2386977c7d87b53c08867d4f4269a7d55896b4b1182086",
+    "s1000": "3862b490391e243e92382e7b234298eb776a91bdea908a3cb1d22e9a082453f8",
+    "s10000": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+    "s1500": "1fd86fb8b5c8080ef8eeab6b703cf3e61184f6c64c3288a54bc2ef806c014a13",
+    "s2000": "37db4d6050d6f031056ac425a9018ac93898ede11c46a255056d22a824f6f926",
+    "s2500": "f23f58e9a69231d1bc7233583730027754fd71e613788a227173d9d6cb5054c2",
+    "s3000": "a71c405a45a8fc32345d8d1bf7156a2758833f807fb8d8eff7c58640dfb9bfe4",
+    "s3500": "ce33143b70b27cbb23779fdfc806563075e6039d58fc135310866fb8de8c3b1e",
+    "s4000": "2231f8272fda436e8a04e4579aeed15cf857e29202a9d30c2c5ae47ef5560148",
+    "s4500": "f8bfe76cffb2554c783e343ec374062b5ef6e280691d58aee84f7938dda9423e",
+    "s500": "75fb4c20cbc7c460a696c12ff4f09b4536b9118c291c2575048f68baacb8cde9",
+    "s5000": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "s5500": "9a41b6164a379fefb969b75d9496c783b4ed69d5390a46cca4497c44a8db518a",
+    "s6000": "c9a7a3e1b4dfd032e517a2fa9913ff958a52a173d372b41d9964378c51cdad43",
+    "s6500": "34749c18a90bd899567ae9767e1410b0248c528ae1a96d1fc40bfe4747d2675a",
+    "s7000": "9a51876aa95ceb96fb2872bad83859be06056fd112fe0846c91ba47aa56a5e1f",
+    "s7500": "8d3f8df713976793e7388c440a738c07d7c0ea18b14d9cb8bced374c0201a232",
+    "s8000": "edbfe700288da54999b86b406e9f5b20ae580ed3188f02bb411407d11cc373f0",
+    "s8500": "71b142218d525d0d740aa6f76f0954052de919624952415f5d4d3cfe4788e1e1",
+    "s9000": "c59a1cf6257c69a76fbb39386b95fd1471bfeb79d1919fe2a474252b72d61847",
+    "s9500": "09389721e646a5f52f0659ecf2409e54267cf5a7253fe29a6b7a35a9fbf37605"
+  }
+}
+CMD[source-unchanged]: weftfs verify --full (after writes)
+CMD[source-unchanged]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z --fixed-timestamp-ns 1767235605000000000 verify --full
+ok=true
+full=true
+generation=10030
+checked_commits=10030
+checked_objects=1
+checked_manifests=40
+checked_chunks=1
+checked_context_roots=2
+checked_causal=0
+checked_representations=0
+checked_capabilities=0
+checked_capability_envelopes=0
+checked_provenance=0
+----- STEP source-unchanged: pass commits unchanged
+
+===== STEP mounts: Mount s5000, s10000, and the branch Context Root =====
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z -> /mnt/weft-fuse/p5a-7-20261105T070415Z-src --snapshot s5000
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z -> /mnt/weft-fuse/p5a-7-20261105T070415Z-last --snapshot s10000
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z -> /mnt/weft-fuse/p5a-7-20261105T070415Z-branch --snapshot by:task=agent-43
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T070415Z -> /mnt/weft-fuse/p5a-7-20261105T070415Z-ctx --context by:task=agent-43
+CMD[mounts]: cat <s5000>/history.txt
+CMD[mounts]: cat <s10000>/history.txt
+CMD[mounts]: cat <snapshot-ref by:task=agent-43>/history.txt
+CMD[mounts]: cat <context by:task=agent-43>/history.txt--bf0ad44e
+----- STEP mounts: pass four mounts, immutable fork
+
+===== STEP unmount: Unmount every branch mount and prove no daemon survives =====
+----- STEP unmount: pass unmounted=4 survivors=0
+summary: pass=7 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/branching-20261105T070415Z.json
+raw log: /work/bench/receipts/branching-20261105T070415Z.log

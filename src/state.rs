@@ -27,6 +27,10 @@ pub const SAVED_CONTEXT_PREDICATE: &str = "saved_context";
 pub const SAVED_CONTEXT_SELECTOR_ATTR: &str = "selector_hex";
 /// Prefix of object attributes that hold extended attributes.
 pub const XATTR_PREFIX: &str = "xattr.";
+/// Reserved object attribute naming the tenant a write is attributed to for
+/// tenant write budgets (`docs/quota-branching.md`). It is ordinary state:
+/// the attribute is part of the object record and therefore of its identity.
+pub const ATTR_TENANT: &str = "weft.tenant";
 
 /// Reserved causal attributes (`WEFT-CAUSAL.md` §3.1).
 pub const ATTR_CAUSAL_PARENTS: &str = "weft.causal.parents";

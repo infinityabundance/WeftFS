@@ -41,6 +41,7 @@ fn codec_opts(chunk_size: u64) -> Options {
         representation: RepresentationMode::CodecAuto,
         codec_min_bytes: 4_096,
         codec_delta_margin_percent: 10,
+        quotas: Vec::new(),
     }
 }
 

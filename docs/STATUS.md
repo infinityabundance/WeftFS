@@ -1663,3 +1663,59 @@ single host, public weights, warm cache, no fleet claim; every method lossless.
   sums of medians rather than one pass; ZipNN is whole-file and not
   delta-aware; mode 9/11 are measured as codec frames, not through the store
   planner; no Go parity for this court.
+
+## Subphase P5a — write budgets and branching time travel
+
+Implemented in both stores (`spec/WEFT-QUOTA.md`, `docs/quota-branching.md`).
+
+- **Commit-time budgets.** Admission is checked inside the writer lock before
+  any commit bytes exist. A commit that would exceed a configured
+  `{posix(uid,gid) | tenant(name), max_new_bytes, max_objects}` budget fails
+  with `BudgetExceeded: write budget exceeded`; generation, head, and state are
+  unchanged. Charges are the canonical object-record bytes plus newly reachable
+  manifest/frame/chunk blob bytes (content already reachable costs zero,
+  deduped per commit). POSIX attribution is the record's own owner; tenant
+  attribution is the reserved `weft.tenant` attribute (`create --tenant`).
+- **Usage storage.** The store-root `quota` file (`WFQ1 || u64le len || WCB ||
+  BLAKE3("weft/quota/v1", WCB)`) carries the policy and cumulative counters
+  keyed by the committed generation and head. It is written atomically after
+  each commit and is never authoritative over content. On open, a record that
+  does not name the committed head fails writes closed (`Corrupt`) and is
+  reported by `verify`; `quota rebuild` recomputes usage from the published
+  commit chain, `quota reset` zeroes counters, and both are explicit admin
+  operations. `quota show` returns only the caller's own counters and limits.
+- **Branching.** `snapshot branch` adds a ref to an immutable commit.
+  `context branch` persists a new Context Root pinned to the source root's fork
+  commit (optionally conjoined with `attrs.task`/`attrs.model`) and records a
+  `derived_from` lineage relation. `merge` is an explicit **union** merge: a
+  path present in both inputs or already at the live head must have identical
+  content, else `Conflict` naming the path; it never overwrites the head and is
+  not a three-way content merge.
+- **Tests.** Rust `tests/quota.rs` 10/10 and `tests/branching.rs` 9/9;
+  `cargo test --all-targets` and `cargo test --features fuse --all-targets`
+  pass (the same two ignored ownership/concurrency cases as before). Go
+  `store/quota_test.go` 7/7 and `store/branch_test.go` 7/7 (including both
+  cross-language directions), full Go suite with `-race` passes in the fuse
+  court, `go vet` and `CGO_ENABLED=0 go build` clean.
+- **Cross-language.** Rust writes a store with quotas and a snapshot branch;
+  Go loads the persisted policy, verifies, reads the branch, enforces a denial,
+  and advances usage. The reverse direction does the same with the Rust CLI
+  reading and enforcing the Go-written record.
+- **Bench** (`bench/RESULTS-quota-branch.md`, receipt
+  `bench/receipts/quota-branch-20261105T070251Z.json`): 1,000 commits p50
+  11.33 ms without budgets and 13.74 ms with budgets (+2.41 ms, +21.3 %; the
+  delta is the durable usage record); branch creation p50 9.05 ms over 50;
+  merge of 1,000 disjoint paths 258.5 ms, 1,000 objects/entries, full verify
+  ok.
+- **Demo** (receipt `bench/receipts/branching-20261105T070415Z.json`, 7/7):
+  10,000 versions, 21 snapshots, branch from `s5000`
+  (`72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d`) into
+  `by:task=agent-43`, five later writes, then `s5000`, `s10000`
+  (`da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762`), the
+  snapshot ref, and the branch Context Root all read their exact historical
+  bytes; live reads the 10,005th version; four mounts, zero surviving daemons.
+- **Residual:** the quota record is the policy authority, so deleting it is a
+  store-local admin act that disables enforcement (a present-but-unusable
+  record always fails closed). Budgets charge admission, not footprint, so
+  deletions do not return budget. The merge is a union, not a three-way merge.
+  Tenant attribution is not yet set by the FUSE write path.

@@ -53,6 +53,7 @@ fn codec_options() -> Options {
         representation: RepresentationMode::CodecAuto,
         codec_min_bytes: 4096,
         codec_delta_margin_percent: 10,
+        quotas: Vec::new(),
     }
 }
 

@@ -1,0 +1,83 @@
+{
+  "branch_creation": {
+    "branches": 50,
+    "max_ns": 14068371,
+    "mean_ns": 9234292,
+    "p50_ns": 9054199,
+    "p95_ns": 11249127,
+    "snapshots_after": 51,
+    "wall_ns": 461714648
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_model": ": AMD Ryzen 7 9800X3D 8-Core Processor",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "nproc": 4,
+    "revision_weftcodec": "eeb0d51e15d4a32b0e4064e57c2b1b613621e35f",
+    "revision_weftfs": "dedf1c284f83e217d5476bac47a71e925dbb38d1",
+    "revision_weftfs_go": "963dc6267720b597aa42aedb166cc3568849b6b8"
+  },
+  "kind": "quota-branch-bench",
+  "label": "single-host Docker bench court; synthetic deterministic fixtures; local store on the court bind mount; not a fleet claim",
+  "merge": {
+    "added_entries": 1000,
+    "added_objects": 1000,
+    "generation_after": 3004,
+    "generation_before": 3003,
+    "head": "3782d4f89f94842873059571a9ddd8c7907aca520e8d7ebebf9ced8eb81f35b9",
+    "left": "f5718254e4882d3dc79838a6d6358ef7ebb2a7fc286469ef34b869d57bafd561",
+    "merge_ns": 258520035,
+    "merge_paths": 1000,
+    "merged_sample_bytes": 1024,
+    "right": "b8519d269e6e39f2175cc93a6e38b579019bbfb704b5b77b22c4f0d61ff97512",
+    "verify_full_ok": true
+  },
+  "notes": [
+    "A: 1,000 single-object commits, 1 KiB distinct payload each, chunk_size 4096, checkpoint_interval disabled. The quota run also rewrites the quota record after every commit (tmp+fsync+rename+dir fsync), which is the honest cost of durable, restart-safe usage.",
+    "B: each branch is one commit plus one snapshot pointer write, over a 32-object store.",
+    "C: 1,000 left-only paths, 1,000 right-only paths, one union merge that adds the right-only 1,000 objects and entries; full verify runs before the merge numbers are reported.",
+    "Single host, warm caches, one repetition. These are court measurements, not a performance guarantee."
+  ],
+  "quota_commit_overhead": {
+    "p50_delta_ns": 2411894,
+    "p50_ratio": 1.2129188072774115,
+    "with_quota": {
+      "commits": 1000,
+      "generation": 1001,
+      "per_commit_max_ns": 32266344,
+      "per_commit_mean_ns": 14171104,
+      "per_commit_p50_ns": 13739658,
+      "per_commit_p95_ns": 17263402,
+      "quota": true,
+      "quota_used_bytes": 1383000,
+      "quota_used_objects": 1000,
+      "store_bytes": 1926914,
+      "verify_ok": true,
+      "wall_ns": 14171104552
+    },
+    "without_quota": {
+      "commits": 1000,
+      "generation": 1001,
+      "per_commit_max_ns": 21879292,
+      "per_commit_mean_ns": 11664022,
+      "per_commit_p50_ns": 11327764,
+      "per_commit_p95_ns": 14616000,
+      "quota": false,
+      "quota_used_bytes": 0,
+      "quota_used_objects": 0,
+      "store_bytes": 1926625,
+      "verify_ok": true,
+      "wall_ns": 11664022006
+    }
+  },
+  "schema": "weft-quota-branch-bench-v1",
+  "vm_hwm_kib": 17112,
+  "wall_time_s": 56.787599929,
+  "work_dir": "/work/.docker-cache/bench-quota-branch"
+}
