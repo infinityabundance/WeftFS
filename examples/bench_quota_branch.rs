@@ -20,7 +20,7 @@ use std::time::Instant;
 
 use serde_json::{json, Value};
 use weftfs::quota::{QuotaBudget, QuotaPrincipal};
-use weftfs::store::{OpenMode, Options, Store};
+use weftfs::store::{Options, Store};
 
 const FIXED_TIMESTAMP_NS: i64 = 1_767_225_600_000_000_000;
 const COMMITS: usize = 1_000;
@@ -267,6 +267,36 @@ fn directory_bytes(path: &Path) -> u64 {
     total
 }
 
+/// The P5a receipt measured the old per-commit durable quota record. It is
+/// reported as history, never as a run of this binary.
+fn historical_before() -> Value {
+    let path = Path::new("bench/receipts/quota-branch-20261105T071244Z.json");
+    let Ok(text) = fs::read_to_string(path) else {
+        return Value::Null;
+    };
+    let Ok(report) = serde_json::from_str::<Value>(&text) else {
+        return Value::Null;
+    };
+    let overhead = &report["quota_commit_overhead"];
+    let without = overhead["without_quota"]["per_commit_p50_ns"].as_u64();
+    let with = overhead["with_quota"]["per_commit_p50_ns"].as_u64();
+    match (without, with) {
+        (Some(without), Some(with)) => json!({
+            "receipt": path.display().to_string(),
+            "label": "historical P5a run: usage written to a separate durable quota record after every commit",
+            "without_quota_p50_ns": without,
+            "with_quota_p50_ns": with,
+            "p50_delta_ns": with.saturating_sub(without),
+            "p50_overhead_percent": if without > 0 {
+                Value::from((with as f64 - without as f64) / without as f64 * 100.0)
+            } else {
+                Value::Null
+            },
+        }),
+        _ => Value::Null,
+    }
+}
+
 fn main() {
     let mut out: Option<PathBuf> = None;
     let mut work: Option<PathBuf> = None;
@@ -324,7 +354,18 @@ fn main() {
         "quota_commit_overhead": {
             "without_quota": without,
             "with_quota": with,
+            "historical_before": historical_before(),
             "p50_delta_ns": overhead_ns,
+            "p50_overhead_percent": if without["per_commit_p50_ns"].as_u64().unwrap_or(0) > 0 {
+                Value::from(
+                    (with["per_commit_p50_ns"].as_u64().unwrap_or(0) as f64
+                        - without["per_commit_p50_ns"].as_u64().unwrap_or(0) as f64)
+                        / without["per_commit_p50_ns"].as_u64().unwrap_or(1) as f64
+                        * 100.0,
+                )
+            } else {
+                Value::Null
+            },
             "p50_ratio": if without["per_commit_p50_ns"].as_u64().unwrap_or(0) > 0 {
                 Value::from(
                     with["per_commit_p50_ns"].as_f64().unwrap_or(0.0)
@@ -337,7 +378,7 @@ fn main() {
         "branch_creation": branches,
         "merge": merge,
         "notes": [
-            "A: 1,000 single-object commits, 1 KiB distinct payload each, chunk_size 4096, checkpoint_interval disabled. The quota run also rewrites the quota record after every commit (tmp+fsync+rename+dir fsync), which is the honest cost of durable, restart-safe usage.",
+            "A: 1,000 single-object commits, 1 KiB distinct payload each, chunk_size 4096, checkpoint_interval disabled. The quota run appends one set_quota_usage op to each commit; there is no separate durable quota write.",
             "B: each branch is one commit plus one snapshot pointer write, over a 32-object store.",
             "C: 1,000 left-only paths, 1,000 right-only paths, one union merge that adds the right-only 1,000 objects and entries; full verify runs before the merge numbers are reported.",
             "Single host, warm caches, one repetition. These are court measurements, not a performance guarantee."

@@ -1202,5 +1202,95 @@
     ],
     "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
     "kind": "present"
+  },
+  {
+    "id": "q3_usage_op_name",
+    "claim": "The normative op table and quota spec name the committed usage op.",
+    "value": "set_quota_usage",
+    "locations": [
+      "spec/WEFT-MODEL.md",
+      "spec/WEFT-QUOTA.md",
+      "docs/quota-branching.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_policy_record_magic",
+    "claim": "The quota spec gives the policy-only record magic.",
+    "value": "WFQ2",
+    "locations": [
+      "spec/WEFT-QUOTA.md",
+      "docs/quota-branching.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_migration_marker",
+    "claim": "The spec, status, and operational docs describe the preserved legacy record name.",
+    "value": "quota.migrated",
+    "locations": [
+      "spec/WEFT-QUOTA.md",
+      "docs/STATUS.md",
+      "docs/quota-branching.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_admission_totals",
+    "claim": "The spec and status state that replay recomputes the admission totals and rejects a disagreeing assertion.",
+    "value": "admission totals",
+    "locations": [
+      "spec/WEFT-QUOTA.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_no_extra_durable_write",
+    "claim": "The spec, operational docs, and results state that usage adds no separate durable write.",
+    "value": "durable write",
+    "locations": [
+      "spec/WEFT-QUOTA.md",
+      "docs/quota-branching.md",
+      "bench/RESULTS-quota-branch.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_overhead_p50_percent",
+    "claim": "Results and status record the measured Q3 p50 overhead versus the same-run no-budget case.",
+    "value": "0.59",
+    "locations": [
+      "bench/RESULTS-quota-branch.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q3_budget_p50_ms",
+    "claim": "Results and status record the measured Q3 p50 per-commit latency with budgets.",
+    "value": "11.34",
+    "locations": [
+      "bench/RESULTS-quota-branch.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q3_receipt_sha256",
+    "claim": "Results record the Q3 receipt digest.",
+    "value": "b94f575d7f5e39cccd5f34d28d05db2af0576751de780c50912ada17215b05e0",
+    "locations": [
+      "bench/RESULTS-quota-branch.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
+    "kind": "present"
   }
 ]

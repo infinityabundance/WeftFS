@@ -1,27 +1,64 @@
-# P5a — write budgets and branching time travel: measured results
+# P5a/Q3 — write budgets and branching time travel: measured results
 
 Receipts:
 
-- `bench/receipts/quota-branch-20261105T071244Z.json` — quota admission
-  overhead, branch creation, and merge. Raw log beside it. Measured at WeftFS
-  `dd1f433`, WeftFS-Go `8372e6f`.
+- `bench/receipts/quota-branch-20261105T224337Z.json` — **Q3** quota admission
+  overhead (usage in the commit), branch creation, and merge. Raw log beside
+  it. Measured at the Q3 code revision; the receipt records the court image,
+  kernel, and revision environment. Receipt SHA-256
+  `b94f575d7f5e39cccd5f34d28d05db2af0576751de780c50912ada17215b05e0`.
+- `bench/receipts/quota-branch-20261105T071244Z.json` — **P5a historical** run
+  (usage written to a separate durable `quota` record after every commit). It
+  is retained as the before measurement and is not a run of the Q3 binary.
 - `bench/receipts/branching-20261105T071457Z.json` — 10,000-version branch
   demo (7/7 steps pass). Raw log and `.results.tsv` beside it.
 
-The earlier `quota-branch-20261105T070251Z.json` and
-`branching-20261105T070415Z.json` were generated one commit earlier (WeftFS
-`dedf1c2`) and are retained as history; the numbers agree within noise.
-
-Environment (both receipts): `weft/bench-court:1`
-(`sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a`)
-and `weft/fuse-court:1`
-(`sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8`),
-kernel 7.3.1-1-cachyos, 4 CPUs, 3 GiB memory, 3 GiB swap, 1024 pids, no host
-cache dropping. Revisions are recorded in each receipt; the code under test is
-the P5a commit.
-
 Label: **single host, synthetic deterministic fixtures, local store on the
 court bind mount, one repetition, warm caches. Not a fleet claim.**
+
+## Q3 — usage carried by the commit
+
+1,000 single-object commits, 1 KiB distinct payload each, `chunk_size 4096`,
+checkpoint interval disabled. The quota run appends one `set_quota_usage` op to
+each commit; it performs **no** separate quota-file write or fsync.
+
+| Workload | p50 per commit | p95 per commit | mean | wall | store bytes | verify |
+|---|---:|---:|---:|---:|---:|---|
+| no budget | 11.28 ms | 14.93 ms | 11.66 ms | 11.661 s | 1,926,625 | ok |
+| budget (`u64::MAX`, enforced), usage in commit | 11.34 ms | 14.85 ms | 11.74 ms | 11.736 s | 2,028,648 | ok |
+
+- Delta **+0.066 ms p50 (+0.59 %)** per commit versus the same-run no-budget
+  case. The whole delta is the ~102 B usage op inside the existing commit;
+  there is no second durable write.
+- Historical P5a before (separate durable record, same court): p50 13.754 ms
+  versus 11.348 ms no-budget, **+2.406 ms (+21.2 %)**. The Q3 path is
+  **−17.5 %** against that before p50.
+- Quota-run usage after 1,000 commits: 1,000 objects, 1,383,000 bytes. Each
+  store publishes exactly 1,001 generations (genesis + 1,000 creates).
+- The policy file is not rewritten by any of the 1,000 commits; it is written
+  only at policy install/migration.
+
+Run wall 54.31 s, peak RSS 16,716 KiB.
+
+### Same-run branch and merge checks
+
+| metric | value |
+|---|---:|
+| branch p50 | 9.01 ms |
+| branch p95 | 11.86 ms |
+| snapshots after 50 branches | 51 |
+| union merge of 1,000 disjoint paths | 256.6 ms |
+| added objects / entries | 1,000 / 1,000 |
+| generations | 3,003 → 3,004 |
+| full verify after merge | ok |
+
+These are unchanged by Q3; they are reported from the same receipt so the run
+is self-contained.
+
+## Historical P5a run (superseded for §A)
+
+Retained for the before/after comparison. The tables below are the original
+P5a receipt and describe the old separate-record implementation.
 
 ## A. Quota admission overhead (1,000 single-object commits)
 
@@ -93,13 +130,14 @@ by:task=agent-43 --task agent-43`, and five further writes on the live head:
 
 ## Honest limits
 
-- One host, one repetition, warm caches. The quota delta is a per-commit fsync
-  cost and will track the storage device, not these absolute numbers.
-- The quota delta is the whole persistent-record cost; there is no measured
-  case where usage is kept only in memory, because that would not survive
-  reopen.
-- Merge throughput includes copying 1,000 object records and 1,000 entries
-  into one commit; it is a union merge, not a content merge, and no attempt is
-  made to resolve conflicting bytes.
+- One host, one repetition, warm caches. The per-commit delta tracks the
+  storage device and the commit size, not these absolute numbers.
+- The Q3 delta is the ~102 B `set_quota_usage` op inside the existing commit.
+  There is no separate durable usage write in Q3, so the historical P5a
+  "one extra fsync per commit" cost is no longer present. No energy, syscall,
+  or fleet claim is made.
+- Merge throughput includes copying 1,000 object records and 1,000 entries into
+  one commit; it is a union merge, not a content merge, and no attempt is made
+  to resolve conflicting bytes.
 - The demo's 10,000 versions are synthetic fixed-payload files; the numbers do
   not describe model weights or a fleet.

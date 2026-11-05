@@ -490,12 +490,20 @@ fn cli_quota_show_is_limited_to_the_callers_principal() {
     );
     assert_eq!(reset["used_bytes"], 0);
     assert_eq!(reset["used_objects"], 0);
+    // The reset is itself a committed usage baseline, so rebuilding from the
+    // chain respects it instead of resurrecting pre-reset usage.
     ok(&store, &["quota", "rebuild"]);
     let rebuilt = json(
         &store,
         &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
     );
-    assert_eq!(rebuilt["used_objects"], 1);
+    assert_eq!(rebuilt["used_objects"], 0);
+    ok(&store, &["create", "/after-reset.txt", "--text", "after"]);
+    let after_reset = json(
+        &store,
+        &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
+    );
+    assert_eq!(after_reset["used_objects"], 1);
 }
 
 #[test]

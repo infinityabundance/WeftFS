@@ -66,6 +66,9 @@ pub enum KeyKind {
     /// `quota` store-root record: the persisted write-budget policy and the
     /// usage counters derived from committed state.
     Quota,
+    /// `quota.migrated` store-root record: the legacy combined
+    /// policy+usage file, preserved when it is imported into committed state.
+    QuotaMigrated,
 }
 
 impl KeyKind {
@@ -85,6 +88,7 @@ impl KeyKind {
             KeyKind::Tmp => "tmp",
             KeyKind::Other => "other",
             KeyKind::Quota => "quota",
+            KeyKind::QuotaMigrated => "quota-migrated",
         }
     }
 }
@@ -120,6 +124,8 @@ pub enum Key {
     },
     /// The single mutable `quota` record at the store root.
     Quota,
+    /// The preserved legacy `quota` record (`quota.migrated`).
+    QuotaMigrated,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -179,6 +185,10 @@ impl Key {
         Key::Quota
     }
 
+    pub fn quota_migrated() -> Key {
+        Key::QuotaMigrated
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -197,6 +207,7 @@ impl Key {
             Key::Tag { .. } => KeyKind::Tag,
             Key::Tmp { .. } => KeyKind::Tmp,
             Key::Quota => KeyKind::Quota,
+            Key::QuotaMigrated => KeyKind::QuotaMigrated,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -251,6 +262,7 @@ impl Key {
             Key::Tag { name } => format!("refs/tags/{name}"),
             Key::Tmp { name } => format!("tmp/{name}"),
             Key::Quota => "quota".to_owned(),
+            Key::QuotaMigrated => "quota.migrated".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -551,6 +563,7 @@ impl LocalBackend {
             Key::Tag { name } => self.root.join("refs").join("tags").join(name),
             Key::Tmp { name } => self.root.join("tmp").join(name),
             Key::Quota => self.root.join("quota"),
+            Key::QuotaMigrated => self.root.join("quota.migrated"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -566,6 +579,7 @@ impl LocalBackend {
             KeyKind::Tag => Some(self.root.join("refs").join("tags")),
             KeyKind::Tmp => Some(self.root.join("tmp")),
             KeyKind::Quota => Some(self.root.clone()),
+            KeyKind::QuotaMigrated => Some(self.root.clone()),
             _ => None,
         }
     }
@@ -1015,6 +1029,13 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
                 None
             }
         }
+        KeyKind::QuotaMigrated => {
+            if name == "quota.migrated" {
+                Some(Key::quota_migrated())
+            } else {
+                None
+            }
+        }
         _ => None,
     }
 }
@@ -1074,6 +1095,7 @@ impl ObjectBackend {
             Key::SnapshotRef { name } => format!("s-{name}"),
             Key::Tag { name } => format!("t-{name}"),
             Key::Quota => "q-quota".to_owned(),
+            Key::QuotaMigrated => "q-quota.migrated".to_owned(),
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
             Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
@@ -1645,6 +1667,12 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
             }
             return None;
         }
+        KeyKind::QuotaMigrated => {
+            if name == "q-quota.migrated" {
+                return Some(Key::quota_migrated());
+            }
+            return None;
+        }
         _ => return None,
     };
     let hash = Hash32::from_lower_hex(hex).ok()?;
@@ -1659,7 +1687,7 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
 }
 
 fn known_object_name(name: &str) -> bool {
-    if name == "q-quota" {
+    if name == "q-quota" || name == "q-quota.migrated" {
         return true;
     }
     if Hash32::from_lower_hex(name).is_ok() {

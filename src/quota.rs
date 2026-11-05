@@ -33,12 +33,19 @@ use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
 use crate::wcb_util as wu;
 
-/// Quota record schema string.
+/// Legacy combined policy+usage record schema (read-only input to migration).
 pub const QUOTA_SCHEMA: &str = "weftfs.quota.v1";
-/// File magic for the persisted record.
+/// File magic for the persisted legacy record.
 pub const QUOTA_MAGIC: &[u8; 4] = b"WFQ1";
-/// Domain separation for the record digest.
+/// Domain separation for the legacy record digest.
 pub const QUOTA_DOMAIN: &str = "weft/quota/v1";
+/// Policy-only record schema. Usage lives in the commit log as
+/// [`QuotaUsageOp`] and is never written to this file.
+pub const QUOTA_POLICY_SCHEMA: &str = "weftfs.quota.v2";
+/// File magic for the persisted policy-only record.
+pub const QUOTA_POLICY_MAGIC: &[u8; 4] = b"WFQ2";
+/// Domain separation for the policy-only record digest.
+pub const QUOTA_POLICY_DOMAIN: &str = "weft/quota/v2";
 /// Maximum number of configured budgets in one store.
 pub const MAX_QUOTA_PRINCIPALS: usize = 4_096;
 /// Maximum tenant label length, matching the capability envelope bound.
@@ -93,7 +100,7 @@ pub struct QuotaBudget {
 }
 
 /// Cumulative admitted usage for one principal.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct QuotaCounters {
     pub used_bytes: u64,
     pub used_objects: u64,
@@ -113,7 +120,177 @@ impl QuotaCounters {
     }
 }
 
-/// The decoded `quota` record.
+/// The committed usage assertion carried by one commit.
+///
+/// `reset == false` asserts the cumulative admitted usage after every other op
+/// in the same commit. `reset == true` is the explicit admin reset: it must be
+/// the only op in its commit and must declare an empty usage map.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct QuotaUsageOp {
+    pub reset: bool,
+    pub usage: Vec<(QuotaPrincipal, QuotaCounters)>,
+}
+
+impl QuotaUsageOp {
+    /// Validate and sort: canonical principal order, no duplicates, bounded
+    /// tenant labels.
+    pub fn normalize(mut self) -> Result<Self> {
+        if self.usage.len() > MAX_QUOTA_PRINCIPALS {
+            return Err(Error::limit_exceeded(format!(
+                "at most {MAX_QUOTA_PRINCIPALS} quota principals are supported"
+            )));
+        }
+        for (principal, _) in &self.usage {
+            principal.validate()?;
+        }
+        self.usage
+            .sort_by(|a, b| a.0.sort_key().cmp(&b.0.sort_key()));
+        self.usage.dedup_by(|a, b| a.0 == b.0);
+        if self.reset && !self.usage.is_empty() {
+            return Err(Error::malformed(
+                "a quota usage reset must declare an empty usage map",
+            ));
+        }
+        Ok(self)
+    }
+
+    /// Canonical map value, including the `op` discriminator.
+    pub fn to_value(&self) -> Value {
+        wu::map([
+            ("op", Value::Str("set_quota_usage".to_owned())),
+            ("reset", Value::Bool(self.reset)),
+            ("usage", Value::Array(usage_to_values(&self.usage))),
+        ])
+    }
+
+    /// Parse from the op map with the `op` key removed.
+    pub fn from_map(map: &std::collections::BTreeMap<String, Value>) -> Result<Self> {
+        wu::check_keys(map, &["reset", "usage"])?;
+        let reset = match wu::field(map, "reset")? {
+            Value::Bool(value) => *value,
+            _ => return Err(Error::malformed("quota usage reset must be a bool")),
+        };
+        let usage = match wu::field(map, "usage")? {
+            Value::Array(items) => usage_from_values(items)?,
+            _ => return Err(Error::malformed("quota usage must be an array")),
+        };
+        let op = QuotaUsageOp {
+            reset,
+            usage: usage.clone(),
+        }
+        .normalize()?;
+        if op.usage != usage {
+            return Err(Error::non_canonical(
+                "quota usage is not in canonical principal order",
+            ));
+        }
+        Ok(op)
+    }
+}
+
+/// The policy-only `quota` file (`weftfs.quota.v2`). Usage is intentionally
+/// absent: it is committed to the commit log instead.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct QuotaPolicyRecord {
+    pub budgets: Vec<QuotaBudget>,
+}
+
+impl QuotaPolicyRecord {
+    pub fn new(mut budgets: Vec<QuotaBudget>) -> Result<Self> {
+        budgets = normalize_policy(budgets)?;
+        Ok(QuotaPolicyRecord { budgets })
+    }
+
+    pub fn to_value(&self) -> Value {
+        let budgets: Vec<Value> = self
+            .budgets
+            .iter()
+            .map(|budget| {
+                let mut map = principal_value(&budget.principal);
+                map.insert("max_new_bytes".to_owned(), Value::U64(budget.max_new_bytes));
+                map.insert("max_objects".to_owned(), Value::U64(budget.max_objects));
+                Value::Map(map)
+            })
+            .collect();
+        wu::map([
+            ("schema", Value::Str(QUOTA_POLICY_SCHEMA.to_owned())),
+            ("budgets", Value::Array(budgets)),
+        ])
+    }
+
+    pub fn encode_bytes(&self) -> Result<Vec<u8>> {
+        let wcb = wu::encode(&self.to_value())?;
+        if wcb.len() > 64 * 1024 * 1024 {
+            return Err(Error::limit_exceeded(
+                "quota policy record is implausibly large",
+            ));
+        }
+        let digest = identity::h(QUOTA_POLICY_DOMAIN, &wcb);
+        let mut out = Vec::with_capacity(4 + 8 + wcb.len() + 32);
+        out.extend_from_slice(QUOTA_POLICY_MAGIC);
+        out.extend_from_slice(&(wcb.len() as u64).to_le_bytes());
+        out.extend_from_slice(&wcb);
+        out.extend_from_slice(digest.as_bytes());
+        Ok(out)
+    }
+
+    pub fn decode_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() < 4 + 8 + 32 {
+            return Err(Error::corrupt("quota policy record is truncated"));
+        }
+        if &bytes[0..4] != QUOTA_POLICY_MAGIC {
+            return Err(Error::corrupt("quota policy record has the wrong magic"));
+        }
+        let len = u64::from_le_bytes(
+            bytes[4..12]
+                .try_into()
+                .map_err(|_| Error::corrupt("quota policy record length is truncated"))?,
+        );
+        let len = usize::try_from(len)
+            .map_err(|_| Error::corrupt("quota policy record length overflows"))?;
+        let expected = 12usize
+            .checked_add(len)
+            .and_then(|value| value.checked_add(32))
+            .ok_or_else(|| Error::corrupt("quota policy record length overflows"))?;
+        if bytes.len() != expected {
+            return Err(Error::corrupt(
+                "quota policy record length disagrees with its frame",
+            ));
+        }
+        let wcb = &bytes[12..12 + len];
+        let digest = &bytes[12 + len..];
+        if identity::h(QUOTA_POLICY_DOMAIN, wcb).as_bytes() != digest {
+            return Err(Error::corrupt("quota policy record fails its digest check"));
+        }
+        let value = wu::decode(wcb)?;
+        Self::from_value(&value)
+    }
+
+    fn from_value(value: &Value) -> Result<Self> {
+        let map = wu::as_map(value)?;
+        wu::check_keys(map, &["schema", "budgets"])?;
+        let schema = wu::get_text(map, "schema")?;
+        if schema != QUOTA_POLICY_SCHEMA {
+            return Err(Error::unsupported_version(format!(
+                "quota policy schema `{schema}` is not `{QUOTA_POLICY_SCHEMA}`"
+            )));
+        }
+        let budget_values = match wu::field(map, "budgets")? {
+            Value::Array(items) => items,
+            _ => return Err(Error::malformed("quota budgets must be an array")),
+        };
+        let budgets = budgets_from_values(budget_values)?;
+        let record = QuotaPolicyRecord::new(budgets.clone())?;
+        if record.budgets != budgets {
+            return Err(Error::non_canonical(
+                "quota budgets are not in canonical principal order",
+            ));
+        }
+        Ok(record)
+    }
+}
+
+/// The decoded legacy `quota` record.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct QuotaRecord {
     pub generation: u64,
@@ -238,49 +415,14 @@ impl QuotaRecord {
         }
         let generation = wu::get_u64(map, "generation")?;
         let commit = wu::get_hash(map, "commit")?;
-        let mut budgets = Vec::new();
-        let budget_values = match wu::field(map, "budgets")? {
+        let budgets = budgets_from_values(match wu::field(map, "budgets")? {
             Value::Array(items) => items,
             _ => return Err(Error::malformed("quota budgets must be an array")),
-        };
-        for item in budget_values {
-            let entry = wu::as_map(item)?;
-            wu::check_keys(
-                entry,
-                &[
-                    "kind",
-                    "uid",
-                    "gid",
-                    "tenant",
-                    "max_new_bytes",
-                    "max_objects",
-                ],
-            )?;
-            budgets.push(QuotaBudget {
-                principal: principal_from_map(entry)?,
-                max_new_bytes: wu::get_u64(entry, "max_new_bytes")?,
-                max_objects: wu::get_u64(entry, "max_objects")?,
-            });
-        }
-        let mut usage = Vec::new();
-        let usage_values = match wu::field(map, "usage")? {
+        })?;
+        let usage = usage_from_values(match wu::field(map, "usage")? {
             Value::Array(items) => items,
             _ => return Err(Error::malformed("quota usage must be an array")),
-        };
-        for item in usage_values {
-            let entry = wu::as_map(item)?;
-            wu::check_keys(
-                entry,
-                &["kind", "uid", "gid", "tenant", "used_bytes", "used_objects"],
-            )?;
-            usage.push((
-                principal_from_map(entry)?,
-                QuotaCounters {
-                    used_bytes: wu::get_u64(entry, "used_bytes")?,
-                    used_objects: wu::get_u64(entry, "used_objects")?,
-                },
-            ));
-        }
+        })?;
         let record = QuotaRecord {
             generation,
             commit,
@@ -333,6 +475,61 @@ fn principal_from_map(map: &BTreeMap<String, Value>) -> Result<QuotaPrincipal> {
     }
 }
 
+fn budgets_from_values(values: &[Value]) -> Result<Vec<QuotaBudget>> {
+    let mut budgets = Vec::with_capacity(values.len());
+    for item in values {
+        let entry = wu::as_map(item)?;
+        wu::check_keys(
+            entry,
+            &[
+                "kind",
+                "uid",
+                "gid",
+                "tenant",
+                "max_new_bytes",
+                "max_objects",
+            ],
+        )?;
+        budgets.push(QuotaBudget {
+            principal: principal_from_map(entry)?,
+            max_new_bytes: wu::get_u64(entry, "max_new_bytes")?,
+            max_objects: wu::get_u64(entry, "max_objects")?,
+        });
+    }
+    Ok(budgets)
+}
+
+fn usage_to_values(usage: &[(QuotaPrincipal, QuotaCounters)]) -> Vec<Value> {
+    usage
+        .iter()
+        .map(|(principal, counters)| {
+            let mut map = principal_value(principal);
+            map.insert("used_bytes".to_owned(), Value::U64(counters.used_bytes));
+            map.insert("used_objects".to_owned(), Value::U64(counters.used_objects));
+            Value::Map(map)
+        })
+        .collect()
+}
+
+fn usage_from_values(values: &[Value]) -> Result<Vec<(QuotaPrincipal, QuotaCounters)>> {
+    let mut usage = Vec::with_capacity(values.len());
+    for item in values {
+        let entry = wu::as_map(item)?;
+        wu::check_keys(
+            entry,
+            &["kind", "uid", "gid", "tenant", "used_bytes", "used_objects"],
+        )?;
+        usage.push((
+            principal_from_map(entry)?,
+            QuotaCounters {
+                used_bytes: wu::get_u64(entry, "used_bytes")?,
+                used_objects: wu::get_u64(entry, "used_objects")?,
+            },
+        ));
+    }
+    Ok(usage)
+}
+
 /// Runtime quota state held by an open [`Store`](crate::store::Store).
 ///
 /// `valid == false` means the persisted record disagreed with committed state
@@ -347,6 +544,12 @@ pub struct QuotaState {
     pub valid: bool,
     /// True when a persisted record was found (even if unusable).
     pub record_present: bool,
+    /// True when `usage` came from a committed `set_quota_usage` op (or was
+    /// just published as one). False means it was derived by replay and the
+    /// head does not yet carry an assertion.
+    pub usage_committed: bool,
+    /// True when a legacy `quota.migrated` record is present.
+    pub migrated_present: bool,
     pub reason: Option<String>,
 }
 
@@ -359,6 +562,8 @@ impl Default for QuotaState {
             commit: Hash32::ZERO,
             valid: true,
             record_present: false,
+            usage_committed: false,
+            migrated_present: false,
             reason: None,
         }
     }

@@ -1769,6 +1769,8 @@ Implemented in both stores (`spec/WEFT-QUOTA.md`, `docs/quota-branching.md`).
   reported by `verify`; `quota rebuild` recomputes usage from the published
   commit chain, `quota reset` zeroes counters, and both are explicit admin
   operations. `quota show` returns only the caller's own counters and limits.
+  **(Superseded by Q3 below: usage is now a `set_quota_usage` op inside the
+  commit; `WFQ1` is read only for migration.)**
 - **Branching.** `snapshot branch` adds a ref to an immutable commit.
   `context branch` persists a new Context Root pinned to the source root's fork
   commit (optionally conjoined with `attrs.task`/`attrs.model`) and records a
@@ -2083,3 +2085,57 @@ WeftCodec-Go `staging` (this commit), all buildable and testable only through
   fleet or remote-object-store claim; WeftFS-Go does not implement
   `weft.checkpoint.v1` and therefore does not yet write or read tiled
   checkpoints.
+
+## Subphase Q3 — quota accounting inside the commit transaction
+
+Implemented in Rust and Go; normative text in `spec/WEFT-MODEL.md` §2.2 and
+`spec/WEFT-QUOTA.md` §1.3–1.5; operational notes in
+`docs/quota-branching.md`.
+
+- **Where usage lives.** A quota-enabled commit appends exactly one
+  `set_quota_usage` op as its last op. The op carries the cumulative admitted
+  usage (sorted principal array, `reset:false`) after all other ops in the same
+  commit, or is a standalone `reset:true` op with an empty array. It changes no
+  namespace state, so checkpoints are unchanged. The commit schema stays
+  `weftfs.commit.v1`; old commits with no usage op replay unchanged.
+- **No second durable write.** The store-root `quota` file is now policy-only
+  (`WFQ2 || u64le len || WCB || BLAKE3("weft/quota/v2", WCB)`); it is written
+  only when a policy is installed/replaced or a legacy record is migrated.
+  Ordinary commits perform one commit publication and no quota-file write.
+- **Admission and replay.** Admission is still computed before publication;
+  denial is `BudgetExceeded: write budget exceeded` with nothing published.
+  Replay recomputes the admission totals and rejects a `reset:false`
+  assertion that disagrees as `Corrupt`; a reset must be alone and empty.
+  `verify --full` validates every assertion and compares the recomputed totals
+  with the in-memory counters. `quota rebuild` validates, then publishes a
+  corrective op; `quota reset` publishes one reset op. Both are explicit admin
+  operations.
+- **Migration.** A legacy `WFQ1` record is imported once on writable open:
+  usage is recomputed from the chain, the exact legacy bytes are preserved as
+  `quota.migrated`, `quota` becomes `WFQ2`, and a corrective usage op is
+  published when needed. If `quota` and `quota.migrated` exist with different
+  bytes, or a preserved record naming the current head disagrees with committed
+  usage, writes fail closed with `Corrupt`. A stale legacy record has its usage
+  recomputed from the authoritative chain and the repair is noted.
+- **Cross-language.** Rust-written usage ops are read, verified, and enforced
+  by Go; Go-written usage ops are read, verified, and enforced by Rust.
+  `TestQuotaUsageOpCrossLanguageEquality` compares numeric counters in both
+  directions and proves both implementations deny an oversized write.
+- **Tests.** Rust `tests/quota_usage_op.rs` 9/9; `tests/quota.rs` 10/10.
+  `cargo test --all-targets`: 212 passed, 0 failed. `cargo test --features fuse
+  --all-targets` in the fuse court: 246 passed, 0 failed, 2 ignored
+  (pre-existing). Go `go test -race -count=1 ./store/...` passes, including 6
+  new Q3 tests; `go vet` and `CGO_ENABLED=0 go build` clean.
+- **Bench** (`bench/RESULTS-quota-branch.md`, receipt
+  `bench/receipts/quota-branch-20261105T224337Z.json`, bench court): 1,000
+  single-object commits, p50 11.278 ms without a budget and 11.344 ms with a
+  budget (+0.066 ms, +0.59 %); p95 14.928 → 14.848 ms; wall 11.661 → 11.736 s.
+  Historical P5a before was 13.754 ms p50 (+21.2 %); Q3 is −17.5 % against it.
+  Store bytes 1,926,625 → 2,028,648 (+102,023 B, the 1,000 usage ops). Usage
+  after the run is 1,000 objects / 1,383,000 bytes; verify ok.
+- **Residual.** Trusting the head assertion on open is O(1); full re-derivation
+  and rejection of an inconsistent assertion happen in `verify --full`,
+  `quota rebuild`, and any open that must replay the chain. The policy file is
+  still the enforcement authority: deleting it disables enforcement. Usage is
+  an admission counter, not a reclaimable footprint; deletes do not return
+  budget. One host, synthetic fixtures, one repetition.

@@ -29,7 +29,8 @@ use crate::format::{
 use crate::identity::{self, Hash32};
 use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
 use crate::quota::{
-    normalize_policy, QuotaBudget, QuotaCounters, QuotaPrincipal, QuotaRecord, QuotaState,
+    normalize_policy, QuotaBudget, QuotaCounters, QuotaPolicyRecord, QuotaPrincipal, QuotaRecord,
+    QuotaState, QuotaUsageOp, QUOTA_MAGIC, QUOTA_POLICY_MAGIC,
 };
 use crate::recovery::{self, BlobKind};
 use crate::representation::{self, MAX_CODEC_DEPENDENCY_DEPTH};
@@ -248,6 +249,8 @@ pub struct VerifyReport {
     /// `provenance` relations validated (record hash, canonical form, and that
     /// the record declares the subject object's content root).
     pub checked_provenance: u64,
+    /// Commits replayed by the `verify --full` quota assertion check.
+    pub checked_quota_commits: u64,
     pub rejected_generations: Vec<u64>,
     pub problems: Vec<VerifyProblem>,
 }
@@ -526,6 +529,14 @@ pub struct Store {
     /// Number of chunk blobs read by the most recent range write, for tests
     /// and receipts that prove Merkle identity does not stream the whole file.
     range_write_chunk_reads: AtomicU64,
+}
+
+/// Accepted quota outcome for one commit. `usage_after` is the cumulative
+/// admitted usage after this commit's ops; it is published as the commit's
+/// `set_quota_usage` op, so no separate durable record is needed.
+pub(crate) struct QuotaPlan {
+    pub additions: BTreeMap<Hash32, u64>,
+    pub usage_after: BTreeMap<QuotaPrincipal, QuotaCounters>,
 }
 
 impl Store {
@@ -4302,13 +4313,34 @@ impl Store {
             report.problems.push(VerifyProblem {
                 class: "Corrupt".to_owned(),
                 detail: format!(
-                    "quota usage record is unusable: {}",
+                    "quota state is unusable: {}",
                     self.quota
                         .reason
                         .clone()
                         .unwrap_or_else(|| "no reason recorded".to_owned())
                 ),
             });
+        }
+
+        // Full verification replays the chain and validates every committed
+        // usage assertion against the recomputed admission totals.
+        if full && (self.quota.enforced() || self.quota.usage_committed) {
+            match self.replay_quota_usage_with_count() {
+                Ok((usage, _, commits)) => {
+                    report.checked_quota_commits = commits;
+                    if usage != self.quota.usage {
+                        report.problems.push(VerifyProblem {
+                            class: "Corrupt".to_owned(),
+                            detail: "committed quota usage disagrees with in-memory counters"
+                                .to_owned(),
+                        });
+                    }
+                }
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("quota replay: {err}"),
+                }),
+            }
         }
 
         report.ok = report.problems.is_empty();
@@ -4976,51 +5008,69 @@ impl Store {
         self.quota.reason.as_deref()
     }
 
-    /// Install or replace the budget policy (admin operation). Usage counters
-    /// are retained when the existing record is valid; otherwise cumulative
-    /// usage is recomputed from the published commit chain before the new
-    /// policy is written.
+    /// Install or replace the budget policy (admin operation). The policy is
+    /// written once to the policy-only `quota` file; it is never rewritten per
+    /// commit. Usage is committed state: when it is not already carried by the
+    /// head commit's `set_quota_usage` op, it is recomputed from the published
+    /// chain and published as one corrective op.
     pub fn install_quota_policy(&mut self, budgets: Vec<QuotaBudget>) -> Result<()> {
         self.require_writable()?;
         let budgets = normalize_policy(budgets)?;
-        let needs_replay = !self.quota.valid || !self.quota.record_present;
         let mut policy = BTreeMap::new();
         for budget in budgets {
             policy.insert(budget.principal.clone(), budget);
         }
         self.quota.policy = policy;
-        if needs_replay {
+        if !self.quota.valid || !self.quota.usage_committed {
             let (usage, blobs) = self.replay_quota_usage()?;
             self.quota.usage = usage;
             self.blob_index = blobs;
             self.blob_index_ready = true;
+            self.quota.valid = true;
+            self.quota.reason = None;
+        }
+        self.persist_quota_policy()?;
+        self.quota.record_present = true;
+        if !self.quota.usage_committed && !self.quota.usage.is_empty() {
+            let usage = self.usage_vec();
+            self.publish_quota_usage_op(
+                QuotaUsageOp {
+                    reset: false,
+                    usage,
+                },
+                false,
+            )?;
+            self.quota.usage_committed = true;
         }
         self.quota.generation = self.generation;
         self.quota.commit = self.head;
-        self.quota.valid = true;
-        self.quota.reason = None;
-        self.persist_quota_record()?;
-        self.quota.record_present = true;
         Ok(())
     }
 
-    /// Zero every usage counter (explicit admin operation). The policy is
-    /// unchanged and no content is touched.
+    /// Zero every usage counter (explicit admin operation). Publishes exactly
+    /// one `set_quota_usage` reset op; the policy is unchanged and no content
+    /// is touched.
     pub fn quota_reset(&mut self) -> Result<()> {
         self.require_writable()?;
+        self.publish_quota_usage_op(
+            QuotaUsageOp {
+                reset: true,
+                usage: Vec::new(),
+            },
+            false,
+        )?;
         self.quota.usage.clear();
+        self.quota.usage_committed = true;
         self.quota.generation = self.generation;
         self.quota.commit = self.head;
         self.quota.valid = true;
         self.quota.reason = None;
-        self.persist_quota_record()?;
-        self.quota.record_present = true;
         Ok(())
     }
 
-    /// Recompute cumulative usage from the published commit chain and rewrite
-    /// the record (explicit admin operation). Returns the number of commits
-    /// replayed. Data is never modified.
+    /// Recompute cumulative usage from the published commit chain, validate
+    /// every committed usage assertion, and publish a corrective usage op.
+    /// Returns the number of commits replayed. Data is never modified.
     pub fn quota_rebuild(&mut self) -> Result<u64> {
         self.require_writable()?;
         if self.quota.policy.is_empty() && self.quota.record_present {
@@ -5031,84 +5081,318 @@ impl Store {
             ));
         }
         let (usage, blobs, commits) = self.replay_quota_usage_with_count()?;
+        let usage_vec = usage
+            .iter()
+            .map(|(principal, counters)| (principal.clone(), *counters))
+            .collect();
+        self.publish_quota_usage_op(
+            QuotaUsageOp {
+                reset: false,
+                usage: usage_vec,
+            },
+            false,
+        )?;
         self.quota.usage = usage;
         self.blob_index = blobs;
         self.blob_index_ready = true;
+        self.quota.usage_committed = true;
         self.quota.generation = self.generation;
         self.quota.commit = self.head;
         self.quota.valid = true;
         self.quota.reason = None;
-        self.persist_quota_record()?;
-        self.quota.record_present = true;
         Ok(commits)
     }
 
-    /// Load the persisted quota record. A missing record means "no policy, no
-    /// usage". A record that cannot be decoded or that does not name the
-    /// committed head marks the runtime state invalid: quota-enforcing writes
-    /// then fail closed until `quota rebuild`.
-    fn load_quota_record(&mut self) {
-        let bytes = match self.with_backend(|backend| backend.read_all(&Key::quota())) {
-            Ok(bytes) => bytes,
-            Err(err) if err.class() == crate::error::Class::NotFound => {
-                self.quota = QuotaState::default();
-                return;
-            }
-            Err(err) => {
-                self.quota.record_present = true;
-                self.quota.valid = false;
-                self.quota.reason = Some(format!("cannot read the quota record: {err}"));
-                return;
-            }
+    fn usage_vec(&self) -> Vec<(QuotaPrincipal, QuotaCounters)> {
+        self.quota
+            .usage
+            .iter()
+            .map(|(principal, counters)| (principal.clone(), *counters))
+            .collect()
+    }
+
+    /// Publish exactly one commit containing one `set_quota_usage` op. Used by
+    /// the explicit admin operations (`reset`, `rebuild`, policy install) and
+    /// by migration; ordinary commits append their usage op inline.
+    fn publish_quota_usage_op(
+        &mut self,
+        usage: QuotaUsageOp,
+        force_checkpoint: bool,
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "a quota admin operation cannot run inside a group commit",
+            ));
+        }
+        let ops = vec![Op::SetQuotaUsage(usage.normalize()?)];
+        let new_generation = self.next_generation;
+        let timestamp = self.now_ns();
+        let mut next_state = self.state.clone();
+        next_state.apply_ops(&ops)?;
+        next_state.generation = new_generation;
+        let interval = self.options.checkpoint_interval;
+        let wants_checkpoint = force_checkpoint || (interval > 0 && new_generation % interval == 0);
+        let checkpoint = if wants_checkpoint {
+            let bytes = encode_state(&next_state, new_generation)?;
+            Some(self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &bytes)?)
+        } else {
+            None
         };
-        match QuotaRecord::decode_bytes(&bytes) {
-            Ok(record) => {
-                self.quota.record_present = true;
-                self.quota.policy = record
-                    .budgets
-                    .into_iter()
-                    .map(|budget| (budget.principal.clone(), budget))
-                    .collect();
-                self.quota.usage = record.usage.into_iter().collect();
-                self.quota.generation = record.generation;
-                self.quota.commit = record.commit;
-                if record.generation != self.generation || record.commit != self.head {
-                    self.quota.valid = false;
-                    self.quota.reason = Some(format!(
-                        "quota record names generation {} ({}), committed head is generation {} ({})",
-                        record.generation, record.commit, self.generation, self.head
-                    ));
-                } else {
-                    self.quota.valid = true;
-                    self.quota.reason = None;
-                }
-            }
+        let commit = Commit {
+            generation: new_generation,
+            parent: Some(self.head),
+            timestamp_ns: timestamp,
+            ops,
+            checkpoint,
+        };
+        let hash = self.publish_commit(&commit)?;
+        self.state = next_state;
+        self.head = hash;
+        self.generation = new_generation;
+        self.next_generation = new_generation
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        self.persist_index_after_commit(hash, &self.state);
+        Ok(hash)
+    }
+
+    /// Test-only: publish an arbitrary usage assertion without enforcing
+    /// admission. Used to prove that replay rejects a tampered assertion.
+    #[doc(hidden)]
+    pub fn publish_quota_usage_for_test(&mut self, usage: QuotaUsageOp) -> Result<Hash32> {
+        self.publish_quota_usage_op(usage, false)
+    }
+
+    /// Read the committed usage carried by the head commit, when it has one.
+    /// A reset op means the current usage is empty.
+    fn head_usage_op(&self) -> Result<Option<QuotaUsageOp>> {
+        let loaded = self.with_backend(|backend| {
+            recovery::load_commit_key_via(
+                backend,
+                &Key::commit(self.generation),
+                Some(self.generation),
+            )
+        })?;
+        Ok(loaded.commit.ops.iter().rev().find_map(|op| match op {
+            Op::SetQuotaUsage(usage) => Some(usage.clone()),
+            _ => None,
+        }))
+    }
+
+    fn committed_usage_from_head(&self) -> Result<Option<BTreeMap<QuotaPrincipal, QuotaCounters>>> {
+        let Some(op) = self.head_usage_op()? else {
+            return Ok(None);
+        };
+        if op.reset {
+            return Ok(Some(BTreeMap::new()));
+        }
+        Ok(Some(op.usage.into_iter().collect()))
+    }
+
+    fn read_store_record(&self, key: &Key) -> Result<Option<Vec<u8>>> {
+        match self.with_backend(|backend| backend.read_all(key)) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(err) if err.class() == crate::error::Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Load the persisted policy and the committed usage.
+    ///
+    /// The `quota` file is policy-only (`WFQ2`). Usage is read from the head
+    /// commit's `set_quota_usage` op; when the head has no such op the chain is
+    /// replayed and every assertion is validated. A legacy combined `WFQ1`
+    /// record is imported once on a writable open: its bytes are preserved as
+    /// `quota.migrated` and the `quota` key is replaced by `WFQ2`. Any decode
+    /// failure or disagreement leaves the runtime quota state invalid, and
+    /// quota-enforcing writes then fail closed.
+    fn load_quota_record(&mut self) {
+        match self.load_quota_record_inner() {
+            Ok(()) => {}
             Err(err) => {
                 self.quota.record_present = true;
                 self.quota.valid = false;
-                self.quota.reason = Some(format!("quota record is unusable: {err}"));
+                self.quota.reason = Some(format!("quota state is unusable: {err}"));
             }
         }
     }
 
-    fn persist_quota_record(&self) -> Result<()> {
-        let record = QuotaRecord {
-            generation: self.quota.generation,
-            commit: self.quota.commit,
-            budgets: self.quota.policy.values().cloned().collect(),
-            usage: self
-                .quota
-                .usage
-                .iter()
-                .map(|(p, c)| (p.clone(), *c))
-                .collect(),
+    fn load_quota_record_inner(&mut self) -> Result<()> {
+        let current = self.read_store_record(&Key::quota())?;
+        let migrated = self.read_store_record(&Key::quota_migrated())?;
+        self.quota.migrated_present = migrated.is_some();
+
+        let mut policy_budgets: Option<Vec<QuotaBudget>> = None;
+        let mut legacy: Option<QuotaRecord> = None;
+        let mut legacy_raw: Option<Vec<u8>> = None;
+        let mut current_is_legacy = false;
+
+        if let Some(bytes) = &current {
+            self.quota.record_present = true;
+            if bytes.starts_with(QUOTA_POLICY_MAGIC) {
+                policy_budgets = Some(QuotaPolicyRecord::decode_bytes(bytes)?.budgets);
+            } else if bytes.starts_with(QUOTA_MAGIC) {
+                let record = QuotaRecord::decode_bytes(bytes)?;
+                policy_budgets = Some(record.budgets.clone());
+                legacy = Some(record);
+                legacy_raw = Some(bytes.clone());
+                current_is_legacy = true;
+            } else {
+                return Err(Error::corrupt("quota record has an unknown magic"));
+            }
+        } else if let Some(bytes) = &migrated {
+            // The policy file is missing but the preserved legacy record is
+            // still present. Its policy remains usable; nothing is rewritten.
+            self.quota.record_present = true;
+            if bytes.starts_with(QUOTA_MAGIC) {
+                let record = QuotaRecord::decode_bytes(bytes)?;
+                policy_budgets = Some(record.budgets.clone());
+            } else {
+                return Err(Error::corrupt("quota.migrated has an unknown magic"));
+            }
         }
-        .normalize()?;
+
+        if let Some(budgets) = policy_budgets {
+            self.quota.policy = budgets
+                .into_iter()
+                .map(|budget| (budget.principal.clone(), budget))
+                .collect();
+        }
+
+        // A legacy `quota` that has already been copied to `quota.migrated`
+        // must be byte-identical; anything else is an interrupted migration
+        // with conflicting evidence.
+        if current_is_legacy {
+            if let (Some(raw), Some(old)) = (&legacy_raw, &migrated) {
+                if raw != old {
+                    return Err(Error::corrupt(
+                        "both quota and quota.migrated exist and disagree",
+                    ));
+                }
+            }
+        }
+
+        // Usage: the head assertion is authoritative; otherwise replay and
+        // validate the chain. A committed assertion that disagrees with the
+        // recomputed admission totals is `Corrupt`.
+        match self.committed_usage_from_head() {
+            Ok(Some(usage)) => {
+                self.quota.usage = usage;
+                self.quota.usage_committed = true;
+                self.quota.valid = true;
+                self.quota.reason = None;
+            }
+            Ok(None) => {
+                if self.quota.enforced() {
+                    match self.replay_quota_usage_with_count() {
+                        Ok((usage, blobs, _)) => {
+                            self.quota.usage = usage;
+                            self.blob_index = blobs;
+                            self.blob_index_ready = true;
+                            self.quota.usage_committed = false;
+                            self.quota.valid = true;
+                            self.quota.reason = None;
+                        }
+                        Err(err) => {
+                            self.quota.valid = false;
+                            self.quota.reason =
+                                Some(format!("committed quota usage is inconsistent: {err}"));
+                            return Ok(());
+                        }
+                    }
+                }
+            }
+            Err(err) => {
+                self.quota.valid = false;
+                self.quota.reason = Some(format!("committed quota usage is inconsistent: {err}"));
+                return Ok(());
+            }
+        }
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+
+        // A preserved legacy record that names the current head must agree
+        // with committed (or derived) usage. A stale one is historical
+        // evidence only.
+        if let Some(bytes) = &migrated {
+            let record = QuotaRecord::decode_bytes(bytes)?;
+            if record.generation == self.generation && record.commit == self.head {
+                if self.quota.usage_committed || self.quota.enforced() {
+                    let recorded: BTreeMap<QuotaPrincipal, QuotaCounters> =
+                        record.usage.into_iter().collect();
+                    if recorded != self.quota.usage {
+                        self.quota.valid = false;
+                        self.quota.reason =
+                            Some("quota.migrated usage disagrees with committed usage".to_owned());
+                        return Ok(());
+                    }
+                }
+            }
+        }
+
+        if let (Some(record), Some(raw)) = (legacy, legacy_raw) {
+            if current_is_legacy && self.mode == OpenMode::ReadWrite {
+                self.migrate_legacy_quota(record, raw)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Import a legacy combined record once: preserve its exact bytes under
+    /// `quota.migrated`, replace `quota` with the policy-only record, and
+    /// publish the recomputed usage as a committed op so later opens are O(1).
+    fn migrate_legacy_quota(&mut self, record: QuotaRecord, raw: Vec<u8>) -> Result<()> {
+        if record.generation == self.generation && record.commit == self.head {
+            let recorded: BTreeMap<QuotaPrincipal, QuotaCounters> =
+                record.usage.iter().cloned().collect();
+            if recorded != self.quota.usage {
+                return Err(Error::corrupt(
+                    "legacy quota record usage disagrees with committed state",
+                ));
+            }
+        } else {
+            self.notes.push(format!(
+                "legacy quota record named generation {} ({}); usage was recomputed from committed state",
+                record.generation, record.commit
+            ));
+        }
+        let capabilities = self.backend_capabilities();
+        capabilities.require_atomic_publish("quota migration")?;
+        capabilities.require_durable_fsync("quota migration")?;
+        self.with_backend_mut(|backend| backend.put_atomic(&Key::quota_migrated(), &raw))?;
+        let policy = QuotaPolicyRecord::new(record.budgets)?.encode_bytes()?;
+        self.with_backend_mut(|backend| backend.put_replace(&Key::quota(), &policy))?;
+        self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
+        self.quota.migrated_present = true;
+        self.quota.record_present = true;
+        if !self.quota.usage.is_empty() && !self.quota.usage_committed {
+            let usage = self.usage_vec();
+            self.publish_quota_usage_op(
+                QuotaUsageOp {
+                    reset: false,
+                    usage,
+                },
+                false,
+            )?;
+            self.quota.usage_committed = true;
+        }
+        self.quota.generation = self.generation;
+        self.quota.commit = self.head;
+        self.quota.valid = true;
+        self.quota.reason = None;
+        Ok(())
+    }
+
+    /// Write the policy-only record. This happens only when a policy is
+    /// installed or replaced, never on an ordinary commit.
+    fn persist_quota_policy(&self) -> Result<()> {
+        let record = QuotaPolicyRecord::new(self.quota.policy.values().cloned().collect())?;
         let bytes = record.encode_bytes()?;
         self.with_backend_mut(|backend| {
             let capabilities = backend.capabilities();
-            capabilities.require_atomic_publish("quota record publication")?;
-            capabilities.require_durable_fsync("quota record publication")?;
+            capabilities.require_atomic_publish("quota policy publication")?;
+            capabilities.require_durable_fsync("quota policy publication")?;
             backend.put_replace(&Key::quota(), &bytes)
         })?;
         self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))
@@ -5167,6 +5451,32 @@ impl Store {
             let (charges, additions) = self.compute_quota_charges(&commit.ops, &pre, &blobs)?;
             for (principal, counters) in charges {
                 usage.entry(principal).or_default().add(&counters)?;
+            }
+            // A committed assertion must equal the totals derived from the
+            // object ops of this commit and every earlier commit. This is the
+            // replay check that makes a tampered or buggy assertion `Corrupt`.
+            let declared = commit.ops.iter().find_map(|op| match op {
+                Op::SetQuotaUsage(value) => Some(value),
+                _ => None,
+            });
+            if let Some(value) = declared {
+                if value.reset {
+                    if commit.ops.len() != 1 || !value.usage.is_empty() {
+                        return Err(Error::corrupt(
+                            "quota usage reset must be the only op and declare an empty map",
+                        ));
+                    }
+                    usage.clear();
+                } else {
+                    let declared_map: BTreeMap<QuotaPrincipal, QuotaCounters> =
+                        value.usage.iter().cloned().collect();
+                    if declared_map != usage {
+                        return Err(Error::corrupt(format!(
+                            "commit {} quota usage disagrees with the recomputed admission totals",
+                            commit.id()?
+                        )));
+                    }
+                }
             }
             blobs.extend(additions);
             state.apply_ops(&commit.ops)?;
@@ -5350,34 +5660,29 @@ impl Store {
         map
     }
 
-    /// Enforce every configured budget for one commit. Returns the accepted
-    /// charges and the new blob sizes to fold into the index after publication,
-    /// or `None` when no budget is configured. Nothing is written here; a denial
-    /// leaves generation, head, and state untouched.
+    /// Enforce every configured budget for one commit and compute the usage
+    /// snapshot the commit will carry. Returns `None` when no budget is
+    /// configured. Nothing is written here; a denial leaves generation, head,
+    /// and state untouched.
     pub(crate) fn quota_preflight(
         &mut self,
         ops: &[Op],
         pre: &BTreeMap<Hash32, Option<ObjectRecord>>,
-    ) -> Result<
-        Option<(
-            BTreeMap<QuotaPrincipal, QuotaCounters>,
-            BTreeMap<Hash32, u64>,
-        )>,
-    > {
+    ) -> Result<Option<QuotaPlan>> {
         if !self.quota.enforced() {
             if self.quota.record_present && !self.quota.valid {
                 // A present but unusable record hides the policy. Refusing is
                 // the only non-silent behaviour: the operator must re-supply
                 // the budgets (`--quota`) or repair the record.
                 return Err(Error::corrupt(
-                    "quota usage record is unusable; re-run with `--quota` to install a policy",
+                    "quota state is unusable; re-run with `--quota` to install a policy",
                 ));
             }
             return Ok(None);
         }
         if !self.quota.valid {
             return Err(Error::corrupt(
-                "quota usage record is inconsistent with committed state; run `quota rebuild`",
+                "quota usage is inconsistent with committed state; run `quota rebuild`",
             ));
         }
         self.ensure_blob_index()?;
@@ -5385,61 +5690,47 @@ impl Store {
         let result = self.compute_quota_charges(ops, pre, &index);
         self.blob_index = index;
         let (charges, additions) = result?;
+        let mut usage_after = self.quota.usage.clone();
+        for (principal, counters) in &charges {
+            usage_after
+                .entry(principal.clone())
+                .or_default()
+                .add(counters)?;
+        }
         for (principal, budget) in &self.quota.policy {
-            let delta = charges.get(principal).copied().unwrap_or_default();
-            let used = self.quota.usage.get(principal).copied().unwrap_or_default();
-            let bytes = used
-                .used_bytes
-                .checked_add(delta.used_bytes)
-                .ok_or_else(|| Error::limit_exceeded("quota byte counter overflow"))?;
-            let objects = used
-                .used_objects
-                .checked_add(delta.used_objects)
-                .ok_or_else(|| Error::limit_exceeded("quota object counter overflow"))?;
-            if bytes > budget.max_new_bytes || objects > budget.max_objects {
+            let after = usage_after.get(principal).copied().unwrap_or_default();
+            if after.used_bytes > budget.max_new_bytes || after.used_objects > budget.max_objects {
                 // Fixed, non-disclosing text: no usage, no limits, no principal.
                 return Err(Error::budget_exceeded("write budget exceeded"));
             }
         }
-        Ok(Some((charges, additions)))
+        Ok(Some(QuotaPlan {
+            additions,
+            usage_after,
+        }))
     }
 
-    /// Fold an accepted commit's charges into the record and publish it. The
-    /// commit is already durable; a record write failure marks the runtime state
-    /// invalid (later writes fail closed) instead of pretending the commit did
-    /// not happen.
-    pub(crate) fn record_quota_after_commit(
-        &mut self,
-        charges: BTreeMap<QuotaPrincipal, QuotaCounters>,
-        additions: BTreeMap<Hash32, u64>,
-    ) {
-        for (principal, counters) in charges {
-            match self
-                .quota
-                .usage
-                .entry(principal)
-                .or_default()
-                .add(&counters)
-            {
-                Ok(()) => {}
-                Err(err) => {
-                    self.quota.valid = false;
-                    self.quota.reason = Some(format!("quota usage overflow: {err}"));
-                    return;
-                }
-            }
-        }
-        self.blob_index.extend(additions);
+    /// The usage op appended to a commit that carries an accepted plan.
+    pub(crate) fn quota_usage_op(plan: &QuotaPlan) -> Op {
+        Op::SetQuotaUsage(QuotaUsageOp {
+            reset: false,
+            usage: plan
+                .usage_after
+                .iter()
+                .map(|(principal, counters)| (principal.clone(), *counters))
+                .collect(),
+        })
+    }
+
+    /// Fold an accepted commit's usage into the in-memory state. The usage was
+    /// published as part of the commit itself, so there is no second durable
+    /// write and no failure path here.
+    pub(crate) fn record_quota_after_commit(&mut self, plan: QuotaPlan) {
+        self.quota.usage = plan.usage_after;
+        self.quota.usage_committed = true;
+        self.blob_index.extend(plan.additions);
         self.quota.generation = self.generation;
         self.quota.commit = self.head;
-        if let Err(err) = self.persist_quota_record() {
-            self.quota.valid = false;
-            self.quota.reason = Some(format!("cannot persist the quota record: {err}"));
-            self.notes.push(format!(
-                "commit {} published but the quota record was not updated: {err} (writes fail closed until `quota rebuild`)",
-                self.head
-            ));
-        }
     }
 
     // ---- internals -------------------------------------------------------
@@ -5580,6 +5871,7 @@ impl Store {
             // returns; this value is the pre-group head.
             return Ok(self.head);
         }
+        let mut ops = ops;
         let new_generation = self.next_generation;
         let timestamp = self.now_ns();
         let mut next_state = self.state.clone();
@@ -5592,6 +5884,11 @@ impl Store {
         // and reclaimable by GC.
         let quota_pre = self.quota_pre_map_live(&ops);
         let quota = self.quota_preflight(&ops, &quota_pre)?;
+        // The usage snapshot is part of the same commit, so it needs no
+        // separate durable write.
+        if let Some(plan) = &quota {
+            ops.push(Self::quota_usage_op(plan));
+        }
 
         let interval = self.options.checkpoint_interval;
         let wants_checkpoint = force_checkpoint || (interval > 0 && new_generation % interval == 0);
@@ -5624,8 +5921,8 @@ impl Store {
         // Advisory only: the commit is already durable and visible. A failed
         // index write is recorded and ignored.
         self.persist_index_after_commit(hash, &self.state);
-        if let Some((charges, additions)) = quota {
-            self.record_quota_after_commit(charges, additions);
+        if let Some(plan) = quota {
+            self.record_quota_after_commit(plan);
         }
         Ok(hash)
     }
@@ -5689,6 +5986,8 @@ impl Store {
             Op::SetTip { object, .. } => self
                 .group_undo
                 .push(Undo::Tip(*object, self.state.tips.get(object).copied())),
+            // Accounting only; it changes no namespace state to undo.
+            Op::SetQuotaUsage(_) => {}
         }
     }
 
@@ -5729,18 +6028,22 @@ impl Store {
         pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
         force_checkpoint: bool,
     ) -> Result<Hash32> {
+        let mut ops = ops;
         let new_generation = self.next_generation;
         let next_generation = new_generation
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
         let quota = self.quota_preflight(&ops, &pre_objects)?;
+        if let Some(plan) = &quota {
+            ops.push(Self::quota_usage_op(plan));
+        }
         let previous_state_generation = self.state.generation;
         self.state.generation = new_generation;
         match self.try_publish_staged(new_generation, ops, force_checkpoint) {
             Ok(hash) => {
                 self.next_generation = next_generation;
-                if let Some((charges, additions)) = quota {
-                    self.record_quota_after_commit(charges, additions);
+                if let Some(plan) = quota {
+                    self.record_quota_after_commit(plan);
                 }
                 Ok(hash)
             }

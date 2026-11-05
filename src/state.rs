@@ -11,6 +11,7 @@ use weftcodec::wcb::Value;
 
 use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
+use crate::quota::QuotaUsageOp;
 use crate::wcb_util as wu;
 
 /// Namespace name used by v1.
@@ -601,8 +602,18 @@ pub enum Op {
     DelEntry(Hash32),
     PutRelation(RelationRecord),
     DelRelation(Hash32),
-    SetSnapshot { name: String, commit: Hash32 },
-    SetTip { object: Hash32, version: Hash32 },
+    SetSnapshot {
+        name: String,
+        commit: Hash32,
+    },
+    SetTip {
+        object: Hash32,
+        version: Hash32,
+    },
+    /// Accounting assertion. It changes no namespace state; it records the
+    /// cumulative admitted usage after the other ops in the same commit. It
+    /// must be the last op, and a reset must be the only op.
+    SetQuotaUsage(QuotaUsageOp),
 }
 
 impl Op {
@@ -654,6 +665,7 @@ impl Op {
                 ("object", wu::hash_value(*object)),
                 ("version", wu::hash_value(*version)),
             ]),
+            Op::SetQuotaUsage(usage) => usage.to_value(),
         }
     }
 
@@ -697,6 +709,7 @@ impl Op {
                     version: wu::get_hash(&without_op, "version")?,
                 })
             }
+            "set_quota_usage" => Ok(Op::SetQuotaUsage(QuotaUsageOp::from_map(&without_op)?)),
             other => Err(Error::malformed(format!("unknown commit op `{other}`"))),
         }
     }
@@ -821,12 +834,45 @@ impl State {
                 }
                 self.tips.insert(*object, *version);
             }
+            Op::SetQuotaUsage(usage) => {
+                // Accounting only: no namespace state changes. Shape and
+                // canonical ordering are still enforced so replay is exact.
+                let normalized = usage.clone().normalize()?;
+                if normalized != *usage {
+                    return Err(Error::non_canonical(
+                        "quota usage is not in canonical principal order",
+                    ));
+                }
+            }
         }
         Ok(())
     }
 
     /// Apply a list of ops atomically: all or nothing.
     pub fn apply_ops(&mut self, ops: &[Op]) -> Result<()> {
+        // `set_quota_usage` describes the state after the other ops in its
+        // commit, so it must be last; a reset must stand alone.
+        let mut usage_seen = false;
+        for (index, op) in ops.iter().enumerate() {
+            if let Op::SetQuotaUsage(usage) = op {
+                if usage_seen {
+                    return Err(Error::malformed(
+                        "a commit may contain at most one set_quota_usage op",
+                    ));
+                }
+                usage_seen = true;
+                if index + 1 != ops.len() {
+                    return Err(Error::malformed(
+                        "set_quota_usage must be the last op in its commit",
+                    ));
+                }
+                if usage.reset && ops.len() != 1 {
+                    return Err(Error::malformed(
+                        "a quota usage reset must be the only op in its commit",
+                    ));
+                }
+            }
+        }
         let mut next = self.clone();
         for op in ops {
             next.apply_op(op)?;
