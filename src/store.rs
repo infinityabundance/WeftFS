@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::{ErrorKind, Read};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -22,7 +23,7 @@ use crate::auth::Principal;
 use crate::backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
 use crate::error::{Error, Result};
 use crate::format::{
-    encode_commit_file, encode_state, ChunkRef, Commit, Manifest, Representation,
+    encode_commit_file, encode_state, ChunkRef, Commit, ContentIdentity, Manifest, Representation,
     RepresentationKind, SuperblockSlot, FORMAT_CONTENTS, SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
@@ -128,6 +129,10 @@ pub struct Options {
     /// Physical representation policy. `Raw` (the default) writes the frozen
     /// v1 manifest; `CodecAuto` is experimental, opt-in, and Rust-only.
     pub representation: RepresentationMode,
+    /// Content identity for newly written chunk manifests. `WholeFileV1` is
+    /// the frozen default; `MerkleV3` writes `weft.manifest.v3` so range writes
+    /// cost O(changed chunks + tree hashing) instead of O(file size).
+    pub content_identity: ContentIdentity,
     /// `CodecAuto` leaves files smaller than this on the raw path.
     pub codec_min_bytes: u64,
     /// A DELTA frame must be at least this percent smaller than the ZSTD frame
@@ -149,6 +154,7 @@ impl Default for Options {
             gc_grace_secs: DEFAULT_GC_GRACE_SECS,
             fixed_timestamp_ns: None,
             representation: RepresentationMode::Raw,
+            content_identity: ContentIdentity::WholeFileV1,
             codec_min_bytes: DEFAULT_CODEC_MIN_BYTES,
             codec_delta_margin_percent: DEFAULT_CODEC_DELTA_MARGIN_PERCENT,
             quotas: Vec::new(),
@@ -162,6 +168,17 @@ pub struct DirEntry {
     pub name: Vec<u8>,
     pub entry_id: Hash32,
     pub target: Hash32,
+}
+
+/// Outcome of [`Store::verify_region`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegionVerification {
+    /// The Merkle root the manifest declares (and which was recomputed).
+    pub content_root: Hash32,
+    /// Number of chunk blobs actually fetched and verified.
+    pub chunks_verified: usize,
+    /// Number of logical bytes covered by the verified chunks.
+    pub bytes_verified: u64,
 }
 
 /// One commit on the published parent chain (newest first).
@@ -487,6 +504,9 @@ pub struct Store {
     /// group commit's quota delta is measured against the state before the
     /// group, not the live state that already contains the ops.
     group_pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
+    /// Number of chunk blobs read by the most recent range write, for tests
+    /// and receipts that prove Merkle identity does not stream the whole file.
+    range_write_chunk_reads: AtomicU64,
 }
 
 impl Store {
@@ -559,6 +579,7 @@ impl Store {
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
+            range_write_chunk_reads: AtomicU64::new(0),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -659,6 +680,7 @@ impl Store {
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
+            range_write_chunk_reads: AtomicU64::new(0),
         };
         store.load_quota_record();
         Ok(store)
@@ -751,6 +773,23 @@ impl Store {
 
     pub fn options(&self) -> &Options {
         &self.options
+    }
+
+    /// Chunk blobs read by the most recent range write. `#[doc(hidden)]`
+    /// test/receipt hook; it is not part of the format.
+    #[doc(hidden)]
+    pub fn range_write_chunk_reads(&self) -> u64 {
+        self.range_write_chunk_reads.load(Ordering::Relaxed)
+    }
+
+    /// Reset [`Store::range_write_chunk_reads`].
+    #[doc(hidden)]
+    pub fn reset_range_write_chunk_reads(&self) {
+        self.range_write_chunk_reads.store(0, Ordering::Relaxed);
+    }
+
+    fn note_range_write_chunk_read(&self) {
+        self.range_write_chunk_reads.fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn mode(&self) -> OpenMode {
@@ -1219,6 +1258,90 @@ impl Store {
         self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
     }
 
+    /// Verify only the chunks a range touches for a `weft.manifest.v3` file.
+    ///
+    /// `content_root` is the store's content root, i.e. the manifest id stored
+    /// in `ObjectRecord::content` (the same value every other `ReadContent`
+    /// entry point takes). The v3 manifest's own `content_root` field is the
+    /// Merkle root and is returned as [`RegionVerification::content_root`].
+    ///
+    /// The touched blob hashes are re-derived from the blob bytes
+    /// (`H("weft/chunk/v1", bytes)` equals the declared chunk hash), their
+    /// lengths are checked, and the Merkle root is recomputed from *all* chunk
+    /// hashes in the manifest and compared with the declared root. No explicit
+    /// sibling table is stored: the manifest already carries every leaf
+    /// preimage, so the recomputation is O(#chunks) small hashes and never
+    /// reads untouched blobs.
+    ///
+    /// A whole-file (`v1`/`v2`) content root cannot be range-verified without
+    /// reading every byte, so it is rejected with `InvalidArgument`; use
+    /// `verify --full` for those. A tampered blob or hash names the chunk index.
+    pub fn verify_region(
+        &self,
+        content_root: Hash32,
+        offset: u64,
+        length: u64,
+    ) -> Result<RegionVerification> {
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
+        if manifest.identity != ContentIdentity::MerkleV3 {
+            return Err(Error::invalid_argument(
+                "verify_region requires a weft.manifest.v3 Merkle content root",
+            ));
+        }
+        let declared = identity::merkle_root_from_chunks(
+            manifest.chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+        );
+        if declared != manifest.content_hash {
+            return Err(Error::corrupt(
+                "merkle content_root does not match the manifest chunk hashes",
+            ));
+        }
+        if offset >= manifest.size || length == 0 {
+            return Ok(RegionVerification {
+                content_root: declared,
+                chunks_verified: 0,
+                bytes_verified: 0,
+            });
+        }
+        let end = offset.saturating_add(length).min(manifest.size);
+        let mut cursor: u64 = 0;
+        let mut chunks_verified = 0usize;
+        let mut bytes_verified = 0u64;
+        for (index, chunk) in manifest.chunks.iter().enumerate() {
+            let chunk_start = cursor;
+            let chunk_end = cursor
+                .checked_add(chunk.len)
+                .ok_or_else(|| Error::corrupt("chunk offset overflow"))?;
+            cursor = chunk_end;
+            if chunk_end <= offset || chunk_start >= end {
+                continue;
+            }
+            let bytes = self
+                .with_backend(|backend| {
+                    recovery::read_blob_verified_via(
+                        backend,
+                        BlobKind::Object,
+                        chunk.hash,
+                        identity::CHUNK_DOMAIN,
+                    )
+                })
+                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+            if bytes.len() as u64 != chunk.len {
+                return Err(Error::corrupt(format!(
+                    "chunk {index} length disagrees with manifest"
+                )));
+            }
+            chunks_verified += 1;
+            bytes_verified = bytes_verified.saturating_add(chunk.len);
+        }
+        Ok(RegionVerification {
+            content_root: declared,
+            chunks_verified,
+            bytes_verified,
+        })
+    }
+
     fn read_manifest_bytes(
         &self,
         manifest: &Manifest,
@@ -1281,7 +1404,7 @@ impl Store {
         let capacity = checked_usize(end - offset, "range length")?;
         let mut out = Vec::with_capacity(capacity);
         let mut cursor: u64 = 0;
-        for chunk in &manifest.chunks {
+        for (index, chunk) in manifest.chunks.iter().enumerate() {
             let chunk_start = cursor;
             let chunk_end = cursor
                 .checked_add(chunk.len)
@@ -1290,16 +1413,20 @@ impl Store {
             if chunk_end <= offset || chunk_start >= end {
                 continue;
             }
-            let bytes = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Object,
-                    chunk.hash,
-                    identity::CHUNK_DOMAIN,
-                )
-            })?;
+            let bytes = self
+                .with_backend(|backend| {
+                    recovery::read_blob_verified_via(
+                        backend,
+                        BlobKind::Object,
+                        chunk.hash,
+                        identity::CHUNK_DOMAIN,
+                    )
+                })
+                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
             if bytes.len() as u64 != chunk.len {
-                return Err(Error::corrupt("chunk length disagrees with manifest"));
+                return Err(Error::corrupt(format!(
+                    "chunk {index} length disagrees with manifest"
+                )));
             }
             let local_start =
                 checked_usize(offset.saturating_sub(chunk_start), "chunk-local read start")?;
@@ -1311,9 +1438,20 @@ impl Store {
             return Err(Error::corrupt("assembled range length mismatch"));
         }
         if verify_whole && offset == 0 && end == manifest.size {
-            let digest = identity::content_hash(&out);
-            if digest != manifest.content_hash {
-                return Err(Error::corrupt("whole-content hash mismatch"));
+            if manifest.identity == ContentIdentity::MerkleV3 {
+                let root = identity::merkle_root_from_chunks(
+                    manifest.chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+                );
+                if root != manifest.content_hash {
+                    return Err(Error::corrupt(
+                        "merkle content root mismatch for a fully read file",
+                    ));
+                }
+            } else {
+                let digest = identity::content_hash(&out);
+                if digest != manifest.content_hash {
+                    return Err(Error::corrupt("whole-content hash mismatch"));
+                }
             }
         }
         Ok(out)
@@ -1654,9 +1792,17 @@ impl Store {
 
         let (manifest_id, content_hash, size) = match self.options.representation {
             RepresentationMode::Raw => {
+                let identity_mode = self.options.content_identity;
                 let (chunks, size, content_hash) =
-                    self.stream_raw_chunks(&mut reader, chunk_size, Vec::new())?;
-                self.store_streamed_manifest(chunk_size, chunks, size, content_hash, false)?
+                    self.stream_raw_chunks(&mut reader, chunk_size, Vec::new(), identity_mode)?;
+                self.store_streamed_manifest(
+                    chunk_size,
+                    chunks,
+                    size,
+                    content_hash,
+                    false,
+                    identity_mode,
+                )?
             }
             RepresentationMode::CodecAuto => {
                 let preamble_limit =
@@ -1673,6 +1819,7 @@ impl Store {
                         chunk_size,
                         base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
                         true,
+                        ContentIdentity::WholeFileV1,
                     )?
                 } else {
                     // Larger stream: keep the preamble (a chunk multiple) and
@@ -1680,9 +1827,20 @@ impl Store {
                     // Codec-backed streaming is not implemented; buffering the
                     // file to reach the codec encoder would violate the memory
                     // goal, and a streaming DELTA/ZSTD writer does not exist.
-                    let (chunks, size, content_hash) =
-                        self.stream_raw_chunks(&mut reader, chunk_size, preamble)?;
-                    self.store_streamed_manifest(chunk_size, chunks, size, content_hash, true)?
+                    let (chunks, size, content_hash) = self.stream_raw_chunks(
+                        &mut reader,
+                        chunk_size,
+                        preamble,
+                        ContentIdentity::WholeFileV1,
+                    )?;
+                    self.store_streamed_manifest(
+                        chunk_size,
+                        chunks,
+                        size,
+                        content_hash,
+                        true,
+                        ContentIdentity::WholeFileV1,
+                    )?
                 }
             }
         };
@@ -1782,8 +1940,10 @@ impl Store {
     /// This is chunk-granular copy-on-write: only chunks whose bytes actually
     /// change are re-encoded and stored. Chunks that the write does not touch
     /// keep their old references verbatim, and their blobs are not rewritten.
-    /// The frozen v1 whole-file ContentId still needs one digest pass over the
-    /// file; see `Store::store_file_range` for the exact cost model.
+    /// A `weft.manifest.v3` (Merkle) file also avoids the O(file size) digest
+    /// pass: its root is folded from the stored chunk hashes. A v1/v2 file still
+    /// needs one digest pass over the whole file to keep the frozen
+    /// `ContentId`; see `Store::store_file_range` for the exact cost model.
     ///
     /// A zero-length write is a POSIX no-op: it returns the current version id
     /// and publishes no commit. (The previous whole-file implementation would
@@ -1833,6 +1993,15 @@ impl Store {
         // frame-backed (codec or tensor) representation, materialises the whole
         // object once. This keeps the experimental and tensor paths simple; the
         // frozen Raw mode still uses the chunk-granular COW path below.
+        //
+        // The file's existing identity wins: a `weft.manifest.v3` file is never
+        // silently rewritten as v1/v2 even when the store-wide option is the
+        // default. A v1/v2 file is upgraded to v3 only when the option asks for
+        // it.
+        let content_identity = match old_manifest.identity {
+            ContentIdentity::MerkleV3 => ContentIdentity::MerkleV3,
+            ContentIdentity::WholeFileV1 => self.options.content_identity,
+        };
         if self.options.representation == RepresentationMode::CodecAuto || old_is_frame_backed {
             let old_bytes =
                 self.read_manifest_bytes(&old_manifest, old.content, 0, old_manifest.size, true)?;
@@ -1850,17 +2019,23 @@ impl Store {
             } else {
                 causal.to_vec()
             };
-            let base = self.delta_base(&parent_versions)?;
+            let base = if content_identity == ContentIdentity::MerkleV3 {
+                None
+            } else {
+                self.delta_base(&parent_versions)?
+            };
             let (manifest_id, _content, _size) = self.store_content_bytes(
                 &buffer,
                 self.options.chunk_size,
                 base.as_ref().map(|(root, bytes)| (*root, bytes.as_slice())),
-                self.options.representation == RepresentationMode::CodecAuto,
+                self.options.representation == RepresentationMode::CodecAuto
+                    && content_identity == ContentIdentity::WholeFileV1,
+                content_identity,
             )?;
             return self.publish_file_version(id, old, manifest_id, new_size, causal);
         }
         let (manifest_id, _content, _size) =
-            self.store_file_range(&old_manifest, offset, bytes, new_size)?;
+            self.store_file_range(&old_manifest, offset, bytes, new_size, content_identity)?;
         self.publish_file_version(id, old, manifest_id, new_size, causal)
     }
 
@@ -1905,6 +2080,11 @@ impl Store {
         }
         let chunk_size = old_manifest.chunk_size;
         validate_chunk_size(chunk_size)?;
+        let content_identity = match old_manifest.identity {
+            ContentIdentity::MerkleV3 => ContentIdentity::MerkleV3,
+            ContentIdentity::WholeFileV1 => self.options.content_identity,
+        };
+        let whole_file_identity = content_identity == ContentIdentity::WholeFileV1;
         let step = checked_usize(chunk_size, "chunk size")?;
         let declared = old_manifest
             .chunks
@@ -1937,18 +2117,22 @@ impl Store {
                 .chunks
                 .get(checked_usize(index, "chunk index")?)
                 .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
-            let bytes = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Object,
-                    reference.hash,
-                    identity::CHUNK_DOMAIN,
-                )
-            })?;
-            if bytes.len() as u64 != reference.len {
-                return Err(Error::corrupt("chunk length disagrees with manifest"));
+            // Merkle identity folds the stored chunk hashes; whole-file identity
+            // must re-read every chunk to feed the streaming digest.
+            if whole_file_identity {
+                let bytes = self.with_backend(|backend| {
+                    recovery::read_blob_verified_via(
+                        backend,
+                        BlobKind::Object,
+                        reference.hash,
+                        identity::CHUNK_DOMAIN,
+                    )
+                })?;
+                if bytes.len() as u64 != reference.len {
+                    return Err(Error::corrupt("chunk length disagrees with manifest"));
+                }
+                hasher.update(&bytes);
             }
-            hasher.update(&bytes);
             chunks.push(reference.clone());
         }
 
@@ -1998,7 +2182,9 @@ impl Store {
                 pending.extend_from_slice(&buffer[..take]);
                 consumed = take;
                 if pending.len() == step {
-                    hasher.update(&pending);
+                    if whole_file_identity {
+                        hasher.update(&pending);
+                    }
                     let hash =
                         self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &pending)?;
                     push_chunk_ref(&mut chunks, hash, pending.len() as u64)?;
@@ -2012,7 +2198,9 @@ impl Store {
             let mut offset = 0usize;
             while offset < full {
                 let part = &data[offset..offset + step];
-                hasher.update(part);
+                if whole_file_identity {
+                    hasher.update(part);
+                }
                 let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
                 push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
                 offset += step;
@@ -2025,7 +2213,9 @@ impl Store {
             }
         }
         if !pending.is_empty() {
-            hasher.update(&pending);
+            if whole_file_identity {
+                hasher.update(&pending);
+            }
             let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &pending)?;
             push_chunk_ref(&mut chunks, hash, pending.len() as u64)?;
         }
@@ -2038,9 +2228,16 @@ impl Store {
                 "file exceeds the {MAX_FILE_BYTES}-byte bound"
             )));
         }
-        let content_hash = identity::finish_content_hash(hasher);
+        let content_hash = match content_identity {
+            ContentIdentity::WholeFileV1 => identity::finish_content_hash(hasher),
+            ContentIdentity::MerkleV3 => identity::merkle_root_from_chunks(
+                chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+            ),
+        };
         debug_assert!(chunks.iter().map(|chunk| chunk.len).sum::<u64>() == new_size);
-        let representation = if self.options.representation == RepresentationMode::CodecAuto {
+        let representation = if content_identity == ContentIdentity::WholeFileV1
+            && self.options.representation == RepresentationMode::CodecAuto
+        {
             Some(Representation {
                 kind: RepresentationKind::Raw,
                 frame: None,
@@ -2058,6 +2255,7 @@ impl Store {
             chunks,
             content_hash,
             representation,
+            identity: content_identity,
         })?;
         self.publish_file_version(id, old, manifest_id, new_size, &[])
     }
@@ -2332,7 +2530,9 @@ impl Store {
         old: ObjectRecord,
         buffer: &[u8],
     ) -> Result<Hash32> {
-        let (manifest_id, _content, _size) = self.store_file_content(buffer)?;
+        let content_identity = self.content_identity_for_object(&old)?;
+        let (manifest_id, _content, _size) =
+            self.store_file_content_with_identity(buffer, content_identity)?;
         let (identity_mode, causal_hash) = crate::state::identity_from_attrs(&old)?;
         let mtime = self.now_ns();
         let size = buffer.len() as u64;
@@ -2384,7 +2584,9 @@ impl Store {
         let mut buffer = vec![0u8; checked_usize(size, "file size")?];
         let copy = current.len().min(buffer.len());
         buffer[..copy].copy_from_slice(&current[..copy]);
-        let (manifest_id, _content, _size) = self.store_file_content(&buffer)?;
+        let content_identity = self.content_identity_for_object(&old)?;
+        let (manifest_id, _content, _size) =
+            self.store_file_content_with_identity(&buffer, content_identity)?;
         let (identity_mode, causal_hash) = crate::state::identity_from_attrs(&old)?;
         let mtime = self.now_ns();
         let version = derive_version_id_with_identity(
@@ -4278,12 +4480,16 @@ impl Store {
                         continue;
                     }
                     if full {
-                        // Stream chunks through the frozen v1 hasher instead of
+                        // Stream chunks through the identity hasher instead of
                         // assembling the whole file. Verification must stay
-                        // bounded for objects near MAX_FILE_BYTES.
+                        // bounded for objects near MAX_FILE_BYTES. A Merkle v3
+                        // manifest folds its stored chunk hashes; a v1/v2
+                        // manifest feeds the frozen whole-content digest.
+                        let merkle = manifest.identity == ContentIdentity::MerkleV3;
                         let mut hasher = identity::content_hash_hasher();
+                        let mut leaves: Vec<(u64, Hash32)> = Vec::new();
                         let mut total: u64 = 0;
-                        for chunk in &manifest.chunks {
+                        for (index, chunk) in manifest.chunks.iter().enumerate() {
                             report.checked_chunks += 1;
                             match self.with_backend(|backend| {
                                 recovery::read_blob_verified_via(
@@ -4298,27 +4504,47 @@ impl Store {
                                         report.problems.push(VerifyProblem {
                                             class: "Corrupt".to_owned(),
                                             detail: format!(
-                                                "chunk {} length disagrees with manifest",
+                                                "chunk {index} ({}) length disagrees with manifest",
                                                 chunk.hash
                                             ),
                                         });
                                     }
                                     total = total.saturating_add(bytes.len() as u64);
-                                    hasher.update(&bytes);
+                                    if merkle {
+                                        leaves.push((chunk.len, chunk.hash));
+                                    } else {
+                                        hasher.update(&bytes);
+                                    }
                                 }
                                 Err(err) => report.problems.push(VerifyProblem {
                                     class: err.class_name().to_owned(),
-                                    detail: format!("chunk {}: {err}", chunk.hash),
+                                    detail: format!("chunk {index} ({}): {err}", chunk.hash),
                                 }),
                             }
                         }
-                        if total == manifest.size
-                            && identity::finish_content_hash(hasher) != manifest.content_hash
-                        {
-                            report.problems.push(VerifyProblem {
-                                class: "Corrupt".to_owned(),
-                                detail: format!("object {} whole-content hash mismatch", record.id),
-                            });
+                        if total == manifest.size {
+                            if merkle {
+                                if identity::merkle_root_from_chunks(leaves)
+                                    != manifest.content_hash
+                                {
+                                    report.problems.push(VerifyProblem {
+                                        class: "Corrupt".to_owned(),
+                                        detail: format!(
+                                            "object {} merkle content root mismatch",
+                                            record.id
+                                        ),
+                                    });
+                                }
+                            } else if identity::finish_content_hash(hasher) != manifest.content_hash
+                            {
+                                report.problems.push(VerifyProblem {
+                                    class: "Corrupt".to_owned(),
+                                    detail: format!(
+                                        "object {} whole-content hash mismatch",
+                                        record.id
+                                    ),
+                                });
+                            }
                         }
                     }
                 }
@@ -5471,19 +5697,25 @@ impl Store {
         Ok(hash)
     }
 
-    /// Stream `reader` into content-addressed chunk blobs and hash the same
-    /// bytes incrementally with the frozen v1 whole-content hasher.
+    /// Stream `reader` into content-addressed chunk blobs and compute the
+    /// requested content identity incrementally.
     ///
     /// `prefix` must already contain whole chunks (it is the buffered codec
     /// preamble). The I/O buffer is at least `STREAM_IO_BYTES` and a multiple
     /// of the chunk size, so every emitted chunk is exactly `chunk_size` bytes
     /// except the final one. Neither the prefix nor the I/O buffer is retained
     /// after return; peak memory is O(io buffer + chunk refs).
+    ///
+    /// With `ContentIdentity::WholeFileV1` the bytes also feed the frozen
+    /// whole-content hasher (O(file size) hashing, bounded memory). With
+    /// `ContentIdentity::MerkleV3` only the per-chunk leaf hashes are kept and
+    /// the root is folded from the chunk table.
     fn stream_raw_chunks<R: Read>(
         &self,
         reader: &mut R,
         chunk_size: u64,
         prefix: Vec<u8>,
+        content_identity: ContentIdentity,
     ) -> Result<(Vec<ChunkRef>, u64, Hash32)> {
         validate_chunk_size(chunk_size)?;
         let step = checked_usize(chunk_size, "chunk size")?;
@@ -5493,6 +5725,7 @@ impl Store {
             ));
         }
         let mut chunks: Vec<ChunkRef> = Vec::new();
+        let whole_file = content_identity == ContentIdentity::WholeFileV1;
         let mut hasher = identity::content_hash_hasher();
         let mut total: u64 = 0;
 
@@ -5504,7 +5737,9 @@ impl Store {
                     "file exceeds the {MAX_FILE_BYTES}-byte bound"
                 )));
             }
-            hasher.update(&prefix);
+            if whole_file {
+                hasher.update(&prefix);
+            }
             for part in prefix.chunks(step) {
                 let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
                 push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
@@ -5526,7 +5761,9 @@ impl Store {
                     "file exceeds the {MAX_FILE_BYTES}-byte bound"
                 )));
             }
-            hasher.update(&buffer[..filled]);
+            if whole_file {
+                hasher.update(&buffer[..filled]);
+            }
             for part in buffer[..filled].chunks(step) {
                 let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, part)?;
                 push_chunk_ref(&mut chunks, hash, part.len() as u64)?;
@@ -5535,12 +5772,20 @@ impl Store {
                 break;
             }
         }
-        Ok((chunks, total, identity::finish_content_hash(hasher)))
+        let content_hash = match content_identity {
+            ContentIdentity::WholeFileV1 => identity::finish_content_hash(hasher),
+            ContentIdentity::MerkleV3 => identity::merkle_root_from_chunks(
+                chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+            ),
+        };
+        Ok((chunks, total, content_hash))
     }
 
     /// Store a manifest assembled by the streaming paths. `v2_raw` selects the
     /// experimental v2 `kind:"raw"` representation used by `CodecAuto`;
-    /// otherwise the frozen v1 manifest is written byte-for-byte.
+    /// otherwise the frozen v1 manifest is written byte-for-byte (or the v3
+    /// Merkle manifest when `content_identity` is `MerkleV3`).
+    #[allow(clippy::too_many_arguments)]
     fn store_streamed_manifest(
         &self,
         chunk_size: u64,
@@ -5548,6 +5793,7 @@ impl Store {
         size: u64,
         content_hash: Hash32,
         v2_raw: bool,
+        content_identity: ContentIdentity,
     ) -> Result<(Hash32, Hash32, u64)> {
         let representation = if v2_raw {
             Some(Representation {
@@ -5567,6 +5813,7 @@ impl Store {
             chunks,
             content_hash,
             representation,
+            identity: content_identity,
         })
     }
 
@@ -5574,7 +5821,36 @@ impl Store {
     /// content (`create_file*`), `truncate`, and the whole-file bench baseline.
     /// Range writes go through `Store::store_file_range` instead.
     fn store_file_content(&self, bytes: &[u8]) -> Result<(Hash32, Hash32, u64)> {
-        self.store_file_content_with_base(bytes, None)
+        self.store_file_content_with_identity(bytes, self.options.content_identity)
+    }
+
+    /// The identity a rewrite of `record` must keep: an existing v3 file stays
+    /// v3 (never implicitly downgraded), while a v1/v2 file adopts the
+    /// store-wide option.
+    fn content_identity_for_object(&self, record: &ObjectRecord) -> Result<ContentIdentity> {
+        if record.kind != ObjectKind::File {
+            return Ok(self.options.content_identity);
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        Ok(match manifest.identity {
+            ContentIdentity::MerkleV3 => ContentIdentity::MerkleV3,
+            ContentIdentity::WholeFileV1 => self.options.content_identity,
+        })
+    }
+
+    fn store_file_content_with_identity(
+        &self,
+        bytes: &[u8],
+        content_identity: ContentIdentity,
+    ) -> Result<(Hash32, Hash32, u64)> {
+        self.store_content_bytes(
+            bytes,
+            self.options.chunk_size,
+            None,
+            self.options.representation == RepresentationMode::CodecAuto,
+            content_identity,
+        )
     }
 
     fn store_file_content_with_base(
@@ -5587,6 +5863,7 @@ impl Store {
             self.options.chunk_size,
             base,
             self.options.representation == RepresentationMode::CodecAuto,
+            self.options.content_identity,
         )
     }
 
@@ -5594,13 +5871,16 @@ impl Store {
     ///
     /// `codec_auto == false` is the frozen Raw path and produces exactly the
     /// pre-representation v1 manifest bytes. `codec_auto == true` may store a
-    /// v2 codec representation or a v2 `kind:"raw"` fallback.
+    /// v2 codec representation or a v2 `kind:"raw"` fallback. With
+    /// `ContentIdentity::MerkleV3` the raw chunk table is written as a v3
+    /// manifest and its `content_root` is folded from the chunk hashes.
     fn store_content_bytes(
         &self,
         bytes: &[u8],
         chunk_size: u64,
         base: Option<(Hash32, &[u8])>,
         codec_auto: bool,
+        content_identity: ContentIdentity,
     ) -> Result<(Hash32, Hash32, u64)> {
         if bytes.len() as u64 > MAX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
@@ -5609,6 +5889,15 @@ impl Store {
         }
         if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
             return Err(Error::invalid_argument("chunk size is out of range"));
+        }
+        if content_identity == ContentIdentity::MerkleV3 {
+            if codec_auto {
+                return Err(Error::invalid_argument(
+                    "content_identity `merkle` cannot be combined with codec-auto",
+                ));
+            }
+            let manifest = self.build_merkle_manifest(bytes, chunk_size)?;
+            return self.store_manifest(manifest);
         }
         let content_hash = identity::content_hash(bytes);
         if codec_auto {
@@ -5631,6 +5920,7 @@ impl Store {
                         chunks: Vec::new(),
                         content_hash,
                         representation: Some(representation),
+                        identity: ContentIdentity::WholeFileV1,
                     });
                 }
             }
@@ -5654,6 +5944,28 @@ impl Store {
         self.store_manifest(manifest)
     }
 
+    /// Build a `weft.manifest.v3` raw manifest: chunk blobs plus the Merkle
+    /// root folded over the chunk table. No whole-file digest is computed.
+    pub(crate) fn build_merkle_manifest(&self, bytes: &[u8], chunk_size: u64) -> Result<Manifest> {
+        let mut chunks = Vec::new();
+        let step = usize::try_from(chunk_size)
+            .map_err(|_| Error::limit_exceeded("chunk size does not fit usize"))?;
+        for chunk in bytes.chunks(step) {
+            let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, chunk)?;
+            push_chunk_ref(&mut chunks, hash, chunk.len() as u64)?;
+        }
+        let content_root =
+            identity::merkle_root_from_chunks(chunks.iter().map(|chunk| (chunk.len, chunk.hash)));
+        Ok(Manifest {
+            size: bytes.len() as u64,
+            chunk_size,
+            chunks,
+            content_hash: content_root,
+            representation: None,
+            identity: ContentIdentity::MerkleV3,
+        })
+    }
+
     /// Write the chunk blobs for a raw layout and return a v1-shaped manifest
     /// value (with no representation).
     pub(crate) fn build_raw_manifest(
@@ -5675,6 +5987,7 @@ impl Store {
             chunks,
             content_hash,
             representation: None,
+            identity: ContentIdentity::WholeFileV1,
         })
     }
 
@@ -5787,18 +6100,22 @@ impl Store {
     /// never read for materialisation and never re-written.
     ///
     /// Cost model: physical writes and peak memory are O(changed chunks +
-    /// chunk_size). The digest is the exception: the frozen v1 identity is a
-    /// single whole-file `ContentId = H("weft/chunk/v1", file_bytes)`, so it
-    /// can only be produced by streaming the whole file. That pass is O(file
-    /// size) by construction; it is done with one chunk-sized buffer at a time
-    /// so memory never becomes O(file size). It cannot be replaced by a Merkle
-    /// root without breaking v1 identity.
+    /// chunk_size). With `ContentIdentity::MerkleV3` the content root is folded
+    /// from the manifest's stored chunk hashes, so hashing is O(#chunks) small
+    /// hashes and no unchanged byte is read. With `ContentIdentity::WholeFileV1`
+    /// the frozen v1 identity is a single whole-file
+    /// `ContentId = H("weft/chunk/v1", file_bytes)`, so it can only be produced
+    /// by streaming the whole file; that pass is O(file size) by construction,
+    /// done with one chunk-sized buffer at a time so memory never becomes
+    /// O(file size). It cannot be replaced by a Merkle root without breaking v1
+    /// identity.
     pub(crate) fn store_file_range(
         &self,
         old_manifest: &Manifest,
         offset: u64,
         bytes: &[u8],
         new_size: u64,
+        content_identity: ContentIdentity,
     ) -> Result<(Hash32, Hash32, u64)> {
         let chunk_size = old_manifest.chunk_size;
         if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
@@ -5871,6 +6188,7 @@ impl Store {
                             identity::CHUNK_DOMAIN,
                         )
                     })?;
+                    self.note_range_write_chunk_read();
                     if stored.len() as u64 != old_ref.len {
                         return Err(Error::corrupt("chunk length disagrees with manifest"));
                     }
@@ -5898,30 +6216,41 @@ impl Store {
             push_chunk_ref(&mut chunks, hash, assembled.len() as u64)?;
         }
 
-        // Stream the new content in chunk order into the frozen v1 whole-file
-        // digest. Peak memory is one chunk, never the whole file.
-        let mut hasher = identity::content_hash_hasher();
-        for chunk in &chunks {
-            let data = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Object,
-                    chunk.hash,
-                    identity::CHUNK_DOMAIN,
-                )
-            })?;
-            if data.len() as u64 != chunk.len {
-                return Err(Error::corrupt("chunk length disagrees with manifest"));
+        // Whole-file identity needs the new content streamed in chunk order
+        // into the frozen v1 digest; that is O(file size) by construction but
+        // bounded to one chunk of memory. Merkle identity folds the chunk
+        // hashes already in the table, so no blob is read here at all.
+        let content_hash = match content_identity {
+            ContentIdentity::WholeFileV1 => {
+                let mut hasher = identity::content_hash_hasher();
+                for chunk in &chunks {
+                    let data = self.with_backend(|backend| {
+                        recovery::read_blob_verified_via(
+                            backend,
+                            BlobKind::Object,
+                            chunk.hash,
+                            identity::CHUNK_DOMAIN,
+                        )
+                    })?;
+                    self.note_range_write_chunk_read();
+                    if data.len() as u64 != chunk.len {
+                        return Err(Error::corrupt("chunk length disagrees with manifest"));
+                    }
+                    hasher.update(&data);
+                }
+                identity::finish_content_hash(hasher)
             }
-            hasher.update(&data);
-        }
-        let content_hash = identity::finish_content_hash(hasher);
+            ContentIdentity::MerkleV3 => identity::merkle_root_from_chunks(
+                chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+            ),
+        };
         let manifest = Manifest {
             size: new_size,
             chunk_size,
             chunks,
             content_hash,
             representation: None,
+            identity: content_identity,
         };
         let wcb = manifest.encode()?;
         if wcb.len() as u64 > crate::format::MAX_CHUNK_SIZE * 64 {
@@ -6100,6 +6429,16 @@ fn validate_options(options: &Options) -> Result<()> {
     if options.codec_delta_margin_percent > 90 {
         return Err(Error::invalid_argument(
             "codec_delta_margin_percent must be at most 90",
+        ));
+    }
+    // Merkle identity is chunk-based; a codec/tensor frame has no chunk table
+    // for it to cover. Refuse the combination rather than silently ignoring
+    // one of the two selections.
+    if options.content_identity == ContentIdentity::MerkleV3
+        && options.representation == RepresentationMode::CodecAuto
+    {
+        return Err(Error::invalid_argument(
+            "content_identity `merkle` cannot be combined with representation `codec-auto`",
         ));
     }
     // Reject duplicate principals before any store I/O.

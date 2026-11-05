@@ -385,6 +385,53 @@ space for the fastest restore. All three planner runs verify clean.
 
 ---
 
+## 2c. Merkle content identity (`weft.manifest.v3`)
+
+**Status: implemented in Rust and Go; opt-in; the default remains v1.** A raw
+chunk table may be written under schema `weft.manifest.v3`, which replaces
+`content_hash` with `content_root` and carries `content_identity:"merkle-v1"`.
+The root is the Merkle fold of
+`H("weft/merkle/leaf/v1", u64le(len) || chunk_hash)` with internal nodes
+`H("weft/merkle/node/v1", left||right)`; an odd trailing node is promoted
+unchanged; an empty file is `H("weft/merkle/empty/v1", empty)`. See
+`spec/WEFT-MODEL.md` §2.3.2 for the normative construction.
+
+Selecting it:
+
+```
+weftfs --store DIR --content-identity merkle create /f --file big.bin
+weftfs --store DIR --content-identity merkle write /f --offset 4096 --file patch
+weftfs --store DIR --content-identity merkle info --json
+```
+
+Go usage is identical (`weftfs --content-identity merkle ...`). The policy is
+per invocation and not persisted; reading dispatches on the manifest schema.
+
+Write/read behaviour:
+
+- A range write re-hashes and re-stores only chunks whose bytes changed; every
+  untouched chunk reference is reused verbatim and its blob is not read. The
+  root is folded from the manifest's chunk hashes, so hashing a small write is
+  O(changed chunks + #chunks small hashes), never an O(file size) read.
+- A full read verifies every chunk blob and the recomputed root. A range read
+  verifies the touched blobs. `Store::verify_region` /
+  `Store::VerifyContentRegion` verifies the touched blobs and recomputes the
+  root from the manifest chunk table; a failure names the chunk index.
+- A v3 file is never implicitly rewritten as v1/v2. Reopening with the default
+  identity preserves it, and `verify --full` handles v1, v2, and v3.
+- The root is chunk-size dependent by design; `chunk_size` is part of the
+  manifest. Same bytes + same chunk size produce the same root in both
+  implementations (cross-language tests compare them in both directions).
+
+Measured (`bench/receipts/merkle-identity-20261105T161026Z.json`): 128 MiB,
+64 KiB chunks, 500 random 4 KiB overwrites. Rust whole-file p50 50.43 ms /
+1,024,537 chunk reads / 67.2 GB `rchar`; Rust Merkle p50 1.81 ms / 537 chunk
+reads / 87.9 MB. Go whole-file p50 202.7 ms / 134.3 GB `rchar` / 437 MiB peak
+RSS; Go Merkle p50 4.38 ms / 87.9 MB / 43 MiB. Every run verified full, kept
+its identity, and changed the root.
+
+---
+
 ## 3. Format interpretations and spec notes
 
 These are deliberate, documented decisions where the prose admits more than one

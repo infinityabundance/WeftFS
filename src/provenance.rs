@@ -908,9 +908,21 @@ impl Store {
     /// Verify that a raw chunked manifest's bytes are retained and hash-correct.
     fn verify_raw_content(&self, manifest: &Manifest) -> Result<()> {
         if manifest.size == 0 {
+            // The empty root is fixed by the identity, not by a blob read.
+            let expected = match manifest.identity {
+                crate::format::ContentIdentity::WholeFileV1 => identity::content_hash(b""),
+                crate::format::ContentIdentity::MerkleV3 => identity::merkle_empty_root(),
+            };
+            if manifest.content_hash != expected {
+                return Err(Error::corrupt(
+                    "empty content root mismatch while verifying retention",
+                ));
+            }
             return Ok(());
         }
+        let merkle = manifest.identity == crate::format::ContentIdentity::MerkleV3;
         let mut hasher = identity::content_hash_hasher();
+        let mut leaves: Vec<(u64, Hash32)> = Vec::new();
         let mut total: u64 = 0;
         for chunk in &manifest.chunks {
             let bytes = self.with_backend(|backend| {
@@ -928,10 +940,18 @@ impl Store {
                 )));
             }
             total = total.saturating_add(bytes.len() as u64);
-            hasher.update(&bytes);
+            if merkle {
+                leaves.push((chunk.len, chunk.hash));
+            } else {
+                hasher.update(&bytes);
+            }
         }
-        if total != manifest.size || identity::finish_content_hash(hasher) != manifest.content_hash
-        {
+        let digest = if merkle {
+            identity::merkle_root_from_chunks(leaves)
+        } else {
+            identity::finish_content_hash(hasher)
+        };
+        if total != manifest.size || digest != manifest.content_hash {
             return Err(Error::corrupt(
                 "content hash mismatch while verifying retention",
             ));

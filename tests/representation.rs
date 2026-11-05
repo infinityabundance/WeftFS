@@ -12,7 +12,9 @@ use tempfile::tempdir;
 use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
-use weftfs::format::{Manifest, Representation, RepresentationKind, MANIFEST_SCHEMA};
+use weftfs::format::{
+    ContentIdentity, Manifest, Representation, RepresentationKind, MANIFEST_SCHEMA,
+};
 use weftfs::identity::{self, Hash32};
 use weftfs::recovery::{manifest_path, read_manifest};
 use weftfs::representation::{codec_chunk_decode_count, reset_codec_chunk_decode_count};
@@ -39,6 +41,7 @@ fn codec_opts(chunk_size: u64) -> Options {
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
         representation: RepresentationMode::CodecAuto,
+        content_identity: ContentIdentity::WholeFileV1,
         codec_min_bytes: 4_096,
         codec_delta_margin_percent: 10,
         quotas: Vec::new(),
@@ -448,6 +451,7 @@ fn dependency_depth_bound_is_enforced() {
                 decoded_size: bottom.len() as u64,
                 tensor: None,
             }),
+            identity: ContentIdentity::WholeFileV1,
         },
     );
 
@@ -470,6 +474,7 @@ fn dependency_depth_bound_is_enforced() {
                     decoded_size: target.len() as u64,
                     tensor: None,
                 }),
+                identity: ContentIdentity::WholeFileV1,
             },
         );
     }

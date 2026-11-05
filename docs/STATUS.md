@@ -1779,3 +1779,49 @@ Implemented in both stores (`spec/WEFT-QUOTA.md`, `docs/quota-branching.md`).
   record always fails closed). Budgets charge admission, not footprint, so
   deletions do not return budget. The merge is a union, not a three-way merge.
   Tenant attribution is not yet set by the FUSE write path.
+
+## Subphase P4 — Merkle content identity (`weft.manifest.v3`)
+
+Implemented in both stores and specified in `spec/WEFT-MODEL.md` §2.3.2.
+The measured bottleneck was the frozen v1 `ContentId =
+H("weft/chunk/v1", whole_plaintext)`: every range write recomputed it by reading
+the whole file (108 ms Rust / 392 ms Go in the FUSE court). v3 replaces it with
+a Merkle root over the chunk table.
+
+- **Format.** `weft.manifest.v3` carries the v2 fields with `content_root` in
+  place of `content_hash`, plus `content_identity:"merkle-v1"`. Leaves are
+  `H("weft/merkle/leaf/v1", u64le(len) || chunk_hash)`, nodes are
+  `H("weft/merkle/node/v1", l||r)`, an odd trailing node is promoted unchanged,
+  and an empty file is `H("weft/merkle/empty/v1", empty)`. The chunk domain for
+  `chunk_hash` is the existing `weft/chunk/v1`. The root is chunk-size dependent
+  by design; `chunk_size` is part of the manifest.
+- **Selection.** `Options.content_identity = WholeFileV1 (default) | MerkleV3`
+  and the global `--content-identity whole-file|merkle` flag in both CLIs.
+  `merkle` + `codec-auto` is rejected. The policy is per invocation and not
+  persisted. The default and every existing fixture stay byte-identical.
+- **Write path.** A range write re-hashes and re-stores only changed chunks and
+  folds the root from the manifest's stored chunk hashes plus changed leaves. No
+  whole-file read for hashing. A `weft.manifest.v3` file is never implicitly
+  rewritten as v1/v2; `truncate`, `zero/collapse/insert`, and reopen preserve
+  it. Unknown schemas fail closed.
+- **Read/verify.** Full reads verify every chunk blob and recompute the root;
+  range reads verify touched blobs. `Store::verify_region` /
+  `Store::VerifyContentRegion` verify the touched blobs and recompute the root
+  from all chunk hashes (O(#chunks) small hashes; no stored sibling table) and
+  name the failing chunk index. `verify --full` handles v1, v2, and v3.
+- **Tests.** Rust `tests/merkle_identity.rs` 7/7 (determinism, chunk-size
+  dependence, empty/single/multiple sizes, 128 MiB 4 KiB overwrite with at most
+  two chunk reads, tampered blob naming the index, tampered chunk hash →
+  `Corrupt`, unknown schema, reopen + GC). Go
+  `store/merkle_identity_test.go` 6 tests. Cross-language
+  `store/merkle_handoff_test.go` in the FUSE court: Rust→Go and Go→Rust read
+  exact bytes, preserve v3, and report the identical root.
+- **Bench** (`bench/RESULTS-merkle-identity.md`, receipt
+  `bench/receipts/merkle-identity-20261105T161026Z.json`): 128 MiB, 64 KiB
+  chunks, 500 random 4 KiB overwrites. Rust whole-file p50 50.43 ms / 67.2 GB
+  `rchar` / 1,024,537 chunk reads; Rust Merkle p50 1.81 ms / 87.9 MB / 537.
+  Go whole-file p50 202.73 ms / 134.3 GB / 437 MiB peak RSS; Go Merkle p50
+  4.38 ms / 87.9 MB / 43 MiB. Every run verified full.
+- **Residual.** The leaf fold is O(#chunks) per write (small, but not O(log n));
+  no per-level sibling table; the root changes with `chunk_size`; Go's v1
+  whole-file path is unchanged; one host and warm caches.

@@ -51,6 +51,7 @@ fn codec_options() -> Options {
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
         representation: RepresentationMode::CodecAuto,
+        content_identity: weftfs::format::ContentIdentity::WholeFileV1,
         codec_min_bytes: 4096,
         codec_delta_margin_percent: 10,
         quotas: Vec::new(),

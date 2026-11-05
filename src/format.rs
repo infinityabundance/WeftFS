@@ -39,6 +39,12 @@ pub const MANIFEST_SCHEMA_V1_LEGACY: &str = "weftfs.manifest.v1";
 /// normative `weft.` spelling used by the frozen v1 writer; there is exactly
 /// one v2 spelling, and no alias.
 pub const MANIFEST_SCHEMA_V2: &str = "weft.manifest.v2";
+/// Merkle-identity chunk manifest (`WEFT-MODEL.md` §2.3.2). Exactly one
+/// spelling, no alias. The `content_hash` field of a v1/v2 manifest is replaced
+/// by `content_root` plus `content_identity: "merkle-v1"`.
+pub const MANIFEST_SCHEMA_V3: &str = "weft.manifest.v3";
+/// The only `content_identity` value a v3 manifest may carry.
+pub const CONTENT_IDENTITY_MERKLE: &str = "merkle-v1";
 /// Checkpoint state manifest schema string.
 pub const STATE_SCHEMA: &str = "weftfs.state.v1";
 
@@ -554,12 +560,59 @@ fn parse_dependencies(map: &std::collections::BTreeMap<String, Value>) -> Result
     Ok(dependencies)
 }
 
+/// Content identity of a file manifest.
+///
+/// `WholeFileV1` is the frozen identity: `ContentId = H("weft/chunk/v1",
+/// plaintext)`. `MerkleV3` replaces it with the `weft.manifest.v3` Merkle root
+/// (`WEFT-MODEL.md` §2.3.2), which a range write can recompute from chunk
+/// hashes without reading the whole file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum ContentIdentity {
+    /// Frozen v1/v2 whole-file identity. The default everywhere.
+    #[default]
+    WholeFileV1,
+    /// `weft.manifest.v3` Merkle identity, opt-in.
+    MerkleV3,
+}
+
+impl ContentIdentity {
+    /// Canonical CLI spelling: `whole-file` or `merkle`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ContentIdentity::WholeFileV1 => "whole-file",
+            ContentIdentity::MerkleV3 => "merkle",
+        }
+    }
+
+    /// Parse the canonical CLI spelling.
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "whole-file" => Ok(ContentIdentity::WholeFileV1),
+            "merkle" => Ok(ContentIdentity::MerkleV3),
+            other => Err(Error::invalid_argument(format!(
+                "--content-identity must be `whole-file` or `merkle` (got `{other}`)"
+            ))),
+        }
+    }
+
+    /// The `content_identity` manifest value, or `None` for v1/v2.
+    pub fn manifest_name(self) -> Option<&'static str> {
+        match self {
+            ContentIdentity::WholeFileV1 => None,
+            ContentIdentity::MerkleV3 => Some(CONTENT_IDENTITY_MERKLE),
+        }
+    }
+}
+
 /// A file content manifest (`WEFT-MODEL.md` §2.3).
 ///
 /// `representation` is `None` for the frozen v1 schema (written whenever the
 /// store is in `RepresentationMode::Raw`) and `Some` for the experimental v2
 /// representation schema. A v1 manifest must never contain a representation
 /// key; a v2 manifest must always contain one.
+///
+/// `content_hash` holds the frozen whole-file digest for v1/v2 and the Merkle
+/// root for v3; `identity` selects the schema.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Manifest {
     pub size: u64,
@@ -567,6 +620,7 @@ pub struct Manifest {
     pub chunks: Vec<ChunkRef>,
     pub content_hash: Hash32,
     pub representation: Option<Representation>,
+    pub identity: ContentIdentity,
 }
 
 /// Largest accepted chunk size in v1 (defensive bound; v1 writes 64 KiB).
@@ -583,6 +637,23 @@ impl Manifest {
         "content_hash",
         "representation",
     ];
+    const KEYS_V3: &'static [&'static str] = &[
+        "schema",
+        "size",
+        "chunk_size",
+        "chunks",
+        "content_root",
+        "content_identity",
+    ];
+    const KEYS_V3_REPRESENTATION: &'static [&'static str] = &[
+        "schema",
+        "size",
+        "chunk_size",
+        "chunks",
+        "content_root",
+        "content_identity",
+        "representation",
+    ];
 
     pub fn to_value(&self) -> Value {
         let chunks: Vec<Value> = self
@@ -595,6 +666,27 @@ impl Manifest {
                 ])
             })
             .collect();
+        if self.identity == ContentIdentity::MerkleV3 {
+            let base = [
+                ("schema", Value::Str(MANIFEST_SCHEMA_V3.to_owned())),
+                ("size", Value::U64(self.size)),
+                ("chunk_size", Value::U64(self.chunk_size)),
+                ("chunks", Value::Array(chunks)),
+                ("content_root", wu::hash_value(self.content_hash)),
+                (
+                    "content_identity",
+                    Value::Str(CONTENT_IDENTITY_MERKLE.to_owned()),
+                ),
+            ];
+            return match &self.representation {
+                None => wu::map(base),
+                Some(representation) => {
+                    let mut fields: Vec<(&str, Value)> = base.to_vec();
+                    fields.push(("representation", representation.to_value()));
+                    wu::map(fields)
+                }
+            };
+        }
         match &self.representation {
             // The frozen v1 map: byte-for-byte the pre-representation writer.
             None => wu::map([
@@ -628,17 +720,29 @@ impl Manifest {
         let schema = wu::get_text(map, "schema")?;
         // The normative v1 writer emits `weft.manifest.v1`; the older
         // `weftfs.manifest.v1` spelling is accepted on read. The experimental
-        // v2 representation schema is `weft.manifest.v2`, with no alias. Any
+        // v2 representation schema is `weft.manifest.v2`, with no alias. The
+        // v3 Merkle schema is `weft.manifest.v3`, also with no alias. Any
         // other schema fails with `UnsupportedVersion`. See
         // docs/store-status.md §3.1.
-        let (v2, keys): (bool, &[&str]) = match schema.as_str() {
-            MANIFEST_SCHEMA | MANIFEST_SCHEMA_V1_LEGACY => (false, Self::KEYS_V1),
-            MANIFEST_SCHEMA_V2 => (true, Self::KEYS_V2),
+        enum Schema {
+            V1,
+            V2,
+            V3,
+        }
+        let (schema_kind, keys): (Schema, &[&str]) = match schema.as_str() {
+            MANIFEST_SCHEMA | MANIFEST_SCHEMA_V1_LEGACY => (Schema::V1, Self::KEYS_V1),
+            MANIFEST_SCHEMA_V2 => (Schema::V2, Self::KEYS_V2),
+            MANIFEST_SCHEMA_V3 => (Schema::V3, Self::KEYS_V3),
             other => {
                 return Err(Error::unsupported_version(format!(
-                    "manifest schema `{other}` is not a supported v1/v2 schema"
+                    "manifest schema `{other}` is not a supported v1/v2/v3 schema"
                 )))
             }
+        };
+        let keys = if matches!(schema_kind, Schema::V3) && map.contains_key("representation") {
+            Self::KEYS_V3_REPRESENTATION
+        } else {
+            keys
         };
         wu::check_keys(map, keys)?;
         let size = wu::get_u64(map, "size")?;
@@ -646,11 +750,42 @@ impl Manifest {
         if chunk_size == 0 || chunk_size > MAX_CHUNK_SIZE {
             return Err(Error::malformed("manifest chunk_size is out of range"));
         }
-        let representation = if v2 {
-            Some(Representation::from_wcb(wu::field(map, "representation")?)?)
+        let identity = match schema_kind {
+            Schema::V1 | Schema::V2 => ContentIdentity::WholeFileV1,
+            Schema::V3 => {
+                let name = wu::get_text(map, "content_identity")?;
+                if name != CONTENT_IDENTITY_MERKLE {
+                    return Err(Error::malformed(format!(
+                        "unknown manifest content_identity `{name}`"
+                    )));
+                }
+                ContentIdentity::MerkleV3
+            }
+        };
+        let representation = if matches!(schema_kind, Schema::V2 | Schema::V3) {
+            match map.get("representation") {
+                Some(value) => Some(Representation::from_wcb(value)?),
+                // A v2 manifest must always carry one; a v3 manifest may
+                // omit it (the writer does, because a Merkle file is raw).
+                None if matches!(schema_kind, Schema::V3) => None,
+                None => {
+                    return Err(Error::malformed(
+                        "weft.manifest.v2 is missing its representation map",
+                    ))
+                }
+            }
         } else {
             None
         };
+        if identity == ContentIdentity::MerkleV3 {
+            if let Some(rep) = &representation {
+                if rep.kind != RepresentationKind::Raw {
+                    return Err(Error::corrupt(
+                        "a Merkle v3 manifest may only carry a raw representation",
+                    ));
+                }
+            }
+        }
         let frame_backed = representation
             .as_ref()
             .map(|rep| {
@@ -705,10 +840,27 @@ impl Manifest {
                 }
             }
         }
-        let content_hash = wu::get_hash(map, "content_hash")?;
-        if size == 0 && content_hash != identity::content_hash(b"") {
-            return Err(Error::corrupt("empty manifest content hash mismatch"));
-        }
+        let content_hash = match identity {
+            ContentIdentity::WholeFileV1 => {
+                let content_hash = wu::get_hash(map, "content_hash")?;
+                if size == 0 && content_hash != identity::content_hash(b"") {
+                    return Err(Error::corrupt("empty manifest content hash mismatch"));
+                }
+                content_hash
+            }
+            ContentIdentity::MerkleV3 => {
+                let declared = wu::get_hash(map, "content_root")?;
+                let computed = identity::merkle_root_from_chunks(
+                    chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+                );
+                if declared != computed {
+                    return Err(Error::corrupt(
+                        "merkle content_root does not match the manifest chunk hashes",
+                    ));
+                }
+                declared
+            }
+        };
         if let Some(representation) = &representation {
             if representation.decoded_size != size {
                 return Err(Error::corrupt(format!(
@@ -723,6 +875,7 @@ impl Manifest {
             chunks,
             content_hash,
             representation,
+            identity,
         })
     }
 }

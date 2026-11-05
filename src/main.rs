@@ -29,6 +29,7 @@ use weftfs::conformance::build_fixture_store;
 use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
+use weftfs::format::ContentIdentity;
 use weftfs::identity::Hash32;
 use weftfs::provenance::{
     choose_recovery, Determinism, ProvenanceEnvironment, ProvenanceInput, ProvenancePrincipal,
@@ -67,6 +68,16 @@ struct Cli {
         default_value = "raw"
     )]
     representation: String,
+    /// Content identity for newly written files: `whole-file` (frozen v1
+    /// `ContentId`) or `merkle` (`weft.manifest.v3`, range writes cost O(changed
+    /// chunks)). Also accepted by `mount`; read-only commands ignore it.
+    #[arg(
+        long = "content-identity",
+        global = true,
+        value_name = "whole-file|merkle",
+        default_value = "whole-file"
+    )]
+    content_identity: String,
     /// Physical storage backend: `local` (normative POSIX layout) or `object`
     /// (immutable object namespace published with link(2)).
     #[arg(
@@ -801,6 +812,7 @@ impl CliBackend {
 struct OpenPolicy {
     fixed_timestamp_ns: Option<i64>,
     representation: RepresentationMode,
+    content_identity: ContentIdentity,
     codec_min_bytes: u64,
     backend: CliBackend,
     quotas: Vec<weftfs::quota::QuotaBudget>,
@@ -811,6 +823,7 @@ impl OpenPolicy {
         Options {
             fixed_timestamp_ns: self.fixed_timestamp_ns,
             representation: self.representation,
+            content_identity: self.content_identity,
             codec_min_bytes: self.codec_min_bytes,
             quotas: self.quotas.clone(),
             ..Options::default()
@@ -838,6 +851,10 @@ fn parse_representation(text: &str) -> Result<RepresentationMode> {
     }
 }
 
+fn parse_content_identity(text: &str) -> Result<ContentIdentity> {
+    ContentIdentity::parse(text)
+}
+
 fn parse_codec_min_bytes(text: Option<&str>) -> Result<u64> {
     match text {
         None => Ok(DEFAULT_CODEC_MIN_BYTES),
@@ -859,6 +876,7 @@ fn run(cli: Cli) -> Result<()> {
         codec_min_bytes,
         quotas,
         quota_file,
+        content_identity,
         command,
     } = cli;
     let mut budgets: Vec<weftfs::quota::QuotaBudget> = quotas
@@ -877,6 +895,7 @@ fn run(cli: Cli) -> Result<()> {
     let policy = OpenPolicy {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
+        content_identity: parse_content_identity(&content_identity)?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
         backend: parse_backend(&backend)?,
         quotas: budgets,
@@ -911,6 +930,7 @@ fn run(cli: Cli) -> Result<()> {
                 gc_grace_secs,
                 fixed_timestamp_ns: policy.fixed_timestamp_ns,
                 representation: policy.representation,
+                content_identity: policy.content_identity,
                 codec_min_bytes: policy.codec_min_bytes,
                 quotas: policy.quotas.clone(),
                 ..Options::default()
@@ -940,6 +960,7 @@ fn run(cli: Cli) -> Result<()> {
                     "relations": state.relations.len(),
                     "snapshots": state.snapshots.len(),
                     "representation": policy.representation.as_str(),
+                    "content_identity": policy.content_identity.as_str(),
                     "codec_min_bytes": policy.codec_min_bytes,
                     "rejected_generations": store.rejected_generations(),
                     "recovery_notes": store.recovery_notes(),
@@ -953,6 +974,7 @@ fn run(cli: Cli) -> Result<()> {
                 println!("relations={}", state.relations.len());
                 println!("snapshots={}", state.snapshots.len());
                 println!("representation={}", policy.representation.as_str());
+                println!("content_identity={}", policy.content_identity.as_str());
                 println!("codec_min_bytes={}", policy.codec_min_bytes);
                 for generation in store.rejected_generations() {
                     println!("rejected_generation={generation}");
@@ -1290,7 +1312,18 @@ fn run(cli: Cli) -> Result<()> {
             let id = store.resolve_path(&path)?;
             let record = store.object_meta(id)?;
             if json {
-                print_json(&object_json(&record))
+                let mut value = object_json(&record);
+                if record.kind == ObjectKind::File {
+                    if let Ok(manifest) =
+                        weftfs::recovery::read_manifest(store.root(), record.content)
+                    {
+                        value["content_hash"] = json!(manifest.content_hash.to_hex());
+                        value["content_identity"] = json!(manifest.identity.as_str());
+                        value["chunk_size"] = json!(manifest.chunk_size);
+                        value["chunks"] = json!(manifest.chunks.len());
+                    }
+                }
+                print_json(&value)
             } else {
                 println!("object_id={}", record.id);
                 println!("kind={}", record.kind.as_str());

@@ -1476,6 +1476,7 @@ impl Store {
                         decoded_size: size,
                         tensor: None,
                     }),
+                    identity: crate::format::ContentIdentity::WholeFileV1,
                 }
             }
             RepresentationKind::Tensor => {
@@ -1503,6 +1504,7 @@ impl Store {
                         decoded_size: size,
                         tensor: Some(tensor),
                     }),
+                    identity: crate::format::ContentIdentity::WholeFileV1,
                 }
             }
         };
