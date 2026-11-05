@@ -7,7 +7,7 @@ including the host-only `claims` documentation gate after spec drift,
 generated-type drift, quantized cross-decode, context cross-language gates,
 Buck2 CAS, agent memory, and `fuzz_diff`), at WeftFS `c9b8bdb`, WeftCodec
 `90d9c13`, WeftCodec-Go `cf62bb1`, WeftFS-Go `1c99070`. The preceding receipts
-`verify-20261104T132330Z.json` and `verify-20261104T100531Z.json` are retained
+`verify-20261105T030019Z.json` and `verify-20261104T100531Z.json` are retained
 as history. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
@@ -114,13 +114,13 @@ Docker court).
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `fb5dbd5` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `ba68f42` | Rust codec v1 |
-| `WeftCodec-Go` | `7fde3de` | independent Go codec |
-| `WeftFS-Go` | `fce700a` | independent Go store + FUSE |
+| `WeftFS` | `c9b8bdb` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `90d9c13` | Rust codec v1 |
+| `WeftCodec-Go` | `cf62bb1` | independent Go codec |
+| `WeftFS-Go` | `1c99070` | independent Go store + FUSE |
 
 These are the revisions pinned by the latest full verification receipt.
-The current release is **v0.4.0** (`docs/RELEASE-v0.4.0.md`); the tag, the
+The current release is **v0.5.0** (`docs/RELEASE-v0.5.0.md`); the tag, the
 per-repo GitHub releases, the four GHCR images, and the two crates are cut
 from the `staging` and `main` commits listed above (both branches are kept
 identical and pushed in all four repositories).
