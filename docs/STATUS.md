@@ -1823,5 +1823,6 @@ a Merkle root over the chunk table.
   Go whole-file p50 202.73 ms / 134.3 GB / 437 MiB peak RSS; Go Merkle p50
   4.38 ms / 87.9 MB / 43 MiB. Every run verified full.
 - **Residual.** The leaf fold is O(#chunks) per write (small, but not O(log n));
-  no per-level sibling table; the root changes with `chunk_size`; Go's v1
-  whole-file path is unchanged; one host and warm caches.
+  no per-level sibling table; the root changes with `chunk_size`; there is no
+  explicit v3→v1/v2 conversion command (implicit downgrade is refused); Go's
+  v1 whole-file path is unchanged; one host and warm caches.

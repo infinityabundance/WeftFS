@@ -104,6 +104,8 @@ Limitations, stated plainly:
 - The root depends on chunk boundaries; changing `chunk_size` changes every
   root. The chunk size is recorded in the manifest, so this is unambiguous, but
   it is not a content-defined identity.
+- There is no explicit v3→v1/v2 conversion command; implicit downgrade is
+  refused, so a v3 file stays v3.
 - Go's whole-file path remains whole-file. This court does not add COW to v1;
   it adds an opt-in identity whose write path is COW.
 - One host, warm page cache, 500 samples, no physical media or power-loss claim.
