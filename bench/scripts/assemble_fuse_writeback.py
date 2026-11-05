@@ -116,6 +116,27 @@ def main():
         "generated_at": os.environ.get("WEFT_WB_GENERATED_AT", ""),
         "label": args.label,
         "environment": env,
+        "revisions": {
+            "weftfs": env["WEFT_REPO_WEFTFS"],
+            "weftfs_go": env["WEFT_REPO_WEFTFS_GO"],
+        },
+        "images": {
+            "court": env["WEFT_COURT_IMAGE"],
+            "court_id": env["WEFT_COURT_IMAGE_ID"],
+        },
+        "kernel": env["WEFT_COURT_KERNEL"],
+        "limits": {
+            "memory": env["WEFT_COURT_MEMORY"],
+            "memory_swap": env["WEFT_COURT_MEMORY"],
+            "cpus": env["WEFT_COURT_CPUS"],
+            "pids": env["WEFT_COURT_PIDS"],
+            "nproc": env["WEFT_COURT_NPROC"],
+            "tmpfs": "/tmp 1g",
+            "no_new_privileges": True,
+            "cap_drop": "ALL",
+            "cap_add": "SYS_ADMIN",
+            "device": "/dev/fuse",
+        },
         "parameters": {
             "overwrites": rows[0]["overwrite"]["count"] if rows else 0,
             "block_bytes": rows[0]["overwrite"]["block_bytes"] if rows else 0,

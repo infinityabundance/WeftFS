@@ -139,10 +139,10 @@ opt-in flags change the durability window rather than the commit protocol:
   a 10 ms window (max 256 ops). A crash leaves the previous whole generation.
 
 Measured in the FUSE court on 500 × 4 KiB overwrites of a 128 MiB file:
-merkle + `--write-back` takes the write p50 from 27.3 ms to 8.4 µs (Rust) and
-26.7 ms to 11.0 µs (Go); `--group-commit` takes 200-file create from 163 to
-24,754 ops/s (Rust) and 384 to 7,314 (Go). Receipt
-`bench/receipts/fuse-writeback-20261105T200833Z.json`, durability table and
+merkle + `--write-back` takes the write p50 from 27.3 ms to 8.8 µs (Rust) and
+33.6 ms to 10.7 µs (Go); `--group-commit` takes 200-file create from 162 to
+26,548 ops/s (Rust) and 310 to 6,264 (Go). Receipt
+`bench/receipts/fuse-writeback-20261105T202300Z.json`, durability table and
 losses in [`docs/fuse-status.md`](docs/fuse-status.md) §3. The recommended
 AI-artifact mount is `--content-identity merkle --write-back --group-commit`.
 Single host, synthetic fixtures, buffered I/O; not a device claim.

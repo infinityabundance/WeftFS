@@ -277,54 +277,65 @@ the store stays at the last published generation.
 
 ### 3.3 Measured cost (Q1)
 
-Receipt `bench/receipts/fuse-writeback-20261105T200833Z.json`, one host, one
-repetition of 500 × 4 KiB overwrites of a 128 MiB file (one `fsync` at the end)
-and a 20-directory × 10-file tree. `p50` is the per-write latency; `flush` is
-the final `fsync`.
+Receipt `bench/receipts/fuse-writeback-20261105T202300Z.json` (WeftFS
+`25cf23d`, WeftFS-Go `a3e8975`), one host, one repetition of 500 × 4 KiB
+overwrites of a 128 MiB file (one `fsync` at the end) and a 20-directory ×
+10-file tree. `p50`/`p95`/`p99` are per-write latencies; the total column is the
+measured 500-write wall plus the final `fsync`. An earlier identical run
+(`fuse-writeback-20261105T200833Z`) is retained; see the spread note below.
 
 | Impl | Identity | Mode | write p50 | write p95 | write p99 | 500 ops + fsync | commits | create ops/s | unlink ops/s |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Rust | whole-file | default | 120.0 ms | 125.1 ms | 127.1 ms | 60.1 s | 1443 | 163 | 164 |
-| Rust | whole-file | `--write-back` | 8.6 µs | 13.8 µs | 24.4 µs | 1.47 s | 444 | 145 | 155 |
-| Rust | whole-file | `--group-commit` | 120.2 ms | 125.0 ms | 127.0 ms | 60.2 s | 1002 | 24,754 | 39,958 |
-| Rust | merkle | default | 27.3 ms | 32.5 ms | 35.4 ms | 15.1 s | 1443 | 162 | 165 |
-| Rust | merkle | `--write-back` | 8.4 µs | 11.2 µs | 15.0 µs | 1.44 s | 444 | 145 | 156 |
-| Rust | merkle | `--group-commit` | 21.4 ms | 26.7 ms | 33.3 ms | 10.7 s | 513 | 11,697 | 17,781 |
-| Go | whole-file | default | 417.2 ms | 428.7 ms | 452.8 ms | 209.4 s | 1443 | 384 | 387 |
-| Go | whole-file | `--write-back` | 10.8 µs | 16.1 µs | 24.7 µs | 1.61 s | 444 | 382 | 388 |
-| Go | whole-file | `--group-commit` | 418.9 ms | 437.0 ms | 466.4 ms | 210.5 s | 1005 | 7,314 | 9,313 |
-| Go | merkle | default | 26.7 ms | 31.3 ms | 34.5 ms | 13.4 s | 1443 | 384 | 377 |
-| Go | merkle | `--write-back` | 11.0 µs | 16.3 µs | 23.1 µs | 1.45 s | 444 | 365 | 381 |
-| Go | merkle | `--group-commit` | 27.1 ms | 31.8 ms | 34.2 ms | 13.6 s | 929 | 3,453 | 7,589 |
+| Rust | whole-file | default | 120.0 ms | 125.1 ms | 127.8 ms | 60.3 s | 1443 | 162 | 162 |
+| Rust | whole-file | `--write-back` | 7.5 µs | 10.2 µs | 15.8 µs | 1.48 s | 444 | 143 | 155 |
+| Rust | whole-file | `--group-commit` | 120.0 ms | 127.4 ms | 804.4 ms | 70.3 s | 1002 | 26,548 | 39,126 |
+| Rust | merkle | default | 27.3 ms | 33.1 ms | 36.2 ms | 14.0 s | 1443 | 161 | 163 |
+| Rust | merkle | `--write-back` | 8.8 µs | 13.4 µs | 22.2 µs | 1.43 s | 444 | 144 | 154 |
+| Rust | merkle | `--group-commit` | 21.6 ms | 35.1 ms | 611.4 ms | 22.2 s | 534 | 24,064 | 38,215 |
+| Go | whole-file | default | 422.9 ms | 450.1 ms | 477.1 ms | 212.9 s | 1443 | 310 | 311 |
+| Go | whole-file | `--write-back` | 10.6 µs | 14.7 µs | 25.6 µs | 1.98 s | 444 | 320 | 313 |
+| Go | whole-file | `--group-commit` | 442.0 ms | 464.8 ms | 478.5 ms | 221.7 s | 1005 | 6,264 | 9,610 |
+| Go | merkle | default | 33.6 ms | 39.2 ms | 41.6 ms | 17.1 s | 1443 | 275 | 274 |
+| Go | merkle | `--write-back` | 10.7 µs | 15.1 µs | 25.6 µs | 2.00 s | 444 | 191 | 237 |
+| Go | merkle | `--group-commit` | 33.5 ms | 320.3 ms | 431.8 ms | 27.9 s | 1004 | 6,736 | 9,418 |
 
 `--write-back --group-commit` measured within noise of `--write-back` for the
-same cell (Rust merkle 8.1 µs p50 / 1.42 s flush; Go merkle 10.7 µs p50 /
-1.48 s flush) because a flush already publishes one commit and metadata in the
-tree is not buffered by `--write-back`.
+same cell (Rust merkle 8.4 µs p50 / 1.43 s flush, 94,318 writes/s; Go merkle
+11.6 µs / 1.99 s, 81,839 writes/s) because a flush already publishes one commit
+and the tree's metadata is not buffered by `--write-back`.
 
 What the numbers say, without over-claiming:
 
 * `--write-back` is the large win for overwrite-heavy workloads: p50 falls from
-  27.3 ms to 8.4 µs (Rust, merkle) and from 26.7 ms to 11.0 µs (Go, merkle), and
-total time for 500 overwrites falls ~10×. The price is deferred visibility and
-an fsync whose cost is the 500-range commit (1.4–1.6 s here; it publishes every
-touched chunk blob durably).
-* Whole-file identity is 4.4× (Rust) to 15.6× (Go) slower per write than merkle
+  27.3 ms to 8.8 µs (Rust, merkle) and from 33.6 ms to 10.7 µs (Go, merkle);
+  whole-file falls from 120.0/422.9 ms to 7.5/10.6 µs. Total time for the 500
+  overwrites plus the final fsync falls from 14.0 s to 1.43 s (Rust merkle) and
+  from 17.1 s to 2.00 s (Go merkle). The price is deferred visibility and an
+  `fsync` whose cost is the 500-range commit (1.4–2.0 s here; it publishes every
+  touched chunk blob durably).
+* Whole-file identity is 4.4× (Rust) to 12.6× (Go) slower per write than merkle
   in the default mode because every write re-hashes the whole 128 MiB.
-* `--group-commit` is the metadata-storm win: creates 163 → 24,754 ops/s and
-  unlinks 164 → 39,958 ops/s (Rust), 384 → 7,314 and 387 → 9,313 (Go), with one
-  commit per group instead of one per mutation. It barely helps `write` because
-each range write still publishes its chunk blob durably inside the group; the
-commit is only the tail of the cost.
-* Go is slower than Rust on whole-file overwrites (417 ms vs 120 ms p50) but
-  reaches parity on merkle defaults (26.7 vs 27.3 ms) once the whole-file digest
-  is out of the path.
+* `--group-commit` is the metadata-storm win: creates 162 → 26,548 ops/s and
+  unlinks 162 → 39,126 ops/s (Rust), 310 → 6,264 and 311 → 9,610 (Go). It barely
+  helps `write`, and it makes the write tail worse (p99 611 ms / 804 ms Rust,
+  320 ms / 432 ms Go) because a request can wait behind the previous group's
+  publication; each range write still publishes its chunk blob durably inside
+  the group, so the commit is only the tail of that cost.
+* Go is slower than Rust on whole-file overwrites (422.9 ms vs 120.0 ms p50) but
+  reaches near-parity on merkle defaults (33.6 vs 27.3 ms) once the whole-file
+  digest is out of the path.
+* Repetition spread: the retained earlier run gave Rust merkle default 27.3 ms
+  and write-back 8.4 µs (same), Rust group-commit create 11,697 ops/s vs 24,064
+  here, and Go merkle default 26.7 ms vs 33.6 ms here. Single-host fsync
+  latency and the group-window/timer interleaving move these cells by up to
+  ~2×. The ordering and the size of the write-back gain are stable; the exact
+  metadata rates are not. No multi-run confidence interval is claimed.
 * The recommended mount for AI-artifact workloads is `--content-identity merkle`
   with `--write-back --group-commit`: merkle removes the O(file) digest,
   write-back removes commit-per-write from the steady state, and group-commit
   collapses metadata storms. The crash proxy in the same receipt shows unflushed
   buffered writes lost and flushed/durable ones kept, with a clean
-  `verify --full` in every case.
+  `verify --full` in every case (8/8).
 
 ---
 

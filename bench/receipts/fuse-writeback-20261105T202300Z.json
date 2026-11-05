@@ -1,0 +1,2110 @@
+{
+  "schema": "weft-fuse-writeback-v1",
+  "kind": "mounted-filesystem-write-path",
+  "generated_at": "2026-11-05T20:34:37Z",
+  "label": "single host, synthetic deterministic fixtures, buffered I/O, FUSE over a real kernel; no device or power-loss claim; page caches not dropped",
+  "environment": {
+    "WEFT_COURT_IMAGE": "weft/fuse-court:1",
+    "WEFT_COURT_IMAGE_ID": "sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8",
+    "WEFT_COURT_KERNEL": "7.3.1-1-cachyos",
+    "WEFT_COURT_MEMORY": "3g",
+    "WEFT_COURT_CPUS": "4",
+    "WEFT_COURT_PIDS": "1024",
+    "WEFT_COURT_NPROC": "2048",
+    "WEFT_REPO_WEFTFS": "25cf23da5fc6a4f37188b4a36af213df49abbaeb",
+    "WEFT_REPO_WEFTFS_GO": "a3e89759bee2d911c2d164ba0cb141905579f058",
+    "kernel": "7.3.1-1-cachyos",
+    "machine": "x86_64",
+    "python": "3.11.2"
+  },
+  "revisions": {
+    "weftfs": "25cf23da5fc6a4f37188b4a36af213df49abbaeb",
+    "weftfs_go": "a3e89759bee2d911c2d164ba0cb141905579f058"
+  },
+  "images": {
+    "court": "weft/fuse-court:1",
+    "court_id": "sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8"
+  },
+  "kernel": "7.3.1-1-cachyos",
+  "limits": {
+    "memory": "3g",
+    "memory_swap": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "nproc": "2048",
+    "tmpfs": "/tmp 1g",
+    "no_new_privileges": true,
+    "cap_drop": "ALL",
+    "cap_add": "SYS_ADMIN",
+    "device": "/dev/fuse"
+  },
+  "parameters": {
+    "overwrites": 500,
+    "block_bytes": 4096,
+    "file_size": 134217728,
+    "fsync": "once at the end",
+    "metadata_tree": "20 directories x 10 files",
+    "reps": 1,
+    "mount_default_content_identity": "merkle",
+    "fuse_writeback": "opt-in; buffer per handle, publish at flush/fsync/release",
+    "fuse_group_commit": "opt-in; independent mutations coalesce within a 10 ms window, max 256 ops"
+  },
+  "available_cells": {
+    "impl": [
+      "rust",
+      "go"
+    ],
+    "identity": [
+      "whole-file",
+      "merkle"
+    ],
+    "mode": [
+      "off",
+      "write-back",
+      "group-commit",
+      "write-back+group"
+    ]
+  },
+  "cells": [
+    {
+      "impl": "go",
+      "identity": "merkle",
+      "mode": "group-commit",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 33478019,
+        "p95_ns": 320331301,
+        "p99_ns": 431760679,
+        "ops_per_s": 17.930438145915463,
+        "final_fsync_ns": 21150,
+        "wall_ns": 27885861094
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 6735.573151641696,
+          "p50_ns": 98063,
+          "p95_ns": 239838,
+          "p99_ns": 385099
+        },
+        "stat": {
+          "ops_per_s": 22847.81050574314,
+          "p50_ns": 36168,
+          "p95_ns": 46517,
+          "p99_ns": 120785
+        },
+        "readdir": {
+          "ops_per_s": 3285.032946416678,
+          "p50_ns": 101379,
+          "p95_ns": 152525,
+          "p99_ns": 152525
+        },
+        "unlink": {
+          "ops_per_s": 9417.888327671692,
+          "p50_ns": 81753,
+          "p95_ns": 208189,
+          "p99_ns": 248935
+        }
+      },
+      "commits_published": 1004,
+      "mount_peak_rss_kib": 144216,
+      "store_bytes": 172898761,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "merkle",
+          "mode": "group-commit",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 21150,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin",
+            "wall_ns": 27885861094,
+            "writes": {
+              "count": 500,
+              "mean_ns": 55771085.562,
+              "ops_per_s": 17.930438145915463,
+              "p50_ns": 33478019,
+              "p95_ns": 320331301,
+              "p99_ns": 431760679,
+              "total_ns": 27885542781
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 148465.465,
+              "ops_per_s": 6735.573151641696,
+              "p50_ns": 98063,
+              "p95_ns": 239838,
+              "p99_ns": 385099,
+              "total_ns": 29693093
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 304410.95,
+              "ops_per_s": 3285.032946416678,
+              "p50_ns": 101379,
+              "p95_ns": 152525,
+              "p99_ns": 152525,
+              "total_ns": 6088219
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 43767.87,
+              "ops_per_s": 22847.81050574314,
+              "p50_ns": 36168,
+              "p95_ns": 46517,
+              "p99_ns": 120785,
+              "total_ns": 8753574
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 106180.915,
+              "ops_per_s": 9417.888327671692,
+              "p50_ns": 81753,
+              "p95_ns": 208189,
+              "p99_ns": 248935,
+              "total_ns": 21236183
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1005,
+          "mount_peak_rss_kib": 144216,
+          "store_bytes": 172898761,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "merkle",
+      "mode": "off",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 33621317,
+        "p95_ns": 39154338,
+        "p99_ns": 41577442,
+        "ops_per_s": 29.239970352988205,
+        "final_fsync_ns": 23734,
+        "wall_ns": 17100257325
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 274.60215036330635,
+          "p50_ns": 3512799,
+          "p95_ns": 4614185,
+          "p99_ns": 5127204
+        },
+        "stat": {
+          "ops_per_s": 19785.029716620007,
+          "p50_ns": 42980,
+          "p95_ns": 65743,
+          "p99_ns": 346838
+        },
+        "readdir": {
+          "ops_per_s": 9288.449070504901,
+          "p50_ns": 90769,
+          "p95_ns": 137397,
+          "p99_ns": 137397
+        },
+        "unlink": {
+          "ops_per_s": 273.9581752765886,
+          "p50_ns": 3523439,
+          "p95_ns": 4648540,
+          "p99_ns": 5232901
+        }
+      },
+      "commits_published": 1443,
+      "mount_peak_rss_kib": 140116,
+      "store_bytes": 173044832,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "merkle",
+          "mode": "off",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 23734,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin",
+            "wall_ns": 17100257325,
+            "writes": {
+              "count": 500,
+              "mean_ns": 34199761.078,
+              "ops_per_s": 29.239970352988205,
+              "p50_ns": 33621317,
+              "p95_ns": 39154338,
+              "p99_ns": 41577442,
+              "total_ns": 17099880539
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 3641632.08,
+              "ops_per_s": 274.60215036330635,
+              "p50_ns": 3512799,
+              "p95_ns": 4614185,
+              "p99_ns": 5127204,
+              "total_ns": 728326416
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 107660.6,
+              "ops_per_s": 9288.449070504901,
+              "p50_ns": 90769,
+              "p95_ns": 137397,
+              "p99_ns": 137397,
+              "total_ns": 2153212
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 50543.265,
+              "ops_per_s": 19785.029716620007,
+              "p50_ns": 42980,
+              "p95_ns": 65743,
+              "p99_ns": 346838,
+              "total_ns": 10108653
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 3650192.22,
+              "ops_per_s": 273.9581752765886,
+              "p50_ns": 3523439,
+              "p95_ns": 4648540,
+              "p99_ns": 5232901,
+              "total_ns": 730038444
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1444,
+          "mount_peak_rss_kib": 140116,
+          "store_bytes": 173044832,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "merkle",
+      "mode": "write-back",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 10720,
+        "p95_ns": 15139,
+        "p99_ns": 25588,
+        "ops_per_s": 87492.34004562901,
+        "final_fsync_ns": 1998345992,
+        "wall_ns": 2004141844
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 191.25969711886765,
+          "p50_ns": 5154184,
+          "p95_ns": 7068008,
+          "p99_ns": 8051092
+        },
+        "stat": {
+          "ops_per_s": 20683.88793386782,
+          "p50_ns": 44493,
+          "p95_ns": 61415,
+          "p99_ns": 131135
+        },
+        "readdir": {
+          "ops_per_s": 9540.960536201983,
+          "p50_ns": 99686,
+          "p95_ns": 137196,
+          "p99_ns": 137196
+        },
+        "unlink": {
+          "ops_per_s": 237.35523680371819,
+          "p50_ns": 3758748,
+          "p95_ns": 6224262,
+          "p99_ns": 7835560
+        }
+      },
+      "commits_published": 444,
+      "mount_peak_rss_kib": 141972,
+      "store_bytes": 31784155,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "merkle",
+          "mode": "write-back",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1998345992,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin",
+            "wall_ns": 2004141844,
+            "writes": {
+              "count": 500,
+              "mean_ns": 11429.572,
+              "ops_per_s": 87492.34004562901,
+              "p50_ns": 10720,
+              "p95_ns": 15139,
+              "p99_ns": 25588,
+              "total_ns": 5714786
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 5228493.065,
+              "ops_per_s": 191.25969711886765,
+              "p50_ns": 5154184,
+              "p95_ns": 7068008,
+              "p99_ns": 8051092,
+              "total_ns": 1045698613
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 104811.25,
+              "ops_per_s": 9540.960536201983,
+              "p50_ns": 99686,
+              "p95_ns": 137196,
+              "p99_ns": 137196,
+              "total_ns": 2096225
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 48346.81,
+              "ops_per_s": 20683.88793386782,
+              "p50_ns": 44493,
+              "p95_ns": 61415,
+              "p99_ns": 131135,
+              "total_ns": 9669362
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 4213094.32,
+              "ops_per_s": 237.35523680371819,
+              "p50_ns": 3758748,
+              "p95_ns": 6224262,
+              "p99_ns": 7835560,
+              "total_ns": 842618864
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 445,
+          "mount_peak_rss_kib": 141972,
+          "store_bytes": 31784155,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "merkle",
+      "mode": "write-back+group",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 11621,
+        "p95_ns": 16901,
+        "p99_ns": 27862,
+        "ops_per_s": 81839.34249617523,
+        "final_fsync_ns": 1989918193,
+        "wall_ns": 1996126235
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 275.0429149116333,
+          "p50_ns": 3507338,
+          "p95_ns": 4722017,
+          "p99_ns": 5601729
+        },
+        "stat": {
+          "ops_per_s": 19622.263577232836,
+          "p50_ns": 46597,
+          "p95_ns": 63409,
+          "p99_ns": 202598
+        },
+        "readdir": {
+          "ops_per_s": 1846.4243899367655,
+          "p50_ns": 100147,
+          "p95_ns": 216454,
+          "p99_ns": 216454
+        },
+        "unlink": {
+          "ops_per_s": 9385.066510323972,
+          "p50_ns": 79618,
+          "p95_ns": 190335,
+          "p99_ns": 291164
+        }
+      },
+      "commits_published": 203,
+      "mount_peak_rss_kib": 137592,
+      "store_bytes": 31653590,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "merkle",
+          "mode": "write-back+group",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1989918193,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin",
+            "wall_ns": 1996126235,
+            "writes": {
+              "count": 500,
+              "mean_ns": 12219.062,
+              "ops_per_s": 81839.34249617523,
+              "p50_ns": 11621,
+              "p95_ns": 16901,
+              "p99_ns": 27862,
+              "total_ns": 6109531
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 3635796.255,
+              "ops_per_s": 275.0429149116333,
+              "p50_ns": 3507338,
+              "p95_ns": 4722017,
+              "p99_ns": 5601729,
+              "total_ns": 727159251
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 541587.3,
+              "ops_per_s": 1846.4243899367655,
+              "p50_ns": 100147,
+              "p95_ns": 216454,
+              "p99_ns": 216454,
+              "total_ns": 10831746
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 50962.52,
+              "ops_per_s": 19622.263577232836,
+              "p50_ns": 46597,
+              "p95_ns": 63409,
+              "p99_ns": 202598,
+              "total_ns": 10192504
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 106552.255,
+              "ops_per_s": 9385.066510323972,
+              "p50_ns": 79618,
+              "p95_ns": 190335,
+              "p99_ns": 291164,
+              "total_ns": 21310451
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 204,
+          "mount_peak_rss_kib": 137592,
+          "store_bytes": 31653590,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "whole-file",
+      "mode": "group-commit",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 441951537,
+        "p95_ns": 464776596,
+        "p99_ns": 478470688,
+        "ops_per_s": 2.255001956904138,
+        "final_fsync_ns": 27972,
+        "wall_ns": 221729578738
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 6263.649863225376,
+          "p50_ns": 108753,
+          "p95_ns": 210442,
+          "p99_ns": 608706
+        },
+        "stat": {
+          "ops_per_s": 15112.729247823598,
+          "p50_ns": 44834,
+          "p95_ns": 59922,
+          "p99_ns": 77926
+        },
+        "readdir": {
+          "ops_per_s": 8478.086055116884,
+          "p50_ns": 109094,
+          "p95_ns": 169877,
+          "p99_ns": 169877
+        },
+        "unlink": {
+          "ops_per_s": 9610.359968045554,
+          "p50_ns": 80902,
+          "p95_ns": 121056,
+          "p99_ns": 167854
+        }
+      },
+      "commits_published": 1005,
+      "mount_peak_rss_kib": 410856,
+      "store_bytes": 172857560,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "whole-file",
+          "mode": "group-commit",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 27972,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin",
+            "wall_ns": 221729578738,
+            "writes": {
+              "count": 500,
+              "mean_ns": 443458595.208,
+              "ops_per_s": 2.255001956904138,
+              "p50_ns": 441951537,
+              "p95_ns": 464776596,
+              "p99_ns": 478470688,
+              "total_ns": 221729297604
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 159651.325,
+              "ops_per_s": 6263.649863225376,
+              "p50_ns": 108753,
+              "p95_ns": 210442,
+              "p99_ns": 608706,
+              "total_ns": 31930265
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 117951.15,
+              "ops_per_s": 8478.086055116884,
+              "p50_ns": 109094,
+              "p95_ns": 169877,
+              "p99_ns": 169877,
+              "total_ns": 2359023
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 66169.385,
+              "ops_per_s": 15112.729247823598,
+              "p50_ns": 44834,
+              "p95_ns": 59922,
+              "p99_ns": 77926,
+              "total_ns": 13233877
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 104054.375,
+              "ops_per_s": 9610.359968045554,
+              "p50_ns": 80902,
+              "p95_ns": 121056,
+              "p99_ns": 167854,
+              "total_ns": 20810875
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1006,
+          "mount_peak_rss_kib": 410856,
+          "store_bytes": 172857560,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "whole-file",
+      "mode": "off",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 422887833,
+        "p95_ns": 450095867,
+        "p99_ns": 477074594,
+        "ops_per_s": 2.3488215803125745,
+        "final_fsync_ns": 31779,
+        "wall_ns": 212872969531
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 310.1496029560929,
+          "p50_ns": 3155673,
+          "p95_ns": 4055843,
+          "p99_ns": 4996870
+        },
+        "stat": {
+          "ops_per_s": 21831.870798115342,
+          "p50_ns": 44774,
+          "p95_ns": 53671,
+          "p99_ns": 62427
+        },
+        "readdir": {
+          "ops_per_s": 10998.474511585244,
+          "p50_ns": 86882,
+          "p95_ns": 111619,
+          "p99_ns": 111619
+        },
+        "unlink": {
+          "ops_per_s": 310.82434015427197,
+          "p50_ns": 3085050,
+          "p95_ns": 3985391,
+          "p99_ns": 5368153
+        }
+      },
+      "commits_published": 1443,
+      "mount_peak_rss_kib": 521332,
+      "store_bytes": 173003486,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "whole-file",
+          "mode": "off",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 31779,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin",
+            "wall_ns": 212872969531,
+            "writes": {
+              "count": 500,
+              "mean_ns": 425745407.136,
+              "ops_per_s": 2.3488215803125745,
+              "p50_ns": 422887833,
+              "p95_ns": 450095867,
+              "p99_ns": 477074594,
+              "total_ns": 212872703568
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 3224250.46,
+              "ops_per_s": 310.1496029560929,
+              "p50_ns": 3155673,
+              "p95_ns": 4055843,
+              "p99_ns": 4996870,
+              "total_ns": 644850092
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 90921.7,
+              "ops_per_s": 10998.474511585244,
+              "p50_ns": 86882,
+              "p95_ns": 111619,
+              "p99_ns": 111619,
+              "total_ns": 1818434
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 45804.595,
+              "ops_per_s": 21831.870798115342,
+              "p50_ns": 44774,
+              "p95_ns": 53671,
+              "p99_ns": 62427,
+              "total_ns": 9160919
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 3217251.26,
+              "ops_per_s": 310.82434015427197,
+              "p50_ns": 3085050,
+              "p95_ns": 3985391,
+              "p99_ns": 5368153,
+              "total_ns": 643450252
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1444,
+          "mount_peak_rss_kib": 521332,
+          "store_bytes": 173003486,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "whole-file",
+      "mode": "write-back",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 10609,
+        "p95_ns": 14708,
+        "p99_ns": 25618,
+        "ops_per_s": 89036.65015630383,
+        "final_fsync_ns": 1971091543,
+        "wall_ns": 1976789462
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 320.04603593388237,
+          "p50_ns": 2978371,
+          "p95_ns": 4060692,
+          "p99_ns": 5482527
+        },
+        "stat": {
+          "ops_per_s": 22232.975571406925,
+          "p50_ns": 43972,
+          "p95_ns": 52648,
+          "p99_ns": 59671
+        },
+        "readdir": {
+          "ops_per_s": 10922.873589583947,
+          "p50_ns": 87684,
+          "p95_ns": 104325,
+          "p99_ns": 104325
+        },
+        "unlink": {
+          "ops_per_s": 312.8830328754854,
+          "p50_ns": 3044264,
+          "p95_ns": 4077994,
+          "p99_ns": 6240643
+        }
+      },
+      "commits_published": 444,
+      "mount_peak_rss_kib": 411808,
+      "store_bytes": 31784068,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "whole-file",
+          "mode": "write-back",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1971091543,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin",
+            "wall_ns": 1976789462,
+            "writes": {
+              "count": 500,
+              "mean_ns": 11231.33,
+              "ops_per_s": 89036.65015630383,
+              "p50_ns": 10609,
+              "p95_ns": 14708,
+              "p99_ns": 25618,
+              "total_ns": 5615665
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 3124550.495,
+              "ops_per_s": 320.04603593388237,
+              "p50_ns": 2978371,
+              "p95_ns": 4060692,
+              "p99_ns": 5482527,
+              "total_ns": 624910099
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 91551,
+              "ops_per_s": 10922.873589583947,
+              "p50_ns": 87684,
+              "p95_ns": 104325,
+              "p99_ns": 104325,
+              "total_ns": 1831020
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 44978.235,
+              "ops_per_s": 22232.975571406925,
+              "p50_ns": 43972,
+              "p95_ns": 52648,
+              "p99_ns": 59671,
+              "total_ns": 8995647
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 3196082.545,
+              "ops_per_s": 312.8830328754854,
+              "p50_ns": 3044264,
+              "p95_ns": 4077994,
+              "p99_ns": 6240643,
+              "total_ns": 639216509
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 445,
+          "mount_peak_rss_kib": 411808,
+          "store_bytes": 31784068,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "go",
+      "identity": "whole-file",
+      "mode": "write-back+group",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 10109,
+        "p95_ns": 16731,
+        "p99_ns": 27802,
+        "ops_per_s": 89117.45734348346,
+        "final_fsync_ns": 2002086937,
+        "wall_ns": 2007800996
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 205.57938672922398,
+          "p50_ns": 4929504,
+          "p95_ns": 6893230,
+          "p99_ns": 7539017
+        },
+        "stat": {
+          "ops_per_s": 17708.180692504968,
+          "p50_ns": 48189,
+          "p95_ns": 83296,
+          "p99_ns": 96811
+        },
+        "readdir": {
+          "ops_per_s": 9047.992815893704,
+          "p50_ns": 104585,
+          "p95_ns": 144630,
+          "p99_ns": 144630
+        },
+        "unlink": {
+          "ops_per_s": 6352.147292575077,
+          "p50_ns": 80370,
+          "p95_ns": 135253,
+          "p99_ns": 3618246
+        }
+      },
+      "commits_published": 204,
+      "mount_peak_rss_kib": 411884,
+      "store_bytes": 31653648,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "go",
+          "identity": "whole-file",
+          "mode": "write-back+group",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 2002086937,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin",
+            "wall_ns": 2007800996,
+            "writes": {
+              "count": 500,
+              "mean_ns": 11221.146,
+              "ops_per_s": 89117.45734348346,
+              "p50_ns": 10109,
+              "p95_ns": 16731,
+              "p99_ns": 27802,
+              "total_ns": 5610573
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 4864300.92,
+              "ops_per_s": 205.57938672922398,
+              "p50_ns": 4929504,
+              "p95_ns": 6893230,
+              "p99_ns": 7539017,
+              "total_ns": 972860184
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 110521.75,
+              "ops_per_s": 9047.992815893704,
+              "p50_ns": 104585,
+              "p95_ns": 144630,
+              "p99_ns": 144630,
+              "total_ns": 2210435
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 56471.075,
+              "ops_per_s": 17708.180692504968,
+              "p50_ns": 48189,
+              "p95_ns": 83296,
+              "p99_ns": 96811,
+              "total_ns": 11294215
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 157427.08,
+              "ops_per_s": 6352.147292575077,
+              "p50_ns": 80370,
+              "p95_ns": 135253,
+              "p99_ns": 3618246,
+              "total_ns": 31485416
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 205,
+          "mount_peak_rss_kib": 411884,
+          "store_bytes": 31653648,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "merkle",
+      "mode": "group-commit",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 21591559,
+        "p95_ns": 35133436,
+        "p99_ns": 611367205,
+        "ops_per_s": 22.45762367436781,
+        "final_fsync_ns": 11151,
+        "wall_ns": 22264433783
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 24064.368334997183,
+          "p50_ns": 38442,
+          "p95_ns": 54221,
+          "p99_ns": 134461
+        },
+        "stat": {
+          "ops_per_s": 18463.58081763198,
+          "p50_ns": 19647,
+          "p95_ns": 32461,
+          "p99_ns": 39454
+        },
+        "readdir": {
+          "ops_per_s": 30219.37757148016,
+          "p50_ns": 32060,
+          "p95_ns": 46747,
+          "p99_ns": 46747
+        },
+        "unlink": {
+          "ops_per_s": 38215.16090971191,
+          "p50_ns": 25337,
+          "p95_ns": 32561,
+          "p99_ns": 52187
+        }
+      },
+      "commits_published": 534,
+      "mount_peak_rss_kib": 10316,
+      "store_bytes": 173815661,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "merkle",
+          "mode": "group-commit",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 11151,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin",
+            "wall_ns": 22264433783,
+            "writes": {
+              "count": 500,
+              "mean_ns": 44528308.716,
+              "ops_per_s": 22.45762367436781,
+              "p50_ns": 21591559,
+              "p95_ns": 35133436,
+              "p99_ns": 611367205,
+              "total_ns": 22264154358
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 41555.215,
+              "ops_per_s": 24064.368334997183,
+              "p50_ns": 38442,
+              "p95_ns": 54221,
+              "p99_ns": 134461,
+              "total_ns": 8311043
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 33091.35,
+              "ops_per_s": 30219.37757148016,
+              "p50_ns": 32060,
+              "p95_ns": 46747,
+              "p99_ns": 46747,
+              "total_ns": 661827
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 54160.675,
+              "ops_per_s": 18463.58081763198,
+              "p50_ns": 19647,
+              "p95_ns": 32461,
+              "p99_ns": 39454,
+              "total_ns": 10832135
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 26167.625,
+              "ops_per_s": 38215.16090971191,
+              "p50_ns": 25337,
+              "p95_ns": 32561,
+              "p99_ns": 52187,
+              "total_ns": 5233525
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 535,
+          "mount_peak_rss_kib": 10316,
+          "store_bytes": 173815661,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "merkle",
+      "mode": "off",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 27349300,
+        "p95_ns": 33073489,
+        "p99_ns": 36162407,
+        "ops_per_s": 35.63845992432277,
+        "final_fsync_ns": 12082,
+        "wall_ns": 14030036008
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 161.03630041393666,
+          "p50_ns": 5873107,
+          "p95_ns": 7979511,
+          "p99_ns": 9008302
+        },
+        "stat": {
+          "ops_per_s": 45083.71143539324,
+          "p50_ns": 20088,
+          "p95_ns": 32511,
+          "p99_ns": 45956
+        },
+        "readdir": {
+          "ops_per_s": 30886.1705626997,
+          "p50_ns": 29775,
+          "p95_ns": 37139,
+          "p99_ns": 37139
+        },
+        "unlink": {
+          "ops_per_s": 162.4750659975546,
+          "p50_ns": 5844914,
+          "p95_ns": 8583829,
+          "p99_ns": 9318691
+        }
+      },
+      "commits_published": 1443,
+      "mount_peak_rss_kib": 9416,
+      "store_bytes": 174266688,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "merkle",
+          "mode": "off",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 12082,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin",
+            "wall_ns": 14030036008,
+            "writes": {
+              "count": 500,
+              "mean_ns": 28059573.902,
+              "ops_per_s": 35.63845992432277,
+              "p50_ns": 27349300,
+              "p95_ns": 33073489,
+              "p99_ns": 36162407,
+              "total_ns": 14029786951
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6209780.015,
+              "ops_per_s": 161.03630041393666,
+              "p50_ns": 5873107,
+              "p95_ns": 7979511,
+              "p99_ns": 9008302,
+              "total_ns": 1241956003
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 32376.95,
+              "ops_per_s": 30886.1705626997,
+              "p50_ns": 29775,
+              "p95_ns": 37139,
+              "p99_ns": 37139,
+              "total_ns": 647539
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 22180.96,
+              "ops_per_s": 45083.71143539324,
+              "p50_ns": 20088,
+              "p95_ns": 32511,
+              "p99_ns": 45956,
+              "total_ns": 4436192
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 6154790.545,
+              "ops_per_s": 162.4750659975546,
+              "p50_ns": 5844914,
+              "p95_ns": 8583829,
+              "p99_ns": 9318691,
+              "total_ns": 1230958109
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1444,
+          "mount_peak_rss_kib": 9416,
+          "store_bytes": 174266688,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "merkle",
+      "mode": "write-back",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 8827,
+        "p95_ns": 13415,
+        "p99_ns": 22152,
+        "ops_per_s": 100507.88645181833,
+        "final_fsync_ns": 1428556763,
+        "wall_ns": 1433603877
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 143.54359251389275,
+          "p50_ns": 6962362,
+          "p95_ns": 9000587,
+          "p99_ns": 10623218
+        },
+        "stat": {
+          "ops_per_s": 38587.57885130566,
+          "p50_ns": 24797,
+          "p95_ns": 32040,
+          "p99_ns": 48471
+        },
+        "readdir": {
+          "ops_per_s": 20684.148909324827,
+          "p50_ns": 46807,
+          "p95_ns": 62417,
+          "p99_ns": 62417
+        },
+        "unlink": {
+          "ops_per_s": 153.78261772957862,
+          "p50_ns": 5913072,
+          "p95_ns": 8525039,
+          "p99_ns": 10446978
+        }
+      },
+      "commits_published": 444,
+      "mount_peak_rss_kib": 11248,
+      "store_bytes": 32710003,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "merkle",
+          "mode": "write-back",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1428556763,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin",
+            "wall_ns": 1433603877,
+            "writes": {
+              "count": 500,
+              "mean_ns": 9949.468,
+              "ops_per_s": 100507.88645181833,
+              "p50_ns": 8827,
+              "p95_ns": 13415,
+              "p99_ns": 22152,
+              "total_ns": 4974734
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6966524.82,
+              "ops_per_s": 143.54359251389275,
+              "p50_ns": 6962362,
+              "p95_ns": 9000587,
+              "p99_ns": 10623218,
+              "total_ns": 1393304964
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 48346.2,
+              "ops_per_s": 20684.148909324827,
+              "p50_ns": 46807,
+              "p95_ns": 62417,
+              "p99_ns": 62417,
+              "total_ns": 966924
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 25915.075,
+              "ops_per_s": 38587.57885130566,
+              "p50_ns": 24797,
+              "p95_ns": 32040,
+              "p99_ns": 48471,
+              "total_ns": 5183015
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 6502685.51,
+              "ops_per_s": 153.78261772957862,
+              "p50_ns": 5913072,
+              "p95_ns": 8525039,
+              "p99_ns": 10446978,
+              "total_ns": 1300537102
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 445,
+          "mount_peak_rss_kib": 11248,
+          "store_bytes": 32710003,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "merkle",
+      "mode": "write-back+group",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 8416,
+        "p95_ns": 18334,
+        "p99_ns": 46938,
+        "ops_per_s": 94317.66264232063,
+        "final_fsync_ns": 1431207652,
+        "wall_ns": 1436606794
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 144.38291164798795,
+          "p50_ns": 6929470,
+          "p95_ns": 8666022,
+          "p99_ns": 10309341
+        },
+        "stat": {
+          "ops_per_s": 36297.01484275679,
+          "p50_ns": 19787,
+          "p95_ns": 33152,
+          "p99_ns": 42329
+        },
+        "readdir": {
+          "ops_per_s": 25215.1800426893,
+          "p50_ns": 37720,
+          "p95_ns": 43171,
+          "p99_ns": 43171
+        },
+        "unlink": {
+          "ops_per_s": 34182.96225448942,
+          "p50_ns": 28363,
+          "p95_ns": 37349,
+          "p99_ns": 56395
+        }
+      },
+      "commits_published": 202,
+      "mount_peak_rss_kib": 12024,
+      "store_bytes": 32271844,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "merkle",
+          "mode": "write-back+group",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1431207652,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin",
+            "wall_ns": 1436606794,
+            "writes": {
+              "count": 500,
+              "mean_ns": 10602.468,
+              "ops_per_s": 94317.66264232063,
+              "p50_ns": 8416,
+              "p95_ns": 18334,
+              "p99_ns": 46938,
+              "total_ns": 5301234
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6926027.385,
+              "ops_per_s": 144.38291164798795,
+              "p50_ns": 6929470,
+              "p95_ns": 8666022,
+              "p99_ns": 10309341,
+              "total_ns": 1385205477
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 39658.65,
+              "ops_per_s": 25215.1800426893,
+              "p50_ns": 37720,
+              "p95_ns": 43171,
+              "p99_ns": 43171,
+              "total_ns": 793173
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 27550.475,
+              "ops_per_s": 36297.01484275679,
+              "p50_ns": 19787,
+              "p95_ns": 33152,
+              "p99_ns": 42329,
+              "total_ns": 5510095
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 29254.34,
+              "ops_per_s": 34182.96225448942,
+              "p50_ns": 28363,
+              "p95_ns": 37349,
+              "p99_ns": 56395,
+              "total_ns": 5850868
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 203,
+          "mount_peak_rss_kib": 12024,
+          "store_bytes": 32271844,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "whole-file",
+      "mode": "group-commit",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 120033786,
+        "p95_ns": 127400818,
+        "p99_ns": 804448133,
+        "ops_per_s": 7.110637364018174,
+        "final_fsync_ns": 18024,
+        "wall_ns": 70317432903
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 26547.725775797553,
+          "p50_ns": 34775,
+          "p95_ns": 47990,
+          "p99_ns": 76774
+        },
+        "stat": {
+          "ops_per_s": 17141.244886338118,
+          "p50_ns": 18454,
+          "p95_ns": 67907,
+          "p99_ns": 125324
+        },
+        "readdir": {
+          "ops_per_s": 24988.63017327116,
+          "p50_ns": 34595,
+          "p95_ns": 54742,
+          "p99_ns": 54742
+        },
+        "unlink": {
+          "ops_per_s": 39125.64359238357,
+          "p50_ns": 23554,
+          "p95_ns": 35286,
+          "p99_ns": 45915
+        }
+      },
+      "commits_published": 1002,
+      "mount_peak_rss_kib": 10544,
+      "store_bytes": 174009795,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "whole-file",
+          "mode": "group-commit",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 18024,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin",
+            "wall_ns": 70317432903,
+            "writes": {
+              "count": 500,
+              "mean_ns": 140634369.158,
+              "ops_per_s": 7.110637364018174,
+              "p50_ns": 120033786,
+              "p95_ns": 127400818,
+              "p99_ns": 804448133,
+              "total_ns": 70317184579
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 37668.01,
+              "ops_per_s": 26547.725775797553,
+              "p50_ns": 34775,
+              "p95_ns": 47990,
+              "p99_ns": 76774,
+              "total_ns": 7533602
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 40018.2,
+              "ops_per_s": 24988.63017327116,
+              "p50_ns": 34595,
+              "p95_ns": 54742,
+              "p99_ns": 54742,
+              "total_ns": 800364
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 58338.82,
+              "ops_per_s": 17141.244886338118,
+              "p50_ns": 18454,
+              "p95_ns": 67907,
+              "p99_ns": 125324,
+              "total_ns": 11667764
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 25558.685,
+              "ops_per_s": 39125.64359238357,
+              "p50_ns": 23554,
+              "p95_ns": 35286,
+              "p99_ns": 45915,
+              "total_ns": 5111737
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1003,
+          "mount_peak_rss_kib": 10544,
+          "store_bytes": 174009795,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "whole-file",
+      "mode": "off",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 119985446,
+        "p95_ns": 125092318,
+        "p99_ns": 127799345,
+        "ops_per_s": 8.288473107606663,
+        "final_fsync_ns": 15148,
+        "wall_ns": 60325004395
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 161.98580012227904,
+          "p50_ns": 5880862,
+          "p95_ns": 7933955,
+          "p99_ns": 8855677
+        },
+        "stat": {
+          "ops_per_s": 46783.82271551085,
+          "p50_ns": 19747,
+          "p95_ns": 31008,
+          "p99_ns": 39895
+        },
+        "readdir": {
+          "ops_per_s": 30467.926413864127,
+          "p50_ns": 28743,
+          "p95_ns": 43852,
+          "p99_ns": 43852
+        },
+        "unlink": {
+          "ops_per_s": 162.20238896836509,
+          "p50_ns": 5837340,
+          "p95_ns": 8300651,
+          "p99_ns": 9029592
+        }
+      },
+      "commits_published": 1443,
+      "mount_peak_rss_kib": 9440,
+      "store_bytes": 174225342,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "whole-file",
+          "mode": "off",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 15148,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin",
+            "wall_ns": 60325004395,
+            "writes": {
+              "count": 500,
+              "mean_ns": 120649483.568,
+              "ops_per_s": 8.288473107606663,
+              "p50_ns": 119985446,
+              "p95_ns": 125092318,
+              "p99_ns": 127799345,
+              "total_ns": 60324741784
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6173380.625,
+              "ops_per_s": 161.98580012227904,
+              "p50_ns": 5880862,
+              "p95_ns": 7933955,
+              "p99_ns": 8855677,
+              "total_ns": 1234676125
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 32821.4,
+              "ops_per_s": 30467.926413864127,
+              "p50_ns": 28743,
+              "p95_ns": 43852,
+              "p99_ns": 43852,
+              "total_ns": 656428
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 21374.91,
+              "ops_per_s": 46783.82271551085,
+              "p50_ns": 19747,
+              "p95_ns": 31008,
+              "p99_ns": 39895,
+              "total_ns": 4274982
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 6165137.31,
+              "ops_per_s": 162.20238896836509,
+              "p50_ns": 5837340,
+              "p95_ns": 8300651,
+              "p99_ns": 9029592,
+              "total_ns": 1233027462
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 1444,
+          "mount_peak_rss_kib": 9440,
+          "store_bytes": 174225342,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "whole-file",
+      "mode": "write-back",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 7464,
+        "p95_ns": 10189,
+        "p99_ns": 15780,
+        "ops_per_s": 125815.91621666508,
+        "final_fsync_ns": 1474031114,
+        "wall_ns": 1478074785
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 143.0551242006448,
+          "p50_ns": 6969104,
+          "p95_ns": 8756021,
+          "p99_ns": 11153367
+        },
+        "stat": {
+          "ops_per_s": 55814.83094943539,
+          "p50_ns": 17422,
+          "p95_ns": 22001,
+          "p99_ns": 30928
+        },
+        "readdir": {
+          "ops_per_s": 32915.03805801275,
+          "p50_ns": 28593,
+          "p95_ns": 35406,
+          "p99_ns": 35406
+        },
+        "unlink": {
+          "ops_per_s": 154.7036179269649,
+          "p50_ns": 5875762,
+          "p95_ns": 8830580,
+          "p99_ns": 10380454
+        }
+      },
+      "commits_published": 444,
+      "mount_peak_rss_kib": 11444,
+      "store_bytes": 32697628,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "whole-file",
+          "mode": "write-back",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1474031114,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin",
+            "wall_ns": 1478074785,
+            "writes": {
+              "count": 500,
+              "mean_ns": 7948.12,
+              "ops_per_s": 125815.91621666508,
+              "p50_ns": 7464,
+              "p95_ns": 10189,
+              "p99_ns": 15780,
+              "total_ns": 3974060
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6990312.34,
+              "ops_per_s": 143.0551242006448,
+              "p50_ns": 6969104,
+              "p95_ns": 8756021,
+              "p99_ns": 11153367,
+              "total_ns": 1398062468
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 30381.25,
+              "ops_per_s": 32915.03805801275,
+              "p50_ns": 28593,
+              "p95_ns": 35406,
+              "p99_ns": 35406,
+              "total_ns": 607625
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 17916.385,
+              "ops_per_s": 55814.83094943539,
+              "p50_ns": 17422,
+              "p95_ns": 22001,
+              "p99_ns": 30928,
+              "total_ns": 3583277
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 6463972.94,
+              "ops_per_s": 154.7036179269649,
+              "p50_ns": 5875762,
+              "p95_ns": 8830580,
+              "p99_ns": 10380454,
+              "total_ns": 1292794588
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 445,
+          "mount_peak_rss_kib": 11444,
+          "store_bytes": 32697628,
+          "verify_ok": true
+        }
+      ]
+    },
+    {
+      "impl": "rust",
+      "identity": "whole-file",
+      "mode": "write-back+group",
+      "reps": 1,
+      "overwrite": {
+        "count": 500,
+        "block_bytes": 4096,
+        "file_size": 134217728,
+        "fsync": "end",
+        "p50_ns": 7574,
+        "p95_ns": 12093,
+        "p99_ns": 15569,
+        "ops_per_s": 120683.25063714723,
+        "final_fsync_ns": 1470624084,
+        "wall_ns": 1474841189
+      },
+      "metadata": {
+        "create": {
+          "ops_per_s": 145.13737764040076,
+          "p50_ns": 6927997,
+          "p95_ns": 8657797,
+          "p99_ns": 10344657
+        },
+        "stat": {
+          "ops_per_s": 40219.46960172268,
+          "p50_ns": 20058,
+          "p95_ns": 29916,
+          "p99_ns": 51756
+        },
+        "readdir": {
+          "ops_per_s": 27355.92659310658,
+          "p50_ns": 31138,
+          "p95_ns": 51958,
+          "p99_ns": 51958
+        },
+        "unlink": {
+          "ops_per_s": 36203.63603977839,
+          "p50_ns": 28373,
+          "p95_ns": 37800,
+          "p99_ns": 47839
+        }
+      },
+      "commits_published": 202,
+      "mount_peak_rss_kib": 11784,
+      "store_bytes": 32251277,
+      "verify_ok": true,
+      "raw": [
+        {
+          "impl": "rust",
+          "identity": "whole-file",
+          "mode": "write-back+group",
+          "rep": 1,
+          "overwrite": {
+            "block_bytes": 4096,
+            "count": 500,
+            "file_size": 134217728,
+            "final_fsync_ns": 1470624084,
+            "fsync": "end",
+            "kind": "overwrite",
+            "path": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin",
+            "wall_ns": 1474841189,
+            "writes": {
+              "count": 500,
+              "mean_ns": 8286.154,
+              "ops_per_s": 120683.25063714723,
+              "p50_ns": 7574,
+              "p95_ns": 12093,
+              "p99_ns": 15569,
+              "total_ns": 4143077
+            }
+          },
+          "meta": {
+            "create": {
+              "count": 200,
+              "mean_ns": 6890023.895,
+              "ops_per_s": 145.13737764040076,
+              "p50_ns": 6927997,
+              "p95_ns": 8657797,
+              "p99_ns": 10344657,
+              "total_ns": 1378004779
+            },
+            "dirs": 20,
+            "files_per_dir": 10,
+            "kind": "meta",
+            "readdir": {
+              "count": 20,
+              "mean_ns": 36555.15,
+              "ops_per_s": 27355.92659310658,
+              "p50_ns": 31138,
+              "p95_ns": 51958,
+              "p99_ns": 51958,
+              "total_ns": 731103
+            },
+            "root": "/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/tree",
+            "stat": {
+              "count": 200,
+              "mean_ns": 24863.58,
+              "ops_per_s": 40219.46960172268,
+              "p50_ns": 20058,
+              "p95_ns": 29916,
+              "p99_ns": 51756,
+              "total_ns": 4972716
+            },
+            "unlink": {
+              "count": 200,
+              "mean_ns": 27621.535,
+              "ops_per_s": 36203.63603977839,
+              "p50_ns": 28373,
+              "p95_ns": 37800,
+              "p99_ns": 47839,
+              "total_ns": 5524307
+            }
+          },
+          "generation_before": 1,
+          "generation_after": 203,
+          "mount_peak_rss_kib": 11784,
+          "store_bytes": 32251277,
+          "verify_ok": true
+        }
+      ]
+    }
+  ],
+  "crash_proxy": [
+    {
+      "impl": "rust",
+      "case": "write",
+      "phase": "old",
+      "observed": "old",
+      "sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "expected_sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "rust",
+      "case": "write",
+      "phase": "buffered",
+      "observed": "old",
+      "sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "expected_sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "rust",
+      "case": "write",
+      "phase": "durable",
+      "observed": "new",
+      "sha256": "340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251",
+      "expected_sha256": "340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "rust",
+      "case": "metadata",
+      "phase": "grouped-creates",
+      "observed_files": 40,
+      "expected": "0 or 40",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "go",
+      "case": "write",
+      "phase": "old",
+      "observed": "old",
+      "sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "expected_sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "go",
+      "case": "write",
+      "phase": "buffered",
+      "observed": "old",
+      "sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "expected_sha256": "2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "go",
+      "case": "write",
+      "phase": "durable",
+      "observed": "new",
+      "sha256": "340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251",
+      "expected_sha256": "340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251",
+      "verify_ok": true,
+      "pass": true
+    },
+    {
+      "impl": "go",
+      "case": "metadata",
+      "phase": "grouped-creates",
+      "observed_files": 0,
+      "expected": "0 or 40",
+      "verify_ok": true,
+      "pass": true
+    }
+  ],
+  "durability": {
+    "default": "every mutation is a durably published commit before its reply",
+    "write_back": "buffered bytes are returned to the writing handle immediately; other readers and the store see them only after flush/fsync/release; fsync is durable before it replies; a crash loses unflushed writes",
+    "group_commit": "a group is durable only when published (window elapsed, 256 ops, fsync, or unmount); a crash leaves the previous whole generation",
+    "crash_proxy_note": "SIGKILL of the daemon is a process-fault proxy, not physical power loss and not a device-cache claim"
+  },
+  "conclusion": "Mount identity defaults to merkle; write-back batches a handle's writes into one commit; group-commit coalesces independent mutations into one commit.",
+  "commands": "cargo build --release --features fuse --bin weftfs\n(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/go-weftfs ./cmd/weftfs)\nCGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/wbops bench/scripts/fuse_writeback_ops.go\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 --foreground --content-identity whole-file\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 --foreground --content-identity whole-file --write-back\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 --foreground --content-identity whole-file --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 --foreground --content-identity whole-file --write-back --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 --foreground --content-identity merkle\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 --foreground --content-identity merkle --write-back\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 --foreground --content-identity merkle --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 --foreground --content-identity merkle --write-back --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/tree 20 10\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1  --content-identity whole-file\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1  --content-identity whole-file --write-back\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1  --content-identity whole-file --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1  --content-identity whole-file --write-back --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1  --content-identity merkle\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1  --content-identity merkle --write-back\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1  --content-identity merkle --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1  --content-identity merkle --write-back --group-commit\ntruncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin\n/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin 500 4096 end 12345\n/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/tree 20 10\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old --foreground --content-identity merkle --write-back --group-commit\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered --foreground --content-identity merkle --write-back --group-commit\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable --foreground --content-identity merkle --write-back --group-commit\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --json verify --full\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust --foreground --content-identity merkle --group-commit\n/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old  --content-identity merkle --write-back --group-commit\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered  --content-identity merkle --write-back --group-commit\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable  --content-identity merkle --write-back --group-commit\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --json verify --full\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go  --content-identity merkle --group-commit\n/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --json verify --full\n"
+}

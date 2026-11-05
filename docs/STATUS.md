@@ -2004,14 +2004,15 @@ staging (this commit), both buildable and testable only through
   `tests/group_commit.rs` (11 total). Go `go vet`, `CGO_ENABLED=0 go build`, and
   `go test -race ./...`: all packages pass; new `store/group_test.go` (5) and
   `fusefs/writeback_test.go` (4).
-- **Measurement.** `bench/receipts/fuse-writeback-20261105T200833Z.json`
+- **Measurement.** `bench/receipts/fuse-writeback-20261105T202300Z.json`
   (single host, synthetic fixtures, buffered I/O, no device claim; 500 × 4 KiB
   overwrites of 128 MiB, 20×10 tree, crash proxy 8/8 pass). Key results:
-  write-back takes merkle write p50 from 27.3 ms to 8.4 µs (Rust) and 26.7 ms to
-  11.0 µs (Go); group-commit takes create from 163 to 24,754 ops/s (Rust) and
-  384 to 7,314 (Go), unlink from 164 to 39,958 (Rust) and 387 to 9,313 (Go);
-  whole-file writes are 4.4× (Rust) to 15.6× (Go) slower than merkle by
-  default. Crash proxy: unflushed buffered writes lost, flushed/durable kept,
+  write-back takes merkle write p50 from 27.3 ms to 8.8 µs (Rust) and 33.6 ms to
+  10.7 µs (Go); group-commit takes create from 162 to 26,548 ops/s (Rust) and
+  310 to 6,264 (Go), unlink from 162 to 39,126 (Rust) and 311 to 9,610 (Go);
+  whole-file writes are 4.4× (Rust) to 12.6× (Go) slower than merkle by
+  default. Group-commit makes the write tail worse (p99 611–804 ms Rust,
+  320–432 ms Go) because a request can wait behind a group publish. Crash proxy: unflushed buffered writes lost, flushed/durable kept,
   grouped metadata all-or-nothing, `verify --full` clean in 8/8 cases.
 - **Recommendation.** `--content-identity merkle --write-back --group-commit`
   for AI-artifact mounts. Residual: write-back defers visibility (and a crash
