@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (27/27 courts pass).",
-    "value": "verify-20261105T174254Z.json",
+    "value": "verify-20261105T175154Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261105T174254Z.json",
+    "receipt": "bench/receipts/verify-20261105T175154Z.json",
     "kind": "present"
   },
   {
@@ -355,9 +355,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v060_crates",
-    "claim": "README.md and docs/containers.md advertise the v0.6.0 crate versions.",
-    "value": "weftcodec = \"0.6.0\"",
+    "id": "release_v070_crates",
+    "claim": "README.md and docs/containers.md advertise the v0.7.0 crate versions.",
+    "value": "weftcodec = \"0.7.0\"",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -366,9 +366,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v060_docker_tag",
-    "claim": "README.md and docs/containers.md advertise the v0.6.0 WeftFS image tag.",
-    "value": "weftfs:v0.6.0",
+    "id": "release_v070_docker_tag",
+    "claim": "README.md and docs/containers.md advertise the v0.7.0 WeftFS image tag.",
+    "value": "weftfs:v0.7.0",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -378,11 +378,10 @@
   },
   {
     "id": "release_v060_verify_25",
-    "claim": "The v0.6.0 release note and docs/STATUS.md retain the 25/25 verification result for that release.",
+    "claim": "The v0.6.0 release note retains the 25/25 verification result for that release.",
     "value": "25/25 courts",
     "locations": [
-      "docs/RELEASE-v0.6.0.md",
-      "docs/STATUS.md"
+      "docs/RELEASE-v0.6.0.md"
     ],
     "receipt": "bench/receipts/verify-20261105T035513Z.json",
     "kind": "present"
@@ -923,6 +922,148 @@
       "docs/CONFORMANCE.md"
     ],
     "receipt": "bench/receipts/conformance-python-20261105T175000Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_release_note",
+    "claim": "README, status, and container docs point at the v0.7.0 release note.",
+    "value": "RELEASE-v0.7.0.md",
+    "locations": [
+      "README.md",
+      "docs/STATUS.md",
+      "docs/containers.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "v070_wheel_sha256",
+    "claim": "The release note records the rebuilt 0.7.0 Python wheel digest.",
+    "value": "8064f27d46f171aca009bd2075a7e76dc7a7d8aa8d1ae9377b25ebcef3dd9f56",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261105T175700Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_float_tensor_bf16_ratio",
+    "claim": "The release note states the BF16 FLOAT_TENSOR ratio against per-tensor zstd -19.",
+    "value": "0.8564",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_float_tensor_fp32_loss",
+    "claim": "The release note states the F32 FLOAT_TENSOR loss against per-tensor zstd -19.",
+    "value": "62 % larger than per-tensor zstd -19",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_delta_fine_tune",
+    "claim": "The release note records the fine-tune delta ratio against zstd -19.",
+    "value": "70.5 %",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_merge_conflict",
+    "claim": "The release note states that overlapping different content fails closed with a named conflict.",
+    "value": "fails closed with `Conflict` naming the path",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/branching-20261105T071457Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_context_mounts_1000",
+    "claim": "The release note records the completed 1,000-mount checks.",
+    "value": "1,000/1,000 mounts",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/context-mounts-20261105T131116Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_context_mounts_break",
+    "claim": "The release note records the directed-limit break point.",
+    "value": "INCOMPLETE 692/1000",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/context-mounts-20261105T140342Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_merkle_rust_p50",
+    "claim": "The release note records the Rust Merkle write p50.",
+    "value": "1.81 ms",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/merkle-identity-20261105T161026Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_buck2_mount_read",
+    "claim": "The release note records the mounted CAS artifact read latency.",
+    "value": "1.236 ms",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/buck2-cas-store-20261105T163930Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_training_ready_output",
+    "claim": "The release note records the verified training-ready object and byte totals.",
+    "value": "581 objects / 988,283,592 B",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/training-ready-20261105T171104Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_conformance_total",
+    "claim": "The release note records the conformance manifest size.",
+    "value": "295 vector entries",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/conformance-rust-20261105T180000Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_python_not_on_pypi",
+    "claim": "The release note states the wheel is not published to PyPI.",
+    "value": "Not published to PyPI",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261105T175700Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "v070_go_parity_absent",
+    "claim": "The release note discloses the missing Go checkpoint/training-ready parity.",
+    "value": "No Go parity for checkpoint or training-ready",
+    "locations": [
+      "docs/RELEASE-v0.7.0.md"
+    ],
+    "receipt": null,
     "kind": "present"
   }
 ]

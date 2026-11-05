@@ -2,18 +2,16 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261105T174254Z.json` (27/27 courts `pass`, including the
+`bench/receipts/verify-20261105T175154Z.json` (27/27 courts `pass`, including the
 host-only `claims` documentation gate, spec drift, generated-type drift,
 `conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
 and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `df9dcb0`, WeftCodec `b15353a`, WeftCodec-Go `9d275c0`,
+`fuzz_diff`), at WeftFS `067bb88`, WeftCodec `b15353a`, WeftCodec-Go `9d275c0`,
 WeftFS-Go `4278445`. The earlier
-`verify-20261105T034941Z.json` is retained because one run of the pre-existing
-`tests/representation.rs` shared atomic decode counter raced under parallel
-test execution (`expected exactly one decoded chunk, got 2`); it passed
-standalone and in the 035513Z rerun, which is the current receipt. Preceding
-receipts `verify-20261105T030019Z.json` and `verify-20261104T100531Z.json` are
-retained as history. Earlier
+`verify-20261105T174254Z.json` and `verify-20261105T034941Z.json` are retained
+as history; the latter had one pre-existing `tests/representation.rs` shared
+atomic decode counter race (`expected exactly one decoded chunk, got 2`) that
+passed standalone and in the 035513Z rerun. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
@@ -180,19 +178,19 @@ Docker court).
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `091d0bb` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `272c2c0` | Rust codec v1 + authenticated capability envelopes |
-| `WeftCodec-Go` | `b7400ec` | independent Go codec, envelope parity |
-| `WeftFS-Go` | `963dc62` | independent Go store + FUSE, spec mirror |
+| `WeftFS` | `067bb88` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `b15353a` | Rust codec v1 + AI modes, checkpoint and capability support |
+| `WeftCodec-Go` | `9d275c0` | independent Go codec, capability parity |
+| `WeftFS-Go` | `4278445` | independent Go store + FUSE, spec mirror |
 
 These are the revisions pinned by the latest full verification receipt
-(`bench/receipts/verify-20261105T035513Z.json`, 25/25 courts pass).
-The current release is **v0.6.0** (`docs/RELEASE-v0.6.0.md`); the tag, the
-per-repo GitHub releases, the four GHCR images, and the two crates are cut
-from the `staging` and `main` commits after the version bump and release
-documentation, with this receipt's code revisions unchanged apart from version
-literals and docs (both branches are kept identical and pushed in all four
-repositories).
+(`bench/receipts/verify-20261105T175154Z.json`, 27/27 courts pass).
+The current release is **v0.7.0** (`docs/RELEASE-v0.7.0.md`); the tag, the
+per-repo GitHub releases, the four GHCR images, the two crates, and the Python
+wheel are cut from the `staging` and `main` commits after the version bump and
+release documentation, with this receipt's code revisions unchanged apart from
+version literals and docs (both branches are kept identical and pushed in all
+four repositories).
 
 ## 2. What is implemented and tested
 
