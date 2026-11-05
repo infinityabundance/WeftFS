@@ -1,13 +1,14 @@
-# Implementation status — 2026-11-04
+# Implementation status — 2026-11-05
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261104T132330Z.json` (all nineteen courts `pass`,
-including spec drift with 27 comparisons, generated-type drift, quantized
-cross-decode, context cross-language gates, Buck2 CAS, agent memory, and the new
-`fuzz_diff` court), at WeftFS `82518e5`, WeftCodec `beb88cf`, WeftCodec-Go
-`6f535ea`, WeftFS-Go `33743f0`. The preceding receipt
-`verify-20261104T100531Z.json` is retained as history. Earlier
+`bench/receipts/verify-20261105T030019Z.json` (all twenty courts `pass`,
+including the host-only `claims` documentation gate after spec drift,
+generated-type drift, quantized cross-decode, context cross-language gates,
+Buck2 CAS, agent memory, and `fuzz_diff`), at WeftFS `c9b8bdb`, WeftCodec
+`90d9c13`, WeftCodec-Go `cf62bb1`, WeftFS-Go `1c99070`. The preceding receipts
+`verify-20261104T132330Z.json` and `verify-20261104T100531Z.json` are retained
+as history. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
@@ -887,8 +888,8 @@ Go Corrupt on a zstd frame declaring content size 2 while yielding 0 bytes, 93
 Rust Corrupt / Go ok on an empty zstd body with `decoded_len = 0`) is retained
 as the evidence that motivated the rule. The court is not coverage-guided
 fuzzing and not a substitute for the curated B1 decoder-bomb vectors. Wired
-into `scripts/verify-all.sh`; `verify-20261104T132330Z.json` passes all 19
-courts including `fuzz_diff`.
+into `scripts/verify-all.sh`; `verify-20261105T030019Z.json` passes all 20
+courts including `claims` and `fuzz_diff`.
 
 **B4 — randomized POSIX torture (6/6 pass; 1,202,560 completed operations).**
 Three FUSE-court invocations at WeftFS `42c82f7` and WeftFS-Go `d7d8d06`, same
@@ -1111,8 +1112,8 @@ It is **not published to PyPI** (no API token); it is a release artifact.
   image with `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
   bounded `/tmp`, `no-new-privileges`, and `cap-drop=ALL` (FUSE adds only
   `/dev/fuse` and `CAP_SYS_ADMIN`).
-- `scripts/verify-all.sh` re-ran all nineteen courts and produced
-  `bench/receipts/verify-20261104T132330Z.json` with revisions, host, command
+- `scripts/verify-all.sh` re-ran all twenty courts and produced
+  `bench/receipts/verify-20261105T030019Z.json` with revisions, host, command
   log, and per-court results.
 - The P7 benchmark court ran codec, store, and filesystem benchmarks under the
   same hard limits. Every receipt contains raw samples, environment, and

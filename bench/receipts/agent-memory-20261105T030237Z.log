@@ -1,0 +1,638 @@
+===== BUILD =====
+receipt: /work/bench/receipts/agent-memory-20261105T030237Z.json
+NOTE: Timestamps are simulated fixture nanoseconds; no real-time aging or retention claim is made
+NOTE: The bundle is a point-in-time export of the January store; replay runs after the September writes
+
+===== STEP january-store: Create prompt/model/tool/dataset/output and typed lineage edges =====
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 init
+generation=1
+snapshot_root=42ddac5a014b660b8d40a1f4a68890fb94cf7251c14686c63208b57b3d0eaeb5
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 mkdir /prompts --seed dir-prompts
+115ae375d5cdf3245df56835e3de9a6f49cd44bdf740d345e176c1f4c7e8c6d4
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 mkdir /models --seed dir-models
+65e38a1aadcf555f42bfc28b7f4fe10d5b7f815284ace3af4d761da88c018531
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 mkdir /tools --seed dir-tools
+0e7edb4276d3fcafbce4d090fa0e3da7b1dd001ed287a1ff4e505ea32aa64d6d
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 mkdir /datasets --seed dir-datasets
+4f19648f5d01bc6e814b328e061b65ddc4b44a25c89c6f227becbffd34f11895
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 mkdir /outputs --seed dir-outputs
+17f4125eb45dc0463d3f0c1699f4fb3851430c82531f5491fb6e088dc1921028
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 create /prompts/task.txt --text Summarize the retained experiment log. Task: summarize.
+ --seed prompt-jan --attr task=summarize --attr model=llama-4 --attr sha256=0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea
+5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 create /models/llama-4.bin --text llama-4 ver_19 weights marker
+ --seed model-jan --attr task=summarize --attr model=llama-4
+71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 create /tools/retriever.bin --text retriever v3 tool marker
+ --seed tool-jan --attr task=summarize
+075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 create /datasets/eval-v1.bin --text eval-v1 dataset marker
+ --seed dataset-jan --attr task=summarize
+dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 create /outputs/run-001.bin --text agent output run-001: exact retained bytes
+ --seed output-jan --attr task=summarize --attr model=llama-4 --attr sha256=2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7
+f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 stat /prompts/task.txt
+{
+  "attrs": {
+    "model": "llama-4",
+    "sha256": "0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea",
+    "task": "summarize"
+  },
+  "content_id": "8468771a0dde35ca8bd590df0c04f2f083a4c4be54631ad67ef7e908f8123637",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726",
+  "size": 56,
+  "uid": 0,
+  "version_id": "e582090d27709e9f030d39b56d7879604bc06926aa9474f1ab4ea6e2019b0aa6"
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 stat /models/llama-4.bin
+{
+  "attrs": {
+    "model": "llama-4",
+    "task": "summarize"
+  },
+  "content_id": "569580304db4336a58c9b646992a4c1965ebda2e56e1b9416038bd9477ac9387",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9",
+  "size": 30,
+  "uid": 0,
+  "version_id": "1516881603ac4b91a201d7fd1b4863edd5219daea449df25b51cd6c99bea7a47"
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 stat /tools/retriever.bin
+{
+  "attrs": {
+    "task": "summarize"
+  },
+  "content_id": "3825797a9776cdd1d561476ae0d2416c61a94821c0bc810b768c450296fd5d47",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a",
+  "size": 25,
+  "uid": 0,
+  "version_id": "5e134c4c51e8e0755066221e4e6ea217d788f217a0c9465c7494cc950b20c15f"
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 stat /datasets/eval-v1.bin
+{
+  "attrs": {
+    "task": "summarize"
+  },
+  "content_id": "c2cf509042552b8ac22a1f44dd581eccdf1f992de12c55851fcca771747c5cc7",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e",
+  "size": 23,
+  "uid": 0,
+  "version_id": "81f282bde7297ee3935717fbd8537c4ce770991fc5471904537468c30f93616c"
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 stat /outputs/run-001.bin
+{
+  "attrs": {
+    "model": "llama-4",
+    "sha256": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+    "task": "summarize"
+  },
+  "content_id": "08a71cad93f0636cadc13b5369b167146aae36331be13c79bd2f405c2ab7acc1",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+  "size": 43,
+  "uid": 0,
+  "version_id": "ee0ad721c93aed9875bfa7a23c1dbd930e3e1cf0e103a5be1b2ae61123f2c4bd"
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate generated_by --object 71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9
+cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate prompted_by --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726
+5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate grounded_in --object dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e
+0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate used_tool --object 075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a
+4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate derived_from --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726
+b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 relation list
+{
+  "relations": [
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "grounded_in",
+      "provenance": null,
+      "relation_id": "0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "used_tool",
+      "provenance": null,
+      "relation_id": "4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "prompted_by",
+      "provenance": null,
+      "relation_id": "5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "derived_from",
+      "provenance": null,
+      "relation_id": "b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "generated_by",
+      "provenance": null,
+      "relation_id": "cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9"
+      }
+    }
+  ]
+}
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1767225600000000000 snapshot create jan-2026
+ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7
+----- STEP january-store: pass output=f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 model=71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9 prompt=5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726 tool=075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a dataset=dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e
+
+===== STEP contexts: Context Roots by task, model, time =====
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:task=summarize --selector select attrs.task == "summarize" --snapshot jan-2026
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065d08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82",
+  "generation": 18,
+  "name": "by:task=summarize",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "30892d72e0847655e18bc5195c51646de1e825be85ed7fa6b476cdb97bf968d5",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a65",
+  "selector_id": "a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82"
+}
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:model=llama-4 --selector select attrs.model == "llama-4" --snapshot jan-2026
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d340508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f",
+  "generation": 19,
+  "name": "by:model=llama-4",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "3eefed25a6f3bc36f078d9432fc0bbcdcd12dea25e8694acb76ca7ca329ba345",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d34",
+  "selector_id": "b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f"
+}
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 context create --name at:2026-01 --selector select true --snapshot jan-2026
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064308030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507010504747275650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f6964062042f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492",
+  "generation": 20,
+  "name": "at:2026-01",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "18130afb1d769e152c36f0624c120adf833ba1164db8f6aaffc015e446793401",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c7405097072656469636174650701050474727565",
+  "selector_id": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492"
+}
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 context list
+{
+  "contexts": [
+    {
+      "budget": null,
+      "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064308030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507010504747275650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f6964062042f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+      "capability_hash": null,
+      "closure": [],
+      "context_root_id": "5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492",
+      "name": "at:2026-01",
+      "namespace": "default",
+      "ordering": "selector_then_object_id",
+      "relation_id": "18130afb1d769e152c36f0624c120adf833ba1164db8f6aaffc015e446793401",
+      "resolver": "weft-resolver-v1",
+      "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c7405097072656469636174650701050474727565",
+      "selector_id": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+      "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+      "uri": "weft://default/c/5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492"
+    },
+    {
+      "budget": null,
+      "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d340508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+      "capability_hash": null,
+      "closure": [],
+      "context_root_id": "43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f",
+      "name": "by:model=llama-4",
+      "namespace": "default",
+      "ordering": "selector_then_object_id",
+      "relation_id": "3eefed25a6f3bc36f078d9432fc0bbcdcd12dea25e8694acb76ca7ca329ba345",
+      "resolver": "weft-resolver-v1",
+      "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d34",
+      "selector_id": "b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+      "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+      "uri": "weft://default/c/43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f"
+    },
+    {
+      "budget": null,
+      "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065d08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+      "capability_hash": null,
+      "closure": [],
+      "context_root_id": "04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82",
+      "name": "by:task=summarize",
+      "namespace": "default",
+      "ordering": "selector_then_object_id",
+      "relation_id": "30892d72e0847655e18bc5195c51646de1e825be85ed7fa6b476cdb97bf968d5",
+      "resolver": "weft-resolver-v1",
+      "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a65",
+      "selector_id": "a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+      "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+      "uri": "weft://default/c/04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82"
+    }
+  ]
+}
+----- STEP contexts: pass task=04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82 model=43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f time=5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492
+
+===== STEP export: Export the January point-in-time replay bundle =====
+CMD[export]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1767225600000000000 export-bundle --out /work/bench/bundles/agent-memory-7-20261105T030237Z.tar.zst --source-revision WeftFS=c9b8bdbbd570c5eaed9957a51b4d058b684711c1
+{
+  "bundle": "/work/bench/bundles/agent-memory-7-20261105T030237Z.tar.zst",
+  "bytes": 12752,
+  "contexts": [
+    "at:2026-01",
+    "by:model=llama-4",
+    "by:task=summarize"
+  ],
+  "generation": 20,
+  "head": "fa6a1f064c477c241dd805ffc5859dfc00ab6014af517674ec4d8d598a5bac58",
+  "sha256": "f850a6d46cca8db05fe6bc47e62401656ce185856a4d8a69a79a64f8e3fe2160"
+}
+----- STEP export: pass bundle=f850a6d46cca8db05fe6bc47e62401656ce185856a4d8a69a79a64f8e3fe2160
+
+===== STEP september-store: Write a later run; old snapshot and Context Roots stay pinned =====
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1788220800000000000 create /outputs/run-002.bin --text agent output run-002: later bytes
+ --seed output-sep --attr task=summarize --attr model=llama-4 --attr sha256=55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10
+0b9645a9589b369407c76a6d34c11f10c182cd026ed26c32d15225ad4643faaf
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-002.bin
+{
+  "attrs": {
+    "model": "llama-4",
+    "sha256": "55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10",
+    "task": "summarize"
+  },
+  "content_id": "8713df2b696ba1420467e66fce1cf945ba15849c01c06e0a888c621f1c98e345",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1788220800000000000,
+  "object_id": "0b9645a9589b369407c76a6d34c11f10c182cd026ed26c32d15225ad4643faaf",
+  "size": 34,
+  "uid": 0,
+  "version_id": "772341fafdd5a2aa0199edc103362c33d145ec2bd2bdf0654da47f0469998e51"
+}
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --fixed-timestamp-ns 1788220800000000000 snapshot create sep-2026
+f32a52746280f3ce21f8e7e1c53608f62c201d0848a628ee10cd2044631e8af7
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 context create --name by:task=summarize@sep --selector select attrs.task == "summarize" --snapshot sep-2026
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065d08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a650508736e617073686f740620f32a52746280f3ce21f8e7e1c53608f62c201d0848a628ee10cd2044631e8af705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "d6bd04ff602e1cfe9257859e6294ee791f72954532907c5debbb7ebd24ce9cdc",
+  "generation": 23,
+  "name": "by:task=summarize@sep",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "1ea7e2fd8ab45af750c841e08317f7a5499279f37d5bbfe797d2ca31e64cb477",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a65",
+  "selector_id": "a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "snapshot_id": "f32a52746280f3ce21f8e7e1c53608f62c201d0848a628ee10cd2044631e8af7",
+  "uri": "weft://default/c/d6bd04ff602e1cfe9257859e6294ee791f72954532907c5debbb7ebd24ce9cdc"
+}
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 context show by:task=summarize
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065d08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82",
+  "name": "by:task=summarize",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "30892d72e0847655e18bc5195c51646de1e825be85ed7fa6b476cdb97bf968d5",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a65",
+  "selector_id": "a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82"
+}
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 verify --full
+{
+  "checked_capabilities": 0,
+  "checked_causal": 0,
+  "checked_chunks": 6,
+  "checked_commits": 23,
+  "checked_context_roots": 4,
+  "checked_manifests": 6,
+  "checked_objects": 6,
+  "checked_provenance": 0,
+  "checked_representations": 0,
+  "commit": "8bbc77c2d7d6496b8292c3e5f0bbdc007e2d6b8c5910a109a3464ce32010de02",
+  "full": true,
+  "generation": 23,
+  "ok": true,
+  "problems": [],
+  "rejected_generations": []
+}
+----- STEP september-store: pass sep-output=0b9645a9589b369407c76a6d34c11f10c182cd026ed26c32d15225ad4643faaf sep-context=d6bd04ff602e1cfe9257859e6294ee791f72954532907c5debbb7ebd24ce9cdc
+
+===== STEP months-later-mounts: After simulated months, old mounts and old time root are exact =====
+CMD[months-later-mounts]: rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z -> /mnt/weft-fuse/agent-7-20261105T030237Z-task --context by:task=summarize
+CMD[months-later-mounts]: go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z -> /mnt/weft-fuse/agent-7-20261105T030237Z-model --context by:model=llama-4
+CMD[months-later-mounts]: rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z -> /mnt/weft-fuse/agent-7-20261105T030237Z-time --at 1767225600000000000
+CMD[months-later-mounts]: go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z -> /mnt/weft-fuse/agent-7-20261105T030237Z-sep --at 1788220800000000000
+CMD[months-later-mounts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-001.bin
+{
+  "attrs": {
+    "model": "llama-4",
+    "sha256": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+    "task": "summarize"
+  },
+  "content_id": "08a71cad93f0636cadc13b5369b167146aae36331be13c79bd2f405c2ab7acc1",
+  "gid": 0,
+  "kind": "file",
+  "mode": 420,
+  "mtime_ns": 1767225600000000000,
+  "object_id": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+  "size": 43,
+  "uid": 0,
+  "version_id": "ee0ad721c93aed9875bfa7a23c1dbd930e3e1cf0e103a5be1b2ae61123f2c4bd"
+}
+----- STEP months-later-mounts: pass run-001 exact in task/model/time mounts; run-002 absent from January
+
+===== STEP replay-after-months: Replay the January bundle later and verify exact bytes + lineage =====
+CMD[replay-after-months]: bash /work/scripts/replay-bundle.sh --bundle /work/bench/bundles/agent-memory-7-20261105T030237Z.tar.zst --out /work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z
+== extract ==
+== checks.sha256 ==
+README.md: OK
+contexts.tsv: OK
+manifest.json: OK
+replay.sh: OK
+store/FORMAT: OK
+store/LOCK: OK
+store/commits/1.commit: OK
+store/commits/10.commit: OK
+store/commits/11.commit: OK
+store/commits/12.commit: OK
+store/commits/13.commit: OK
+store/commits/14.commit: OK
+store/commits/15.commit: OK
+store/commits/16.commit: OK
+store/commits/17.commit: OK
+store/commits/18.commit: OK
+store/commits/19.commit: OK
+store/commits/2.commit: OK
+store/commits/20.commit: OK
+store/commits/3.commit: OK
+store/commits/4.commit: OK
+store/commits/5.commit: OK
+store/commits/6.commit: OK
+store/commits/7.commit: OK
+store/commits/8.commit: OK
+store/commits/9.commit: OK
+store/manifests/08/08a71cad93f0636cadc13b5369b167146aae36331be13c79bd2f405c2ab7acc1: OK
+store/manifests/38/3825797a9776cdd1d561476ae0d2416c61a94821c0bc810b768c450296fd5d47: OK
+store/manifests/56/569580304db4336a58c9b646992a4c1965ebda2e56e1b9416038bd9477ac9387: OK
+store/manifests/84/8468771a0dde35ca8bd590df0c04f2f083a4c4be54631ad67ef7e908f8123637: OK
+store/manifests/c2/c2cf509042552b8ac22a1f44dd581eccdf1f992de12c55851fcca771747c5cc7: OK
+store/objects/1f/1f938652937c3400ab3267437df618177b8ea4572911c1ebe44fc76c8367b90c: OK
+store/objects/71/71f76fa6ede76d9a4ddea232ade15477b23407fe0831d0fef476e328ac56e35f: OK
+store/objects/ad/ada8c5606486326a28c529e8e97688fae3c87a4c23fe999f8ed342f6a0e49d03: OK
+store/objects/bd/bdfe61993ff8c4579228f9a1f0e72ab5c081eb019006a773927d22b92f0e4017: OK
+store/objects/e0/e087a0db18eaf9fa17b026429aba509f658576490e077dc77cc6b8cc52ade90d: OK
+store/refs/snapshots/jan-2026: OK
+store/superblock: OK
+== go open + verify --full ==
+== go resolve + materialize every Context Root ==
+== go manifest verification ==
+{
+  "ok": true,
+  "schema": "weftfs.replay-bundle/1",
+  "store_entries_checked": 34,
+  "contexts_checked": 3,
+  "context_files_checked": 13,
+  "resolved_ids_checked": 3,
+  "mismatches": [],
+  "materialized_dir": "/work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z/materialized"
+}
+replay: ok
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z/store --json relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0
+[
+  {
+    "id": "0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999",
+    "kind": "object",
+    "object": "dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e",
+    "predicate": "grounded_in",
+    "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+  },
+  {
+    "id": "4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79",
+    "kind": "object",
+    "object": "075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a",
+    "predicate": "used_tool",
+    "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+  },
+  {
+    "id": "5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37",
+    "kind": "object",
+    "object": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726",
+    "predicate": "prompted_by",
+    "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+  },
+  {
+    "id": "b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e",
+    "kind": "object",
+    "object": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726",
+    "predicate": "derived_from",
+    "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+  },
+  {
+    "id": "cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c",
+    "kind": "object",
+    "object": "71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9",
+    "predicate": "generated_by",
+    "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+  }
+]
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z/store --json context show by:task=summarize
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065d08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82",
+  "name": "by:task=summarize",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "30892d72e0847655e18bc5195c51646de1e825be85ed7fa6b476cdb97bf968d5",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050a61747472732e7461736b050973756d6d6172697a65",
+  "selector_id": "a98c984d3c8456d77ec71c71c4d4624a5c2241bb4075ec29bc863da75bf7bded",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/04bf9a9a673b8e6035587000fed4d730ec4df1f19b9ce27fe3e7917a581dfb82"
+}
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z/store --json context show by:model=llama-4
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72065c08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d340508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f69640620b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f",
+  "name": "by:model=llama-4",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "3eefed25a6f3bc36f078d9432fc0bbcdcd12dea25e8694acb76ca7ca329ba345",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507030507617474725f6571050b61747472732e6d6f64656c05076c6c616d612d34",
+  "selector_id": "b604b3218d308d05dec8fd2f181500e70eadb28c8c403a5df7940753675aa7d9",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/43cd4a1f14e6af2c02499a9836d0926a50509068fca8cf54798a071063eba44f"
+}
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261105T030237Z/store --json context show at:2026-01
+{
+  "budget": null,
+  "canonical_hex": "0808050663617573616c07000506736368656d610514776566742e636f6e746578742d726f6f742e763105086f72646572696e67051773656c6563746f725f7468656e5f6f626a6563745f696405087265736f6c7665720510776566742d7265736f6c7665722d7631050873656c6563746f72064308030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c74050970726564696361746507010504747275650508736e617073686f740620ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d705096e616d657370616365050764656661756c74050b73656c6563746f725f6964062042f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "capability_hash": null,
+  "closure": [],
+  "context_root_id": "5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492",
+  "name": "at:2026-01",
+  "namespace": "default",
+  "ordering": "selector_then_object_id",
+  "relation_id": "18130afb1d769e152c36f0624c120adf833ba1164db8f6aaffc015e446793401",
+  "resolver": "weft-resolver-v1",
+  "selector_canonical_hex": "08030506736368656d610510776566742e73656c6563746f722e763105096e616d657370616365050764656661756c7405097072656469636174650701050474727565",
+  "selector_id": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+  "snapshot_id": "ce7c99b103268b1477a46f7fbdfd8a5fed5684888994bb90d66ecd79b2c310d7",
+  "uri": "weft://default/c/5c743634a5ff62a9a32294fee9cfc4d2117e6ad4f0ba8986406286c13f4bb492"
+}
+----- STEP replay-after-months: pass exact run-001 sha; 3 Context Roots; 5 lineage edges
+
+===== STEP lineage-check: Every typed edge survives with the same subject and object =====
+CMD[lineage-check]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261105T030237Z --json --fixed-timestamp-ns 1788220800000000000 relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0
+{
+  "relations": [
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "grounded_in",
+      "provenance": null,
+      "relation_id": "0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "used_tool",
+      "provenance": null,
+      "relation_id": "4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "prompted_by",
+      "provenance": null,
+      "relation_id": "5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "derived_from",
+      "provenance": null,
+      "relation_id": "b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726"
+      }
+    },
+    {
+      "attrs": {},
+      "kind": "object",
+      "predicate": "generated_by",
+      "provenance": null,
+      "relation_id": "cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c",
+      "subject": "f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+      "target": {
+        "kind": "object",
+        "object_id": "71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9"
+      }
+    }
+  ]
+}
+----- STEP lineage-check: pass all five predicates present after the later writes
+summary: pass=7 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/agent-memory-20261105T030237Z.json
+raw log: /work/bench/receipts/agent-memory-20261105T030237Z.log
