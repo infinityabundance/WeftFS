@@ -181,6 +181,7 @@ start_mount_async() {
   mkdir -p "$mount"
   MOUNT_PATHS+=("$mount")
   local logfile="$SCRATCH/mount-$RUN_ID-$(basename "$mount").log"
+  MOUNT_PID_LAST=""
   case "$impl" in
     rust)
       "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount \
@@ -217,8 +218,14 @@ stop_mount() {
   return 0
 }
 listing_digest() {
-  local mount="$1"
-  ( cd "$mount" && find . -mindepth 1 -not -path './.weft*' -printf '%y %p\n' | LC_ALL=C sort | sha256sum | awk '{print $1}' )
+  local mount="$1" out
+  # A dead FUSE daemon leaves an ENOTCONN mountpoint behind; make that an
+  # explicit failure instead of a digest over a partial listing.
+  out="$( cd "$mount" 2>/dev/null && find . -mindepth 1 -not -path './.weft*' -printf '%y %p\n' 2>/dev/null | LC_ALL=C sort )" || return 1
+  [ -n "$out" ] || return 1
+  # `$(...)` strips the trailing newline; restore it so the digest is over the
+  # exact sorted listing with its final newline.
+  printf '%s\n' "$out" | sha256sum | awk '{print $1}'
 }
 
 # ---- timing and measurement helpers ---------------------------------------
@@ -257,6 +264,69 @@ sum_rss_kb() {
   done
   printf '%s' "$total"
 }
+# sample_daemons <pid...> -> DAEMON_RSS_KB (sum), DAEMON_RSS_MAX_KB,
+# DAEMON_THREADS (sum), DAEMON_THREADS_MAX, DAEMON_SAMPLED (processes read).
+# One awk pass over every /proc/<pid>/status keeps a 1,000-daemon sample cheap.
+DAEMON_RSS_KB=0
+DAEMON_RSS_MAX_KB=0
+DAEMON_THREADS=0
+DAEMON_THREADS_MAX=0
+DAEMON_SAMPLED=0
+DAEMON_MISSING=0
+sample_daemons() {
+  local present=() pid
+  for pid in "$@"; do
+    [ -r "/proc/$pid/status" ] && present+=("/proc/$pid/status")
+  done
+  DAEMON_MISSING=$(( $# - ${#present[@]} ))
+  DAEMON_RSS_KB=0
+  DAEMON_RSS_MAX_KB=0
+  DAEMON_THREADS=0
+  DAEMON_THREADS_MAX=0
+  DAEMON_SAMPLED=0
+  [ "${#present[@]}" -gt 0 ] || return 0
+  local out
+  # A process can exit between the readability check and awk; a missing file
+  # makes awk exit non-zero, which is a sample miss, not a demo failure.
+  out="$(awk '
+    FNR == 1 { if (n > 0) { sum_rss += rss; if (rss > max_rss) max_rss = rss;
+                           sum_thr += thr; if (thr > max_thr) max_thr = thr }
+               rss = 0; thr = 0; n++ }
+    /^VmRSS:/ { rss = $2 }
+    /^Threads:/ { thr = $2 }
+    END { if (n > 0) { sum_rss += rss; if (rss > max_rss) max_rss = rss;
+                      sum_thr += thr; if (thr > max_thr) max_thr = thr }
+          printf "%d %d %d %d %d", sum_rss, max_rss, sum_thr, max_thr, n }
+  ' "${present[@]}" 2>/dev/null || true)"
+  read -r DAEMON_RSS_KB DAEMON_RSS_MAX_KB DAEMON_THREADS DAEMON_THREADS_MAX DAEMON_SAMPLED \
+    <<< "${out:-0 0 0 0 0}" || true
+  DAEMON_RSS_KB="${DAEMON_RSS_KB:-0}"
+  DAEMON_RSS_MAX_KB="${DAEMON_RSS_MAX_KB:-0}"
+  DAEMON_THREADS="${DAEMON_THREADS:-0}"
+  DAEMON_THREADS_MAX="${DAEMON_THREADS_MAX:-0}"
+  DAEMON_SAMPLED="${DAEMON_SAMPLED:-0}"
+}
+# cgroup v2 pids accounting, when the runtime exposes it. "unavailable" otherwise.
+cgroup_pids_current() {
+  if [ -r /sys/fs/cgroup/pids.current ]; then cat /sys/fs/cgroup/pids.current; return 0; fi
+  printf 'unavailable'
+}
+cgroup_pids_max() {
+  if [ -r /sys/fs/cgroup/pids.max ]; then cat /sys/fs/cgroup/pids.max; return 0; fi
+  printf 'unavailable'
+}
+# Number of times the cgroup pids limit refused a fork (`pids.events: max N`).
+cgroup_pids_events_max() {
+  local path=/sys/fs/cgroup/pids.events
+  if [ ! -r "$path" ]; then printf 'unavailable'; return 0; fi
+  awk '$1 == "max" { print $2; found = 1 } END { if (!found) print 0 }' "$path" 2>/dev/null || printf 'unavailable'
+}
+# Number of OOM kills charged to the cgroup (`memory.events: oom_kill N`).
+cgroup_oom_kills() {
+  local path=/sys/fs/cgroup/memory.events
+  if [ ! -r "$path" ]; then printf 'unavailable'; return 0; fi
+  awk '$1 == "oom_kill" { print $2; found = 1 } END { if (!found) print 0 }' "$path" 2>/dev/null || printf 'unavailable'
+}
 
 build_tools() {
   log "===== BUILD ====="
@@ -265,8 +335,10 @@ build_tools() {
   ( cd /tmp && GO111MODULE=off go build -o "$JSONQ" "$ROOT/scripts/showcase/jsonq.go" )
   ( cd /tmp && GO111MODULE=off go build -o "$RECEIPTGEN" "$ROOT/scripts/showcase/receiptgen.go" )
   ( cd /tmp && GO111MODULE=off go build -o "$DEMOCMP" "$ROOT/scripts/showcase/democmp.go" )
+  ( cd "$ROOT" && cargo build --quiet --example context_mount_corpus )
   cp "$TARGET_DEBUG/weftfs" "$RUSTFS"
-  [ -x "$RUSTFS" ] && [ -x "$GOFS" ] && [ -x "$JSONQ" ] && [ -x "$RECEIPTGEN" ]
+  cp "$TARGET_DEBUG/examples/context_mount_corpus" "$BIN/context-corpus"
+  [ -x "$RUSTFS" ] && [ -x "$GOFS" ] && [ -x "$JSONQ" ] && [ -x "$RECEIPTGEN" ] && [ -x "$BIN/context-corpus" ]
 }
 
 demo_finalize() {
@@ -345,6 +417,7 @@ demo_init() {
   meta env.limit_memory "${WEFT_COURT_MEMORY:-unknown}"
   meta env.limit_memory_swap "${WEFT_COURT_MEMORY:-unknown}"
   meta env.limit_pids "${WEFT_COURT_PIDS:-unknown}"
+  meta env.limit_nproc "${WEFT_COURT_NPROC:-unknown}"
   meta env.limit_cpus "${WEFT_COURT_CPUS:-unknown}"
   meta env.tmpfs_tmp "1g"
   meta env.tmpfs_fuse "512m"
@@ -352,6 +425,7 @@ demo_init() {
   meta env.cap_add "SYS_ADMIN"
   meta env.device "/dev/fuse"
   meta env.fixed_timestamps "$TS1,$TS2,$TS3"
+  meta env.host_nproc "$(nproc 2>/dev/null || echo unknown)"
   meta env.scratch "$(rel "$SCRATCH")"
   repo WeftFS "${WEFT_REPO_WEFTFS:-unknown}"
   repo WeftFS-Go "${WEFT_REPO_WEFTFS_GO:-unknown}"

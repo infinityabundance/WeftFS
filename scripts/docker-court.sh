@@ -31,6 +31,11 @@ esac
 WEFT_MEMORY="${WEFT_MEMORY:-3g}"
 WEFT_CPUS="${WEFT_CPUS:-4}"
 WEFT_PIDS="${WEFT_PIDS:-1024}"
+# Second line of defense: RLIMIT_NPROC for the container's single uid. It is
+# always a hard bound; the cgroup pids limit remains the binding bound whenever
+# it is the smaller of the two. A scale court may raise both together but never
+# disable either.
+WEFT_NPROC="${WEFT_NPROC:-2048}"
 
 validate_limit() {
   local name="$1" value="$2" re="$3"
@@ -39,9 +44,11 @@ validate_limit() {
     exit 78
   fi
 }
+
 validate_limit WEFT_MEMORY "$WEFT_MEMORY" '^[0-9]+(\.[0-9]+)?[mg]$'
 validate_limit WEFT_CPUS "$WEFT_CPUS" '^[1-9][0-9]*(\.[0-9]+)?$'
 validate_limit WEFT_PIDS "$WEFT_PIDS" '^[1-9][0-9]*$'
+validate_limit WEFT_NPROC "$WEFT_NPROC" '^[1-9][0-9]*$'
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cache_root="$repo_root/.docker-cache"
@@ -109,6 +116,7 @@ common=(
   -e "WEFT_COURT_MEMORY=$WEFT_MEMORY"
   -e "WEFT_COURT_CPUS=$WEFT_CPUS"
   -e "WEFT_COURT_PIDS=$WEFT_PIDS"
+  -e "WEFT_COURT_NPROC=$WEFT_NPROC"
   -e "WEFT_DOCKER_SERVER=$docker_server"
   -e "WEFT_DOCKER_CLIENT=$docker_client"
   -e "WEFT_REPO_WEFTFS=$weftfs_rev"
@@ -154,7 +162,7 @@ if [[ "$kind" == "vm" ]]; then
 fi
 
 # Bound in-container scratch and compiler concurrency as a second line of defense.
-guarded_cmd="set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; ${cmd}"
+guarded_cmd="set -Eeuo pipefail; ulimit -n 65536; ulimit -u ${WEFT_NPROC}; export TMPDIR=/tmp; cd /work; ${cmd}"
 
 set -x
 exec docker run "${common[@]}" "$image" bash -c "$guarded_cmd"
