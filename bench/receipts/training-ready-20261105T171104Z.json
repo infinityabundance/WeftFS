@@ -1,0 +1,134 @@
+{
+  "assertions": {
+    "all_preconditions": true,
+    "checkpoint_tensors_match": true,
+    "materialized_files_verified": true,
+    "source_digest_matches": true,
+    "tensor_roots_verified": true
+  },
+  "check": {
+    "checkpoint_tensors_verified": 290,
+    "cost": {
+      "actual_bytes": 988283592,
+      "actual_decode_ms": 77099,
+      "actual_objects": 581,
+      "estimated_bytes": 988283592,
+      "estimated_decode_ms": 30034,
+      "estimated_objects": 581,
+      "max_bytes": null,
+      "max_decode_ms": null,
+      "max_objects": null
+    },
+    "peak_rss_kib": 552156,
+    "preconditions": {
+      "authorized": true,
+      "budget_enforced": true,
+      "causal_complete": true,
+      "content_verified": true,
+      "resolution_exact": true,
+      "tensors_verified": true
+    },
+    "tensor_objects_verified": 580
+  },
+  "corpus": {
+    "checkpoint_source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "element_bytes": 988065536,
+    "not_committed": "weights are referenced from the local cache, never committed",
+    "shard_objects": 580,
+    "shards_per_tensor": 2,
+    "source_match": true,
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "source_store": "/work/.docker-cache/real-corpus/store-qwen-base",
+    "source_weights": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "tensors": 290
+  },
+  "court": "fuse",
+  "ids": {
+    "context_root_id": "4c0a3f3bce4cdf1c60c56601c61a181e3c5ad73c7937f5269fbd9f9d99659fa2",
+    "selector_id": "ec33241ce98898e2b49304b2b336cd689e0bac3758839dfb1f48b5a0a3bcdf08",
+    "snapshot_id": "739e22d54a97f0a76990d11a2e41de2e5b7fc9276c8e7e30e07acbeb82329661"
+  },
+  "image": "weft/fuse-court:1",
+  "image_id": "sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8",
+  "kernel": "7.3.1-1-cachyos",
+  "kind": "weftfs.training-ready.receipt/1",
+  "label": "real cached Qwen/Qwen2.5-0.5B weights; copy of the P3 cached store",
+  "limits": {
+    "cpus": "4",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024"
+  },
+  "materialize": {
+    "checkpoint_tensors_verified": 290,
+    "cost": {
+      "actual_bytes": 988283592,
+      "actual_decode_ms": 77980,
+      "actual_objects": 581,
+      "estimated_bytes": 988283592,
+      "estimated_decode_ms": 30034,
+      "estimated_objects": 581,
+      "max_bytes": null,
+      "max_decode_ms": null,
+      "max_objects": null
+    },
+    "files": 581,
+    "peak_rss_kib": 552236,
+    "preconditions": {
+      "authorized": true,
+      "budget_enforced": true,
+      "causal_complete": true,
+      "content_verified": true,
+      "resolution_exact": true,
+      "tensors_verified": true
+    },
+    "tensor_objects_verified": 580
+  },
+  "notes": [
+    "single host, one court run, warm caches",
+    "training-ready is a refusal contract over storage preconditions; it is not a model-quality claim",
+    "the source store is a copy of the P3 cached Qwen base store; the checkpoint is written from the cached BF16 container",
+    "output files are decoded bytes at their store paths plus manifest.wcb and training-ready.wcb (canonical WCB)"
+  ],
+  "revision": {
+    "WeftCodec": "d074a072998a7cbda539e1f99e3fb77969de782c",
+    "WeftCodec-Go": "5c48d4cc0addd066ac147bee6a8af97b6923f70c",
+    "WeftFS": "807d2eee24b9720b297c2160d6a17d46fe92a5fe",
+    "WeftFS-Go": "25d8b552cd4b40ddd710497a22baa961ab18a535"
+  },
+  "timestamp_utc": "20261105T171104Z",
+  "timings": {
+    "check": {
+      "max_rss_kib": 552156,
+      "wall_s": 77.247544488
+    },
+    "checkpoint_write": {
+      "max_rss_kib": 1174908,
+      "wall_s": 66.345876325
+    },
+    "context_create": {
+      "max_rss_kib": null,
+      "wall_s": 0.055661052
+    },
+    "materialize": {
+      "max_rss_kib": 552236,
+      "wall_s": 98.136255065
+    },
+    "snapshot": {
+      "max_rss_kib": null,
+      "wall_s": 0.061569653
+    },
+    "verify_out": {
+      "max_rss_kib": 543892,
+      "wall_s": 0.757091406
+    }
+  },
+  "verify_out": {
+    "bytes": 988283592,
+    "checkpoint_tensors_verified": 290,
+    "checkpoints_verified": 1,
+    "files": 581,
+    "peak_rss_kib": 543892,
+    "tensor_roots_verified": 580
+  }
+}

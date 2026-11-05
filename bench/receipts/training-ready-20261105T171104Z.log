@@ -1,0 +1,28 @@
+kind: training-ready
+timestamp_utc: 20261105T171104Z
+court: fuse
+revisions:
+  WeftFS: 807d2eee24b9720b297c2160d6a17d46fe92a5fe
+  WeftCodec: d074a072998a7cbda539e1f99e3fb77969de782c
+  WeftCodec-Go: 5c48d4cc0addd066ac147bee6a8af97b6923f70c
+  WeftFS-Go: 25d8b552cd4b40ddd710497a22baa961ab18a535
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.1-1-cachyos
+image: weft/fuse-court:1 sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8
+source_store: /work/.docker-cache/real-corpus/store-qwen-base
+source_weights: /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors
+== build rust binary ==
+== copy cached P3 store ==
+== checkpoint write ==
+tensors=290 shards=2 element_bytes=988065536 source_sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+== snapshot ==
+== context root over checkpoint objects only ==
+== training-ready --check (writes nothing) ==
+== materialize --training-ready ==
+== verify the materialized directory offline ==
+== compare the checkpoint's source tensor digest with the source container ==
+source_sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 checkpoint_source_sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+assertions: ok
+== receipt ==
+receipt=/work/bench/receipts/training-ready-20261105T171104Z.json
+== done ==

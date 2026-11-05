@@ -1852,3 +1852,66 @@ a Merkle root over the chunk table.
   no per-level sibling table; the root changes with `chunk_size`; there is no
   explicit v3→v1/v2 conversion command (implicit downgrade is refused); Go's
   v1 whole-file path is unchanged; one host and warm caches.
+
+## Subphase P7 — training-ready is a storage refusal
+
+Implemented in `src/training_ready.rs`, the `DependencyMismatch` error class,
+snapshot-aware checkpoint/tensor verification helpers, the CLI verbs
+`weft materialize` and `weft training-ready`, the normative
+`spec/WEFT-TRAINING-READY.md`, and `tests/training_ready.rs` (10/10).
+
+- **Contract.** A Context Root may be materialized as training-ready only when
+  all six preconditions hold at the pinned snapshot: exact untruncated
+  resolution; every decoded object verifies (v1 whole-file, v3 Merkle root, v2
+  representation decode, symlink digest); every declared and transitively
+  reachable causal parent is present (cycles terminate; a missing identity is
+  `DependencyMismatch` naming it); every object and selector predicate is
+  authorized under the supplied capability/envelope; every tensor logical root
+  is recomputed (and every checkpoint manifest is fully decoded and reassembled
+  when `--require-tensors` is given); and the estimate and the measured cost
+  stay inside `--max-bytes`/`--max-objects`/`--max-decode-ms`. Any failure is a
+  typed error, creates no output directory, and leaves no partial file.
+- **Commands.** `weft materialize --root N --training-ready --out DIR
+  [--max-*] [--capability FILE] [--require-tensors]`;
+  `weft training-ready --root N --check`; and
+  `weft training-ready --verify-out DIR`. An existing output path is `Exists`.
+- **Output.** Verified decoded bytes at their store paths, plus canonical WCB
+  `manifest.wcb` (`weft.training_ready.manifest.v1`) and
+  `training-ready.wcb` (`weft.training_ready.v1`). No JSON is written into the
+  output directory. Publication is a sibling temporary directory renamed into
+  place after every check and write succeeds.
+- **Reused verification.** `checkpoint::verify_checkpoint_at` and
+  `tensor_store::tensor_logical_root_at` resolve and read against the pinned
+  state; no second hashing implementation was added. The proof is the store's
+  ordinary verified read path, not a trusted field.
+- **Tests.** `tests/training_ready.rs` 10/10: happy path with relations and a
+  real `checkpoint write` tensor; tampered chunk blob → `Corrupt`, no out dir;
+  removed causal parent → `DependencyMismatch` naming the root; budget below
+  actual → `BudgetExceeded`; corrupted `weft.tensor.logical_root` → `Corrupt`;
+  capability that grants another namespace → `Unauthorized`; second run into an
+  existing directory → `Exists`; a causal cycle terminates; check mode writes
+  nothing; the CLI check/materialize/verify-out surface. `cargo test
+  --all-targets` and `cargo test --features fuse --all-targets` both pass in
+  the Docker courts (one pre-existing parallel `tests/quota.rs` lock flake
+  passed standalone and on rerun).
+- **Real-data demo.** Receipt
+  `bench/receipts/training-ready-20261105T171104Z.json`, raw log beside it;
+  `scripts/demo-training-ready.sh` in the FUSE court. Corpus: cached
+  Qwen/Qwen2.5-0.5B BF16 container (SHA-256
+  `88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342`),
+  290 tensors, 988,065,536 element bytes, 2 raw shards per tensor (580 shard
+  objects); the store is a copy of the P3 cached base store. Checkpoint write
+  66.35 s, max RSS 1,174,908 KiB. `training-ready --check` 77.25 s, 552,156 KiB,
+  all six preconditions true, 581 objects, 988,283,592 bytes, estimate 30,034 ms
+  vs actual 77,099 ms. Materialize 98.14 s, 552,236 KiB, 581 files, 580 tensor
+  objects verified, 290 checkpoint tensors verified. Offline `--verify-out`
+  re-reads all 581 files, recomputes 580 tensor roots, reassembles all 290
+  checkpoint tensors, and matches the source digest. The materialized
+  checkpoint's `source_sha256` equals the source container's SHA-256.
+- **Residual.** Only the Rust store implements training-ready (Go parity is
+  not claimed); the output contains decoded shard bytes and a canonical
+  manifest, not a single restored safetensors container; output verification
+  trusts the canonical manifest for paths and only checks that every recorded
+  byte and tensor root matches; the demo is one host, warm caches, and a copy
+  of a cached public-weight store. The cost estimate is a declared
+  throughput model, not a calibration.
