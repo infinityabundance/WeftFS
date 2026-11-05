@@ -124,10 +124,10 @@ Per-daemon memory scales with the pinned snapshot state, so the
 
 | corpus objects | receipts | daemon RSS mean | max |
 |---|---|---|---|
-| 235 | 100-mount court | ≈17.7 MiB | 26.5 MiB |
+| 235 | 100-mount court | ≈18.1 MiB | 26.5 MiB |
 | 914 | 400-mount | ≈31.1 MiB | 41.1 MiB |
 | 1,139 | 500-mount | ≈35.6 MiB | 48.5 MiB |
-| 2,264 | 1,000-mount | ≈47.5 MiB | 80.5 MiB |
+| 2,264 | 1,000-mount | ≈47.6 MiB | 80.5 MiB |
 
 That is the honest reason a shared multi-mount daemon (one process serving many
 contexts) is required to fit many mounts inside a small court; 1,000
