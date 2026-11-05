@@ -1,0 +1,73 @@
+{
+  "envelope_verify": {
+    "cold": {
+      "max_ns": 60583,
+      "mean_ns": 43175,
+      "median_ns": 43110,
+      "min_ns": 42399,
+      "p95_ns": 43702,
+      "samples": 1000
+    },
+    "note": "cold = first verification of each distinct blob; warm = three subsequent passes over the same 1,000 blobs",
+    "warm": {
+      "max_ns": 47078,
+      "mean_ns": 43228,
+      "median_ns": 43180,
+      "min_ns": 42469,
+      "p95_ns": 43621,
+      "samples": 3000
+    }
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "272c2c09211c337d8511693f230934a90b4fa916",
+    "revision_weftfs": "d5f9572d0f58591ad9121bc9595fd38cb374ff6d"
+  },
+  "isolation": {
+    "note": "same tenant A content and envelope; tenant B adds unreadable objects",
+    "tenant_b_population_large": 40,
+    "tenant_b_population_small": 0,
+    "work_units_equal": true,
+    "work_units_large": 7,
+    "work_units_small": 7
+  },
+  "label": "Synthetic, single host, Docker bench court with hard memory/CPU/pids limits and bounded /tmp. Envelope and resolve measurements are warm-cache; isolation compares authorized work units only. Not a fleet, power-loss, or timing-side-channel claim.",
+  "schema": "weft.capability-envelope.bench.v1",
+  "signed_resolve": {
+    "matched_count": 1000,
+    "overhead_median_ns": 472511,
+    "overhead_percent": 0.5281276649218517,
+    "signed": {
+      "max_ns": 96147312,
+      "mean_ns": 90175298,
+      "median_ns": 89941598,
+      "min_ns": 88075469,
+      "p95_ns": 93162746,
+      "samples": 50
+    },
+    "unsigned": {
+      "max_ns": 94260914,
+      "mean_ns": 89581626,
+      "median_ns": 89469087,
+      "min_ns": 87400660,
+      "p95_ns": 92246417,
+      "samples": 50
+    },
+    "work_units_equal": true,
+    "work_units_signed": 1001,
+    "work_units_unsigned": 1001
+  },
+  "workload": {
+    "envelopes": 1000,
+    "resolve_samples": 50,
+    "selector": "select attrs.project == \"capability-bench\"",
+    "store_objects": 1000
+  }
+}

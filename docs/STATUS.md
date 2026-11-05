@@ -40,7 +40,15 @@ it (whole-pair-aware planner); analysis, losses, and caveats are in
 `ai-corpus-20261103T220113Z.json` is retained. F8 receipts are
 `bench/receipts/buck2-cas-20261104T022511Z.json` (15/15 prototype assertions)
 and `bench/receipts/agent-memory-20261104T022512Z.json` (7/7 simulated-timestamp
-months-later replay). Generated-type drift is `scripts/gen-types.sh --check`,
+months-later replay). D2 authenticated capability grants are implemented on
+`staging`: Ed25519 `weft.capability.envelope.v1`, offline verification against
+an explicit revocation set, enforcement layered on POSIX and explicit
+capabilities, a two-tenant isolation court, and the envelope benchmark receipt
+`bench/receipts/capability-envelope-20261105T034858Z.json` (analysis in
+`bench/RESULTS-capability-envelope.md`). The cross-language gate is
+`WeftCodec-Go/hack/capability-cross.sh`: byte-identical signed blobs and
+identical `BadSignature`/`WrongGrantee`/`Expired`/`Revoked`/`NonCanonical`
+rejections. Generated-type drift is `scripts/gen-types.sh --check`,
 wired into `verify-all`. FLOAT_TENSOR (mode 9) now encodes its exponent plane with `huffman-canonical-v1`: `cargo test --all-targets` (133 tests) and `go test ./...` pass in the Docker courts, and `WeftCodec-Go/hack/cross.sh compare` reports `PASS identical float_tensor`, `float_tensor_single`, and `float_tensor_uniform`; this change is on `staging` and is not yet represented in a full `verify-all` receipt.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
