@@ -111,6 +111,32 @@ evidence.
     models, a refinement proof, physical power loss, host page-cache loss, and
     the remaining release/CI items.
 
+## P8 — Third-party conformance surface (implemented)
+
+- **Manifest.** `conformance/manifest.json` enumerates every vector (295
+  entries) with kind, mode, expectation, supersession, SHA-256, and mirror
+  paths; `scripts/gen-conformance-manifest.sh --check` fails on drift. The
+  shared Rust↔Go corpus (288 files) has aggregate
+  `5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1`.
+- **Runner contract.** `<adapter> VECTOR.json` prints one JSON object
+  (`ok` with `content_root`/`decoded_sha256`, `error` with `class`, or `skip`
+  with a reason). `scripts/run-conformance.sh` compares against the manifest,
+  prints `VECTOR MISMATCH <path>: expected ... got ...`, and exits non-zero.
+  `docs/CONFORMANCE.md` is the precise contract.
+- **Reference adapters.** Rust, Go, and Python adapters wrap the shipped CLIs.
+  Committed results: Rust 206/0/89, Go 206/0/89, Python 56/0/239
+  (pass/fail/skip); receipts are named in `docs/CONFORMANCE.md`.
+- **Decoder guide.** `docs/WRITE-YOUR-OWN-DECODER.md` covers WFT1 framing,
+  WCB, domain-separated hashing, modes 0–14, limits, failure classes, the exact
+  check order, frozen/experimental status, and a 50-line skeleton.
+- **Coverage.** `scripts/check-conformance-coverage.sh` requires mode 0–14
+  valid+reject coverage, valid identity records for every kind, complete
+  expectations, and mirror identity. Both it and the manifest check are
+  host-only courts in `scripts/verify-all.sh`.
+- **Evidence.** `bench/receipts/verify-20261105T174254Z.json` (27/27), plus the
+  three conformance run receipts. Residual: the reference adapters explicitly
+  skip kinds without a public CLI verb; the Python reader implements modes 0–8.
+
 ## Non-negotiables
 
 - Every claim carries command, environment, fixture, revisions, raw output.

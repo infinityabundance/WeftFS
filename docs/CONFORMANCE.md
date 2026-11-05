@@ -217,7 +217,10 @@ scripts/docker-court.sh python \
 ```
 
 Committed reference results (manifest aggregate
-`3c981f03…`; see the receipts for the exact revision):
+`3c981f03…`; receipts:
+`bench/receipts/conformance-rust-20261105T180000Z.json`,
+`bench/receipts/conformance-go-20261105T180100Z.json`,
+`bench/receipts/conformance-python-20261105T175000Z.json`):
 
 | Implementation | Pass | Fail | Skip |
 |---|---:|---:|---:|
