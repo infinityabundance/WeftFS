@@ -37,6 +37,108 @@ power loss.
 > selects it with `--backend local|object`. No 3FS run is claimed; see
 > `spec/WEFT-MODEL.md` §4.1.
 
+> **S3 backend addendum (subphase Q4, 2026-11-05).** `S3Backend` implements the
+> same `StorageBackend` contract over a real S3-compatible endpoint using SigV4
+> and conditional writes. An S3 store and a local store built from the same
+> seeded operations publish **byte-identical** commit, manifest, chunk, index,
+> and snapshot-ref keys; `tests/s3_backend.rs` proves this against a live MinIO
+> server. Writable open requires the endpoint to honour `If-None-Match: *` and
+> `If-Match`; a server that ignores either form is refused with
+> `UnsupportedVersion` rather than silently overwriting a head. No AWS, GCS,
+> 3FS, cloud, multi-node, media, or power-loss claim is made.
+
+### 0.1 Backend matrix
+
+| Backend | Selection | Publication primitive | Range reads | Writer lock | Court |
+|---|---|---|---|---|---|
+| `LocalBackend` | `--backend local` (default) | `tmp` + `fsync` + `rename(2)` + dir `fsync` | yes | `flock(2)` on `LOCK` | all existing courts |
+| `ObjectBackend` | `--backend object` | `tmp` + `fsync` + `link(2)` + unlink + dir `fsync` (rename fallback stated) | yes | `flock(2)` on `LOCK` | `tests/backend.rs` |
+| `S3Backend` | `--backend s3` + `--s3-*` | `PUT` `If-None-Match: *`; superblock `GET` + `PUT` `If-Match` | yes | `LOCK` object, owner + lease, `If-Match` reclaim | `scripts/s3_court.sh` |
+| `Posix` | caller-declared capabilities | whatever the declaration says (enforced) | declared | `flock(2)` | capability-refusal tests |
+
+S3 key mapping is the local logical layout, not a private encoding:
+`FORMAT`, `superblock` (the same two 4096-byte slots), `LOCK`,
+`commits/<gen>.commit`, `objects/<ab>/<hash>`, `manifests/<ab>/<hash>`,
+`indexes/<ab>/<commit>.idx`, `refs/snapshots/<name>`, `refs/tags/<name>`,
+`quota`, and `quota.migrated`.
+
+### 0.2 S3 head publication
+
+1. Content, manifests, commit records, indexes, refs, and quota use
+   `PUT` with `If-None-Match: *`. A `412` means the key exists: identical bytes
+   are idempotent, different bytes are `Exists` (content addresses make the
+   latter a real inconsistency).
+2. The `superblock` object is 8192 bytes and holds the same two slots as the
+   local layout. `write_at` reads the whole object (including its ETag), patches
+   the inactive slot, and publishes the whole object with `If-Match: <ETag>`.
+   A lost race returns `412`; the writer re-reads and retries a bounded number
+   of times, then fails `Busy`. The previous head is never overwritten blindly.
+3. Every S3 `write_at` is a whole-object rewrite because object stores have no
+   in-place range write. This preserves the two-slot protocol, not a physical
+   in-place update.
+4. `LOCK` is an S3 object with `owner=` and `expires_ns=`. A live second writer
+   fails `Busy`. A crashed writer leaves a lease; a later writable open replaces
+   it with `If-Match` after expiry. The lock is advisory and provider-side, not
+   a POSIX file lock.
+5. Writable open probes both conditional forms on a temporary key. Ignoring
+   either one fails closed with `UnsupportedVersion`; there is no degraded mode.
+
+### 0.3 MinIO court and measured result
+
+The official `minio/minio` Docker Hub repository was not pullable on
+2026-11-05 (registry returned 404/unauthorized). `scripts/s3_court.sh` therefore
+runs the official linux-amd64 MinIO release binary
+`RELEASE.2025-04-22T22-12-26Z` (sha256
+`53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c`) inside a
+minimal `debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc`
+container. It uses the same hard limits as every other court (`3g` memory,
+swap `3g`, `1024` pids, `4` CPUs, bounded tmpfs, no-new-privileges,
+`cap-drop=ALL`) and a tmpfs data directory. The script creates a bucket, runs
+the Rust test binary against it, and tears the server and network down.
+
+Observed at WeftFS `0526798`:
+
+| Court | Observed |
+|---|---|
+| `tests/s3_backend.rs` with MinIO | 6 passed, 0 failed, 0 ignored |
+| `tests/s3_backend.rs` without S3 env | 6 passed (each prints `SKIP s3_backend: WEFT_S3_TEST_ENDPOINT is not set`), 0 failed |
+| Rust `cargo test --all-targets` | 221 passed, 0 failed, 0 ignored |
+| FUSE `cargo test --features fuse --all-targets` | 255 passed, 0 failed, 2 ignored (pre-existing) |
+
+The tests cover init/open/create/read/range read/write/truncate/rename/
+snapshot/`verify --full`, live second-writer refusal, a lost `If-Match` leaving
+the previous head readable, a process-fault crash proxy at all three
+publication phases, GC deleting only unreachable content, and byte-identical
+artifacts versus a local store built from the same operations.
+
+Benchmark receipt `bench/receipts/s3-backend-20261105T231956Z.json`
+(single-node MinIO on localhost; 1,000 creates of a 25-byte payload, 100 x
+1 MiB writes, 1,000 reads; both backends produced the same head
+`8e47145e1a09c3bf…` and generation 1101):
+
+| Phase | Local | S3 | Ratio |
+|---|---|---|---|
+| 1,000 creates wall | 105.8 ms / 9,448 ops/s | 1,843.3 ms / 542.5 ops/s | 17.4x |
+| create p50 / p95 | 100 / 155 us | 1,813 / 2,025 us | — |
+| 100 MiB writes wall | 189.7 ms / 527.2 MiB/s | 1,182.7 ms / 84.6 MiB/s | 6.2x |
+| write p50 / p95 | 660 / 747 us | 10,448 / 11,032 us | — |
+| 1,000 reads wall | 4.5 ms / 222,165 ops/s | 358.6 ms / 2,789 ops/s | 79.7x |
+| read p50 / p95 | 4 / 4 us | 346 / 424 us | — |
+| backend bytes written | 111,581,685 | 116,091,480 | +4.0% |
+| verify --full | ok | ok | — |
+
+The S3 byte total is higher because each commit rewrites the full 8192-byte
+superblock object instead of one 4096-byte slot, and lock/probe traffic is
+counted. S3 provides no physical-byte counter, so the receipt reports the
+requested payload bytes per phase and sets `physical_bytes` to 0 there.
+
+**Residual risks.** The S3 path is Rust-only. MinIO is single-node on
+localhost with a tmpfs data directory, so this court proves protocol behaviour
+and conditional-write safety, not media durability or power-loss recovery. The
+writer lock is a lease, so a paused writer longer than the lease can lose the
+lock; the default lease is 900 s and the court uses 2 s. No remote
+multi-writer, fleet, AWS, GCS, or 3FS run is claimed.
+
 ---
 
 ## 1. Verification commands and observed results

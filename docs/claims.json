@@ -1292,5 +1292,102 @@
     ],
     "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
     "kind": "present"
+  },
+  {
+    "id": "q4_s3_backend_present",
+    "claim": "The store-status and status docs name the S3-compatible backend type.",
+    "value": "S3Backend",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q4_minio_binary_sha256",
+    "claim": "The docs record the exact MinIO release binary digest used by the S3 court.",
+    "value": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261105T231956Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_test_count",
+    "claim": "The docs record the S3 test result with MinIO.",
+    "value": "6 passed, 0 failed, 0 ignored",
+    "locations": [
+      "docs/store-status.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261105T231956Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_bench_receipt",
+    "claim": "The docs cite the local-vs-S3 benchmark receipt.",
+    "value": "s3-backend-20261105T231956Z.json",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T231956Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_same_head",
+    "claim": "The docs record that local and S3 produced the same head.",
+    "value": "8e47145e1a09c3bf",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T231956Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_no_aws_s3_claim",
+    "claim": "The docs do not claim an AWS S3 run.",
+    "value": "AWS S3",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "absent"
+  },
+  {
+    "id": "q4_rust_all_targets",
+    "claim": "The docs record the full Rust all-targets count at the Q4 revision.",
+    "value": "221 passed",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q4_fuse_all_targets",
+    "claim": "The docs record the full FUSE all-targets count at the Q4 revision.",
+    "value": "255 passed",
+    "locations": [
+      "docs/store-status.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_rust_only",
+    "claim": "The status records that only Rust implements the S3 backend.",
+    "value": "The S3 path is Rust-only",
+    "locations": [
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

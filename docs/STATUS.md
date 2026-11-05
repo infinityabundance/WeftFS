@@ -2139,3 +2139,65 @@ Implemented in Rust and Go; normative text in `spec/WEFT-MODEL.md` §2.2 and
   still the enforcement authority: deleting it disables enforcement. Usage is
   an admission counter, not a reclaimable footprint; deletes do not return
   budget. One host, synthetic fixtures, one repetition.
+
+## Subphase Q4 — real S3-compatible backend and MinIO court
+
+Implemented in Rust on `staging` at `0526798` (code commit); not pushed.
+
+- **Backend.** `S3Backend` implements `StorageBackend` over SigV4 with a minimal
+  blocking client (`ureq`, rustls-capable). It uses the local logical key
+  layout verbatim (`objects/<ab>/<hash>`, `manifests/<ab>/<hash>`,
+  `commits/<gen>.commit`, `indexes/...`, `refs/...`, `FORMAT`, `superblock`,
+  `LOCK`, `quota`). Blobs use `PUT` + `If-None-Match: *` (identical bytes
+  idempotent, different bytes `Exists`), range reads use HTTP `Range`, and the
+  two-slot superblock is updated by whole-object `GET` + `PUT` with
+  `If-Match: <ETag>`. A lost conditional update retries from a fresh read and
+  then fails `Busy`; it never overwrites the head blindly. Writable open probes
+  both conditional forms and refuses (`UnsupportedVersion`) if the endpoint
+  ignores either. CLI: `--backend s3` plus `--s3-endpoint`, `--s3-bucket`,
+  `--s3-region`, `--s3-access-key`, `--s3-secret-key` (or the AWS_* variables).
+  `--store` is optional for S3.
+- **Lock.** The writer lock is a `LOCK` object with an owner and an expiry
+  lease, created with `If-None-Match: *`. A live second writer fails `Busy`; a
+  crashed writer's lease is reclaimed with `If-Match`. This is advisory and is
+  not a POSIX `flock` or a multi-host protocol.
+- **Capabilities.** `atomic_publish`, `durable_fsync` (provider
+  acknowledgement only; no local fsync), `true_range_reads`, max object bound
+  1 GiB, consistency `single-node S3-compatible endpoint; read-after-write and
+  list-after-write; conditional writes required`. Publication text states the
+  `If-None-Match`/`If-Match` protocol.
+- **MinIO court.** The official `minio/minio` Docker Hub repository was not
+  pullable on 2026-11-05 (registry 404/unauthorized).
+  `scripts/s3_court.sh` runs the official linux-amd64 MinIO release binary
+  `RELEASE.2025-04-22T22-12-26Z` (sha256
+  `53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c`) in a
+  minimal `debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc`
+  container with the same hard limits (`3g`, swap `3g`, `1024` pids, `4`
+  CPUs, bounded tmpfs, no-new-privileges, `cap-drop=ALL`) and a tmpfs data
+  directory. It creates a bucket, runs `tests/s3_backend.rs`, and tears down the
+  server and network. `scripts/docker-court.sh` gained a validated optional
+  network and forwards only named `WEFT_S3_*`/`AWS_*` variables.
+- **Tests.** With MinIO: `tests/s3_backend.rs` 6 passed / 0 failed / 0 ignored
+  (init/open/create/read/range/write/truncate/rename/snapshot/`verify --full`;
+  live second-writer `Busy`; lost `If-Match` leaves the previous head readable;
+  process-fault crash proxy at `after_objects`, `after_commit_file`,
+  `after_superblock_write`; GC removes only unreachable content;
+  byte-identical local-vs-S3 artifacts). Without the S3 environment each test
+  prints `SKIP s3_backend: WEFT_S3_TEST_ENDPOINT is not set` and passes.
+  Rust `cargo test --all-targets`: 221 passed / 0 failed / 0 ignored. FUSE
+  `--features fuse --all-targets`: 255 passed / 0 failed / 2 ignored
+  (pre-existing).
+- **Bench** (`bench/receipts/s3-backend-20261105T231956Z.json`, court receipt
+  `bench/receipts/s3-court-20261105T231956Z.json`): single-node MinIO on
+  localhost, same seeded operations, same head `8e47145e1a09c3bf…`, generation
+  1101. 1,000 creates: local 105.8 ms / 9,448 ops/s (p50 100 us, p95 155 us)
+  vs S3 1,843.3 ms / 542.5 ops/s (p50 1,813 us, p95 2,025 us). 100 MiB in 100
+  files: 189.7 ms / 527.2 MiB/s vs 1,182.7 ms / 84.6 MiB/s; p50 660 vs 10,448
+  us. 1,000 reads: 4.5 ms / 222,165 ops/s vs 358.6 ms / 2,789 ops/s; p50 4 vs
+  346 us. Backend bytes written 111,581,685 vs 116,091,480 (+4.0%, from
+  whole-superblock rewrites and lock/probe traffic). `verify --full` ok on both.
+- **Residual.** Rust only. MinIO is one node on localhost with a tmpfs data
+  directory: protocol and conditional-write safety, not media durability or
+  power loss. The writer lock is a lease (default 900 s; court 2 s); a paused
+  writer longer than the lease can lose it. No AWS, GCS, 3FS, cloud,
+  multi-node, or fleet claim.
