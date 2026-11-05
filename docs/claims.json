@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87×",
+    "value": "7.87\u00d7",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -426,6 +426,127 @@
       "docs/RELEASE-v0.6.0.md"
     ],
     "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p2_receipt_current",
+    "claim": "The P2 real-weight court is recorded in the results doc and status file.",
+    "value": "real-float-tensor-20261105T053958Z.json",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_float_tensor_bf16_win",
+    "claim": "The results and status state that FLOAT_TENSOR beats per-tensor zstd -19 on Qwen BF16.",
+    "value": "14.4 % smaller than per-tensor zstd -19",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_float_tensor_fp32_loss",
+    "claim": "The results and status publish the FLOAT_TENSOR loss on pythia F32 against zstd -19.",
+    "value": "62.0 % larger than per-tensor zstd -19",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_float_tensor_fp32_zipnn_loss",
+    "claim": "The results and status publish the FLOAT_TENSOR loss on pythia F32 against ZipNN.",
+    "value": "95.5 % larger than ZipNN 0.5.4",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_delta_consecutive_ratio",
+    "claim": "The results and status state the delta ratio range on the meaningful consecutive pairs.",
+    "value": "19.4-34.1 %",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_delta_fine_tune_ratio",
+    "claim": "The results and status state the fine-tune delta ratio.",
+    "value": "70.5 % of zstd -19",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_sparse_change_patch_loss",
+    "claim": "The results and status publish the mode-11 loss to patch-from on the 19-byte step0->step1 pair.",
+    "value": "245.66",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_corpus_step0_step1_anomaly",
+    "claim": "The results and status record that the published pythia step0 and step1 files differ in exactly 19 bytes.",
+    "value": "exactly 19 bytes",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_pythia_dtype_disclosure",
+    "claim": "The results and status disclose that the F32 pythia containers hold fp16-precision values widened to F32.",
+    "value": "F32 containers hold fp16-precision values widened to F32",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_delta_restore_loss",
+    "claim": "The results and status state the measured fine-tune delta decode slowdown.",
+    "value": "44.0\u00d7",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p2_no_aggregation",
+    "claim": "The results and status state that consecutive pairs and the fine-tune are never aggregated.",
+    "value": "never aggregated",
+    "locations": [
+      "bench/RESULTS-float-tensor-real.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
     "kind": "present"
   }
 ]

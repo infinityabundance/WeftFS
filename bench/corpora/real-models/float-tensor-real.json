@@ -1,0 +1,140 @@
+{
+  "schema": "weft.real-float-tensor.corpus.v1",
+  "label": "Real public weights for the P2 FLOAT_TENSOR / WEIGHT_DELTA court",
+  "note": "Seven real checkpoint files and five pairs. Files are downloaded by bench/scripts/real_model_fetch.py, which reads the LFS pointer for the exact revision from the Hugging Face tree API and verifies size and SHA-256 after download. Every file is re-hashed by bench/scripts/real_float_tensor_court.py before measurement. No weights are committed; they live under .docker-cache/real-corpus.",
+  "cases": [
+    {
+      "id": "qwen-base",
+      "repo": "Qwen/Qwen2.5-0.5B",
+      "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+      "size": 988097824,
+      "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "dtype": "bf16",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536,
+      "role": "base of the independent fine-tune pair"
+    },
+    {
+      "id": "qwen-instruct",
+      "repo": "Qwen/Qwen2.5-0.5B-Instruct",
+      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+      "size": 988097824,
+      "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "dtype": "bf16",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536,
+      "role": "independent instruction fine-tune of qwen-base"
+    },
+    {
+      "id": "pythia-step0",
+      "repo": "EleutherAI/pythia-70m",
+      "revision": "step0",
+      "revision_commit": "87c8ac0ba129db9b084502d341c6ca8dec0fa01f",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/pythia-70m-step0.safetensors",
+      "size": 281715176,
+      "sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+      "dtype": "fp32",
+      "tensor_count": 76,
+      "tensor_data_bytes": 281706496,
+      "role": "training-run checkpoint 0 (random initialisation)"
+    },
+    {
+      "id": "pythia-step1",
+      "repo": "EleutherAI/pythia-70m",
+      "revision": "step1",
+      "revision_commit": "85473bbdf722c86eaf9d22d22bdbfea8b505380d",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/pythia-70m-step1.safetensors",
+      "size": 281715176,
+      "sha256": "652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109",
+      "dtype": "fp32",
+      "tensor_count": 76,
+      "tensor_data_bytes": 281706496,
+      "role": "training-run checkpoint 1"
+    },
+    {
+      "id": "pythia-step2",
+      "repo": "EleutherAI/pythia-70m",
+      "revision": "step2",
+      "revision_commit": "cf8b7696e5c19ed56c98186fd48b12a40a550f50",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/pythia-70m-step2.safetensors",
+      "size": 281715176,
+      "sha256": "491b4bafde38f7b58871b997597d5ca8447e683718879f846501b20a719127b2",
+      "dtype": "fp32",
+      "tensor_count": 76,
+      "tensor_data_bytes": 281706496,
+      "role": "training-run checkpoint 2"
+    },
+    {
+      "id": "pythia-step4",
+      "repo": "EleutherAI/pythia-70m",
+      "revision": "step4",
+      "revision_commit": "667d937e64f611069848ed310ddb5ce971a3b0a9",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/pythia-70m-step4.safetensors",
+      "size": 281715176,
+      "sha256": "cf8a0b16691ab56ed52e5c6ace2c14f99637e7de755eba9ee3b113417d996223",
+      "dtype": "fp32",
+      "tensor_count": 76,
+      "tensor_data_bytes": 281706496,
+      "role": "training-run checkpoint 4"
+    },
+    {
+      "id": "pythia-step8",
+      "repo": "EleutherAI/pythia-70m",
+      "revision": "step8",
+      "revision_commit": "e17bfc00db39ee168247dd3ba7c54d51135002ae",
+      "file": "model.safetensors",
+      "path": ".docker-cache/real-corpus/pythia-70m-step8.safetensors",
+      "size": 281715176,
+      "sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+      "dtype": "fp32",
+      "tensor_count": 76,
+      "tensor_data_bytes": 281706496,
+      "role": "training-run checkpoint 8"
+    }
+  ],
+  "pairs": [
+    {
+      "id": "pythia-step0-to-step1",
+      "base": "pythia-step0",
+      "target": "pythia-step1",
+      "kind": "consecutive-training-checkpoint",
+      "note": "step0 -> step1 of the same published EleutherAI/pythia-70m training run"
+    },
+    {
+      "id": "pythia-step1-to-step2",
+      "base": "pythia-step1",
+      "target": "pythia-step2",
+      "kind": "consecutive-training-checkpoint",
+      "note": "step1 -> step2 of the same published training run"
+    },
+    {
+      "id": "pythia-step2-to-step4",
+      "base": "pythia-step2",
+      "target": "pythia-step4",
+      "kind": "consecutive-training-checkpoint",
+      "note": "step2 -> step4 of the same published training run (two optimizer steps)"
+    },
+    {
+      "id": "pythia-step4-to-step8",
+      "base": "pythia-step4",
+      "target": "pythia-step8",
+      "kind": "consecutive-training-checkpoint",
+      "note": "step4 -> step8 of the same published training run (four optimizer steps)"
+    },
+    {
+      "id": "qwen-base-to-instruct",
+      "base": "qwen-base",
+      "target": "qwen-instruct",
+      "kind": "independent-fine-tune",
+      "note": "Qwen2.5-0.5B base -> Qwen2.5-0.5B-Instruct; a separate instruction-tuning run, not a neighbouring training step"
+    }
+  ]
+}

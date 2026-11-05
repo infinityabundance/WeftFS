@@ -13,6 +13,10 @@ Usage:
   python3 bench/scripts/real_model_fetch.py \
       --repo Qwen/Qwen2.5-0.5B --file model.safetensors \
       --dest .docker-cache/real-corpus/Qwen2.5-0.5B.safetensors
+
+`--revision` selects a branch/tag/commit (for example the Pythia `stepN`
+branches); the LFS pointer is read from that revision's tree, so verification
+always targets the hub metadata for the exact revision that was downloaded.
 """
 
 import argparse
@@ -32,8 +36,8 @@ def api_tree(repo, revision="main"):
         return json.load(response)
 
 
-def entry_for(repo, name):
-    for item in api_tree(repo):
+def entry_for(repo, name, revision="main"):
+    for item in api_tree(repo, revision):
         if item.get("type") == "file" and item.get("path") == name:
             lfs = item.get("lfs") or {}
             return {
@@ -102,10 +106,11 @@ def main():
     parser.add_argument("--repo", required=True)
     parser.add_argument("--file", required=True)
     parser.add_argument("--dest", required=True)
+    parser.add_argument("--revision", default="main")
     args = parser.parse_args()
 
     os.makedirs(os.path.dirname(os.path.abspath(args.dest)), exist_ok=True)
-    meta = entry_for(args.repo, args.file)
+    meta = entry_for(args.repo, args.file, args.revision)
     expected = meta["lfs_size"]
     if meta["size"] != expected or not meta["sha256"]:
         raise SystemExit(f"missing LFS pointer metadata for {args.repo}/{args.file}: {meta}")
@@ -117,7 +122,7 @@ def main():
             return
         raise SystemExit(f"{args.dest}: size matches but sha256 is {digest}")
 
-    url = f"{HF}/{args.repo}/resolve/main/{args.file}"
+    url = f"{HF}/{args.repo}/resolve/{args.revision}/{args.file}"
     part, elapsed, downloaded = download(url, args.dest, expected)
     actual = os.path.getsize(part)
     if actual != expected:
@@ -132,6 +137,7 @@ def main():
             {
                 "repo": args.repo,
                 "file": args.file,
+                "revision": args.revision,
                 "path": args.dest,
                 "size": expected,
                 "sha256": digest,

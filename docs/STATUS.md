@@ -1557,3 +1557,72 @@ reproduce commands: `bench/RESULTS-real-model.md`.
   whole-file and independent, not per-tensor or delta-aware; WeftFS restore
   timings are single observations for the full-file rows; no Go parity for this
   court.
+
+## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
+
+**Implemented, measured once, single host.** This court settles two empirical
+questions on real public weights, reported separately: (A) whether
+`FLOAT_TENSOR` (mode 9) is competitive with zstd and ZipNN-class coding, and
+(B) whether `WEIGHT_DELTA` (mode 11) helps more on consecutive training
+checkpoints than on an independent fine-tune. Receipt:
+`bench/receipts/real-float-tensor-20261105T053958Z.json`; tables, method, every
+loss, and reproduce commands: `bench/RESULTS-float-tensor-real.md`. Label:
+single host, public weights, warm cache, no fleet claim; every method lossless.
+
+- **Corpus:** seven files, all SHA-256-verified against the Hugging Face LFS
+  pointers for the exact revision. `Qwen/Qwen2.5-0.5B` and `-Instruct` are
+  BF16 (290 tensors, 988,097,824 bytes each). `EleutherAI/pythia-70m` branches
+  `step0`, `step1`, `step2`, `step4`, `step8` are **F32** (76 tensors,
+  281,715,176 bytes each) and are not reported as bf16.
+  The F32 containers hold fp16-precision values widened to F32 (the receipt's
+  byte-plane probe finds entropy 0.0 in byte plane 0 and 8 symbols in plane 1
+  of the largest tensor);
+  no claim is made for full-precision random F32. The published `step0` and
+  `step1` files differ in **exactly 19 bytes**, so that pair is reported
+  separately and is not the headline consecutive result.
+- **Harness:** `WeftCodec/examples/real_float_tensor_bench.rs` parses
+  safetensors headers directly and calls the shipped `encode_float_tensor` /
+  `decode_float_tensor` and `encode_weight_delta` / `decode_with_base_frame`
+  entry points. zstd baselines are the real 1.5.4 CLI, per tensor at `-19 -T1`
+  and default `-3 -T1`; whole-file `-19` is reported separately. ZipNN 0.5.4
+  is the official whole-file byte path; it is not delta-aware.
+- **(A) BF16:** `FLOAT_TENSOR` is **14.4 % smaller than per-tensor zstd -19**
+  on the base (657,975,743 vs 768,347,895) and 14.3 % smaller on instruct
+  (657,891,990 vs 767,597,259); it is 14.0 % smaller than whole-file zstd -19.
+  ZipNN 0.5.4 gives 658,281,885 / 658,236,344, so mode 9 is ahead by 306,142 /
+  344,354 bytes (0.05 %) — a tie, not a claimed win. Mode-9/raw is 0.6659.
+  All 121 tensors of at least 1 MiB win; 169/290 win overall; the worst loss is
+  +663 bytes on a 1,792-byte layernorm.
+- **(A) F32:** `FLOAT_TENSOR` is **62.0 % larger than per-tensor zstd -19**
+  (233,958,945 vs 144,397,747 on step0) and **95.5 % larger than ZipNN 0.5.4**
+  (119,680,613); 0/76 tensors win. Mode-9/raw is 0.8305. The structural reason:
+  mode 9 stores the 24-bit sign+mantissa plane raw for F32 and the pythia
+  mantissas have three low-entropy bytes that zstd removes.
+- **(B) Consecutive pairs** (delta bytes vs the newer checkpoint's per-tensor
+  zstd -19; patch-from is the whole-file baseline): step0→step1 7,434,959 /
+  144,403,851 (0.0515; patch 30,265, so delta is 245.66× worse on this
+  19-byte-change artifact); step1→step2 28,030,116 / 144,272,053 (0.1943;
+  patch 67,686,695); step2→step4 33,412,606 / 144,303,717 (0.2315; patch
+  111,529,080); step4→step8 49,198,709 / 144,464,688 (0.3406; patch
+  141,228,981). Delta is 19.4-34.1 % of independent per-tensor zstd -19 on the
+  meaningful consecutive pairs and 2.4–3.3× smaller than the best
+  `zstd --patch-from` there.
+- **(B) Independent fine-tune:** base→instruct changes 97.93 % of words; mode
+  11 is 541,188,577 bytes, which is **70.5 % of zstd -19** (767,597,259) and
+  72.2 % of the best patch (749,534,915 at `-12`; `-19` was killed by the
+  3 GiB limit at 3,128,344 KiB). So delta helps, but 2–3.6× less than on
+  meaningful consecutive checkpoints. The two case sets are never aggregated.
+- **Restore:** single-threaded, 5 reps per tensor, sum of per-tensor medians,
+  excluding storage I/O. Mode 9 is 6.7× (pythia F32) to 12.0× (Qwen BF16)
+  slower than zstd -19 decode; delta is 16.1–20.6× slower on the four pythia
+  pairs and 44.0× slower on the Qwen fine-tune. Delta restore also reads the
+  base frame (the Qwen pair reads 1,199,164,320 bytes vs zstd's 767,597,259).
+- **Losses kept explicit:** mode 9 loses on F32 by 62.0 %/95.5 %; only ties
+  ZipNN on BF16; decodes 6.7–12× slower. Mode 11 loses 245.66× to patch-from
+  on the 19-byte step0→step1 pair because any non-constant Huffman plane costs
+  at least one bit per element; it reaches only 70.5 % of zstd -19 on the
+  fine-tune; and its restore is 16–44× slower.
+- **Residual:** one host, warm caches, no cache dropping; restore totals are
+  sums of medians rather than one pass; ZipNN is whole-file and not
+  delta-aware; mode 9/11 are measured as codec frames, not through the store
+  planner; no Go parity for this court.
