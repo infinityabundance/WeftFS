@@ -73,10 +73,11 @@ fi
 run_court go "generated_types" \
   "GO111MODULE=off go run scripts/gen-types.go -schema spec/schema/identity-v1.schema -rust WeftCodec/src/generated.rs -go WeftCodec-Go/generated/generated.go --check"
 
-# D1 prototype Buck2 CAS adapter + exact-rebuild/miss/query demonstration.
+# P6 store-backed Buck2 CAS adapter: Go tests, then the FUSE court with the
+# Rust oracle and a real context mount (cross-language both directions).
 run_court go "buck2_cas" \
   "cd adapters/buck2 && go vet ./... && go test -count=1 ./..."
-run_court go "buck2_cas_demo" \
+run_court fuse "buck2_cas_store" \
   "bash scripts/demo-buck2-cas.sh"
 
 # D2 agent long-term memory with simulated timestamps and a months-later replay.

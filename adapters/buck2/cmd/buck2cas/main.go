@@ -1,5 +1,6 @@
-// Command buck2cas is a prototype local action-cache adapter keyed by a typed
-// Weft Context Root. It is not a Buck2 plugin and does not speak REAPI gRPC.
+// Command buck2cas is a local action-cache adapter keyed by a typed Weft
+// action declaration and stored on WeftFS. It is not a Buck2 plugin, does not
+// load into Buck2, and does not speak REAPI gRPC.
 package main
 
 import (
@@ -7,225 +8,356 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
+	"path"
+	"sort"
 	"strings"
-	"time"
 
+	"github.com/infinityabundance/WeftFS-Go/store"
+	"github.com/infinityabundance/WeftFS-Go/werr"
 	"github.com/infinityabundance/WeftFS/adapters/buck2/cas"
 )
 
+const (
+	exitOK       = 0
+	exitFailure  = 1
+	exitUsage    = 2
+	exitMiss     = 3
+	exitMismatch = 4
+	exitConflict = 5
+)
+
 func main() {
-	if len(os.Args) < 2 {
+	os.Exit(run(os.Args[1:]))
+}
+
+func run(args []string) int {
+	if len(args) < 1 {
 		usage()
-		os.Exit(2)
+		return exitUsage
 	}
 	var err error
-	switch os.Args[1] {
+	switch args[0] {
 	case "init":
-		err = cmdInit(os.Args[2:])
+		err = cmdInit(args[1:])
+	case "key":
+		err = cmdKey(args[1:])
 	case "store":
-		err = cmdStore(os.Args[2:])
+		err = cmdStore(args[1:])
 	case "fetch":
-		err = cmdFetch(os.Args[2:])
+		err = cmdFetch(args[1:])
 	case "query":
-		err = cmdQuery(os.Args[2:])
+		err = cmdQuery(args[1:])
 	case "verify":
-		err = cmdVerify(os.Args[2:])
-	case "demo":
-		err = cmdDemo(os.Args[2:])
+		err = cmdVerify(args[1:])
+	case "gc":
+		err = cmdGC(args[1:])
+	case "context":
+		err = cmdContext(args[1:])
+	case "resolve":
+		err = cmdResolve(args[1:])
+	case "delete":
+		err = cmdDelete(args[1:])
+	case "demo-store":
+		err = cmdDemoStore(args[1:])
+	case "bench":
+		err = cmdBench(args[1:])
+	case "help", "-h", "--help":
+		usage()
+		return exitOK
 	default:
 		usage()
-		os.Exit(2)
+		return exitUsage
 	}
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "buck2cas:", err)
-		os.Exit(1)
+	if err == nil {
+		return exitOK
 	}
+	code := exitFailure
+	if errors.Is(err, cas.ErrMiss) {
+		code = exitMiss
+	}
+	var typed *werr.Error
+	if errors.As(err, &typed) {
+		switch typed.Kind {
+		case werr.Conflict:
+			code = exitConflict
+		case werr.Corrupt, werr.Malformed, werr.NonCanonical:
+			if code == exitFailure {
+				code = exitMismatch
+			}
+		}
+	}
+	fmt.Fprintln(os.Stderr, "buck2cas:", err)
+	return code
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, `buck2cas — prototype Buck2-style CAS keyed by a Weft Context Root
+	fmt.Fprint(os.Stderr, `buck2cas — WeftFS-backed Buck2-style action cache (not a Buck2 plugin)
 
 usage:
-  buck2cas init  --root DIR
-  buck2cas store --root DIR --action-type T --toolchain C --input PATH=FILE ... --output FILE --output-path REL
-  buck2cas fetch --root DIR --action-type T --toolchain C --input PATH=FILE ... --out DIR
-  buck2cas query --root DIR [--action-type T] [--toolchain C] [--input PATH=FILE]
-  buck2cas verify --root DIR
-  buck2cas demo  --root DIR --receipt FILE`)
+  buck2cas init    --root DIR [--gc-grace-secs N] [--checkpoint-interval N]
+  buck2cas key     --key-file FILE [--json]
+  buck2cas store   --root DIR --key-file FILE --blob FILE [--output-path REL] [--json]
+  buck2cas fetch   --root DIR --key HEX64 --out FILE [--json]
+  buck2cas query   --root DIR --by action=HEX64 [--json]
+  buck2cas verify  --root DIR (--key HEX64 [--blob FILE] | --all) [--json]
+  buck2cas context --root DIR --key HEX64 [--name NAME] [--snapshot NAME] [--replace] [--json]
+  buck2cas resolve --root DIR --name NAME [--json]
+  buck2cas delete  --root DIR --key HEX64
+  buck2cas gc      --root DIR [--apply] [--grace-secs N] [--max-deletes N] [--json]
+  buck2cas demo-store --root DIR --receipt FILE [--rust-bin FILE]
+  buck2cas bench   --root DIR --small N --large N --out FILE
+
+exit codes: 0 success, 1 failure, 2 usage, 3 cache miss, 4 verification
+mismatch/corrupt store data, 5 same-key/different-bytes conflict.
+`)
 }
 
-type inputFlags []string
+type keyFileInput struct {
+	Path      string `json:"path"`
+	File      string `json:"file,omitempty"`
+	ContentID string `json:"content_id,omitempty"`
+	Bytes     *int64 `json:"bytes,omitempty"`
+}
 
-func (i *inputFlags) String() string     { return strings.Join(*i, ",") }
-func (i *inputFlags) Set(v string) error { *i = append(*i, v); return nil }
+type keyFile struct {
+	ActionType string            `json:"action_type"`
+	Toolchain  string            `json:"toolchain"`
+	Inputs     []keyFileInput    `json:"inputs"`
+	Params     map[string]string `json:"params,omitempty"`
+	OutputPath string            `json:"output_path,omitempty"`
+}
 
-func actionFromFlags(actionType, toolchain string, flags inputFlags) (cas.Action, error) {
-	action := cas.Action{ActionType: actionType, Toolchain: toolchain}
-	for _, spec := range flags {
-		at := strings.Index(spec, "=")
-		if at <= 0 || at == len(spec)-1 {
-			return cas.Action{}, fmt.Errorf("--input %q must be PATH=FILE", spec)
-		}
-		declared := spec[:at]
-		file := spec[at+1:]
-		digest, size, err := cas.HashFile(file)
-		if err != nil {
-			return cas.Action{}, err
-		}
-		action.Inputs = append(action.Inputs, cas.Input{Path: declared, Digest: digest, Bytes: size})
+func loadKeyFile(file string) (cas.Action, string, error) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return cas.Action{}, "", err
 	}
-	return cas.NormalizeAction(action)
+	var spec keyFile
+	if err := json.Unmarshal(data, &spec); err != nil {
+		return cas.Action{}, "", fmt.Errorf("%s: %w", file, err)
+	}
+	action := cas.Action{
+		ActionType: spec.ActionType,
+		Toolchain:  spec.Toolchain,
+		Params:     spec.Params,
+	}
+	for _, in := range spec.Inputs {
+		input := cas.Input{Path: in.Path, ContentID: in.ContentID}
+		if in.Bytes != nil {
+			input.Bytes = *in.Bytes
+		}
+		if in.File != "" {
+			contentID, bytes, err := hashFile(in.File)
+			if err != nil {
+				return cas.Action{}, "", err
+			}
+			if in.ContentID != "" && strings.ToLower(in.ContentID) != contentID {
+				return cas.Action{}, "", fmt.Errorf(
+					"input %s declares content id %s but %s hashes to %s",
+					in.Path, in.ContentID, in.File, contentID)
+			}
+			if in.Bytes != nil && *in.Bytes != bytes {
+				return cas.Action{}, "", fmt.Errorf(
+					"input %s declares %d bytes but %s is %d bytes",
+					in.Path, *in.Bytes, in.File, bytes)
+			}
+			input.ContentID = contentID
+			input.Bytes = bytes
+		}
+		action.Inputs = append(action.Inputs, input)
+	}
+	normalized, err := cas.NormalizeAction(action)
+	if err != nil {
+		return cas.Action{}, "", err
+	}
+	return normalized, spec.OutputPath, nil
+}
+
+func hashFile(file string) (string, int64, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", 0, err
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return "", 0, err
+	}
+	contentID, err := cas.ContentIDReader(f)
+	if err != nil {
+		return "", 0, err
+	}
+	return contentID, info.Size(), nil
 }
 
 func cmdInit(args []string) error {
-	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
+	fs := flagSet("init")
+	root := fs.String("root", "", "WeftFS store root")
+	gcGrace := fs.Uint64("gc-grace-secs", 3600, "GC grace window in seconds")
+	checkpoint := fs.Uint64("checkpoint-interval", 256, "commit checkpoint interval")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if *root == "" {
 		return errors.New("init requires --root")
 	}
-	store, err := cas.Init(*root)
+	opts := store.DefaultOptions()
+	opts.GCGraceSecs = *gcGrace
+	opts.CheckpointInterval = *checkpoint
+	s, err := cas.Init(*root, opts)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("initialized %s (%s)\n", store.Root, strings.TrimSpace(cas.FormatLine))
+	fmt.Printf("initialized %s generation=%d head=%s\n", s.Root(), s.Generation(), s.Head())
+	return s.Close()
+}
+
+func cmdKey(args []string) error {
+	fs := flag.NewFlagSet("key", flag.ContinueOnError)
+	keyFile := fs.String("key-file", "", "action declaration JSON")
+	asJSON := fs.Bool("json", false, "JSON output")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *keyFile == "" {
+		return errors.New("key requires --key-file")
+	}
+	action, _, err := loadKeyFile(*keyFile)
+	if err != nil {
+		return err
+	}
+	key, err := cas.DeriveKey(action)
+	if err != nil {
+		return err
+	}
+	if *asJSON {
+		return printJSON(key)
+	}
+	fmt.Printf("action_key=%s\nrecord_object_id=%s\noutput_object_id=%s\nselector=%s\n",
+		key.ActionKey, key.RecordObjectID, key.OutputObjectID, key.ContextSelector)
 	return nil
 }
 
 func cmdStore(args []string) error {
 	fs := flag.NewFlagSet("store", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
-	actionType := fs.String("action-type", "", "typed action kind")
-	toolchain := fs.String("toolchain", "", "toolchain identity")
-	output := fs.String("output", "", "output file to store")
-	outputPath := fs.String("output-path", "", "relative path inside the action output tree")
+	root := fs.String("root", "", "WeftFS store root")
+	specFile := fs.String("key-file", "", "action declaration JSON")
+	blobFile := fs.String("blob", "", "output blob to publish")
+	outputPath := fs.String("output-path", "", "override the declared output path")
 	asJSON := fs.Bool("json", false, "JSON output")
-	var inputs inputFlags
-	fs.Var(&inputs, "input", "PATH=FILE (repeatable)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if *root == "" || *actionType == "" || *toolchain == "" || *output == "" || *outputPath == "" {
-		return errors.New("store requires --root/--action-type/--toolchain/--output/--output-path")
+	if *root == "" || *specFile == "" || *blobFile == "" {
+		return errors.New("store requires --root/--key-file/--blob")
 	}
-	store, err := cas.Open(*root)
+	action, declaredOut, err := loadKeyFile(*specFile)
 	if err != nil {
 		return err
 	}
-	action, err := actionFromFlags(*actionType, *toolchain, inputs)
+	if *outputPath != "" {
+		declaredOut = *outputPath
+	}
+	if declaredOut == "" {
+		return errors.New("store requires an output path (--output-path or key-file output_path)")
+	}
+	blob, err := os.ReadFile(*blobFile)
 	if err != nil {
 		return err
 	}
-	data, err := os.ReadFile(*output)
+	s, err := cas.Open(*root)
 	if err != nil {
 		return err
 	}
-	record, existed, err := store.StoreAction(action, data, *outputPath)
+	defer s.Close()
+	record, existed, err := s.StoreAction(action, blob, declaredOut)
 	if err != nil {
 		return err
 	}
 	if *asJSON {
 		return printJSON(map[string]any{"existed": existed, "record": record})
 	}
-	fmt.Printf("stored key=%s digest=%s bytes=%d existed=%t\n",
-		record.ContextRootID, record.OutputDigest, record.OutputBytes, existed)
+	fmt.Printf("stored key=%s content_id=%s bytes=%d existed=%t\n",
+		record.ActionKey, record.OutputContentID, record.OutputBytes, existed)
 	return nil
 }
 
 func cmdFetch(args []string) error {
 	fs := flag.NewFlagSet("fetch", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
-	actionType := fs.String("action-type", "", "typed action kind")
-	toolchain := fs.String("toolchain", "", "toolchain identity")
-	out := fs.String("out", "", "materialization directory")
+	root := fs.String("root", "", "WeftFS store root")
+	key := fs.String("key", "", "action key (64 lowercase hex)")
+	out := fs.String("out", "", "materialize the exact output to this file")
 	asJSON := fs.Bool("json", false, "JSON output")
-	var inputs inputFlags
-	fs.Var(&inputs, "input", "PATH=FILE (repeatable)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if *root == "" || *actionType == "" || *toolchain == "" || *out == "" {
-		return errors.New("fetch requires --root/--action-type/--toolchain/--out")
+	if *root == "" || *key == "" || *out == "" {
+		return errors.New("fetch requires --root/--key/--out")
 	}
-	store, err := cas.Open(*root)
+	s, err := cas.OpenReadOnly(*root)
 	if err != nil {
 		return err
 	}
-	action, err := actionFromFlags(*actionType, *toolchain, inputs)
-	if err != nil {
-		return err
-	}
-	record, target, err := store.Fetch(action, *out)
-	if errors.Is(err, cas.ErrMiss) {
-		if *asJSON {
-			_ = printJSON(map[string]any{"hit": false, "reason": "action cache miss"})
-		}
-		return fmt.Errorf("miss: no action record for the derived Context Root")
-	}
+	defer s.Close()
+	record, data, err := s.Fetch(*key, *out)
 	if err != nil {
 		return err
 	}
 	if *asJSON {
-		return printJSON(map[string]any{"hit": true, "record": record, "materialized": target})
+		return printJSON(map[string]any{
+			"hit":        true,
+			"key":        record.ActionKey,
+			"content_id": record.OutputContentID,
+			"bytes":      len(data),
+			"out":        *out,
+		})
 	}
-	fmt.Printf("hit key=%s digest=%s materialized=%s\n",
-		record.ContextRootID, record.OutputDigest, target)
+	fmt.Printf("hit key=%s content_id=%s bytes=%d out=%s\n",
+		record.ActionKey, record.OutputContentID, len(data), *out)
 	return nil
 }
 
 func cmdQuery(args []string) error {
 	fs := flag.NewFlagSet("query", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
-	actionType := fs.String("action-type", "", "typed action kind filter")
-	toolchain := fs.String("toolchain", "", "toolchain filter")
+	root := fs.String("root", "", "WeftFS store root")
+	by := fs.String("by", "", "action=<key>")
 	asJSON := fs.Bool("json", false, "JSON output")
-	var inputs inputFlags
-	fs.Var(&inputs, "input", "PATH=FILE filter")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if *root == "" {
-		return errors.New("query requires --root")
+	if *root == "" || *by == "" {
+		return errors.New("query requires --root/--by action=<key>")
 	}
-	store, err := cas.Open(*root)
+	key, err := parseByAction(*by)
 	if err != nil {
 		return err
 	}
-	inputPath, inputDigest := "", ""
-	if len(inputs) > 0 {
-		at := strings.Index(inputs[0], "=")
-		if at <= 0 || at == len(inputs[0])-1 {
-			return fmt.Errorf("--input %q must be PATH=FILE", inputs[0])
-		}
-		inputPath = inputs[0][:at]
-		digest, _, err := cas.HashFile(inputs[0][at+1:])
-		if err != nil {
-			return err
-		}
-		inputDigest = digest
+	s, err := cas.OpenReadOnly(*root)
+	if err != nil {
+		return err
 	}
-	records, err := store.Query(*actionType, *toolchain, inputPath, inputDigest)
+	defer s.Close()
+	result, err := s.QueryByAction(key)
 	if err != nil {
 		return err
 	}
 	if *asJSON {
-		return printJSON(map[string]any{"count": len(records), "records": records})
+		return printJSON(result)
 	}
-	fmt.Printf("count=%d\n", len(records))
-	for _, record := range records {
-		fmt.Printf("%s %s %s %s\n",
-			record.ContextRootID, record.ActionType, record.Toolchain, record.OutputDigest)
-	}
+	fmt.Printf("count=1\naction_key=%s\ncontent_id=%s\nobject_id=%s\npath=%s\nbytes=%d\nselector=%s\n",
+		result.ActionKey, result.ContentID, result.OutputObjectID,
+		result.StorePath, result.Bytes, result.Selector)
 	return nil
 }
 
 func cmdVerify(args []string) error {
 	fs := flag.NewFlagSet("verify", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
+	root := fs.String("root", "", "WeftFS store root")
+	key := fs.String("key", "", "action key (64 lowercase hex)")
+	blobFile := fs.String("blob", "", "external blob to re-hash and compare")
+	all := fs.Bool("all", false, "verify every action record")
 	asJSON := fs.Bool("json", false, "JSON output")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -233,19 +365,177 @@ func cmdVerify(args []string) error {
 	if *root == "" {
 		return errors.New("verify requires --root")
 	}
-	store, err := cas.Open(*root)
+	s, err := cas.OpenReadOnly(*root)
 	if err != nil {
 		return err
 	}
-	count, err := store.Verify()
+	defer s.Close()
+	if *all {
+		count, err := s.VerifyAll()
+		if err != nil {
+			return err
+		}
+		if *asJSON {
+			return printJSON(map[string]any{"ok": true, "records": count})
+		}
+		fmt.Printf("verify ok: %d action record(s)\n", count)
+		return nil
+	}
+	if *key == "" {
+		return errors.New("verify requires --key or --all")
+	}
+	var blob []byte
+	if *blobFile != "" {
+		blob, err = os.ReadFile(*blobFile)
+		if err != nil {
+			return err
+		}
+	}
+	record, err := s.Verify(*key, blob)
 	if err != nil {
 		return err
 	}
 	if *asJSON {
-		return printJSON(map[string]any{"ok": true, "records": count})
+		return printJSON(map[string]any{
+			"ok":         true,
+			"key":        record.ActionKey,
+			"content_id": record.OutputContentID,
+			"bytes":      record.OutputBytes,
+		})
 	}
-	fmt.Printf("verify ok: %d record(s), all blobs and derived keys match\n", count)
+	fmt.Printf("verify ok: key=%s content_id=%s bytes=%d\n",
+		record.ActionKey, record.OutputContentID, record.OutputBytes)
 	return nil
+}
+
+func cmdContext(args []string) error {
+	fs := flag.NewFlagSet("context", flag.ContinueOnError)
+	root := fs.String("root", "", "WeftFS store root")
+	key := fs.String("key", "", "action key (64 lowercase hex)")
+	name := fs.String("name", "", "Context Root name (default by:action=<key>)")
+	snapshot := fs.String("snapshot", "", "snapshot name or commit hex (default current head)")
+	replace := fs.Bool("replace", false, "replace an existing same-name Context Root")
+	asJSON := fs.Bool("json", false, "JSON output")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *root == "" || *key == "" {
+		return errors.New("context requires --root/--key")
+	}
+	s, err := cas.Open(*root)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	info, err := s.CreateContext(*key, *name, *snapshot, *replace)
+	if err != nil {
+		return err
+	}
+	if *asJSON {
+		return printJSON(info)
+	}
+	fmt.Printf("name=%s\ncontext_root_id=%s\nuri=%s\nsnapshot_id=%s\nselector=%s\n",
+		info.Name, info.ContextRootID, info.URI, info.SnapshotID, info.Selector)
+	return nil
+}
+
+func cmdResolve(args []string) error {
+	fs := flag.NewFlagSet("resolve", flag.ContinueOnError)
+	root := fs.String("root", "", "WeftFS store root")
+	name := fs.String("name", "", "Context Root name or URI")
+	asJSON := fs.Bool("json", false, "JSON output")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *root == "" || *name == "" {
+		return errors.New("resolve requires --root/--name")
+	}
+	s, err := cas.OpenReadOnly(*root)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	value, err := s.ResolveContext(*name, true)
+	if err != nil {
+		return err
+	}
+	if *asJSON {
+		return printJSON(value)
+	}
+	fmt.Printf("name=%s\ncontext_root_id=%s\nsnapshot_id=%s\nmatched=%d\nobject_ids=%s\ncontent_ids=%s\n",
+		value.Name, value.ContextRootID, value.SnapshotID, value.MatchedCount,
+		strings.Join(value.ObjectIDs, ","), strings.Join(value.ContentIDs, ","))
+	return nil
+}
+
+func cmdDelete(args []string) error {
+	fs := flag.NewFlagSet("delete", flag.ContinueOnError)
+	root := fs.String("root", "", "WeftFS store root")
+	key := fs.String("key", "", "action key (64 lowercase hex)")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *root == "" || *key == "" {
+		return errors.New("delete requires --root/--key")
+	}
+	s, err := cas.Open(*root)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	if err := s.DeleteAction(*key); err != nil {
+		return err
+	}
+	fmt.Printf("deleted action=%s\n", *key)
+	return nil
+}
+
+func cmdGC(args []string) error {
+	fs := flag.NewFlagSet("gc", flag.ContinueOnError)
+	root := fs.String("root", "", "WeftFS store root")
+	apply := fs.Bool("apply", false, "delete unreachable blobs (default dry run)")
+	grace := fs.Int64("grace-secs", -1, "override the GC grace window")
+	maxDeletes := fs.Int("max-deletes", 0, "delete at most N blobs (0 = unbounded)")
+	asJSON := fs.Bool("json", false, "JSON output")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *root == "" {
+		return errors.New("gc requires --root")
+	}
+	s, err := cas.Open(*root)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	if *grace >= 0 {
+		if err := s.SetGCGrace(uint64(*grace)); err != nil {
+			return err
+		}
+	}
+	report, err := s.GC(*apply, *maxDeletes)
+	if err != nil {
+		return err
+	}
+	if *asJSON {
+		return printJSON(report)
+	}
+	fmt.Printf("applied=%t reachable=%d files/%d bytes candidates=%d files/%d bytes deleted=%d files/%d bytes\n",
+		report.Applied, report.ReachableFiles, report.ReachableBytes,
+		report.CandidateFiles, report.CandidateBytes,
+		report.DeletedFiles, report.DeletedBytes)
+	return nil
+}
+
+func parseByAction(value string) (string, error) {
+	if !strings.HasPrefix(value, "action=") {
+		return "", fmt.Errorf("--by must be action=<key> (got %q)", value)
+	}
+	key := strings.TrimPrefix(value, "action=")
+	if _, err := cas.ParseKey(key); err != nil {
+		return "", err
+	}
+	return key, nil
 }
 
 func printJSON(value any) error {
@@ -254,227 +544,27 @@ func printJSON(value any) error {
 	return encoder.Encode(value)
 }
 
-type assertion struct {
-	Name   string `json:"name"`
-	Pass   bool   `json:"pass"`
-	Detail string `json:"detail,omitempty"`
+func flagSet(name string) *flag.FlagSet {
+	return flag.NewFlagSet(name, flag.ContinueOnError)
 }
 
-func inputDigest(file string) (string, int64, error) {
-	return cas.HashFile(file)
+// sortedKeys is used by receipts and tests.
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
-func cmdDemo(args []string) error {
-	fs := flag.NewFlagSet("demo", flag.ContinueOnError)
-	root := fs.String("root", "", "CAS root")
-	receiptPath := fs.String("receipt", "", "receipt JSON output")
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-	if *root == "" || *receiptPath == "" {
-		return errors.New("demo requires --root and --receipt")
-	}
-	_ = os.RemoveAll(*root)
-	store, err := cas.Init(*root)
-	if err != nil {
-		return err
-	}
-	work := filepath.Join(*root, "work")
-	if err := os.MkdirAll(work, 0o755); err != nil {
-		return err
-	}
-	inputA := filepath.Join(work, "input-a.txt")
-	if err := os.WriteFile(inputA, []byte("typed action input A\n"), 0o644); err != nil {
-		return err
-	}
-	inputB := filepath.Join(work, "input-b.txt")
-	if err := os.WriteFile(inputB, []byte("typed action input B\n"), 0o644); err != nil {
-		return err
-	}
-	output := filepath.Join(work, "output.bin")
-	outputBytes := []byte("deterministic object bytes for the action context\n")
-	if err := os.WriteFile(output, outputBytes, 0o644); err != nil {
-		return err
-	}
-	action := func(toolchain, input string) (cas.Action, error) {
-		digest, size, err := inputDigest(input)
-		if err != nil {
-			return cas.Action{}, err
-		}
-		return cas.Action{
-			ActionType: "compile_object",
-			Toolchain:  toolchain,
-			Inputs:     []cas.Input{{Path: "src/input.txt", Digest: digest, Bytes: size}},
-		}, nil
-	}
-	a1, err := action("rust-1.85.0", inputA)
-	if err != nil {
-		return err
-	}
-	a2, err := action("rust-1.85.0", inputA)
-	if err != nil {
-		return err
-	}
-	a3, err := action("rust-1.86.0", inputA)
-	if err != nil {
-		return err
-	}
-	a4, err := action("rust-1.85.0", inputB)
-	if err != nil {
-		return err
-	}
-
-	key1, err := cas.DeriveKey(a1)
-	if err != nil {
-		return err
-	}
-	key2, err := cas.DeriveKey(a2)
-	if err != nil {
-		return err
-	}
-	key3, err := cas.DeriveKey(a3)
-	if err != nil {
-		return err
-	}
-	key4, err := cas.DeriveKey(a4)
-	if err != nil {
-		return err
-	}
-	var assertions []assertion
-	add := func(name string, pass bool, detail string) {
-		assertions = append(assertions, assertion{Name: name, Pass: pass, Detail: detail})
-	}
-	add("same action context -> same Context Root",
-		key1.ContextRootID == key2.ContextRootID,
-		key1.ContextRootID+" == "+key2.ContextRootID)
-	add("different toolchain -> different Context Root",
-		key1.ContextRootID != key3.ContextRootID,
-		key1.ContextRootID+" != "+key3.ContextRootID)
-	add("different input -> different Context Root",
-		key1.ContextRootID != key4.ContextRootID,
-		key1.ContextRootID+" != "+key4.ContextRootID)
-
-	record1, existed1, err := store.StoreAction(a1, outputBytes, "out/object.bin")
-	if err != nil {
-		return err
-	}
-	record2, existed2, err := store.StoreAction(a2, outputBytes, "out/object.bin")
-	if err != nil {
-		return err
-	}
-	add("first store is new", !existed1, fmt.Sprintf("existed=%t", existed1))
-	add("second store is a hit", existed2, fmt.Sprintf("existed=%t", existed2))
-	add("same key returns identical record digest",
-		record1.OutputDigest == record2.OutputDigest,
-		record1.OutputDigest+" == "+record2.OutputDigest)
-
-	fetchDir := filepath.Join(work, "fetch")
-	fetched, target, err := store.Fetch(a2, fetchDir)
-	if err != nil {
-		return err
-	}
-	fetchedBytes, err := os.ReadFile(target)
-	if err != nil {
-		return err
-	}
-	add("fetch materializes exact bytes",
-		string(fetchedBytes) == string(outputBytes),
-		fmt.Sprintf("%d bytes, digest %s", len(fetchedBytes), fetched.OutputDigest))
-	add("fetch digest matches stored output", fetched.OutputDigest == record1.OutputDigest,
-		fetched.OutputDigest)
-
-	_, _, err = store.Fetch(a3, filepath.Join(work, "miss-toolchain"))
-	add("different toolchain misses", errors.Is(err, cas.ErrMiss), fmt.Sprint(err))
-	_, _, err = store.Fetch(a4, filepath.Join(work, "miss-input"))
-	add("different input misses", errors.Is(err, cas.ErrMiss), fmt.Sprint(err))
-
-	byType, err := store.Query("compile_object", "", "", "")
-	if err != nil {
-		return err
-	}
-	add("query by action type finds one record", len(byType) == 1, fmt.Sprintf("count=%d", len(byType)))
-	byToolchain, err := store.Query("", "rust-1.85.0", "", "")
-	if err != nil {
-		return err
-	}
-	add("query by toolchain finds one record", len(byToolchain) == 1, fmt.Sprintf("count=%d", len(byToolchain)))
-	noToolchain, err := store.Query("", "rust-1.86.0", "", "")
-	if err != nil {
-		return err
-	}
-	add("query by absent toolchain finds none", len(noToolchain) == 0, fmt.Sprintf("count=%d", len(noToolchain)))
-	inputDigestValue, _, err := inputDigest(inputA)
-	if err != nil {
-		return err
-	}
-	byInput, err := store.Query("", "", "src/input.txt", inputDigestValue)
-	if err != nil {
-		return err
-	}
-	add("query by input digest finds one record", len(byInput) == 1, fmt.Sprintf("count=%d", len(byInput)))
-
-	verified, err := store.Verify()
-	if err != nil {
-		return err
-	}
-	add("verify re-derives every key and blob", verified == 1, fmt.Sprintf("records=%d", verified))
-
-	pass := true
-	for _, item := range assertions {
-		if !item.Pass {
-			pass = false
-		}
-	}
-	receipt := map[string]any{
-		"kind":                     "buck2-cas-prototype",
-		"schema":                   "weft.buck2-cas.receipt/1",
-		"timestamp_utc":            time.Now().UTC().Format(time.RFC3339),
-		"prototype":                "local CAS service + Buck2-compatible key/digest mapping; not a Buck2 plugin, not REAPI gRPC",
-		"root":                     *root,
-		"action":                   a1,
-		"key":                      key1,
-		"key_with_other_toolchain": key3,
-		"key_with_other_input":     key4,
-		"record":                   record1,
-		"fetch": map[string]any{
-			"materialized": target,
-			"bytes":        len(fetchedBytes),
-			"digest":       fetched.OutputDigest,
-			"same_bytes":   string(fetchedBytes) == string(outputBytes),
-		},
-		"query": map[string]any{
-			"by_action_type":      len(byType),
-			"by_toolchain":        len(byToolchain),
-			"by_other_input":      len(byInput),
-			"by_absent_toolchain": len(noToolchain),
-		},
-		"assertions": assertions,
-		"result":     map[string]any{"pass": pass, "total": len(assertions)},
-	}
-	encoded, err := json.MarshalIndent(receipt, "", "  ")
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(*receiptPath), 0o755); err != nil {
-		return err
-	}
-	if err := os.WriteFile(*receiptPath, append(encoded, '\n'), 0o644); err != nil {
-		return err
-	}
-	fmt.Printf("buck2-cas demo: %d/%d assertions pass; receipt %s\n",
-		countPass(assertions), len(assertions), *receiptPath)
-	if !pass {
-		return errors.New("demo assertions failed")
-	}
-	return nil
+// copyAll is a small io helper for tests.
+func copyAll(dst io.Writer, src io.Reader) error {
+	_, err := io.Copy(dst, src)
+	return err
 }
 
-func countPass(items []assertion) int {
-	n := 0
-	for _, item := range items {
-		if item.Pass {
-			n++
-		}
-	}
-	return n
+// ensurePath is used by the demo to create host files deterministically.
+func ensurePath(target string) error {
+	return os.MkdirAll(path.Dir(target), 0o755)
 }
