@@ -36,6 +36,7 @@ use weftfs::provenance::{
     ProvenanceRecord, PROVENANCE_SCHEMA,
 };
 use weftfs::quota::{parse_quota_file, QuotaPrincipal};
+use weftfs::s3::S3Config;
 use weftfs::state::{
     object_causal_closure, ObjectKind, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE,
 };
@@ -80,15 +81,34 @@ struct Cli {
         value_name = "whole-file|merkle"
     )]
     content_identity: Option<String>,
-    /// Physical storage backend: `local` (normative POSIX layout) or `object`
-    /// (immutable object namespace published with link(2)).
+    /// Physical storage backend: `local` (normative POSIX layout), `object`
+    /// (immutable object namespace published with link(2)), or `s3`
+    /// (SigV4 S3-compatible endpoint; see `--s3-*`).
     #[arg(
         long,
         global = true,
-        value_name = "local|object",
+        value_name = "local|object|s3",
         default_value = "local"
     )]
     backend: String,
+    /// S3-compatible endpoint, e.g. `http://127.0.0.1:9000`.
+    #[arg(long = "s3-endpoint", global = true, value_name = "URL")]
+    s3_endpoint: Option<String>,
+    /// S3 bucket that holds the store.
+    #[arg(long = "s3-bucket", global = true, value_name = "BUCKET")]
+    s3_bucket: Option<String>,
+    /// S3 region used for SigV4 scoping.
+    #[arg(long = "s3-region", global = true, value_name = "REGION")]
+    s3_region: Option<String>,
+    /// S3 access key id (fallback: AWS_ACCESS_KEY_ID).
+    #[arg(long = "s3-access-key", global = true, value_name = "KEY")]
+    s3_access_key: Option<String>,
+    /// S3 secret access key (fallback: AWS_SECRET_ACCESS_KEY).
+    #[arg(long = "s3-secret-key", global = true, value_name = "SECRET")]
+    s3_secret_key: Option<String>,
+    /// Optional S3 session token (fallback: AWS_SESSION_TOKEN).
+    #[arg(long = "s3-session-token", global = true, value_name = "TOKEN")]
+    s3_session_token: Option<String>,
     /// `codec-auto` leaves files smaller than this on the raw path.
     #[arg(
         long = "codec-min-bytes",
@@ -878,18 +898,26 @@ fn main() {
 /// Resolved store-open policy from the global CLI flags. Applied wherever
 /// `Options` is constructed, so every verb that opens the store for writing
 /// sees the same representation policy; read-only verbs simply never write.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum CliBackend {
     Local,
     Object,
+    S3(S3Config),
 }
 
 impl CliBackend {
-    fn kind(self) -> BackendKind {
+    fn kind(&self) -> BackendKind {
         match self {
             CliBackend::Local => BackendKind::Local,
             CliBackend::Object => BackendKind::Object,
+            CliBackend::S3(config) => BackendKind::S3 {
+                config: config.clone(),
+            },
         }
+    }
+
+    fn is_remote(&self) -> bool {
+        matches!(self, CliBackend::S3(_))
     }
 }
 
@@ -916,12 +944,28 @@ impl OpenPolicy {
     }
 }
 
-fn parse_backend(text: &str) -> Result<CliBackend> {
+fn parse_backend(
+    text: &str,
+    endpoint: Option<String>,
+    bucket: Option<String>,
+    region: Option<String>,
+    access_key: Option<String>,
+    secret_key: Option<String>,
+    session_token: Option<String>,
+) -> Result<CliBackend> {
     match text {
         "local" => Ok(CliBackend::Local),
         "object" => Ok(CliBackend::Object),
+        "s3" => Ok(CliBackend::S3(S3Config::resolve(
+            endpoint,
+            bucket,
+            region,
+            access_key,
+            secret_key,
+            session_token,
+        )?)),
         other => Err(Error::invalid_argument(format!(
-            "--backend must be `local` or `object` (got `{other}`)"
+            "--backend must be `local`, `object`, or `s3` (got `{other}`)"
         ))),
     }
 }
@@ -958,6 +1002,12 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation,
         backend,
+        s3_endpoint,
+        s3_bucket,
+        s3_region,
+        s3_access_key,
+        s3_secret_key,
+        s3_session_token,
         codec_min_bytes,
         quotas,
         quota_file,
@@ -984,7 +1034,15 @@ fn run(cli: Cli) -> Result<()> {
             content_identity.as_deref().unwrap_or("whole-file"),
         )?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
-        backend: parse_backend(&backend)?,
+        backend: parse_backend(
+            &backend,
+            s3_endpoint,
+            s3_bucket,
+            s3_region,
+            s3_access_key,
+            s3_secret_key,
+            s3_session_token,
+        )?,
         quotas: budgets,
     };
     let needs_store = !matches!(
@@ -1000,6 +1058,7 @@ fn run(cli: Cli) -> Result<()> {
     let store = match store {
         Some(path) => path,
         None if !needs_store => PathBuf::new(),
+        None if policy.backend.is_remote() => PathBuf::from("<s3>"),
         None => {
             return Err(Error::invalid_argument(
                 "--store <DIR> is required for this command",

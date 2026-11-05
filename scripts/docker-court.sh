@@ -49,6 +49,13 @@ validate_limit WEFT_MEMORY "$WEFT_MEMORY" '^[0-9]+(\.[0-9]+)?[mg]$'
 validate_limit WEFT_CPUS "$WEFT_CPUS" '^[1-9][0-9]*(\.[0-9]+)?$'
 validate_limit WEFT_PIDS "$WEFT_PIDS" '^[1-9][0-9]*$'
 validate_limit WEFT_NPROC "$WEFT_NPROC" '^[1-9][0-9]*$'
+# Optional user-defined Docker network (the S3 court uses one so the test
+# container can resolve the MinIO container by name). Never required; when set
+# it must be a valid network name.
+WEFT_DOCKER_NETWORK="${WEFT_DOCKER_NETWORK:-}"
+if [[ -n "$WEFT_DOCKER_NETWORK" ]]; then
+  validate_limit WEFT_DOCKER_NETWORK "$WEFT_DOCKER_NETWORK" '^[a-zA-Z0-9][a-zA-Z0-9_.-]*$'
+fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cache_root="$repo_root/.docker-cache"
@@ -139,6 +146,25 @@ common=(
   -v "$cache_root/cargo-git:/cargo/git"
   -w /work
 )
+
+# Forward only the S3 court's explicitly named environment. Nothing else from
+# the host environment reaches the container.
+for name in \
+  WEFT_S3_ENDPOINT WEFT_S3_BUCKET WEFT_S3_REGION WEFT_S3_ACCESS_KEY \
+  WEFT_S3_SECRET_KEY WEFT_S3_SESSION_TOKEN WEFT_S3_LOCK_LEASE_SECS \
+  WEFT_S3_TEST_ENDPOINT WEFT_S3_TEST_PREFIX WEFT_S3_RECEIPT \
+  WEFT_S3_SERVER_LABEL WEFT_S3_SERVER_VERSION WEFT_S3_SERVER_SHA256 \
+  WEFT_S3_CONTAINER_IMAGE WEFT_S3_CONTAINER_IMAGE_ID \
+  AWS_ENDPOINT_URL AWS_ENDPOINT_URL_S3 AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
+  AWS_SESSION_TOKEN AWS_REGION AWS_DEFAULT_REGION; do
+  if [[ -n "${!name:-}" ]]; then
+    common+=(-e "$name=${!name}")
+  fi
+done
+
+if [[ -n "$WEFT_DOCKER_NETWORK" ]]; then
+  common+=(--network "$WEFT_DOCKER_NETWORK")
+fi
 
 # FUSE-capable courts. `bench` is included because the filesystem benchmark
 # mounts a real WeftFS image; the device and capability are the only additions

@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+# S3 court (subphase Q4): a real MinIO server in Docker, the Rust S3 backend
+# tests, and an optional local-vs-S3 benchmark.
+#
+# Why not `minio/minio`?
+#   The official Docker Hub repository `minio/minio` is no longer pullable
+#   (registry returns 404/unauthorized as of 2026-11-05). MinIO still publishes
+#   signed release binaries on GitHub. This court runs the official linux-amd64
+#   release binary inside a minimal `debian:bookworm-slim` container under the
+#   same hard limits as every other court, and records both the binary sha256
+#   and the container image digest in its receipt. It does not claim to run the
+#   official container image.
+#
+# Usage:
+#   scripts/s3_court.sh            # tests only
+#   scripts/s3_court.sh --bench    # tests plus the local-vs-S3 benchmark
+#
+# Every container has the same hard limits as `scripts/docker-court.sh`:
+# memory 3g, swap 3g, pids 1024, cpus 4, bounded tmpfs, no-new-privileges,
+# cap-drop=ALL. The MinIO data directory is a tmpfs, so this court proves
+# protocol and conditional-write behaviour, not media or power-loss durability.
+set -Eeuo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+bench=0
+for arg in "$@"; do
+  case "$arg" in
+    --bench) bench=1 ;;
+    -h|--help)
+      sed -n '2,24p' "$0"
+      exit 0
+      ;;
+    *) echo "unknown argument '$arg'" >&2; exit 64 ;;
+  esac
+done
+
+WEFT_MEMORY="${WEFT_MEMORY:-3g}"
+WEFT_CPUS="${WEFT_CPUS:-4}"
+WEFT_PIDS="${WEFT_PIDS:-1024}"
+WEFT_NPROC="${WEFT_NPROC:-2048}"
+
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  echo "s3_court: only the verified linux-amd64 MinIO release is supported (host is $(uname -m))" >&2
+  exit 78
+fi
+
+minio_release="${WEFT_S3_SERVER_RELEASE:-RELEASE.2025-04-22T22-12-26Z}"
+minio_sha256="${WEFT_S3_SERVER_SHA256:-53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c}"
+minio_dir="$repo_root/.docker-cache/minio"
+minio_bin="$minio_dir/minio"
+minio_url="https://github.com/minio/minio/releases/download/${minio_release}/minio.linux-amd64.${minio_release}"
+mkdir -p "$minio_dir"
+if [[ ! -f "$minio_bin" ]]; then
+  echo "s3_court: downloading official MinIO binary $minio_release" >&2
+  curl -fL --retry 3 -o "$minio_bin.part" "$minio_url"
+  mv "$minio_bin.part" "$minio_bin"
+fi
+chmod +x "$minio_bin"
+actual_sha256="$(sha256sum "$minio_bin" | awk '{print $1}')"
+if [[ "$actual_sha256" != "$minio_sha256" ]]; then
+  echo "s3_court: MinIO binary sha256 mismatch (expected $minio_sha256, got $actual_sha256)" >&2
+  exit 1
+fi
+minio_version="$("$minio_bin" --version | head -1)"
+
+container_image="debian:bookworm-slim"
+if ! docker image inspect "$container_image" >/dev/null 2>&1; then
+  docker pull "$container_image" >/dev/null
+fi
+container_image_digest="$(docker image inspect "$container_image" --format '{{index .RepoDigests 0}}')"
+container_image_id="$(docker image inspect "$container_image" --format '{{.Id}}')"
+
+stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+suffix="$(printf '%s' "$stamp" | tr '[:upper:]' '[:lower:]')"
+access_key="${WEFT_S3_ACCESS_KEY:-weftcourt}"
+secret_key="${WEFT_S3_SECRET_KEY:-weftcourt-secret}"
+minio_name="weft-s3-minio-$$"
+network="weft-s3-net-$$"
+court_bucket="weft-s3-court-$suffix"
+mkdir -p bench/receipts
+chmod a+rwX bench/receipts 2>/dev/null || true
+
+cleanup() {
+  docker rm -f "$minio_name" >/dev/null 2>&1 || true
+  docker network rm "$network" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+
+docker network create "$network" >/dev/null
+docker run -d --name "$minio_name" \
+  --memory="$WEFT_MEMORY" --memory-swap="$WEFT_MEMORY" \
+  --pids-limit="$WEFT_PIDS" --cpus="$WEFT_CPUS" \
+  --ulimit nofile=65536:65536 \
+  --security-opt no-new-privileges \
+  --cap-drop=ALL \
+  --network "$network" \
+  --tmpfs /data:rw,size=1g,nosuid,nodev \
+  -p 127.0.0.1::9000 \
+  -e MINIO_ROOT_USER="$access_key" \
+  -e MINIO_ROOT_PASSWORD="$secret_key" \
+  -v "$minio_bin":/minio:ro \
+  "$container_image" \
+  /minio server /data --address :9000 --console-address :9001 >/dev/null
+
+host_port_line="$(docker port "$minio_name" 9000/tcp | head -1)"
+host_port="${host_port_line##*:}"
+ready=0
+for _ in $(seq 1 60); do
+  if curl -sf "http://127.0.0.1:${host_port}/minio/health/ready" >/dev/null 2>&1; then
+    ready=1
+    break
+  fi
+  sleep 0.5
+done
+if [[ "$ready" != 1 ]]; then
+  echo "s3_court: MinIO did not become ready; logs follow" >&2
+  docker logs "$minio_name" >&2 || true
+  exit 1
+fi
+
+endpoint="http://${minio_name}:9000"
+export WEFT_DOCKER_NETWORK="$network"
+export WEFT_S3_ENDPOINT="$endpoint"
+export WEFT_S3_BUCKET="$court_bucket"
+export WEFT_S3_REGION="${WEFT_S3_REGION:-us-east-1}"
+export WEFT_S3_ACCESS_KEY="$access_key"
+export WEFT_S3_SECRET_KEY="$secret_key"
+export WEFT_S3_TEST_ENDPOINT="$endpoint"
+export WEFT_S3_TEST_PREFIX="weft-s3-test-$suffix"
+export WEFT_S3_LOCK_LEASE_SECS="${WEFT_S3_LOCK_LEASE_SECS:-2}"
+export WEFT_S3_SERVER_LABEL="$minio_version"
+export WEFT_S3_SERVER_VERSION="$minio_release"
+export WEFT_S3_SERVER_SHA256="$actual_sha256"
+export WEFT_S3_CONTAINER_IMAGE="$container_image_digest"
+export WEFT_S3_CONTAINER_IMAGE_ID="$container_image_id"
+
+echo "s3_court: MinIO $minio_release sha256=$actual_sha256 endpoint=$endpoint bucket=$court_bucket" >&2
+
+scripts/docker-court.sh rust \
+  "cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend -- --test-threads=1 --nocapture"
+
+receipt="bench/receipts/s3-backend-${stamp}.json"
+if [[ "$bench" == 1 ]]; then
+  scripts/docker-court.sh rust \
+    "cd /work && cargo run --release --quiet --example bench_s3_backend -- --out ${receipt}"
+fi
+
+court_receipt="bench/receipts/s3-court-${stamp}.json"
+cat > "$court_receipt" <<JSON
+{
+  "schema": "weft-s3-court-v1",
+  "generated_utc": "$stamp",
+  "server": {
+    "product": "MinIO",
+    "release": "$minio_release",
+    "version_line": "$minio_version",
+    "binary_sha256": "$actual_sha256",
+    "binary_url": "$minio_url",
+    "container_image": "$container_image_digest",
+    "container_image_id": "$container_image_id",
+    "note": "The official minio/minio Docker Hub repository was not pullable on 2026-11-05 (registry 404/unauthorized). The official release binary runs in a minimal debian:bookworm-slim container under the same hard limits."
+  },
+  "container": {
+    "memory": "$WEFT_MEMORY",
+    "memory_swap": "$WEFT_MEMORY",
+    "pids": "$WEFT_PIDS",
+    "cpus": "$WEFT_CPUS",
+    "nproc": "$WEFT_NPROC",
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "data": "tmpfs 1g",
+    "network": "user-defined bridge (container-name DNS)",
+    "host_port": $host_port
+  },
+  "tests": {
+    "command": "cargo test --test s3_backend -- --test-threads=1 --nocapture",
+    "bucket_prefix": "$WEFT_S3_TEST_PREFIX"
+  },
+  "benchmark": $(if [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
+  "label": "Single-node MinIO on localhost in the OOM-protected Docker court with a tmpfs data directory. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
+}
+JSON
+
+echo "s3_court: receipt $court_receipt" >&2

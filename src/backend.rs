@@ -34,6 +34,7 @@ use fs2::FileExt as Fs2FileExt;
 use crate::error::{Error, Result};
 use crate::format::MAX_CHUNK_SIZE;
 use crate::identity::Hash32;
+use crate::s3::{S3Backend, S3Config};
 
 /// Logical namespace of a key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -349,6 +350,8 @@ pub enum BackendKind {
     Local,
     /// Immutable-object namespace published with `link(2)`.
     Object,
+    /// A real S3-compatible object store (SigV4 over HTTPS/HTTP).
+    S3 { config: S3Config },
     /// A POSIX-named backend whose guarantees are declared by the caller.
     /// Used to represent storage such as 3FS before its consistency and
     /// durability claims have been measured. The declared capabilities are
@@ -361,6 +364,7 @@ impl BackendKind {
         match self {
             BackendKind::Local => "local",
             BackendKind::Object => "object",
+            BackendKind::S3 { .. } => "s3",
             BackendKind::Posix { .. } => "posix",
         }
     }
@@ -370,8 +374,15 @@ impl BackendKind {
         match self {
             BackendKind::Local => Capabilities::local_posix(),
             BackendKind::Object => Capabilities::immutable_object(),
+            BackendKind::S3 { .. } => S3Backend::capabilities(),
             BackendKind::Posix { capabilities } => capabilities.clone(),
         }
+    }
+
+    /// Whether the backend stores bytes outside the local filesystem, so the
+    /// store must not require or create a local directory.
+    pub fn is_remote(&self) -> bool {
+        matches!(self, BackendKind::S3 { .. })
     }
 
     /// Construct the backend rooted at `root`.
@@ -380,6 +391,7 @@ impl BackendKind {
         match self {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
+            BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }

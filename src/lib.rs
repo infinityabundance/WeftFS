@@ -33,6 +33,7 @@ pub mod provenance;
 pub mod quota;
 pub mod recovery;
 pub mod representation;
+pub mod s3;
 pub mod safetensors;
 pub mod state;
 pub mod store;
@@ -57,6 +58,7 @@ pub use provenance::{
     ProvenanceInput, ProvenanceNode, ProvenancePrincipal, ProvenanceRecord, RecoveryCandidate,
     RecoveryChoice, RecoveryCosts, RecoveryRejection, RecoveryStrategy,
 };
+pub use s3::{S3Backend, S3Config};
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
     GcReport, LineageEntry, OpenMode, Options, RepresentationMode, SavedContext, SetAttr, StatFs,

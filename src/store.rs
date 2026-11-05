@@ -562,7 +562,16 @@ impl Store {
         capabilities.require_atomic_publish("initial store publication")?;
         let root = path.as_ref().to_path_buf();
 
-        if root.exists() {
+        if backend_kind.is_remote() {
+            // An S3 bucket is the store root. There is no local directory to
+            // create or inspect; refuse if the bucket already holds a store.
+            let probe = backend_kind.open(&root);
+            if probe.exists(&Key::format())? {
+                return Err(Error::exists(
+                    "a WeftFS store already exists at this S3 bucket",
+                ));
+            }
+        } else if root.exists() {
             if !root.is_dir() {
                 return Err(Error::exists("store path exists and is not a directory"));
             }
