@@ -42,6 +42,7 @@ tested in the Docker court.
 | F7 | AI corpus + cost graph (C1/C2) | **Implemented (synthetic)** — 60-file deterministic `bench/corpora/ai-v1` (CC0-1.0, 1.94 MB source / 1.52 MB visible), four strategies with whole-object accounting, cold dependency-DAG latency, and depth. Receipt `ai-corpus-20261104T021627Z.json` (whole-pair-aware planner); results, every loss, and caveats in [`bench/RESULTS-ai-v1.md`](bench/RESULTS-ai-v1.md). No Meta/production data and no superiority claim. |
 | F8 | Product/identity hooks: Buck2 CAS, spec-as-code types, agent memory | **Implemented (prototype)** — Buck2 CAS prototype (15/15), generated Rust/Go identity types with a drift court, agent-memory replay demo (7/7), and `QUANTIZED_TENSOR` mode 8 byte-identical Rust↔Go. Not a Buck2 plugin and not REAPI; see [`docs/STATUS.md`](docs/STATUS.md). |
 | F9 | Verification: TLA+ model, power-loss/block-layer courts, comparative baselines | **Implemented with documented limits** — TLA+ commit/recovery model with a buggy-model counterexample, QEMU lying-fsync and dm-flakey/blkdebug block-layer courts, whole-disk ZFS/Btrfs plus ext4/XFS `fio` baselines, and SQLite relational/adjacency baselines. Physical media power loss, host page-cache loss, and RAPL energy are **not** claimed. See [`verification/README.md`](verification/README.md). |
+| F10 | Real public model checkpoint family: exact ingest, automatic shared/independent representation, storage and restore vs baselines | **Implemented, measured once** — Qwen2.5-0.5B + Instruct (BF16, 290 tensors, 988 MB each) ingested through the shipped tensor planner; every restored file matches the Hugging Face LFS SHA-256. ZipNN 0.5.4 wins complete storage by 5.27 % (1.317 GB vs 1.390 GB); WeftFS wins the instruct checkpoint by 8.6 % (delta sharing) but loses the base by 19.8 %, and loses full instruct restore by 9.7× to zstd / 73× to ZipNN. Single-tensor restore is 7.3–118.6 ms and 6.8–11.6 MB. DFloat11 and `zstd --patch-from -19` are unavailable (CUDA; 3 GiB OOM). Receipt `bench/receipts/real-model-20261105T012000Z.json`; every loss in [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md). |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
@@ -49,6 +50,15 @@ Labels used throughout: **implemented** (built and tested), **experimental**
 ## What's new in v0.4.0
 
 Full note: [`docs/RELEASE-v0.4.0.md`](docs/RELEASE-v0.4.0.md).
+
+- **Real-model storage (subphase F):** a real public BF16 base/fine-tune pair
+  (Qwen2.5-0.5B, 290 tensors each) is ingested through the shipped tensor
+  planner with exact restore checked against the Hugging Face LFS SHA-256.
+  WeftFS stores the fine-tune in 8.6 % fewer bytes than ZipNN by choosing 241
+  weight deltas, but its base checkpoint is 19.8 % larger than ZipNN, so
+  complete storage loses by 5.27 %; full instruct restore also loses to zstd and
+  ZipNN. Single-tensor restore wins by 56–119× in bytes read. All losses and the
+  exact commands are in [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md).
 
 - **Correctness:** work accounting counts only authorized objects and visible
   relations; budget denials are non-disclosing (`tests/capability_nondisclosure.rs`).

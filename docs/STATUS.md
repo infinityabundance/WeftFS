@@ -1478,3 +1478,66 @@ It is **not published to PyPI** (no API token); it is a release artifact.
       closure follows an explicit input object or a unique content-root match,
       otherwise the input is an external leaf; a rewrite after recording makes
       the receipt stale and `verify --full` reports it.
+
+## Subphase F — real public checkpoint family (storage and restore)
+
+**Implemented, measured once, single host.** The headline experiment ingests a
+real public base/fine-tune pair into WeftFS as tensors, chooses representations
+with the shipped bytes-only planner, and compares complete storage and restore
+against strong conventional baselines at matched exactness. Receipt:
+`bench/receipts/real-model-20261105T012000Z.json`; analysis, every loss, and the
+reproduce commands: `bench/RESULTS-real-model.md`.
+
+- **Corpus:** `Qwen/Qwen2.5-0.5B` (`060db649…`) and
+  `Qwen/Qwen2.5-0.5B-Instruct` (`7ae55760…`), one 988,097,824-byte
+  `model.safetensors` each, both BF16, 290 identical tensor names/shapes,
+  SHA-256 verified against the Hugging Face LFS pointers. The operator's first
+  choice (`HuggingFaceTB/SmolLM-135M` + Instruct) publishes the base as F32 and
+  the instruct model as BF16 despite both configs saying bfloat16, so no exact
+  causal delta is possible; it was ingested as a cross-dtype secondary instead.
+  No model weights are committed; they live under `.docker-cache/real-corpus/`.
+- **Harness:** `examples/real_model_bench.rs` parses safetensors headers
+  directly and calls `write_tensor_file_with_spec` per tensor with no strategy
+  hint, offering the corresponding base tensor version as the causal parent for
+  the instruct checkpoint. The header is stored as a raw object so the complete
+  file can be reassembled. Ingest and restore are separate processes for honest
+  peak RSS.
+- **Exactness:** both reassembled files match the LFS SHA-256
+  (`88c14255…0ed342`, `fdf756fa…88fb7fe`); every tensor hash and every logical
+  root matches; `verify --full` is clean. All four judged methods are lossless.
+- **Storage, both checkpoints (bytes):** ZipNN 0.5.4 **1,316,518,229** (winner);
+  WeftFS store **1,389,785,926** (+5.57 %); WeftFS data-only 1,313,652,215
+  (−0.22 %, i.e. a tie once 75,549,540 bytes of rebuildable index segments and
+  575,964 bytes of commits are excluded); zstd `--patch-from` `-12` both files
+  1,503,140,795 (+14.18 %); zstd `-19` independent 1,528,909,007 (+16.13 %).
+- **Per checkpoint:** WeftFS base 788,405,375 (loses 19.8 % to ZipNN and 3.1 %
+  to zstd `-19`); WeftFS instruct marginal 601,380,551 (**wins 8.64 % vs
+  ZipNN** and 21.3 % vs zstd `-19`). The planner chose 241 weight deltas, 1
+  zstd frame, and 48 raw tensors for the instruct checkpoint; the base chose
+  242 zstd + 48 raw. No semantic delta was applicable.
+- **Restore:** WeftFS base read 968.8 ms / materialize 6,464 ms; instruct read
+  14,367 ms / materialize 23,752 ms. zstd `-19` read (to null) 1,413 / 1,488 ms
+  and materialize 976 / 727 ms; ZipNN 240 / 196 ms in-memory and 508 / 455 ms
+  to file. **WeftFS loses full instruct restore by 9.7× to zstd and 73× to
+  ZipNN**, the cost of Huffman-decoding weight deltas plus the base dependency.
+  A single tensor (`model.layers.10.mlp.down_proj.weight`) restores in 7.3 ms
+  reading 6,842,059 bytes (base) and 118.6 ms reading 11,643,580 bytes
+  (instruct, delta + base), versus a whole-file decode of 658–765 MB for the
+  file-at-a-time formats.
+- **Ingest:** 136.0 s total (30.7 s base + 105.3 s instruct), peak RSS
+  2,540,908 KiB; the instruct phase reads 19.07 GB from the store backend while
+  pricing raw/zstd/weight-delta candidates. zstd `-19` took 538.9 s; ZipNN
+  0.50 s.
+- **Unavailable baselines:** `zstd --patch-from -19` was killed by the 3 GiB
+  cgroup limit after 510.3 s (`returncode 137`, `maxrss 3,131,264 KiB`,
+  622,206,976 partial bytes); the reported patch baseline is `-12` for both
+  files. DFloat11 0.5.0 installs but cannot import: it builds a CUDA `RawModule`
+  at module load and the court exposes no `/dev/nvidia*`; cupy 14.2.0 reports
+  `cudaErrorInsufficientDriver`. No DFloat11 bytes or time are claimed.
+- **Secondary:** SmolLM-135M (F32) + Instruct (BF16) ingested with no causal
+  parent offered, all tensors stored independently (512.7 MB data), both files
+  restored byte-exactly; confirms the dtype mismatch fails closed.
+- **Residual:** single host, warm caches, no cache dropping; ZipNN was run
+  whole-file and independent, not per-tensor or delta-aware; WeftFS restore
+  timings are single observations for the full-file rows; no Go parity for this
+  court.

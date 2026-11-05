@@ -1,0 +1,34 @@
+{
+  "schema": "weft.real-model.corpus.v1",
+  "label": "SmolLM-135M base vs Instruct (secondary, cross-dtype)",
+  "note": "The operator's first-choice pair. The base repository publishes F32 weights (538,090,408 bytes) while the instruct repository publishes BF16 weights (269,060,552 bytes), despite both config.json files declaring torch_dtype bfloat16. Tensor names and shapes are identical, but the dtypes differ, so no exact weight delta is possible. This pair was ingested anyway to prove the planner refuses the causal path and still restores exact bytes; it is not the headline size comparison.",
+  "pair": {
+    "base": {
+      "repo": "HuggingFaceTB/SmolLM-135M",
+      "revision": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+      "file": "model.safetensors",
+      "url": "https://huggingface.co/HuggingFaceTB/SmolLM-135M/resolve/main/model.safetensors",
+      "size": 538090408,
+      "sha256": "c7a387d6fe81ca6dd304aeb809bda3932ff1bbef3ca41c9484502f2f448dc093",
+      "xet_hash": "daeead3e38de1c72e6a38c81d8e9dd71130aedebf9fa7873cece855a850abb00"
+    },
+    "instruct": {
+      "repo": "HuggingFaceTB/SmolLM-135M-Instruct",
+      "revision": "b5f4b394abe60fe0e4d666139e57bfce520302a9",
+      "file": "model.safetensors",
+      "url": "https://huggingface.co/HuggingFaceTB/SmolLM-135M-Instruct/resolve/main/model.safetensors",
+      "size": 269060552,
+      "sha256": "c1464c9ebccc6fb497aa4ccc8d74d29b33f9a9eddc4638a4575719357f532f2d",
+      "xet_hash": "7f34a5194b1fe62c8ca90f46c7dfc9695c66df659c1df116f16cc5db476be287"
+    }
+  },
+  "structure": {
+    "tensors_per_checkpoint": 272,
+    "dtypes": {"base": "F32", "instruct": "BF16"},
+    "same_tensor_names": true,
+    "same_shapes": true,
+    "causal_parent_possible": false,
+    "base_tensor_data_bytes": 538060032,
+    "instruct_tensor_data_bytes": 269030016
+  }
+}

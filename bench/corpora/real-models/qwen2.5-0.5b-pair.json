@@ -1,0 +1,35 @@
+{
+  "schema": "weft.real-model.corpus.v1",
+  "label": "Qwen2.5-0.5B base vs Instruct (headline pair)",
+  "note": "Both checkpoints are BF16 with identical tensor names and shapes, so the instruct checkpoint can be offered the base checkpoint's corresponding tensor as a causal parent. Sizes and SHA-256 were verified against the Hugging Face LFS pointers after download.",
+  "pair": {
+    "base": {
+      "repo": "Qwen/Qwen2.5-0.5B",
+      "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+      "file": "model.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B/resolve/main/model.safetensors",
+      "size": 988097824,
+      "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "xet_hash": "aeb713fdee2a083353a999d46771858f952744509d8af12868a1e95e9c45c7e3"
+    },
+    "instruct": {
+      "repo": "Qwen/Qwen2.5-0.5B-Instruct",
+      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "file": "model.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/model.safetensors",
+      "size": 988097824,
+      "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "xet_hash": "bb5ff7e71536bbce6378f6d4bb523a77f1e9455965702d18bec33f599d5851f7"
+    }
+  },
+  "structure": {
+    "tensors_per_checkpoint": 290,
+    "dtype": "BF16",
+    "same_tensor_names": true,
+    "same_shapes": true,
+    "tensor_data_bytes_per_checkpoint": 988065536,
+    "safetensors_header_bytes": 32280,
+    "largest_tensor_bytes": 272269312,
+    "parameter_count": 494032768
+  }
+}
