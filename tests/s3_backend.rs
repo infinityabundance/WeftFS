@@ -141,6 +141,7 @@ fn capabilities_and_conditional_put_absent_or_idempotent() {
     assert_eq!(backend.len(&key).unwrap(), first.len() as u64);
     assert_eq!(backend.read_all(&key).unwrap(), first);
     assert_eq!(backend.read(&key, 6, 7).unwrap(), b"payload");
+    assert_eq!(backend.read(&key, first.len() as u64, 4).unwrap(), b"");
     assert_eq!(
         backend.read(&key, 100, 4).unwrap_err().class_name(),
         "InvalidArgument"

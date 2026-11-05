@@ -904,10 +904,16 @@ impl StorageBackend for S3Backend {
                 )))
             }
             416 => {
+                // End-of-object is not an error, matching the local backend;
+                // only an offset strictly beyond the object is rejected.
+                let total = self.len(key)?;
+                if offset == total {
+                    return Ok(Vec::new());
+                }
                 return Err(Error::invalid_argument(format!(
-                    "read offset {offset} is beyond {}",
+                    "read offset {offset} is beyond {} ({total} bytes)",
                     key.display_path()
-                )))
+                )));
             }
             403 => {
                 return Err(Error::unauthorized(format!(
