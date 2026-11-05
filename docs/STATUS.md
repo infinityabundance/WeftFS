@@ -176,7 +176,7 @@ identical and pushed in all four repositories).
   `weft/quantized-tensor/payload/v1` hash binding. Finite positive scale and
   dtype-range zero point are enforced; three valid and eight reject vectors;
   Rust↔Go frames are byte-identical.
-- `FLOAT_TENSOR` (mode 9, added 2026-11-04): zstd-compressed exponent plane plus raw sign+mantissa plane, bit-exact including NaN payloads, infinities, signed zeros and denormals; 3 valid + 8 reject vectors; exponent plane uses `huffman-canonical-v1`, and Rust↔Go frames are byte-identical.
+- `FLOAT_TENSOR` (mode 9, added 2026-11-04): `huffman-canonical-v1` exponent plane plus raw sign+mantissa plane, bit-exact including NaN payloads, infinities, signed zeros and denormals; 3 valid + 8 reject vectors; Rust↔Go frames are byte-identical.
 - **Not implemented and not allocated a wire value in mode 6:** blocked/
   column-major/sharded layout *fields*, i4 nibble packing and per-axis
   quantized scales, activation/gradient streams, embedding/KV-cache pages,
