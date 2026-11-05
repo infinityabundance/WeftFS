@@ -756,7 +756,15 @@ fn mount_codec_auto_writes_v2_codec_manifest() {
     let fx = Fixture::new();
     let data = compressible_payload(256 * 1024);
     {
-        let _mount = fx.mount(&["--representation", "codec-auto"]);
+        let _mount = fx.mount(&[
+            "--representation",
+            "codec-auto",
+            // The mount default is now merkle; a v3 manifest carries a raw
+            // representation only, so codec-auto needs the frozen whole-file
+            // identity explicitly.
+            "--content-identity",
+            "whole-file",
+        ]);
         let path = fx.path("big.bin");
         fs::write(&path, &data).expect("write through the codec-auto mount");
         assert_eq!(

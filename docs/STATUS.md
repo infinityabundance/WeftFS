@@ -1964,3 +1964,59 @@ snapshot-aware checkpoint/tensor verification helpers, the CLI verbs
   WeftFS-Go `4278445`. Residual: the reference adapters skip the kinds named
   above; the Python reader is not a full codec; the manifest is a snapshot and
   must be regenerated when vectors are added.
+
+## Subphase Q1 — mount write path (merkle default, write-back, group commit)
+
+Implemented and measured at WeftFS `staging` (this commit) and `WeftFS-Go`
+staging (this commit), both buildable and testable only through
+`scripts/docker-court.sh`.
+
+- **Merkle identity is the mount default.** `mount` now defaults
+  `--content-identity` to `merkle` (explicit `whole-file` still available); every
+  non-mount command keeps the frozen `whole-file` default, so existing fixtures
+  are unchanged. Reads accept v1/v2/v3. `mount --representation codec-auto`
+  requires an explicit `--content-identity whole-file` because a v3 manifest
+  carries a raw representation only.
+- **`--write-back` (off by default).** Per-handle buffered ranges, published as
+  one commit at `flush`/`fsync`/`release`; the writing handle reads its own
+  buffered bytes, other readers see the committed version until the flush;
+  `fsync` is durable before it replies; a crash loses unflushed ranges. Buffers
+  are bounded (32 MiB per handle, early flush on overflow).
+- **`--group-commit` (off by default).** Independent mutations share one durable
+  commit within a 10 ms window (max 256 ops), also published on `fsync` and
+  unmount. A crash leaves the previous whole generation. Publish failures after
+  a reply are surfaced as `EIO` on later mutations and logged.
+- **Redundant work removed.** `Store::write_file_ranges` applies many ranges
+  with one manifest read, one manifest encode and one commit (used by a
+  write-back flush); `Store::write_file_cached` reuses a handle's manifest only
+  when it still names the object's current content id; `Store::manifest_of`
+  seeds that cache. The store exposes `begin_group`/`commit_group`/
+  `abort_group`; Go gained the same group API with a pre-image journal and
+  `WriteFileRanges`/`WriteFileCached`.
+- **Go FUSE parity.** Same `--write-back`/`--group-commit` semantics, same mount
+  default, a per-handle buffer and overlay read, and a lifecycle-safe
+  background group publisher (`OnForget`, unmount, and tests can stop it
+  concurrently).
+- **Tests.** Rust `cargo test --all-targets`: 200 passed, 0 failed. FUSE
+  all-targets: 234 passed, 0 failed, 2 ignored (both pre-existing: kernel 7.3
+  same-inode EIO and `CAP_SETUID`). New `tests/fuse_writeback.rs` (6),
+  `tests/range_write.rs` (6), and three group-API tests in
+  `tests/group_commit.rs` (11 total). Go `go vet`, `CGO_ENABLED=0 go build`, and
+  `go test -race ./...`: all packages pass; new `store/group_test.go` (5) and
+  `fusefs/writeback_test.go` (4).
+- **Measurement.** `bench/receipts/fuse-writeback-20261105T200833Z.json`
+  (single host, synthetic fixtures, buffered I/O, no device claim; 500 × 4 KiB
+  overwrites of 128 MiB, 20×10 tree, crash proxy 8/8 pass). Key results:
+  write-back takes merkle write p50 from 27.3 ms to 8.4 µs (Rust) and 26.7 ms to
+  11.0 µs (Go); group-commit takes create from 163 to 24,754 ops/s (Rust) and
+  384 to 7,314 (Go), unlink from 164 to 39,958 (Rust) and 387 to 9,313 (Go);
+  whole-file writes are 4.4× (Rust) to 15.6× (Go) slower than merkle by
+  default. Crash proxy: unflushed buffered writes lost, flushed/durable kept,
+  grouped metadata all-or-nothing, `verify --full` clean in 8/8 cases.
+- **Recommendation.** `--content-identity merkle --write-back --group-commit`
+  for AI-artifact mounts. Residual: write-back defers visibility (and a crash
+  loses unflushed ranges); group commit defers durability; both are opt-in and
+  the default remains commit-per-mutation; blob publication inside a group is
+  still one durable write per touched chunk, which is why group commit helps
+  metadata far more than content writes. This is a process-fault crash proxy,
+  not a physical power-loss claim.

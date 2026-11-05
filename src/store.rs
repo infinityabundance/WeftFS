@@ -181,6 +181,25 @@ pub struct RegionVerification {
     pub bytes_verified: u64,
 }
 
+/// Outcome of a range write: the new version, the new manifest id, and the
+/// new logical size. Callers that keep a [`ManifestCache`] refresh it from
+/// these fields instead of re-reading the object record.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WriteOutcome {
+    pub version: Hash32,
+    pub content: Hash32,
+    pub size: u64,
+}
+
+/// A manifest a caller already holds for one object version. Passing it to
+/// [`Store::write_file_cached`] skips re-reading that manifest when it is still
+/// current. It is advisory only: a mismatch is ignored, never trusted.
+#[derive(Clone, Debug)]
+pub struct ManifestCache {
+    pub content: Hash32,
+    pub manifest: Manifest,
+}
+
 /// One commit on the published parent chain (newest first).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LineageEntry {
@@ -1342,6 +1361,13 @@ impl Store {
         })
     }
 
+    /// Read and validate a chunk manifest by its content id. This is the
+    /// manifest the store itself would decode for an object whose `content` is
+    /// `id`; callers use it to seed a [`ManifestCache`].
+    pub fn manifest_of(&self, id: Hash32) -> Result<Manifest> {
+        self.with_backend(|backend| recovery::read_manifest_via(backend, id))
+    }
+
     fn read_manifest_bytes(
         &self,
         manifest: &Manifest,
@@ -1943,7 +1969,7 @@ impl Store {
     /// A `weft.manifest.v3` (Merkle) file also avoids the O(file size) digest
     /// pass: its root is folded from the stored chunk hashes. A v1/v2 file still
     /// needs one digest pass over the whole file to keep the frozen
-    /// `ContentId`; see `Store::store_file_range` for the exact cost model.
+    /// `ContentId`; see `Store::store_file_ranges` for the exact cost model.
     ///
     /// A zero-length write is a POSIX no-op: it returns the current version id
     /// and publishes no commit. (The previous whole-file implementation would
@@ -1960,24 +1986,94 @@ impl Store {
         bytes: &[u8],
         causal: &[Hash32],
     ) -> Result<Hash32> {
+        let outcome = self.write_file_ranges_causal(id, &[(offset, bytes)], causal, None)?;
+        Ok(outcome.version)
+    }
+
+    /// Replace a byte range, reusing a manifest the caller already holds.
+    ///
+    /// The cache is advisory: when `cached.content` is still the object's
+    /// current manifest id and `cached.manifest.size` matches the object size,
+    /// the manifest is not read from disk again. A stale or mismatched cache is
+    /// ignored (the manifest is read normally), so a cache can never change a
+    /// result. This removes one manifest read per write from a long-lived
+    /// handle; it does not affect identity, hashing, or durability.
+    ///
+    /// Returns the new version id, the manifest id, and the new size so the
+    /// caller can refresh its cache without re-reading state.
+    pub fn write_file_cached(
+        &mut self,
+        id: Hash32,
+        offset: u64,
+        bytes: &[u8],
+        cached: Option<&ManifestCache>,
+    ) -> Result<WriteOutcome> {
+        self.write_file_ranges_causal(id, &[(offset, bytes)], &[], cached)
+    }
+
+    /// Apply several byte ranges with one manifest read, one manifest write,
+    /// and one commit.
+    ///
+    /// Ranges are applied in the order given, so overlapping writes have the
+    /// same last-writer-wins result they would have as separate calls, but the
+    /// manifest is decoded and encoded once and every touched chunk is
+    /// encoded at most once. Empty ranges are ignored; an all-empty input is a
+    /// no-op that publishes nothing. The file's existing identity is kept (a
+    /// v3 Merkle file is never downgraded).
+    pub fn write_file_ranges(
+        &mut self,
+        id: Hash32,
+        ranges: &[(u64, &[u8])],
+    ) -> Result<WriteOutcome> {
+        self.write_file_ranges_causal(id, ranges, &[], None)
+    }
+
+    /// Shared range-write core. `ranges` are applied in order against one
+    /// preloaded manifest and published as one commit.
+    fn write_file_ranges_causal(
+        &mut self,
+        id: Hash32,
+        ranges: &[(u64, &[u8])],
+        causal: &[Hash32],
+        cached: Option<&ManifestCache>,
+    ) -> Result<WriteOutcome> {
         self.require_writable()?;
         let old = self.object_meta(id)?;
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("write_file requires a file object"));
         }
-        if bytes.is_empty() {
-            return Ok(old.version);
+        let ranges: Vec<(u64, &[u8])> = ranges
+            .iter()
+            .copied()
+            .filter(|(_, bytes)| !bytes.is_empty())
+            .collect();
+        if ranges.is_empty() {
+            return Ok(WriteOutcome {
+                version: old.version,
+                content: old.content,
+                size: old.size,
+            });
         }
-        let end = offset
-            .checked_add(bytes.len() as u64)
-            .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
-        if end > MAX_FILE_BYTES {
-            return Err(Error::limit_exceeded(format!(
-                "file exceeds the {MAX_FILE_BYTES}-byte bound"
-            )));
+        let mut end = old.size;
+        for (offset, bytes) in &ranges {
+            let range_end = offset
+                .checked_add(bytes.len() as u64)
+                .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
+            if range_end > MAX_FILE_BYTES {
+                return Err(Error::limit_exceeded(format!(
+                    "file exceeds the {MAX_FILE_BYTES}-byte bound"
+                )));
+            }
+            end = end.max(range_end);
         }
-        let old_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        // The caller's manifest is only a cache: it must name the object's
+        // current content id and size, otherwise it is ignored.
+        let old_manifest = match cached {
+            Some(cache) if cache.content == old.content && cache.manifest.size == old.size => {
+                cache.manifest.clone()
+            }
+            _ => self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?,
+        };
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2005,11 +2101,13 @@ impl Store {
         if self.options.representation == RepresentationMode::CodecAuto || old_is_frame_backed {
             let old_bytes =
                 self.read_manifest_bytes(&old_manifest, old.content, 0, old_manifest.size, true)?;
-            let offset_usize = checked_usize(offset, "write offset")?;
-            let end_usize = checked_usize(end, "write end")?;
             let mut buffer = vec![0u8; checked_usize(new_size, "file size")?];
             buffer[..old_bytes.len()].copy_from_slice(&old_bytes);
-            buffer[offset_usize..end_usize].copy_from_slice(bytes);
+            for (offset, bytes) in &ranges {
+                let offset_usize = checked_usize(*offset, "write offset")?;
+                let end_usize = checked_usize(*offset + bytes.len() as u64, "write end")?;
+                buffer[offset_usize..end_usize].copy_from_slice(bytes);
+            }
             // A new explicit causal parent wins; otherwise an existing
             // causal-exact object keeps using its recorded parents as bases.
             let parent_versions: Vec<Hash32> = if causal.is_empty() {
@@ -2032,11 +2130,21 @@ impl Store {
                     && content_identity == ContentIdentity::WholeFileV1,
                 content_identity,
             )?;
-            return self.publish_file_version(id, old, manifest_id, new_size, causal);
+            let version = self.publish_file_version(id, old, manifest_id, new_size, causal)?;
+            return Ok(WriteOutcome {
+                version,
+                content: manifest_id,
+                size: new_size,
+            });
         }
         let (manifest_id, _content, _size) =
-            self.store_file_range(&old_manifest, offset, bytes, new_size, content_identity)?;
-        self.publish_file_version(id, old, manifest_id, new_size, causal)
+            self.store_file_ranges(&old_manifest, &ranges, new_size, content_identity)?;
+        let version = self.publish_file_version(id, old, manifest_id, new_size, causal)?;
+        Ok(WriteOutcome {
+            version,
+            content: manifest_id,
+            size: new_size,
+        })
     }
 
     /// Append a reader to an existing file without buffering the file.
@@ -3802,6 +3910,36 @@ impl Store {
     where
         F: FnOnce(&mut Store) -> Result<T>,
     {
+        self.begin_group()?;
+        // Roll back on panic as well as on `Err`, so a panicking closure cannot
+        // leave the live state ahead of the published commit chain.
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(&mut *self)));
+        let value = match outcome {
+            Ok(Ok(value)) => value,
+            Ok(Err(err)) => {
+                self.abort_group();
+                return Err(err);
+            }
+            Err(panic) => {
+                self.abort_group();
+                std::panic::resume_unwind(panic);
+            }
+        };
+        let hash = self.commit_group()?;
+        Ok((value, hash))
+    }
+
+    /// Open a group that spans multiple calls.
+    ///
+    /// This is the non-closure form of [`Store::group`], for callers that cannot
+    /// keep one closure open across the mutations they want to batch (the FUSE
+    /// frontend serves one request per callback). The semantics are identical:
+    /// mutations buffer their ops and are applied to the live in-memory state;
+    /// nothing is published until [`Store::commit_group`]. A crash before that
+    /// point leaves the previous whole generation. Callers must always close
+    /// the group with [`Store::commit_group`] or [`Store::abort_group`];
+    /// dropping a store with an open group publishes nothing.
+    pub fn begin_group(&mut self) -> Result<()> {
         self.require_writable()?;
         if self.group_depth != 0 {
             return Err(Error::invalid_argument(
@@ -3817,33 +3955,27 @@ impl Store {
         self.group_undo.clear();
         self.group_pre_objects.clear();
         self.group_force_checkpoint = false;
+        Ok(())
+    }
 
-        // Roll back on panic as well as on `Err`, so a panicking closure cannot
-        // leave the live state ahead of the published commit chain.
-        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(&mut *self)));
-        let value = match outcome {
-            Ok(Ok(value)) => value,
-            Ok(Err(err)) => {
-                self.abort_group();
-                return Err(err);
-            }
-            Err(panic) => {
-                self.abort_group();
-                std::panic::resume_unwind(panic);
-            }
-        };
-
+    /// Publish every buffered group op as exactly one commit and close the
+    /// group. Returns the current head when no op was buffered (nothing is
+    /// published). On error the in-memory state is rolled back to the pre-group
+    /// value and the group is closed.
+    pub fn commit_group(&mut self) -> Result<Hash32> {
+        if self.group_depth == 0 {
+            return Err(Error::invalid_argument("no group commit is open"));
+        }
         let ops = std::mem::take(&mut self.pending_ops);
         let undo = std::mem::take(&mut self.group_undo);
         let pre_objects = std::mem::take(&mut self.group_pre_objects);
         let force_checkpoint = std::mem::replace(&mut self.group_force_checkpoint, false);
         self.group_depth = 0;
-
         if ops.is_empty() {
-            return Ok((value, self.head));
+            return Ok(self.head);
         }
         match self.publish_staged(ops, pre_objects, force_checkpoint) {
-            Ok(hash) => Ok((value, hash)),
+            Ok(hash) => Ok(hash),
             Err(err) => {
                 // Nothing is published on an error return, so the in-memory
                 // state must go back to the pre-group value.
@@ -3851,6 +3983,26 @@ impl Store {
                 Err(err)
             }
         }
+    }
+
+    /// Discard the open group without publishing and restore the pre-group
+    /// in-memory state.
+    pub fn abort_group(&mut self) {
+        if self.group_depth == 0 {
+            return;
+        }
+        let undo = std::mem::take(&mut self.group_undo);
+        self.rollback(&undo);
+        self.pending_ops.clear();
+        self.group_pre_objects.clear();
+        self.group_force_checkpoint = false;
+        self.group_depth = 0;
+    }
+
+    /// True while a group opened by [`Store::begin_group`] or [`Store::group`]
+    /// is buffering mutations.
+    pub fn group_open(&self) -> bool {
+        self.group_depth != 0
     }
 
     // ---- selector resolution --------------------------------------------
@@ -5540,17 +5692,6 @@ impl Store {
         }
     }
 
-    /// Discard the open group without publishing and restore the pre-group
-    /// in-memory state.
-    fn abort_group(&mut self) {
-        let undo = std::mem::take(&mut self.group_undo);
-        self.rollback(&undo);
-        self.pending_ops.clear();
-        self.group_pre_objects.clear();
-        self.group_force_checkpoint = false;
-        self.group_depth = 0;
-    }
-
     /// Unwind a whole undo journal (newest entry first).
     fn rollback(&mut self, undo: &[Undo]) {
         for entry in undo.iter().rev() {
@@ -5819,7 +5960,7 @@ impl Store {
 
     /// Encode and store a complete in-memory buffer. Used for initial file
     /// content (`create_file*`), `truncate`, and the whole-file bench baseline.
-    /// Range writes go through `Store::store_file_range` instead.
+    /// Range writes go through `Store::store_file_ranges` instead.
     fn store_file_content(&self, bytes: &[u8]) -> Result<(Hash32, Hash32, u64)> {
         self.store_file_content_with_identity(bytes, self.options.content_identity)
     }
@@ -6109,11 +6250,10 @@ impl Store {
     /// done with one chunk-sized buffer at a time so memory never becomes
     /// O(file size). It cannot be replaced by a Merkle root without breaking v1
     /// identity.
-    pub(crate) fn store_file_range(
+    pub(crate) fn store_file_ranges(
         &self,
         old_manifest: &Manifest,
-        offset: u64,
-        bytes: &[u8],
+        ranges: &[(u64, &[u8])],
         new_size: u64,
         content_identity: ContentIdentity,
     ) -> Result<(Hash32, Hash32, u64)> {
@@ -6121,15 +6261,12 @@ impl Store {
         if chunk_size == 0 || chunk_size > crate::format::MAX_CHUNK_SIZE {
             return Err(Error::invalid_argument("chunk size is out of range"));
         }
-        let end = offset
-            .checked_add(bytes.len() as u64)
-            .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
         if new_size > MAX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "file exceeds the {MAX_FILE_BYTES}-byte bound"
             )));
         }
-        if end > new_size || new_size < old_manifest.size {
+        if new_size < old_manifest.size {
             return Err(Error::invalid_argument(
                 "range write exceeds the target file size",
             ));
@@ -6151,6 +6288,27 @@ impl Store {
                 "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
             )));
         }
+
+        // Which ranges touch each chunk. This bounds the per-chunk work to the
+        // ranges that actually overlap it; a range list cannot make the walk
+        // quadratic in the file size.
+        let mut touched: BTreeMap<u64, Vec<usize>> = BTreeMap::new();
+        for (index, (offset, bytes)) in ranges.iter().enumerate() {
+            let end = offset
+                .checked_add(bytes.len() as u64)
+                .ok_or_else(|| Error::limit_exceeded("write offset overflows"))?;
+            if end > new_size {
+                return Err(Error::invalid_argument(
+                    "range write exceeds the target file size",
+                ));
+            }
+            let first = *offset / chunk_size;
+            let last = (end - 1) / chunk_size;
+            for chunk in first..=last {
+                touched.entry(chunk).or_default().push(index);
+            }
+        }
+
         let mut chunks: Vec<ChunkRef> = Vec::with_capacity(
             usize::try_from(chunk_count)
                 .map_err(|_| Error::limit_exceeded("chunk count does not fit usize"))?,
@@ -6161,9 +6319,9 @@ impl Store {
             let old_ref = old_manifest
                 .chunks
                 .get(checked_usize(index, "chunk index")?);
-            let touches_write = chunk_start < end && offset < chunk_end;
+            let overlapping = touched.get(&index);
             if let Some(old_ref) = old_ref {
-                if chunk_end <= old_manifest.size && !touches_write {
+                if chunk_end <= old_manifest.size && overlapping.is_none() {
                     // Unchanged chunk: reuse the old reference verbatim. Its
                     // blob is neither read nor re-written here.
                     chunks.push(old_ref.clone());
@@ -6171,7 +6329,7 @@ impl Store {
                 }
             }
             // Reconstruct this chunk from the old bytes (if any), the written
-            // range, and zeros for any gap past the old EOF.
+            // ranges, and zeros for any gap past the old EOF.
             let mut assembled = vec![0u8; checked_usize(chunk_end - chunk_start, "chunk length")?];
             let mut old_bytes: Option<Vec<u8>> = None;
             if let Some(old_ref) = old_ref {
@@ -6196,14 +6354,21 @@ impl Store {
                     old_bytes = Some(stored);
                 }
             }
-            let write_start = offset.max(chunk_start);
-            let write_end = end.min(chunk_end);
-            if write_start < write_end {
-                let dst_start = checked_usize(write_start - chunk_start, "chunk write start")?;
-                let dst_end = checked_usize(write_end - chunk_start, "chunk write end")?;
-                let src_start = checked_usize(write_start - offset, "range write start")?;
-                let src_end = checked_usize(write_end - offset, "range write end")?;
-                assembled[dst_start..dst_end].copy_from_slice(&bytes[src_start..src_end]);
+            if let Some(overlapping) = overlapping {
+                for &range_index in overlapping {
+                    let (offset, bytes) = ranges[range_index];
+                    let range_end = offset + bytes.len() as u64;
+                    let write_start = offset.max(chunk_start);
+                    let write_end = range_end.min(chunk_end);
+                    if write_start >= write_end {
+                        continue;
+                    }
+                    let dst_start = checked_usize(write_start - chunk_start, "chunk write start")?;
+                    let dst_end = checked_usize(write_end - chunk_start, "chunk write end")?;
+                    let src_start = checked_usize(write_start - offset, "range write start")?;
+                    let src_end = checked_usize(write_end - offset, "range write end")?;
+                    assembled[dst_start..dst_end].copy_from_slice(&bytes[src_start..src_end]);
+                }
             }
             if let (Some(old_ref), Some(old_bytes)) = (old_ref, old_bytes.as_deref()) {
                 // A write that reproduces the old bytes must not add a blob.

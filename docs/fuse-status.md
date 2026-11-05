@@ -48,15 +48,8 @@ Core without FUSE (also proves the core has no FUSE dependency):
 scripts/docker-court.sh rust "cargo test --all-targets -- --test-threads=1"
 ```
 
-```
-cli.rs             4 passed
-crash_proxy.rs     3 passed
-recovery.rs       11 passed
-store_core.rs     11 passed
-store_extensions.rs 10 passed
------------------------------------
-total             39 passed, 0 failed
-```
+Current result: **200 passed, 0 failed, 0 ignored**. The earlier P5 per-file
+breakdown (39 tests) is superseded by the Q1 suites.
 
 With FUSE:
 
@@ -65,25 +58,17 @@ cd /mnt/1tb_kingston/WeftFS
 scripts/docker-court.sh fuse "cargo test --features fuse --all-targets -- --test-threads=1"
 ```
 
-Observed twice in a row, in the final configuration:
+Observed in the final configuration (`2026-11-05`, Q1):
 
 ```
-lib unit tests           3 passed
-main unit tests          0 passed
-tests/cli.rs             4 passed
-tests/crash_proxy.rs     3 passed
-tests/fuse_concurrency.rs 0 passed, 1 ignored
-tests/fuse_crash.rs      3 passed
-tests/fuse_posix.rs      9 passed, 1 ignored
-tests/recovery.rs       11 passed
-tests/store_core.rs     11 passed
-tests/store_extensions.rs 10 passed
-------------------------------------
-total                   54 passed, 0 failed, 2 ignored
+cargo test --features fuse --all-targets
+  total 234 passed, 0 failed, 2 ignored
+cargo test --all-targets
+  total 200 passed, 0 failed, 0 ignored
 ```
 
-The full suite was run three consecutive times with this result (0 failures).
-The two ignored tests are not claimed as passing:
+The earlier per-file table below is kept as the P5 baseline. The two ignored
+tests are unchanged and are not claimed as passing:
 
 1. `permissions_with_allow_other` needs `CAP_SETUID` (the court has only
    `CAP_SYS_ADMIN`), so it cannot drop to uid 65534.
@@ -217,13 +202,16 @@ root that did not verify.
 
 ## 3. Durability and caching semantics
 
-* **One commit per mutation.** `create`, `write`, `truncate`, `mkdir`, `rmdir`,
-  `unlink`, `rename`, `link`, `symlink`, `setattr`, xattr changes, and the
-  unlink cleanup on `release` publish exactly one store commit. The reply is
+* **One commit per mutation (default).** `create`, `write`, `truncate`, `mkdir`,
+  `rmdir`, `unlink`, `rename`, `link`, `symlink`, `setattr`, xattr changes, and
+  the unlink cleanup on `release` publish exactly one store commit. The reply is
   sent only after the commit file, commit directory, superblock slot, and store
-  root have been fsynced by the store core.
+  root have been fsynced by the store core. `--write-back` and `--group-commit`
+  change only *when* independent mutations are published; see §3.1–3.2.
 * **Writable handles use write-through.** No `FUSE_WRITEBACK_CACHE` capability
   is negotiated. The kernel sends each `write(2)` to the daemon synchronously.
+  With `--write-back`, the daemon buffers the range per handle and publishes at
+  `flush`/`fsync`/`release`; without it, each write is a commit.
   Shared writable `mmap` nevertheless works through the kernel page cache: the
   verb-matrix test maps a file `MAP_SHARED`, writes through the mapping,
   `msync`s, and reads the exact bytes through a separate file description.
@@ -235,17 +223,108 @@ root that did not verify.
   cannot mix two committed versions. Reads larger than one FUSE request are
   split by the kernel and are not atomic across a concurrent writer — normal
   POSIX behaviour for a file being written concurrently.
-* **`fsync` / `fsyncdir` are `Ok`.** There is nothing left to flush: every
-  mutation was durably published before its reply. The daemon does **not**
-  claim to flush page cache it never populated for those handles.
-* **`flush` is not `fsync`.** It reports that no deferred write error is
-  pending and does nothing else. `release` errors cannot be reported to
-  `close(2)`; a failed cleanup commit is left for GC.
+* **`fsync` / `fsyncdir` are `Ok`.** By default there is nothing left to flush:
+  every mutation was durably published before its reply. With `--write-back`,
+  `fsync` is the durability point and publishes the handle's buffer before it
+  replies. The daemon does **not** claim to flush page cache it never populated
+  for those handles.
+* **`flush` is not `fsync` (default).** It reports that no deferred write error
+  is pending and does nothing else. With `--write-back` it publishes the
+  handle's buffer. `release` errors cannot be reported to `close(2)`; a failed
+  cleanup commit is left for GC.
 * **No power-loss claim.** All tests are process-fault or ordinary-operation
   tests on a host filesystem. The underlying filesystem's `fsync` contract is
   the limit of the durability statement, exactly as in `docs/store-status.md`.
 * `WEFT_CRASH_PHASE` is a test hook in the store core, not a production
   feature; it aborts the process at a named publication phase.
+
+### 3.1 Mount options added for AI-artifact workloads
+
+Both frontends accept the same flags and implement the same semantics.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--content-identity whole-file\|merkle` | **`merkle` for `mount`**, `whole-file` for every other command | Identity of files *created* through the mount. `merkle` writes `weft.manifest.v3`, so a range write costs O(changed chunks + manifest) instead of O(file size). Reads accept both. Existing v1/v2/v3 files keep their identity on rewrite (v3 is never downgraded; v1/v2 only upgrade when the flag asks). |
+| `--write-back` | off | Buffer each handle's writes; publish them as one commit at `flush`, `fsync`, or `release`. Off keeps commit-per-write. |
+| `--group-commit` | off | Buffer independent mutations and publish one commit when a 10 ms window elapses, 256 ops accumulate, `fsync` is called, or the mount is torn down. |
+
+The mount default is `merkle` because the mount is the interactive path that
+creates AI-artifact-sized files, and commit-per-write plus whole-file hashing is
+what made a 4 KiB overwrite cost 108 ms (Rust) / 392 ms (Go) in the v0.7 FUSE
+court. Non-mount commands keep the frozen `whole-file` default so every existing
+fixture stays byte-identical. `--representation codec-auto` is incompatible with
+a v3 manifest, so `mount --representation codec-auto` requires an explicit
+`--content-identity whole-file`; it never silently substitutes one.
+
+The mount defaults are also exposed by `weftfs --help` and the Go `mount -help`;
+the store-level defaults (`Options::default()`, `store.DefaultOptions()`) are
+unchanged.
+
+### 3.2 Durability table
+
+| Mode | `write` reply means | Visible to other readers | Durable after | Crash loses |
+| --- | --- | --- | --- | --- |
+| default | the new version is committed and fsynced | immediately | the write reply | nothing acknowledged |
+| `--write-back` | bytes are in the daemon's per-handle buffer (returned to that handle on read) | only after `flush`/`fsync`/`release` | `fsync` reply (and `flush`/`release` success) | unflushed buffered ranges of that handle |
+| `--group-commit` | the mutation is in the open group and visible in memory | immediately within the mount | the group is published (window, 256 ops, `fsync`, unmount) | every mutation in an unpublished group |
+| `--write-back --group-commit` | both of the above | after the handle flush; unrelated mutations batch | `fsync` reply | unflushed handle ranges and unpublished groups |
+
+A crash at any point leaves the previous whole generation for anything not yet
+published; an in-flight commit is the ordinary store crash set (old generation
+or the whole new one, never a partial one). Group publication failures after the
+mutation already replied are reported as `EIO` on later mutations and logged;
+the store stays at the last published generation.
+
+### 3.3 Measured cost (Q1)
+
+Receipt `bench/receipts/fuse-writeback-20261105T200833Z.json`, one host, one
+repetition of 500 × 4 KiB overwrites of a 128 MiB file (one `fsync` at the end)
+and a 20-directory × 10-file tree. `p50` is the per-write latency; `flush` is
+the final `fsync`.
+
+| Impl | Identity | Mode | write p50 | write p95 | write p99 | 500 ops + fsync | commits | create ops/s | unlink ops/s |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Rust | whole-file | default | 120.0 ms | 125.1 ms | 127.1 ms | 60.1 s | 1443 | 163 | 164 |
+| Rust | whole-file | `--write-back` | 8.6 µs | 13.8 µs | 24.4 µs | 1.47 s | 444 | 145 | 155 |
+| Rust | whole-file | `--group-commit` | 120.2 ms | 125.0 ms | 127.0 ms | 60.2 s | 1002 | 24,754 | 39,958 |
+| Rust | merkle | default | 27.3 ms | 32.5 ms | 35.4 ms | 15.1 s | 1443 | 162 | 165 |
+| Rust | merkle | `--write-back` | 8.4 µs | 11.2 µs | 15.0 µs | 1.44 s | 444 | 145 | 156 |
+| Rust | merkle | `--group-commit` | 21.4 ms | 26.7 ms | 33.3 ms | 10.7 s | 513 | 11,697 | 17,781 |
+| Go | whole-file | default | 417.2 ms | 428.7 ms | 452.8 ms | 209.4 s | 1443 | 384 | 387 |
+| Go | whole-file | `--write-back` | 10.8 µs | 16.1 µs | 24.7 µs | 1.61 s | 444 | 382 | 388 |
+| Go | whole-file | `--group-commit` | 418.9 ms | 437.0 ms | 466.4 ms | 210.5 s | 1005 | 7,314 | 9,313 |
+| Go | merkle | default | 26.7 ms | 31.3 ms | 34.5 ms | 13.4 s | 1443 | 384 | 377 |
+| Go | merkle | `--write-back` | 11.0 µs | 16.3 µs | 23.1 µs | 1.45 s | 444 | 365 | 381 |
+| Go | merkle | `--group-commit` | 27.1 ms | 31.8 ms | 34.2 ms | 13.6 s | 929 | 3,453 | 7,589 |
+
+`--write-back --group-commit` measured within noise of `--write-back` for the
+same cell (Rust merkle 8.1 µs p50 / 1.42 s flush; Go merkle 10.7 µs p50 /
+1.48 s flush) because a flush already publishes one commit and metadata in the
+tree is not buffered by `--write-back`.
+
+What the numbers say, without over-claiming:
+
+* `--write-back` is the large win for overwrite-heavy workloads: p50 falls from
+  27.3 ms to 8.4 µs (Rust, merkle) and from 26.7 ms to 11.0 µs (Go, merkle), and
+total time for 500 overwrites falls ~10×. The price is deferred visibility and
+an fsync whose cost is the 500-range commit (1.4–1.6 s here; it publishes every
+touched chunk blob durably).
+* Whole-file identity is 4.4× (Rust) to 15.6× (Go) slower per write than merkle
+  in the default mode because every write re-hashes the whole 128 MiB.
+* `--group-commit` is the metadata-storm win: creates 163 → 24,754 ops/s and
+  unlinks 164 → 39,958 ops/s (Rust), 384 → 7,314 and 387 → 9,313 (Go), with one
+  commit per group instead of one per mutation. It barely helps `write` because
+each range write still publishes its chunk blob durably inside the group; the
+commit is only the tail of the cost.
+* Go is slower than Rust on whole-file overwrites (417 ms vs 120 ms p50) but
+  reaches parity on merkle defaults (26.7 vs 27.3 ms) once the whole-file digest
+  is out of the path.
+* The recommended mount for AI-artifact workloads is `--content-identity merkle`
+  with `--write-back --group-commit`: merkle removes the O(file) digest,
+  write-back removes commit-per-write from the steady state, and group-commit
+  collapses metadata storms. The crash proxy in the same receipt shows unflushed
+  buffered writes lost and flushed/durable ones kept, with a clean
+  `verify --full` in every case.
 
 ---
 
@@ -323,8 +402,14 @@ CLI:
 
 ```
 weftfs mount --store <DIR> --mountpoint <DIR> \
-  [--foreground] [--allow-other] [--snapshot <name-or-hex>] [--read-only]
+  [--foreground] [--allow-other] [--snapshot <name-or-hex>] [--read-only] \
+  [--content-identity whole-file|merkle] [--write-back] [--group-commit]
 ```
+
+The identity flag defaults to `merkle` for `mount` (see §3.1); every other
+command keeps `whole-file`. `--write-back` and `--group-commit` are refused on a
+read-only mount instead of being silently ignored. The Go frontend accepts the
+same flags (`result`-style `-flag` spellings as well).
 
 * Mount options: `FSName("weftfs")`, `DefaultPermissions`, `AutoUnmount`, plus
   `AllowOther` for `--allow-other` or `AllowRoot` otherwise. `AutoUnmount`
@@ -401,14 +486,23 @@ This demonstrates atomicity of a single read with respect to commits. It does
 
 | File | Tests | State |
 |---|---|---|
-| `tests/fuse_posix.rs` | 10 | 9 passed + `permissions_with_allow_other` ignored |
+| `tests/fuse_posix.rs` | 11 | 10 passed + `permissions_with_allow_other` ignored (codec-auto now passes an explicit whole-file identity) |
 | `tests/fuse_verb_matrix.rs` | 4 | 4 passed (fallocate modes/server copy, mknod/tmpfile, mmap, locks/timestamps) |
 | `tests/fuse_context_mount.rs` | 6 | 6 passed |
 | `tests/fuse_crash.rs` | 3 | 3 passed |
+| `tests/fuse_writeback.rs` | 6 | 6 passed (mount default merkle, explicit whole-file, write-back read-back/fsync/release, group-commit tree, combined) |
 | `tests/fuse_concurrency.rs` | 1 | 1 ignored (kernel/fuser EIO; see §2.1) |
+| `tests/group_commit.rs` | 11 | 11 passed (adds begin/commit/abort and an empty group) |
+| `tests/range_write.rs` | 6 | 6 passed (multi-range equivalence, one commit, overlap order, cache current/stale) |
 | `tests/store_extensions.rs` | 11 | 11 passed (also runs without FUSE) |
 | other core tests | 53 | 53 passed |
-| **total** | **88** | **86 passed, 2 ignored, 0 failed** |
+| **total (fuse all-targets)** | **234 collected** | **232 passed, 2 ignored, 0 failed** |
+
+Latest court runs: `cargo test --features fuse --all-targets` → 234 passed,
+0 failed, 2 ignored; `cargo test --all-targets` → 200 passed, 0 failed;
+`go test -race ./...` in `WeftFS-Go` → all packages pass, plus `go vet` and a
+`CGO_ENABLED=0 go build`. (The counts in the table are by file; the 234 total
+includes the harness support targets and the library unit tests.)
 
 ### Ignored test and precise reason
 

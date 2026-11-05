@@ -71,14 +71,15 @@ struct Cli {
     representation: String,
     /// Content identity for newly written files: `whole-file` (frozen v1
     /// `ContentId`) or `merkle` (`weft.manifest.v3`, range writes cost O(changed
-    /// chunks)). Also accepted by `mount`; read-only commands ignore it.
+    /// chunks)). Defaults to `whole-file`, except for `mount`, which defaults
+    /// to `merkle` for files created through the mount. Read-only commands
+    /// ignore it.
     #[arg(
         long = "content-identity",
         global = true,
-        value_name = "whole-file|merkle",
-        default_value = "whole-file"
+        value_name = "whole-file|merkle"
     )]
-    content_identity: String,
+    content_identity: Option<String>,
     /// Physical storage backend: `local` (normative POSIX layout) or `object`
     /// (immutable object namespace published with link(2)).
     #[arg(
@@ -503,6 +504,14 @@ enum Command {
         /// saved-context views.
         #[arg(long = "capability")]
         capability_file: Option<PathBuf>,
+        /// Buffer each handle's writes and commit them at flush/fsync/release
+        /// instead of committing every write. Off by default.
+        #[arg(long = "write-back")]
+        write_back: bool,
+        /// Batch independent mutations arriving within a 10 ms window into one
+        /// durable commit. Off by default.
+        #[arg(long = "group-commit")]
+        group_commit: bool,
     },
     /// Build the deterministic handoff fixture.
     ConformanceStore {
@@ -964,7 +973,9 @@ fn run(cli: Cli) -> Result<()> {
     let policy = OpenPolicy {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
-        content_identity: parse_content_identity(&content_identity)?,
+        content_identity: parse_content_identity(
+            content_identity.as_deref().unwrap_or("whole-file"),
+        )?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
         backend: parse_backend(&backend)?,
         quotas: budgets,
@@ -2031,6 +2042,8 @@ fn run(cli: Cli) -> Result<()> {
             at,
             read_only,
             capability_file,
+            write_back,
+            group_commit,
         } => {
             // v1 does not daemonize: the process always stays in the foreground
             // so SIGINT/SIGTERM can trigger a clean unmount.
@@ -2046,6 +2059,25 @@ fn run(cli: Cli) -> Result<()> {
                 || context.is_some()
                 || at.is_some()
                 || capability.is_some();
+            if read_only && (write_back || group_commit) {
+                return Err(Error::invalid_argument(
+                    "--write-back and --group-commit require a writable live mount",
+                ));
+            }
+            // The mount default is Merkle identity: files created through the
+            // mount are written for range-update workloads, and the mount is
+            // the only path that creates AI-artifact-sized files interactively.
+            // Non-mount commands keep the frozen `whole-file` default so every
+            // existing fixture stays v1. An explicit flag always wins.
+            let mut policy = policy;
+            if content_identity.is_none() {
+                if policy.representation == RepresentationMode::CodecAuto {
+                    return Err(Error::invalid_argument(
+                        "--representation codec-auto requires an explicit --content-identity whole-file (a v3 Merkle manifest carries a raw representation only)",
+                    ));
+                }
+                policy.content_identity = ContentIdentity::MerkleV3;
+            }
             let mode = if read_only {
                 OpenMode::ReadOnly
             } else {
@@ -2115,6 +2147,8 @@ fn run(cli: Cli) -> Result<()> {
                     snapshot_state,
                     capability,
                     context: context_mount,
+                    write_back,
+                    group_commit,
                 },
             )
         }

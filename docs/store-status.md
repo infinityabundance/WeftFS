@@ -236,8 +236,15 @@ subcommand, so they also work as mount flags):
 ```sh
 weftfs --store DIR --representation codec-auto create /big.bin --file big.bin
 weftfs --store DIR --representation codec-auto --codec-min-bytes 65536 verify --full
-weftfs --store DIR mount --mountpoint MNT --representation codec-auto
+weftfs --store DIR mount --mountpoint MNT --representation codec-auto \
+  --content-identity whole-file
 ```
+
+`mount` defaults `--content-identity` to `merkle` (Q1); a v3 Merkle manifest
+carries a raw representation only, so `--representation codec-auto` on a mount
+requires the explicit `--content-identity whole-file` shown above and is
+otherwise `InvalidArgument`. Non-mount commands keep the frozen `whole-file`
+default.
 
 `--representation` accepts `raw` (the default) or `codec-auto`; any other value
 is `InvalidArgument`. `--codec-min-bytes` defaults to

@@ -1,10 +1,20 @@
 //! Linux FUSE frontend for the WeftFS store (P5).
 //!
-//! The daemon is a thin POSIX adapter over [`crate::store::Store`]. Every
-//! mutation is one store commit, so a `write`/`create`/`mkdir`/`xattr` reply is
-//! only sent after the commit (and its fsyncs) completed. `flush` is not
-//! `fsync`; see `docs/fuse-status.md` for the honest durability and limitation
-//! matrix.
+//! The daemon is a thin POSIX adapter over [`crate::store::Store`]. By default
+//! every mutation is one store commit, so a `write`/`create`/`mkdir`/`xattr`
+//! reply is only sent after the commit (and its fsyncs) completed. Two opt-in
+//! mount modes change that, and only that:
+//!
+//! * `--write-back` buffers each handle's writes and commits them at
+//!   `flush`/`fsync`/`release`. Readers other than the writing handle see no
+//!   buffered bytes until then; a crash loses unflushed writes; `fsync` is
+//!   durable before it replies.
+//! * `--group-commit` batches successive independent mutations into one
+//!   durable commit within a short window. A group is durable only when it is
+//!   published; a crash leaves the previous whole generation.
+//!
+//! The defaults are unchanged: commit-per-mutation, no buffering. See
+//! `docs/fuse-status.md` for the exact durability table.
 //!
 //! Two virtual surfaces are mounted under `/.weft` (they shadow a real entry of
 //! that name, which remains reachable through the exact-id surface):
@@ -40,7 +50,7 @@ use crate::context::CapabilityContext;
 use crate::error::{Class, Error, Result};
 use crate::identity::Hash32;
 use crate::state::{validate_name_bytes, ObjectKind, ObjectRecord, State};
-use crate::store::{OpenMode, Store, MAX_FILE_BYTES, MAX_XATTR_VALUE_BYTES};
+use crate::store::{ManifestCache, OpenMode, Store, MAX_FILE_BYTES, MAX_XATTR_VALUE_BYTES};
 
 /// Attribute/entry TTL. Zero makes every kernel question reach the daemon, so
 /// changes made through another mount are visible immediately. No attribute
@@ -79,6 +89,17 @@ const X_OK: i32 = 1;
 /// This also means `fsync` has nothing extra to flush (see docs/fuse-status.md).
 const FOPEN_DIRECT_IO: u32 = 1 << 0;
 
+/// Group-commit window: mutations arriving within this window share one
+/// durable commit. Short enough that an isolated mutation is published almost
+/// immediately, long enough to coalesce a metadata storm.
+const GROUP_COMMIT_WINDOW: Duration = Duration::from_millis(10);
+/// Upper bound on buffered mutations in one group, so a sustained storm cannot
+/// grow the pending-op list without bound.
+const GROUP_COMMIT_MAX_OPS: usize = 256;
+/// Upper bound on bytes buffered by one write-back handle. Reaching it flushes
+/// the handle early (an earlier durable commit is always allowed).
+const WRITE_BACK_MAX_BYTES: usize = 32 * 1024 * 1024;
+
 const SEEK_DATA: i32 = 3;
 const SEEK_HOLE: i32 = 4;
 
@@ -94,6 +115,11 @@ pub struct MountOptions {
     pub capability: Option<CapabilityContext>,
     /// When present, the mount root is this Context Root's result set.
     pub context: Option<ContextMount>,
+    /// Buffer per-handle writes and commit at `flush`/`fsync`/`release`.
+    pub write_back: bool,
+    /// Batch successive independent mutations into one durable commit within
+    /// [`GROUP_COMMIT_WINDOW`].
+    pub group_commit: bool,
 }
 
 /// A resolved Context Root used as the mount root.
@@ -292,6 +318,30 @@ struct OpenHandle {
     append: bool,
     pinned_object: bool,
     pinned_content: bool,
+    /// Buffered writes for `--write-back`, in call order. Empty otherwise.
+    pending: Vec<PendingWrite>,
+    /// Last manifest this handle produced or read, reused by the next write so
+    /// a long write sequence does not re-read the manifest each time.
+    manifest: Option<ManifestCache>,
+}
+
+struct PendingWrite {
+    offset: u64,
+    data: Vec<u8>,
+}
+
+impl OpenHandle {
+    /// End (exclusive) of the buffered region, or the committed size.
+    fn pending_end(&self) -> u64 {
+        self.pending
+            .iter()
+            .map(|write| write.offset + write.data.len() as u64)
+            .fold(self.size, u64::max)
+    }
+
+    fn pending_bytes(&self) -> usize {
+        self.pending.iter().map(|write| write.data.len()).sum()
+    }
 }
 
 struct DirItem {
@@ -317,26 +367,214 @@ pub struct WeftFuse {
     snapshot_state: Option<State>,
     capability: Option<CapabilityContext>,
     context: Option<ContextMount>,
+    write_back: bool,
+    group_commit: bool,
+    /// Open group-commit session; `None` while no group is buffering.
+    group: Arc<Mutex<Option<GroupSession>>>,
+    group_stop: Arc<AtomicBool>,
+    group_thread: Option<thread::JoinHandle<()>>,
+    /// Set when publishing a group failed after its callbacks already replied;
+    /// every later mutating operation fails with EIO instead of pretending the
+    /// store is writable.
+    publish_failed: Arc<AtomicBool>,
     inodes: Mutex<InodeTable>,
     handles: Mutex<BTreeMap<u64, OpenHandle>>,
     dirs: Mutex<BTreeMap<u64, DirHandle>>,
     next_fh: AtomicU64,
 }
 
+struct GroupSession {
+    opened_at: std::time::Instant,
+    ops: usize,
+}
+
 impl WeftFuse {
     pub fn new(store: Store, options: &MountOptions) -> Self {
+        let store = Arc::new(Mutex::new(store));
+        let group: Arc<Mutex<Option<GroupSession>>> = Arc::new(Mutex::new(None));
+        let group_stop = Arc::new(AtomicBool::new(false));
+        let publish_failed = Arc::new(AtomicBool::new(false));
+        let group_thread = if options.group_commit && !options.read_only {
+            Some(spawn_group_committer(
+                Arc::clone(&store),
+                Arc::clone(&group),
+                Arc::clone(&group_stop),
+                Arc::clone(&publish_failed),
+            ))
+        } else {
+            None
+        };
         WeftFuse {
-            store: Arc::new(Mutex::new(store)),
+            store,
             read_only: options.read_only,
             snapshot: options.snapshot,
             snapshot_state: options.snapshot_state.clone(),
             capability: options.capability.clone(),
             context: options.context.clone(),
+            write_back: options.write_back && !options.read_only,
+            group_commit: options.group_commit && !options.read_only,
+            group,
+            group_stop,
+            group_thread,
+            publish_failed,
             inodes: Mutex::new(InodeTable::new(options.context.is_some())),
             handles: Mutex::new(BTreeMap::new()),
             dirs: Mutex::new(BTreeMap::new()),
             next_fh: AtomicU64::new(1),
         }
+    }
+
+    /// Join the open group-commit session, opening one if needed. Must be
+    /// called while holding the store lock, immediately before the first
+    /// mutation of a callback.
+    fn begin_grouped_mutation(&self, store: &mut Store) -> Result<()> {
+        if !self.group_commit || self.read_only {
+            return Ok(());
+        }
+        if self.publish_failed.load(Ordering::SeqCst) {
+            return Err(Error::io(
+                "a previous group commit failed to publish; remount to continue",
+            ));
+        }
+        if !store.group_open() {
+            store.begin_group()?;
+            *self.group.lock().unwrap() = Some(GroupSession {
+                opened_at: std::time::Instant::now(),
+                ops: 0,
+            });
+        }
+        Ok(())
+    }
+
+    /// Count a finished mutation and publish the group when it is full or the
+    /// window elapsed. Must be called while holding the store lock, before
+    /// replying.
+    fn finish_grouped_mutation(&self, store: &mut Store) -> Result<()> {
+        if !self.group_commit || self.read_only {
+            return Ok(());
+        }
+        let should_publish = {
+            let mut session = self.group.lock().unwrap();
+            match session.as_mut() {
+                Some(current) => {
+                    current.ops = current.ops.saturating_add(1);
+                    current.ops >= GROUP_COMMIT_MAX_OPS
+                        || current.opened_at.elapsed() >= GROUP_COMMIT_WINDOW
+                }
+                None => false,
+            }
+        };
+        if should_publish {
+            self.publish_group(store)?;
+        }
+        Ok(())
+    }
+
+    /// Publish the open group (if any) and close the session. Must be called
+    /// while holding the store lock.
+    fn publish_group(&self, store: &mut Store) -> Result<()> {
+        if !self.group_commit || self.read_only || !store.group_open() {
+            *self.group.lock().unwrap() = None;
+            return Ok(());
+        }
+        let result = store.commit_group();
+        *self.group.lock().unwrap() = None;
+        match result {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                self.publish_failed.store(true, Ordering::SeqCst);
+                eprintln!("weftfs: group commit failed to publish: {err}");
+                Err(err)
+            }
+        }
+    }
+
+    /// Publish any open group and drop every buffered write for `ino` after
+    /// committing it. Used before `truncate`/`unlink`/`rename` so a later
+    /// flush cannot resurrect data into a namespace object that changed.
+    fn flush_pending_for_ino(&self, store: &mut Store, ino: u64) -> Result<()> {
+        let targets: Vec<u64> = self
+            .handles
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(_, handle)| handle.ino == ino && !handle.pending.is_empty())
+            .map(|(fh, _)| *fh)
+            .collect();
+        for fh in targets {
+            self.flush_pending(store, fh)?;
+        }
+        Ok(())
+    }
+
+    /// Commit every buffered handle. Used before namespace mutations that can
+    /// move or remove the target, so a flush cannot write into a stale object.
+    fn flush_all_pending(&self, store: &mut Store) -> Result<()> {
+        let targets: Vec<u64> = self
+            .handles
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(_, handle)| !handle.pending.is_empty())
+            .map(|(fh, _)| *fh)
+            .collect();
+        for fh in targets {
+            self.flush_pending(store, fh)?;
+        }
+        Ok(())
+    }
+
+    /// Commit one handle's buffered writes as one durable commit.
+    fn flush_pending(&self, store: &mut Store, fh: u64) -> Result<()> {
+        // A write-back flush promises durability, so an older open group is
+        // published first and the flush itself is published before replying.
+        // This runs before the buffer is drained, so a failed publish leaves
+        // the previously open group's state unchanged and no data is lost.
+        self.publish_group(store)?;
+        let (id, ranges) = {
+            let mut handles = self.handles.lock().unwrap();
+            let Some(handle) = handles.get_mut(&fh) else {
+                return Err(Error::invalid_argument("unknown file handle"));
+            };
+            if handle.pending.is_empty() {
+                return Ok(());
+            }
+            let Some(id) = handle.object else {
+                return Err(Error::invalid_argument(
+                    "read-only handle cannot buffer writes",
+                ));
+            };
+            let ranges: Vec<(u64, Vec<u8>)> = handle
+                .pending
+                .drain(..)
+                .map(|write| (write.offset, write.data))
+                .collect();
+            (id, ranges)
+        };
+        let borrowed: Vec<(u64, &[u8])> = ranges
+            .iter()
+            .map(|(offset, data)| (*offset, data.as_slice()))
+            .collect();
+        let outcome = match store.write_file_ranges(id, &borrowed) {
+            Ok(outcome) => outcome,
+            Err(err) => {
+                // The data is still only in memory; put it back so the caller
+                // can retry, and report the failure.
+                if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh) {
+                    handle.pending = ranges
+                        .into_iter()
+                        .map(|(offset, data)| PendingWrite { offset, data })
+                        .collect();
+                }
+                return Err(err);
+            }
+        };
+        if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh) {
+            handle.content = outcome.content;
+            handle.size = outcome.size;
+            handle.manifest = None;
+        }
+        Ok(())
     }
 
     fn next_fh(&self) -> u64 {
@@ -1126,7 +1364,15 @@ impl Filesystem for WeftFuse {
         Ok(())
     }
 
-    fn destroy(&mut self) {}
+    fn destroy(&mut self) {
+        // Best effort: publish the open group and every buffered handle so an
+        // orderly unmount never discards acknowledged writes. A crash still
+        // leaves the previous whole generation.
+        let store_arc = Arc::clone(&self.store);
+        let mut store = store_arc.lock().unwrap();
+        let _ = self.flush_all_pending(&mut store);
+        let _ = self.publish_group(&mut store);
+    }
 
     fn lookup(&mut self, req: &Request<'_>, parent: u64, name: &OsStr, reply: ReplyEntry) {
         let store_arc = Arc::clone(&self.store);
@@ -1169,13 +1415,34 @@ impl Filesystem for WeftFuse {
         // released through handle pins, not through lookup counts.
     }
 
-    fn getattr(&mut self, _req: &Request<'_>, ino: u64, _fh: Option<u64>, reply: ReplyAttr) {
+    fn getattr(&mut self, _req: &Request<'_>, ino: u64, fh: Option<u64>, reply: ReplyAttr) {
         let store_arc = Arc::clone(&self.store);
         let store = store_arc.lock().unwrap();
         let mut table = self.inodes.lock().unwrap();
         let state = self.state(&store);
+        let pending_size = if self.write_back {
+            fh.and_then(|fh| {
+                self.handles
+                    .lock()
+                    .unwrap()
+                    .get(&fh)
+                    .filter(|handle| handle.ino == ino && !handle.pending.is_empty())
+                    .map(|handle| handle.pending_end())
+            })
+        } else {
+            None
+        };
         match self.attr_for_ino(&mut table, state, ino) {
-            Ok((attr, _generation)) => reply.attr(&TTL, &attr),
+            Ok((mut attr, _generation)) => {
+                // `fstat` on a write-back descriptor reports the buffered size;
+                // a path `stat` still sees the committed size, matching the
+                // visibility contract in docs/fuse-status.md.
+                if let Some(size) = pending_size {
+                    attr.size = size;
+                    attr.blocks = size.div_ceil(512);
+                }
+                reply.attr(&TTL, &attr)
+            }
             Err(err) => reply.error(errno(&err)),
         }
     }
@@ -1215,11 +1482,24 @@ impl Filesystem for WeftFuse {
         if store.mode() == OpenMode::ReadOnly {
             return reply.error(libc::EROFS);
         }
+        // Buffered writes must be published before a truncate/metadata change,
+        // otherwise a later flush would write bytes into a stale version.
+        if self.write_back {
+            if let Err(err) = self.flush_pending_for_ino(&mut store, ino) {
+                return reply.error(errno(&err));
+            }
+        }
+        let mut mutated = false;
         if let Some(new_size) = size {
             if new_size > MAX_FILE_BYTES {
                 return reply.error(libc::EFBIG);
             }
+            if let Err(err) = self.begin_grouped_mutation(&mut store) {
+                return reply.error(errno(&err));
+            }
+            mutated = true;
             if let Err(err) = store.truncate(id, new_size) {
+                let _ = self.finish_grouped_mutation(&mut store);
                 return reply.error(errno(&err));
             }
             table.bump_generation(ino);
@@ -1242,11 +1522,23 @@ impl Filesystem for WeftFuse {
             || changes.gid.is_some()
             || changes.mtime_ns.is_some();
         if attributes_changed {
+            if !mutated {
+                if let Err(err) = self.begin_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
+                mutated = true;
+            }
             if let Err(err) = store.setattr(id, changes) {
                 eprintln!("weftfs: setattr failed: {err}");
+                let _ = self.finish_grouped_mutation(&mut store);
                 return reply.error(errno(&err));
             }
             table.bump_generation(ino);
+        }
+        if mutated {
+            if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                return reply.error(errno(&err));
+            }
         }
         let state = self.state(&store);
         match self.attr_for(&mut table, state, &node, ino) {
@@ -1306,6 +1598,9 @@ impl Filesystem for WeftFuse {
         }
         let perm = (mode & 0o7777 & !umask) as u64;
         let bytes = name.as_bytes();
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.create_file(
             parent_id,
             bytes,
@@ -1320,11 +1615,22 @@ impl Filesystem for WeftFuse {
                 table.set_parent(child_ino, parent);
                 let state = self.state(&store);
                 match self.attr_for(&mut table, state, &Node::Object(id), child_ino) {
-                    Ok(attr) => reply.entry(&TTL, &attr, table.generation(child_ino)),
-                    Err(err) => reply.error(errno(&err)),
+                    Ok(attr) => {
+                        if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                            return reply.error(errno(&err));
+                        }
+                        reply.entry(&TTL, &attr, table.generation(child_ino))
+                    }
+                    Err(err) => {
+                        let _ = self.finish_grouped_mutation(&mut store);
+                        reply.error(errno(&err))
+                    }
                 }
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1350,6 +1656,9 @@ impl Filesystem for WeftFuse {
             return reply.error(libc::EROFS);
         };
         let perm = (mode & 0o7777 & !umask) as u64;
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.mkdir(
             parent_id,
             name.as_bytes(),
@@ -1362,11 +1671,22 @@ impl Filesystem for WeftFuse {
                 table.set_parent(child_ino, parent);
                 let state = self.state(&store);
                 match self.attr_for(&mut table, state, &Node::Object(id), child_ino) {
-                    Ok(attr) => reply.entry(&TTL, &attr, table.generation(child_ino)),
-                    Err(err) => reply.error(errno(&err)),
+                    Ok(attr) => {
+                        if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                            return reply.error(errno(&err));
+                        }
+                        reply.entry(&TTL, &attr, table.generation(child_ino))
+                    }
+                    Err(err) => {
+                        let _ = self.finish_grouped_mutation(&mut store);
+                        reply.error(errno(&err))
+                    }
                 }
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1383,9 +1703,23 @@ impl Filesystem for WeftFuse {
         let Some(parent_id) = parent_node.object() else {
             return reply.error(libc::EROFS);
         };
+        if let Err(err) = self.flush_all_pending(&mut store) {
+            return reply.error(errno(&err));
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.unlink(parent_id, name.as_bytes()) {
-            Ok(()) => reply.ok(),
-            Err(err) => reply.error(errno(&err)),
+            Ok(()) => {
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
+                reply.ok()
+            }
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1402,9 +1736,23 @@ impl Filesystem for WeftFuse {
         let Some(parent_id) = parent_node.object() else {
             return reply.error(libc::EROFS);
         };
+        if let Err(err) = self.flush_all_pending(&mut store) {
+            return reply.error(errno(&err));
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.rmdir(parent_id, name.as_bytes()) {
-            Ok(()) => reply.ok(),
-            Err(err) => reply.error(errno(&err)),
+            Ok(()) => {
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
+                reply.ok()
+            }
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1434,6 +1782,12 @@ impl Filesystem for WeftFuse {
         if flags & !(RENAME_NOREPLACE | RENAME_EXCHANGE) != 0 {
             return reply.error(libc::EINVAL);
         }
+        if let Err(err) = self.flush_all_pending(&mut store) {
+            return reply.error(errno(&err));
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         let result = if flags & RENAME_EXCHANGE != 0 {
             store.rename_exchange(old_parent, name.as_bytes(), new_parent, newname.as_bytes())
         } else if flags & RENAME_NOREPLACE != 0 {
@@ -1449,9 +1803,15 @@ impl Filesystem for WeftFuse {
                     let child_ino = table.ino_object(target);
                     table.set_parent(child_ino, newparent);
                 }
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
                 reply.ok()
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1475,6 +1835,9 @@ impl Filesystem for WeftFuse {
         let (Some(id), Some(new_parent)) = (node.object(), new_node.object()) else {
             return reply.error(libc::EROFS);
         };
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.link(id, new_parent, newname.as_bytes()) {
             Ok(()) => {
                 let state = self.state(&store);
@@ -1484,12 +1847,21 @@ impl Filesystem for WeftFuse {
                             let child_ino = table.ino_object(target);
                             table.set_parent(child_ino, newparent);
                         }
+                        if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                            return reply.error(errno(&err));
+                        }
                         reply.entry(&TTL, &attr, table.generation(ino))
                     }
-                    Err(err) => reply.error(errno(&err)),
+                    Err(err) => {
+                        let _ = self.finish_grouped_mutation(&mut store);
+                        reply.error(errno(&err))
+                    }
                 }
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1513,6 +1885,9 @@ impl Filesystem for WeftFuse {
         let Some(parent_id) = parent_node.object() else {
             return reply.error(libc::EROFS);
         };
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.symlink(
             parent_id,
             link_name.as_bytes(),
@@ -1525,11 +1900,22 @@ impl Filesystem for WeftFuse {
                 table.set_parent(child_ino, parent);
                 let state = self.state(&store);
                 match self.attr_for(&mut table, state, &Node::Object(id), child_ino) {
-                    Ok(attr) => reply.entry(&TTL, &attr, table.generation(child_ino)),
-                    Err(err) => reply.error(errno(&err)),
+                    Ok(attr) => {
+                        if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                            return reply.error(errno(&err));
+                        }
+                        reply.entry(&TTL, &attr, table.generation(child_ino))
+                    }
+                    Err(err) => {
+                        let _ = self.finish_grouped_mutation(&mut store);
+                        reply.error(errno(&err))
+                    }
                 }
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -1568,7 +1954,19 @@ impl Filesystem for WeftFuse {
             (record.content, record.size, record.kind)
         };
         if flags & O_TRUNC != 0 && !read_only_surface {
+            if self.write_back {
+                if let Err(err) = self.flush_pending_for_ino(&mut store, ino) {
+                    return reply.error(errno(&err));
+                }
+            }
+            if let Err(err) = self.begin_grouped_mutation(&mut store) {
+                return reply.error(errno(&err));
+            }
             if let Err(err) = store.truncate(object_id.unwrap(), 0) {
+                let _ = self.finish_grouped_mutation(&mut store);
+                return reply.error(errno(&err));
+            }
+            if let Err(err) = self.finish_grouped_mutation(&mut store) {
                 return reply.error(errno(&err));
             }
             table.bump_generation(ino);
@@ -1605,6 +2003,8 @@ impl Filesystem for WeftFuse {
                 append: flags & O_APPEND != 0,
                 pinned_object,
                 pinned_content,
+                pending: Vec::new(),
+                manifest: None,
             },
         );
         // Read-only handles use direct I/O so one read is served from one
@@ -1648,17 +2048,47 @@ impl Filesystem for WeftFuse {
             }
         };
         let offset = offset as u64;
-        if offset >= file_size {
+        // A write-back handle reads its own buffered bytes; every other reader
+        // sees only committed content until the handle flushes.
+        let visible_size = if self.write_back {
+            handle.pending_end().max(file_size)
+        } else {
+            file_size
+        };
+        if offset >= visible_size {
             return reply.data(&[]);
         }
-        let length = (file_size - offset).min(size as u64);
-        match store.read_content(content, offset, length) {
-            Ok(bytes) => reply.data(&bytes),
+        let length = (visible_size - offset).min(size as u64);
+        let committed = file_size.saturating_sub(offset).min(length);
+        let mut out = match store.read_content(content, offset, committed) {
+            Ok(bytes) => bytes,
             Err(err) => {
-                eprintln!("weftfs: read failed at offset {offset} length {length}: {err}");
-                reply.error(errno(&err))
+                eprintln!("weftfs: read failed at offset {offset} length {committed}: {err}");
+                return reply.error(errno(&err));
+            }
+        };
+        if !handle.pending.is_empty() {
+            let length_usize = length as usize;
+            if out.len() < length_usize {
+                out.resize(length_usize, 0);
+            }
+            let read_end = offset + length;
+            for write in &handle.pending {
+                let write_start = write.offset;
+                let write_end = write.offset + write.data.len() as u64;
+                let start = write_start.max(offset);
+                let end = write_end.min(read_end);
+                if start >= end {
+                    continue;
+                }
+                let dst_start = (start - offset) as usize;
+                let dst_end = (end - offset) as usize;
+                let src_start = (start - write_start) as usize;
+                let src_end = (end - write_start) as usize;
+                out[dst_start..dst_end].copy_from_slice(&write.data[src_start..src_end]);
             }
         }
+        reply.data(&out)
     }
 
     fn write(
@@ -1691,11 +2121,12 @@ impl Filesystem for WeftFuse {
         let ino = handle.ino;
         let append = handle.append;
         let last_size = handle.size;
+        let pending_end = handle.pending_end();
         let offset = {
             let state = self.state(&store);
             match state.objects.get(&id) {
-                Some(record) if append => record.size,
-                _ if append => last_size,
+                Some(record) if append => record.size.max(pending_end),
+                _ if append => last_size.max(pending_end),
                 _ => offset as u64,
             }
         };
@@ -1706,23 +2137,73 @@ impl Filesystem for WeftFuse {
             return reply.error(libc::EFBIG);
         }
         drop(handles);
-        match store.write_file(id, offset, data) {
-            Ok(_version) => {
-                let state = self.state(&store);
-                if let Some(record) = state.objects.get(&id) {
-                    if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh) {
-                        handle.content = record.content;
-                        handle.size = record.size;
+        // ---- write-back: buffer per handle, commit at flush/fsync/release --
+        if self.write_back {
+            let full = {
+                let handles = self.handles.lock().unwrap();
+                match handles.get(&fh) {
+                    Some(handle) => {
+                        handle.pending_bytes().saturating_add(data.len()) > WRITE_BACK_MAX_BYTES
+                    }
+                    None => true,
+                }
+            };
+            if full {
+                // An early durable commit is always allowed; buffering is never
+                // an unbounded allocation.
+                if let Err(err) = self.flush_pending(&mut store, fh) {
+                    return reply.error(errno(&err));
+                }
+            }
+            let mut handles = self.handles.lock().unwrap();
+            let Some(handle) = handles.get_mut(&fh) else {
+                return reply.error(libc::EBADF);
+            };
+            handle.pending.push(PendingWrite {
+                offset,
+                data: data.to_vec(),
+            });
+            handle.size = handle.size.max(offset + data.len() as u64);
+            drop(handles);
+            self.inodes.lock().unwrap().bump_generation(ino);
+            return reply.written(data.len() as u32);
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
+        let cached = self
+            .handles
+            .lock()
+            .unwrap()
+            .get(&fh)
+            .and_then(|handle| handle.manifest.clone());
+        match store.write_file_cached(id, offset, data, cached.as_ref()) {
+            Ok(outcome) => {
+                if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh) {
+                    handle.content = outcome.content;
+                    handle.size = outcome.size;
+                    // Keep the manifest identity so the next write does not
+                    // re-read it. A truncate elsewhere makes it stale and the
+                    // store ignores it.
+                    if let Ok(manifest) = store.manifest_of(outcome.content) {
+                        handle.manifest = Some(ManifestCache {
+                            content: outcome.content,
+                            manifest,
+                        });
                     }
                 }
                 self.inodes.lock().unwrap().bump_generation(ino);
-                reply.written(data.len() as u32);
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
+                reply.written(data.len() as u32)
             }
             Err(err) => {
                 eprintln!(
                     "weftfs: write failed at offset {offset} ({} bytes): {err}",
                     data.len()
                 );
+                let _ = self.finish_grouped_mutation(&mut store);
                 reply.error(errno(&err))
             }
         }
@@ -1732,12 +2213,21 @@ impl Filesystem for WeftFuse {
         &mut self,
         _req: &Request<'_>,
         _ino: u64,
-        _fh: u64,
+        fh: u64,
         _lock_owner: u64,
         reply: ReplyEmpty,
     ) {
-        // Not fsync: every write already committed durably. This reports that
-        // no deferred write error is pending (there are none).
+        // Without write-back this is not fsync: every write already committed.
+        // With write-back it publishes the buffered ranges, so it is the point
+        // where the data becomes visible to other readers and durable.
+        if self.write_back {
+            let store_arc = Arc::clone(&self.store);
+            let mut store = store_arc.lock().unwrap();
+            if let Err(err) = self.flush_pending(&mut store, fh) {
+                eprintln!("weftfs: flush failed: {err}");
+                return reply.error(errno(&err));
+            }
+        }
         reply.ok();
     }
 
@@ -1751,10 +2241,17 @@ impl Filesystem for WeftFuse {
         _flush: bool,
         reply: ReplyEmpty,
     ) {
+        let store_arc = Arc::clone(&self.store);
+        let mut store = store_arc.lock().unwrap();
+        // Close publishes buffered writes even when the kernel did not issue a
+        // separate flush, matching the documented write-back contract.
+        let flush_result = if self.write_back {
+            self.flush_pending(&mut store, fh)
+        } else {
+            Ok(())
+        };
         let handle = self.handles.lock().unwrap().remove(&fh);
         if let Some(handle) = handle {
-            let store_arc = Arc::clone(&self.store);
-            let mut store = store_arc.lock().unwrap();
             if handle.pinned_content {
                 store.unpin_content(handle.content);
             }
@@ -1766,19 +2263,38 @@ impl Filesystem for WeftFuse {
                 }
             }
         }
-        reply.ok();
+        match flush_result {
+            Ok(()) => reply.ok(),
+            Err(err) => reply.error(errno(&err)),
+        }
     }
 
     fn fsync(
         &mut self,
         _req: &Request<'_>,
         _ino: u64,
-        _fh: u64,
+        fh: u64,
         _datasync: bool,
         reply: ReplyEmpty,
     ) {
-        // Every mutation is a durably published commit before its reply is
-        // sent, so there is nothing left to flush. No page cache is involved.
+        // Without write-back every mutation is a durably published commit
+        // before its reply, so there is nothing left to flush. With write-back
+        // this is the durability point: buffered ranges are published and the
+        // group committed before the reply.
+        if self.write_back {
+            let store_arc = Arc::clone(&self.store);
+            let mut store = store_arc.lock().unwrap();
+            if let Err(err) = self.flush_pending(&mut store, fh) {
+                eprintln!("weftfs: fsync failed: {err}");
+                return reply.error(errno(&err));
+            }
+        } else {
+            let store_arc = Arc::clone(&self.store);
+            let mut store = store_arc.lock().unwrap();
+            if let Err(err) = self.publish_group(&mut store) {
+                return reply.error(errno(&err));
+            }
+        }
         reply.ok();
     }
 
@@ -2016,12 +2532,21 @@ impl Filesystem for WeftFuse {
             }
             Err(err) => return reply.error(errno(&err)),
         }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.set_xattr(id, name, value) {
             Ok(()) => {
                 table.bump_generation(ino);
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
                 reply.ok()
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -2126,13 +2651,25 @@ impl Filesystem for WeftFuse {
         let Some(id) = node.object() else {
             return reply.error(libc::EROFS);
         };
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.remove_xattr(id, name) {
             Ok(true) => {
                 table.bump_generation(ino);
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
                 reply.ok()
             }
-            Ok(false) => reply.error(libc::ENODATA),
-            Err(err) => reply.error(errno(&err)),
+            Ok(false) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(libc::ENODATA)
+            }
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -2217,6 +2754,14 @@ impl Filesystem for WeftFuse {
         if existing.is_some() && flags & O_EXCL != 0 {
             return reply.error(libc::EEXIST);
         }
+        if self.write_back {
+            if let Err(err) = self.flush_all_pending(&mut store) {
+                return reply.error(errno(&err));
+            }
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         let (id, created) = match existing {
             Some(id) => (id, false),
             None => {
@@ -2285,8 +2830,13 @@ impl Filesystem for WeftFuse {
                 append: flags & O_APPEND != 0,
                 pinned_object: true,
                 pinned_content: false,
+                pending: Vec::new(),
+                manifest: None,
             },
         );
+        if let Err(err) = self.finish_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         // A writable create handle uses the same write-through mode as other
         // writable handles; read-only handles use direct I/O.
         reply.created(&TTL, &attr, generation, fh, 0);
@@ -2379,6 +2929,12 @@ impl Filesystem for WeftFuse {
 
         // Dense v1 files: PUNCH_HOLE/ZERO_RANGE define zero content but do not
         // reclaim physical chunks. COLLAPSE/INSERT rewrite content exactly.
+        if let Err(err) = self.flush_pending_for_ino(&mut store, ino) {
+            return reply.error(errno(&err));
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         let result = if mode == 0 {
             if end > current {
                 store.truncate(id, end)
@@ -2413,9 +2969,15 @@ impl Filesystem for WeftFuse {
                 if version != old_version {
                     table.bump_generation(ino);
                 }
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
                 reply.ok()
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
 
@@ -2539,6 +3101,12 @@ impl Filesystem for WeftFuse {
             Ok(data) => data,
             Err(err) => return reply.error(errno(&err)),
         };
+        if let Err(err) = self.flush_pending_for_ino(&mut store, dest_ino) {
+            return reply.error(errno(&err));
+        }
+        if let Err(err) = self.begin_grouped_mutation(&mut store) {
+            return reply.error(errno(&err));
+        }
         match store.write_file(dest_id, offset_out, &data) {
             Ok(_version) => {
                 let state = self.state(&store);
@@ -2546,14 +3114,69 @@ impl Filesystem for WeftFuse {
                     if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh_out) {
                         handle.content = record.content;
                         handle.size = record.size;
+                        handle.manifest = None;
                     }
                     self.inodes.lock().unwrap().bump_generation(dest_ino);
                 }
+                if let Err(err) = self.finish_grouped_mutation(&mut store) {
+                    return reply.error(errno(&err));
+                }
                 reply.written(data.len() as u32)
             }
-            Err(err) => reply.error(errno(&err)),
+            Err(err) => {
+                let _ = self.finish_grouped_mutation(&mut store);
+                reply.error(errno(&err))
+            }
         }
     }
+}
+
+impl Drop for WeftFuse {
+    fn drop(&mut self) {
+        self.group_stop.store(true, Ordering::SeqCst);
+        if let Some(handle) = self.group_thread.take() {
+            let _ = handle.join();
+        }
+        let store_arc = Arc::clone(&self.store);
+        let mut store = store_arc.lock().unwrap();
+        let _ = self.flush_all_pending(&mut store);
+        let _ = self.publish_group(&mut store);
+    }
+}
+
+/// Background publisher for `--group-commit`: publishes the open group once its
+/// window elapses, so an isolated mutation is not left uncommitted until the
+/// next one arrives. Lock order is group-then-store or store alone; the group
+/// guard is never held while waiting for the store.
+fn spawn_group_committer(
+    store: Arc<Mutex<Store>>,
+    group: Arc<Mutex<Option<GroupSession>>>,
+    stop: Arc<AtomicBool>,
+    publish_failed: Arc<AtomicBool>,
+) -> thread::JoinHandle<()> {
+    thread::spawn(move || {
+        while !stop.load(Ordering::SeqCst) {
+            thread::sleep(Duration::from_millis(2));
+            let expired = {
+                let session = group.lock().unwrap();
+                session
+                    .as_ref()
+                    .map(|current| current.opened_at.elapsed() >= GROUP_COMMIT_WINDOW)
+                    .unwrap_or(false)
+            };
+            if !expired {
+                continue;
+            }
+            let mut store = store.lock().unwrap();
+            if store.group_open() {
+                if let Err(err) = store.commit_group() {
+                    publish_failed.store(true, Ordering::SeqCst);
+                    eprintln!("weftfs: group commit failed to publish: {err}");
+                }
+            }
+            *group.lock().unwrap() = None;
+        }
+    })
 }
 
 /// Resolve the inode number for a freshly looked-up node.

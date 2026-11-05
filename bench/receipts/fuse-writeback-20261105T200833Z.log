@@ -1,0 +1,2087 @@
++ MNT=
++ MOUNT_PID=
++ HELPER_PIDS=()
++ trap cleanup EXIT
++ record 'cargo build --release --features fuse --bin weftfs'
++ printf '%s\n' 'cargo build --release --features fuse --bin weftfs'
++ cargo build --release --features fuse --bin weftfs
+    Finished `release` profile [optimized] target(s) in 0.02s
++ record '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/go-weftfs ./cmd/weftfs)'
++ printf '%s\n' '(cd WeftFS-Go && CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/go-weftfs ./cmd/weftfs)'
++ cd /work/WeftFS-Go
++ CGO_ENABLED=0
++ go build -o /work/.docker-cache/fuse-writeback/bin/go-weftfs ./cmd/weftfs
++ record 'CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/wbops bench/scripts/fuse_writeback_ops.go'
++ printf '%s\n' 'CGO_ENABLED=0 go build -o /work/.docker-cache/fuse-writeback/bin/wbops bench/scripts/fuse_writeback_ops.go'
++ CGO_ENABLED=0
++ go build -o /work/.docker-cache/fuse-writeback/bin/wbops /work/bench/scripts/fuse_writeback_ops.go
++ for impl in rust go
++ '[' rust = rust ']'
++ cli=/work/.docker-cache/target-rust/release/weftfs
++ for identity in whole-file merkle
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs whole-file off 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=whole-file mode=off rep=1
++ local tag=rust-whole-file-off-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 rust-whole-file-off-r1 rust --content-identity whole-file
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 name=rust-whole-file-off-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 --foreground --content-identity whole-file'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 --foreground --content-identity whole-file'
++ MOUNT_PID=93
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1 --foreground --content-identity whole-file
++ kill -0 93
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1444
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ local rss=
+++ '[' -n 93 ']'
+++ '[' -r /proc/93/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/93/status
+++ rss=9300
+++ '[' -n 93 ']'
+++ kill -TERM 93
+++ wait 93
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-off-r1
+++ MOUNT_PID=
+++ printf %s 9300
++ rss=9300
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 verify-rust-whole-file-off-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 out=verify-rust-whole-file-off-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-whole-file-off-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
+++ cut -f1
++ bytes=174229438
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-whole-file-off-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-whole-file-off-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-off-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs whole-file write-back 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=whole-file mode=write-back rep=1
++ local tag=rust-whole-file-write-back-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--write-back)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 rust-whole-file-write-back-r1 rust --content-identity whole-file --write-back
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 name=rust-whole-file-write-back-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 --foreground --content-identity whole-file --write-back'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 --foreground --content-identity whole-file --write-back'
++ MOUNT_PID=137
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1 --foreground --content-identity whole-file --write-back
++ kill -0 137
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=445
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ local rss=
+++ '[' -n 137 ']'
+++ '[' -r /proc/137/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/137/status
+++ rss=11304
+++ '[' -n 137 ']'
+++ kill -TERM 137
+++ wait 137
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back-r1
+++ MOUNT_PID=
+++ printf %s 11304
++ rss=11304
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 verify-rust-whole-file-write-back-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 out=verify-rust-whole-file-write-back-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-whole-file-write-back-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
+++ cut -f1
++ bytes=32697628
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-whole-file-write-back-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-whole-file-write-back-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs whole-file group-commit 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=whole-file mode=group-commit rep=1
++ local tag=rust-whole-file-group-commit-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--group-commit)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 rust-whole-file-group-commit-r1 rust --content-identity whole-file --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 name=rust-whole-file-group-commit-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 --foreground --content-identity whole-file --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 --foreground --content-identity whole-file --group-commit'
++ MOUNT_PID=181
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1 --foreground --content-identity whole-file --group-commit
++ kill -0 181
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1003
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ local rss=
+++ '[' -n 181 ']'
+++ '[' -r /proc/181/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/181/status
+++ rss=10272
+++ '[' -n 181 ']'
+++ kill -TERM 181
+++ wait 181
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-group-commit-r1
+++ MOUNT_PID=
+++ printf %s 10272
++ rss=10272
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 verify-rust-whole-file-group-commit-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 out=verify-rust-whole-file-group-commit-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-whole-file-group-commit-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
+++ cut -f1
++ bytes=174022083
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-whole-file-group-commit-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-whole-file-group-commit-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-group-commit-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs whole-file write-back+group 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=whole-file mode=write-back+group rep=1
++ local tag=rust-whole-file-write-back+group-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--write-back --group-commit)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 rust-whole-file-write-back+group-r1 rust --content-identity whole-file --write-back --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 name=rust-whole-file-write-back+group-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 --foreground --content-identity whole-file --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 --foreground --content-identity whole-file --write-back --group-commit'
++ MOUNT_PID=226
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1 --foreground --content-identity whole-file --write-back --group-commit
++ kill -0 226
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=203
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ local rss=
+++ '[' -n 226 ']'
+++ '[' -r /proc/226/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/226/status
+++ rss=11584
+++ '[' -n 226 ']'
+++ kill -TERM 226
+++ wait 226
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-whole-file-write-back+group-r1
+++ MOUNT_PID=
+++ printf %s 11584
++ rss=11584
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 verify-rust-whole-file-write-back+group-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 out=verify-rust-whole-file-write-back+group-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-whole-file-write-back+group-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
+++ cut -f1
++ bytes=32226701
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-whole-file-write-back+group-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-whole-file-write-back+group-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-whole-file-write-back+group-r1
++ for identity in whole-file merkle
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs merkle off 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=merkle mode=off rep=1
++ local tag=rust-merkle-off-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 rust-merkle-off-r1 rust --content-identity merkle
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 name=rust-merkle-off-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 --foreground --content-identity merkle'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 --foreground --content-identity merkle'
++ MOUNT_PID=271
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1 --foreground --content-identity merkle
++ kill -0 271
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1444
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ local rss=
+++ '[' -n 271 ']'
+++ '[' -r /proc/271/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/271/status
+++ rss=9632
+++ '[' -n 271 ']'
+++ kill -TERM 271
+++ wait 271
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-off-r1
+++ MOUNT_PID=
+++ printf %s 9632
++ rss=9632
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 verify-rust-merkle-off-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 out=verify-rust-merkle-off-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-merkle-off-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
+++ cut -f1
++ bytes=174266688
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-merkle-off-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-merkle-off-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-off-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs merkle write-back 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=merkle mode=write-back rep=1
++ local tag=rust-merkle-write-back-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--write-back)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 rust-merkle-write-back-r1 rust --content-identity merkle --write-back
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 name=rust-merkle-write-back-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 --foreground --content-identity merkle --write-back'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 --foreground --content-identity merkle --write-back'
++ MOUNT_PID=315
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1 --foreground --content-identity merkle --write-back
++ kill -0 315
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=445
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ local rss=
+++ '[' -n 315 ']'
+++ '[' -r /proc/315/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/315/status
+++ rss=11404
+++ '[' -n 315 ']'
+++ kill -TERM 315
+++ wait 315
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back-r1
+++ MOUNT_PID=
+++ printf %s 11404
++ rss=11404
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 verify-rust-merkle-write-back-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 out=verify-rust-merkle-write-back-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-merkle-write-back-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
+++ cut -f1
++ bytes=32689523
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-merkle-write-back-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-merkle-write-back-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs merkle group-commit 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=merkle mode=group-commit rep=1
++ local tag=rust-merkle-group-commit-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--group-commit)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 rust-merkle-group-commit-r1 rust --content-identity merkle --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 name=rust-merkle-group-commit-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 --foreground --content-identity merkle --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 --foreground --content-identity merkle --group-commit'
++ MOUNT_PID=359
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1 --foreground --content-identity merkle --group-commit
++ kill -0 359
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=514
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ local rss=
+++ '[' -n 359 ']'
+++ '[' -r /proc/359/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/359/status
+++ rss=9476
+++ '[' -n 359 ']'
+++ kill -TERM 359
+++ wait 359
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-group-commit-r1
+++ MOUNT_PID=
+++ printf %s 9476
++ rss=9476
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 verify-rust-merkle-group-commit-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 out=verify-rust-merkle-group-commit-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-merkle-group-commit-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
+++ cut -f1
++ bytes=173814073
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-merkle-group-commit-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-merkle-group-commit-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-group-commit-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell rust /work/.docker-cache/target-rust/release/weftfs merkle write-back+group 1
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs identity=merkle mode=write-back+group rep=1
++ local tag=rust-merkle-write-back+group-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--write-back --group-commit)
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 rust-merkle-write-back+group-r1 rust --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 name=rust-merkle-write-back+group-r1 impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 --foreground --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 --foreground --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=404
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1 --foreground --content-identity merkle --write-back --group-commit
++ kill -0 404
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
++ local gen_before
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
+++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=203
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ local rss=
+++ '[' -n 404 ']'
+++ '[' -r /proc/404/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/404/status
+++ rss=11764
+++ '[' -n 404 ']'
+++ kill -TERM 404
+++ wait 404
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-rust-merkle-write-back+group-r1
+++ MOUNT_PID=
+++ printf %s 11764
++ rss=11764
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 verify-rust-merkle-write-back+group-r1
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 out=verify-rust-merkle-write-back+group-r1
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-rust-merkle-write-back+group-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
+++ cut -f1
++ bytes=32267748
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-rust-merkle-write-back+group-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-rust-merkle-write-back+group-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-rust-merkle-write-back+group-r1
++ for impl in rust go
++ '[' go = rust ']'
++ cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs
++ for identity in whole-file merkle
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs whole-file off 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=whole-file mode=off rep=1
++ local tag=go-whole-file-off-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1 go-whole-file-off-r1 go --content-identity whole-file
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1 name=go-whole-file-off-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1  --content-identity whole-file'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1  --content-identity whole-file'
++ MOUNT_PID=453
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1 --content-identity whole-file
++ kill -0 453
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1444
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ local rss=
+++ '[' -n 453 ']'
+++ '[' -r /proc/453/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/453/status
+++ rss=411956
+++ '[' -n 453 ']'
+++ kill -TERM 453
+++ wait 453
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-off-r1
+++ MOUNT_PID=
+++ printf %s 411956
++ rss=411956
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 verify-go-whole-file-off-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 out=verify-go-whole-file-off-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-whole-file-off-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
+++ cut -f1
++ bytes=173003486
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-whole-file-off-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-whole-file-off-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-off-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs whole-file write-back 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=whole-file mode=write-back rep=1
++ local tag=go-whole-file-write-back-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--write-back)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1 go-whole-file-write-back-r1 go --content-identity whole-file --write-back
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1 name=go-whole-file-write-back-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1  --content-identity whole-file --write-back'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1  --content-identity whole-file --write-back'
++ MOUNT_PID=528
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1 --content-identity whole-file --write-back
++ kill -0 528
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json info
++ gen_after=445
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ local rss=
+++ '[' -n 528 ']'
+++ '[' -r /proc/528/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/528/status
+++ rss=411888
+++ '[' -n 528 ']'
+++ kill -TERM 528
+++ wait 528
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back-r1
+++ MOUNT_PID=
+++ printf %s 411888
++ rss=411888
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 verify-go-whole-file-write-back-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 out=verify-go-whole-file-write-back-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-whole-file-write-back-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
+++ cut -f1
++ bytes=31784068
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-whole-file-write-back-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-whole-file-write-back-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs whole-file group-commit 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=whole-file mode=group-commit rep=1
++ local tag=go-whole-file-group-commit-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--group-commit)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1 go-whole-file-group-commit-r1 go --content-identity whole-file --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1 name=go-whole-file-group-commit-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1  --content-identity whole-file --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1  --content-identity whole-file --group-commit'
++ MOUNT_PID=603
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1 --content-identity whole-file --group-commit
++ kill -0 603
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1006
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ local rss=
+++ '[' -n 603 ']'
+++ '[' -r /proc/603/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/603/status
+++ rss=586064
+++ '[' -n 603 ']'
+++ kill -TERM 603
+++ wait 603
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-group-commit-r1
+++ MOUNT_PID=
+++ printf %s 586064
++ rss=586064
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 verify-go-whole-file-group-commit-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 out=verify-go-whole-file-group-commit-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-whole-file-group-commit-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
+++ cut -f1
++ bytes=172857560
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-whole-file-group-commit-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-whole-file-group-commit-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-group-commit-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs whole-file write-back+group 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=whole-file mode=write-back+group rep=1
++ local tag=go-whole-file-write-back+group-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 init
++ flags=('--content-identity' 'whole-file')
++ local flags
++ case "$mode" in
++ flags+=(--write-back --group-commit)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1 go-whole-file-write-back+group-r1 go --content-identity whole-file --write-back --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1 name=go-whole-file-write-back+group-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1  --content-identity whole-file --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1  --content-identity whole-file --write-back --group-commit'
++ MOUNT_PID=676
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1 --content-identity whole-file --write-back --group-commit
++ kill -0 676
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=204
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ local rss=
+++ '[' -n 676 ']'
+++ '[' -r /proc/676/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/676/status
+++ rss=411936
+++ '[' -n 676 ']'
+++ kill -TERM 676
+++ wait 676
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-whole-file-write-back+group-r1
+++ MOUNT_PID=
+++ printf %s 411936
++ rss=411936
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 verify-go-whole-file-write-back+group-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 out=verify-go-whole-file-write-back+group-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-whole-file-write-back+group-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
+++ cut -f1
++ bytes=31653503
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-whole-file-write-back+group-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-whole-file-write-back+group-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-whole-file-write-back+group-r1
++ for identity in whole-file merkle
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs merkle off 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=merkle mode=off rep=1
++ local tag=go-merkle-off-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1 go-merkle-off-r1 go --content-identity merkle
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1 name=go-merkle-off-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1  --content-identity merkle'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1  --content-identity merkle'
++ MOUNT_PID=751
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1 --content-identity merkle
++ kill -0 751
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=1444
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ local rss=
+++ '[' -n 751 ']'
+++ '[' -r /proc/751/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/751/status
+++ rss=144204
+++ '[' -n 751 ']'
+++ kill -TERM 751
+++ wait 751
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-off-r1
+++ MOUNT_PID=
+++ printf %s 144204
++ rss=144204
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 verify-go-merkle-off-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 out=verify-go-merkle-off-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-merkle-off-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
+++ cut -f1
++ bytes=173044832
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-merkle-off-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-merkle-off-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-off-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs merkle write-back 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=merkle mode=write-back rep=1
++ local tag=go-merkle-write-back-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--write-back)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1 go-merkle-write-back-r1 go --content-identity merkle --write-back
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1 name=go-merkle-write-back-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1  --content-identity merkle --write-back'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1  --content-identity merkle --write-back'
++ MOUNT_PID=826
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1 --content-identity merkle --write-back
++ kill -0 826
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=445
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ local rss=
+++ '[' -n 826 ']'
+++ '[' -r /proc/826/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/826/status
+++ rss=143828
+++ '[' -n 826 ']'
+++ kill -TERM 826
+++ wait 826
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back-r1
+++ MOUNT_PID=
+++ printf %s 143828
++ rss=143828
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 verify-go-merkle-write-back-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 out=verify-go-merkle-write-back-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-merkle-write-back-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
+++ cut -f1
++ bytes=31784155
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-merkle-write-back-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-merkle-write-back-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs merkle group-commit 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=merkle mode=group-commit rep=1
++ local tag=go-merkle-group-commit-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--group-commit)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1 go-merkle-group-commit-r1 go --content-identity merkle --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1 name=go-merkle-group-commit-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1  --content-identity merkle --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1  --content-identity merkle --group-commit'
++ MOUNT_PID=901
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1 --content-identity merkle --group-commit
++ kill -0 901
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=930
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ local rss=
+++ '[' -n 901 ']'
+++ '[' -r /proc/901/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/901/status
+++ rss=144296
+++ '[' -n 901 ']'
+++ kill -TERM 901
+++ wait 901
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-group-commit-r1
+++ MOUNT_PID=
+++ printf %s 144296
++ rss=144296
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 verify-go-merkle-group-commit-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 out=verify-go-merkle-group-commit-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-merkle-group-commit-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
+++ cut -f1
++ bytes=172887886
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-merkle-group-commit-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-merkle-group-commit-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-group-commit-r1
++ for mode in off write-back group-commit write-back+group
+++ seq 1 1
++ for rep in $(seq 1 "$REPS")
++ run_cell go /work/.docker-cache/fuse-writeback/bin/go-weftfs merkle write-back+group 1
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs identity=merkle mode=write-back+group rep=1
++ local tag=go-merkle-write-back+group-r1
++ local store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 init
++ flags=('--content-identity' 'merkle')
++ local flags
++ case "$mode" in
++ flags+=(--write-back --group-commit)
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1 go-merkle-write-back+group-r1 go --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1 name=go-merkle-write-back+group-r1 impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1  --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1  --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=976
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1 --content-identity merkle --write-back --group-commit
++ kill -0 976
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
++ local gen_before
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_before=1
++ record 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin'
++ printf '%s\n' 'truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin'
++ truncate -s 128M /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin
++ record '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin 500 4096 end 12345'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin 500 4096 end 12345'
++ /work/.docker-cache/fuse-writeback/bin/wbops overwrite /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/big.bin 500 4096 end 12345
++ record '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/tree 20 10'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/tree 20 10'
++ /work/.docker-cache/fuse-writeback/bin/wbops meta /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1/tree 20 10
++ local gen_after
+++ info_json /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
+++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json info
+++ python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])'
++ gen_after=205
++ local rss
+++ stop_mount /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ local rss=
+++ '[' -n 976 ']'
+++ '[' -r /proc/976/status ']'
++++ awk '/^VmHWM:/ {print $2}' /proc/976/status
+++ rss=141940
+++ '[' -n 976 ']'
+++ kill -TERM 976
+++ wait 976
+++ true
+++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ local tries=0
+++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-go-merkle-write-back+group-r1
+++ MOUNT_PID=
+++ printf %s 141940
++ rss=141940
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 verify-go-merkle-write-back+group-r1
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 out=verify-go-merkle-write-back+group-r1
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1 --json verify --full
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-go-merkle-write-back+group-r1.json
++ ok=True
++ local bytes
+++ du -sb /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
+++ cut -f1
++ bytes=31653735
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/cells.jsonl /work/.docker-cache/fuse-writeback/run/raw/over-go-merkle-write-back+group-r1.json /work/.docker-cache/fuse-writeback/run/raw/meta-go-merkle-write-back+group-r1.json
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-go-merkle-write-back+group-r1
++ for impl in rust go
++ '[' rust = rust ']'
++ cli=/work/.docker-cache/target-rust/release/weftfs
++ for phase in old buffered durable
++ crash_case rust /work/.docker-cache/target-rust/release/weftfs old
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs phase=old
++ local tag=crash-rust-old
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-old
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-rust-old /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old init
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-old /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old crash-rust-old rust --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-old mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old name=crash-rust-old impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old --foreground --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old --foreground --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1046
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old --foreground --content-identity merkle --write-back --group-commit
++ kill -0 1046
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old/crash.bin old
++ '[' old = old ']'
++ want=old-durable
++ local tries=0
++ grep -q old-durable /work/.docker-cache/fuse-writeback/run/raw/crash-rust-old.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q old-durable /work/.docker-cache/fuse-writeback/run/raw/crash-rust-old.json
++ sleep 0.2
++ kill -9 1046
++ wait 1046
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-old
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-old verify-crash-rust-old
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-old out=verify-crash-rust-old
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old --json verify --full
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-old cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-rust-old.out
+++ cut '-d ' -f1
++ got=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-rust-old.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ kind=old
+++ '[' old = durable ']'
+++ expected_hash 0x11
+++ local byte=0x11
+++ python3 - 0x11
++ expected=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-rust-old.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ for phase in old buffered durable
++ crash_case rust /work/.docker-cache/target-rust/release/weftfs buffered
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs phase=buffered
++ local tag=crash-rust-buffered
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered init
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered crash-rust-buffered rust --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered name=crash-rust-buffered impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered --foreground --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered --foreground --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1082
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered --foreground --content-identity merkle --write-back --group-commit
++ kill -0 1082
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ '[' buffered = old ']'
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered/crash.bin buffered
++ local tries=0
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-rust-buffered.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-rust-buffered.json
++ sleep 0.2
++ kill -9 1082
++ wait 1082
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-buffered
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered verify-crash-rust-buffered
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered out=verify-crash-rust-buffered
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered --json verify --full
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-buffered cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-rust-buffered.out
+++ cut '-d ' -f1
++ got=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-rust-buffered.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ kind=old
+++ '[' buffered = durable ']'
+++ expected_hash 0x11
+++ local byte=0x11
+++ python3 - 0x11
++ expected=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-rust-buffered.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ for phase in old buffered durable
++ crash_case rust /work/.docker-cache/target-rust/release/weftfs durable
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs phase=durable
++ local tag=crash-rust-durable
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-durable
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable init
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable crash-rust-durable rust --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-durable mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable name=crash-rust-durable impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable --foreground --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable --foreground --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1118
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable --foreground --content-identity merkle --write-back --group-commit
++ kill -0 1118
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ '[' durable = old ']'
++ local tries=0
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable/crash.bin durable
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-rust-durable.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-rust-durable.json
++ sleep 0.2
++ kill -9 1118
++ wait 1118
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-rust-durable
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable verify-crash-rust-durable
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-rust-durable out=verify-crash-rust-durable
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable --json verify --full
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-rust-durable cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-rust-durable.out
+++ cut '-d ' -f1
++ got=340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-rust-durable.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-rust-durable.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x22])*65536)'
++ kind=new
+++ '[' durable = durable ']'
+++ expected_hash 0x22
+++ local byte=0x22
+++ python3 - 0x22
++ expected=340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-rust-durable.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ crash_meta rust /work/.docker-cache/target-rust/release/weftfs
++ local impl=rust cli=/work/.docker-cache/target-rust/release/weftfs
++ local tag=crashmeta-rust
++ local store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-rust
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust init
++ start_mount /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust crashmeta-rust rust --content-identity merkle --group-commit
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-rust mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust name=crashmeta-rust impl=rust
++ shift 5
++ extra=()
++ local extra
++ '[' rust = rust ']'
++ extra+=(--foreground)
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust --foreground --content-identity merkle --group-commit'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust --foreground --content-identity merkle --group-commit'
++ MOUNT_PID=1156
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust --foreground --content-identity merkle --group-commit
++ kill -0 1156
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ HELPER_PIDS+=($!)
++ local tries=0
++ grep -q '"files":40' /work/.docker-cache/fuse-writeback/run/raw/crashmeta-rust.create.json
++ /work/.docker-cache/fuse-writeback/bin/wbops crashmeta /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust 40
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q '"files":40' /work/.docker-cache/fuse-writeback/run/raw/crashmeta-rust.create.json
++ kill -9 1156
++ wait 1156
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-rust
++ MNT=
++ verify_store /work/.docker-cache/target-rust/release/weftfs /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust verify-crashmeta-rust
++ local cli=/work/.docker-cache/target-rust/release/weftfs store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-rust out=verify-crashmeta-rust
++ record '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --json verify --full'
++ printf '%s\n' '/work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --json verify --full'
++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust --json verify --full
++ local count ok
+++ /work/.docker-cache/target-rust/release/weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-rust ls /
+++ grep -c '^c-'
++ count=40
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crashmeta-rust.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ for impl in rust go
++ '[' go = rust ']'
++ cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs
++ for phase in old buffered durable
++ crash_case go /work/.docker-cache/fuse-writeback/bin/go-weftfs old
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs phase=old
++ local tag=crash-go-old
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-go-old
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-go-old /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old init
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-old /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old crash-go-old go --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-old mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-old name=crash-go-old impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old  --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old  --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1190
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old --content-identity merkle --write-back --group-commit
++ kill -0 1190
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ '[' old = old ']'
++ want=old-durable
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old/crash.bin old
++ local tries=0
++ grep -q old-durable /work/.docker-cache/fuse-writeback/run/raw/crash-go-old.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q old-durable /work/.docker-cache/fuse-writeback/run/raw/crash-go-old.json
++ sleep 0.2
++ kill -9 1190
++ wait 1190
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-old
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-old verify-crash-go-old
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-old out=verify-crash-go-old
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old --json verify --full
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-old cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-go-old.out
+++ cut '-d ' -f1
++ got=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-go-old.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ kind=old
+++ '[' old = durable ']'
+++ expected_hash 0x11
+++ local byte=0x11
+++ python3 - 0x11
++ expected=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-go-old.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ for phase in old buffered durable
++ crash_case go /work/.docker-cache/fuse-writeback/bin/go-weftfs buffered
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs phase=buffered
++ local tag=crash-go-buffered
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-go-buffered
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered init
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered crash-go-buffered go --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-buffered mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered name=crash-go-buffered impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered  --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered  --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1246
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered --content-identity merkle --write-back --group-commit
++ kill -0 1246
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ '[' buffered = old ']'
++ local tries=0
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered/crash.bin buffered
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-go-buffered.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-go-buffered.json
++ sleep 0.2
++ kill -9 1246
++ wait 1246
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-buffered
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered verify-crash-go-buffered
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-buffered out=verify-crash-go-buffered
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered --json verify --full
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-buffered cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-go-buffered.out
+++ cut '-d ' -f1
++ got=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-go-buffered.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ kind=old
+++ '[' buffered = durable ']'
+++ expected_hash 0x11
+++ local byte=0x11
+++ python3 - 0x11
++ expected=2dc4424addd6f849f68402090e7d0d19018adf629de600210d807575932f2e2d
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-go-buffered.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ for phase in old buffered durable
++ crash_case go /work/.docker-cache/fuse-writeback/bin/go-weftfs durable
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs phase=durable
++ local tag=crash-go-durable
++ local store=/work/.docker-cache/fuse-writeback/run/store-crash-go-durable
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crash-go-durable /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable init
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-durable /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable crash-go-durable go --content-identity merkle --write-back --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-durable mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable name=crash-go-durable impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable  --content-identity merkle --write-back --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable  --content-identity merkle --write-back --group-commit'
++ MOUNT_PID=1302
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable --content-identity merkle --write-back --group-commit
++ kill -0 1302
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ HELPER_PIDS+=($!)
++ local want=new-sent
++ '[' durable = old ']'
++ local tries=0
++ /work/.docker-cache/fuse-writeback/bin/wbops crashwrite /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable/crash.bin durable
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-go-durable.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q new-sent /work/.docker-cache/fuse-writeback/run/raw/crash-go-durable.json
++ sleep 0.2
++ kill -9 1302
++ wait 1302
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crash-go-durable
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crash-go-durable verify-crash-go-durable
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crash-go-durable out=verify-crash-go-durable
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable --json verify --full
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crash-go-durable cat /crash.bin
++ local got expected kind
+++ sha256sum /work/.docker-cache/fuse-writeback/run/raw/crash-go-durable.out
+++ cut '-d ' -f1
++ got=340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-go-durable.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x11])*65536)'
++ cmp -s /work/.docker-cache/fuse-writeback/run/raw/crash-go-durable.out /dev/fd/63
+++ python3 -c 'import sys; sys.stdout.buffer.write(bytes([0x22])*65536)'
++ kind=new
+++ '[' durable = durable ']'
+++ expected_hash 0x22
+++ local byte=0x22
+++ python3 - 0x22
++ expected=340693c442e3b90c375bc0896d7bbee8fa763a33a3960b36aeb426329dd52251
++ local ok
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crash-go-durable.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
++ crash_meta go /work/.docker-cache/fuse-writeback/bin/go-weftfs
++ local impl=go cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs
++ local tag=crashmeta-go
++ local store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-go
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ rm -rf /work/.docker-cache/fuse-writeback/run/store-crashmeta-go /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go init
++ start_mount /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crashmeta-go /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go crashmeta-go go --content-identity merkle --group-commit
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-go mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go name=crashmeta-go impl=go
++ shift 5
++ extra=()
++ local extra
++ '[' go = rust ']'
++ mkdir -p /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go  --content-identity merkle --group-commit'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go  --content-identity merkle --group-commit'
++ MOUNT_PID=1360
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --fixed-timestamp-ns 1767225600000000000 mount --mountpoint /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go --content-identity merkle --group-commit
++ kill -0 1360
++ tries=1
++ '[' 1 -gt 300 ']'
++ sleep 0.1
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ sleep 0.2
++ MNT=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ HELPER_PIDS+=($!)
++ local tries=0
++ /work/.docker-cache/fuse-writeback/bin/wbops crashmeta /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go 40
++ grep -q '"files":40' /work/.docker-cache/fuse-writeback/run/raw/crashmeta-go.create.json
++ tries=1
++ '[' 1 -gt 100 ']'
++ sleep 0.1
++ grep -q '"files":40' /work/.docker-cache/fuse-writeback/run/raw/crashmeta-go.create.json
++ kill -9 1360
++ wait 1360
++ true
++ MOUNT_PID=
++ unmount_now /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ local mnt=/work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ local tries=0
++ mountpoint -q /work/.docker-cache/fuse-writeback/run/mnt-crashmeta-go
++ MNT=
++ verify_store /work/.docker-cache/fuse-writeback/bin/go-weftfs /work/.docker-cache/fuse-writeback/run/store-crashmeta-go verify-crashmeta-go
++ local cli=/work/.docker-cache/fuse-writeback/bin/go-weftfs store=/work/.docker-cache/fuse-writeback/run/store-crashmeta-go out=verify-crashmeta-go
++ record '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --json verify --full'
++ printf '%s\n' '/work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --json verify --full'
++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go --json verify --full
++ local count ok
+++ /work/.docker-cache/fuse-writeback/bin/go-weftfs --store /work/.docker-cache/fuse-writeback/run/store-crashmeta-go ls /
+++ grep -c '^c-'
+++ true
++ count=0
+++ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("ok", d.get("OK")))' /work/.docker-cache/fuse-writeback/run/raw/verify-crashmeta-go.json
++ ok=True
++ python3 - /work/.docker-cache/fuse-writeback/run/raw/crash.jsonl
+++ date -u +%Y-%m-%dT%H:%M:%SZ
++ WEFT_WB_GENERATED_AT=2026-11-05T20:19:12Z
++ python3 /work/bench/scripts/assemble_fuse_writeback.py --raw /work/.docker-cache/fuse-writeback/run/raw --out /work/bench/receipts/fuse-writeback-20261105T200833Z.json --label 'single host, synthetic deterministic fixtures, buffered I/O, FUSE over a real kernel; no device or power-loss claim; page caches not dropped'
++ log 'receipt: /work/bench/receipts/fuse-writeback-20261105T200833Z.json'
++ printf '%s\n' 'receipt: /work/bench/receipts/fuse-writeback-20261105T200833Z.json'
+receipt: /work/bench/receipts/fuse-writeback-20261105T200833Z.json
++ cleanup
++ set +e
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1055
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1091
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1127
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1165
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1207
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1263
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1319
++ for pid in "${HELPER_PIDS[@]:-}"
++ kill -9 1375
++ '[' -n '' ']'
++ '[' -n '' ']'
++ find /work/.docker-cache/fuse-writeback -maxdepth 2 -type d -name 'mnt-*' -exec sh -c 'umount -l "$1" 2>/dev/null || true' _ '{}' ';'
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1055 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1091 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1127 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1165 Killed                  "$HELPER" crashmeta "$mnt" 40 > "$RAW/$tag.create.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1207 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1263 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1319 Killed                  "$HELPER" crashwrite "$mnt/crash.bin" "$phase" > "$RAW/$tag.json" 2> "$RAW/$tag.err"
+bench/scripts/run_fuse_writeback_bench.sh: line 72:  1375 Killed                  "$HELPER" crashmeta "$mnt" 40 > "$RAW/$tag.create.json" 2> "$RAW/$tag.err"

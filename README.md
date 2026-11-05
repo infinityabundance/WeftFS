@@ -32,7 +32,7 @@ tested in the Docker court.
 | P2 | Rust WeftCodec v1 (all modes, CLI, tests) | **Implemented** — Rust unit and integration suites pass; 60 codec, 20 WCB, 22 selector, 16 context, 10 causal, 36 adversarial vectors |
 | P3 | Golden vectors + independent Go WeftCodec + bidirectional cross-decode | **Implemented** — Go unit/vector suites pass; Rust→Go and Go→Rust decode gates pass for all modes, including byte-identical TENSOR, TOKENS, and QUANTIZED_TENSOR |
 | P4 | Rust WeftFS core (transactions, snapshots, graph, recovery) | **Implemented** (store core, no FUSE) — 39 core tests — see [`docs/store-status.md`](docs/store-status.md) |
-| P5 | Rust FUSE frontend, POSIX matrix, context views | **Implemented** — 88 Rust court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
+| P5 | Rust FUSE frontend, POSIX matrix, context views | **Implemented** — 232 Rust FUSE-court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P5a | Commit-time write budgets + branching time travel (Rust + Go) | **Implemented** — admission budgets fail closed with `BudgetExceeded` before publication; usage is a committed-state-derived `quota` record that survives reopen and fails closed on mismatch; `snapshot branch` / `context branch` / union `merge` at parity. Rust `tests/quota.rs` + `tests/branching.rs` (19 tests) and Go `store/quota_test.go` + `store/branch_test.go` (14 tests) pass, including both cross-language directions; bench receipt `bench/receipts/quota-branch-20261105T071244Z.json`, 10,000-version demo receipt `bench/receipts/branching-20261105T071457Z.json` (7/7). See [`spec/WEFT-QUOTA.md`](spec/WEFT-QUOTA.md) and [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) |
 | P7 | Bench courts, receipt bundle, showcase, release | **v0.7.0 released; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-20261105T175154Z.json` (**27/27**, including `claims`, `conformance_manifest`, `conformance_coverage`, the five authenticated-capability cross-language courts, and `fuzz_diff`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md), [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md), [`bench/RESULTS-fuse-v0.5.md`](bench/RESULTS-fuse-v0.5.md), [`bench/RESULTS-capability-envelope.md`](bench/RESULTS-capability-envelope.md), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md), [`bench/RESULTS-float-tensor-real.md`](bench/RESULTS-float-tensor-real.md), [`bench/RESULTS-checkpoint-topology.md`](bench/RESULTS-checkpoint-topology.md), [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md), [`bench/RESULTS-context-mounts-1000.md`](bench/RESULTS-context-mounts-1000.md), and [`bench/RESULTS-merkle-identity.md`](bench/RESULTS-merkle-identity.md); no headline performance claim is made. See [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md). |
@@ -125,6 +125,27 @@ accepted after `mount`, e.g. `weftfs --store DIR mount --mountpoint MNT
 which both the Rust and Go stores now parse, write, verify, and GC. The two
 implementations read each other's v2 objects byte-exactly, but their zstd frame
 bytes are not claimed identical. Defaults and fixtures are unchanged.
+
+### Mount write path (Q1)
+
+`mount` defaults `--content-identity` to `merkle` for files created through the
+mount (every non-mount command keeps `whole-file`, and reads accept both). Two
+opt-in flags change the durability window rather than the commit protocol:
+
+* `--write-back` buffers each handle's 4 KiB-range writes and publishes them as
+  one commit at `flush`/`fsync`/`release`. `fsync` is durable before it replies;
+  a crash loses unflushed ranges.
+* `--group-commit` coalesces independent mutations into one durable commit within
+  a 10 ms window (max 256 ops). A crash leaves the previous whole generation.
+
+Measured in the FUSE court on 500 × 4 KiB overwrites of a 128 MiB file:
+merkle + `--write-back` takes the write p50 from 27.3 ms to 8.4 µs (Rust) and
+26.7 ms to 11.0 µs (Go); `--group-commit` takes 200-file create from 163 to
+24,754 ops/s (Rust) and 384 to 7,314 (Go). Receipt
+`bench/receipts/fuse-writeback-20261105T200833Z.json`, durability table and
+losses in [`docs/fuse-status.md`](docs/fuse-status.md) §3. The recommended
+AI-artifact mount is `--content-identity merkle --write-back --group-commit`.
+Single host, synthetic fixtures, buffered I/O; not a device claim.
 
 ## Testing: Docker only
 

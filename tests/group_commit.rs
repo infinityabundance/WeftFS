@@ -163,6 +163,72 @@ fn one_group_of_100_creates_matches_100_single_creates() {
 }
 
 #[test]
+fn begin_and_commit_group_across_calls_publishes_one_commit() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let generation_before = store.generation();
+
+    store.begin_group().unwrap();
+    assert!(store.group_open());
+    for index in 0..5 {
+        create_seeded(&mut store, root, index);
+        // Buffered: no commit yet, but the live state already sees the object.
+        assert!(store.lookup(root, &name(index)).is_ok());
+    }
+    assert_eq!(store.generation(), generation_before);
+    let commit = store.commit_group().unwrap();
+    assert!(!store.group_open());
+    assert_eq!(store.generation(), generation_before + 1);
+    assert_eq!(store.snapshot_root(), commit);
+    for index in 0..5 {
+        let id = store.lookup(root, &name(index)).unwrap();
+        assert_eq!(store.read_object(id).unwrap(), payload(index));
+    }
+    let report = store.verify(true).unwrap();
+    assert!(report.ok, "problems: {:?}", report.problems);
+}
+
+#[test]
+fn abort_group_restores_pre_group_state_exactly() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let baseline = create_seeded(&mut store, root, 0);
+    let before = (
+        store.generation(),
+        store.head(),
+        store.current_state().clone(),
+    );
+
+    store.begin_group().unwrap();
+    create_seeded(&mut store, root, 1);
+    store.write_file(baseline, 0, b"buffered").unwrap();
+    assert!(store.lookup(root, &name(1)).is_ok());
+    assert_ne!(store.read_object(baseline).unwrap(), payload(0));
+    store.abort_group();
+
+    assert_eq!(store.generation(), before.0);
+    assert_eq!(store.head(), before.1);
+    assert_same_records(store.current_state(), &before.2, "after abort");
+    assert!(store.lookup(root, &name(1)).is_err());
+    assert_eq!(store.read_object(baseline).unwrap(), payload(0));
+    let report = store.verify(true).unwrap();
+    assert!(report.ok, "problems: {:?}", report.problems);
+}
+
+#[test]
+fn empty_commit_group_publishes_nothing() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let before = (store.generation(), store.head());
+    store.begin_group().unwrap();
+    let head = store.commit_group().unwrap();
+    assert_eq!(head, before.1);
+    assert_eq!((store.generation(), store.head()), before);
+}
+
+#[test]
 fn reads_inside_the_group_see_staged_writes() {
     let dir = tempdir().unwrap();
     let mut store = Store::init(dir.path(), opts()).unwrap();
