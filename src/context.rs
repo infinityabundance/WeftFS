@@ -20,6 +20,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::json;
+use weftcodec::capability::{
+    verify_envelope, CapabilityBlob, CapabilityEnvelope, VerifiedEnvelope, DOMAIN_BLOB,
+};
 use weftcodec::context::{
     Budget, CapabilityScope, CausalClosure, ContextRoot, ContextUri, IdentityMode,
 };
@@ -34,8 +37,10 @@ use crate::identity::{self, Hash32};
 use crate::recovery::{self, BlobKind};
 use crate::state::{
     apply_causal_attrs, object_causal_closure, ObjectKind, ObjectRecord, RelationKind,
-    RelationRecord, RelationTarget, State, CAPABILITY_PREDICATE, CAPABILITY_RECORD_ATTR,
-    CONTEXT_ROOT_PREDICATE, CONTEXT_ROOT_RECORD_ATTR, CONTEXT_ROOT_URI_ATTR,
+    RelationRecord, RelationTarget, State, CAPABILITY_ENVELOPE_BLOB_ATTR,
+    CAPABILITY_ENVELOPE_PREDICATE, CAPABILITY_ENVELOPE_TENANT_ATTR, CAPABILITY_PREDICATE,
+    CAPABILITY_RECORD_ATTR, CONTEXT_ROOT_PREDICATE, CONTEXT_ROOT_RECORD_ATTR,
+    CONTEXT_ROOT_URI_ATTR,
 };
 use crate::store::Store;
 
@@ -46,6 +51,8 @@ static MATERIALIZE_COUNTER: AtomicU64 = AtomicU64::new(0);
 pub struct CapabilityContext {
     pub scope: CapabilityScope,
     pub hash: Hash32,
+    /// `EnvelopeId` when this grant came from a verified envelope.
+    pub envelope_id: Option<Hash32>,
 }
 
 impl CapabilityContext {
@@ -54,7 +61,25 @@ impl CapabilityContext {
         if hash == Hash32::ZERO {
             return Err(Error::non_canonical("capability hash must not be zero"));
         }
-        Ok(CapabilityContext { scope, hash })
+        Ok(CapabilityContext {
+            scope,
+            hash,
+            envelope_id: None,
+        })
+    }
+
+    /// Build the enforcement context for a verified envelope.
+    pub fn from_envelope(envelope: &CapabilityEnvelope) -> Result<Self> {
+        let scope = envelope.capability_scope()?;
+        let hash = scope.id()?;
+        if hash == Hash32::ZERO {
+            return Err(Error::non_canonical("capability hash must not be zero"));
+        }
+        Ok(CapabilityContext {
+            scope,
+            hash,
+            envelope_id: Some(envelope.id()?),
+        })
     }
 
     pub fn allows_namespace(&self, namespace: &str) -> bool {
@@ -77,6 +102,14 @@ impl CapabilityContext {
             }
         }
         Ok(())
+    }
+}
+
+/// The capability carried by a principal's verified envelope, if any.
+pub(crate) fn principal_capability(principal: &Principal) -> Result<Option<CapabilityContext>> {
+    match principal.envelope() {
+        None => Ok(None),
+        Some(verified) => Ok(Some(CapabilityContext::from_envelope(&verified.envelope)?)),
     }
 }
 
@@ -118,6 +151,20 @@ pub struct StoredContextRoot {
     pub uri: String,
     pub relation_id: Hash32,
     pub context_root_id: Hash32,
+}
+
+/// A stored authenticated capability envelope relation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StoredCapabilityEnvelope {
+    /// `EnvelopeId = H("weft/capability/envelope/v1", WCB(envelope))`.
+    pub envelope_id: Hash32,
+    /// Grantee identity (relation subject).
+    pub grantee: Hash32,
+    /// Content address of the stored `{envelope, signature}` blob.
+    pub blob_id: Hash32,
+    /// Tenant label copied from the envelope for discovery.
+    pub tenant: String,
+    pub relation_id: Hash32,
 }
 
 /// A resolved Context Root.
@@ -605,6 +652,138 @@ impl Store {
         Err(Error::not_found("no stored capability has this hash"))
     }
 
+    /// Persist an authenticated capability envelope and attach it to its
+    /// grantee.
+    ///
+    /// The signature is verified before anything is stored. The blob is
+    /// content-addressed in the manifest namespace under
+    /// `H("weft/capability/blob/v1", WCB({envelope, signature}))`; a
+    /// `capability_envelope` relation on the grantee names the `EnvelopeId`.
+    /// Persisting the same envelope twice is idempotent.
+    pub fn save_capability_envelope(&mut self, blob: &CapabilityBlob) -> Result<Hash32> {
+        self.require_writable_context()?;
+        let bytes = blob.encode()?;
+        // i64::MIN disables the wall-clock check; only canonical form and the
+        // signature are required to persist. Expiry is enforced at use.
+        verify_envelope(&bytes, &[], i64::MIN, None)
+            .map_err(|err| Error::corrupt(format!("capability envelope: {err}")))?;
+        let envelope_id = blob.envelope.id()?;
+        let blob_id = self.store_blob(BlobKind::Manifest, DOMAIN_BLOB, &bytes)?;
+        let target = envelope_id.to_hex();
+        if self.current_state().relations.values().any(|relation| {
+            is_capability_envelope_relation(relation)
+                && relation_target_text(relation) == Some(&target)
+        }) {
+            return Ok(envelope_id);
+        }
+        let mut attrs = BTreeMap::new();
+        attrs.insert(
+            CAPABILITY_ENVELOPE_BLOB_ATTR.to_owned(),
+            Value::Str(blob_id.to_hex()),
+        );
+        attrs.insert(
+            CAPABILITY_ENVELOPE_TENANT_ATTR.to_owned(),
+            Value::Str(blob.envelope.tenant.clone()),
+        );
+        let relation = RelationRecord::new(
+            blob.envelope.grantee,
+            CAPABILITY_ENVELOPE_PREDICATE,
+            RelationTarget::Value(Value::Str(target)),
+            None,
+            attrs,
+        )?;
+        self.commit_ops_context(vec![crate::state::Op::PutRelation(relation)], false)?;
+        Ok(envelope_id)
+    }
+
+    /// Load and verify a stored envelope offline.
+    ///
+    /// `revocations` is the caller's trusted revocation set; `now_ns` is the
+    /// caller's clock. No network access is performed.
+    pub fn load_capability_envelope(
+        &self,
+        envelope_id: Hash32,
+        revocations: &[Hash32],
+        now_ns: i64,
+    ) -> Result<VerifiedEnvelope> {
+        self.load_capability_envelope_at(self.current_state(), envelope_id, revocations, now_ns)
+    }
+
+    pub fn load_capability_envelope_at(
+        &self,
+        state: &State,
+        envelope_id: Hash32,
+        revocations: &[Hash32],
+        now_ns: i64,
+    ) -> Result<VerifiedEnvelope> {
+        let stored = self
+            .list_capability_envelopes_at(state)?
+            .into_iter()
+            .find(|item| item.envelope_id == envelope_id)
+            .ok_or_else(|| Error::not_found("no stored capability envelope has this id"))?;
+        let bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                stored.blob_id,
+                DOMAIN_BLOB,
+            )
+        })?;
+        let verified = verify_envelope(&bytes, revocations, now_ns, None)
+            .map_err(|err| Error::unauthorized(format!("capability envelope: {err}")))?;
+        if verified.envelope_id != envelope_id {
+            return Err(Error::corrupt(
+                "capability envelope blob does not match its stored identity",
+            ));
+        }
+        Ok(verified)
+    }
+
+    /// All stored envelope attachments, sorted by `EnvelopeId`.
+    pub fn list_capability_envelopes_at(
+        &self,
+        state: &State,
+    ) -> Result<Vec<StoredCapabilityEnvelope>> {
+        let mut out = Vec::new();
+        for relation in state.relations.values() {
+            if !is_capability_envelope_relation(relation) {
+                continue;
+            }
+            let envelope_id = relation_target_text(relation)
+                .and_then(|text| Hash32::from_hex(text).ok())
+                .ok_or_else(|| {
+                    Error::corrupt("capability_envelope target is not a 32-byte hash")
+                })?;
+            let blob_id = match relation.attrs.get(CAPABILITY_ENVELOPE_BLOB_ATTR) {
+                Some(Value::Str(text)) => Hash32::from_hex(text).map_err(|_| {
+                    Error::corrupt("capability_envelope blob id is not a 32-byte hash")
+                })?,
+                _ => {
+                    return Err(Error::corrupt(
+                        "capability_envelope relation has no capability.envelope_blob",
+                    ))
+                }
+            };
+            let tenant = match relation.attrs.get(CAPABILITY_ENVELOPE_TENANT_ATTR) {
+                Some(Value::Str(text)) => text.clone(),
+                _ => {
+                    return Err(Error::corrupt(
+                        "capability_envelope relation has no capability.envelope_tenant",
+                    ))
+                }
+            };
+            out.push(StoredCapabilityEnvelope {
+                envelope_id,
+                grantee: relation.subject,
+                blob_id,
+                tenant,
+                relation_id: relation.id,
+            });
+        }
+        out.sort_by(|a, b| a.envelope_id.cmp(&b.envelope_id));
+        Ok(out)
+    }
+
     /// Resolve a stored Context Root under an explicit capability context.
     ///
     /// Order of operations: verify identity, verify snapshot, verify resolver,
@@ -658,7 +837,7 @@ impl Store {
 
         // 3. Capability binding.
         let bound_capability;
-        let active_capability = match root.capability_hash {
+        let base_capability = match root.capability_hash {
             Some(hash) => {
                 let supplied = match capability {
                     Some(cap) => {
@@ -685,7 +864,14 @@ impl Store {
             }
             None => capability,
         };
-        if let Some(cap) = active_capability {
+        // A verified envelope on the principal is an additional authenticated
+        // grant. Every grant must independently allow the operation; neither
+        // replaces the other, and both are additional to POSIX permissions.
+        let envelope_capability = principal_capability(principal)?;
+        for cap in base_capability
+            .into_iter()
+            .chain(envelope_capability.as_ref())
+        {
             cap.check_valid_at(now_ns)?;
             if !cap.scope.roots.is_empty() && !cap.allows_root(recomputed) {
                 // Non-disclosing denial: the requested root is simply not
@@ -697,7 +883,10 @@ impl Store {
         }
 
         let selector = root.selector()?;
-        let budget = effective_budget(root.budget.as_ref(), active_capability);
+        let mut budget = effective_budget(root.budget.as_ref(), base_capability);
+        if let Some(envelope) = envelope_capability.as_ref() {
+            budget = effective_budget(budget.as_ref(), Some(envelope));
+        }
         // `snapshot_state` is the replay of `root.snapshot`, so the snapshot
         // hash is a correct cache key for its derived selector index.
         let index = self.state_index(root.snapshot, &snapshot_state);
@@ -707,7 +896,7 @@ impl Store {
             &snapshot_state,
             principal,
             limits,
-            active_capability,
+            base_capability,
             Some(recomputed),
             budget.as_ref(),
             index.as_ref(),
@@ -766,39 +955,71 @@ impl Store {
         if candidates.is_empty() {
             return Err(Error::not_found("no such object"));
         }
+        let envelope_capability = principal_capability(principal)?;
+        let mut capabilities: Vec<&CapabilityContext> = Vec::new();
         if let Some(cap) = capability {
-            cap.check_valid_at(now_ns)?;
-            let namespace_grant = cap.allows_namespace(crate::state::DEFAULT_NAMESPACE);
-            let mut allowed_roots: Vec<Hash32> = Vec::new();
-            if !namespace_grant {
-                allowed_roots = cap.scope.roots.clone();
+            capabilities.push(cap);
+        }
+        if let Some(cap) = envelope_capability.as_ref() {
+            capabilities.push(cap);
+        }
+        if !capabilities.is_empty() {
+            for cap in &capabilities {
+                cap.check_valid_at(now_ns)?;
             }
             for record in candidates {
                 if !can_read(record, principal) {
                     continue;
                 }
-                if namespace_grant {
-                    return Ok(record.clone());
-                }
-                // Root grant: the object (or one of its identities) must be
-                // selected by at least one granted root.
-                for root_id in &allowed_roots {
-                    let context = self.load_context_root(&root_id.to_hex())?;
-                    let resolution = self.resolve_context_at(
-                        self.current_state(),
-                        &context.name,
-                        Some(cap),
-                        principal,
-                        &Limits::default(),
-                        now_ns,
-                    )?;
-                    if resolution.resolution.results.iter().any(|result| {
-                        result.object_id == record.id
-                            || result.version_id == id
-                            || result.content_id == id
-                    }) {
-                        return Ok(record.clone());
+                let mut all_allow = true;
+                for cap in &capabilities {
+                    // A namespace grant authorizes readable objects directly.
+                    if cap.allows_namespace(crate::state::DEFAULT_NAMESPACE) {
+                        continue;
                     }
+                    // Root grant: the object (or one of its identities) must be
+                    // selected by at least one granted root. Roots are addressed
+                    // by ContextRootId, not by a display name.
+                    let contexts = self.list_context_roots_at(self.current_state())?;
+                    let mut allowed = false;
+                    for root_id in &cap.scope.roots {
+                        let Some(context) = contexts
+                            .iter()
+                            .find(|stored| stored.context_root_id == *root_id)
+                        else {
+                            continue;
+                        };
+                        match self.resolve_context_at(
+                            self.current_state(),
+                            &context.name,
+                            capability,
+                            principal,
+                            &Limits::default(),
+                            now_ns,
+                        ) {
+                            Ok(resolution) => {
+                                if resolution.resolution.results.iter().any(|result| {
+                                    result.object_id == record.id
+                                        || result.version_id == id
+                                        || result.content_id == id
+                                }) {
+                                    allowed = true;
+                                    break;
+                                }
+                            }
+                            // A root denied by the other grant cannot authorize
+                            // this record; keep the response non-disclosing.
+                            Err(err) if err.class() == crate::error::Class::Unauthorized => {}
+                            Err(err) => return Err(err),
+                        }
+                    }
+                    if !allowed {
+                        all_allow = false;
+                        break;
+                    }
+                }
+                if all_allow {
+                    return Ok(record.clone());
                 }
             }
             return Err(Error::not_found("no such object"));
@@ -823,7 +1044,15 @@ impl Store {
         principal: &Principal,
         now_ns: i64,
     ) -> Result<Vec<crate::store::SavedContext>> {
+        let envelope_capability = principal_capability(principal)?;
+        let mut capabilities: Vec<&CapabilityContext> = Vec::new();
         if let Some(cap) = capability {
+            capabilities.push(cap);
+        }
+        if let Some(cap) = envelope_capability.as_ref() {
+            capabilities.push(cap);
+        }
+        for cap in &capabilities {
             cap.check_valid_at(now_ns)?;
         }
         let root = state
@@ -836,15 +1065,18 @@ impl Store {
         let mut out = Vec::new();
         for saved in self.list_contexts_at(state)? {
             let selector = self.load_context_at(state, &saved.name)?;
-            if let Some(cap) = capability {
-                if !cap.allows_namespace(&selector.namespace) {
-                    continue;
-                }
-                if !selector_predicates_allowed(&selector, cap) {
-                    continue;
+            let mut visible = true;
+            for cap in &capabilities {
+                if !cap.allows_namespace(&selector.namespace)
+                    || !selector_predicates_allowed(&selector, cap)
+                {
+                    visible = false;
+                    break;
                 }
             }
-            out.push(saved);
+            if visible {
+                out.push(saved);
+            }
         }
         Ok(out)
     }
@@ -1243,8 +1475,13 @@ pub(crate) fn is_context_root_relation(relation: &RelationRecord) -> bool {
 }
 
 pub(crate) fn is_capability_relation(relation: &RelationRecord) -> bool {
-    relation.subject == State::ROOT_ID
-        && relation.predicate == CAPABILITY_PREDICATE
+    relation.predicate == CAPABILITY_PREDICATE
+        && relation.kind == RelationKind::Value
+        && relation.provenance.is_none()
+}
+
+pub(crate) fn is_capability_envelope_relation(relation: &RelationRecord) -> bool {
+    relation.predicate == CAPABILITY_ENVELOPE_PREDICATE
         && relation.kind == RelationKind::Value
         && relation.provenance.is_none()
 }

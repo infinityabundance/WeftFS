@@ -197,6 +197,9 @@ pub struct VerifyReport {
     /// Codec representations fully decoded and re-hashed by `verify --full`.
     pub checked_representations: u64,
     pub checked_capabilities: u64,
+    /// Authenticated capability envelopes whose blob hash, canonical form, and
+    /// Ed25519 signature were verified (expiry/revocation are caller policy).
+    pub checked_capability_envelopes: u64,
     /// `provenance` relations validated (record hash, canonical form, and that
     /// the record declares the subject object's content root).
     pub checked_provenance: u64,
@@ -3651,6 +3654,55 @@ impl Store {
             }
         }
 
+        // Authenticated envelopes: the relation must name an EnvelopeId and a
+        // blob whose content address is valid, canonical, and correctly signed
+        // by the declared grantor. Expiry and revocation are caller policy and
+        // are not rejected by `verify`.
+        let stored_envelopes = match self.list_capability_envelopes_at(state) {
+            Ok(items) => items,
+            Err(err) => {
+                report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("capability envelopes: {err}"),
+                });
+                Vec::new()
+            }
+        };
+        for stored in stored_envelopes {
+            report.checked_capability_envelopes += 1;
+            let bytes = match self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Manifest,
+                    stored.blob_id,
+                    weftcodec::capability::DOMAIN_BLOB,
+                )
+            }) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    report.problems.push(VerifyProblem {
+                        class: err.class_name().to_owned(),
+                        detail: format!("capability envelope {}: {err}", stored.envelope_id),
+                    });
+                    continue;
+                }
+            };
+            match weftcodec::capability::verify_envelope(&bytes, &[], i64::MIN, None) {
+                Ok(verified) if verified.envelope_id == stored.envelope_id => {}
+                Ok(_) => report.problems.push(VerifyProblem {
+                    class: "Corrupt".to_owned(),
+                    detail: format!(
+                        "capability envelope {} does not match its stored identity",
+                        stored.envelope_id
+                    ),
+                }),
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class().as_str().to_owned(),
+                    detail: format!("capability envelope {}: {err}", stored.envelope_id),
+                }),
+            }
+        }
+
         let contexts = match self.list_context_roots_at(state) {
             Ok(contexts) => contexts,
             Err(err) => {
@@ -5246,6 +5298,24 @@ fn mark_state(
             0,
             &mut seen,
         );
+    }
+
+    // Authenticated capability envelopes are retained while their attachment
+    // relation is retained. The relation names a content-addressed manifest
+    // blob; an unreadable or malformed attachment is kept (fail safe) and
+    // reported by `verify`.
+    for relation in state.relations.values() {
+        if relation.predicate != crate::state::CAPABILITY_ENVELOPE_PREDICATE {
+            continue;
+        }
+        if let Some(Value::Str(text)) = relation
+            .attrs
+            .get(crate::state::CAPABILITY_ENVELOPE_BLOB_ATTR)
+        {
+            if let Ok(hash) = Hash32::from_hex(text) {
+                manifests.insert(hash);
+            }
+        }
     }
 
     // Provenance receipts are retained exactly while an output object that

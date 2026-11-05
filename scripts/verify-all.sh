@@ -92,7 +92,20 @@ run_court go "context_cross_go_gen" \
 run_court rust "context_cross_rust_parse" \
   "cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-parse-go"
 run_court go "context_cross_compare" \
-  "cd WeftCodec-Go && bash hack/context-cross.sh compare"
+  "cd /work/WeftCodec-Go && bash hack/context-cross.sh compare"
+
+# Authenticated capability envelope cross-language gate: identical canonical
+# bytes, EnvelopeId, deterministic signature, and every rejection class.
+run_court rust "capability_cross_rust_gen" \
+  "cd /work/WeftCodec-Go && bash hack/capability-cross.sh rust-gen"
+run_court go "capability_cross_go_gen" \
+  "cd /work/WeftCodec-Go && bash hack/capability-cross.sh go-gen"
+run_court rust "capability_cross_rust_verify" \
+  "cd /work/WeftCodec-Go && bash hack/capability-cross.sh rust-verify-go"
+run_court go "capability_cross_go_verify" \
+  "cd /work/WeftCodec-Go && bash hack/capability-cross.sh go-verify-rust"
+run_court go "capability_cross_compare" \
+  "cd /work/WeftCodec-Go && bash hack/capability-cross.sh compare"
 
 # Deterministic cross-language differential fuzz: 1,000,000 generated/mutated
 # inputs through both decoders, identical classes and content roots, no panics,

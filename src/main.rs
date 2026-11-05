@@ -12,6 +12,9 @@ use std::process::Command as ProcessCommand;
 
 use clap::{Parser, Subcommand};
 use serde_json::json;
+use weftcodec::capability::{
+    public_key_for_seed, sign_envelope, verify_envelope, CapabilityEnvelope,
+};
 use weftcodec::context::{Budget, ContextRoot, DEFAULT_RESOLVER};
 use weftcodec::selector;
 use weftcodec::wcb::Value;
@@ -180,6 +183,17 @@ enum Command {
         /// Logical tensor hyper-rectangle `s0,s1:e0,e1` (row-major).
         #[arg(long)]
         region: Option<String>,
+        /// Verified capability envelope blob; the read is denied unless it
+        /// authorizes the object in addition to POSIX permissions.
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        /// Revocation ids for `--envelope`.
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
     },
     /// Price the tensor representation planner without writing anything.
     Plan {
@@ -309,6 +323,11 @@ enum Command {
     Context {
         #[command(subcommand)]
         command: ContextCommand,
+    },
+    /// Authenticated capability envelope operations (`WEFT-CAPABILITIES.md` §9).
+    Capability {
+        #[command(subcommand)]
+        command: CapabilityCommand,
     },
     /// Causal closure inspection.
     Causal {
@@ -470,6 +489,12 @@ enum ContextCommand {
         target: String,
         #[arg(long = "capability")]
         capability_file: Option<PathBuf>,
+        /// Verified authenticated capability envelope blob.
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        /// Revocation ids for `--envelope`.
+        #[arg(long)]
+        revocations: Option<PathBuf>,
         #[arg(long)]
         uid: Option<u64>,
         #[arg(long)]
@@ -484,6 +509,12 @@ enum ContextCommand {
         out: PathBuf,
         #[arg(long = "capability")]
         capability_file: Option<PathBuf>,
+        /// Verified authenticated capability envelope blob.
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        /// Revocation ids for `--envelope`.
+        #[arg(long)]
+        revocations: Option<PathBuf>,
         #[arg(long)]
         uid: Option<u64>,
         #[arg(long)]
@@ -499,6 +530,63 @@ enum ContextCommand {
     Uri { target: String },
     /// Delete a stored Context Root by name.
     Delete { name: String },
+}
+
+#[derive(Subcommand)]
+enum CapabilityCommand {
+    /// Sign a canonical envelope JSON document and write the stored blob form.
+    Sign {
+        /// Envelope JSON (`weft.capability.envelope.v1`) or canonical hex.
+        #[arg(long)]
+        envelope: PathBuf,
+        /// File containing a 32-byte Ed25519 seed (hex or raw).
+        #[arg(long)]
+        key: PathBuf,
+        /// Output blob path.
+        #[arg(long)]
+        out: PathBuf,
+        /// Also attach the envelope to its grantee in the store (needs --store).
+        #[arg(long)]
+        attach: bool,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Verify a stored blob offline against a revocation set and clock.
+    Verify {
+        #[arg(long)]
+        envelope: PathBuf,
+        /// Revocation ids: hex lines, comma-separated, or a JSON array.
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        /// Require this grantee (64 hex digits).
+        #[arg(long)]
+        grantee: Option<String>,
+        /// Override the verification clock (UTC ns since the Unix epoch).
+        #[arg(long = "now-ns")]
+        now_ns: Option<i64>,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Print the Ed25519 public key derived from a seed file.
+    Key {
+        #[arg(long)]
+        key: PathBuf,
+    },
+    /// List stored envelope attachments.
+    List {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Show one stored envelope by id (verification is offline).
+    Show {
+        envelope_id: String,
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        #[arg(long = "now-ns")]
+        now_ns: Option<i64>,
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -628,7 +716,10 @@ fn run(cli: Cli) -> Result<()> {
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
         backend: parse_backend(&backend)?,
     };
-    let needs_store = !matches!(command, Command::ConformanceStore { .. });
+    let needs_store = !matches!(
+        command,
+        Command::ConformanceStore { .. } | Command::Capability { .. }
+    );
     let store = match store {
         Some(path) => path,
         None if !needs_store => PathBuf::new(),
@@ -958,9 +1049,27 @@ fn run(cli: Cli) -> Result<()> {
             offset,
             len,
             region,
+            envelope,
+            revocations,
+            uid,
+            gid,
         } => {
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
+            if let Some(envelope_path) = envelope.as_ref() {
+                let (default_uid, default_gid) = current_ids();
+                let principal = build_principal(
+                    uid.unwrap_or(default_uid),
+                    gid.unwrap_or(default_gid),
+                    Vec::new(),
+                    Some(envelope_path),
+                    revocations.as_ref(),
+                    store.clock_now_ns(),
+                )?;
+                // Possession of a path or id is not authority: the envelope and
+                // POSIX rules must both allow this object.
+                store.exact_id_object(id, None, &principal, store.clock_now_ns())?;
+            }
             let bytes = if let Some(region) = region {
                 let region = parse_region(&region)?;
                 store.read_tensor_region(id, &region)?.bytes
@@ -1362,6 +1471,7 @@ fn run(cli: Cli) -> Result<()> {
                     "checked_causal": report.checked_causal,
                     "checked_representations": report.checked_representations,
                     "checked_capabilities": report.checked_capabilities,
+                    "checked_capability_envelopes": report.checked_capability_envelopes,
                     "checked_provenance": report.checked_provenance,
                     "rejected_generations": report.rejected_generations,
                     "problems": problems,
@@ -1378,6 +1488,10 @@ fn run(cli: Cli) -> Result<()> {
                 println!("checked_causal={}", report.checked_causal);
                 println!("checked_representations={}", report.checked_representations);
                 println!("checked_capabilities={}", report.checked_capabilities);
+                println!(
+                    "checked_capability_envelopes={}",
+                    report.checked_capability_envelopes
+                );
                 println!("checked_provenance={}", report.checked_provenance);
                 for problem in &report.problems {
                     println!("problem={}: {}", problem.class, problem.detail);
@@ -1436,6 +1550,7 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Command::Context { command } => run_context(&store, json, policy, command),
+        Command::Capability { command } => run_capability(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -1853,6 +1968,268 @@ fn read_selector_source(spec: &str) -> Result<String> {
     }
 }
 
+fn read_envelope_file(path: &Path) -> Result<CapabilityEnvelope> {
+    let bytes = fs::read(path)
+        .map_err(|err| Error::io(format!("cannot read envelope {}: {err}", path.display())))?;
+    let text = std::str::from_utf8(&bytes)
+        .map_err(|_| Error::parse("capability envelope file is not UTF-8"))?;
+    let trimmed = text.trim();
+    if trimmed.starts_with('{') {
+        Ok(CapabilityEnvelope::from_json_str(trimmed)?)
+    } else {
+        let raw = hex::decode(trimmed).map_err(|_| {
+            Error::parse("capability envelope file is neither JSON nor canonical hex")
+        })?;
+        Ok(CapabilityEnvelope::from_canonical_bytes(
+            &raw,
+            &weftcodec::Limits::default(),
+        )?)
+    }
+}
+
+fn read_seed_file(path: &Path) -> Result<Vec<u8>> {
+    let bytes = fs::read(path)
+        .map_err(|err| Error::io(format!("cannot read key {}: {err}", path.display())))?;
+    if bytes.len() == 32 {
+        return Ok(bytes);
+    }
+    let text = std::str::from_utf8(&bytes)
+        .map_err(|_| Error::parse("key file must be 32 raw bytes or 64 hex digits"))?;
+    let decoded = hex::decode(text.trim())
+        .map_err(|_| Error::parse("key file must be 32 raw bytes or 64 hex digits"))?;
+    if decoded.len() != 32 {
+        return Err(Error::parse("Ed25519 seed must be 32 bytes"));
+    }
+    Ok(decoded)
+}
+
+fn read_revocations(path: &Option<PathBuf>) -> Result<Vec<Hash32>> {
+    let Some(path) = path else {
+        return Ok(Vec::new());
+    };
+    let text = fs::read_to_string(path)
+        .map_err(|err| Error::io(format!("cannot read revocations {}: {err}", path.display())))?;
+    let trimmed = text.trim();
+    let mut out = Vec::new();
+    if trimmed.starts_with('[') {
+        let items: Vec<String> = serde_json::from_str(trimmed)
+            .map_err(|err| Error::parse(format!("bad revocation JSON: {err}")))?;
+        for item in items {
+            out.push(Hash32::from_hex(item.trim())?);
+        }
+    } else {
+        for item in trimmed.split(|c: char| c == ',' || c.is_whitespace()) {
+            if item.is_empty() {
+                continue;
+            }
+            out.push(Hash32::from_hex(item)?);
+        }
+    }
+    Ok(out)
+}
+
+fn build_principal(
+    uid: u64,
+    gid: u64,
+    groups: Vec<u64>,
+    envelope_path: Option<&PathBuf>,
+    revocations_path: Option<&PathBuf>,
+    now_ns: i64,
+) -> Result<Principal> {
+    let mut principal = Principal::new(uid, gid, groups);
+    if let Some(path) = envelope_path {
+        let bytes = fs::read(path)
+            .map_err(|err| Error::io(format!("cannot read envelope {}: {err}", path.display())))?;
+        let revocations = read_revocations(&revocations_path.cloned())?;
+        let verified = verify_envelope(&bytes, &revocations, now_ns, None)
+            .map_err(|_| Error::unauthorized("capability envelope is not valid"))?;
+        principal = principal.with_envelope(verified);
+    }
+    Ok(principal)
+}
+
+fn run_capability(
+    store: &PathBuf,
+    json_output: bool,
+    policy: OpenPolicy,
+    command: CapabilityCommand,
+) -> Result<()> {
+    match command {
+        CapabilityCommand::Sign {
+            envelope,
+            key,
+            out,
+            attach,
+            json: as_json,
+        } => {
+            let envelope_record = read_envelope_file(&envelope)?;
+            let seed = read_seed_file(&key)?;
+            let blob = sign_envelope(&envelope_record, &seed)?;
+            let bytes = blob.encode()?;
+            fs::write(&out, &bytes)
+                .map_err(|err| Error::io(format!("cannot write {}: {err}", out.display())))?;
+            let envelope_id = envelope_record.id()?;
+            let blob_id = blob.id()?;
+            let mut attached = false;
+            if attach {
+                if store.as_os_str().is_empty() {
+                    return Err(Error::invalid_argument(
+                        "capability sign --attach requires --store",
+                    ));
+                }
+                let mut store = open_store(store, OpenMode::ReadWrite, policy)?;
+                let stored = store.save_capability_envelope(&blob)?;
+                if stored != envelope_id {
+                    return Err(Error::corrupt(
+                        "stored envelope id does not match the signed envelope",
+                    ));
+                }
+                attached = true;
+            }
+            let as_json = as_json || json_output;
+            if as_json {
+                print_json(&json!({
+                    "envelope_id": envelope_id.to_hex(),
+                    "blob_id": blob_id.to_hex(),
+                    "tenant": envelope_record.tenant,
+                    "grantor": envelope_record.grantor.to_hex(),
+                    "grantee": envelope_record.grantee.to_hex(),
+                    "expires_at_ns": envelope_record.expires_at_ns,
+                    "revocation_id": envelope_record.revocation_id.to_hex(),
+                    "signature": hex::encode(&blob.signature),
+                    "out": out.display().to_string(),
+                    "attached": attached,
+                }))
+            } else {
+                println!("envelope_id={envelope_id}");
+                println!("blob_id={blob_id}");
+                println!("out={}", out.display());
+                println!("attached={attached}");
+                Ok(())
+            }
+        }
+        CapabilityCommand::Verify {
+            envelope,
+            revocations,
+            grantee,
+            now_ns,
+            json: as_json,
+        } => {
+            let bytes = fs::read(&envelope).map_err(|err| {
+                Error::io(format!(
+                    "cannot read envelope {}: {err}",
+                    envelope.display()
+                ))
+            })?;
+            let revocations = read_revocations(&revocations)?;
+            let expected = match grantee {
+                Some(text) => Some(Hash32::from_hex(text.trim())?),
+                None => None,
+            };
+            let now = now_ns.unwrap_or_else(|| {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_nanos() as i64)
+                    .unwrap_or(0)
+            });
+            let verified = verify_envelope(&bytes, &revocations, now, expected).map_err(|err| {
+                Error::unauthorized(format!(
+                    "capability envelope is not valid ({})",
+                    err.rejection()
+                ))
+            })?;
+            let as_json = as_json || json_output;
+            if as_json {
+                print_json(&json!({
+                    "valid": true,
+                    "envelope_id": verified.envelope_id.to_hex(),
+                    "blob_id": verified.blob_id.to_hex(),
+                    "tenant": verified.envelope.tenant,
+                    "grantor": verified.envelope.grantor.to_hex(),
+                    "grantee": verified.envelope.grantee.to_hex(),
+                    "roots": verified.envelope.roots.iter().map(|h| h.to_hex()).collect::<Vec<_>>(),
+                    "namespaces": verified.envelope.namespaces,
+                    "predicates": verified.envelope.predicates,
+                    "expires_at_ns": verified.envelope.expires_at_ns,
+                    "revocation_id": verified.envelope.revocation_id.to_hex(),
+                }))
+            } else {
+                println!("valid=true");
+                println!("envelope_id={}", verified.envelope_id);
+                println!("tenant={}", verified.envelope.tenant);
+                println!("grantee={}", verified.envelope.grantee);
+                Ok(())
+            }
+        }
+        CapabilityCommand::Key { key } => {
+            let seed = read_seed_file(&key)?;
+            let public = public_key_for_seed(&seed)?;
+            println!("{public}");
+            Ok(())
+        }
+        CapabilityCommand::List { json: as_json } => {
+            if store.as_os_str().is_empty() {
+                return Err(Error::invalid_argument("capability list requires --store"));
+            }
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
+            let entries = store.list_capability_envelopes_at(store.current_state())?;
+            let as_json = as_json || json_output;
+            if as_json {
+                let items: Vec<_> = entries
+                    .iter()
+                    .map(|item| {
+                        json!({
+                            "envelope_id": item.envelope_id.to_hex(),
+                            "grantee": item.grantee.to_hex(),
+                            "blob_id": item.blob_id.to_hex(),
+                            "tenant": item.tenant,
+                            "relation_id": item.relation_id.to_hex(),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({"envelopes": items}))
+            } else {
+                for item in entries {
+                    println!(
+                        "{} {} {} {}",
+                        item.envelope_id, item.grantee, item.tenant, item.blob_id
+                    );
+                }
+                Ok(())
+            }
+        }
+        CapabilityCommand::Show {
+            envelope_id,
+            revocations,
+            now_ns,
+            json: as_json,
+        } => {
+            if store.as_os_str().is_empty() {
+                return Err(Error::invalid_argument("capability show requires --store"));
+            }
+            let store = open_store(store, OpenMode::ReadOnly, policy)?;
+            let id = Hash32::from_hex(envelope_id.trim())?;
+            let revocations = read_revocations(&revocations)?;
+            let now = now_ns.unwrap_or_else(|| store.clock_now_ns());
+            let verified = store.load_capability_envelope(id, &revocations, now)?;
+            let as_json = as_json || json_output;
+            if as_json {
+                print_json(&json!({
+                    "envelope_id": verified.envelope_id.to_hex(),
+                    "blob_id": verified.blob_id.to_hex(),
+                    "envelope": verified.envelope.to_json(),
+                }))
+            } else {
+                println!("envelope_id={}", verified.envelope_id);
+                println!("blob_id={}", verified.blob_id);
+                println!("tenant={}", verified.envelope.tenant);
+                println!("grantee={}", verified.envelope.grantee);
+                Ok(())
+            }
+        }
+    }
+}
+
 fn read_capability(path: &Option<PathBuf>) -> Result<Option<CapabilityContext>> {
     match path {
         None => Ok(None),
@@ -2015,6 +2392,8 @@ fn run_context(
         ContextCommand::Resolve {
             target,
             capability_file,
+            envelope,
+            revocations,
             uid,
             gid,
             groups,
@@ -2022,11 +2401,14 @@ fn run_context(
             let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let capability = read_capability(&capability_file)?;
             let (default_uid, default_gid) = current_ids();
-            let principal = Principal::new(
+            let principal = build_principal(
                 uid.unwrap_or(default_uid),
                 gid.unwrap_or(default_gid),
                 groups,
-            );
+                envelope.as_ref(),
+                revocations.as_ref(),
+                store.clock_now_ns(),
+            )?;
             let limits = weftcodec::Limits::default();
             let resolved = store.resolve_context(
                 &target,
@@ -2113,6 +2495,8 @@ fn run_context(
             target,
             out,
             capability_file,
+            envelope,
+            revocations,
             uid,
             gid,
             groups,
@@ -2121,11 +2505,14 @@ fn run_context(
             let store = open_store(store, OpenMode::ReadOnly, policy)?;
             let capability = read_capability(&capability_file)?;
             let (default_uid, default_gid) = current_ids();
-            let principal = Principal::new(
+            let principal = build_principal(
                 uid.unwrap_or(default_uid),
                 gid.unwrap_or(default_gid),
                 groups,
-            );
+                envelope.as_ref(),
+                revocations.as_ref(),
+                store.clock_now_ns(),
+            )?;
             let limits = weftcodec::Limits::default();
             if require_one {
                 // Cardinality is checked before any filesystem work. A singular

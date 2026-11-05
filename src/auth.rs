@@ -6,21 +6,31 @@
 //! array. Traversal requires the execute bit. uid 0 is not special; mount-level
 //! root behavior belongs to a future FUSE policy.
 
+use weftcodec::capability::VerifiedEnvelope;
 use weftcodec::wcb::Value;
 
 use crate::state::{ObjectRecord, ATTR_ACL_READ};
 
 /// A caller identity supplied by the kernel (or by tests/CLI).
+///
+/// `envelope` is an **already verified** authenticated capability grant
+/// (`WEFT-CAPABILITIES.md` §9). It can only narrow what POSIX/ACL rules allow.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Principal {
     pub uid: u64,
     pub gid: u64,
     pub groups: Vec<u64>,
+    pub envelope: Option<VerifiedEnvelope>,
 }
 
 impl Principal {
     pub fn new(uid: u64, gid: u64, groups: Vec<u64>) -> Self {
-        Principal { uid, gid, groups }
+        Principal {
+            uid,
+            gid,
+            groups,
+            envelope: None,
+        }
     }
 
     /// A principal that owns everything created with uid/gid 0.
@@ -29,7 +39,20 @@ impl Principal {
             uid: 0,
             gid: 0,
             groups: Vec::new(),
+            envelope: None,
         }
+    }
+
+    /// Attach a verified envelope. Verification must already have happened;
+    /// use [`weftcodec::capability::verify_envelope`] before calling this.
+    pub fn with_envelope(mut self, envelope: VerifiedEnvelope) -> Self {
+        self.envelope = Some(envelope);
+        self
+    }
+
+    /// The verified envelope attached to this principal, if any.
+    pub fn envelope(&self) -> Option<&VerifiedEnvelope> {
+        self.envelope.as_ref()
     }
 
     fn is_in_group(&self, gid: u64) -> bool {

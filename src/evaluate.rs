@@ -294,7 +294,19 @@ fn resolve_state_inner(
             crate::state::DEFAULT_NAMESPACE
         )));
     }
+    // A verified envelope on the principal is enforced on every resolution
+    // path, including the store-level `resolve`/`resolve_state` entry points
+    // that do not take an explicit capability. Each grant must independently
+    // allow the operation; an envelope never replaces an explicit capability.
+    let envelope_capability = crate::context::principal_capability(principal)?;
+    let mut capabilities: Vec<&CapabilityContext> = Vec::new();
     if let Some(cap) = capability {
+        capabilities.push(cap);
+    }
+    if let Some(cap) = envelope_capability.as_ref() {
+        capabilities.push(cap);
+    }
+    for cap in &capabilities {
         let namespace_allowed = cap.allows_namespace(&selector.namespace)
             || context_root_id
                 .map(|id| cap.allows_root(id))

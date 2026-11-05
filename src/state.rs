@@ -46,6 +46,17 @@ pub const CAPABILITY_PREDICATE: &str = "capability";
 /// Attribute holding lowercase hex of the canonical capability record.
 pub const CAPABILITY_RECORD_ATTR: &str = "capability.record";
 
+/// Reserved predicate attaching an authenticated envelope to its grantee
+/// (D2). The subject is the grantee identity; the value target is the
+/// lowercase-hex `EnvelopeId`.
+pub const CAPABILITY_ENVELOPE_PREDICATE: &str = "capability_envelope";
+/// Attribute holding lowercase hex of the stored `{envelope, signature}` blob
+/// id in the manifest namespace.
+pub const CAPABILITY_ENVELOPE_BLOB_ATTR: &str = "capability.envelope_blob";
+/// Attribute holding the envelope tenant label (for discovery only; the
+/// authoritative value is inside the signed envelope).
+pub const CAPABILITY_ENVELOPE_TENANT_ATTR: &str = "capability.envelope_tenant";
+
 /// Object kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ObjectKind {
