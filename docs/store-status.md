@@ -96,7 +96,7 @@ swap `3g`, `1024` pids, `4` CPUs, bounded tmpfs, no-new-privileges,
 `cap-drop=ALL`) and a tmpfs data directory. The script creates a bucket, runs
 the Rust test binary against it, and tears the server and network down.
 
-Observed at WeftFS `0526798`:
+Observed at WeftFS `c2a8d53`:
 
 | Court | Observed |
 |---|---|
@@ -111,19 +111,19 @@ the previous head readable, a process-fault crash proxy at all three
 publication phases, GC deleting only unreachable content, and byte-identical
 artifacts versus a local store built from the same operations.
 
-Benchmark receipt `bench/receipts/s3-backend-20261105T231956Z.json`
+Benchmark receipt `bench/receipts/s3-backend-20261105T232435Z.json`
 (single-node MinIO on localhost; 1,000 creates of a 25-byte payload, 100 x
 1 MiB writes, 1,000 reads; both backends produced the same head
 `8e47145e1a09c3bf…` and generation 1101):
 
 | Phase | Local | S3 | Ratio |
 |---|---|---|---|
-| 1,000 creates wall | 105.8 ms / 9,448 ops/s | 1,843.3 ms / 542.5 ops/s | 17.4x |
-| create p50 / p95 | 100 / 155 us | 1,813 / 2,025 us | — |
-| 100 MiB writes wall | 189.7 ms / 527.2 MiB/s | 1,182.7 ms / 84.6 MiB/s | 6.2x |
-| write p50 / p95 | 660 / 747 us | 10,448 / 11,032 us | — |
-| 1,000 reads wall | 4.5 ms / 222,165 ops/s | 358.6 ms / 2,789 ops/s | 79.7x |
-| read p50 / p95 | 4 / 4 us | 346 / 424 us | — |
+| 1,000 creates wall | 105.2 ms / 9,502 ops/s | 1,746.1 ms / 572.7 ops/s | 16.6x |
+| create p50 / p95 | 102 / 153 us | 1,705 / 1,915 us | — |
+| 100 MiB writes wall | 190.0 ms / 526.4 MiB/s | 1,150.9 ms / 86.9 MiB/s | 6.1x |
+| write p50 / p95 | 649 / 754 us | 10,022 / 10,859 us | — |
+| 1,000 reads wall | 4.3 ms / 232,368 ops/s | 335.4 ms / 2,982 ops/s | 78.0x |
+| read p50 / p95 | 4 / 4 us | 321 / 389 us | — |
 | backend bytes written | 111,581,685 | 116,091,480 | +4.0% |
 | verify --full | ok | ok | — |
 

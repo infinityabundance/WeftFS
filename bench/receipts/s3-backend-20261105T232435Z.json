@@ -1,0 +1,153 @@
+{
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftfs": "c2a8d53103464b464bdf2ffbe100bc90fdf45f38",
+    "s3_bucket": "weft-s3-court-20261105t232435z",
+    "s3_container_image": "debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+    "s3_container_image_id": "sha256:43f84a0b210f98845ef003912981774c95efe439eaa4b1cb62cf803fd46fc82a",
+    "s3_endpoint": "http://weft-s3-minio-213139:9000",
+    "s3_region": "us-east-1",
+    "s3_server": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+    "s3_server_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
+    "s3_server_version": "RELEASE.2025-04-22T22-12-26Z"
+  },
+  "generated_utc": "20261105T232515Z",
+  "kind": "local-vs-s3-storage-backend",
+  "label": "Single-node S3-compatible endpoint on localhost inside the OOM-protected Docker court. Not a cloud, multi-node, fleet, device-cache, power-loss, RPO/RTO, or production claim.",
+  "local": {
+    "backend": "local",
+    "backend_stats": {
+      "bytes_read": 177000,
+      "bytes_written": 111581685,
+      "range_reads": 0,
+      "reads": 2000,
+      "writes": 7009
+    },
+    "creates": {
+      "latency": {
+        "max_us": 1600.0,
+        "p50_us": 102.0,
+        "p95_us": 153.0,
+        "samples": 1000
+      },
+      "ops": 1000,
+      "ops_per_sec": 9502.089827873158,
+      "payload_bytes": 25000,
+      "wall_us": 105240
+    },
+    "diagnostics": [],
+    "generation": 1101,
+    "head": "8e47145e1a09c3bfabd99566b50a8c1ccb074fb999e214e9c6b236228d3f35e0",
+    "init_us": 109,
+    "physical_bytes": 107071989,
+    "reads": {
+      "bytes": 18000,
+      "latency": {
+        "max_us": 19.0,
+        "p50_us": 4.0,
+        "p95_us": 4.0,
+        "samples": 1000
+      },
+      "ops": 1000,
+      "ops_per_sec": 232367.92207309365,
+      "wall_us": 4303
+    },
+    "verify_ok": true,
+    "verify_wall_us": 148473,
+    "writes": {
+      "bytes": 104857600,
+      "latency": {
+        "max_us": 2594.0,
+        "p50_us": 649.0,
+        "p95_us": 754.0,
+        "samples": 100
+      },
+      "mib": 100,
+      "mib_per_sec": 526.430836777029,
+      "ops": 100,
+      "wall_us": 189958
+    }
+  },
+  "notes": [
+    "Both backends received the same seeded operations and fixed clock, so an equal head demonstrates identical logical content.",
+    "`s3.backend_stats` counts HTTP-backed backend reads and writes; S3 provides no physical byte counter, so `physical_bytes` is 0 there and the requested payload bytes are reported per phase.",
+    "MinIO runs as one container on a localhost bridge network with a tmpfs data directory. Latency includes loopback HTTP and SigV4 signing.",
+    "No fsync, media, power-loss, cloud, multi-node, or fleet claim is made."
+  ],
+  "s3": {
+    "backend": "s3",
+    "backend_stats": {
+      "bytes_read": 177000,
+      "bytes_written": 116091480,
+      "range_reads": 0,
+      "reads": 2000,
+      "writes": 7012
+    },
+    "creates": {
+      "latency": {
+        "max_us": 7476.0,
+        "p50_us": 1705.0,
+        "p95_us": 1915.0,
+        "samples": 1000
+      },
+      "ops": 1000,
+      "ops_per_sec": 572.7033915060736,
+      "payload_bytes": 25000,
+      "wall_us": 1746104
+    },
+    "diagnostics": [
+      "S3 conditional writes observed 2 lost/retried race(s)"
+    ],
+    "generation": 1101,
+    "head": "8e47145e1a09c3bfabd99566b50a8c1ccb074fb999e214e9c6b236228d3f35e0",
+    "init_us": 5028,
+    "physical_bytes": 0,
+    "reads": {
+      "bytes": 18000,
+      "latency": {
+        "max_us": 2372.0,
+        "p50_us": 321.0,
+        "p95_us": 389.0,
+        "samples": 1000
+      },
+      "ops": 1000,
+      "ops_per_sec": 2981.8360591723062,
+      "wall_us": 335363
+    },
+    "verify_ok": true,
+    "verify_wall_us": 3392046,
+    "writes": {
+      "bytes": 104857600,
+      "latency": {
+        "max_us": 16614.0,
+        "p50_us": 10022.0,
+        "p95_us": 10859.0,
+        "samples": 100
+      },
+      "mib": 100,
+      "mib_per_sec": 86.88806822123722,
+      "ops": 100,
+      "wall_us": 1150906
+    }
+  },
+  "same_generation": true,
+  "same_head": true,
+  "schema": "weft-s3-backend-bench-v1",
+  "workload": {
+    "checkpoint_interval": 256,
+    "chunk_size": 65536,
+    "create_payload_bytes": 25,
+    "creates": 1000,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "reads": 1000,
+    "write_files": 100,
+    "write_mib": 100
+  }
+}
