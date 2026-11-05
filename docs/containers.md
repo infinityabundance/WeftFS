@@ -20,23 +20,23 @@ image on a `v*` tag or manual dispatch.
 | `ghcr.io/infinityabundance/weftfs` | `weftfs` (Rust) | store + FUSE CLI |
 | `ghcr.io/infinityabundance/weftfs-go` | `weftfs` (Go) | store + FUSE CLI |
 
-Tags: `v0.4.0` and `latest` (release workflow). Images are built from the program
+Tags: `v0.5.0` and `latest` (release workflow). Images are built from the program
 home commit and the pinned submodule commits.
 
 ## Pull and run
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftfs-go:v0.4.0
-docker run --rm ghcr.io/infinityabundance/weftcodec:v0.4.0 --help
+docker pull ghcr.io/infinityabundance/weftfs-go:v0.5.0
+docker run --rm ghcr.io/infinityabundance/weftcodec:v0.5.0 --help
 
 # Store operations need a writable volume:
 docker run --rm -v "$PWD/store:/store" \
-  ghcr.io/infinityabundance/weftfs:v0.4.0 --store /store init
+  ghcr.io/infinityabundance/weftfs:v0.5.0 --store /store init
 
 # Mounting a FUSE view requires the device and capability:
 docker run --rm -it --device /dev/fuse --cap-add SYS_ADMIN \
   -v "$PWD/store:/store" -v "$PWD/mnt:/mnt" \
-  ghcr.io/infinityabundance/weftfs:v0.4.0 mount --store /store --mountpoint /mnt --foreground
+  ghcr.io/infinityabundance/weftfs:v0.5.0 mount --store /store --mountpoint /mnt --foreground
 ```
 
 Use `--cap-add SYS_ADMIN` only for mounts; codec/store-only operations do not
@@ -58,13 +58,13 @@ the workflow attempts to set visibility to public.
 The same release publishes the libraries on crates.io:
 
 ```toml
-weftcodec = "0.4.0"
-weftfs = "0.4.0"
+weftcodec = "0.5.0"
+weftfs = "0.5.0"
 ```
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus
 FUSE frontend (the `fuse` feature enables mounting). See
-`docs/RELEASE-v0.4.0.md`. Image tags and crate versions carry no extra claim
+`docs/RELEASE-v0.5.0.md`. Image tags and crate versions carry no extra claim
 beyond the `bench/receipts/verify-*.json` for the same source revision.
 
 Publishing is repeatable and runs inside the same hard-limited rust court:
