@@ -563,6 +563,16 @@ impl S3Backend {
         bytes: &[u8],
         if_match: Option<&str>,
     ) -> Result<Option<String>> {
+        self.put_conditional_inner(key, bytes, if_match, true)
+    }
+
+    fn put_conditional_inner(
+        &self,
+        key: &Key,
+        bytes: &[u8],
+        if_match: Option<&str>,
+        count_conflict: bool,
+    ) -> Result<Option<String>> {
         if bytes.len() as u64 > MAX_OBJECT_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "object is {} bytes, above the backend's {MAX_OBJECT_BYTES}-byte bound",
@@ -590,9 +600,11 @@ impl S3Backend {
                 Ok(Some(response.etag.unwrap_or_default()))
             }
             412 => {
-                self.stats
-                    .conditional_conflicts
-                    .fetch_add(1, Ordering::Relaxed);
+                if count_conflict {
+                    self.stats
+                        .conditional_conflicts
+                        .fetch_add(1, Ordering::Relaxed);
+                }
                 Ok(None)
             }
             403 => Err(Error::unauthorized(format!(
@@ -670,7 +682,10 @@ impl S3Backend {
             cleanup();
             return Err(Error::io("S3 conditional probe: unexpected existing key"));
         }
-        if self.put_conditional(&key, b"probe-two", None)?.is_some() {
+        if self
+            .put_conditional_inner(&key, b"probe-two", None, false)?
+            .is_some()
+        {
             cleanup();
             return Err(Error::unsupported_version(
                 "S3-compatible endpoint ignored If-None-Match: *; refusing a writable store \
@@ -702,7 +717,7 @@ impl S3Backend {
             ));
         }
         if self
-            .put_conditional(&key, b"probe-four", Some(&etag))?
+            .put_conditional_inner(&key, b"probe-four", Some(&etag), false)?
             .is_some()
         {
             cleanup();
