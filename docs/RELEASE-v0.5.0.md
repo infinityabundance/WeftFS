@@ -104,8 +104,8 @@ Mode 11 detail (`bench/receipts/weight-delta-20261104T214337Z.json`): the two
 planes are 265,022 + 267,643 bytes from 2,097,152 raw bytes each; the decoded
 words and logical root `279bc0801a8f3a012afd97f2e002fb48d0f998636211246937b83032b6ea1207`
 match the original. The verified ratio on this pair is 7.87× versus independent
-zstd-3. A 5.81× figure was requested for this mode; no receipt in the repository
-contains it, so it is not claimed.
+zstd-3. No receipt in this repository supports a 5.81× figure for this mode, so
+that number is not claimed.
 
 Mode 12/13 detail (`bench/receipts/kv-activation-20261104T220008Z.json`): the
 KV frame is 16,791,311 bytes and the activation frame 67,164,992 bytes for
