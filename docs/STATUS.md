@@ -1064,6 +1064,47 @@ and there is no refinement proof. See `verification/README.md` for the exact
 mapping, assumptions, and remaining gaps (checkpoints, GC, capabilities,
 multi-writer, physical rig).
 
+### E — Independent Python reader and PyTorch dataset (implemented 2026-11-04)
+
+`python/` ships `weftcodec` 0.5.0 (Apache-2.0) as a **third independent
+implementation** with no Rust or Go extension modules. It provides canonical
+WCB encode/decode, WFT1 header/table parsing with CRC32C and strict structural
+validation, domain-separated BLAKE3 content roots, and exact decoders for RAW,
+ZSTD, REFERENCE, DELTA, DICTIONARY, STRUCTURED, TENSOR, TOKEN_SEQUENCE, and
+QUANTIZED_TENSOR. Modes 9–14 (`FLOAT_TENSOR`, `TENSOR_SHARDED`, `WEIGHT_DELTA`,
+`KV_CACHE`, `ACTIVATION_STREAM`, `SEMANTIC_DELTA`) raise the typed
+`UnsupportedMode`; there is no approximate decode and no opaque-body fallback.
+`weftcodec.torch.WeftMapDataset` walks a mounted tree in sorted POSIX-relative
+order and returns `(path, bytes)` or, when `dtype` is supplied,
+`torch.frombuffer` tensors; `torch` is an optional extra and is never imported
+at module import time.
+
+**Court and evidence.** New minimal image `weft/python-court:1`
+(`docker/python-court.Dockerfile`, from `python:3.12-slim`; image id
+`sha256:67d4cf7ba67c9c2e3c6229e271b1b012a61e909852f422da0852bfaa755797e0`),
+wired as the `python` mode of `scripts/docker-court.sh` with the same hard
+limits as every other court (3 GiB memory/swap, 1024 pids, 4 CPUs, 1 GiB
+`/tmp`, `no-new-privileges`, `cap-drop=ALL`). Receipt
+`bench/receipts/python-bindings-20261105T000147Z.json` with its raw `.log`
+(WeftFS `1c4b249`, WeftCodec `f1d32e3`, kernel `7.3.1-1-cachyos`).
+
+**Counts (from the receipt, not estimated).** 111 frame vectors discovered; 61
+asserted, 61 passed, 0 failed. The 50 skips are explicit and labelled: 7
+historical `superseded_by` vectors and 43 frames in unimplemented modes 9–14
+(13 valid, 30 reject; the Python reader returns `UnsupportedMode` where Rust
+returns the mode-specific class). All asserted valid vectors decode
+byte-exactly and match the recorded plaintext hash, content hash, mode, flags,
+features, and chunk count; all asserted reject vectors raise the recorded
+class. Cross-language: 11/11 cases pass — Rust CLI encodes RAW, ZSTD, chunked
+RAW/ZSTD, REFERENCE, DELTA, DICTIONARY, TENSOR, TOKENS, QUANTIZED_TENSOR, and
+STRUCTURED, and the Python reader verifies and decodes each byte-exactly, with
+`inspect --json` fields matching Rust's. Full suite 166 tests: 115 passed, 51
+skipped (50 vector skips plus the PyTorch module, absent by design), 0 failed.
+
+**Artifact.** `python/dist/weftcodec-0.5.0-py3-none-any.whl`, 27,070 bytes,
+sha256 `cc0afe3b9b68490c5ad29a9fe54b830bf6266fd704e9ad962a674cdb4a2781f1`.
+It is **not published to PyPI** (no API token); it is a release artifact.
+
 ## 3. Evidence discipline
 
 - Every build/test ran through `scripts/docker-court.sh` in a minimal official
