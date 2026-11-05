@@ -487,11 +487,7 @@ impl S3Backend {
                 let content_length = response
                     .header("content-length")
                     .and_then(|value| value.parse::<u64>().ok());
-                let mut bytes = Vec::new();
-                response
-                    .into_reader()
-                    .read_to_end(&mut bytes)
-                    .map_err(|err| Error::io(format!("S3 response read: {err}")))?;
+                let bytes = read_bounded(response, content_length, key_path)?;
                 return Ok(HttpResponse {
                     status,
                     etag,
@@ -511,11 +507,7 @@ impl S3Backend {
         let content_length = response
             .header("content-length")
             .and_then(|value| value.parse::<u64>().ok());
-        let mut bytes = Vec::new();
-        response
-            .into_reader()
-            .read_to_end(&mut bytes)
-            .map_err(|err| Error::io(format!("S3 response read: {err}")))?;
+        let bytes = read_bounded(response, content_length, key_path)?;
         Ok(HttpResponse {
             status,
             etag,
@@ -1353,6 +1345,32 @@ fn now_ns() -> i64 {
 fn unique_counter() -> u64 {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     COUNTER.fetch_add(1, Ordering::Relaxed)
+}
+
+fn read_bounded(
+    response: ureq::Response,
+    content_length: Option<u64>,
+    what: &str,
+) -> Result<Vec<u8>> {
+    if let Some(len) = content_length {
+        if len > MAX_OBJECT_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "S3 object `{what}` is {len} bytes, above the backend's {MAX_OBJECT_BYTES}-byte bound"
+            )));
+        }
+    }
+    let mut bytes = Vec::new();
+    response
+        .into_reader()
+        .take(MAX_OBJECT_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|err| Error::io(format!("S3 response read: {err}")))?;
+    if bytes.len() as u64 > MAX_OBJECT_BYTES {
+        return Err(Error::limit_exceeded(format!(
+            "S3 object `{what}` exceeded the backend's {MAX_OBJECT_BYTES}-byte bound"
+        )));
+    }
+    Ok(bytes)
 }
 
 fn response_body(bytes: &[u8]) -> String {
