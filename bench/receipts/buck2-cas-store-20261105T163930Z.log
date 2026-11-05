@@ -1,0 +1,19 @@
+kind: buck2-cas-store-bench
+timestamp_utc: 20261105T163930Z
+court: bench
+revisions:
+  WeftFS: d175fe7034d1a04d0b7ae444e44a1c3e260e478f
+  WeftCodec: baeb0696a59a891cb02c2bc755755cdd765d24c7
+  WeftCodec-Go: 8c5b07ba959cacee2ee77fbe41395362c9a27b57
+  WeftFS-Go: 2e2575b0573e2b0a7e33207fd77826d6cc074499
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.1-1-cachyos
+image: weft/bench-court:1 sha256:e80c438516a509c251d6f3ca4848363a86d12a92287a1d9284117acd9cc0d85a
+== build rust oracle ==
+== build adapter ==
+== benchmark ==
+buck2-cas bench: 1000 small + 100 large actions; head=9704baf2b2d8e2836447670123525f66aec74f98d1f9fdf09b14ce481d446f8f generation=6612; receipt /work/bench/receipts/buck2-cas-store-20261105T163930Z.json
+== mount a 1 MiB artifact ==
+== CLI fetch (process boundary) ==
+== merge mount evidence ==
+mount read: {'count': 5, 'min_ns': 1193410, 'median_ns': 1235899, 'p95_ns': 1296823, 'max_ns': 1296823, 'mean_ns': 1239017, 'runs_ns': [1193410, 1206855, 1235899, 1262098, 1296823]}

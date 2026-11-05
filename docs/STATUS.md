@@ -16,7 +16,13 @@ retained as history. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
-as history. The
+as history. The P6 store-backed Buck2 CAS court is separate from that full
+`verify-all` receipt: it passes 41/41 assertions at WeftFS `d175fe7` and is
+recorded in `bench/receipts/buck2-cas-store-correctness-20261105T163919Z.json`,
+with the benchmark in
+`bench/receipts/buck2-cas-store-20261105T163930Z.json` and analysis in
+`bench/RESULTS-buck2-cas-store.md`.
+The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
 The P7 benchmark receipts are `bench/receipts/bench-codec-20261103T175847Z.json`,
@@ -50,9 +56,11 @@ quantized byte-identical in both directions). The current F7 receipt is
 it (whole-pair-aware planner); analysis, losses, and caveats are in
 `bench/RESULTS-ai-v1.md`. The historical frame-smallest receipt
 `ai-corpus-20261103T220113Z.json` is retained. F8 receipts are
-`bench/receipts/buck2-cas-20261104T022511Z.json` (15/15 prototype assertions)
-and `bench/receipts/agent-memory-20261104T022512Z.json` (7/7 simulated-timestamp
-months-later replay). D2 authenticated capability grants are implemented and
+`bench/receipts/buck2-cas-store-correctness-20261105T163919Z.json` (41/41,
+store-backed CAS with mount and cross-language) and
+`bench/receipts/agent-memory-20261104T022512Z.json` (7/7 simulated-timestamp
+months-later replay); the earlier prototype receipt
+`bench/receipts/buck2-cas-20261104T022511Z.json` (15/15) is retained. D2 authenticated capability grants are implemented and
 released in v0.6.0: Ed25519 `weft.capability.envelope.v1`, offline verification
 against an explicit revocation set, enforcement layered on POSIX and explicit
 capabilities, a two-tenant isolation court, and the envelope benchmark receipt
@@ -298,18 +306,34 @@ repositories).
   and cross-language tested but is not part of the ai-v1 corpus. No superiority
   claim.
 
-### F8 — Hooks: Buck2 CAS prototype, agent memory, generated types (implemented)
+### F8 — Hooks: store-backed Buck2 CAS, agent memory, generated types (implemented)
 
-- **D1 Buck2 adapter (prototype, not a plugin):** `adapters/buck2/` implements a
-  local CAS plus Buck2-compatible `sha256:<hex>` blob layout. The action key is
-  a real `weft.context-root.v1` record whose pinned snapshot is the BLAKE3
-  digest of the typed action context (action type + toolchain + sorted inputs).
-  `store`, `fetch`, `materialize`, `query`, and `verify` exist; the same key
-  returns identical bytes, different toolchain/input misses, query by action
-  type/toolchain/input works, and same-key/different-bytes fails closed. Go
-  tests + `go vet` and a 15/15 assertion demo run in the Go court; receipt
-  `bench/receipts/buck2-cas-20261104T022511Z.json`. No REAPI gRPC, no Buck2
-  plugin ABI, no performance claim.
+- **D1 Buck2 adapter (store-backed, not a plugin):** `adapters/buck2/` is now a
+  CAS on the WeftFS store, not a private directory. Every blob is an ordinary
+  WeftFS file whose `ContentId` is `H("weft/chunk/v1", bytes)`; the action
+  record is a canonical WCB file (`weft.buck2.action-record.v1`); `cas_action`
+  (record→output) and `cas_output_of` (output→record) are typed edges, so
+  `by:action=<key>` is a one-hop WeftQL selector. `ActionKey =
+  H("weft/buck2/action/v1", WCB({action_type, toolchain, sorted input
+  ContentIds, canonical params}))` — input paths are metadata, not key material.
+  Verbs: `store --key-file --blob`, `fetch --key --out`, `query --by
+  action=<key>`, `verify --key --blob`, `context`, `resolve`, `delete`, `gc`.
+  Same key + identical bytes is an idempotent hit; same key + different bytes
+  fails closed with `Conflict` before any store mutation. The correctness court
+  runs in the FUSE court and passes **41/41** assertions, including:
+  `mount --context by:action=<key>` reads the artifact byte-exactly; a flipped
+  manifest byte is detected by `verify`/`fetch`; GC collects an unreferenced
+  action while a named snapshot + Context Root keep another output exact; the
+  Rust CLI verifies/cats/stats/resolves a Go-written store; the Go adapter
+  fetch/verify/query reads a store written entirely by the Rust CLI. Go tests
+  are 7/7 in the FUSE court and 5/7 pass with 2 honest skips in the Go-only
+  court (no Rust oracle). Receipts:
+  `bench/receipts/buck2-cas-store-correctness-20261105T163919Z.json` (41/41)
+  and `bench/receipts/buck2-cas-store-20261105T163930Z.json` (bench); analysis
+  `bench/RESULTS-buck2-cas-store.md`. The historical prototype receipt
+  `bench/receipts/buck2-cas-20261104T022511Z.json` (15/15) is retained but
+  superseded. `buck2` itself was **absent** in the court; no Buck2 run, no
+  plugin/worker ABI, no REAPI gRPC.
 - **D2 agent long-term memory:** `scripts/demo-agent-memory.sh` creates
   prompt/model/tool/dataset/output objects and five typed edges, three Context
   Roots (task/model/time), a January snapshot, an exported bundle, then
@@ -1300,10 +1324,12 @@ It is **not published to PyPI** (no API token); it is a release artifact.
     are fixture nanoseconds and the replay is a point-in-time export; no real
     months of wall-clock retention, no background aging, and no physical media
     aging were tested.
-13. **The Buck2 adapter is a prototype.** It is a local CAS service plus a
-    Buck2-compatible key/digest mapping, not a Buck2 plugin, worker, or REAPI
-    gRPC backend. It does not execute actions, fetch remotely, or integrate with
-    Buck2's scheduler.
+13. **The Buck2 adapter is a local adapter, not an integration.** It is a
+    store-backed CAS plus canonical action keys. It is not a Buck2 plugin,
+    worker, or REAPI gRPC backend. It does not execute actions, fetch remotely,
+    or integrate with Buck2's scheduler. The generated Context Root pins a
+    named snapshot; a Context Root whose commit is not a named snapshot is not
+    itself a v1 GC root.
 13. **Replay bundle scope.** The bundle carries one store and its Context
     Roots; it does not yet carry a filtered/partitioned subset, remote fetch,
     or a signature. `tar` and `zstd` are required tools and a missing tool is a
@@ -1369,9 +1395,9 @@ It is **not published to PyPI** (no API token); it is a release artifact.
    superiority claim is made.
 9. **Native async API and object-store backend.** Prerequisite: none; not
    started, and no claim is made.
-10. **Buck2 plugin/REAPI integration.** Prerequisite: the local CAS prototype
-    (`bench/receipts/buck2-cas-20261104T022511Z.json`, 15/15), which is not a
-    plugin, worker, or REAPI gRPC backend.
+10. **Buck2 plugin/REAPI integration.** Prerequisite: the store-backed local
+    CAS (`bench/receipts/buck2-cas-store-correctness-20261105T163919Z.json`,
+    41/41), which is not a plugin, worker, or REAPI gRPC backend.
 11. **Real-time aging.** Prerequisite: the simulated-timestamp agent-memory demo
     (`bench/receipts/agent-memory-20261104T022512Z.json`, 7/7). Months of
     wall-clock retention were not measured.
