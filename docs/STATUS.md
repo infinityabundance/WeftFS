@@ -1702,12 +1702,12 @@ Implemented in both stores (`spec/WEFT-QUOTA.md`, `docs/quota-branching.md`).
   and advances usage. The reverse direction does the same with the Rust CLI
   reading and enforcing the Go-written record.
 - **Bench** (`bench/RESULTS-quota-branch.md`, receipt
-  `bench/receipts/quota-branch-20261105T070251Z.json`): 1,000 commits p50
-  11.33 ms without budgets and 13.74 ms with budgets (+2.41 ms, +21.3 %; the
-  delta is the durable usage record); branch creation p50 9.05 ms over 50;
-  merge of 1,000 disjoint paths 258.5 ms, 1,000 objects/entries, full verify
+  `bench/receipts/quota-branch-20261105T071244Z.json`): 1,000 commits p50
+  11.35 ms without budgets and 13.75 ms with budgets (+2.41 ms, +21.2 %; the
+  delta is the durable usage record); branch creation p50 9.11 ms over 50;
+  merge of 1,000 disjoint paths 255.6 ms, 1,000 objects/entries, full verify
   ok.
-- **Demo** (receipt `bench/receipts/branching-20261105T070415Z.json`, 7/7):
+- **Demo** (receipt `bench/receipts/branching-20261105T071457Z.json`, 7/7):
   10,000 versions, 21 snapshots, branch from `s5000`
   (`72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d`) into
   `by:task=agent-43`, five later writes, then `s5000`, `s10000`

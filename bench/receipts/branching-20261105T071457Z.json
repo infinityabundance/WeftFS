@@ -1,0 +1,422 @@
+{
+  "schema": "weftfs.branching.receipt/1",
+  "generated_at": "2026-11-05T07:14:57Z",
+  "label": "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; not a fleet claim",
+  "run": {
+    "started_at": "2026-11-05T07:14:57Z",
+    "finished_at": "2026-11-05T07:18:44Z",
+    "duration_ms": 227000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:e74926322e19ab08833ddce3db2086d8b6be3434880ba969dd879266d7f7cba8",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "metrics": {
+    "branch_context_id": "0c3918b7fbfeb356e168fbb0e7adf4875781efe3ef87a3cd58f2a81e324fe575",
+    "branch_context_snapshot": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "daemons_surviving": "0",
+    "descendant_commit": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+    "descendant_snapshot": "s10000",
+    "fork_version": "5000",
+    "ingest_ms": "220493",
+    "mount_ms": "1354",
+    "mounts": "4",
+    "snapshot_every": "500",
+    "snapshots_created": "21",
+    "source_commit": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+    "source_snapshot": "s5000",
+    "versions": "10000",
+    "versions_completed": "10000"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "dd1f4334c319715c8503d7c74a9ae592a43f45d3"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "8372e6fa59ef1e6eca1507c9b8f3af386060fea0"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "eeb0d51e15d4a32b0e4064e57c2b1b613621e35f"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "b7400ecdba7e6776ff350c7560c035bbca35aa83"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "versions",
+      "title": "10000 versions with a snapshot every 500",
+      "status": "pass",
+      "notes": "versions=10000 snapshots=21 ingest_ms=220493",
+      "commands": [
+        "weftfs create /history.txt --attr task=agent-43 --seed history-v1",
+        "weftfs write /history.txt (versions 2..10000)",
+        "weftfs snapshot create s<n> for n in 1,500,..,10000",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767225601000000000 create /history.txt --text branch-test version-1\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n --attr task=agent-43 --seed history-v1",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767225601000000000 snapshot create s1"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-v1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-s1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "every version was written",
+          "expected": "10000",
+          "actual": "10000",
+          "pass": true
+        },
+        {
+          "name": "ingest failed at version (0 = none)",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "snapshot-identities",
+      "title": "Record the source and descendant snapshot commits",
+      "status": "pass",
+      "notes": "source=72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235600000000000 snapshot list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235600000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "snap-list-before exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "s5000 and s10000 are distinct commits",
+          "expected": "different from da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "verify-full exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "branch",
+      "title": "Branch s5000 and persist a Context Root at the fork commit",
+      "status": "pass",
+      "notes": "context=0c3918b7fbfeb356e168fbb0e7adf4875781efe3ef87a3cd58f2a81e324fe575",
+      "commands": [
+        "weftfs snapshot branch s5000 by:task=agent-43",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235600000000000 snapshot branch s5000 by:task=agent-43",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235600000000000 snapshot list",
+        "weftfs context create --name fork-5000 --selector 'select attrs.task == \"agent-43\"' --snapshot s5000",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235600000000000 context create --name fork-5000 --selector select attrs.task == \"agent-43\" --snapshot s5000",
+        "weftfs context branch fork-5000 by:task=agent-43 --task agent-43",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235600000000000 context branch fork-5000 by:task=agent-43 --task agent-43"
+      ],
+      "assertions": [
+        {
+          "name": "branch-ref exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "the branch names the source commit",
+          "expected": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "snap-list-branched exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "the snapshot branch is present",
+          "expected": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "context-source exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "context-branch exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "the Context Root resolves against the fork commit",
+          "expected": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "lineage names the source context",
+          "expected": "fork-5000",
+          "actual": "fork-5000",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "write-after-branch",
+      "title": "Five new versions after the branch",
+      "status": "pass",
+      "notes": "live version=10005",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235601000000000 write /history.txt --text branch-test version-10001\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235602000000000 write /history.txt --text branch-test version-10002\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235603000000000 write /history.txt --text branch-test version-10003\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235604000000000 write /history.txt --text branch-test version-10004\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235605000000000 write /history.txt --text branch-test version-10005\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235605000000000 cat /history.txt"
+      ],
+      "assertions": [
+        {
+          "name": "write-after-10001 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-after-10002 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-after-10003 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-after-10004 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "write-after-10005 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "cat-live exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "the live head sees the last write",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "source-unchanged",
+      "title": "Source and descendant commits are byte-identical after the writes",
+      "status": "pass",
+      "notes": "commits unchanged",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --json --fixed-timestamp-ns 1767235605000000000 snapshot list",
+        "weftfs verify --full (after writes)",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z --fixed-timestamp-ns 1767235605000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "snap-list-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "s5000 did not move",
+          "expected": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "s10000 did not move",
+          "expected": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+          "actual": "da172164095e35da79952b4a22b52130cc47a50a65b10367ec004088036a2762",
+          "pass": true
+        },
+        {
+          "name": "the branch ref did not move",
+          "expected": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "actual": "72ace03186863e95c9fe2c7f3ae166c8d5cfe2eed9a118cea6a34f5e0443cc7d",
+          "pass": true
+        },
+        {
+          "name": "verify-after exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "mounts",
+      "title": "Mount s5000, s10000, and the branch Context Root",
+      "status": "pass",
+      "notes": "four mounts, immutable fork",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z -> /mnt/weft-fuse/p5a-7-20261105T071457Z-src --snapshot s5000",
+        "go mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z -> /mnt/weft-fuse/p5a-7-20261105T071457Z-last --snapshot s10000",
+        "go mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z -> /mnt/weft-fuse/p5a-7-20261105T071457Z-branch --snapshot by:task=agent-43",
+        "rust mount /work/.docker-cache/f3-demos/stores/branching-7-20261105T071457Z -> /mnt/weft-fuse/p5a-7-20261105T071457Z-ctx --context by:task=agent-43",
+        "cat <s5000>/history.txt",
+        "cat <s10000>/history.txt",
+        "cat <snapshot-ref by:task=agent-43>/history.txt",
+        "cat <context by:task=agent-43>/history.txt--bf0ad44e"
+      ],
+      "assertions": [
+        {
+          "name": "all four mounts appeared",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "source snapshot bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "descendant snapshot bytes",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "snapshot branch bytes equal the source",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "the branch Context Root lists exactly one object",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "branch Context Root bytes equal the fork",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "src-read",
+          "content": "branch-test version-5000\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "branch-read",
+          "content": "branch-test version-5000\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        },
+        {
+          "label": "context-read",
+          "content": "branch-test version-5000\npadding-0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "unmount",
+      "title": "Unmount every branch mount and prove no daemon survives",
+      "status": "pass",
+      "notes": "unmounted=4 survivors=0",
+      "commands": [],
+      "assertions": [
+        {
+          "name": "clean unmounts",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "daemons surviving unmount",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}
