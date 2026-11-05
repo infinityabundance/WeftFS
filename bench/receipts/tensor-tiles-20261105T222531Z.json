@@ -1,0 +1,295 @@
+{
+  "bench": {
+    "comparisons": [
+      {
+        "byte_reduction": 0.8704557014988195,
+        "mode10_p50_ms": 130.13099,
+        "mode10_store_bytes_read": 7213077,
+        "mode10_units_touched": 1,
+        "mode15_p50_ms": 12.051846,
+        "mode15_store_bytes_read": 934413,
+        "mode15_units_touched": 76,
+        "region": "100_rows",
+        "speedup": 10.797598143886008
+      },
+      {
+        "byte_reduction": 0.9609298500487379,
+        "mode10_p50_ms": 129.978796,
+        "mode10_store_bytes_read": 7213077,
+        "mode10_units_touched": 1,
+        "mode15_p50_ms": 3.218021,
+        "mode15_store_bytes_read": 281816,
+        "mode15_units_touched": 19,
+        "region": "1_row",
+        "speedup": 40.39090981693407
+      }
+    ],
+    "p50_definition": "lower median of the sorted per-rep durations (index len/2)",
+    "reps": 10,
+    "rows": [
+      {
+        "output_bytes": 972944,
+        "p50_ms": 130.13099,
+        "p50_ns": 130130990,
+        "region": "100_rows",
+        "region_extent": [
+          100,
+          4864
+        ],
+        "samples_ns": [
+          129166754,
+          130055230,
+          130892952,
+          131484458,
+          129984268,
+          131042078,
+          130902980,
+          130130990,
+          129341707,
+          129637675
+        ],
+        "shards_read": 1,
+        "store_bytes_read": 7213077,
+        "store_reads": 5,
+        "strategy": "mode-10",
+        "units_touched": 1
+      },
+      {
+        "output_bytes": 972944,
+        "p50_ms": 12.051846,
+        "p50_ns": 12051846,
+        "region": "100_rows",
+        "region_extent": [
+          100,
+          4864
+        ],
+        "samples_ns": [
+          12031689,
+          12138427,
+          12128929,
+          12032481,
+          12045034,
+          12051846,
+          12027912,
+          12131994,
+          12055783,
+          12024716
+        ],
+        "shards_read": 1,
+        "store_bytes_read": 934413,
+        "store_reads": 158,
+        "strategy": "mode-15",
+        "units_touched": 76
+      },
+      {
+        "output_bytes": 9864,
+        "p50_ms": 129.978796,
+        "p50_ns": 129978796,
+        "region": "1_row",
+        "region_extent": [
+          1,
+          4864
+        ],
+        "samples_ns": [
+          130061721,
+          129565260,
+          130017849,
+          132229595,
+          128603297,
+          129978796,
+          129674742,
+          130450721,
+          128948577,
+          129628908
+        ],
+        "shards_read": 1,
+        "store_bytes_read": 7213077,
+        "store_reads": 5,
+        "strategy": "mode-10",
+        "units_touched": 1
+      },
+      {
+        "output_bytes": 9864,
+        "p50_ms": 3.218021,
+        "p50_ns": 3218021,
+        "region": "1_row",
+        "region_extent": [
+          1,
+          4864
+        ],
+        "samples_ns": [
+          3306416,
+          3184830,
+          3183007,
+          3177757,
+          3171736,
+          3218021,
+          3378799,
+          3394278,
+          3177136,
+          3228972
+        ],
+        "shards_read": 1,
+        "store_bytes_read": 281816,
+        "store_reads": 44,
+        "strategy": "mode-15",
+        "units_touched": 19
+      }
+    ],
+    "tile_shape": [
+      32,
+      256
+    ]
+  },
+  "checkpoints": {
+    "mode10": {
+      "element_bytes": 8716288,
+      "shard_objects": 1,
+      "shard_strategy": "tensor-sharded"
+    },
+    "mode15": {
+      "element_bytes": 8716288,
+      "shard_objects": 1,
+      "shard_strategy": "tensor-tiled",
+      "tile_shape": [
+        32,
+        256
+      ]
+    }
+  },
+  "checks": [
+    {
+      "check": "slices_are_exact",
+      "detail": "mode-10 and mode-15 100-row restore bytes are identical",
+      "ok": true
+    },
+    {
+      "check": "mode15_decodes_fewer_bytes",
+      "detail": "both regions",
+      "ok": true
+    },
+    {
+      "check": "mode15_touches_only_intersecting_tiles",
+      "detail": "tile counts are reported per row",
+      "ok": true
+    },
+    {
+      "check": "mount_loader_ok",
+      "detail": "unmodified safetensors library read the restored container through the mount",
+      "ok": true
+    },
+    {
+      "check": "restore_report_present",
+      "detail": "restored_tensors=1",
+      "ok": true
+    }
+  ],
+  "corpus": {
+    "dtype": "bf16",
+    "logical_tensor_bytes": 8716288,
+    "shape": [
+      896,
+      4864
+    ],
+    "source": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "tensor": "model.layers.0.mlp.down_proj.weight"
+  },
+  "created_utc": "20261105T222531Z",
+  "environment": {
+    "court": "fuse",
+    "docker_server": "29.9.2",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157",
+    "kernel": "7.3.1-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "nproc": "2048",
+      "pids": "1024",
+      "tmpfs_bench": "1g",
+      "tmpfs_work": "512m"
+    }
+  },
+  "label": "single-host Docker fuse court, one real public Qwen2.5-0.5B BF16 tensor, in-process store API plus a FUSE mount read by the unmodified safetensors library; not a fleet, multi-host, or remote-store claim",
+  "mount_loader": {
+    "all_tensors_match_source": true,
+    "all_tensors_materialised": true,
+    "daemon_peak_rss_kib": 7376,
+    "library_keys": [
+      "model.layers.0.mlp.down_proj.weight"
+    ],
+    "ml_dtypes_version": "0.6.0",
+    "mounted_sha256": "67d33e5b11a2f7682329fd7b132023116a26d7475a1e4e72f379a9524fc0a957",
+    "numpy_version": "2.4.6",
+    "ok": true,
+    "safetensors_version": "0.8.0",
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "tensor_count": 1,
+    "tensors": [
+      {
+        "bytes": 8716288,
+        "dtype": "BF16",
+        "matches_source": true,
+        "numpy_materialised": true,
+        "shape": [
+          896,
+          4864
+        ],
+        "source_tensor_sha256": "db708f9a857fe3b09bdd61078acbcb6d5d4b58987364cdcfe8339d7eefd572c6",
+        "tensor": "model.layers.0.mlp.down_proj.weight",
+        "tensor_sha256": "db708f9a857fe3b09bdd61078acbcb6d5d4b58987364cdcfe8339d7eefd572c6"
+      }
+    ]
+  },
+  "passed": 5,
+  "restore": {
+    "checkpoint": "tiles",
+    "elapsed_ms": 815.387789,
+    "exact_source_file": false,
+    "file_bytes": 8716432,
+    "file_sha256": "67d33e5b11a2f7682329fd7b132023116a26d7475a1e4e72f379a9524fc0a957",
+    "generation": 4,
+    "header_reproduced": false,
+    "host_out": null,
+    "manifest_root": "eb1a24d0e769b6e4ee3cba62ca03bb692e88e6e977b0186056d2ff56e11606ce",
+    "object_id": "6120876bf46f6d49ad4100066456fa6554bbfe05d277961b411a3d3bc6e2b916",
+    "peak_rss_kib": 30300,
+    "shards_read": 1,
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "store_bytes_read": 6157093,
+    "store_path": "bench-mount/down.safetensors",
+    "store_reads": 3,
+    "tensors": [
+      {
+        "bytes": 8716288,
+        "dtype": "bf16",
+        "full_logical_root": "a7a55b495be79030ca541a0ea124af46bc48ef40eccf73ee8286863008d975a4",
+        "full_root_verified": true,
+        "full_shape": [
+          896,
+          4864
+        ],
+        "name": "model.layers.0.mlp.down_proj.weight",
+        "restored_content_root": "ae7e45d8a94796b048646a031ed09202242fe9d053049dcd50a46b224d3ca6aa",
+        "sha256": "db708f9a857fe3b09bdd61078acbcb6d5d4b58987364cdcfe8339d7eefd572c6",
+        "shape": [
+          896,
+          4864
+        ],
+        "shard_roots_verified": true,
+        "shards_read": 1,
+        "topology_root": null,
+        "units_touched": 1
+      }
+    ],
+    "units_touched": 1
+  },
+  "revisions": {
+    "weftcodec": "606b3b2dd3388fa46c8cd8d1f73f61f494a7358b",
+    "weftcodec_go": "6c385d436f7cf27deacb498cf980919042e58260",
+    "weftfs": "d56d56be9882e682e75d0ad71430889eaa1ccb99",
+    "weftfs_go": "8f710d2d5ee3653e0f522a2df2732ce8553baa76"
+  },
+  "schema": "weft.receipts.tensor-tiles.v1",
+  "total": 5
+}

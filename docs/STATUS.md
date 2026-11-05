@@ -2065,12 +2065,12 @@ WeftCodec-Go `staging` (this commit), all buildable and testable only through
   vectors, byte-identical in both codec repositories. The cross gate prints
   `YES byte-identical tensor_tiled_bf16` and `YES byte-identical
   tensor_tiled_fp32`, and both directions decode to the original bytes.
-- **Measurement.** `bench/receipts/tensor-tiles-20261105T222109Z.json`
+- **Measurement.** `bench/receipts/tensor-tiles-20261105T222531Z.json`
   (single-host fuse court, one real Qwen2.5-0.5B BF16 tensor
   `model.layers.0.mlp.down_proj.weight`, shape `[896, 4864]`, tile `[32, 256]`,
-  10 reps per row, in-process store API). 100-row slice: mode-10 129.2 ms →
-  mode-15 12.0 ms (10.8×), backend bytes 7,213,077 → 934,413 (−87.0%), touched
-  units 1 shard → 76 tiles. 1-row slice: 127.6 ms → 3.1 ms (40.6×), bytes
+  10 reps per row, in-process store API). 100-row slice: mode-10 130.1 ms →
+  mode-15 12.1 ms (10.8×), backend bytes 7,213,077 → 934,413 (−87.0%), touched
+  units 1 shard → 76 tiles. 1-row slice: 130.0 ms → 3.2 ms (40.4×), bytes
   7,213,077 → 281,816 (−96.1%), units 1 → 19. The restored 100-row slices are
   byte-identical between the two strategies. After a tiled restore, the mount
   was read by the unmodified `safetensors` 0.8.0 + NumPy 2.4.6 + ml_dtypes

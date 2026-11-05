@@ -140,12 +140,18 @@ fn tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles() {
         topology: None,
     };
     let (tiled_bytes, tiled_report) = tiled.restore_checkpoint_bytes("rank3", &options).unwrap();
-    assert_eq!(container_payload(&tiled_bytes), expected_slice(&source, start, end));
+    assert_eq!(
+        container_payload(&tiled_bytes),
+        expected_slice(&source, start, end)
+    );
     assert_eq!(tiled_report.tensors[0].units_touched, 2);
     assert_eq!(tiled_report.shards_read, 1);
 
     let (m10_bytes, m10_report) = m10.restore_checkpoint_bytes("rank3", &options).unwrap();
-    assert_eq!(container_payload(&m10_bytes), container_payload(&tiled_bytes));
+    assert_eq!(
+        container_payload(&m10_bytes),
+        container_payload(&tiled_bytes)
+    );
     assert!(
         tiled_report.store_bytes_read < m10_report.store_bytes_read,
         "tiled region read {} bytes, mode 10 {} bytes",
@@ -165,7 +171,10 @@ fn tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles() {
             },
         )
         .unwrap();
-    assert_eq!(container_payload(&bytes), expected_slice(&source, [10, 4, 2], [11, 8, 6]));
+    assert_eq!(
+        container_payload(&bytes),
+        expected_slice(&source, [10, 4, 2], [11, 8, 6])
+    );
     assert_eq!(report.tensors[0].units_touched, 1);
 }
 

@@ -1,7 +1,7 @@
 # Tensor tiles (mode 15) — region-read results
 
-Receipt: `bench/receipts/tensor-tiles-20261105T222109Z.json`
-Log: `bench/receipts/tensor-tiles-20261105T222109Z.log`
+Receipt: `bench/receipts/tensor-tiles-20261105T222531Z.json`
+Log: `bench/receipts/tensor-tiles-20261105T222531Z.log`
 Court: `scripts/docker-court.sh fuse "bash bench/scripts/run_tensor_tiles_court.sh"`
 Label: **single-host Docker fuse court, one real public Qwen2.5-0.5B BF16
 tensor, in-process store API plus a FUSE mount read by the unmodified
@@ -45,15 +45,15 @@ phase restores the tiled tensor into the store and reads
 
 | Region | Mode | p50 | Backend bytes read | Units touched |
 |---|---|---:|---:|---:|
-| 100 rows | mode 10 | 129.198 ms | 7,213,077 | 1 (shard) |
-| 100 rows | mode 15 | 12.007 ms | 934,413 | 76 (tiles) |
-| 1 row | mode 10 | 127.577 ms | 7,213,077 | 1 (shard) |
-| 1 row | mode 15 | 3.141 ms | 281,816 | 19 (tiles) |
+| 100 rows | mode 10 | 130.131 ms | 7,213,077 | 1 (shard) |
+| 100 rows | mode 15 | 12.052 ms | 934,413 | 76 (tiles) |
+| 1 row | mode 10 | 129.979 ms | 7,213,077 | 1 (shard) |
+| 1 row | mode 15 | 3.218 ms | 281,816 | 19 (tiles) |
 
 | Region | Speedup | Backend byte reduction |
 |---|---:|---:|
 | 100 rows | 10.8× | 87.0% |
-| 1 row | 40.6× | 96.1% |
+| 1 row | 40.4× | 96.1% |
 
 The 1-row region is 100× narrower than the 100-row region but mode 15 still
 touches 19 tiles: `tile_shape[1] = 256` means one row spans 19 column tiles,

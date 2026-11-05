@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87\u00d7",
+    "value": "7.87×",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -528,7 +528,7 @@
   {
     "id": "p2_delta_restore_loss",
     "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-    "value": "44.0\u00d7",
+    "value": "44.0×",
     "locations": [
       "bench/RESULTS-float-tensor-real.md",
       "docs/STATUS.md"
@@ -1121,12 +1121,86 @@
   {
     "id": "writeback_p50_gain",
     "claim": "README.md and docs/STATUS.md record the measured Rust merkle write-back p50 gain.",
-    "value": "27.3 ms to 8.8 \u00b5s",
+    "value": "27.3 ms to 8.8 µs",
     "locations": [
       "README.md",
       "docs/STATUS.md"
     ],
     "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_mode15_schema",
+    "claim": "The spec and status record the mode-15 tensor-tiled schema.",
+    "value": "weft.ai.tensor_tiled.v1",
+    "locations": [
+      "spec/WEFT-AI-CODEC.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_100row_speedup",
+    "claim": "STATUS and the Q2 results record the measured 100-row slice speedup.",
+    "value": "10.8×",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-tensor-tiles.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_1row_speedup",
+    "claim": "STATUS and the Q2 results record the measured 1-row slice speedup.",
+    "value": "40.4×",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-tensor-tiles.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_byte_reduction",
+    "claim": "STATUS and the Q2 results record the measured backend byte reductions.",
+    "value": "96.1%",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-tensor-tiles.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_mount_loader_sha",
+    "claim": "The Q2 results record the mounted tensor SHA-256 equality.",
+    "value": "db708f9a857fe3b09bdd61078acbcb6d5d4b58987364cdcfe8339d7eefd572c6",
+    "locations": [
+      "bench/RESULTS-tensor-tiles.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "tensor_tiles_check_counts",
+    "claim": "STATUS records that the Q2 court passed every check.",
+    "value": "5/5 court checks pass",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "mode15_reserved16",
+    "claim": "The decoder guide records that modes 16-127 are reserved after mode 15 was allocated.",
+    "value": "Mode values 16–127",
+    "locations": [
+      "docs/WRITE-YOUR-OWN-DECODER.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
     "kind": "present"
   }
 ]
