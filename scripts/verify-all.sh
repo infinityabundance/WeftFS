@@ -69,6 +69,28 @@ else
   status=1
 fi
 
+# Conformance manifest drift and coverage gaps. Host-only and fast: the
+# generator is deterministic and the coverage gate reads the committed corpus.
+echo "=== conformance_manifest ===" | tee -a "$log"
+if bash scripts/gen-conformance-manifest.sh --check >>"$log" 2>&1; then
+  echo "conformance_manifest=pass" >> "$results"
+  echo "PASS conformance_manifest"
+else
+  echo "conformance_manifest=fail" >> "$results"
+  echo "FAIL conformance_manifest"
+  status=1
+fi
+
+echo "=== conformance_coverage ===" | tee -a "$log"
+if bash scripts/check-conformance-coverage.sh >>"$log" 2>&1; then
+  echo "conformance_coverage=pass" >> "$results"
+  echo "PASS conformance_coverage"
+else
+  echo "conformance_coverage=fail" >> "$results"
+  echo "FAIL conformance_coverage"
+  status=1
+fi
+
 # Spec-as-code: regenerate both identity type files and fail on any drift.
 run_court go "generated_types" \
   "GO111MODULE=off go run scripts/gen-types.go -schema spec/schema/identity-v1.schema -rust WeftCodec/src/generated.rs -go WeftCodec-Go/generated/generated.go --check"

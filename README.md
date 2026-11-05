@@ -138,6 +138,29 @@ Container defaults: `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
 `--tmpfs /tmp:size=1m`-bounded (1 GiB), `no-new-privileges`, `cap-drop=ALL`,
 and for FUSE only: `/dev/fuse` plus `CAP_SYS_ADMIN`.
 
+### Conformance and third-party decoders
+
+- [`docs/CONFORMANCE.md`](docs/CONFORMANCE.md) — the generated
+  `conformance/manifest.json`, the minimal adapter contract,
+  `scripts/run-conformance.sh`, reference adapters for Rust, Go, and Python,
+  cross-repository identity aggregates, and the coverage gate.
+- [`docs/WRITE-YOUR-OWN-DECODER.md`](docs/WRITE-YOUR-OWN-DECODER.md) — a
+  step-by-step normative-pointer guide to WFT1, WCB, hashing, modes 0–14, the
+  exact check order that determines the error class, and a 50-line decoder
+  skeleton.
+
+Fast host-only checks:
+
+```sh
+scripts/gen-conformance-manifest.sh --check
+scripts/check-conformance-coverage.sh
+```
+
+The runner is invoked against an adapter; the shipped adapters wrap the Rust
+and Go CLIs (and the independent Python reader). See
+[`docs/CONFORMANCE.md`](docs/CONFORMANCE.md) for the exact court commands and
+committed pass/fail/skip counts.
+
 ## Twelve-step showcase
 
 One command reproduces the mandated end-to-end scenarios (mixed contexts,
@@ -294,12 +317,12 @@ spec/          Normative specifications (single source of truth)
 docs/adr/      Architecture decision records
 scripts/       Docker court and spec export
 docker/        Minimal court images
-WeftCodec/     Rust codec (independent git repo later; directory now)
+conformance/   Generated manifest + frozen store/checkpoint/fuzz fixtures
+WeftCodec/     Rust codec (canonical vectors under WeftCodec/conformance/v1)
 WeftCodec-Go/  Go codec
 WeftFS-Go/     Go filesystem
 src/, crates/  Rust filesystem implementation
 tests/         POSIX, crash, snapshot, graph, interop courts
-conformance/   Frozen golden and invalid vectors
 security/      Threat model and audit notes
 bench/         Contracts, corpora manifests, scripts, receipts
 research/      Local-only research notes (gitignored)

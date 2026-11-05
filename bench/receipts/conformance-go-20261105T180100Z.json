@@ -1,0 +1,370 @@
+{
+  "fail": 0,
+  "implementation": "scripts/conformance-adapter-go.sh",
+  "manifest": "conformance/manifest.json",
+  "manifest_aggregate_sha256": "3c981f03fca856c0632ec48d5be166a1ae6513f87b393f934f3555482c2c0bda",
+  "mismatches": [],
+  "pass": 206,
+  "result": "pass",
+  "schema": "weft.conformance.run.v1",
+  "skip": 89,
+  "skips": [
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/010_dependency_cycle_archive.json",
+      "reason": "adversarial verb 'archive-create' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/026_archive_entry_count_limit.json",
+      "reason": "adversarial verb 'archive-decode' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/027_archive_non_topological.json",
+      "reason": "adversarial verb 'archive-decode' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/028_archive_entry_count_absurd.json",
+      "reason": "adversarial verb 'archive-decode' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/036_archive_truncated_short.json",
+      "reason": "adversarial verb 'archive-decode' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/101_unsorted.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/102_duplicate.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode.json",
+      "reason": "superseded by 017_unknown_mode_reserved8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved10.json",
+      "reason": "superseded by 017_unknown_mode_reserved11"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved11.json",
+      "reason": "superseded by 017_unknown_mode_reserved12"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved12.json",
+      "reason": "superseded by 017_unknown_mode_reserved14"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved14.json",
+      "reason": "superseded by unknown_mode_reserved15"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved8.json",
+      "reason": "superseded by 017_unknown_mode_reserved9"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved9.json",
+      "reason": "superseded by 017_unknown_mode_reserved10"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/110_unknown_key.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json",
+      "reason": "tensor subkind 'semantic_root' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json",
+      "reason": "tensor subkind 'semantic_root' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json",
+      "reason": "tensor subkind 'semantic_root' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/105_levels_zero.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/001_null.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/002_true.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/003_false.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/004_u64_zero.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/005_u64_max.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/006_i64_min.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/007_i64_neg_one.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/008_timestamp.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/009_text.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/010_bytes.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/011_array.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/012_map.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/013_non_minimal_varint.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/016_non_text_map_key.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/017_trailing_bytes.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/018_unknown_tag.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/019_truncated_text.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/020_depth_limit.json",
+      "reason": "kind 'wcb' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+      "reason": "tensor subkind 'tensor_layout' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+      "reason": "tensor subkind 'tensor_layout' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+      "reason": "tensor subkind 'tensor_layout' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+      "reason": "tensor subkind 'tensor_layout' has no adapter"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+      "reason": "record-level reject has no CLI verb in this implementation"
+    },
+    {
+      "path": "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+      "reason": "kind 'checkpoint' has no adapter"
+    },
+    {
+      "path": "conformance/checkpoint/v1/101_unknown_schema.json",
+      "reason": "kind 'checkpoint' has no adapter"
+    },
+    {
+      "path": "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+      "reason": "kind 'checkpoint' has no adapter"
+    },
+    {
+      "path": "conformance/checkpoint/v1/103_duplicate_tensor.json",
+      "reason": "kind 'checkpoint' has no adapter"
+    },
+    {
+      "path": "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json",
+      "reason": "kind 'checkpoint' has no adapter"
+    },
+    {
+      "path": "conformance/context/v1/causal_versions.json",
+      "reason": "context subkind 'causal_versions' has no adapter"
+    },
+    {
+      "path": "conformance/fuzz/v1/seeds.txt",
+      "reason": "composite fixture (use --include-fixtures)"
+    },
+    {
+      "path": "conformance/store/v1",
+      "reason": "composite fixture (use --include-fixtures)"
+    }
+  ],
+  "total": 295
+}

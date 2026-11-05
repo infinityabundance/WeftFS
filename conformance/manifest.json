@@ -1,0 +1,4719 @@
+{
+  "aggregate_sha256": "3c981f03fca856c0632ec48d5be166a1ae6513f87b393f934f3555482c2c0bda",
+  "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
+  "counts": {
+    "capability": 7,
+    "checkpoint": 5,
+    "context": 27,
+    "frame": 174,
+    "fuzz": 1,
+    "selector": 22,
+    "store": 1,
+    "tensor": 38,
+    "wcb": 20
+  },
+  "description": "Deterministic enumeration of every conformance vector. Paths are relative to the program home. `content_root` is the BLAKE3 domain-separated identity recorded by the vector (for WCB, H(\"weft/structured/v1\", canonical bytes)); `decoded_sha256` is SHA-256 over the exact decoded byte string the vector records. Null means the format does not define that value for the kind.",
+  "generated_by": "scripts/gen-conformance-manifest.sh",
+  "identity_types": {
+    "capability": {
+      "error": 5,
+      "valid": 2,
+      "vectors": [
+        "WeftCodec/conformance/v1/capability/001_valid_envelope.json",
+        "WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json",
+        "WeftCodec/conformance/v1/capability/101_bad_signature.json",
+        "WeftCodec/conformance/v1/capability/102_wrong_grantee.json",
+        "WeftCodec/conformance/v1/capability/103_expired.json",
+        "WeftCodec/conformance/v1/capability/104_revoked.json",
+        "WeftCodec/conformance/v1/capability/105_non_canonical.json"
+      ]
+    },
+    "checkpoint": {
+      "error": 4,
+      "valid": 1,
+      "vectors": [
+        "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+        "conformance/checkpoint/v1/101_unknown_schema.json",
+        "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+        "conformance/checkpoint/v1/103_duplicate_tensor.json",
+        "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json"
+      ]
+    },
+    "context": {
+      "error": 16,
+      "valid": 11,
+      "vectors": [
+        "WeftCodec/conformance/v1/causal/001_single_parent.json",
+        "WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json",
+        "WeftCodec/conformance/v1/causal/003_three_parents.json",
+        "WeftCodec/conformance/v1/causal/004_empty_closure.json",
+        "WeftCodec/conformance/v1/causal/101_unsorted.json",
+        "WeftCodec/conformance/v1/causal/102_duplicate.json",
+        "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+        "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+        "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+        "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+        "WeftCodec/conformance/v1/context/001_root_true.json",
+        "WeftCodec/conformance/v1/context/002_root_filter_budget.json",
+        "WeftCodec/conformance/v1/context/003_root_causal_capability.json",
+        "WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json",
+        "WeftCodec/conformance/v1/context/005_root_custom_resolver.json",
+        "WeftCodec/conformance/v1/context/006_root_empty_causal.json",
+        "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+        "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+        "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+        "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+        "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+        "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+        "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+        "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+        "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+        "WeftCodec/conformance/v1/context/110_unknown_key.json",
+        "conformance/context/v1/causal_versions.json"
+      ]
+    },
+    "selector": {
+      "error": 0,
+      "valid": 22,
+      "vectors": [
+        "WeftCodec/conformance/v1/selectors/001_select_true.json",
+        "WeftCodec/conformance/v1/selectors/002_select_false.json",
+        "WeftCodec/conformance/v1/selectors/003_select_not_false.json",
+        "WeftCodec/conformance/v1/selectors/004_select_not_not_true.json",
+        "WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json",
+        "WeftCodec/conformance/v1/selectors/006_select_tag_demo.json",
+        "WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json",
+        "WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json",
+        "WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json",
+        "WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json",
+        "WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json",
+        "WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json",
+        "WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json",
+        "WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json",
+        "WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json",
+        "WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json",
+        "WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json",
+        "WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json",
+        "WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json",
+        "WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json",
+        "WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json",
+        "WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json"
+      ]
+    },
+    "tensor": {
+      "error": 26,
+      "valid": 12,
+      "vectors": [
+        "WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json",
+        "WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json",
+        "WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json",
+        "WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json",
+        "WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json",
+        "WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json",
+        "WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json",
+        "WeftCodec/conformance/v1/semantic-root/105_levels_zero.json",
+        "WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json",
+        "WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json",
+        "WeftCodec/conformance/v1/tensor/002_logical_f32_3.json",
+        "WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json",
+        "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+        "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+        "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+        "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+        "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+        "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+        "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+        "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+        "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+        "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+        "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+        "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+        "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+        "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+        "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+        "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+        "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+        "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+        "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+        "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+        "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+        "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+        "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+        "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+        "WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json",
+        "WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json"
+      ]
+    },
+    "wcb": {
+      "error": 8,
+      "valid": 12,
+      "vectors": [
+        "WeftCodec/conformance/v1/structured/001_null.json",
+        "WeftCodec/conformance/v1/structured/002_true.json",
+        "WeftCodec/conformance/v1/structured/003_false.json",
+        "WeftCodec/conformance/v1/structured/004_u64_zero.json",
+        "WeftCodec/conformance/v1/structured/005_u64_max.json",
+        "WeftCodec/conformance/v1/structured/006_i64_min.json",
+        "WeftCodec/conformance/v1/structured/007_i64_neg_one.json",
+        "WeftCodec/conformance/v1/structured/008_timestamp.json",
+        "WeftCodec/conformance/v1/structured/009_text.json",
+        "WeftCodec/conformance/v1/structured/010_bytes.json",
+        "WeftCodec/conformance/v1/structured/011_array.json",
+        "WeftCodec/conformance/v1/structured/012_map.json",
+        "WeftCodec/conformance/v1/structured/013_non_minimal_varint.json",
+        "WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json",
+        "WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json",
+        "WeftCodec/conformance/v1/structured/016_non_text_map_key.json",
+        "WeftCodec/conformance/v1/structured/017_trailing_bytes.json",
+        "WeftCodec/conformance/v1/structured/018_unknown_tag.json",
+        "WeftCodec/conformance/v1/structured/019_truncated_text.json",
+        "WeftCodec/conformance/v1/structured/020_depth_limit.json"
+      ]
+    }
+  },
+  "mirrors": [
+    {
+      "aggregate_sha256_common": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
+      "aggregate_sha256_from": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
+      "aggregate_sha256_to": "5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1",
+      "common_files": 288,
+      "differing": [],
+      "files_from": 288,
+      "files_to": 288,
+      "from": "WeftCodec/conformance/v1",
+      "identical": true,
+      "only_from": [],
+      "only_to": [],
+      "to": "WeftCodec-Go/conformance/v1"
+    },
+    {
+      "aggregate_sha256_common": "d3ceef9e14518fd99fd7f9c05dde6e677bc500cd892d440da8a5cec7e68a2d4f",
+      "aggregate_sha256_from": "d3ceef9e14518fd99fd7f9c05dde6e677bc500cd892d440da8a5cec7e68a2d4f",
+      "aggregate_sha256_to": "16073c27f44d1b077e376301997c0696f8acc20e6eada75ce5563e3984d926ca",
+      "common_files": 25,
+      "differing": [],
+      "files_from": 25,
+      "files_to": 26,
+      "from": "conformance/store/v1",
+      "identical": true,
+      "only_from": [],
+      "only_to": [
+        "PROVENANCE.md"
+      ],
+      "to": "WeftFS-Go/conformance/store/v1"
+    }
+  ],
+  "modes": {
+    "0": {
+      "error": 20,
+      "valid": 6,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/012_chunk_extent_overflow.json",
+        "WeftCodec/conformance/v1/adversarial/013_chunk_overlap.json",
+        "WeftCodec/conformance/v1/adversarial/014_chunk_gap.json",
+        "WeftCodec/conformance/v1/adversarial/015_chunk_count_limit.json",
+        "WeftCodec/conformance/v1/adversarial/016_length_arithmetic_overflow.json",
+        "WeftCodec/conformance/v1/adversarial/018_unknown_critical_flag.json",
+        "WeftCodec/conformance/v1/adversarial/019_unknown_critical_feature.json",
+        "WeftCodec/conformance/v1/adversarial/032_truncated_frame_99.json",
+        "WeftCodec/conformance/v1/adversarial/033_truncated_frame_50.json",
+        "WeftCodec/conformance/v1/adversarial/035_frame_size_limit.json",
+        "WeftCodec/conformance/v1/codec/001_raw_empty.json",
+        "WeftCodec/conformance/v1/codec/002_raw_one_byte.json",
+        "WeftCodec/conformance/v1/codec/003_raw_4k.json",
+        "WeftCodec/conformance/v1/codec/004_raw_1m.json",
+        "WeftCodec/conformance/v1/codec/005_raw_64k_repetitive.json",
+        "WeftCodec/conformance/v1/codec/006_raw_chunked_1024.json",
+        "WeftCodec/conformance/v1/codec/014_bad_header_crc.json",
+        "WeftCodec/conformance/v1/codec/015_bad_trailer_crc.json",
+        "WeftCodec/conformance/v1/codec/016_truncated.json",
+        "WeftCodec/conformance/v1/codec/018_unknown_feature.json",
+        "WeftCodec/conformance/v1/codec/019_self_contained_reserved.json",
+        "WeftCodec/conformance/v1/codec/020_unsupported_version.json",
+        "WeftCodec/conformance/v1/codec/021_bad_table_len.json",
+        "WeftCodec/conformance/v1/codec/022_chunk_gap.json",
+        "WeftCodec/conformance/v1/codec/023_chunk_overlap.json",
+        "WeftCodec/conformance/v1/codec/029_limits_exceeded.json"
+      ]
+    },
+    "1": {
+      "error": 6,
+      "valid": 2,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/001_declared_10gib.json",
+        "WeftCodec/conformance/v1/adversarial/002_zstd_expansion_low_limit.json",
+        "WeftCodec/conformance/v1/adversarial/003_zstd_output_length_mismatch.json",
+        "WeftCodec/conformance/v1/adversarial/004_zstd_declared_4gib_body_one_byte.json",
+        "WeftCodec/conformance/v1/codec/007_zstd_chunked_1024.json",
+        "WeftCodec/conformance/v1/codec/008_zstd_4k.json",
+        "WeftCodec/conformance/v1/codec/038_zstd_empty_body.json",
+        "WeftCodec/conformance/v1/codec/039_zstd_content_size_mismatch.json"
+      ]
+    },
+    "10": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/sharded/001_q8_0_rank2_2shards.json",
+        "WeftCodec/conformance/v1/sharded/002_q4_0_rank3_4shards.json",
+        "WeftCodec/conformance/v1/sharded/003_q8_0_rank1_1shard.json",
+        "WeftCodec/conformance/v1/sharded/101_unknown_dtype.json",
+        "WeftCodec/conformance/v1/sharded/102_quant_scale_mismatch.json",
+        "WeftCodec/conformance/v1/sharded/103_element_count_mismatch.json",
+        "WeftCodec/conformance/v1/sharded/104_block_size_invalid.json",
+        "WeftCodec/conformance/v1/sharded/105_shape_not_divisible.json",
+        "WeftCodec/conformance/v1/sharded/106_index_out_of_range.json",
+        "WeftCodec/conformance/v1/sharded/107_duplicate_shard.json",
+        "WeftCodec/conformance/v1/sharded/108_malformed_huffman.json"
+      ]
+    },
+    "11": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/weight-delta/001_bf16_small_changes.json",
+        "WeftCodec/conformance/v1/weight-delta/002_fp32_zero_delta.json",
+        "WeftCodec/conformance/v1/weight-delta/003_q8_0_mixed_changes.json",
+        "WeftCodec/conformance/v1/weight-delta/101_base_dtype_mismatch.json",
+        "WeftCodec/conformance/v1/weight-delta/102_base_shape_mismatch.json",
+        "WeftCodec/conformance/v1/weight-delta/103_unknown_op.json",
+        "WeftCodec/conformance/v1/weight-delta/104_word_bits_inconsistent.json",
+        "WeftCodec/conformance/v1/weight-delta/105_delta_root_mismatch.json",
+        "WeftCodec/conformance/v1/weight-delta/106_payload_length_mismatch.json",
+        "WeftCodec/conformance/v1/weight-delta/107_missing_base.json",
+        "WeftCodec/conformance/v1/weight-delta/108_dependency_cycle.json"
+      ]
+    },
+    "12": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/kv-cache/001_bf16_two_pages.json",
+        "WeftCodec/conformance/v1/kv-cache/002_fp32_two_pages.json",
+        "WeftCodec/conformance/v1/kv-cache/003_bf16_seq_boundary.json",
+        "WeftCodec/conformance/v1/kv-cache/101_unknown_dtype.json",
+        "WeftCodec/conformance/v1/kv-cache/102_zero_dimension.json",
+        "WeftCodec/conformance/v1/kv-cache/103_page_index_out_of_range.json",
+        "WeftCodec/conformance/v1/kv-cache/104_seq_range_invalid.json",
+        "WeftCodec/conformance/v1/kv-cache/105_shape_mismatch.json",
+        "WeftCodec/conformance/v1/kv-cache/106_page_bytes_mismatch.json",
+        "WeftCodec/conformance/v1/kv-cache/107_seq_overflow.json",
+        "WeftCodec/conformance/v1/kv-cache/108_payload_len_mismatch.json"
+      ]
+    },
+    "13": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/activation-stream/001_activation_bf16_two_chunks.json",
+        "WeftCodec/conformance/v1/activation-stream/002_gradient_fp32_two_chunks.json",
+        "WeftCodec/conformance/v1/activation-stream/003_activation_fp16_single_chunk.json",
+        "WeftCodec/conformance/v1/activation-stream/101_unknown_dtype.json",
+        "WeftCodec/conformance/v1/activation-stream/102_unknown_stream.json",
+        "WeftCodec/conformance/v1/activation-stream/103_rank_not_below_world.json",
+        "WeftCodec/conformance/v1/activation-stream/104_chunk_index_out_of_range.json",
+        "WeftCodec/conformance/v1/activation-stream/105_element_count_mismatch.json",
+        "WeftCodec/conformance/v1/activation-stream/106_digest_root_mismatch.json",
+        "WeftCodec/conformance/v1/activation-stream/107_payload_len_mismatch.json",
+        "WeftCodec/conformance/v1/activation-stream/108_decoded_len_mismatch.json"
+      ]
+    },
+    "14": {
+      "error": 6,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/semantic-delta/001_bf16_near_duplicate.json",
+        "WeftCodec/conformance/v1/semantic-delta/002_fp32_small_change.json",
+        "WeftCodec/conformance/v1/semantic-delta/003_q8_0_mixed_changes.json",
+        "WeftCodec/conformance/v1/semantic-delta/101_base_semantic_mismatch.json",
+        "WeftCodec/conformance/v1/semantic-delta/102_policy_mismatch.json",
+        "WeftCodec/conformance/v1/semantic-delta/103_delta_root_mismatch.json",
+        "WeftCodec/conformance/v1/semantic-delta/104_missing_base.json",
+        "WeftCodec/conformance/v1/semantic-delta/105_base_shape_mismatch.json",
+        "WeftCodec/conformance/v1/semantic-delta/106_payload_length_mismatch.json"
+      ]
+    },
+    "15": {
+      "error": 1,
+      "valid": 0,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json"
+      ]
+    },
+    "2": {
+      "error": 2,
+      "valid": 1,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/009_dependency_cycle_frame_source.json",
+        "WeftCodec/conformance/v1/adversarial/011_dependency_count_limit.json",
+        "WeftCodec/conformance/v1/codec/009_reference_equal.json"
+      ]
+    },
+    "255": {
+      "error": 1,
+      "valid": 0,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/017_unknown_mode.json"
+      ]
+    },
+    "3": {
+      "error": 9,
+      "valid": 1,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/005_delta_copy_offset_overflow.json",
+        "WeftCodec/conformance/v1/adversarial/006_delta_insert_length_overflow.json",
+        "WeftCodec/conformance/v1/adversarial/007_delta_op_count_limit.json",
+        "WeftCodec/conformance/v1/adversarial/008_dependency_depth_chain.json",
+        "WeftCodec/conformance/v1/adversarial/031_reference_total_fetch_limit.json",
+        "WeftCodec/conformance/v1/codec/010_delta_edits.json",
+        "WeftCodec/conformance/v1/codec/024_bad_dependency_length.json",
+        "WeftCodec/conformance/v1/codec/025_bad_dependency_hash.json",
+        "WeftCodec/conformance/v1/codec/026_delta_offset_out_of_range.json",
+        "WeftCodec/conformance/v1/codec/027_delta_length_mismatch.json"
+      ]
+    },
+    "4": {
+      "error": 2,
+      "valid": 1,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/029_dictionary_mismatch.json",
+        "WeftCodec/conformance/v1/adversarial/030_dictionary_size_limit.json",
+        "WeftCodec/conformance/v1/codec/011_dictionary_raw.json"
+      ]
+    },
+    "5": {
+      "error": 5,
+      "valid": 1,
+      "vectors": [
+        "WeftCodec/conformance/v1/adversarial/020_non_minimal_varint_structured.json",
+        "WeftCodec/conformance/v1/adversarial/021_overflow_varint_structured.json",
+        "WeftCodec/conformance/v1/adversarial/022_wcb_depth_limit.json",
+        "WeftCodec/conformance/v1/adversarial/023_wcb_item_limit.json",
+        "WeftCodec/conformance/v1/codec/012_structured_map.json",
+        "WeftCodec/conformance/v1/codec/028_structured_non_canonical.json"
+      ]
+    },
+    "6": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/100_tensor_f32_2x3.json",
+        "WeftCodec/conformance/v1/codec/101_tensor_f16_scalar.json",
+        "WeftCodec/conformance/v1/codec/102_tensor_u8_zero_element.json",
+        "WeftCodec/conformance/v1/codec/120_tensor_shape_mismatch.json",
+        "WeftCodec/conformance/v1/codec/121_tensor_payload_bytes_mismatch.json",
+        "WeftCodec/conformance/v1/codec/122_tensor_payload_hash_mismatch.json",
+        "WeftCodec/conformance/v1/codec/123_tensor_layout_not_implemented.json",
+        "WeftCodec/conformance/v1/codec/124_tensor_unknown_dtype.json",
+        "WeftCodec/conformance/v1/codec/125_tensor_shape_overflow.json",
+        "WeftCodec/conformance/v1/codec/126_tensor_element_limit.json",
+        "WeftCodec/conformance/v1/codec/127_tensor_rank_limit.json"
+      ]
+    },
+    "7": {
+      "error": 6,
+      "valid": 2,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/103_tokens_delta_boundaries.json",
+        "WeftCodec/conformance/v1/codec/104_tokens_empty.json",
+        "WeftCodec/conformance/v1/codec/130_tokens_count_mismatch.json",
+        "WeftCodec/conformance/v1/codec/131_tokens_encoding_not_implemented.json",
+        "WeftCodec/conformance/v1/codec/132_tokens_non_minimal_varint.json",
+        "WeftCodec/conformance/v1/codec/133_tokens_trailing_bytes.json",
+        "WeftCodec/conformance/v1/codec/134_tokens_payload_hash_mismatch.json",
+        "WeftCodec/conformance/v1/codec/135_tokens_count_limit.json"
+      ]
+    },
+    "8": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/030_quantized_dtype_f32.json",
+        "WeftCodec/conformance/v1/codec/031_quantized_scale_nan.json",
+        "WeftCodec/conformance/v1/codec/032_quantized_zero_point_out_of_range.json",
+        "WeftCodec/conformance/v1/codec/033_quantized_payload_bytes_mismatch.json",
+        "WeftCodec/conformance/v1/codec/034_quantized_payload_hash_mismatch.json",
+        "WeftCodec/conformance/v1/codec/035_quantized_scale_bytes_len.json",
+        "WeftCodec/conformance/v1/codec/036_quantized_layout_not_implemented.json",
+        "WeftCodec/conformance/v1/codec/037_quantized_zero_point_not_i64.json",
+        "WeftCodec/conformance/v1/codec/105_quantized_i8_2x3.json",
+        "WeftCodec/conformance/v1/codec/106_quantized_u8_zero_element.json",
+        "WeftCodec/conformance/v1/codec/107_quantized_i8_scalar.json"
+      ]
+    },
+    "9": {
+      "error": 14,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/108_float_bf16_2x2.json",
+        "WeftCodec/conformance/v1/codec/109_float_fp16_3d.json",
+        "WeftCodec/conformance/v1/codec/110_float_fp32_4d.json",
+        "WeftCodec/conformance/v1/codec/140_float_tensor_unknown_dtype.json",
+        "WeftCodec/conformance/v1/codec/141_float_tensor_element_count_mismatch.json",
+        "WeftCodec/conformance/v1/codec/142_float_tensor_rank_zero.json",
+        "WeftCodec/conformance/v1/codec/143_float_tensor_zero_dimension.json",
+        "WeftCodec/conformance/v1/codec/144_float_tensor_field_widths_mismatch.json",
+        "WeftCodec/conformance/v1/codec/145_float_tensor_plane_length_overflow.json",
+        "WeftCodec/conformance/v1/codec/146_float_tensor_unknown_exponent_coder.json",
+        "WeftCodec/conformance/v1/codec/147_float_tensor_decoded_len_mismatch.json",
+        "WeftCodec/conformance/v1/codec/148_float_tensor_exponent_over_subscribed.json",
+        "WeftCodec/conformance/v1/codec/149_float_tensor_exponent_incomplete.json",
+        "WeftCodec/conformance/v1/codec/150_float_tensor_exponent_code_length_too_long.json",
+        "WeftCodec/conformance/v1/codec/151_float_tensor_exponent_nonzero_padding.json",
+        "WeftCodec/conformance/v1/codec/152_float_tensor_exponent_table_truncated.json",
+        "WeftCodec/conformance/v1/codec/153_float_tensor_exponent_stream_truncated.json"
+      ]
+    }
+  },
+  "schema": "weft.conformance.manifest.v1",
+  "vector_count": 295,
+  "vectors": [
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "8c7ab55866560599ea270cd76346f4e58c8496cd5ed06d981de848b198510cd5",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/001_activation_bf16_two_chunks.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/001_activation_bf16_two_chunks.json",
+      "sha256": "20c50954ef83d3a3556b79e2a48163ddb7b2076d54f8ceec59cf438e633ba992",
+      "subkind": "activation_stream",
+      "vector_name": "001_activation_bf16_two_chunks"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "b388f5fe46ae4baff5ce52f2b4a808920885e0942aa596c038ccab0742b66d8a",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/002_gradient_fp32_two_chunks.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/002_gradient_fp32_two_chunks.json",
+      "sha256": "a4734e2e6253e97977dabff691569f5fc1df1cc5d6f2af9cd9b87756a564d7c0",
+      "subkind": "activation_stream",
+      "vector_name": "002_gradient_fp32_two_chunks"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "bcba8bc46f102dfdb81e3df48af1200744abe21773dbfd20f1c952591b190d4b",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/003_activation_fp16_single_chunk.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/003_activation_fp16_single_chunk.json",
+      "sha256": "3365fa13a56f0ea2e8be0e8f27ecf4f06d5d53a37eb5294309252f9464f558ec",
+      "subkind": "activation_stream",
+      "vector_name": "003_activation_fp16_single_chunk"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/101_unknown_dtype.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/101_unknown_dtype.json",
+      "sha256": "8a82612d99543d1b29418bc52e090b7bb578b41d6ad2628a9c38a0bb52d7de54",
+      "subkind": "activation_stream",
+      "vector_name": "101_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/102_unknown_stream.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/102_unknown_stream.json",
+      "sha256": "604c967e581c1751638703811f6913e28615d39eee5720933e18b5d13f999d64",
+      "subkind": "activation_stream",
+      "vector_name": "102_unknown_stream"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/103_rank_not_below_world.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/103_rank_not_below_world.json",
+      "sha256": "410634edf5e9599b769cd1d79327a8af1e2fe73aa3ee954f7354a2fea9a4129f",
+      "subkind": "activation_stream",
+      "vector_name": "103_rank_not_below_world"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/104_chunk_index_out_of_range.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/104_chunk_index_out_of_range.json",
+      "sha256": "6916ad1c160301d965098cc0512a9dee8bfd6ae40ed29e372b4c60d56a801ba2",
+      "subkind": "activation_stream",
+      "vector_name": "104_chunk_index_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/105_element_count_mismatch.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/105_element_count_mismatch.json",
+      "sha256": "3ce13412b3a36d90780e9bdb2f05b0285fe703b65c50d49b75bf4e6d857337d0",
+      "subkind": "activation_stream",
+      "vector_name": "105_element_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/106_digest_root_mismatch.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/106_digest_root_mismatch.json",
+      "sha256": "1ce0788b3ec349cddc852e29f6d648d18ad47dc762ff2bb5751e582c3bcd8a46",
+      "subkind": "activation_stream",
+      "vector_name": "106_digest_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/107_payload_len_mismatch.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/107_payload_len_mismatch.json",
+      "sha256": "dac5f7f5687afbcfc1e65e37dd1df2feef465a7143a6c9b7c78654767520faaa",
+      "subkind": "activation_stream",
+      "vector_name": "107_payload_len_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/activation-stream/108_decoded_len_mismatch.json"
+      ],
+      "mode": 13,
+      "mode_name": "activation_stream",
+      "path": "WeftCodec/conformance/v1/activation-stream/108_decoded_len_mismatch.json",
+      "sha256": "fb90c392d3f4a73623c6d7267c01052655cc74c2b71ee183e0ff81a1d8eaf22e",
+      "subkind": "activation_stream",
+      "vector_name": "108_decoded_len_mismatch"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/001_declared_10gib.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/001_declared_10gib.json",
+      "sha256": "cd478a49f36aa16d83dcdc578e1b7d183a0127ff11d0e209fb53cee67a033215",
+      "subkind": "adversarial",
+      "vector_name": "declared_10gib"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/002_zstd_expansion_low_limit.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/002_zstd_expansion_low_limit.json",
+      "sha256": "79778641636fcaed363843a2b8170cdfffc231ea9fd5fa27898b9ddd431b4d74",
+      "subkind": "adversarial",
+      "vector_name": "zstd_expansion_low_limit"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/003_zstd_output_length_mismatch.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/003_zstd_output_length_mismatch.json",
+      "sha256": "1a14a00f82c0b34656cd0859d6d2dad9d2ef80d4e7da825723385cb546fd85b3",
+      "subkind": "adversarial",
+      "vector_name": "zstd_output_length_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/004_zstd_declared_4gib_body_one_byte.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/004_zstd_declared_4gib_body_one_byte.json",
+      "sha256": "23115d720354f8fa522224feca8703ca4d525fd7f72f7d1ad765c0b862c5c3e5",
+      "subkind": "adversarial",
+      "vector_name": "zstd_declared_4gib_body_one_byte"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/005_delta_copy_offset_overflow.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/005_delta_copy_offset_overflow.json",
+      "sha256": "3f99a938eb9031ab3ecea4f73958cc1e0a83f1c5fe6853deb24380c9dd4e0733",
+      "subkind": "adversarial",
+      "vector_name": "delta_copy_offset_overflow"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/006_delta_insert_length_overflow.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/006_delta_insert_length_overflow.json",
+      "sha256": "658ee34abb9f7e7289d0195ea10fec082979b1d892cfb8e1e91ee65e47bc9842",
+      "subkind": "adversarial",
+      "vector_name": "delta_insert_length_overflow"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/007_delta_op_count_limit.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/007_delta_op_count_limit.json",
+      "sha256": "1db853cbfbc0fe0fe5537acf1672baecabf68a02c8e5f91b7670927558efe10b",
+      "subkind": "adversarial",
+      "vector_name": "delta_op_count_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/008_dependency_depth_chain.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/008_dependency_depth_chain.json",
+      "sha256": "f3d2cfb022724814816f66ed17282a4e30d9ffbb216da6d6f81fb0985c9a6245",
+      "subkind": "adversarial",
+      "vector_name": "dependency_depth_chain"
+    },
+    {
+      "expect": {
+        "error": "DependencyCycle"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/009_dependency_cycle_frame_source.json"
+      ],
+      "mode": 2,
+      "mode_name": "reference",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/009_dependency_cycle_frame_source.json",
+      "sha256": "396a77370e7b3582f535b29527e491c66e07f11645d31a3430996aeec7f191a2",
+      "subkind": "adversarial",
+      "vector_name": "dependency_cycle_frame_source"
+    },
+    {
+      "expect": {
+        "error": "DependencyCycle"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/010_dependency_cycle_archive.json"
+      ],
+      "operation": "archive-create",
+      "path": "WeftCodec/conformance/v1/adversarial/010_dependency_cycle_archive.json",
+      "sha256": "4c15c8e90d9b67eaa0a5e8acd58e99bab56dc2e14484f969c8015e30f9f27329",
+      "subkind": "adversarial",
+      "vector_name": "dependency_cycle_archive"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/011_dependency_count_limit.json"
+      ],
+      "mode": 2,
+      "mode_name": "reference",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/011_dependency_count_limit.json",
+      "sha256": "2c95c2c2696abfc865796342e06b7b78d7280bffa957d977a986455327a58ecf",
+      "subkind": "adversarial",
+      "vector_name": "dependency_count_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/012_chunk_extent_overflow.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/012_chunk_extent_overflow.json",
+      "sha256": "414e5820476074872d3a3a37aa65e790bc551d3efe550b53e298478752e4a2d1",
+      "subkind": "adversarial",
+      "vector_name": "chunk_extent_overflow"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/013_chunk_overlap.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/013_chunk_overlap.json",
+      "sha256": "a3bbab603891a8c31f2fb0a29760f9d31108e55de094d70c019b95667b80eefe",
+      "subkind": "adversarial",
+      "vector_name": "chunk_overlap"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/014_chunk_gap.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/014_chunk_gap.json",
+      "sha256": "f30d7c062371fd2b434cda0d880c769b4b91726ec1024ae3e8b2254851b13aef",
+      "subkind": "adversarial",
+      "vector_name": "chunk_gap"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/015_chunk_count_limit.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/015_chunk_count_limit.json",
+      "sha256": "9d92017e1ee13b1a398b9f118b87a61fc549807993cf3e3e8dddfa26b4309c97",
+      "subkind": "adversarial",
+      "vector_name": "chunk_count_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/016_length_arithmetic_overflow.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/016_length_arithmetic_overflow.json",
+      "sha256": "8389671fcb8d45342bc7a0619328c13323f7b3ead628ee5ff275d5a9d427b2de",
+      "subkind": "adversarial",
+      "vector_name": "length_arithmetic_overflow"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/017_unknown_mode.json"
+      ],
+      "mode": 255,
+      "mode_name": null,
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/017_unknown_mode.json",
+      "sha256": "f7bf9964388442ab7875f49538fd8bef29b534f37029deb3a93ee0fdece94426",
+      "subkind": "adversarial",
+      "vector_name": "unknown_mode"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/018_unknown_critical_flag.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/018_unknown_critical_flag.json",
+      "sha256": "a30d207af59f956ec8f9e0d373080cb6a8c6fe0d1eaefa6ca32178552e4b0bab",
+      "subkind": "adversarial",
+      "vector_name": "unknown_critical_flag"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/019_unknown_critical_feature.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/019_unknown_critical_feature.json",
+      "sha256": "d1679af717a33f586602197ea6fc38b4612798b45323969e3aa0f57994170fee",
+      "subkind": "adversarial",
+      "vector_name": "unknown_critical_feature"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/020_non_minimal_varint_structured.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/020_non_minimal_varint_structured.json",
+      "sha256": "5e7da90ddd73a3c20bfb620a1913d00946f2a3f345aa9672bbde377ddc9f8779",
+      "subkind": "adversarial",
+      "vector_name": "non_minimal_varint_structured"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/021_overflow_varint_structured.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/021_overflow_varint_structured.json",
+      "sha256": "d1e86f349108ebc4fa800b4ba40fb9208692718e964fc29619177667c2ba92ef",
+      "subkind": "adversarial",
+      "vector_name": "overflow_varint_structured"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/022_wcb_depth_limit.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/022_wcb_depth_limit.json",
+      "sha256": "2298ad4534c8481db8bf32f5b2c6ce30da9a78ad295327c3c457d901aeb1290d",
+      "subkind": "adversarial",
+      "vector_name": "wcb_depth_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/023_wcb_item_limit.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/023_wcb_item_limit.json",
+      "sha256": "788ab1cad56e7b1ee0722368631c2b71d1e1f807aa3b4fa2763609a652b8eca2",
+      "subkind": "adversarial",
+      "vector_name": "wcb_item_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/024_selector_depth_limit.json"
+      ],
+      "operation": "selector-id",
+      "path": "WeftCodec/conformance/v1/adversarial/024_selector_depth_limit.json",
+      "sha256": "820319bcdfc98e73fa8a9d6ba947716dd5a1e78df0a03ad45e91613ce16d1b3d",
+      "subkind": "adversarial",
+      "vector_name": "selector_depth_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/025_selector_input_limit.json"
+      ],
+      "operation": "selector-id",
+      "path": "WeftCodec/conformance/v1/adversarial/025_selector_input_limit.json",
+      "sha256": "9c0eeeefa2df3f74b05b5a80ae93f11bc3fff0320826ffaca47405ead17baff4",
+      "subkind": "adversarial",
+      "vector_name": "selector_input_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/026_archive_entry_count_limit.json"
+      ],
+      "operation": "archive-decode",
+      "path": "WeftCodec/conformance/v1/adversarial/026_archive_entry_count_limit.json",
+      "sha256": "c0269821203d0e0481c338d2ee827be812d0daf0ef923bc3b173e16042bf560a",
+      "subkind": "adversarial",
+      "vector_name": "archive_entry_count_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/027_archive_non_topological.json"
+      ],
+      "operation": "archive-decode",
+      "path": "WeftCodec/conformance/v1/adversarial/027_archive_non_topological.json",
+      "sha256": "41d1c580b992c9e20ca7a4b03d9d01dcc01301a7bf7bbd26491b00f5b936fdbd",
+      "subkind": "adversarial",
+      "vector_name": "archive_non_topological"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/028_archive_entry_count_absurd.json"
+      ],
+      "operation": "archive-decode",
+      "path": "WeftCodec/conformance/v1/adversarial/028_archive_entry_count_absurd.json",
+      "sha256": "0edb0fdc681e656d3df1256556fa9f1f30bd0d3161e47aee4b7805cbfd9aeb7c",
+      "subkind": "adversarial",
+      "vector_name": "archive_entry_count_absurd"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/029_dictionary_mismatch.json"
+      ],
+      "mode": 4,
+      "mode_name": "dictionary",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/029_dictionary_mismatch.json",
+      "sha256": "eccc94ca26240ffb76ec0d08fa327ec93e48aad2daf81015743b8e282c7a1170",
+      "subkind": "adversarial",
+      "vector_name": "dictionary_mismatch"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/030_dictionary_size_limit.json"
+      ],
+      "mode": 4,
+      "mode_name": "dictionary",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/030_dictionary_size_limit.json",
+      "sha256": "bc8c4a604e4e2f69f8886d21de87c1f364e005a7759b6d5874a688f13f09da61",
+      "subkind": "adversarial",
+      "vector_name": "dictionary_size_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/031_reference_total_fetch_limit.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/031_reference_total_fetch_limit.json",
+      "sha256": "f6d26793df6e28f83e857e2574a77f032a4149357e580efc155f630a03b4f1a8",
+      "subkind": "adversarial",
+      "vector_name": "reference_total_fetch_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/032_truncated_frame_99.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/032_truncated_frame_99.json",
+      "sha256": "bfcbc412ae8a9946b5eca5c960cb8d80be226847e8b0c9a7c5232980eee35168",
+      "subkind": "adversarial",
+      "vector_name": "032_truncated_frame_99"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/033_truncated_frame_50.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/033_truncated_frame_50.json",
+      "sha256": "9de2932182d8ef3e28e6a75b5fc97841f7e89842605475d7ae0d87db620e26da",
+      "subkind": "adversarial",
+      "vector_name": "033_truncated_frame_50"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/034_empty_frame.json"
+      ],
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/034_empty_frame.json",
+      "sha256": "7003ec2d867861b953e119c52e89d17e602e5c9994cbc3a70b09c50ecba1f708",
+      "subkind": "adversarial",
+      "vector_name": "034_empty_frame"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/035_frame_size_limit.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "operation": "decode",
+      "path": "WeftCodec/conformance/v1/adversarial/035_frame_size_limit.json",
+      "sha256": "487df0716de38dab48079fc8f26ef89b6cfd6f4d0ea2d1a3ea7290698a237c06",
+      "subkind": "adversarial",
+      "vector_name": "frame_size_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/adversarial/036_archive_truncated_short.json"
+      ],
+      "operation": "archive-decode",
+      "path": "WeftCodec/conformance/v1/adversarial/036_archive_truncated_short.json",
+      "sha256": "c1edd0419e1af4bb106203a01398a140ab0a31393c802ce21ae775ddb10e2147",
+      "subkind": "adversarial",
+      "vector_name": "archive_truncated_short"
+    },
+    {
+      "expect": {
+        "content_root": "fe5b6642a2beb7f5b4ca5e46d8b051a507494194043f427dfc5f22a20231fb95",
+        "decoded_sha256": "9d6c12222cc24ba53d241aaece92ad27b1580ed12df9ac663a4ad715f0aa7ed8",
+        "ok": true
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/001_valid_envelope.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/001_valid_envelope.json",
+      "sha256": "e07b5c0deeeed28db1440ddde3e39b427c8bcd64ce0debc44bee3afad1eee12e",
+      "vector_name": "001_valid_envelope"
+    },
+    {
+      "expect": {
+        "content_root": "3949f4979005d220045f7f16e8a0e5eb9a2ccadf7c5950db77516d87ba99499a",
+        "decoded_sha256": "82035cdad61b5c3950ff2594e160d67553c1663faa6eb5772c368a0cc236e19f",
+        "ok": true
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/002_valid_minimal_envelope.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json",
+      "sha256": "f88e4a8967d9c59ee13a7b71c888ed84ea112420efefc6dc2e5ff0440e9dbc8d",
+      "vector_name": "002_valid_minimal_envelope"
+    },
+    {
+      "expect": {
+        "error": "BadSignature"
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/101_bad_signature.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/101_bad_signature.json",
+      "sha256": "ea6b3113e87e635cb174060f2135e15a8baccdbc6e735de0fccdb33d5350364b",
+      "vector_name": "101_bad_signature"
+    },
+    {
+      "expect": {
+        "error": "WrongGrantee"
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/102_wrong_grantee.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/102_wrong_grantee.json",
+      "sha256": "814b1413ab8b520d71e3b0cbc099b43679197cb9788a214c58262d367bef2df4",
+      "vector_name": "102_wrong_grantee"
+    },
+    {
+      "expect": {
+        "error": "Expired"
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/103_expired.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/103_expired.json",
+      "sha256": "dc3b6d9179f09cba7923fc20c7481124fa5f44a9d7be1a6aab8b21f47a2568f0",
+      "vector_name": "103_expired"
+    },
+    {
+      "expect": {
+        "error": "Revoked"
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/104_revoked.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/104_revoked.json",
+      "sha256": "199f72c8e767d63018fe0269a624913cb4706ae28605793beddd6e8da6a32fde",
+      "vector_name": "104_revoked"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "capability",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/capability/105_non_canonical.json"
+      ],
+      "path": "WeftCodec/conformance/v1/capability/105_non_canonical.json",
+      "sha256": "d0ee5a85463391e5b4b0f970257d863ab9ba5b7b56289f138336d5a654abe73a",
+      "vector_name": "105_non_canonical"
+    },
+    {
+      "expect": {
+        "content_root": "77475fa35f898c07f43c6ca1b6a8b30da44468825e0dcd8a0249442ba86ec15c",
+        "decoded_sha256": "0cb2633466a3f5de3224ef7c2cd891355231e3e48fc914091f705a0e27eb9409",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/001_single_parent.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/001_single_parent.json",
+      "sha256": "50376c8988fc3b24b52e31adf98e46bf9445d0bb9bbed6eacee8512c469344f2",
+      "subkind": "causal_closure",
+      "vector_name": "001_single_parent"
+    },
+    {
+      "expect": {
+        "content_root": "58f09b15991e2de83a8f689327a928d31e3df8c80cf44562293377316b6c92ae",
+        "decoded_sha256": "ccfb3256b529d869af1f8076d96e48034188f03c70212316f3675178e80ded98",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/002_two_parents_unsorted_input.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json",
+      "sha256": "d2fc8289fb7abd61badeb9e0119447d0adac8505af7bc1cbf8a5813a759ce6a8",
+      "subkind": "causal_closure",
+      "vector_name": "002_two_parents_unsorted_input"
+    },
+    {
+      "expect": {
+        "content_root": "41c5d31f9a62e7bc57e52a5aafbac806830aae08265b8f99ea330a70c46f2100",
+        "decoded_sha256": "ab99ff1e6226ef2f6b249f326c3f1e7faa982bbddfb063d25c752b84125d9aa1",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/003_three_parents.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/003_three_parents.json",
+      "sha256": "c4857c2a006376f8cecb0b05f5aeb1a42dd65beec050a57543fc4d426c4029ca",
+      "subkind": "causal_closure",
+      "vector_name": "003_three_parents"
+    },
+    {
+      "expect": {
+        "content_root": "fe2d8422572489a70dc533dffa9a891fd36d99f496f16aab85254fff147ab7cc",
+        "decoded_sha256": "5696ca8a2a60b271f0c481000c73fe3a37c2e035f3940f01e26f5d40beeeb894",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/004_empty_closure.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/004_empty_closure.json",
+      "sha256": "ab0d718783d3db2fd75c88de574087232a3b248812f0196ef479617275c3858f",
+      "subkind": "causal_closure",
+      "vector_name": "004_empty_closure"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/101_unsorted.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/101_unsorted.json",
+      "sha256": "d12dcdd63c1060e4ce81d7686fd68fafa85e22dfd6a7518701e04635b04b5908",
+      "subkind": "causal_closure",
+      "vector_name": "101_unsorted"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/102_duplicate.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/102_duplicate.json",
+      "sha256": "8514fd6bd08c9e684ba3933108f15aeacc1ab6f09428e5841e5c72fe1a513afb",
+      "subkind": "causal_closure",
+      "vector_name": "102_duplicate"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/103_closure_missing_parent.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+      "sha256": "39439a7fd50220e4a29bcfabdaac5f0b159d1a116a11898910a89af33d0a25c8",
+      "subkind": "causal_closure",
+      "vector_name": "103_closure_missing_parent"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/104_zero_entry.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+      "sha256": "be646fa04fa5fa3f851eba51a29a57653ac0d8d09fc5f235d1fa289ce222b6b0",
+      "subkind": "causal_closure",
+      "vector_name": "104_zero_entry"
+    },
+    {
+      "expect": {
+        "error": "UnknownSchema"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/105_unknown_schema.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+      "sha256": "a8d0a3ea8b82ecdc91a54802fe686bab63d808a8d52810ad723f6d6ff78c0829",
+      "subkind": "causal_closure",
+      "vector_name": "105_unknown_schema"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/causal/106_unknown_key.json"
+      ],
+      "path": "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+      "sha256": "a5314df7193f26dff1ddeac6d743c70c6dd8148eed87f2989fd1634847a72b86",
+      "subkind": "causal_closure",
+      "vector_name": "106_unknown_key"
+    },
+    {
+      "expect": {
+        "content_root": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+        "decoded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/001_raw_empty.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/001_raw_empty.json",
+      "sha256": "699a59a52677c0664a8ce998003f5c6e40d94cb0dbb8a2fe0e10cc4c326268b2",
+      "vector_name": "001_raw_empty"
+    },
+    {
+      "expect": {
+        "content_root": "ed16b611e50be935121ea4c9334d86f722bb1dc04f3fe40e30186ca9ef9dabdb",
+        "decoded_sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/002_raw_one_byte.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/002_raw_one_byte.json",
+      "sha256": "1ceca29f535e0d48ee93ee0418c25c5d42dc9c658af157a3fca0a7176ab353ac",
+      "vector_name": "002_raw_one_byte"
+    },
+    {
+      "expect": {
+        "content_root": "afcfd1e9581878b973ce78e4ac080f029b7d2d8345e80e09727ca0a2194aef89",
+        "decoded_sha256": "4dd7e5d1734d0011ac775692e1328a55a589708d45e22603b83a70a1632a9351",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/003_raw_4k.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/003_raw_4k.json",
+      "sha256": "c64d554090e433e2391005900dadef55116afc4d0fcd121dffb0ecc243346d60",
+      "vector_name": "003_raw_4k"
+    },
+    {
+      "expect": {
+        "content_root": "08fd3375c693ed0866218977ce127ebbc6796cb0f70359cfe01ab6394c68bbef",
+        "decoded_sha256": "b7bc810e008f9dc59ed9105ec519c550e593489ef5c69b0124e6ae428f282599",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/004_raw_1m.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/004_raw_1m.json",
+      "sha256": "9101ce7c85ff5b08ab0d1b4f19c12ee1329e5c82fa030a415bf09e285e2a8692",
+      "vector_name": "004_raw_1m"
+    },
+    {
+      "expect": {
+        "content_root": "af1f8edefbc52867dff58e5aaa537a649cf893a64ea49ceb8c901b9dbf942bea",
+        "decoded_sha256": "ce0ff060d9716d935a6eea5683511b7ef5ac06fa6e525f5b23cbc12d85e02899",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/005_raw_64k_repetitive.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/005_raw_64k_repetitive.json",
+      "sha256": "aa77941e0001460627161c46df0cccda7ee5d85ddaaf888226a012973f0f85d8",
+      "vector_name": "005_raw_64k_repetitive"
+    },
+    {
+      "expect": {
+        "content_root": "ee6beb849473c5b1724ea69ff92269e53423b816993061e1e53875d60e0927b1",
+        "decoded_sha256": "f1be48f0cdb5b5916b3c4cd57062c23c454118842d20ddb6ab3d44b2ecadd528",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/006_raw_chunked_1024.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/006_raw_chunked_1024.json",
+      "sha256": "c6befc684965115bf0e04bbfcb00fd5c00c281f4497691dd00fa0fa6f8d0c713",
+      "vector_name": "006_raw_chunked_1024"
+    },
+    {
+      "expect": {
+        "content_root": "ee6beb849473c5b1724ea69ff92269e53423b816993061e1e53875d60e0927b1",
+        "decoded_sha256": "f1be48f0cdb5b5916b3c4cd57062c23c454118842d20ddb6ab3d44b2ecadd528",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/007_zstd_chunked_1024.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "path": "WeftCodec/conformance/v1/codec/007_zstd_chunked_1024.json",
+      "sha256": "aa9615b1c900e82c61931c27d6a361b4fe0fe427467974a8bbaf405de2ca2b6f",
+      "vector_name": "007_zstd_chunked_1024"
+    },
+    {
+      "expect": {
+        "content_root": "afcfd1e9581878b973ce78e4ac080f029b7d2d8345e80e09727ca0a2194aef89",
+        "decoded_sha256": "4dd7e5d1734d0011ac775692e1328a55a589708d45e22603b83a70a1632a9351",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/008_zstd_4k.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "path": "WeftCodec/conformance/v1/codec/008_zstd_4k.json",
+      "sha256": "2c0e603c99cee5728b896fcfa58141335887a9c325cc4419c924b699d9ff3da6",
+      "vector_name": "008_zstd_4k"
+    },
+    {
+      "expect": {
+        "content_root": "5bb5e8e162687708af80e24418443638c7d9bd8c9bf77092c1b3895a39d8b114",
+        "decoded_sha256": "1e74cf6c684f294744f64cbb8d59923fd1aa4bf88307d8a030f64d01672bdeea",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/009_reference_equal.json"
+      ],
+      "mode": 2,
+      "mode_name": "reference",
+      "path": "WeftCodec/conformance/v1/codec/009_reference_equal.json",
+      "sha256": "068f1c0fc5e79153f3d2c88ed729d1111c0fb58b3b5b2820c735c134f9f819b1",
+      "vector_name": "009_reference_equal"
+    },
+    {
+      "expect": {
+        "content_root": "bf648dbd5d8e663d7ab05b5cb2811a434a490c38ef7063f5f4171d9483127337",
+        "decoded_sha256": "bef36651ed9d35fce589d208a87c59a86bd5fd23845581678b2c8f66ce97a4f8",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/010_delta_edits.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "path": "WeftCodec/conformance/v1/codec/010_delta_edits.json",
+      "sha256": "51cf24d3053015086e51867612542c5a2a4b75d134d708d427df1269ed0cad4a",
+      "vector_name": "010_delta_edits"
+    },
+    {
+      "expect": {
+        "content_root": "373026a96b18d6a4722a8e6224f72274b2c0f1a89685cf273bd08854545018c0",
+        "decoded_sha256": "ac20b8f1f05d69d35ef04f0f924ea874e07d016829e3bc22ffdfb776c2213a7b",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/011_dictionary_raw.json"
+      ],
+      "mode": 4,
+      "mode_name": "dictionary",
+      "path": "WeftCodec/conformance/v1/codec/011_dictionary_raw.json",
+      "sha256": "a3f93c7a63e3b3c5fab1481c3b193e1153ddcfa5393282894b9686ada809adf3",
+      "vector_name": "011_dictionary_raw"
+    },
+    {
+      "expect": {
+        "content_root": "73cc190ce09686afcca5ee3b083577e1f9110a0b830229d0afe058a67a60767d",
+        "decoded_sha256": "629159eed5b5c9be8b36b0271362f9cf672b23d0b9890c1b9aa1b0790beaa1fb",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/012_structured_map.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "path": "WeftCodec/conformance/v1/codec/012_structured_map.json",
+      "sha256": "1af73931d2b3f90b2b3497da3d18011b445bbf98a74a16eed6cbb05ec9ddeaac",
+      "vector_name": "012_structured_map"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/013_bad_magic.json"
+      ],
+      "path": "WeftCodec/conformance/v1/codec/013_bad_magic.json",
+      "sha256": "ab0a9c55cadbd2d113c580222ec3f5f28a60d9ce8631754f4b3bb3eaf1575355",
+      "vector_name": "013_bad_magic"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/014_bad_header_crc.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/014_bad_header_crc.json",
+      "sha256": "b00428d4be5890d5c2a1730fd0ff056218ee013f8e4048d450297c90cd00ea8d",
+      "vector_name": "014_bad_header_crc"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/015_bad_trailer_crc.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/015_bad_trailer_crc.json",
+      "sha256": "7249e9fb93114de78adf3277ad53990838f2d793a513657f660a578315f8628a",
+      "vector_name": "015_bad_trailer_crc"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/016_truncated.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/016_truncated.json",
+      "sha256": "d8e1b887c51580ee1c30103cb753de09f573fa6ec2edbd5101e786505fc63582",
+      "vector_name": "016_truncated"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode.json",
+      "sha256": "ac047bfd112e854a1777e3ab1a64794e2c0dece8052e0e8b16a8dba3b8cc31e0",
+      "superseded_by": "017_unknown_mode_reserved8",
+      "vector_name": "017_unknown_mode"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved10.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved10.json",
+      "sha256": "fcfaf7d14b95f66947b5ea3626d14f36f0533a76d3620dbc9c232dc42599ab48",
+      "superseded_by": "017_unknown_mode_reserved11",
+      "supersedes": [
+        "017_unknown_mode_reserved9"
+      ],
+      "vector_name": "017_unknown_mode_reserved10"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved11.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved11.json",
+      "sha256": "fedf1a7d83d411109bee5635f98b6199e0b167e742efce9ecc96a1c44b2a8ada",
+      "superseded_by": "017_unknown_mode_reserved12",
+      "supersedes": [
+        "017_unknown_mode_reserved10"
+      ],
+      "vector_name": "017_unknown_mode_reserved11"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved12.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved12.json",
+      "sha256": "c1fc8145484abda48dd37c7d4dfe549b415f325a796100d43eba45657993c3cf",
+      "superseded_by": "017_unknown_mode_reserved14",
+      "supersedes": [
+        "017_unknown_mode_reserved11"
+      ],
+      "vector_name": "017_unknown_mode_reserved12"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved14.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved14.json",
+      "sha256": "63c0811c230783fecf1590b8e85d6a35c04543a527442bbb3efe4faff78d4c41",
+      "superseded_by": "unknown_mode_reserved15",
+      "supersedes": [
+        "017_unknown_mode_reserved12"
+      ],
+      "vector_name": "017_unknown_mode_reserved14"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved15.json"
+      ],
+      "mode": 15,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json",
+      "sha256": "8343a78b81a58dbaeb8e673b09876ed08624cf177a67048994846ad34bcca514",
+      "supersedes": [
+        "017_unknown_mode_reserved14"
+      ],
+      "vector_name": "017_unknown_mode_reserved15"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved8.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved8.json",
+      "sha256": "4f532b30c2770b04fc6cfdce2862175296cfff9fa6b337be8f818b0820e7135f",
+      "superseded_by": "017_unknown_mode_reserved9",
+      "supersedes": [
+        "017_unknown_mode"
+      ],
+      "vector_name": "017_unknown_mode_reserved8"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved9.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved9.json",
+      "sha256": "bed772ef28755929bfd570b744233d55d9126d18b821399df7ac27281d5b37a2",
+      "superseded_by": "017_unknown_mode_reserved10",
+      "supersedes": [
+        "017_unknown_mode_reserved8"
+      ],
+      "vector_name": "017_unknown_mode_reserved9"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/018_unknown_feature.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/018_unknown_feature.json",
+      "sha256": "307246f29fef397e0dba66e800156f80a18e2a0b7a70731765675f75310bc44c",
+      "vector_name": "018_unknown_feature"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/019_self_contained_reserved.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/019_self_contained_reserved.json",
+      "sha256": "8b12f09d835538768a8cabe653fa2da12ee5136c9d4bb43a5ad64404ca87efbd",
+      "vector_name": "019_self_contained_reserved"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedVersion"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/020_unsupported_version.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/020_unsupported_version.json",
+      "sha256": "8e58025223168e00f960d1223cda908adc04b1e5f2cd6a046813e3f7f49b0177",
+      "vector_name": "020_unsupported_version"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/021_bad_table_len.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/021_bad_table_len.json",
+      "sha256": "26a026ff6920afd203d5082ffee226ffa0f508f94674642c0687943ca6a38297",
+      "vector_name": "021_bad_table_len"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/022_chunk_gap.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/022_chunk_gap.json",
+      "sha256": "7ef7c3a338e41b7737d44ea83c96229fbb4b8c697dac26748f924ad4ba06a4c3",
+      "vector_name": "022_chunk_gap"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/023_chunk_overlap.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/023_chunk_overlap.json",
+      "sha256": "7c56c1a94ae5529a60a63fef871724f365e8c773b9cf316d09a43426abef6f81",
+      "vector_name": "023_chunk_overlap"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/024_bad_dependency_length.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "path": "WeftCodec/conformance/v1/codec/024_bad_dependency_length.json",
+      "sha256": "1a1009a398781f174d7f5ae7e5246306db40152d4ee793fd9fe22e6058c778e9",
+      "vector_name": "024_bad_dependency_length"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/025_bad_dependency_hash.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "path": "WeftCodec/conformance/v1/codec/025_bad_dependency_hash.json",
+      "sha256": "85f671935a1fd4de3a6638d2b9434efe255dc5ccbbb393451c25c92cca048e20",
+      "vector_name": "025_bad_dependency_hash"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/026_delta_offset_out_of_range.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "path": "WeftCodec/conformance/v1/codec/026_delta_offset_out_of_range.json",
+      "sha256": "80194b4180b6aebb4d490216c89b936be55a6f0ba89b72cf6ec054e496ecdd9a",
+      "vector_name": "026_delta_offset_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/027_delta_length_mismatch.json"
+      ],
+      "mode": 3,
+      "mode_name": "delta",
+      "path": "WeftCodec/conformance/v1/codec/027_delta_length_mismatch.json",
+      "sha256": "fb14d4538146963577e60b347bc8089ada9e57eb41b538d018fd2b94430a1b39",
+      "vector_name": "027_delta_length_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/028_structured_non_canonical.json"
+      ],
+      "mode": 5,
+      "mode_name": "structured",
+      "path": "WeftCodec/conformance/v1/codec/028_structured_non_canonical.json",
+      "sha256": "0b358f42e71118aaac3740f1c4bf70d8834043877837a15e7c36042d99a605fa",
+      "vector_name": "028_structured_non_canonical"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/029_limits_exceeded.json"
+      ],
+      "mode": 0,
+      "mode_name": "raw",
+      "path": "WeftCodec/conformance/v1/codec/029_limits_exceeded.json",
+      "sha256": "9a1a2cd68035cfc57eacf0bae20c9a5d7fe7cf9de8f188857d06145bd4afca29",
+      "vector_name": "029_limits_exceeded"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/030_quantized_dtype_f32.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/030_quantized_dtype_f32.json",
+      "sha256": "b67a054a6753aed342d11c3052c578d7d6cd2832b81d4f15dc5791dfdc03e211",
+      "vector_name": "030_quantized_dtype_f32"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/031_quantized_scale_nan.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/031_quantized_scale_nan.json",
+      "sha256": "a2921f76d0fed09c043da5d60e09fb8ad685929ce8e57e4ab307c0cd246f31f5",
+      "vector_name": "031_quantized_scale_nan"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/032_quantized_zero_point_out_of_range.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/032_quantized_zero_point_out_of_range.json",
+      "sha256": "4a183be4fc7f3791550ea513c2014f0854d2f9a31060f61290d43e1ce1d07f0e",
+      "vector_name": "032_quantized_zero_point_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/033_quantized_payload_bytes_mismatch.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/033_quantized_payload_bytes_mismatch.json",
+      "sha256": "6650f63994abb8c691c56273a3fe4334170f5eafdbb3994f80bd192e8b0aec03",
+      "vector_name": "033_quantized_payload_bytes_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/034_quantized_payload_hash_mismatch.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/034_quantized_payload_hash_mismatch.json",
+      "sha256": "5856dc83918fb86a22871777b7e9ab4cb9ab65e9e41b88927b5755ff12ec9663",
+      "vector_name": "034_quantized_payload_hash_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/035_quantized_scale_bytes_len.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/035_quantized_scale_bytes_len.json",
+      "sha256": "a52c97aa0fb65ceb762a9c95b33e5fa3ccf80bc5ae9c98d00f2a7d62281ec809",
+      "vector_name": "035_quantized_scale_bytes_len"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/036_quantized_layout_not_implemented.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/036_quantized_layout_not_implemented.json",
+      "sha256": "dda6cfee2aeb7262d6082550c109599665983d1cdf70ea84ec406b35afc9c8fd",
+      "vector_name": "036_quantized_layout_not_implemented"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/037_quantized_zero_point_not_i64.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/037_quantized_zero_point_not_i64.json",
+      "sha256": "48c4624a7f4970f469e47dfc355d9cb7c1b20b77f89b185c8f2d86821376746b",
+      "vector_name": "037_quantized_zero_point_not_i64"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/038_zstd_empty_body.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "path": "WeftCodec/conformance/v1/codec/038_zstd_empty_body.json",
+      "sha256": "cb9f42ab00b9b77c8f0474c994be6bbcca19d006202e3ec37ea7a15482e6ccfd",
+      "vector_name": "038_zstd_empty_body"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/039_zstd_content_size_mismatch.json"
+      ],
+      "mode": 1,
+      "mode_name": "zstd",
+      "path": "WeftCodec/conformance/v1/codec/039_zstd_content_size_mismatch.json",
+      "sha256": "3b1d95b4eb26ed0cec540335f0c286c5c7ea54dee0fa2f0822c69907ae91bddb",
+      "vector_name": "039_zstd_content_size_mismatch"
+    },
+    {
+      "expect": {
+        "content_root": "32c3c68a7b3503d5e8abacfe27e7eb6088b624a6b4b971458b09ed74708e2c1d",
+        "decoded_sha256": "3476ca35238b26f59f4f6d71b7f28cc499f87acf513571fec28026f17cc98ce1",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/100_tensor_f32_2x3.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/100_tensor_f32_2x3.json",
+      "sha256": "e3d23972e5215d87848f0f8e504c310b7b4cc6059b37155c3c485807243d5869",
+      "vector_name": "100_tensor_f32_2x3"
+    },
+    {
+      "expect": {
+        "content_root": "a7a31cb78a210a39c0592bb0221fe2ce754da09926ae87cfbd4c1eef52bd1582",
+        "decoded_sha256": "505114fe537172ea35e17ca1a7516edac516a89b31f983f7c6387d5d2bb462aa",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/101_tensor_f16_scalar.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/101_tensor_f16_scalar.json",
+      "sha256": "6921bb09cd4d6cc349f676654391e5cf2287c6c6121d59617a409b372180a74b",
+      "vector_name": "101_tensor_f16_scalar"
+    },
+    {
+      "expect": {
+        "content_root": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+        "decoded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/102_tensor_u8_zero_element.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/102_tensor_u8_zero_element.json",
+      "sha256": "b9f1f2d5d9b0c367cb8671cb4e95556f0ccb27adfaa0ed1221e7f6c48eddf0a2",
+      "vector_name": "102_tensor_u8_zero_element"
+    },
+    {
+      "expect": {
+        "content_root": "6159a5180fdf4043d937b52e0bd3fc0d24a4b6de6ca05a27dde1895f369848a3",
+        "decoded_sha256": "84ce1112e9ead6f5182f1d01d519c5b5c5a1f43c6c860490d19f02d172804cfd",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/103_tokens_delta_boundaries.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/103_tokens_delta_boundaries.json",
+      "sha256": "e6739bc7d6c2d581160a370cae510b277a396bfb14ce91ecca5180415c6a0d35",
+      "vector_name": "103_tokens_delta_boundaries"
+    },
+    {
+      "expect": {
+        "content_root": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+        "decoded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/104_tokens_empty.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/104_tokens_empty.json",
+      "sha256": "77f686400e76b73d80a52f0871318ab1d5031741d096adf60f7afc2bb9c7c2e3",
+      "vector_name": "104_tokens_empty"
+    },
+    {
+      "expect": {
+        "content_root": "145fcc0fe0bc0d100d77d39293367c352c85ffdde06debdb2c870ab78bc4d76f",
+        "decoded_sha256": "7e8fe5455aff7fa1528c44b1fb3389e4e12afad68256314545f0335217f67efe",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/105_quantized_i8_2x3.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/105_quantized_i8_2x3.json",
+      "sha256": "1cfcec0ad4398ae1d3079587015b9350d02463bcd2e3fc7aaf48cd315227a462",
+      "vector_name": "105_quantized_i8_2x3"
+    },
+    {
+      "expect": {
+        "content_root": "9959c2a9c356d12342cde2d83160cc18ed0136e2e36e8f6eed89066c78a471cb",
+        "decoded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/106_quantized_u8_zero_element.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/106_quantized_u8_zero_element.json",
+      "sha256": "21d0e439ce6f25f5f40751d5921a0579a520b4654829360293b606f41251ad1b",
+      "vector_name": "106_quantized_u8_zero_element"
+    },
+    {
+      "expect": {
+        "content_root": "83b528582cff69548ec72f999b8ba51a8f3de21df82046f9f308de9f6f7438bc",
+        "decoded_sha256": "76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/107_quantized_i8_scalar.json"
+      ],
+      "mode": 8,
+      "mode_name": "quantized_tensor",
+      "path": "WeftCodec/conformance/v1/codec/107_quantized_i8_scalar.json",
+      "sha256": "5fba4d24880e5c57bb17e160df92192578a92ff9c4a67af323f4065d6435dc35",
+      "vector_name": "107_quantized_i8_scalar"
+    },
+    {
+      "expect": {
+        "content_root": "28f5e92f11ff4801e2dc0e012b82d94131eaf2e6bde55f6bceef2e54c347b177",
+        "decoded_sha256": "421e3067fcf6dea70351162ca3c39d45a7ffc9d52d47e82b766b754c2f3310a6",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/108_float_bf16_2x2.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/108_float_bf16_2x2.json",
+      "sha256": "1317e9dda1927977354a5c90e27202ebcc2d29b5f69cee6ac85c414e0c7ac049",
+      "vector_name": "108_float_bf16_2x2"
+    },
+    {
+      "expect": {
+        "content_root": "2fd16af3604d0ea132eefd480b70b4e75763c73675c5ddf3759348da9de9c5e9",
+        "decoded_sha256": "02bb923fbe64a02ab45ab5f3a81b62a6f312b11416d48891163b5dc84256cca8",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/109_float_fp16_3d.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/109_float_fp16_3d.json",
+      "sha256": "2b64a8b5864af149934d2cb299f89637e3173d5de57581e21e958cfee661bdf8",
+      "vector_name": "109_float_fp16_3d"
+    },
+    {
+      "expect": {
+        "content_root": "d76da988b80ad5e12ad1a5ea1a22ad100fb70ea0d0f2d0ceb2df4f0fde77b666",
+        "decoded_sha256": "c9d2eef2d5aa2224ccde51031009295312b67508a1c06293a97c2f3eb7a3c65f",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/110_float_fp32_4d.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/110_float_fp32_4d.json",
+      "sha256": "af6cec9971eca78c137895d30284a6bb6f86f781345f806787228a4493fedf11",
+      "vector_name": "110_float_fp32_4d"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/120_tensor_shape_mismatch.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/120_tensor_shape_mismatch.json",
+      "sha256": "8420ff15daf056d7f60ad4ff8fb5ef5f3427a772f9cfa7e205be60931a800d0a",
+      "vector_name": "120_tensor_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/121_tensor_payload_bytes_mismatch.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/121_tensor_payload_bytes_mismatch.json",
+      "sha256": "23446121a1b2815fe4d0a52f0543454a8c715477cc3e7136309b7b3e7cd88436",
+      "vector_name": "121_tensor_payload_bytes_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/122_tensor_payload_hash_mismatch.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/122_tensor_payload_hash_mismatch.json",
+      "sha256": "a59eb088a332fe5d8b24411adbeb8303e0d7c1e84c711e8ffb31cc70476c3fbd",
+      "vector_name": "122_tensor_payload_hash_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/123_tensor_layout_not_implemented.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/123_tensor_layout_not_implemented.json",
+      "sha256": "76fb3b03a57761c6b7bf2b064151051ab7dedb46a25f15e8bba3336a7f21e3c9",
+      "vector_name": "123_tensor_layout_not_implemented"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/124_tensor_unknown_dtype.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/124_tensor_unknown_dtype.json",
+      "sha256": "504af790d2a58d1fda9206bb86dc9b47781ba6919eae3b50381b8933f9ecb363",
+      "vector_name": "124_tensor_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/125_tensor_shape_overflow.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/125_tensor_shape_overflow.json",
+      "sha256": "7a40fca865465b80d9b520b41b891c7fa05dc8f3c4fcc00669b4349a2c15f156",
+      "vector_name": "125_tensor_shape_overflow"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/126_tensor_element_limit.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/126_tensor_element_limit.json",
+      "sha256": "00020cb092aef7bd930ffac12e29b1e278799fdd1b4e661c475bfe959cae2911",
+      "vector_name": "126_tensor_element_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/127_tensor_rank_limit.json"
+      ],
+      "mode": 6,
+      "mode_name": "tensor",
+      "path": "WeftCodec/conformance/v1/codec/127_tensor_rank_limit.json",
+      "sha256": "45503d3a41ecf2709e6aacd9802b1f36fdad5dd63b63742076e2f9f12b6db61c",
+      "vector_name": "127_tensor_rank_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/130_tokens_count_mismatch.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/130_tokens_count_mismatch.json",
+      "sha256": "50639e1c1a11941071537484064a0cef07a6d16f2c3b3f1c9822410835ec26c7",
+      "vector_name": "130_tokens_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/131_tokens_encoding_not_implemented.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/131_tokens_encoding_not_implemented.json",
+      "sha256": "cd7596d6ab8b80aebb14f6125d8f394bd968cbe6ff17334167b450120b38e6b4",
+      "vector_name": "131_tokens_encoding_not_implemented"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/132_tokens_non_minimal_varint.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/132_tokens_non_minimal_varint.json",
+      "sha256": "c4d90b81d8dbf40f71f91deb8ab1c5b2c97837af208000352883ebc2a56cfe16",
+      "vector_name": "132_tokens_non_minimal_varint"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/133_tokens_trailing_bytes.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/133_tokens_trailing_bytes.json",
+      "sha256": "ae96d3bedd41eed9115005f8a2236277637f8c39a2a4fda4df1ac975979c17ab",
+      "vector_name": "133_tokens_trailing_bytes"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/134_tokens_payload_hash_mismatch.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/134_tokens_payload_hash_mismatch.json",
+      "sha256": "e2b8a2b28678e4097d0af619618b6cd9a5e373a8f747cfb6aa5df3c2e83b902d",
+      "vector_name": "134_tokens_payload_hash_mismatch"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/135_tokens_count_limit.json"
+      ],
+      "mode": 7,
+      "mode_name": "tokens",
+      "path": "WeftCodec/conformance/v1/codec/135_tokens_count_limit.json",
+      "sha256": "80ac3420bd9fbc8a8f4a8b717afc8a4abce96720fb4b0fee5e1532d5aa787352",
+      "vector_name": "135_tokens_count_limit"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/140_float_tensor_unknown_dtype.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/140_float_tensor_unknown_dtype.json",
+      "sha256": "109cf768e4002fb5406c7eb3568b1a738465c36e8da290f929db5a50d51589b5",
+      "vector_name": "140_float_tensor_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/141_float_tensor_element_count_mismatch.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/141_float_tensor_element_count_mismatch.json",
+      "sha256": "3daa3ff1714e30c2e5d30b2a2dbcc909434bf19954b34a3072e0449a42aae35a",
+      "vector_name": "141_float_tensor_element_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/142_float_tensor_rank_zero.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/142_float_tensor_rank_zero.json",
+      "sha256": "b83023ac040bb2cfb4fd6a716a1ab06def2ef703305b7bf74e321a3ef3c81ca4",
+      "vector_name": "142_float_tensor_rank_zero"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/143_float_tensor_zero_dimension.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/143_float_tensor_zero_dimension.json",
+      "sha256": "132ac363035a2383c1c38b456d93537bae9bb0a4a1270bf6a734f7f9cbd7fa28",
+      "vector_name": "143_float_tensor_zero_dimension"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/144_float_tensor_field_widths_mismatch.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/144_float_tensor_field_widths_mismatch.json",
+      "sha256": "83d37bc016e9cc8ad7e78d51629a46bc390f597e908fa7f07d1fe55e7b3ce48e",
+      "vector_name": "144_float_tensor_field_widths_mismatch"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/145_float_tensor_plane_length_overflow.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/145_float_tensor_plane_length_overflow.json",
+      "sha256": "815c7a095fdd1090632659e617b537c9a5db88455295fa465920b998fc7b9bb5",
+      "vector_name": "145_float_tensor_plane_length_overflow"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/146_float_tensor_unknown_exponent_coder.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/146_float_tensor_unknown_exponent_coder.json",
+      "sha256": "c389d9d0ecedaf8c589e32ae88f4aae319ba85e193d2c875c33257509eed0e27",
+      "vector_name": "146_float_tensor_unknown_exponent_coder"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/147_float_tensor_decoded_len_mismatch.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/147_float_tensor_decoded_len_mismatch.json",
+      "sha256": "0cdb9653f09c7f973c6787b10b93c1423ffaecf45d4429e5736ebf9db999530b",
+      "vector_name": "147_float_tensor_decoded_len_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/148_float_tensor_exponent_over_subscribed.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/148_float_tensor_exponent_over_subscribed.json",
+      "sha256": "4a28c2ef3d4f56e129112da9f77cad90a21ba708c2e105eaba4e0c9f4bf9c651",
+      "vector_name": "148_float_tensor_exponent_over_subscribed"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/149_float_tensor_exponent_incomplete.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/149_float_tensor_exponent_incomplete.json",
+      "sha256": "902598acd6cde77dc6a020f596a56a503e61876e2d124a6a2d66ff1ecbbbb876",
+      "vector_name": "149_float_tensor_exponent_incomplete"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/150_float_tensor_exponent_code_length_too_long.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/150_float_tensor_exponent_code_length_too_long.json",
+      "sha256": "c1d1fdd717e49c5b51ddf239d8f8d7d1bc0c848c2b9dba2931c3439e1b2214ac",
+      "vector_name": "150_float_tensor_exponent_code_length_too_long"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/151_float_tensor_exponent_nonzero_padding.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/151_float_tensor_exponent_nonzero_padding.json",
+      "sha256": "c738c84b1d827552f81be4ddb2f8b17c1066505926082e15156abd07001b5fc3",
+      "vector_name": "151_float_tensor_exponent_nonzero_padding"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/152_float_tensor_exponent_table_truncated.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/152_float_tensor_exponent_table_truncated.json",
+      "sha256": "d2ee760641f7fe55d499a4c5de6697557a0d01a692b20abe451c4c3ef706b816",
+      "vector_name": "152_float_tensor_exponent_table_truncated"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/153_float_tensor_exponent_stream_truncated.json"
+      ],
+      "mode": 9,
+      "mode_name": "float_tensor",
+      "path": "WeftCodec/conformance/v1/codec/153_float_tensor_exponent_stream_truncated.json",
+      "sha256": "dd8b78de7555a15f40a87de14269a5352e5b210847886de6589a6e8b8f926571",
+      "vector_name": "153_float_tensor_exponent_stream_truncated"
+    },
+    {
+      "expect": {
+        "content_root": "53f70ff51a49496af01dc87e7002fa7ef7fe1ab5c192bdb326d0868b1f01a41a",
+        "decoded_sha256": "ede545cec50c12f69a99e632d1211fae4ae1a0665a0a58c2c7c96f236fd1eb72",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/001_root_true.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/001_root_true.json",
+      "sha256": "e381f2c1c710209d01da054c9af3e82419c928a28e17ec37a1e8829282b277d4",
+      "subkind": "context_root",
+      "vector_name": "001_root_true"
+    },
+    {
+      "expect": {
+        "content_root": "190b59a2510cf402fe0e4c8a3e8bc8a72d2b60e5c0ee4ed9ca8ce2787bc56af2",
+        "decoded_sha256": "909693b330c91fa77566adf34c88561b800b5e78dac9efc9614ce7d1ed87eee0",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/002_root_filter_budget.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/002_root_filter_budget.json",
+      "sha256": "0fc236ece5b78e0a5d6a1d21fb8478fb4c4d204a378f64019ee95017db50afb3",
+      "subkind": "context_root",
+      "vector_name": "002_root_filter_budget"
+    },
+    {
+      "expect": {
+        "content_root": "ce702e74220a98d9b3b36e007860b20ee2404ef0f735085c8f942c9b29acfc02",
+        "decoded_sha256": "3976cc39115d583598f741e5dae36a1da6e730f8ee951845f20edc5e5b57471d",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/003_root_causal_capability.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/003_root_causal_capability.json",
+      "sha256": "a934743fb6a4fbb76b9e4b0193818fafbe4e1fb95882691d4ab5487d9f789002",
+      "subkind": "context_root",
+      "vector_name": "003_root_causal_capability"
+    },
+    {
+      "expect": {
+        "content_root": "dc6433a13d94842a972b37ab141f1911d02f533a043e7f662c57571b403b7e5a",
+        "decoded_sha256": "dffc5c339b099873cf9079178a78131e8f0d864b7650f2986a618ca4f31947b0",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/004_root_descriptor_escaping.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json",
+      "sha256": "87c942bb03611b6d8ed26bebd7ee1336ba2f9ead52279e4ea10842f886cdc262",
+      "subkind": "context_root",
+      "vector_name": "004_root_descriptor_escaping"
+    },
+    {
+      "expect": {
+        "content_root": "f4d84a7e21f100e7e01d4788bd538b0a50db11b1b0b9a4293e510c12e31bbc26",
+        "decoded_sha256": "ab240329e9264b640ffdbaaebd3a81ceee1b67446fcf2b7855025d256c2b01ca",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/005_root_custom_resolver.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/005_root_custom_resolver.json",
+      "sha256": "0936ba62156619e2760f8f04b2d2e3b859565c633a275722964d4655e6bfc39c",
+      "subkind": "context_root",
+      "vector_name": "005_root_custom_resolver"
+    },
+    {
+      "expect": {
+        "content_root": "b61f96f46c6231f057b2dc64fcb602c5a48622a855d99fb4b600e075e10209be",
+        "decoded_sha256": "dc1f658c3e40da13348d63ac374cc9ad908fa17ff5ec1ee229f41c7861ccf154",
+        "ok": true
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/006_root_empty_causal.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/006_root_empty_causal.json",
+      "sha256": "353558de72096439af3facfaf1313946195929909da34564e47373fdfbce0f68",
+      "subkind": "context_root",
+      "vector_name": "006_root_empty_causal"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/101_unsorted_causal.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+      "sha256": "0789c1a74468a0788e052156066c73400eeba83d394f2a8bd139e06d32f86a87",
+      "subkind": "context_root",
+      "vector_name": "101_unsorted_causal"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/102_duplicate_causal.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+      "sha256": "9f01b0de4f2dbdc0569fdd9a3e707de7eb8be45fe95cff784b25f03508535cc3",
+      "subkind": "context_root",
+      "vector_name": "102_duplicate_causal"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/103_zero_snapshot.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+      "sha256": "6543b72810a45c992df08a82e7cabe9e09d65cb84bc684b3cc77dc9feda61174",
+      "subkind": "context_root",
+      "vector_name": "103_zero_snapshot"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/104_selector_id_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+      "sha256": "3d7af6e1f39ee5fbbda353080971b91cbf6334c06dd1f7e81266aa7c7e86fc0a",
+      "subkind": "context_root",
+      "vector_name": "104_selector_id_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/105_namespace_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+      "sha256": "5465e2621d825615b53dadc9c2c4d53717c40b08b346b6d21d60a9133a5146f6",
+      "subkind": "context_root",
+      "vector_name": "105_namespace_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/106_bad_namespace.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+      "sha256": "eb2318a524c51571e02b62aee95c7446eec0f20786648004bd9b8ba611e5204f",
+      "subkind": "context_root",
+      "vector_name": "106_bad_namespace"
+    },
+    {
+      "expect": {
+        "error": "UnknownSchema"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/107_unknown_schema.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+      "sha256": "013e92ae3aa4388679bb2bd2a39c6447a42d435b56694a2ad26ad43c36b074ea",
+      "subkind": "context_root",
+      "vector_name": "107_unknown_schema"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/108_bad_budget_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+      "sha256": "ece618292ddfefd5fa93541137dc854ecb7f1f74e35576ca27b2784fe46c97b8",
+      "subkind": "context_root",
+      "vector_name": "108_bad_budget_zero"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedVersion"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/109_unknown_ordering.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+      "sha256": "c37193bb357703726e46d6cb7f82d1e0761eab4e1ed10f52f4bf50971c306a93",
+      "subkind": "context_root",
+      "vector_name": "109_unknown_ordering"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "context",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/context/110_unknown_key.json"
+      ],
+      "path": "WeftCodec/conformance/v1/context/110_unknown_key.json",
+      "sha256": "24b2b6b44a6e1f815ca81fc32f907b5e6526f2297b701a99f6e1223929233c87",
+      "subkind": "context_root",
+      "vector_name": "110_unknown_key"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "6fd7f4c9cd70638d86fd3b5d83fd5c0bb8a94369fad37d254e0e0c9ac1cee211",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/001_bf16_two_pages.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/001_bf16_two_pages.json",
+      "sha256": "240a38c248b6fe70cf383dc50746c3b2db63d91f345626485ab3c4a343b9ed4e",
+      "subkind": "kv_cache",
+      "vector_name": "001_bf16_two_pages"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "9fea3ea835ffa30124bbcfa45fbbe67a8f89e4e7137234ee64c9fc19a060438a",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/002_fp32_two_pages.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/002_fp32_two_pages.json",
+      "sha256": "104dbd5ef4c17f72e2b7b114aef8fe7ed6d6bd7b78f2474960ce80b1d1d28975",
+      "subkind": "kv_cache",
+      "vector_name": "002_fp32_two_pages"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "ec8825e8b9e666f27bb9e2bb251bc6b8bcd965687b6ad2bb4c397692903446eb",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/003_bf16_seq_boundary.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/003_bf16_seq_boundary.json",
+      "sha256": "7c982713e405e21cbbb721f00c48ffe28b627604853dcd9d759e2dcac44239aa",
+      "subkind": "kv_cache",
+      "vector_name": "003_bf16_seq_boundary"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/101_unknown_dtype.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/101_unknown_dtype.json",
+      "sha256": "4a3d5a0821a5e90f40e082dfe2860233773ac373a4f72aa187ea9187da984677",
+      "subkind": "kv_cache",
+      "vector_name": "101_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/102_zero_dimension.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/102_zero_dimension.json",
+      "sha256": "4b4394b57da7113b5f2fe8dbcd74cbde4546ba3f36399a445e0944108e9a8faf",
+      "subkind": "kv_cache",
+      "vector_name": "102_zero_dimension"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/103_page_index_out_of_range.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/103_page_index_out_of_range.json",
+      "sha256": "f614e0d6931b560d535e9de3aa4c2857804ccd2330a57e3d9dd4dd9b406beb54",
+      "subkind": "kv_cache",
+      "vector_name": "103_page_index_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/104_seq_range_invalid.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/104_seq_range_invalid.json",
+      "sha256": "07b3de63badb52d2c074735a52e61c5427feb8adf8f2a3bc11765971f80c2684",
+      "subkind": "kv_cache",
+      "vector_name": "104_seq_range_invalid"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/105_shape_mismatch.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/105_shape_mismatch.json",
+      "sha256": "a4486369328bcdf7955ea803ccd94b37803109bbcdb15164b60a835bb35de1ff",
+      "subkind": "kv_cache",
+      "vector_name": "105_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/106_page_bytes_mismatch.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/106_page_bytes_mismatch.json",
+      "sha256": "e3426fede1af9ed8d069c492968494db070cfeaa94f9f07ed0f534b561d4f1b8",
+      "subkind": "kv_cache",
+      "vector_name": "106_page_bytes_mismatch"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/107_seq_overflow.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/107_seq_overflow.json",
+      "sha256": "56b46100c3b4c0cc1f421d4b98e37dd41895b552d51dc1d807ce1e3fe994e199",
+      "subkind": "kv_cache",
+      "vector_name": "107_seq_overflow"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-cache/108_payload_len_mismatch.json"
+      ],
+      "mode": 12,
+      "mode_name": "kv_cache",
+      "path": "WeftCodec/conformance/v1/kv-cache/108_payload_len_mismatch.json",
+      "sha256": "949da83c0fdac9d0f7e5df24d9fc0765a889a772956db4c1fffcf32c9ce1a38d",
+      "subkind": "kv_cache",
+      "vector_name": "108_payload_len_mismatch"
+    },
+    {
+      "expect": {
+        "content_root": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+        "decoded_sha256": "547a0f4b481f715bd1d55f6563cc7073669c03d73c5760ec0d899ee43fb90a1b",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/001_select_true.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/001_select_true.json",
+      "sha256": "671c8d67d643d589e84f0eb6e5501c7319043bfd5faf39b2acb71460db91bb66",
+      "vector_name": "1_select_true"
+    },
+    {
+      "expect": {
+        "content_root": "fa432203a49bdcbf3345619794058e3b1dd17c43303298ccf260c4f8cf1e3280",
+        "decoded_sha256": "0dc16e3f2a103f91ba4cca36dfb39cc22cf89a374a037b25501d9d5796f88f24",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/002_select_false.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/002_select_false.json",
+      "sha256": "48db5eb563ddc56f0d4718f5007e61ddc3b5751a22109156a8256c7c390c5fea",
+      "vector_name": "2_select_false"
+    },
+    {
+      "expect": {
+        "content_root": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+        "decoded_sha256": "547a0f4b481f715bd1d55f6563cc7073669c03d73c5760ec0d899ee43fb90a1b",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/003_select_not_false.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/003_select_not_false.json",
+      "sha256": "b9977c32d07b977b31db121d7d2b566c64b3587d30c8806620176c3820dfbb12",
+      "vector_name": "3_select_not_false"
+    },
+    {
+      "expect": {
+        "content_root": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+        "decoded_sha256": "547a0f4b481f715bd1d55f6563cc7073669c03d73c5760ec0d899ee43fb90a1b",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/004_select_not_not_true.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/004_select_not_not_true.json",
+      "sha256": "6cc35904262f908c6e419a4832ae36cff892e8c7d0e211c48c44093891ebe868",
+      "vector_name": "4_select_not_not_true"
+    },
+    {
+      "expect": {
+        "content_root": "f2d22f2a28dc328f44807807fa4056d9f84fd348e8bfda38e59cbaf87cd7f6c2",
+        "decoded_sha256": "e29c579179f9fa05dae32817504a225db3deeb56f40b725f0c982cd3e0769793",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/005_select_has_attrs_project.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json",
+      "sha256": "eafdbcbcfdf846e80581f652ddaccab32e334bf408b673458f434951752fb693",
+      "vector_name": "5_select_has_attrs_project"
+    },
+    {
+      "expect": {
+        "content_root": "104e7328656502ef285bade87b1aaf9cdf49bdad07a68a0cc2a04ba162dc01ad",
+        "decoded_sha256": "ee06683b66e6c84bc81016c7e701c2154805bc2ae9c784aa63d2fe323e09dd4c",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/006_select_tag_demo.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/006_select_tag_demo.json",
+      "sha256": "5d93e3f43d8c515ea24f45e79f0e44d8d2e3995e453dbc5ae43a799957f954d1",
+      "vector_name": "6_select_tag_demo"
+    },
+    {
+      "expect": {
+        "content_root": "1b734bfbb8ac5ca652d00f151f315984bb4beea556f5930724304104e759d387",
+        "decoded_sha256": "981aea68653b92e9dc70a27699b45de23fdcdc8a79d1a60761ce87bbcfc57656",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json",
+      "sha256": "e7df48144b288fec8b245a81d06f4bd7b07b5c23deefb0963536ab7756cd3877",
+      "vector_name": "7_select_relation_derived_from_obj_0011223"
+    },
+    {
+      "expect": {
+        "content_root": "1b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d",
+        "decoded_sha256": "24c9b36066ec05302a489abbf8fee4153eb1266789e7e405ddf1bb86770433cb",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/008_select_attrs_project_demo.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json",
+      "sha256": "0662d570cbe66e31b8c510ddc6884cc66ea947fe5cf7914b23a0f9b144ab0efa",
+      "vector_name": "8_select_attrs_project_demo"
+    },
+    {
+      "expect": {
+        "content_root": "5a79825d46bc1a1565b82c9e16b8b4435d330b1051b7b0f5ee1a682d1a7f16a9",
+        "decoded_sha256": "4c8242e0b5e59b6a08a2a6b3637cc3405251b1a943fbbc766b616f16eca2071d",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/009_select_attrs_size_10.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json",
+      "sha256": "6ec382f42ea871d6d8b0eb22785fd73d89572c3c2717cc315b3866ababccc22f",
+      "vector_name": "9_select_attrs_size_10"
+    },
+    {
+      "expect": {
+        "content_root": "da1af625a9d9b5e28e7cc999c3d0c346f776c77147c312d070d156299f61461d",
+        "decoded_sha256": "528be2fc0c5fa03efe8b709b8350402ada0efe0a258ae8f824245d3de61fd8a6",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/010_select_attrs_size_1.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json",
+      "sha256": "ebb061a8c1cdf6f1a922d326ad8682b7cad9801a7c7dd9cc386eb1122abd1d97",
+      "vector_name": "10_select_attrs_size_1"
+    },
+    {
+      "expect": {
+        "content_root": "cd1f5abf6081fef5ac42b23c619f0270e8b77185367898c90968b5d0a9d3fea5",
+        "decoded_sha256": "64eeb2914cebad87748134fe731987be7754202b327dd9908030ff28d8edeaba",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json",
+      "sha256": "1cb3d430efd69513ce4181c6177987c2bb8f9133f8036925210e859ff4b8a07f",
+      "vector_name": "11_select_attrs_size_10_and_attrs_size_0"
+    },
+    {
+      "expect": {
+        "content_root": "acdeee75886298f35d19e4041f81a03f0c1f3391ee2267383cf3c2772e66a997",
+        "decoded_sha256": "6f1b8f9bf3aeeb13a05d0cec80d2fa2177b55669d45c4bd62a989a1ebb9dad20",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json",
+      "sha256": "8af81b34579b196c464fd5d031655fe5829224e318a28ccbbb89ea413c382d7b",
+      "vector_name": "12_select_attrs_a_1_and_attrs_b_2_and_attrs"
+    },
+    {
+      "expect": {
+        "content_root": "e544fddf3cbe114d64bdeb669c7d319f0e2356ac6c4e09cb6a8026784bb252ab",
+        "decoded_sha256": "112af10c0d74ee3c0a2a084636da69cba70c7aacc276468ad4ea071d8e5b8e87",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json",
+      "sha256": "793afafa2a167050644f12fdf03415f37b450d54afc05719cdb2ef3bf7406dc9",
+      "vector_name": "13_select_attrs_a_1_or_attrs_b_2_or_attrs_c"
+    },
+    {
+      "expect": {
+        "content_root": "614cfe9a1e06d88057f447295aedecc48882accf53ac5447eecf4532bed9c078",
+        "decoded_sha256": "a525b674d72920eb400cc47073542b06192c5fab2ef93a3a652130006df97f51",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/014_select_not_has_attrs_x.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json",
+      "sha256": "a4c09b1c2c62d988c5eaa71ffc08fd122e4cc6ddd0647533514b4092f7a91ace",
+      "vector_name": "14_select_not_has_attrs_x"
+    },
+    {
+      "expect": {
+        "content_root": "17fbb895fa469b3af7a441a8021f16c26b0597793bc6452339f636747523d81b",
+        "decoded_sha256": "cfbc8fd21914b20e67e7131ebf20d3e8a2650d7305ede536156eebb3efc6d7c6",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json",
+      "sha256": "dceb5e7dd131656e65ebc5bf9a246804a6bd7c8bb1e1872b80d01694731053fb",
+      "vector_name": "15_select_attrs_x_1_order_by_attrs_seq_desc"
+    },
+    {
+      "expect": {
+        "content_root": "5c503feb3d0505304b1386e0f34ccecc27996bba94f9a548e1388b4fbb77d8d8",
+        "decoded_sha256": "74c8d54c0e8e426acaf9b53948ee7b5623fdeff672e293e84cbdd42994976e64",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json",
+      "sha256": "cb9e5d7de7f7085ebd9a52aa68a8acf9af25f48d9d9993953578f813fedc32c8",
+      "vector_name": "16_select_attrs_x_1_order_by_attrs_seq_asc"
+    },
+    {
+      "expect": {
+        "content_root": "88456990964b5e0c56a0e58f075fd5f68c356fad32e219ea49c2c5c7ea6405bd",
+        "decoded_sha256": "3ee14e2cb4bbec497a21e23e8b28cab2c77c080d30e04b9d48bdb486bdff654e",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json",
+      "sha256": "325c4b696f9893568f863e50f9a3fa2c7b058bcef53292d9c51fdb0c76e6f7d8",
+      "vector_name": "17_select_attrs_x_1_offset_0"
+    },
+    {
+      "expect": {
+        "content_root": "5398923e1386f112d076849251425cc4b257a3e9f8430449197be68ecfc2ba7a",
+        "decoded_sha256": "2d2fc467a7c73e3ee3756b8eb7a904f221a0fcfc2e34c9dca3b1b6166b7d8188",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json",
+      "sha256": "2133c83ef73a5cf5eacf49f4743bbe781f73e4d132b6e6a9b9ba3983efb06493",
+      "vector_name": "18_select_attrs_x_1_and_attrs_y_2"
+    },
+    {
+      "expect": {
+        "content_root": "bcd629a2d8ca1ec66944d20135d0dd06bf1a1438ad2f6f0ea976b5de017df503",
+        "decoded_sha256": "82d638a580e05902eb864c9e0a24786efcdae8e4545df2d0a2b13999930d6883",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json",
+      "sha256": "4723559eebd328e7f278de7c2cff7e4ef0c3870f25c775c45a8d6a59aa30d5d9",
+      "vector_name": "19_select_attrs_y_2_and_attrs_x_1"
+    },
+    {
+      "expect": {
+        "content_root": "02e1864a2b1d5c31a90dbf26339eccd1ca6cfee8144eeedd890dd39b6ca5b0a4",
+        "decoded_sha256": "c19782232e29c0bc574e7bad2b9dde6c55540b0ddaf3fd3776a8fc50c73cbceb",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json",
+      "sha256": "fc3c2a02a8dda7d712899edd403a65bd5ca5a36ae6b662f9e9260ffa337954e9",
+      "vector_name": "20_select_attrs_e_u00e9_ud83d_ude00_n_t"
+    },
+    {
+      "expect": {
+        "content_root": "443b92b2853bf24c1376b07cc0dd6fb14bcc66d3f13cbb0b723e0ff90d0c02c4",
+        "decoded_sha256": "bdf50d51ee4654ec364076cfd09c5e80d2f23715597682c6f27bd33ab02b6825",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/021_select_attrs_p_null.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json",
+      "sha256": "a5d1bd970b8cb87239f5319c25896b667f51654cc525aa255036131f93f7e28e",
+      "vector_name": "21_select_attrs_p_null"
+    },
+    {
+      "expect": {
+        "content_root": "6bd275be3dbbdcc6c3d43caf83d20248c864eda430ceb7d03f40077dc5bf056a",
+        "decoded_sha256": "406faea4c7e14ea2c90f76ad113460a108ab6543f75550be6ad53104afdc1e44",
+        "ok": true
+      },
+      "kind": "selector",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json"
+      ],
+      "path": "WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json",
+      "sha256": "4bfec78a7f8c6bbe9e73c0341bad10ca88d950a2baaded830a90a88ad49eb628",
+      "vector_name": "22_select_attrs_b_true_and_attrs_n_false"
+    },
+    {
+      "expect": {
+        "content_root": "fdee03bd7029157d6edb412923d25418ddc0e189e618d05ebe9a6d3e4e8d892e",
+        "decoded_sha256": "dc4e573c088cdbaeb4c61b22417d5ea21a5e231b67097e7156cc16d97fb46b71",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/001_bf16_near_duplicate.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/001_bf16_near_duplicate.json",
+      "sha256": "dc8b52230f388d96eae4afc8b0cf9f844dd9663ee67cd3a841c94b63185cb9d1",
+      "subkind": "semantic_delta",
+      "vector_name": "001_bf16_near_duplicate"
+    },
+    {
+      "expect": {
+        "content_root": "e59db3ca7876dcba0edafba73faedf69fc0e7c526953f73df02da6f965a453de",
+        "decoded_sha256": "fb92bdb487b2b799dcb31248aaa8c70ee53fea1a136d39dc4089733b5126a100",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/002_fp32_small_change.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/002_fp32_small_change.json",
+      "sha256": "11a07aab038a349718470b21d9c19d5859bc5d4d2d73e597268fe6f05e7144c1",
+      "subkind": "semantic_delta",
+      "vector_name": "002_fp32_small_change"
+    },
+    {
+      "expect": {
+        "content_root": "ab4abc4e59f40edced4bd05a77e79d4ebdf1b0879751624c9a964aa2a6814928",
+        "decoded_sha256": "2f63bfc190172e620667dbd28c97570006bd0ec72e00c31c6fd889d2df3f5ecc",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/003_q8_0_mixed_changes.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/003_q8_0_mixed_changes.json",
+      "sha256": "cb842762ab976d5334762db5c4c627bfb6d220e07e41964087347e71f5703752",
+      "subkind": "semantic_delta",
+      "vector_name": "003_q8_0_mixed_changes"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/101_base_semantic_mismatch.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/101_base_semantic_mismatch.json",
+      "sha256": "700316fd5f91f540f6af207b6cc241553f27c14748815228f1b76c3fb5e0696c",
+      "subkind": "semantic_delta",
+      "vector_name": "101_base_semantic_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/102_policy_mismatch.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/102_policy_mismatch.json",
+      "sha256": "1f7b0b2e93b41119b481ea5e32fac821f87dc3ae3f02ba27fc47ae4e38911f73",
+      "subkind": "semantic_delta",
+      "vector_name": "102_policy_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/103_delta_root_mismatch.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/103_delta_root_mismatch.json",
+      "sha256": "1eafdbd0f32c1890b952e1cbbe4a66f377e95ce3779f29facf22bb126ba33a9a",
+      "subkind": "semantic_delta",
+      "vector_name": "103_delta_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMissing"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/104_missing_base.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/104_missing_base.json",
+      "sha256": "8e77ce099f816d136c3a831cffab58687ebc2370e2beba520bc58f05fa370827",
+      "subkind": "semantic_delta",
+      "vector_name": "104_missing_base"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/105_base_shape_mismatch.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/105_base_shape_mismatch.json",
+      "sha256": "32c6b1db9f080b8c28de7bb3434d54cac2cd41c923c4859f92f8fa7a9a530697",
+      "subkind": "semantic_delta",
+      "vector_name": "105_base_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-delta/106_payload_length_mismatch.json"
+      ],
+      "mode": 14,
+      "mode_name": "semantic_delta",
+      "path": "WeftCodec/conformance/v1/semantic-delta/106_payload_length_mismatch.json",
+      "sha256": "7828fba525ab7a89d4392656ab426994d7a836ed757f4925f6981c94d018d092",
+      "subkind": "semantic_delta",
+      "vector_name": "106_payload_length_mismatch"
+    },
+    {
+      "expect": {
+        "content_root": "89fd826b81eed818ccd8f51fe9a32682d357df1bf256317d713b9c91df697b42",
+        "decoded_sha256": "8148a49e8dbeb38468f9c9cada496dd8ec57c0ac63fe462b6f8fcf700b29df79",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/001_root_none_bf16.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json",
+      "sha256": "03b8bfa3a48041678f0a6c6c47b78111f73b22a53222678c92e505d0088d2170",
+      "subkind": "semantic_root",
+      "vector_name": "001_root_none_bf16"
+    },
+    {
+      "expect": {
+        "content_root": "0e172128ed1203d2d115a46980304328401b2570b8df0342f465373402c2fb08",
+        "decoded_sha256": "8148a49e8dbeb38468f9c9cada496dd8ec57c0ac63fe462b6f8fcf700b29df79",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json",
+      "sha256": "3ae82ea7035a506a4e4b4ebb721586994fbf449df804ed14388eebccf4d97b0c",
+      "subkind": "semantic_root",
+      "vector_name": "002_root_mantissa_bf16_bits3"
+    },
+    {
+      "expect": {
+        "content_root": "f06337b6a3b92a2acda847fc9a67db04084fea769f47f0066fdf13e2f59cd8f3",
+        "decoded_sha256": "1057705b8b61e5dc98c5c2ad0ac1a0e7f8d5b5aaac2dd47bfed855f7f104313c",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json",
+      "sha256": "146c5e084eade610830bf40e46b55fc06908aef3f1d75022c8bf15eb9ed944dc",
+      "subkind": "semantic_root",
+      "vector_name": "003_root_block_quantize_fp32_b128_l256"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/101_unknown_scheme.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json",
+      "sha256": "22e72fba67c7ae55289354ccaa11aa481859b74f1f26e1913c49686708da573e",
+      "subkind": "semantic_root",
+      "vector_name": "101_unknown_scheme"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/102_bits_out_of_range.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json",
+      "sha256": "d5893a77018abcd5875b9e7e8c7b87ff246a1c0c800fc32ca9cd03455345dd42",
+      "subkind": "semantic_root",
+      "vector_name": "102_bits_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/103_block_size_not_divisor.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json",
+      "sha256": "e9a69de87ecc9fdbe5b4558c2aa8d701b247e99e8ff3580318a95db78f047003",
+      "subkind": "semantic_root",
+      "vector_name": "103_block_size_not_divisor"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/104_shape_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json",
+      "sha256": "01dc38c5ef2d5fb0266af391b1b93a3fad26e50086212b5265c0277c0f592aae",
+      "subkind": "semantic_root",
+      "vector_name": "104_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/105_levels_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/105_levels_zero.json",
+      "sha256": "3e2d8deeb3858280af92ea40d1500f3783e617c662734b7face89fdf0b95e2b8",
+      "subkind": "semantic_root",
+      "vector_name": "105_levels_zero"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/semantic-root/106_non_finite_policy.json"
+      ],
+      "path": "WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json",
+      "sha256": "9468fbf3d1892e3ac33a6b06cc8a1e4554a46c2e92ba5e0c76bdb955b9ff9f8b",
+      "subkind": "semantic_root",
+      "vector_name": "106_non_finite_policy"
+    },
+    {
+      "expect": {
+        "content_root": "e5f6ae4affc4a11cc4abea6ad792fcd7a2b3859bd216b08373971c88743baf45",
+        "decoded_sha256": null,
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/001_q8_0_rank2_2shards.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/001_q8_0_rank2_2shards.json",
+      "sha256": "7eb9d4376c8cae8e0671e2cb93dd7c49bc07afcf74882708e8efeb3004f905aa",
+      "subkind": "sharded",
+      "vector_name": "001_q8_0_rank2_2shards"
+    },
+    {
+      "expect": {
+        "content_root": "c9ac7ecb9894c9023e5fe5c034a84fa9664adb7245c5f4c33330b1f7b8a71d13",
+        "decoded_sha256": null,
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/002_q4_0_rank3_4shards.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/002_q4_0_rank3_4shards.json",
+      "sha256": "4dd25c01d19076dc96f9407e09d73e9319fae6415387644daa191fadc6844f87",
+      "subkind": "sharded",
+      "vector_name": "002_q4_0_rank3_4shards"
+    },
+    {
+      "expect": {
+        "content_root": "57b8f7ebcbe6436d8d2df6ce094cdbcf14b1958593f92ce37551534754cf50c1",
+        "decoded_sha256": null,
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/003_q8_0_rank1_1shard.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/003_q8_0_rank1_1shard.json",
+      "sha256": "ad6e80b5ee6156a274bfe8900d0c500a66f5fc30d2f9a529b64ccc2eeec03a7d",
+      "subkind": "sharded",
+      "vector_name": "003_q8_0_rank1_1shard"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/101_unknown_dtype.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/101_unknown_dtype.json",
+      "sha256": "70775e315d58be60d761545d245f2a4f09665ee5238f2501cfe385932d87f125",
+      "subkind": "sharded",
+      "vector_name": "101_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/102_quant_scale_mismatch.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/102_quant_scale_mismatch.json",
+      "sha256": "9242a59e3b6a1c5624fb6c4bb84cb37f035e72430df1cc280fa4c2bf457c6d85",
+      "subkind": "sharded",
+      "vector_name": "102_quant_scale_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/103_element_count_mismatch.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/103_element_count_mismatch.json",
+      "sha256": "2d67322b3c62cb52bd47431730079a631211854ec75f48587871b218cd591b44",
+      "subkind": "sharded",
+      "vector_name": "103_element_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/104_block_size_invalid.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/104_block_size_invalid.json",
+      "sha256": "2fadb7fe9d6303f5a3fbe085152e45af5d1ecbb4f40f6e241b94494c152687e5",
+      "subkind": "sharded",
+      "vector_name": "104_block_size_invalid"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/105_shape_not_divisible.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/105_shape_not_divisible.json",
+      "sha256": "b3909c68d7a181a6cda48bb459a3f21a284e0e6859a7080144978c4a1ca2d692",
+      "subkind": "sharded",
+      "vector_name": "105_shape_not_divisible"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/106_index_out_of_range.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/106_index_out_of_range.json",
+      "sha256": "0b2374082d2651f99ba2b94b732e904f48bdfd63b75284445c1d4e719c4fd8c0",
+      "subkind": "sharded",
+      "vector_name": "106_index_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/107_duplicate_shard.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/107_duplicate_shard.json",
+      "sha256": "a842a92deece1297a59db2b9182ecfb1e8db3d06c5cae60b7e0ed7869a8313a5",
+      "subkind": "sharded",
+      "vector_name": "107_duplicate_shard"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sharded/108_malformed_huffman.json"
+      ],
+      "mode": 10,
+      "mode_name": "tensor_sharded",
+      "path": "WeftCodec/conformance/v1/sharded/108_malformed_huffman.json",
+      "sha256": "f07f2cc12e31961178820bbcea5e73706c868e51507469c25b688c336b4720c0",
+      "subkind": "sharded",
+      "vector_name": "108_malformed_huffman"
+    },
+    {
+      "expect": {
+        "content_root": "405f5648e0bfeaf6b5ed17fcbcc435cefa97f411f67a3bd21d9cd2c6de6a7e24",
+        "decoded_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/001_null.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/001_null.json",
+      "sha256": "5168afd8def29fe3a978d8d1461e77b0abafbf61884ba6afc488bf5e3ee90db2",
+      "vector_name": "null"
+    },
+    {
+      "expect": {
+        "content_root": "66249a2d07afb316478a72019f7bacf28a09cf77a313f905cbb1a8065b58b5a1",
+        "decoded_sha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/002_true.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/002_true.json",
+      "sha256": "effc798e05b75d596680cc022283034fa03b214d9c09143996fe9fdac7dda3e1",
+      "vector_name": "true"
+    },
+    {
+      "expect": {
+        "content_root": "beffce1fb71b00ca0170bca19ff211c72cf751e21fb06b146a62abd56e0a5030",
+        "decoded_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/003_false.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/003_false.json",
+      "sha256": "7b2106e7b7a93abeaeca6b02e7da8a980ef4dfd5a0bf243158737b0ffdb07e74",
+      "vector_name": "false"
+    },
+    {
+      "expect": {
+        "content_root": "5dbe7772a954000ade3cbab5e90c06b25de1aa5bf5442729e7719d7d2910d3e8",
+        "decoded_sha256": "9b4fb24edd6d1d8830e272398263cdbf026b97392cc35387b991dc0248a628f9",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/004_u64_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/004_u64_zero.json",
+      "sha256": "cd0916e5894f8b16349f6f7d7e8122a16702867910f87bc1cced3b11fe70287a",
+      "vector_name": "u64_zero"
+    },
+    {
+      "expect": {
+        "content_root": "4ccce4b378e11c3f8b63a81d4d574873b44b4602d22768e6610f476a0b4bf0f9",
+        "decoded_sha256": "e81309975483ce24e2423e9b5502ea7c152e5c0b1673da9a7963b0f25f67bd13",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/005_u64_max.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/005_u64_max.json",
+      "sha256": "8f98bb51cab61a57d97d1a5d8085dbfa1a42076f9efc8224e453d3dba56ae0b2",
+      "vector_name": "u64_max"
+    },
+    {
+      "expect": {
+        "content_root": "6f8a851c6f53b8bd2875f127cb50aa9ec5089c21e343a2e9903f5ce4e1288681",
+        "decoded_sha256": "20c16ed44a8942adf247f9915bbf78a1b8e076bb08fc42c350b0d652f263b609",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/006_i64_min.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/006_i64_min.json",
+      "sha256": "4c536e66f739104c7c64f377fdc0389e08a380669c577e5b14f5e625e3827481",
+      "vector_name": "i64_min"
+    },
+    {
+      "expect": {
+        "content_root": "fa5f0099d4f015377ed25c692fa9870c9799de5e6f3aa9c303bc283df52f1f74",
+        "decoded_sha256": "38b8bc5c86db41a80615b2f4694fc754cccffb95e8933d5b376021feab83cea3",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/007_i64_neg_one.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/007_i64_neg_one.json",
+      "sha256": "807c7c5a2374dbf3e834a4a65ac59134b7a58cdcdedb1a2ce495417d6f9e5d62",
+      "vector_name": "i64_neg_one"
+    },
+    {
+      "expect": {
+        "content_root": "f446ff3806b40e2cdca3926d67c7d32376de52b77ffc53ea26ccb6a0691d111c",
+        "decoded_sha256": "a3288709fe94e9575ae05d7a8b8e3ab4205f0318bcbe1276c47b02ed6860b05a",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/008_timestamp.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/008_timestamp.json",
+      "sha256": "f6d08651f46582819c3b03c1f9906dafd51b671382795d5dc54b4ae3baba0344",
+      "vector_name": "timestamp"
+    },
+    {
+      "expect": {
+        "content_root": "dc3ad0b7a78bf7dca33af213d7f94e931462d8d6acd3ccbe0d8231c2ac0e2592",
+        "decoded_sha256": "efb59c9257df170bfd43545e7d8d098d1fdf20366a860b591f51fc1e6ab3d701",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/009_text.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/009_text.json",
+      "sha256": "4c969c0c015c68a4d537feb4a5aee05ab42f4c519d0a33f60ed8664d9aa548db",
+      "vector_name": "text"
+    },
+    {
+      "expect": {
+        "content_root": "7f6e57c32ec80e2618f4972df6eed3f34bb3e161037528481a980ae41f7ec1ae",
+        "decoded_sha256": "b2a09bc414048d8f3664be3145989404ab35ac6b568935b60d3b2abd960d5f8b",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/010_bytes.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/010_bytes.json",
+      "sha256": "c1075edc6838d4e4c7bfd21d92ef78c36863af9a244060e88b14ab53671d218c",
+      "vector_name": "bytes"
+    },
+    {
+      "expect": {
+        "content_root": "6ead183bb2aa84d270a0395b9b26233b238f2fde74e806580b57d3f87e840e4f",
+        "decoded_sha256": "aabbc950df2eca103b895c711a50b18e9f5e07b32e4a58e4e7cda56b7d49aca5",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/011_array.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/011_array.json",
+      "sha256": "20601afcf11407b70b5c665f128651d04d081521ffac49da30f4195dbb031122",
+      "vector_name": "array"
+    },
+    {
+      "expect": {
+        "content_root": "0922ae944955935ba7411bb019b0cf426d5e7d83682612e76e331bc1fba5b92f",
+        "decoded_sha256": "03cec9ffdff1188ee3458e1f17b6dd3853795a412e54e02a796d7bd6fd11a653",
+        "ok": true
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/012_map.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/012_map.json",
+      "sha256": "0f7dedc04009fb223246aa855706000c9bc546ef1cd0a4613064859ec0a370e1",
+      "vector_name": "map"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/013_non_minimal_varint.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/013_non_minimal_varint.json",
+      "sha256": "350c6f575fb39896d6c4757b9994520a493b95adc9e42cf4078968f19b1812e5",
+      "vector_name": "non_minimal_varint"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/014_unsorted_map_keys.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json",
+      "sha256": "3a4904f8dd6394519fa6448a8f5ee4b805f6bdd9a1f89d9deb644bc93ea334fe",
+      "vector_name": "unsorted_map_keys"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/015_duplicate_map_keys.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json",
+      "sha256": "7aad7b537b58c04e726936ff23a870c636405a2a256a3bb8de4fbb7cebef5459",
+      "vector_name": "duplicate_map_keys"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/016_non_text_map_key.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/016_non_text_map_key.json",
+      "sha256": "67106168ff6338dabdfb67d6efb3edfb38c4795edd55cae9617a091e2df98d3c",
+      "vector_name": "non_text_map_key"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/017_trailing_bytes.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/017_trailing_bytes.json",
+      "sha256": "af50e15ea4686d05fb2115865585e32da6bcbb3331f448e748acc9a3a547c412",
+      "vector_name": "trailing_bytes"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/018_unknown_tag.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/018_unknown_tag.json",
+      "sha256": "06420eedf3d5ce8fb40fe1fcd08930a9720d22a07aff6dba3b69f74c8b6622ef",
+      "vector_name": "unknown_tag"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/019_truncated_text.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/019_truncated_text.json",
+      "sha256": "a28a9501a4c971c1e3be2c4b4b9a20e9b8578559c94e8196eff79f7b691e62b9",
+      "vector_name": "truncated_text"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "wcb",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/structured/020_depth_limit.json"
+      ],
+      "path": "WeftCodec/conformance/v1/structured/020_depth_limit.json",
+      "sha256": "ebeed01a43b421ed8b47bf16f2fb64f16b6ec85abadab077a960658476d8af9f",
+      "vector_name": "depth_limit"
+    },
+    {
+      "expect": {
+        "content_root": "db917ad3857754269d4952c2d10555230e67719f80fe2d9d5a0160f577cd1e7c",
+        "decoded_sha256": "922c5dfb9fc639cc3239483d06005fc926afb4034c848937b46de3c8c1b86781",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/001_logical_bf16_2x3x4.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json",
+      "sha256": "d5ae58534d8379f4a8fca7fbab1707315d6d73e3f993c053a548a880e1622177",
+      "subkind": "tensor_logical",
+      "vector_name": "001_logical_bf16_2x3x4"
+    },
+    {
+      "expect": {
+        "content_root": "d05e2f47fe7db0af74a034421536cd2e69c67b0db83bb377efa47f9ba8085846",
+        "decoded_sha256": "7c75baf1661c5e3cb2fa034751043cb05fe7c77afce38bbdf813b5e5a00c28fe",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/002_logical_f32_3.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/002_logical_f32_3.json",
+      "sha256": "548b0a01952be16eda258828902ed593c4aca31910032d93dbf563a84c4985b4",
+      "subkind": "tensor_logical",
+      "vector_name": "002_logical_f32_3"
+    },
+    {
+      "expect": {
+        "content_root": "d661974cc767d3328ca006d5edbb9f919de5471ae7b2f923114386baa2ce04d1",
+        "decoded_sha256": "389b044bb3ba9270a457026a4e5ab98be6148431d85c1b454a1385611323a5f6",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/003_logical_i8_2x2.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json",
+      "sha256": "05c5283aa5b672bd551a86e762cbe5bedfe2edb2caaeaf8c17b5e5baec3bc4ec",
+      "subkind": "tensor_logical",
+      "vector_name": "003_logical_i8_2x2"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/101_logical_rank_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+      "sha256": "5f8a5056d592a8607cd7a54e31aef2c804b41d14d2ef6e656ef9635f91ad280c",
+      "vector_name": "101_logical_rank_zero"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/102_logical_zero_dimension.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+      "sha256": "1751346b493437fa9d205c971131d8b54124d6cc53b78f4cb9ce57f261eed854",
+      "vector_name": "102_logical_zero_dimension"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/103_logical_product_overflow.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+      "sha256": "d71489b0fa1ce2da10e785095c050d6f0ab87c8ff5fd90c42ccdd48c878430f4",
+      "vector_name": "103_logical_product_overflow"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/104_logical_element_count_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+      "sha256": "4ac4284fe4e76c87e058b3276f66de211046243f47e96045f1afc0f19f80d086",
+      "vector_name": "104_logical_element_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "UnknownSchema"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/105_logical_unknown_schema.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+      "sha256": "afb632c66a214cfc876371ed61efb69c854070d5a30daefef7f7f5f63b754b30",
+      "vector_name": "105_logical_unknown_schema"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/106_logical_unknown_dtype.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+      "sha256": "f88c5697e8acd29211d42b10a80b92b7e6c82ca5da8592277142e3d9475b6922",
+      "vector_name": "106_logical_unknown_dtype"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/107_logical_short_values_hash.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+      "sha256": "42da5053e442e9b033cbd9ad64fb5d31003e98983cbc9171bf3657910cd15600",
+      "vector_name": "107_logical_short_values_hash"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/108_logical_unknown_key.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+      "sha256": "d68d48e63dab6dfbfe27cea0d1db2b1b3e3ee5ebb40d1e268587ee5cde257479",
+      "vector_name": "108_logical_unknown_key"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/109_logical_rank_exceeds_limit.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+      "sha256": "035e5b525d0183ad6792114d72bc34ccdbbc14ef8910c78ec533205e6ccd003b",
+      "vector_name": "109_logical_rank_exceeds_limit"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/110_logical_count_exceeds_limit.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+      "sha256": "68808e8c551c9f3ef4681e79a8af5433644d1e108a211116188b90f78f84095a",
+      "vector_name": "110_logical_count_exceeds_limit"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "c78bc573d91b50aea91293dcd3b17405aee0b4617a295f00dabb5ae465465fb6",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/201_layout_row_major.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+      "sha256": "a58935c64fad88d0b568d8e49219a6e3c8ed964be70c6a34d35ef9cbaa1c2939",
+      "subkind": "tensor_layout",
+      "vector_name": "201_layout_row_major"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "763ade88c76a9fc41fbf1a5f30fb0fec909e11ec7d1d6498437eb37463c95c1d",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/202_layout_column_major.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+      "sha256": "563ed3b8923d9a84ce459ae15ccbd30355d8b86e642443141187731734bcfab3",
+      "subkind": "tensor_layout",
+      "vector_name": "202_layout_column_major"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "d8c96f5e78923790a4d5b91d874cafe6558832dcf0b4390a93a26f9d9684a6b6",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/203_layout_blocked.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+      "sha256": "131acc8b9d14df9989fb37453fc6c0428694ceae6c36022ddb7882e0ba87abd8",
+      "subkind": "tensor_layout",
+      "vector_name": "203_layout_blocked"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": "bc3edab0be6e058199d20d9012db9fb0266aa21c5524e0f5dc3524664d85710c",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/204_layout_sharded.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+      "sha256": "b5102e2a66a0985c70e81b0b86d2372e67c8e26936053c06357c027584375fd1",
+      "subkind": "tensor_layout",
+      "vector_name": "204_layout_sharded"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/301_layout_unknown_layout.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+      "sha256": "3bc6784502cda4e9329cf2c0fc169e7cfee313b6c1b3a5596df5f54aa96c622d",
+      "vector_name": "301_layout_unknown_layout"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/302_sharded_not_divisible.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+      "sha256": "549df61b872b5fc03a3fb71beda54231ee2c53c319a20e315ae7f5a247b8225b",
+      "vector_name": "302_sharded_not_divisible"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/303_shard_index_out_of_range.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+      "sha256": "764515077997d36c27388d612ae878a11c9a2632baabfb554df75001440074df",
+      "vector_name": "303_shard_index_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/304_sharded_zero_shards.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+      "sha256": "927464dfdea10f8feb65153d277c9ff5d32b27a3c7b673ecd32bb9fcd401f492",
+      "vector_name": "304_sharded_zero_shards"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/305_blocked_rank_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+      "sha256": "18c4dff4962ca47d68e03fdf17cdcc20af79df11df854060f4d6533984685d91",
+      "vector_name": "305_blocked_rank_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/306_blocked_zero_block.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+      "sha256": "f8eb6822a4db90ee149052b17cc779912d8c5d77d97b69239e3869269ea414b6",
+      "vector_name": "306_blocked_zero_block"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/307_column_major_rank_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+      "sha256": "c4e8ff28d3d35e722ec47bb9ef845c40a8880440b3d31d1e27688ce105ac9542",
+      "vector_name": "307_column_major_rank_zero"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/308_layout_extra_field.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+      "sha256": "dded3fec7a0a1c6add36bcad121bd29756ffe42c61bdf33c8f96e5f4b4738de2",
+      "vector_name": "308_layout_extra_field"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/309_shard_axis_out_of_range.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+      "sha256": "b150f1d22c470345812831d773468573d2cacd28a8d553af990e342df4fbbb44",
+      "vector_name": "309_shard_axis_out_of_range"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/310_layout_shape_overflow.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+      "sha256": "eeb70dacbb34a83cc083efb3d9652f7490661b5c70da73c0035c7f6eb07d4f60",
+      "vector_name": "310_layout_shape_overflow"
+    },
+    {
+      "expect": {
+        "content_root": "32f06f4d1df77b61f984cf9a68730a47fc56eb88f11d614fd7a9b3fa2e3a7fc7",
+        "decoded_sha256": "34fb0326abfd7a9d35b46fd7ddaa3b3f8ff6f295b2f42bfe1aeb4288416de14c",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json",
+      "sha256": "2ad8626d7c74fd73b5ea8de57703a0f361172dcae54a1dde05d21882f029fe3f",
+      "subkind": "tensor_shards",
+      "vector_name": "401_shards_bf16_4x3x2_axis0"
+    },
+    {
+      "expect": {
+        "content_root": "906182c3888235432036eb6b0772f7a820b5b6653bb81419e4bdcc5c5a864bbb",
+        "decoded_sha256": "05d960b26a49efdaa1f3bd3e1e2f02b87e7a5744d374a1b04dbc52e3a88948f5",
+        "ok": true
+      },
+      "kind": "tensor",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json"
+      ],
+      "path": "WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json",
+      "sha256": "7319d0bfb2ef6fa7596923366f6a5b0a7129a91b42be1dc0af176bfbdf363a0d",
+      "subkind": "tensor_shards",
+      "vector_name": "402_shards_f32_4x3x2_axis1"
+    },
+    {
+      "expect": {
+        "content_root": "eb837c3f138281c2dc86db4eb54b1448b4c8e99e0ab2b5b93ee56103d67dac3d",
+        "decoded_sha256": "8857b0e32604f7db229224ac46e54c0e1ee9f6a99dc57d20e3a58986f899cd7d",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/001_bf16_small_changes.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/001_bf16_small_changes.json",
+      "sha256": "5396abeef3b40435648808d34eded2bf1412acb5d2441b42405cfe10b2e4e478",
+      "subkind": "weight_delta",
+      "vector_name": "001_bf16_small_changes"
+    },
+    {
+      "expect": {
+        "content_root": "8a1cdb118502bad28e966194a12e79509fbe29fe20c4763ab1de163c1972d19e",
+        "decoded_sha256": "9b867a26f7bbea4cdf67977d49517d736a838da1ad8b22eae4434d42c76cbe83",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/002_fp32_zero_delta.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/002_fp32_zero_delta.json",
+      "sha256": "bdd7430b5ae28461bf7572cad2b8dc57573ec893edce5cd847617302e9bc2ff1",
+      "subkind": "weight_delta",
+      "vector_name": "002_fp32_zero_delta"
+    },
+    {
+      "expect": {
+        "content_root": "ab4abc4e59f40edced4bd05a77e79d4ebdf1b0879751624c9a964aa2a6814928",
+        "decoded_sha256": "2f63bfc190172e620667dbd28c97570006bd0ec72e00c31c6fd889d2df3f5ecc",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/003_q8_0_mixed_changes.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/003_q8_0_mixed_changes.json",
+      "sha256": "871a8e89ab02fc14141ad393ccabc5d997b9d09cb0579b87696a63c2bc3e0073",
+      "subkind": "weight_delta",
+      "vector_name": "003_q8_0_mixed_changes"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/101_base_dtype_mismatch.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/101_base_dtype_mismatch.json",
+      "sha256": "fe240d979f31f88e711acfdf0476bbf148a96c3b66ddb86c2457757cdd21c9f9",
+      "subkind": "weight_delta",
+      "vector_name": "101_base_dtype_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/102_base_shape_mismatch.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/102_base_shape_mismatch.json",
+      "sha256": "2c297fa366d03f7e8c4190f3bee1adcd86bb8d5808f51541a9b0550c47147947",
+      "subkind": "weight_delta",
+      "vector_name": "102_base_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/103_unknown_op.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/103_unknown_op.json",
+      "sha256": "c11450ffc08440b471cd8b3e07b36f03ecd6e8675876bc0e766fa85cb2c6f30f",
+      "subkind": "weight_delta",
+      "vector_name": "103_unknown_op"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/104_word_bits_inconsistent.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/104_word_bits_inconsistent.json",
+      "sha256": "a9a8c3e9c867c1e4db2892978509b7a4fabd43aa67dd3ef5e8e7f8978cf5d62f",
+      "subkind": "weight_delta",
+      "vector_name": "104_word_bits_inconsistent"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/105_delta_root_mismatch.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/105_delta_root_mismatch.json",
+      "sha256": "d5df66e977a297b65987f1adae1d3d39e5a9b9029467c50db3522d5407181d93",
+      "subkind": "weight_delta",
+      "vector_name": "105_delta_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/106_payload_length_mismatch.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/106_payload_length_mismatch.json",
+      "sha256": "8fd529d2b2abc551046d840b2adf953f174503f5a1e095d22d1f7cd03c004a10",
+      "subkind": "weight_delta",
+      "vector_name": "106_payload_length_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMissing"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/107_missing_base.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/107_missing_base.json",
+      "sha256": "425b3079d758c2df2e1fe3d18e07ba725628ce7e0d380e1e57cd1c235c9b8834",
+      "subkind": "weight_delta",
+      "vector_name": "107_missing_base"
+    },
+    {
+      "expect": {
+        "error": "DependencyCycle"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/weight-delta/108_dependency_cycle.json"
+      ],
+      "mode": 11,
+      "mode_name": "weight_delta",
+      "path": "WeftCodec/conformance/v1/weight-delta/108_dependency_cycle.json",
+      "sha256": "fdafe89451fe8ed069478cff2a41b2a2819a1ca35190924a95e819fb58e146b5",
+      "subkind": "weight_delta",
+      "vector_name": "108_dependency_cycle"
+    },
+    {
+      "expect": {
+        "content_root": "4d73dd83a65cf9749417d6ca7f8f6623dadf23a75b4a5b219082ba64cda9d8d3",
+        "decoded_sha256": "68d9e7816c4d48da5ced41843dc5c06c68e4b2d859c92043a9b947dd582d81e3",
+        "ok": true
+      },
+      "kind": "checkpoint",
+      "path": "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+      "sha256": "290bd82af5488a3654d051a5803c3c2f7053a2a4b2ff50f3bda72a7d008f4c98",
+      "vector_name": "001_manifest_bf16_1shard"
+    },
+    {
+      "expect": {
+        "error": "UnknownSchema"
+      },
+      "kind": "checkpoint",
+      "path": "conformance/checkpoint/v1/101_unknown_schema.json",
+      "sha256": "12920f5b1c0a818fe70c85d1a5803abb2596a2b80900ff11da799f559fb7913e",
+      "vector_name": "101_unknown_schema"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "checkpoint",
+      "path": "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+      "sha256": "1be127a4a2afb73f0abfba252c4c8b7ecb8a5460a34d1efd54c2c012f79f2f0d",
+      "vector_name": "102_element_bytes_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "checkpoint",
+      "path": "conformance/checkpoint/v1/103_duplicate_tensor.json",
+      "sha256": "ded0c02064f1912e21ea4311adcc6d20deed46ebe15503912b3e6ab335c62488",
+      "vector_name": "103_duplicate_tensor"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "checkpoint",
+      "path": "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json",
+      "sha256": "a216c35fb38025f293ba019bb61991ec4ff6f8386d5275ad12648039fbf30444",
+      "vector_name": "104_shard_byte_len_mismatch"
+    },
+    {
+      "expect": {
+        "content_root": "e25a220e3f48238795103c2705ae42de6603ecbe0ae121013c955282b145ff21",
+        "decoded_sha256": "004203832d4c8e32705851b2189e9d7ca4294257410bf22fa3e0ae0538c584c8",
+        "ok": true
+      },
+      "kind": "context",
+      "path": "conformance/context/v1/causal_versions.json",
+      "sha256": "1ccb84b781e66326c2ff9cc6be3a6701fb813ae9e88c59b200f04dece368ffc0",
+      "subkind": "causal_versions",
+      "vector_name": "causal_versions"
+    },
+    {
+      "expect": {
+        "content_root": null,
+        "decoded_sha256": null,
+        "ok": true
+      },
+      "kind": "fuzz",
+      "path": "conformance/fuzz/v1/seeds.txt",
+      "seed_count": 44,
+      "sha256": "b606adf1f5ab5a60d474538514621e6ca9b631a78ecc4903e652fbe71105447a",
+      "vector_name": "fuzz_seeds_v1"
+    },
+    {
+      "expect": {
+        "content_root": "8959c65b7b5d821063e8785ed950a67214b555210bec45f65fd576053b0e1d81",
+        "decoded_sha256": null,
+        "ok": true
+      },
+      "file_count": 25,
+      "kind": "store",
+      "path": "conformance/store/v1",
+      "sha256": "6da9c6ac9ee017f4e89123eef8fcd34482568bfcbd21999ccf92c6b5454e665b",
+      "sha256_kind": "directory-aggregate",
+      "vector_name": "store_fixture_v1"
+    }
+  ]
+}
