@@ -72,8 +72,8 @@ commits are later than the verified code revisions; the only changes between
 them are version literals and documentation.
 
 The host-only `claims` court checks the documentation claims in
-`docs/claims.json` against the files that carry them (see the final section for
-the count after the v0.7.0 entries were added).
+`docs/claims.json` against the files that carry them. After the v0.7.0 entries
+were added, the gate was re-run on the release tree: **102 entries OK**.
 
 ## Real weights: FLOAT_TENSOR and WEIGHT_DELTA (P2)
 
