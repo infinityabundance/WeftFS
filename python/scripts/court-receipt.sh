@@ -120,7 +120,7 @@ receipt = {
         "size_bytes": int(env.get("WEFT_WHEEL_SIZE", "0")),
         "path": "python/dist/" + (env.get("WEFT_WHEEL_NAME") or ""),
         "name": "weftcodec",
-        "version": "0.5.0",
+        "version": "0.7.0",
         "license": "Apache-2.0",
         "pypi_published": False,
         "pypi_note": "No PyPI token is available; the wheel is attached to the release.",

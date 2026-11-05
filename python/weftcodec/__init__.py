@@ -29,7 +29,7 @@ from .frame import Frame, FrameHeader, IMPLEMENTED_MODES, MODE_NAMES, parse
 from .hashing import content_root, content_root_hex, hash_domain
 from .identity import VerifyResult, verify_bytes, verify_frame
 
-__version__ = "0.5.0"
+__version__ = "0.7.0"
 
 __all__ = [
     "Corrupt",

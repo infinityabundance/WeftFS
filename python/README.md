@@ -11,9 +11,9 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-0.5.0-py3-none-any.whl
+pip install dist/weftcodec-0.7.0-py3-none-any.whl
 # with the optional dataset extra
-pip install "dist/weftcodec-0.5.0-py3-none-any.whl[torch]"
+pip install "dist/weftcodec-0.7.0-py3-none-any.whl[torch]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch` is optional and is only imported
