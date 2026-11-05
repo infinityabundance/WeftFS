@@ -2,13 +2,17 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261105T030019Z.json` (all twenty courts `pass`,
-including the host-only `claims` documentation gate after spec drift,
-generated-type drift, quantized cross-decode, context cross-language gates,
-Buck2 CAS, agent memory, and `fuzz_diff`), at WeftFS `c9b8bdb`, WeftCodec
-`90d9c13`, WeftCodec-Go `cf62bb1`, WeftFS-Go `1c99070`. The preceding receipts
-`verify-20261105T030019Z.json` and `verify-20261104T100531Z.json` are retained
-as history. Earlier
+`bench/receipts/verify-20261105T035513Z.json` (25/25 courts `pass`, including the
+host-only `claims` documentation gate, spec drift, generated-type drift,
+quantized cross-decode, context and authenticated-capability cross-language
+gates, Buck2 CAS, agent memory, and `fuzz_diff`), at WeftFS `091d0bb`,
+WeftCodec `272c2c0`, WeftCodec-Go `b7400ec`, WeftFS-Go `963dc62`. The earlier
+`verify-20261105T034941Z.json` is retained because one run of the pre-existing
+`tests/representation.rs` shared atomic decode counter raced under parallel
+test execution (`expected exactly one decoded chunk, got 2`); it passed
+standalone and in the 035513Z rerun, which is the current receipt. Preceding
+receipts `verify-20261105T030019Z.json` and `verify-20261104T100531Z.json` are
+retained as history. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
