@@ -32,6 +32,16 @@ if [ ! -f "$BUNDLE" ]; then
   exit 66
 fi
 
+# Resolve --repo-root before extracting and cd'ing into the bundle directory;
+# a relative value such as `.` must keep its meaning from the invocation cwd.
+if [ -n "$REPO_ROOT" ]; then
+  if [ ! -d "$REPO_ROOT" ]; then
+    echo "repo root not found: $REPO_ROOT" >&2
+    exit 66
+  fi
+  REPO_ROOT="$(cd "$REPO_ROOT" && pwd)"
+fi
+
 BUNDLE_SHA="$(sha256sum "$BUNDLE" | awk '{print $1}')"
 BUNDLE_SIZE="$(stat -c %s "$BUNDLE")"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/weft-verify-receipts.XXXXXX")"
