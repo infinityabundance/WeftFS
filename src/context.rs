@@ -1588,7 +1588,7 @@ pub(crate) fn relation_target_text(relation: &RelationRecord) -> Option<&str> {
     }
 }
 
-fn selector_predicates_allowed(selector: &Selector, cap: &CapabilityContext) -> bool {
+pub(crate) fn selector_predicates_allowed(selector: &Selector, cap: &CapabilityContext) -> bool {
     fn walk(expr: &Expr, cap: &CapabilityContext) -> bool {
         match expr {
             Expr::Tag(_) => cap.allows_predicate("tagged_as"),

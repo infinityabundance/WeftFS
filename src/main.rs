@@ -43,6 +43,7 @@ use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
 use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
+use weftfs::training_ready::{verify_training_ready_output, TrainingReadyOptions};
 use weftfs::wcb_util as wu;
 use weftfs::wcb_util::value_to_json;
 
@@ -356,6 +357,74 @@ enum Command {
     Context {
         #[command(subcommand)]
         command: ContextCommand,
+    },
+    /// Materialize a Context Root as a training-ready, fully verified set.
+    Materialize {
+        /// Context Root name or `weft://` URI.
+        #[arg(long)]
+        root: String,
+        /// Require every training-ready precondition (this is the only mode).
+        #[arg(long = "training-ready")]
+        training_ready: bool,
+        /// Output directory; must not exist.
+        #[arg(long)]
+        out: PathBuf,
+        #[arg(long = "max-bytes")]
+        max_bytes: Option<u64>,
+        #[arg(long = "max-objects")]
+        max_objects: Option<u64>,
+        #[arg(long = "max-decode-ms")]
+        max_decode_ms: Option<u64>,
+        /// Capability JSON or canonical-hex file.
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
+        /// Verified authenticated capability envelope blob.
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        /// Revocation ids for `--envelope`.
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        /// Re-verify every tensor object's logical root against decoded bytes.
+        #[arg(long = "require-tensors")]
+        require_tensors: bool,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+        #[arg(long = "group")]
+        groups: Vec<u64>,
+    },
+    /// Check training-ready preconditions, or verify an output directory.
+    TrainingReady {
+        /// Context Root name or `weft://` URI (required with `--check`).
+        #[arg(long)]
+        root: Option<String>,
+        /// Run every check and print a structured report; write nothing.
+        #[arg(long)]
+        check: bool,
+        /// Verify an existing materialized directory against its manifest.
+        #[arg(long = "verify-out", value_name = "DIR")]
+        verify_out: Option<PathBuf>,
+        #[arg(long = "max-bytes")]
+        max_bytes: Option<u64>,
+        #[arg(long = "max-objects")]
+        max_objects: Option<u64>,
+        #[arg(long = "max-decode-ms")]
+        max_decode_ms: Option<u64>,
+        #[arg(long = "capability")]
+        capability_file: Option<PathBuf>,
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        #[arg(long = "require-tensors")]
+        require_tensors: bool,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+        #[arg(long = "group")]
+        groups: Vec<u64>,
     },
     /// Authenticated capability envelope operations (`WEFT-CAPABILITIES.md` §9).
     Capability {
@@ -903,6 +972,12 @@ fn run(cli: Cli) -> Result<()> {
     let needs_store = !matches!(
         command,
         Command::ConformanceStore { .. } | Command::Capability { .. }
+    ) && !matches!(
+        &command,
+        Command::TrainingReady {
+            verify_out: Some(_),
+            ..
+        }
     );
     let store = match store {
         Some(path) => path,
@@ -1856,6 +1931,70 @@ fn run(cli: Cli) -> Result<()> {
             Some(subcommand) => run_checkpoint(&store, json, policy, subcommand),
         },
         Command::Context { command } => run_context(&store, json, policy, command),
+        Command::Materialize {
+            root,
+            training_ready,
+            out,
+            max_bytes,
+            max_objects,
+            max_decode_ms,
+            capability_file,
+            envelope,
+            revocations,
+            require_tensors,
+            uid,
+            gid,
+            groups,
+        } => run_materialize(
+            &store,
+            json,
+            policy,
+            root,
+            training_ready,
+            out,
+            max_bytes,
+            max_objects,
+            max_decode_ms,
+            capability_file,
+            envelope,
+            revocations,
+            require_tensors,
+            uid,
+            gid,
+            groups,
+        ),
+        Command::TrainingReady {
+            root,
+            check,
+            verify_out,
+            max_bytes,
+            max_objects,
+            max_decode_ms,
+            capability_file,
+            envelope,
+            revocations,
+            require_tensors,
+            uid,
+            gid,
+            groups,
+        } => run_training_ready(
+            &store,
+            json,
+            policy,
+            root,
+            check,
+            verify_out,
+            max_bytes,
+            max_objects,
+            max_decode_ms,
+            capability_file,
+            envelope,
+            revocations,
+            require_tensors,
+            uid,
+            gid,
+            groups,
+        ),
         Command::Capability { command } => run_capability(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
@@ -3387,6 +3526,219 @@ fn run_context(
                 &format!("deleted context root {name}"),
                 json!({"name": name, "generation": store.generation()}),
             )
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_materialize(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    root: String,
+    training_ready: bool,
+    out: PathBuf,
+    max_bytes: Option<u64>,
+    max_objects: Option<u64>,
+    max_decode_ms: Option<u64>,
+    capability_file: Option<PathBuf>,
+    envelope: Option<PathBuf>,
+    revocations: Option<PathBuf>,
+    require_tensors: bool,
+    uid: Option<u64>,
+    gid: Option<u64>,
+    groups: Vec<u64>,
+) -> Result<()> {
+    if !training_ready {
+        return Err(Error::invalid_argument(
+            "`materialize` requires --training-ready; use `context materialize` for the plain \
+             materialization command",
+        ));
+    }
+    let started = std::time::Instant::now();
+    let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+    let capability = read_capability(&capability_file)?;
+    let (default_uid, default_gid) = current_ids();
+    let principal = build_principal(
+        uid.unwrap_or(default_uid),
+        gid.unwrap_or(default_gid),
+        groups,
+        envelope.as_ref(),
+        revocations.as_ref(),
+        store.clock_now_ns(),
+    )?;
+    let options = TrainingReadyOptions {
+        max_bytes,
+        max_objects,
+        max_decode_ms,
+        require_tensors,
+    };
+    let report = store.materialize_training_ready(
+        &root,
+        &out,
+        capability.as_ref(),
+        &principal,
+        &weftcodec::Limits::default(),
+        store.clock_now_ns(),
+        &options,
+    )?;
+    if json {
+        let mut output = report.to_json();
+        output["elapsed_ms"] = json!(started.elapsed().as_secs_f64() * 1000.0);
+        output["peak_rss_kib"] = json!(peak_rss_kib());
+        print_json(&output)
+    } else {
+        println!(
+            "out={}",
+            report
+                .out
+                .as_ref()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default()
+        );
+        println!(
+            "manifest={}",
+            report
+                .manifest_path
+                .as_ref()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default()
+        );
+        println!("files={}", report.files.len());
+        println!("bytes={}", report.cost.actual_bytes);
+        println!("context_root_id={}", report.context_root_id);
+        println!("snapshot_id={}", report.snapshot_id);
+        println!("selector_id={}", report.selector_id);
+        Ok(())
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_training_ready(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    root: Option<String>,
+    check: bool,
+    verify_out: Option<PathBuf>,
+    max_bytes: Option<u64>,
+    max_objects: Option<u64>,
+    max_decode_ms: Option<u64>,
+    capability_file: Option<PathBuf>,
+    envelope: Option<PathBuf>,
+    revocations: Option<PathBuf>,
+    require_tensors: bool,
+    uid: Option<u64>,
+    gid: Option<u64>,
+    groups: Vec<u64>,
+) -> Result<()> {
+    if let Some(out) = verify_out {
+        if check || root.is_some() {
+            return Err(Error::invalid_argument(
+                "--verify-out cannot be combined with --root or --check",
+            ));
+        }
+        let started = std::time::Instant::now();
+        let report = verify_training_ready_output(&out)?;
+        if json {
+            let mut output = report.to_json();
+            output["elapsed_ms"] = json!(started.elapsed().as_secs_f64() * 1000.0);
+            output["peak_rss_kib"] = json!(peak_rss_kib());
+            print_json(&output)
+        } else {
+            println!("files={}", report.files);
+            println!("bytes={}", report.bytes);
+            println!("tensor_roots_verified={}", report.tensor_roots_verified);
+            println!("checkpoints_verified={}", report.checkpoints_verified);
+            println!(
+                "checkpoint_tensors_verified={}",
+                report.checkpoint_tensors_verified
+            );
+            Ok(())
+        }
+    } else {
+        let root = root.ok_or_else(|| {
+            Error::invalid_argument("--root is required with --check (or use --verify-out DIR)")
+        })?;
+        if !check {
+            return Err(Error::invalid_argument(
+                "`training-ready` writes nothing; pass --check to run the report",
+            ));
+        }
+        let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+        let capability = read_capability(&capability_file)?;
+        let started = std::time::Instant::now();
+        let (default_uid, default_gid) = current_ids();
+        let principal = build_principal(
+            uid.unwrap_or(default_uid),
+            gid.unwrap_or(default_gid),
+            groups,
+            envelope.as_ref(),
+            revocations.as_ref(),
+            store.clock_now_ns(),
+        )?;
+        let options = TrainingReadyOptions {
+            max_bytes,
+            max_objects,
+            max_decode_ms,
+            require_tensors,
+        };
+        let report = store.check_training_ready(
+            &root,
+            capability.as_ref(),
+            &principal,
+            &weftcodec::Limits::default(),
+            store.clock_now_ns(),
+            &options,
+        )?;
+        if json {
+            let mut output = report.to_json();
+            output["elapsed_ms"] = json!(started.elapsed().as_secs_f64() * 1000.0);
+            output["peak_rss_kib"] = json!(peak_rss_kib());
+            print_json(&output)
+        } else {
+            println!("context_root_id={}", report.context_root_id);
+            println!("snapshot_id={}", report.snapshot_id);
+            println!("selector_id={}", report.selector_id);
+            println!(
+                "precondition.resolution_exact={}",
+                report.preconditions.resolution_exact
+            );
+            println!(
+                "precondition.content_verified={}",
+                report.preconditions.content_verified
+            );
+            println!(
+                "precondition.causal_complete={}",
+                report.preconditions.causal_complete
+            );
+            println!(
+                "precondition.authorized={}",
+                report.preconditions.authorized
+            );
+            println!(
+                "precondition.tensors_verified={}",
+                report.preconditions.tensors_verified
+            );
+            println!(
+                "precondition.budget_enforced={}",
+                report.preconditions.budget_enforced
+            );
+            println!("objects={}", report.cost.actual_objects);
+            println!("bytes={}", report.cost.actual_bytes);
+            println!("estimated_bytes={}", report.cost.estimated_bytes);
+            println!("estimated_objects={}", report.cost.estimated_objects);
+            println!("estimated_decode_ms={}", report.cost.estimated_decode_ms);
+            println!("actual_decode_ms={}", report.cost.actual_decode_ms);
+            println!("tensor_objects_verified={}", report.tensor_objects_verified);
+            println!(
+                "checkpoint_tensors_verified={}",
+                report.checkpoint_tensors_verified
+            );
+            for file in &report.files {
+                println!("file={} {}", file.content_hash, file.path);
+            }
+            Ok(())
         }
     }
 }

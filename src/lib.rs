@@ -38,6 +38,7 @@ pub mod state;
 pub mod store;
 pub mod tensor_store;
 pub mod timeparse;
+pub mod training_ready;
 pub mod wcb_util;
 
 pub use auth::Principal;
@@ -64,4 +65,9 @@ pub use store::{
 pub use tensor_store::{
     StoredTensorMetadata, TensorLayoutSpec, TensorPlan, TensorPlanCandidate, TensorPlanOptions,
     TensorStrategy, TensorWriteSpec,
+};
+pub use training_ready::{
+    verify_training_ready_output, PreconditionReport, TrainingReadyCheckpoint, TrainingReadyCost,
+    TrainingReadyFile, TrainingReadyOptions, TrainingReadyReport, TrainingReadyTensor,
+    TrainingReadyVerification,
 };

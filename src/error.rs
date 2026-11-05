@@ -53,6 +53,8 @@ pub enum Class {
     BudgetExceeded,
     /// A union merge found the same path with different content.
     Conflict,
+    /// A declared causal dependency is missing, unreachable, or mismatched.
+    DependencyMismatch,
     /// Transport/read/write failure.
     Io,
 }
@@ -82,6 +84,7 @@ impl Class {
             Class::UnknownSchema => "UnknownSchema",
             Class::BudgetExceeded => "BudgetExceeded",
             Class::Conflict => "Conflict",
+            Class::DependencyMismatch => "DependencyMismatch",
             Class::Io => "Io",
         }
     }
@@ -183,6 +186,9 @@ impl Error {
     }
     pub fn conflict(message: impl Into<String>) -> Self {
         Self::new(Class::Conflict, message)
+    }
+    pub fn dependency_mismatch(message: impl Into<String>) -> Self {
+        Self::new(Class::DependencyMismatch, message)
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)

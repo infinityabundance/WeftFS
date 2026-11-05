@@ -34,7 +34,7 @@ use crate::error::{Class, Error, Result};
 use crate::identity::{self, Hash32};
 use crate::representation::TensorElementDtype;
 use crate::safetensors::{self, SafetensorsFile, SafetensorsTensor};
-use crate::state::State;
+use crate::state::{ObjectKind, State};
 use crate::store::Store;
 use crate::tensor_store::{TensorLayoutSpec, TensorStrategy, TensorWriteSpec};
 use crate::wcb_util as wu;
@@ -1031,6 +1031,25 @@ impl Store {
         Ok((id, CheckpointManifest::decode(&bytes)?))
     }
 
+    /// Load a checkpoint manifest against a pinned state and snapshot.
+    fn load_checkpoint_with_id_at(
+        &self,
+        state: &State,
+        snapshot: Option<Hash32>,
+        name: &str,
+    ) -> Result<(Hash32, CheckpointManifest)> {
+        let id = resolve_in_state(
+            state,
+            &[
+                CHECKPOINT_ROOT.as_bytes(),
+                name.as_bytes(),
+                CHECKPOINT_MANIFEST_NAME.as_bytes(),
+            ],
+        )?;
+        let bytes = self.read_object_at(snapshot, id)?;
+        Ok((id, CheckpointManifest::decode(&bytes)?))
+    }
+
     /// Names of every checkpoint directory.
     pub fn list_checkpoints(&self) -> Result<Vec<String>> {
         let dir = match self.resolve_components(&[CHECKPOINT_ROOT.as_bytes()]) {
@@ -1192,6 +1211,33 @@ impl Store {
         options: &CheckpointRestoreOptions,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
+        self.restore_checkpoint_inner(None, None, name, options, writer)
+    }
+
+    /// Restore a checkpoint as it exists at a pinned snapshot.
+    ///
+    /// Checkpoint entry names, shard object ids, and every shard read are all
+    /// resolved against the pinned state. The live head is never consulted, so a
+    /// later rename, delete, or rewrite cannot change what is verified.
+    pub fn restore_checkpoint_at<W: Write>(
+        &self,
+        snapshot: Hash32,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        let state = self.state_at(snapshot)?;
+        self.restore_checkpoint_inner(Some(&state), Some(snapshot), name, options, writer)
+    }
+
+    fn restore_checkpoint_inner<W: Write>(
+        &self,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
         if options.region.is_some() && options.tensor.is_none() {
             return Err(Error::invalid_argument(
                 "a region restore requires --tensor (one named tensor)",
@@ -1202,7 +1248,10 @@ impl Store {
                 "a region restore cannot be verified against a full-tensor topology",
             ));
         }
-        let (_, manifest) = self.load_checkpoint_with_id(name)?;
+        let (_, manifest) = match state {
+            Some(state) => self.load_checkpoint_with_id_at(state, snapshot, name)?,
+            None => self.load_checkpoint_with_id(name)?,
+        };
         let manifest_root = manifest.root()?;
         let selected: Vec<&CheckpointTensor> = match &options.tensor {
             Some(tensor) => vec![manifest.tensor(tensor)?],
@@ -1264,6 +1313,8 @@ impl Store {
                 options.region.as_ref(),
                 options.topology.as_ref(),
                 &limits,
+                state,
+                snapshot,
             )?;
             writer
                 .write_all(&restored.bytes)
@@ -1346,6 +1397,18 @@ impl Store {
         Ok((out, report))
     }
 
+    /// Restore one tensor to memory from a pinned snapshot.
+    pub fn restore_checkpoint_bytes_at(
+        &self,
+        snapshot: Hash32,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+    ) -> Result<(Vec<u8>, CheckpointRestoreReport)> {
+        let mut out = Vec::new();
+        let report = self.restore_checkpoint_at(snapshot, name, options, &mut out)?;
+        Ok((out, report))
+    }
+
     fn restore_tensor(
         &self,
         checkpoint: &str,
@@ -1353,6 +1416,8 @@ impl Store {
         region: Option<&Region>,
         topology: Option<&RestoreTopology>,
         limits: &Limits,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
     ) -> Result<RestoredBytes> {
         let dtype = TensorElementDtype::parse(&tensor.dtype)?;
         let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
@@ -1369,7 +1434,7 @@ impl Store {
                 let mut payloads = Vec::with_capacity(shards.len());
                 let mut verified = 0usize;
                 for shard in &shards {
-                    let bytes = self.read_shard(checkpoint, tensor, shard)?;
+                    let bytes = self.read_shard(checkpoint, tensor, shard, state, snapshot)?;
                     if bytes.len() as u64 != shard.byte_len {
                         return Err(context(
                             &tensor.name,
@@ -1502,7 +1567,7 @@ impl Store {
                     // object, then take the region through the stored object.
                     // The store verifies the shard's own mode-10 root while
                     // decoding it.
-                    self.verify_shard_entry(checkpoint, tensor, shard)?;
+                    self.verify_shard_entry(checkpoint, tensor, shard, state, snapshot)?;
                     let local_extent = local.extent();
                     let expected_len = tc::payload_len(checked_product(&local_extent)?, physical)?;
                     let rank = local_extent.len();
@@ -1567,10 +1632,21 @@ impl Store {
         checkpoint: &str,
         tensor: &CheckpointTensor,
         shard: &CheckpointShard,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
     ) -> Result<Vec<u8>> {
-        let id = self.verify_shard_entry(checkpoint, tensor, shard)?;
-        self.read_tensor(id)
-            .map_err(|err| context(&tensor.name, shard, err))
+        let id = self.verify_shard_entry(checkpoint, tensor, shard, state, snapshot)?;
+        match state {
+            Some(state) => {
+                self.tensor_metadata_at(state, id)
+                    .map_err(|err| context(&tensor.name, shard, err))?;
+                self.read_object_at(snapshot, id)
+                    .map_err(|err| context(&tensor.name, shard, err))
+            }
+            None => self
+                .read_tensor(id)
+                .map_err(|err| context(&tensor.name, shard, err)),
+        }
     }
 
     fn verify_shard_entry(
@@ -1578,14 +1654,19 @@ impl Store {
         checkpoint: &str,
         tensor: &CheckpointTensor,
         shard: &CheckpointShard,
+        state: Option<&State>,
+        _snapshot: Option<Hash32>,
     ) -> Result<Hash32> {
-        let id = self
-            .resolve_components(&[
-                CHECKPOINT_ROOT.as_bytes(),
-                checkpoint.as_bytes(),
-                shard.object_name.as_bytes(),
-            ])
-            .map_err(|err| context(&tensor.name, shard, err))?;
+        let components = [
+            CHECKPOINT_ROOT.as_bytes(),
+            checkpoint.as_bytes(),
+            shard.object_name.as_bytes(),
+        ];
+        let id = match state {
+            Some(state) => resolve_in_state(state, &components),
+            None => self.resolve_components(&components),
+        }
+        .map_err(|err| context(&tensor.name, shard, err))?;
         if id != shard.object_id {
             return Err(context(
                 &tensor.name,
@@ -1598,6 +1679,23 @@ impl Store {
         }
         Ok(id)
     }
+}
+
+/// Resolve pre-split byte components against an explicit state.
+fn resolve_in_state(state: &State, components: &[&[u8]]) -> Result<Hash32> {
+    let mut current = State::ROOT_ID;
+    for component in components {
+        crate::state::validate_name_bytes(component)?;
+        let object = state
+            .objects
+            .get(&current)
+            .ok_or_else(|| Error::not_found("no such parent object"))?;
+        if object.kind != ObjectKind::Dir {
+            return Err(Error::not_dir("path component is not a directory"));
+        }
+        current = state.lookup(current, component)?;
+    }
+    Ok(current)
 }
 
 fn verify_layout_roundtrip(
@@ -1660,14 +1758,34 @@ fn source_metadata(header_bytes: &[u8]) -> Option<serde_json::Value> {
 /// Full verification of a checkpoint: every shard decoded, every per-shard and
 /// per-tensor logical root recomputed. Returns the number of tensors verified.
 pub fn verify_checkpoint(store: &Store, name: &str) -> Result<usize> {
-    let manifest = store.checkpoint_manifest(name)?;
+    verify_checkpoint_inner(store, None, name)
+}
+
+/// Full verification of a checkpoint as it exists at a pinned snapshot.
+pub fn verify_checkpoint_at(store: &Store, snapshot: Hash32, name: &str) -> Result<usize> {
+    verify_checkpoint_inner(store, Some(snapshot), name)
+}
+
+fn verify_checkpoint_inner(store: &Store, snapshot: Option<Hash32>, name: &str) -> Result<usize> {
+    let manifest = match snapshot {
+        Some(snapshot) => {
+            let state = store.state_at(snapshot)?;
+            store
+                .load_checkpoint_with_id_at(&state, Some(snapshot), name)?
+                .1
+        }
+        None => store.checkpoint_manifest(name)?,
+    };
     for tensor in &manifest.tensors {
         let options = CheckpointRestoreOptions {
             tensor: Some(tensor.name.clone()),
             region: None,
             topology: None,
         };
-        let (_, report) = store.restore_checkpoint_bytes(name, &options)?;
+        let (_, report) = match snapshot {
+            Some(snapshot) => store.restore_checkpoint_bytes_at(snapshot, name, &options)?,
+            None => store.restore_checkpoint_bytes(name, &options)?,
+        };
         let restored = report
             .tensors
             .first()

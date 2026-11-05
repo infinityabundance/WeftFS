@@ -35,7 +35,7 @@ use crate::format::{Manifest, Representation, RepresentationKind, TensorRepresen
 use crate::identity::{self, Hash32};
 use crate::recovery::{self, BlobKind};
 use crate::representation::{TensorElementDtype, MAX_CODEC_DEPENDENCY_DEPTH};
-use crate::state::ObjectKind;
+use crate::state::{ObjectKind, ObjectRecord, State};
 use crate::store::Store;
 use crate::wcb_util as wu;
 
@@ -715,10 +715,11 @@ impl Store {
 
     /// Recompute and verify an object's `LogicalTensorRoot`.
     pub fn tensor_logical_root(&self, id: Hash32) -> Result<Hash32> {
-        let meta = self.tensor_metadata(id)?;
+        let record = self.object_meta(id)?;
+        let meta = self.tensor_metadata_record(&record)?;
         let bytes = self.read_object(id)?;
         let root = if meta.dtype == TensorElementDtype::Q8_0 {
-            let shard = self.q8_0_shard_meta(id)?;
+            let shard = self.q8_0_shard_meta_record(&record)?;
             let words = words_from_bytes(&bytes);
             weftcodec::tensor_sharded::logical_root(
                 shard.dtype,
@@ -739,8 +740,50 @@ impl Store {
         Ok(root)
     }
 
-    fn q8_0_shard_meta(&self, id: Hash32) -> Result<weftcodec::TensorShardedMeta> {
-        let record = self.object_meta(id)?;
+    /// Recompute and verify a tensor's `LogicalTensorRoot` at a pinned snapshot.
+    ///
+    /// The record, representation manifest, and decoded bytes all come from the
+    /// pinned state; the live head is never consulted. This is the form used by
+    /// training-ready materialization.
+    pub fn tensor_logical_root_at(
+        &self,
+        state: &State,
+        snapshot: Hash32,
+        id: Hash32,
+    ) -> Result<Hash32> {
+        let record = state
+            .objects
+            .get(&id)
+            .ok_or_else(|| Error::not_found("no such object at this snapshot"))?;
+        let meta = self.tensor_metadata_record(record)?;
+        let bytes = self.read_object_at(Some(snapshot), id)?;
+        let root = if meta.dtype == TensorElementDtype::Q8_0 {
+            let shard = self.q8_0_shard_meta_record(record)?;
+            let words = words_from_bytes(&bytes);
+            weftcodec::tensor_sharded::logical_root(
+                shard.dtype,
+                &shard.shape,
+                &words,
+                &shard.scales,
+                &shard.zero_points,
+                &Limits::default(),
+            )?
+        } else {
+            self.logical_root_for_bytes(meta.dtype, &meta.shape, &bytes, None)?
+        };
+        if root != meta.logical_root {
+            return Err(Error::corrupt(format!(
+                "object {id} tensor logical root does not match its recorded identity at the \
+                 pinned snapshot"
+            )));
+        }
+        Ok(root)
+    }
+
+    fn q8_0_shard_meta_record(
+        &self,
+        record: &ObjectRecord,
+    ) -> Result<weftcodec::TensorShardedMeta> {
         let manifest =
             self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
         let rep = manifest
@@ -770,6 +813,22 @@ impl Store {
     /// Tensor identity recorded for an object.
     pub fn tensor_metadata(&self, id: Hash32) -> Result<StoredTensorMetadata> {
         let record = self.object_meta(id)?;
+        self.tensor_metadata_record(&record)
+    }
+
+    /// Tensor identity for an object record taken from an explicit state.
+    ///
+    /// The record determines every identity field; no live state is consulted.
+    /// This is the pinned-snapshot form used by training-ready verification.
+    pub fn tensor_metadata_at(&self, state: &State, id: Hash32) -> Result<StoredTensorMetadata> {
+        let record = state
+            .objects
+            .get(&id)
+            .ok_or_else(|| Error::not_found("no such object at this snapshot"))?;
+        self.tensor_metadata_record(record)
+    }
+
+    fn tensor_metadata_record(&self, record: &ObjectRecord) -> Result<StoredTensorMetadata> {
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument(
                 "tensor metadata requires a file object",
