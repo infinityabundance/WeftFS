@@ -55,6 +55,20 @@ run_court go "codec_cross_compare" \
 run_court rust "spec_drift" \
   "bash scripts/check-spec-drift.sh"
 
+# Documentation claim drift: every externally visible claim in docs/claims.json
+# must appear (or be absent) exactly where the manifest says, and cite an
+# existing receipt. Host-only check, so it is invoked directly instead of
+# through a container court.
+echo "=== claims ===" | tee -a "$log"
+if bash scripts/check-claims.sh >>"$log" 2>&1; then
+  echo "claims=pass" >> "$results"
+  echo "PASS claims"
+else
+  echo "claims=fail" >> "$results"
+  echo "FAIL claims"
+  status=1
+fi
+
 # Spec-as-code: regenerate both identity type files and fail on any drift.
 run_court go "generated_types" \
   "GO111MODULE=off go run scripts/gen-types.go -schema spec/schema/identity-v1.schema -rust WeftCodec/src/generated.rs -go WeftCodec-Go/generated/generated.go --check"
