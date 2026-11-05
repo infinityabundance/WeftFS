@@ -2142,7 +2142,7 @@ Implemented in Rust and Go; normative text in `spec/WEFT-MODEL.md` §2.2 and
 
 ## Subphase Q4 — real S3-compatible backend and MinIO court
 
-Implemented in Rust on `staging` at `08ec8d2` (code commit); not pushed.
+Implemented in Rust on `staging` at `8683ecc` (code commit); not pushed.
 
 - **Backend.** `S3Backend` implements `StorageBackend` over SigV4 with a minimal
   blocking client (`ureq`, rustls-capable). It uses the local logical key
@@ -2187,14 +2187,14 @@ Implemented in Rust on `staging` at `08ec8d2` (code commit); not pushed.
   Rust `cargo test --all-targets`: 221 passed / 0 failed / 0 ignored. FUSE
   `--features fuse --all-targets`: 255 passed / 0 failed / 2 ignored
   (pre-existing).
-- **Bench** (`bench/receipts/s3-backend-20261105T232819Z.json`, court receipt
-  `bench/receipts/s3-court-20261105T232819Z.json`): single-node MinIO on
+- **Bench** (`bench/receipts/s3-backend-20261105T233154Z.json`, court receipt
+  `bench/receipts/s3-court-20261105T233154Z.json`): single-node MinIO on
   localhost, same seeded operations, same head `8e47145e1a09c3bf…`, generation
-  1101. 1,000 creates: local 106.1 ms / 9,426 ops/s (p50 101 us, p95 154 us)
-  vs S3 1,806.6 ms / 553.5 ops/s (p50 1,778 us, p95 1,965 us). 100 MiB in 100
-  files: 193.3 ms / 517.3 MiB/s vs 1,175.0 ms / 85.1 MiB/s; p50 667 vs 10,302
-  us. 1,000 reads: 4.5 ms / 220,495 ops/s vs 345.3 ms / 2,896 ops/s; p50 4 vs
-  332 us. Backend bytes written 111,581,685 vs 116,091,480 (+4.0%, from
+  1101. 1,000 creates: local 105.9 ms / 9,442 ops/s (p50 100 us, p95 154 us)
+  vs S3 1,809.7 ms / 552.6 ops/s (p50 1,781 us, p95 1,967 us). 100 MiB in 100
+  files: 192.0 ms / 520.9 MiB/s vs 1,168.3 ms / 85.6 MiB/s; p50 664 vs 10,300
+  us. 1,000 reads: 4.4 ms / 224,799 ops/s vs 345.8 ms / 2,892 ops/s; p50 4 vs
+  334 us. Backend bytes written 111,581,685 vs 116,091,480 (+4.0%, from
   whole-superblock rewrites and lock/probe traffic). `verify --full` ok on both.
 - **Residual.** Rust only. MinIO is one node on localhost with a tmpfs data
   directory: protocol and conditional-write safety, not media durability or
