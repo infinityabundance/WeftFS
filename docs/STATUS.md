@@ -44,16 +44,16 @@ it (whole-pair-aware planner); analysis, losses, and caveats are in
 `ai-corpus-20261103T220113Z.json` is retained. F8 receipts are
 `bench/receipts/buck2-cas-20261104T022511Z.json` (15/15 prototype assertions)
 and `bench/receipts/agent-memory-20261104T022512Z.json` (7/7 simulated-timestamp
-months-later replay). D2 authenticated capability grants are implemented on
-`staging`: Ed25519 `weft.capability.envelope.v1`, offline verification against
-an explicit revocation set, enforcement layered on POSIX and explicit
+months-later replay). D2 authenticated capability grants are implemented and
+released in v0.6.0: Ed25519 `weft.capability.envelope.v1`, offline verification
+against an explicit revocation set, enforcement layered on POSIX and explicit
 capabilities, a two-tenant isolation court, and the envelope benchmark receipt
 `bench/receipts/capability-envelope-20261105T034858Z.json` (analysis in
 `bench/RESULTS-capability-envelope.md`). The cross-language gate is
 `WeftCodec-Go/hack/capability-cross.sh`: byte-identical signed blobs and
 identical `BadSignature`/`WrongGrantee`/`Expired`/`Revoked`/`NonCanonical`
 rejections. Generated-type drift is `scripts/gen-types.sh --check`,
-wired into `verify-all`. FLOAT_TENSOR (mode 9) now encodes its exponent plane with `huffman-canonical-v1`: `cargo test --all-targets` (133 tests) and `go test ./...` pass in the Docker courts, and `WeftCodec-Go/hack/cross.sh compare` reports `PASS identical float_tensor`, `float_tensor_single`, and `float_tensor_uniform`; this change is on `staging` and is not yet represented in a full `verify-all` receipt.
+wired into `verify-all`. FLOAT_TENSOR (mode 9) now encodes its exponent plane with `huffman-canonical-v1`: `cargo test --all-targets` (133 tests) and `go test ./...` pass in the Docker courts, and `WeftCodec-Go/hack/cross.sh compare` reports `PASS identical float_tensor`, `float_tensor_single`, and `float_tensor_uniform`; this change is covered by the `codec_cross_compare` court in `verify-20261105T035513Z.json`.
 The F9 TLA+ receipt is `bench/receipts/tla-20261103T224446Z.json` (corrected
 model pass; flawed model counterexample). The F9 power-loss receipts are
 `bench/receipts/powerloss-20261103T224453Z.json` (30/30, `cache=none`),
@@ -126,16 +126,19 @@ Docker court).
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `c9b8bdb` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `90d9c13` | Rust codec v1 |
-| `WeftCodec-Go` | `cf62bb1` | independent Go codec |
-| `WeftFS-Go` | `1c99070` | independent Go store + FUSE |
+| `WeftFS` | `091d0bb` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `272c2c0` | Rust codec v1 + authenticated capability envelopes |
+| `WeftCodec-Go` | `b7400ec` | independent Go codec, envelope parity |
+| `WeftFS-Go` | `963dc62` | independent Go store + FUSE, spec mirror |
 
-These are the revisions pinned by the latest full verification receipt.
-The current release is **v0.5.0** (`docs/RELEASE-v0.5.0.md`); the tag, the
+These are the revisions pinned by the latest full verification receipt
+(`bench/receipts/verify-20261105T035513Z.json`, 25/25 courts pass).
+The current release is **v0.6.0** (`docs/RELEASE-v0.6.0.md`); the tag, the
 per-repo GitHub releases, the four GHCR images, and the two crates are cut
-from the `staging` and `main` commits listed above (both branches are kept
-identical and pushed in all four repositories).
+from the `staging` and `main` commits after the version bump and release
+documentation, with this receipt's code revisions unchanged apart from version
+literals and docs (both branches are kept identical and pushed in all four
+repositories).
 
 ## 2. What is implemented and tested
 
@@ -900,8 +903,8 @@ Go Corrupt on a zstd frame declaring content size 2 while yielding 0 bytes, 93
 Rust Corrupt / Go ok on an empty zstd body with `decoded_len = 0`) is retained
 as the evidence that motivated the rule. The court is not coverage-guided
 fuzzing and not a substitute for the curated B1 decoder-bomb vectors. Wired
-into `scripts/verify-all.sh`; `verify-20261105T030019Z.json` passes all 20
-courts including `claims` and `fuzz_diff`.
+into `scripts/verify-all.sh`; `verify-20261105T035513Z.json` passes all 25
+courts including `claims`, the authenticated-capability gates, and `fuzz_diff`.
 
 **B4 — randomized POSIX torture (6/6 pass; 1,202,560 completed operations).**
 Three FUSE-court invocations at WeftFS `42c82f7` and WeftFS-Go `d7d8d06`, same
@@ -1124,8 +1127,8 @@ It is **not published to PyPI** (no API token); it is a release artifact.
   image with `--memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4`,
   bounded `/tmp`, `no-new-privileges`, and `cap-drop=ALL` (FUSE adds only
   `/dev/fuse` and `CAP_SYS_ADMIN`).
-- `scripts/verify-all.sh` re-ran all twenty courts and produced
-  `bench/receipts/verify-20261105T030019Z.json` with revisions, host, command
+- `scripts/verify-all.sh` re-ran all twenty-five courts and produced
+  `bench/receipts/verify-20261105T035513Z.json` with revisions, host, command
   log, and per-court results.
 - The P7 benchmark court ran codec, store, and filesystem benchmarks under the
   same hard limits. Every receipt contains raw samples, environment, and
