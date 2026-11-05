@@ -549,7 +549,10 @@ fn q8_0_scales(words: &[i8], block_size: u64) -> (Vec<u32>, Vec<i64>) {
 }
 
 fn q8_0_block_size(element_count: u64) -> Option<u64> {
-    [16u64, 32, 64, 128, 256]
+    // Prefer the largest block that divides the payload: the scale plane costs
+    // one 4-byte record per block, so 16-element blocks would add 25 % metadata
+    // to every q8_0 object while 256-element blocks add about 1.6 %.
+    [256u64, 128, 64, 32, 16]
         .into_iter()
         .find(|block| element_count % *block == 0)
 }

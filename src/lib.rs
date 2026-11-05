@@ -19,6 +19,7 @@
 
 pub mod auth;
 pub mod backend;
+pub mod checkpoint;
 pub mod conformance;
 pub mod context;
 pub mod error;
@@ -31,6 +32,7 @@ pub(crate) mod index;
 pub mod provenance;
 pub mod recovery;
 pub mod representation;
+pub mod safetensors;
 pub mod state;
 pub mod store;
 pub mod tensor_store;
@@ -39,6 +41,11 @@ pub mod wcb_util;
 
 pub use auth::Principal;
 pub use backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
+pub use checkpoint::{
+    CheckpointManifest, CheckpointRestoreOptions, CheckpointRestoreReport, CheckpointShard,
+    CheckpointTensor, CheckpointWriteOptions, CheckpointWriteReport, RestoreTopology,
+    ShardStrategy, WrittenTensor,
+};
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};

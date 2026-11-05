@@ -22,6 +22,9 @@ use weftcodec::{Region, SemanticPolicy};
 
 use weftfs::auth::Principal;
 use weftfs::backend::BackendKind;
+use weftfs::checkpoint::{
+    self, CheckpointRestoreOptions, CheckpointWriteOptions, RestoreTopology, ShardStrategy,
+};
 use weftfs::conformance::build_fixture_store;
 use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
@@ -31,7 +34,9 @@ use weftfs::provenance::{
     choose_recovery, Determinism, ProvenanceEnvironment, ProvenanceInput, ProvenancePrincipal,
     ProvenanceRecord, PROVENANCE_SCHEMA,
 };
-use weftfs::state::{object_causal_closure, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE};
+use weftfs::state::{
+    object_causal_closure, ObjectKind, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE,
+};
 use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
@@ -317,8 +322,11 @@ enum Command {
         #[arg(long = "grace-secs")]
         grace_secs: Option<u64>,
     },
-    /// Force a checkpoint commit.
-    Checkpoint,
+    /// Force a checkpoint commit, or write/restore/verify a tensor checkpoint.
+    Checkpoint {
+        #[command(subcommand)]
+        command: Option<CheckpointCommand>,
+    },
     /// Context Root persistence, resolution, and materialization.
     Context {
         #[command(subcommand)]
@@ -448,6 +456,82 @@ enum SnapshotCommand {
     Create { name: String },
     /// List snapshots.
     List,
+}
+
+#[derive(Subcommand)]
+enum CheckpointCommand {
+    /// Ingest one safetensors container as a sharded tensor checkpoint.
+    Write {
+        /// Directory containing exactly one `*.safetensors` file.
+        #[arg(long = "from-dir", value_name = "DIR")]
+        from_dir: Option<PathBuf>,
+        /// Explicit source container (alternative to `--from-dir`).
+        #[arg(long = "file", value_name = "FILE")]
+        file: Option<PathBuf>,
+        /// Checkpoint name (store directory under `/checkpoints`).
+        #[arg(long)]
+        name: String,
+        /// Number of shards per tensor.
+        #[arg(long, default_value_t = 1)]
+        shards: u32,
+        /// Split axis.
+        #[arg(long, default_value_t = 0)]
+        axis: u32,
+        /// Glob filter on tensor names (repeatable; default all tensors).
+        #[arg(long = "tensor-filter", value_name = "GLOB")]
+        tensor_filters: Vec<String>,
+        /// Per-shard physical strategy: tensor-sharded, zstd, or raw.
+        #[arg(long = "shard-strategy", default_value = "tensor-sharded")]
+        shard_strategy: String,
+    },
+    /// Restore a checkpoint, one tensor, or one tensor region into the store.
+    Restore {
+        #[arg(long)]
+        name: String,
+        /// Destination directory inside the store.
+        #[arg(long, value_name = "STORE_DIR")]
+        out: String,
+        /// Output file name (default `<checkpoint>.safetensors`).
+        #[arg(long = "out-name")]
+        out_name: Option<String>,
+        /// Restore only this tensor.
+        #[arg(long)]
+        tensor: Option<String>,
+        /// Region `s0:e0,s1:e1,...` in full-tensor coordinates (needs --tensor).
+        #[arg(long, value_name = "S:E,...")]
+        range: Option<String>,
+        /// Verify the tensor through this many shards (sharded topology).
+        #[arg(long, value_name = "N")]
+        topology: Option<u32>,
+        /// Shard axis for `--topology` / `--layout sharded`.
+        #[arg(long, default_value_t = 0)]
+        axis: u32,
+        /// Physical layout to verify through: row-major, column-major, blocked,
+        /// sharded.
+        #[arg(long, value_name = "LAYOUT")]
+        layout: Option<String>,
+        /// Block shape for `--layout blocked`.
+        #[arg(long = "block-shape", value_name = "B0,B1,...")]
+        block_shape: Option<String>,
+        /// Also write the restored container to this host file.
+        #[arg(long = "host-out", value_name = "FILE")]
+        host_out: Option<PathBuf>,
+        /// Host spool file used while assembling (default: a temp file).
+        #[arg(long, value_name = "FILE")]
+        spool: Option<PathBuf>,
+    },
+    /// List checkpoints.
+    List,
+    /// Show a checkpoint manifest.
+    Show {
+        #[arg(long)]
+        name: String,
+    },
+    /// Decode every shard and verify every per-shard and per-tensor root.
+    Verify {
+        #[arg(long)]
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1535,20 +1619,23 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
-        Command::Checkpoint => {
-            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
-            let head = store.checkpoint()?;
-            if json {
-                print_json(&json!({
-                    "commit": head.to_hex(),
-                    "generation": store.generation(),
-                }))
-            } else {
-                println!("commit={head}");
-                println!("generation={}", store.generation());
-                Ok(())
+        Command::Checkpoint { command } => match command {
+            None => {
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+                let head = store.checkpoint()?;
+                if json {
+                    print_json(&json!({
+                        "commit": head.to_hex(),
+                        "generation": store.generation(),
+                    }))
+                } else {
+                    println!("commit={head}");
+                    println!("generation={}", store.generation());
+                    Ok(())
+                }
             }
-        }
+            Some(subcommand) => run_checkpoint(&store, json, policy, subcommand),
+        },
         Command::Context { command } => run_context(&store, json, policy, command),
         Command::Capability { command } => run_capability(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
@@ -1687,6 +1774,473 @@ fn run(cli: Cli) -> Result<()> {
 
 fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Result<Store> {
     Store::open_with_options_and_backend(path, mode, policy.options(), policy.backend.kind())
+}
+
+/// One `checkpoint` subcommand (`weftfs checkpoint` alone still forces a
+/// checkpoint commit).
+fn run_checkpoint(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: CheckpointCommand,
+) -> Result<()> {
+    match command {
+        CheckpointCommand::Write {
+            from_dir,
+            file,
+            name,
+            shards,
+            axis,
+            tensor_filters,
+            shard_strategy,
+        } => {
+            let started = std::time::Instant::now();
+            let source = resolve_checkpoint_source(from_dir.as_deref(), file.as_deref())?;
+            let options = CheckpointWriteOptions {
+                shards,
+                axis,
+                filters: tensor_filters,
+                strategy: ShardStrategy::parse(&shard_strategy)?,
+            };
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let report = store.write_checkpoint(&name, &source, &options)?;
+            if json {
+                print_json(&json!({
+                    "checkpoint": report.name,
+                    "checkpoint_id": report.checkpoint_id.to_hex(),
+                    "commit": report.head.to_hex(),
+                    "generation": store.generation(),
+                    "manifest_id": report.manifest_id.to_hex(),
+                    "manifest_root": report.manifest_root.to_hex(),
+                    "source": source.display().to_string(),
+                    "source_sha256": hex::encode(report.source_sha256),
+                    "source_file_bytes": report.source_file_bytes,
+                    "complete": report.complete,
+                    "shards": options.shards,
+                    "axis": options.axis,
+                    "shard_strategy": options.strategy.as_str(),
+                    "total_element_bytes": report.total_element_bytes,
+                    "shard_objects": report.shard_objects,
+                    "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                    "peak_rss_kib": peak_rss_kib(),
+                    "tensors": report.tensors.iter().map(|tensor| json!({
+                        "name": tensor.name,
+                        "dtype": tensor.dtype,
+                        "shape": tensor.shape,
+                        "logical_root": tensor.logical_root.to_hex(),
+                        "element_bytes": tensor.element_bytes,
+                        "shards": tensor.shards,
+                        "object_ids": tensor.object_ids.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                println!("checkpoint={}", report.name);
+                println!("checkpoint_id={}", report.checkpoint_id);
+                println!("commit={}", report.head);
+                println!("manifest_root={}", report.manifest_root);
+                println!("source_sha256={}", hex::encode(report.source_sha256));
+                println!("tensors={}", report.tensors.len());
+                println!("shard_objects={}", report.shard_objects);
+                println!("element_bytes={}", report.total_element_bytes);
+                Ok(())
+            }
+        }
+        CheckpointCommand::Restore {
+            name,
+            out,
+            out_name,
+            tensor,
+            range,
+            topology,
+            axis,
+            layout,
+            block_shape,
+            host_out,
+            spool,
+        } => {
+            let started = std::time::Instant::now();
+            let restore_topology =
+                build_restore_topology(topology, axis, layout.as_deref(), block_shape.as_deref())?;
+            let region = match range.as_deref() {
+                Some(text) => Some(parse_checkpoint_region(text)?),
+                None => None,
+            };
+            if region.is_some() && tensor.is_none() {
+                return Err(Error::invalid_argument(
+                    "--range requires --tensor (one named tensor)",
+                ));
+            }
+            let options = CheckpointRestoreOptions {
+                tensor: tensor.clone(),
+                region,
+                topology: restore_topology,
+            };
+            let spool_path = host_out
+                .clone()
+                .or_else(|| spool.clone())
+                .unwrap_or_else(default_restore_spool);
+            if let Some(parent) = spool_path.parent() {
+                if !parent.as_os_str().is_empty() {
+                    fs::create_dir_all(parent)
+                        .map_err(|err| Error::io(format!("{}: {err}", parent.display())))?;
+                }
+            }
+            let report = {
+                let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+                let file = fs::File::create(&spool_path)
+                    .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+                let mut writer = std::io::BufWriter::new(file);
+                let outcome = store.restore_checkpoint(&name, &options, &mut writer);
+                match outcome {
+                    Ok(report) => {
+                        writer
+                            .flush()
+                            .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+                        drop(writer);
+                        report
+                    }
+                    Err(err) => {
+                        drop(writer);
+                        let _ = fs::remove_file(&spool_path);
+                        return Err(err);
+                    }
+                }
+            };
+            // Import the restored container into the store, then expose it
+            // through the ordinary namespace (and through a mount).
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let parent = ensure_store_dir(&mut store, &out)?;
+            let file_name = out_name.unwrap_or_else(|| format!("{name}.safetensors"));
+            let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
+            let mut attrs = BTreeMap::new();
+            attrs.insert(
+                "weft.checkpoint.name".to_owned(),
+                Value::Str(report.name.clone()),
+            );
+            attrs.insert(
+                "weft.checkpoint.manifest_root".to_owned(),
+                wu::hash_value(report.manifest_root),
+            );
+            attrs.insert(
+                "weft.checkpoint.file_sha256".to_owned(),
+                Value::Bytes(report.file_sha256.to_vec()),
+            );
+            if let Some(source) = report.source_sha256 {
+                attrs.insert(
+                    "weft.checkpoint.source_sha256".to_owned(),
+                    Value::Bytes(source.to_vec()),
+                );
+            }
+            attrs.insert(
+                "weft.checkpoint.exact".to_owned(),
+                Value::Bool(report.exact_source_file),
+            );
+            let input = fs::File::open(&spool_path)
+                .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+            let object_id = store.create_file_streaming(
+                parent,
+                file_name.as_bytes(),
+                std::io::BufReader::new(input),
+                0o644,
+                uid,
+                gid,
+                attrs,
+            )?;
+            if host_out.is_none() {
+                let _ = fs::remove_file(&spool_path);
+            }
+            let store_path_out = format!("{}/{}", out.trim_end_matches('/'), file_name);
+            if json {
+                print_json(&json!({
+                    "checkpoint": report.name,
+                    "manifest_root": report.manifest_root.to_hex(),
+                    "file_sha256": hex::encode(report.file_sha256),
+                    "source_sha256": report.source_sha256.map(hex::encode),
+                    "exact_source_file": report.exact_source_file,
+                    "header_reproduced": report.header_reproduced,
+                    "file_bytes": report.file_bytes,
+                    "object_id": object_id.to_hex(),
+                    "generation": store.generation(),
+                    "store_path": store_path_out,
+                    "host_out": host_out.as_ref().map(|path| path.display().to_string()),
+                    "shards_read": report.shards_read,
+                    "units_touched": report.units_touched,
+                    "store_bytes_read": report.store_bytes_read,
+                    "store_reads": report.store_reads,
+                    "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                    "peak_rss_kib": peak_rss_kib(),
+                    "tensors": report.tensors.iter().map(|tensor| json!({
+                        "name": tensor.name,
+                        "dtype": tensor.dtype,
+                        "shape": tensor.shape,
+                        "full_shape": tensor.full_shape,
+                        "full_logical_root": tensor.full_logical_root.to_hex(),
+                        "restored_content_root": tensor.restored_content_root.to_hex(),
+                        "bytes": tensor.bytes,
+                        "shards_read": tensor.shards_read,
+                        "units_touched": tensor.units_touched,
+                        "full_root_verified": tensor.full_root_verified,
+                        "shard_roots_verified": tensor.shard_roots_verified,
+                        "topology_root": tensor.topology_root.map(|root| root.to_hex()),
+                        "sha256": hex::encode(tensor.sha256),
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                println!("checkpoint={}", report.name);
+                println!("file_sha256={}", hex::encode(report.file_sha256));
+                println!("exact_source_file={}", report.exact_source_file);
+                println!("file_bytes={}", report.file_bytes);
+                println!("object_id={object_id}");
+                println!("store_path={store_path_out}");
+                println!("shards_read={}", report.shards_read);
+                println!("units_touched={}", report.units_touched);
+                println!("store_bytes_read={}", report.store_bytes_read);
+                Ok(())
+            }
+        }
+        CheckpointCommand::List => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let mut rows = Vec::new();
+            for name in store.list_checkpoints()? {
+                let manifest = store.checkpoint_manifest(&name)?;
+                rows.push(json!({
+                    "name": name,
+                    "tensors": manifest.tensors.len(),
+                    "element_bytes": manifest.element_bytes,
+                    "complete": manifest.complete,
+                }));
+            }
+            if json {
+                print_json(&json!({"checkpoints": rows}))
+            } else {
+                for row in &rows {
+                    println!(
+                        "{} tensors={} element_bytes={} complete={}",
+                        row["name"].as_str().unwrap_or_default(),
+                        row["tensors"],
+                        row["element_bytes"],
+                        row["complete"]
+                    );
+                }
+                Ok(())
+            }
+        }
+        CheckpointCommand::Show { name } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let manifest = store.checkpoint_manifest(&name)?;
+            let root = manifest.root()?;
+            if json {
+                print_json(&json!({
+                    "manifest_root": root.to_hex(),
+                    "manifest": value_to_json(&manifest.to_value()),
+                }))
+            } else {
+                println!("manifest_root={root}");
+                println!("checkpoint={}", manifest.name);
+                println!("tensors={}", manifest.tensors.len());
+                println!("element_bytes={}", manifest.element_bytes);
+                println!("complete={}", manifest.complete);
+                for tensor in &manifest.tensors {
+                    println!(
+                        "tensor={} dtype={} shape={:?} shards={} root={}",
+                        tensor.name,
+                        tensor.dtype,
+                        tensor.shape,
+                        tensor.shards.len(),
+                        tensor.logical_root
+                    );
+                }
+                Ok(())
+            }
+        }
+        CheckpointCommand::Verify { name } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let verified = checkpoint::verify_checkpoint(&store, &name)?;
+            if json {
+                print_json(&json!({"checkpoint": name, "tensors_verified": verified}))
+            } else {
+                println!("checkpoint={name}");
+                println!("tensors_verified={verified}");
+                Ok(())
+            }
+        }
+    }
+}
+
+fn resolve_checkpoint_source(from_dir: Option<&Path>, file: Option<&Path>) -> Result<PathBuf> {
+    match (from_dir, file) {
+        (Some(_), Some(_)) => Err(Error::invalid_argument(
+            "checkpoint write takes --from-dir or --file, not both",
+        )),
+        (None, None) => Err(Error::invalid_argument(
+            "checkpoint write needs --from-dir DIR or --file FILE",
+        )),
+        (None, Some(file)) => Ok(file.to_path_buf()),
+        (Some(dir), None) => {
+            let mut found = Vec::new();
+            for entry in
+                fs::read_dir(dir).map_err(|err| Error::io(format!("{}: {err}", dir.display())))?
+            {
+                let path = entry
+                    .map_err(|err| Error::io(format!("{}: {err}", dir.display())))?
+                    .path();
+                if path.is_file()
+                    && path.extension().and_then(|ext| ext.to_str()) == Some("safetensors")
+                {
+                    found.push(path);
+                }
+            }
+            found.sort();
+            match found.len() {
+                1 => Ok(found.remove(0)),
+                0 => Err(Error::not_found(format!(
+                    "{} contains no .safetensors file",
+                    dir.display()
+                ))),
+                count => Err(Error::invalid_argument(format!(
+                    "{} contains {count} .safetensors files; select one with --file",
+                    dir.display()
+                ))),
+            }
+        }
+    }
+}
+
+fn build_restore_topology(
+    topology: Option<u32>,
+    axis: u32,
+    layout: Option<&str>,
+    block_shape: Option<&str>,
+) -> Result<Option<RestoreTopology>> {
+    let topology = match layout {
+        None | Some("none") => match topology {
+            Some(shards) => Some(RestoreTopology::Sharded { axis, shards }),
+            None => None,
+        },
+        Some("sharded") => {
+            let shards = topology
+                .ok_or_else(|| Error::invalid_argument("--layout sharded requires --topology N"))?;
+            Some(RestoreTopology::Sharded { axis, shards })
+        }
+        Some("row-major") => {
+            reject_axis_or_topology(topology)?;
+            Some(RestoreTopology::RowMajor)
+        }
+        Some("column-major") => {
+            reject_axis_or_topology(topology)?;
+            Some(RestoreTopology::ColumnMajor)
+        }
+        Some("blocked") => {
+            reject_axis_or_topology(topology)?;
+            let block = block_shape.ok_or_else(|| {
+                Error::invalid_argument("--layout blocked requires --block-shape B0,B1,...")
+            })?;
+            Some(RestoreTopology::Blocked {
+                block_shape: parse_checkpoint_u64_list(block)?,
+            })
+        }
+        Some(other) => {
+            return Err(Error::invalid_argument(format!(
+                "--layout must be row-major, column-major, blocked, or sharded (got `{other}`)"
+            )))
+        }
+    };
+    Ok(topology)
+}
+
+fn reject_axis_or_topology(topology: Option<u32>) -> Result<()> {
+    if topology.is_some() {
+        return Err(Error::invalid_argument(
+            "--topology applies only to the sharded layout",
+        ));
+    }
+    Ok(())
+}
+
+fn parse_checkpoint_u64_list(text: &str) -> Result<Vec<u64>> {
+    text.split(',')
+        .map(|part| {
+            part.trim()
+                .parse::<u64>()
+                .map_err(|_| Error::invalid_argument(format!("`{}` is not a u64 list", text)))
+        })
+        .collect()
+}
+
+fn parse_checkpoint_region(text: &str) -> Result<weftcodec::Region> {
+    let mut start = Vec::new();
+    let mut end = Vec::new();
+    for part in text.split(',') {
+        let part = part.trim();
+        let (from, to) = part.split_once(':').ok_or_else(|| {
+            Error::invalid_argument(format!(
+                "region `{text}` must be `s0:e0,s1:e1,...` (one pair per axis)"
+            ))
+        })?;
+        start.push(
+            from.trim().parse::<u64>().map_err(|_| {
+                Error::invalid_argument(format!("region start `{from}` is not a u64"))
+            })?,
+        );
+        end.push(
+            to.trim()
+                .parse::<u64>()
+                .map_err(|_| Error::invalid_argument(format!("region end `{to}` is not a u64")))?,
+        );
+    }
+    if start.is_empty() || start.len() != end.len() {
+        return Err(Error::invalid_argument(format!(
+            "region `{text}` must name at least one axis"
+        )));
+    }
+    Ok(weftcodec::Region::new(start, end))
+}
+
+fn ensure_store_dir(store: &mut Store, path: &str) -> Result<Hash32> {
+    let mut current = weftfs::state::State::ROOT_ID;
+    for component in path.split('/') {
+        if component.is_empty() {
+            continue;
+        }
+        current = match store.lookup(current, component.as_bytes()) {
+            Ok(id) => {
+                if store.object_meta(id)?.kind != ObjectKind::Dir {
+                    return Err(Error::not_dir(format!("{} is not a directory", path)));
+                }
+                id
+            }
+            Err(err) if err.class() == weftfs::error::Class::NotFound => {
+                let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
+                store.mkdir(current, component.as_bytes(), 0o755, uid, gid)?
+            }
+            Err(err) => return Err(err),
+        };
+    }
+    Ok(current)
+}
+
+fn peak_rss_kib() -> u64 {
+    fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|text| {
+            text.lines().find_map(|line| {
+                line.strip_prefix("VmHWM:")
+                    .and_then(|rest| rest.split_whitespace().next())
+                    .and_then(|value| value.parse::<u64>().ok())
+            })
+        })
+        .unwrap_or(0)
+}
+
+fn default_restore_spool() -> PathBuf {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    std::env::temp_dir().join(format!(
+        "weft-checkpoint-restore-{}-{nanos}.safetensors",
+        std::process::id()
+    ))
 }
 
 fn run_relation(

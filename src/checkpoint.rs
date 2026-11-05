@@ -1,0 +1,1689 @@
+//! Checkpoint object model and topology-independent restore.
+//!
+//! A checkpoint is a store directory holding one `weft.checkpoint.v1` manifest
+//! and one shard object per named tensor slice. Each shard is written through
+//! the tensor store as a mode-10 `TENSOR_SHARDED` object whose payload is the
+//! shard's exact element bytes (a `q8_0` word transport: the quantized words
+//! are the payload bytes, so the round trip is bit-exact). The checkpoint
+//! manifest records the *logical* dtype, shape and `LogicalTensorRoot` of each
+//! tensor plus the storage topology `{axis, shards, index, object_id,
+//! content_root}` of every shard.
+//!
+//! Restore treats the storage topology as an implementation detail: it reads
+//! the shard objects, verifies every shard's own logical root and the
+//! reassembled tensor's logical root, and can re-express the same bytes under a
+//! different topology or layout before writing the container. The logical root
+//! is therefore identical for every topology, by construction.
+//!
+//! Shard objects are mode-10 frames, which are not independently seekable: a
+//! region restore reads only the shard objects the region intersects, but
+//! decodes each intersecting shard's whole frame. The touched-shard count is
+//! reported and asserted by the tests; it is not a byte-range claim inside a
+//! shard.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::Write;
+use std::path::Path;
+
+use sha2::{Digest, Sha256};
+use weftcodec::tensor::{self as tc, PhysicalTensor, Region};
+use weftcodec::wcb::Value;
+use weftcodec::Limits;
+
+use crate::error::{Class, Error, Result};
+use crate::identity::{self, Hash32};
+use crate::representation::TensorElementDtype;
+use crate::safetensors::{self, SafetensorsFile, SafetensorsTensor};
+use crate::state::State;
+use crate::store::Store;
+use crate::tensor_store::{TensorLayoutSpec, TensorStrategy, TensorWriteSpec};
+use crate::wcb_util as wu;
+
+/// Canonical checkpoint manifest schema.
+pub const CHECKPOINT_SCHEMA: &str = "weft.checkpoint.v1";
+/// Store directory that holds every checkpoint.
+pub const CHECKPOINT_ROOT: &str = "checkpoints";
+/// Name of the manifest file inside a checkpoint directory.
+pub const CHECKPOINT_MANIFEST_NAME: &str = "manifest";
+/// Domain for the checkpoint manifest identity.
+pub const CHECKPOINT_MANIFEST_DOMAIN: &str = "weft/checkpoint/manifest/v1";
+/// Container name recorded in the manifest.
+pub const CHECKPOINT_CONTAINER: &str = "safetensors";
+
+/// SHA-256 digest (container digests are SHA-256, store identities are BLAKE3).
+pub type Sha256Digest = [u8; 32];
+
+/// Storage strategy for one shard object.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShardStrategy {
+    /// Mode 10 `TENSOR_SHARDED` with a `q8_0` byte-word transport.
+    TensorSharded,
+    /// One ZSTD frame per shard (exact fallback).
+    Zstd,
+    /// Raw chunks per shard (exact fallback).
+    Raw,
+}
+
+impl ShardStrategy {
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "tensor-sharded" => Ok(ShardStrategy::TensorSharded),
+            "zstd" => Ok(ShardStrategy::Zstd),
+            "raw" => Ok(ShardStrategy::Raw),
+            other => Err(Error::invalid_argument(format!(
+                "--shard-strategy must be `tensor-sharded`, `zstd`, or `raw` (got `{other}`)"
+            ))),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ShardStrategy::TensorSharded => "tensor-sharded",
+            ShardStrategy::Zstd => "zstd",
+            ShardStrategy::Raw => "raw",
+        }
+    }
+}
+
+/// Options for one checkpoint write.
+#[derive(Clone, Debug)]
+pub struct CheckpointWriteOptions {
+    pub shards: u32,
+    pub axis: u32,
+    /// Glob patterns matched against tensor names; empty selects every tensor.
+    pub filters: Vec<String>,
+    pub strategy: ShardStrategy,
+}
+
+impl Default for CheckpointWriteOptions {
+    fn default() -> Self {
+        CheckpointWriteOptions {
+            shards: 1,
+            axis: 0,
+            filters: Vec::new(),
+            strategy: ShardStrategy::TensorSharded,
+        }
+    }
+}
+
+/// One stored shard.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CheckpointShard {
+    pub axis: u32,
+    pub shards: u32,
+    pub index: u32,
+    /// Directory entry name inside the checkpoint directory.
+    pub object_name: String,
+    pub object_id: Hash32,
+    /// `H("weft/chunk/v1", shard_bytes)`, the store's content identity.
+    pub content_root: Hash32,
+    /// `LogicalTensorRoot` of the shard sub-tensor under the tensor's own dtype.
+    pub logical_root: Hash32,
+    pub byte_len: u64,
+}
+
+/// One logical tensor in a checkpoint.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CheckpointTensor {
+    pub name: String,
+    pub dtype: String,
+    pub shape: Vec<u64>,
+    /// `LogicalTensorRoot` of the whole tensor under its logical dtype.
+    pub logical_root: Hash32,
+    /// `H("weft/chunk/v1", whole canonical row-major bytes)`.
+    pub content_root: Hash32,
+    pub element_bytes: u64,
+    /// `data_offsets[0]` in the source container.
+    pub source_offset: u64,
+    pub shards: Vec<CheckpointShard>,
+}
+
+/// A `weft.checkpoint.v1` manifest.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CheckpointManifest {
+    pub name: String,
+    pub container: String,
+    /// True when every tensor of the source container is present.
+    pub complete: bool,
+    pub element_bytes: u64,
+    /// Exact `u64le(len) || JSON` header of the source container.
+    pub source_header: Option<Vec<u8>>,
+    pub source_file_bytes: Option<u64>,
+    pub source_sha256: Option<Sha256Digest>,
+    /// Sorted by name (canonical form).
+    pub tensors: Vec<CheckpointTensor>,
+}
+
+/// One tensor's write report.
+#[derive(Clone, Debug)]
+pub struct WrittenTensor {
+    pub name: String,
+    pub dtype: String,
+    pub shape: Vec<u64>,
+    pub logical_root: Hash32,
+    pub element_bytes: u64,
+    pub axis: u32,
+    pub shards: u32,
+    pub object_names: Vec<String>,
+    pub object_ids: Vec<Hash32>,
+}
+
+/// Result of a checkpoint write.
+#[derive(Clone, Debug)]
+pub struct CheckpointWriteReport {
+    pub name: String,
+    pub checkpoint_id: Hash32,
+    pub head: Hash32,
+    pub manifest_id: Hash32,
+    pub manifest_root: Hash32,
+    pub tensors: Vec<WrittenTensor>,
+    pub total_element_bytes: u64,
+    pub shard_objects: usize,
+    pub complete: bool,
+    pub source_sha256: Sha256Digest,
+    pub source_file_bytes: u64,
+}
+
+/// Physical arrangement a restore verifies the bytes against.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RestoreTopology {
+    RowMajor,
+    ColumnMajor,
+    Blocked { block_shape: Vec<u64> },
+    Sharded { axis: u32, shards: u32 },
+}
+
+/// Options for one restore.
+#[derive(Clone, Debug, Default)]
+pub struct CheckpointRestoreOptions {
+    /// Restore exactly one tensor by name.
+    pub tensor: Option<String>,
+    /// Restore only this region (full-tensor coordinates). Requires `tensor`.
+    pub region: Option<Region>,
+    /// Re-express the assembled bytes in this layout and verify the root.
+    /// Rejected together with `region` (a region has no full-tensor identity).
+    pub topology: Option<RestoreTopology>,
+}
+
+/// One tensor's restore report.
+#[derive(Clone, Debug)]
+pub struct RestoredTensor {
+    pub name: String,
+    pub dtype: String,
+    /// Shape of the restored bytes (`region.extent()` for a slice).
+    pub shape: Vec<u64>,
+    /// Full logical shape of the tensor.
+    pub full_shape: Vec<u64>,
+    pub full_logical_root: Hash32,
+    pub restored_content_root: Hash32,
+    pub bytes: u64,
+    pub shards_read: usize,
+    pub units_touched: u64,
+    /// The whole-tensor root was recomputed and matched the manifest.
+    pub full_root_verified: bool,
+    /// Every read shard's own logical root was recomputed and matched.
+    pub shard_roots_verified: bool,
+    /// Root recomputed through the requested physical topology.
+    pub topology_root: Option<Hash32>,
+    pub sha256: Sha256Digest,
+}
+
+/// Result of a restore.
+#[derive(Clone, Debug)]
+pub struct CheckpointRestoreReport {
+    pub name: String,
+    pub manifest_root: Hash32,
+    pub file_sha256: Sha256Digest,
+    pub file_bytes: u64,
+    pub source_sha256: Option<Sha256Digest>,
+    /// True only when the whole source file (header included) was reproduced.
+    pub exact_source_file: bool,
+    pub header_reproduced: bool,
+    pub tensors: Vec<RestoredTensor>,
+    pub shards_read: usize,
+    pub units_touched: u64,
+    /// Backend bytes read (manifest + frame blobs), measured by the backend.
+    pub store_bytes_read: u64,
+    pub store_reads: u64,
+}
+
+// ---------------------------------------------------------------------------
+// Manifest encoding
+// ---------------------------------------------------------------------------
+
+fn u64_array(values: &[u64]) -> Value {
+    Value::Array(values.iter().map(|dim| Value::U64(*dim)).collect())
+}
+
+fn shard_value(shard: &CheckpointShard) -> Value {
+    wu::map([
+        ("axis", Value::U64(u64::from(shard.axis))),
+        ("shards", Value::U64(u64::from(shard.shards))),
+        ("index", Value::U64(u64::from(shard.index))),
+        ("object_name", Value::Str(shard.object_name.clone())),
+        ("object_id", wu::hash_value(shard.object_id)),
+        ("content_root", wu::hash_value(shard.content_root)),
+        ("logical_root", wu::hash_value(shard.logical_root)),
+        ("byte_len", Value::U64(shard.byte_len)),
+    ])
+}
+
+fn tensor_value(tensor: &CheckpointTensor) -> Value {
+    wu::map([
+        ("name", Value::Str(tensor.name.clone())),
+        ("dtype", Value::Str(tensor.dtype.clone())),
+        ("shape", u64_array(&tensor.shape)),
+        ("logical_root", wu::hash_value(tensor.logical_root)),
+        ("content_root", wu::hash_value(tensor.content_root)),
+        ("element_bytes", Value::U64(tensor.element_bytes)),
+        ("source_offset", Value::U64(tensor.source_offset)),
+        (
+            "shards",
+            Value::Array(tensor.shards.iter().map(shard_value).collect()),
+        ),
+    ])
+}
+
+impl CheckpointManifest {
+    /// Canonical WCB value.
+    pub fn to_value(&self) -> Value {
+        wu::map([
+            ("schema", Value::Str(CHECKPOINT_SCHEMA.to_owned())),
+            ("name", Value::Str(self.name.clone())),
+            ("container", Value::Str(self.container.clone())),
+            ("complete", Value::Bool(self.complete)),
+            ("element_bytes", Value::U64(self.element_bytes)),
+            (
+                "source_header",
+                match &self.source_header {
+                    Some(bytes) => Value::Bytes(bytes.clone()),
+                    None => Value::Null,
+                },
+            ),
+            (
+                "source_file_bytes",
+                match self.source_file_bytes {
+                    Some(bytes) => Value::U64(bytes),
+                    None => Value::Null,
+                },
+            ),
+            (
+                "source_sha256",
+                match self.source_sha256 {
+                    Some(digest) => Value::Bytes(digest.to_vec()),
+                    None => Value::Null,
+                },
+            ),
+            (
+                "tensors",
+                Value::Array(self.tensors.iter().map(tensor_value).collect()),
+            ),
+        ])
+    }
+
+    /// Canonical WCB bytes.
+    pub fn canonical_bytes(&self) -> Result<Vec<u8>> {
+        wu::encode(&self.to_value())
+    }
+
+    /// `H("weft/checkpoint/manifest/v1", canonical_bytes)`.
+    pub fn root(&self) -> Result<Hash32> {
+        Ok(identity::h(
+            CHECKPOINT_MANIFEST_DOMAIN,
+            &self.canonical_bytes()?,
+        ))
+    }
+
+    /// Strict decode: structure, every field, and canonical re-encoding.
+    pub fn decode(bytes: &[u8]) -> Result<CheckpointManifest> {
+        let value = wu::decode(bytes)?;
+        let manifest = CheckpointManifest::from_value(&value)?;
+        if manifest.canonical_bytes()? != bytes {
+            return Err(Error::non_canonical(
+                "checkpoint manifest bytes are not the canonical encoding of its fields",
+            ));
+        }
+        Ok(manifest)
+    }
+
+    /// Parse and validate a manifest value.
+    pub fn from_value(value: &Value) -> Result<CheckpointManifest> {
+        let map = wu::as_map(value)?;
+        wu::check_keys(
+            map,
+            &[
+                "schema",
+                "name",
+                "container",
+                "complete",
+                "element_bytes",
+                "source_header",
+                "source_file_bytes",
+                "source_sha256",
+                "tensors",
+            ],
+        )?;
+        let schema = wu::get_text(map, "schema")?;
+        if schema != CHECKPOINT_SCHEMA {
+            return Err(Error::unknown_schema(format!(
+                "checkpoint schema `{schema}` is not `{CHECKPOINT_SCHEMA}`"
+            )));
+        }
+        let name = wu::get_text(map, "name")?;
+        if name.is_empty() {
+            return Err(Error::malformed("checkpoint name must not be empty"));
+        }
+        let container = wu::get_text(map, "container")?;
+        if container != CHECKPOINT_CONTAINER {
+            return Err(Error::unsupported_version(format!(
+                "checkpoint container `{container}` is not `{CHECKPOINT_CONTAINER}`"
+            )));
+        }
+        let complete = match wu::field(map, "complete")? {
+            Value::Bool(value) => *value,
+            _ => return Err(Error::malformed("checkpoint `complete` must be a bool")),
+        };
+        let element_bytes = wu::get_u64(map, "element_bytes")?;
+        let source_header = match wu::field(map, "source_header")? {
+            Value::Null => None,
+            Value::Bytes(bytes) => Some(bytes.clone()),
+            _ => {
+                return Err(Error::malformed(
+                    "checkpoint `source_header` must be bytes or null",
+                ))
+            }
+        };
+        let source_file_bytes = match wu::field(map, "source_file_bytes")? {
+            Value::Null => None,
+            Value::U64(value) => Some(*value),
+            _ => {
+                return Err(Error::malformed(
+                    "checkpoint `source_file_bytes` must be u64 or null",
+                ))
+            }
+        };
+        let source_sha256 = match wu::field(map, "source_sha256")? {
+            Value::Null => None,
+            Value::Bytes(bytes) => Some(digest32(bytes, "source_sha256")?),
+            _ => {
+                return Err(Error::malformed(
+                    "checkpoint `source_sha256` must be bytes32 or null",
+                ))
+            }
+        };
+        if complete
+            && (source_header.is_none() || source_file_bytes.is_none() || source_sha256.is_none())
+        {
+            return Err(Error::malformed(
+                "a complete checkpoint must carry the source header, byte length, and SHA-256",
+            ));
+        }
+
+        let tensors_value = wu::field(map, "tensors")?;
+        let tensor_values = match tensors_value {
+            Value::Array(items) => items,
+            _ => return Err(Error::malformed("checkpoint `tensors` must be an array")),
+        };
+        let limits = Limits::default();
+        if tensor_values.len() as u64 > limits.max_structured_items {
+            return Err(Error::limit_exceeded(
+                "checkpoint tensor count exceeds the structured-item bound",
+            ));
+        }
+        let mut tensors = Vec::with_capacity(tensor_values.len());
+        let mut names = BTreeSet::new();
+        let mut total = 0u64;
+        for item in tensor_values {
+            let mut tensor = tensor_from_value(item, &limits)?;
+            tensor.shards.sort_by_key(|shard| shard.index);
+            if !names.insert(tensor.name.clone()) {
+                return Err(Error::malformed(format!(
+                    "checkpoint has duplicate tensor `{}`",
+                    tensor.name
+                )));
+            }
+            total = total
+                .checked_add(tensor.element_bytes)
+                .ok_or_else(|| Error::limit_exceeded("checkpoint element bytes overflow"))?;
+            tensors.push(tensor);
+        }
+        if tensors.is_empty() {
+            return Err(Error::malformed(
+                "a checkpoint must name at least one tensor",
+            ));
+        }
+        if total != element_bytes {
+            return Err(Error::corrupt(format!(
+                "checkpoint element_bytes {element_bytes} does not match the tensor sum {total}"
+            )));
+        }
+        // Canonical array order: tensors sorted by name.
+        tensors.sort_by(|a, b| a.name.cmp(&b.name));
+        Ok(CheckpointManifest {
+            name,
+            container,
+            complete,
+            element_bytes,
+            source_header,
+            source_file_bytes,
+            source_sha256,
+            tensors,
+        })
+    }
+
+    /// Tensor by exact name.
+    pub fn tensor(&self, name: &str) -> Result<&CheckpointTensor> {
+        self.tensors
+            .iter()
+            .find(|tensor| tensor.name == name)
+            .ok_or_else(|| {
+                Error::not_found(format!(
+                    "checkpoint `{}` has no tensor named `{name}`",
+                    self.name
+                ))
+            })
+    }
+}
+
+fn digest32(bytes: &[u8], field: &str) -> Result<[u8; 32]> {
+    bytes.try_into().map_err(|_| {
+        Error::malformed(format!(
+            "`{field}` must be exactly 32 bytes (found {})",
+            bytes.len()
+        ))
+    })
+}
+
+fn tensor_from_value(value: &Value, limits: &Limits) -> Result<CheckpointTensor> {
+    let map = wu::as_map(value)?;
+    wu::check_keys(
+        map,
+        &[
+            "name",
+            "dtype",
+            "shape",
+            "logical_root",
+            "content_root",
+            "element_bytes",
+            "source_offset",
+            "shards",
+        ],
+    )?;
+    let name = wu::get_text(map, "name")?;
+    if name.is_empty() {
+        return Err(Error::malformed("checkpoint tensor name must not be empty"));
+    }
+    let dtype = TensorElementDtype::parse(&wu::get_text(map, "dtype")?)?;
+    let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+        Error::unsupported_version(format!(
+            "checkpoint tensor dtype `{}` has no physical layout",
+            dtype.as_str()
+        ))
+    })?;
+    let mut shape = Vec::new();
+    for item in wu::get_array(map, "shape")? {
+        match item {
+            Value::U64(dim) => shape.push(*dim),
+            _ => return Err(Error::malformed("checkpoint tensor shape must be u64")),
+        }
+    }
+    let count = tc::validate_shape(&shape, limits)?;
+    let expected = tc::payload_len(count, physical)?;
+    let element_bytes = wu::get_u64(map, "element_bytes")?;
+    if expected != element_bytes {
+        return Err(Error::corrupt(format!(
+            "checkpoint tensor `{name}` declares {element_bytes} element bytes but \
+             shape {:?} x {} requires {expected}",
+            shape,
+            dtype.as_str()
+        )));
+    }
+    let logical_root = wu::get_hash(map, "logical_root")?;
+    let content_root = wu::get_hash(map, "content_root")?;
+    let source_offset = wu::get_u64(map, "source_offset")?;
+    let shard_values = wu::get_array(map, "shards")?;
+    if shard_values.is_empty() {
+        return Err(Error::malformed(format!(
+            "checkpoint tensor `{name}` has no shards"
+        )));
+    }
+    let mut shards = Vec::with_capacity(shard_values.len());
+    for item in shard_values {
+        shards.push(shard_from_value(item)?);
+    }
+    validate_shard_set(name.as_str(), &shape, element_bytes, &shards, limits)?;
+    Ok(CheckpointTensor {
+        name,
+        dtype: dtype.as_str().to_owned(),
+        shape,
+        logical_root,
+        content_root,
+        element_bytes,
+        source_offset,
+        shards,
+    })
+}
+
+fn shard_from_value(value: &Value) -> Result<CheckpointShard> {
+    let map = wu::as_map(value)?;
+    wu::check_keys(
+        map,
+        &[
+            "axis",
+            "shards",
+            "index",
+            "object_name",
+            "object_id",
+            "content_root",
+            "logical_root",
+            "byte_len",
+        ],
+    )?;
+    let axis = u32::try_from(wu::get_u64(map, "axis")?)
+        .map_err(|_| Error::malformed("shard axis does not fit u32"))?;
+    let shards = u32::try_from(wu::get_u64(map, "shards")?)
+        .map_err(|_| Error::malformed("shard count does not fit u32"))?;
+    let index = u32::try_from(wu::get_u64(map, "index")?)
+        .map_err(|_| Error::malformed("shard index does not fit u32"))?;
+    let object_name = wu::get_text(map, "object_name")?;
+    crate::state::validate_name_bytes(object_name.as_bytes())?;
+    Ok(CheckpointShard {
+        axis,
+        shards,
+        index,
+        object_name,
+        object_id: wu::get_hash(map, "object_id")?,
+        content_root: wu::get_hash(map, "content_root")?,
+        logical_root: wu::get_hash(map, "logical_root")?,
+        byte_len: wu::get_u64(map, "byte_len")?,
+    })
+}
+
+fn validate_shard_set(
+    name: &str,
+    shape: &[u64],
+    element_bytes: u64,
+    shards: &[CheckpointShard],
+    limits: &Limits,
+) -> Result<()> {
+    let first = &shards[0];
+    if first.shards == 0 {
+        return Err(Error::malformed(format!(
+            "checkpoint tensor `{name}` declares zero shards"
+        )));
+    }
+    if shards.len() != first.shards as usize {
+        return Err(Error::malformed(format!(
+            "checkpoint tensor `{name}` declares {} shard entries but shard count {}",
+            shards.len(),
+            first.shards
+        )));
+    }
+    if first.shards as u64 > limits.max_structured_items {
+        return Err(Error::limit_exceeded(format!(
+            "checkpoint tensor `{name}` shard count exceeds the bound"
+        )));
+    }
+    // The shard geometry itself is codec-validated.
+    tc::shard_shape(shape, first.axis, first.shards, 0)?;
+    let shard_bytes = element_bytes / u64::from(first.shards);
+    let mut seen = BTreeSet::new();
+    for shard in shards {
+        if shard.axis != first.axis || shard.shards != first.shards {
+            return Err(Error::non_canonical(format!(
+                "checkpoint tensor `{name}` shard set disagrees on axis or shard count"
+            )));
+        }
+        if shard.index >= first.shards {
+            return Err(Error::non_canonical(format!(
+                "checkpoint tensor `{name}` shard index {} is not below {}",
+                shard.index, first.shards
+            )));
+        }
+        if !seen.insert(shard.index) {
+            return Err(Error::non_canonical(format!(
+                "checkpoint tensor `{name}` shard index {} is duplicated",
+                shard.index
+            )));
+        }
+        if shard.byte_len != shard_bytes {
+            return Err(Error::corrupt(format!(
+                "checkpoint tensor `{name}` shard {} is {} bytes but {} shards of {} \
+                 element bytes require {shard_bytes}",
+                shard.index, shard.byte_len, first.shards, element_bytes
+            )));
+        }
+    }
+    if seen.len() != shards.len() {
+        return Err(Error::non_canonical(format!(
+            "checkpoint tensor `{name}` shard indices are not a permutation of 0..{}",
+            first.shards
+        )));
+    }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Writing
+// ---------------------------------------------------------------------------
+
+fn shard_object_name(tensor_index: usize, shard: u32) -> String {
+    format!("t{tensor_index:05}.s{shard:03}")
+}
+
+/// Row-major byte shape of a tensor payload.
+///
+/// A fixed-width dtype is contiguous on the last axis, so the payload bytes of
+/// a `shape` tensor are exactly a row-major `u8` tensor of `shape` with the
+/// last dimension multiplied by the element size. That lets a mode-10 `q8_0`
+/// object carry the exact bytes while the store's region API still addresses
+/// them with logical coordinates.
+fn byte_shape(shape: &[u64], element_bytes: u64) -> Result<Vec<u64>> {
+    let mut out = shape.to_vec();
+    let last = out
+        .len()
+        .checked_sub(1)
+        .ok_or_else(|| Error::malformed("a tensor shape must have rank >= 1"))?;
+    out[last] = out[last]
+        .checked_mul(element_bytes)
+        .ok_or_else(|| Error::limit_exceeded("byte shape overflows u64"))?;
+    Ok(out)
+}
+
+fn ensure_dir(store: &mut Store, parent: Hash32, name: &[u8]) -> Result<Hash32> {
+    match store.lookup(parent, name) {
+        Ok(id) => {
+            store.require_dir(id)?;
+            Ok(id)
+        }
+        Err(err) if err.class() == Class::NotFound => {
+            let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
+            store.mkdir(parent, name, 0o755, uid, gid)
+        }
+        Err(err) => Err(err),
+    }
+}
+
+/// Glob matching with `*` (any run of characters) and `?` (one character).
+pub fn glob_match(pattern: &str, text: &str) -> bool {
+    let pattern: Vec<char> = pattern.chars().collect();
+    let text: Vec<char> = text.chars().collect();
+    let (mut p, mut t) = (0usize, 0usize);
+    let (mut star, mut mark) = (None, 0usize);
+    while t < text.len() {
+        if p < pattern.len() && (pattern[p] == '?' || pattern[p] == text[t]) {
+            p += 1;
+            t += 1;
+        } else if p < pattern.len() && pattern[p] == '*' {
+            star = Some(p);
+            mark = t;
+            p += 1;
+        } else if let Some(star_at) = star {
+            p = star_at + 1;
+            mark += 1;
+            t = mark;
+        } else {
+            return false;
+        }
+    }
+    while p < pattern.len() && pattern[p] == '*' {
+        p += 1;
+    }
+    p == pattern.len()
+}
+
+fn selected_by_filters(name: &str, filters: &[String]) -> bool {
+    if filters.is_empty() {
+        return true;
+    }
+    filters.iter().any(|pattern| glob_match(pattern, name))
+}
+
+fn context(tensor: &str, shard: &CheckpointShard, err: Error) -> Error {
+    Error::new(
+        err.class(),
+        format!(
+            "checkpoint tensor `{tensor}` shard {}/{} (`{}`, object {}): {}",
+            shard.index,
+            shard.shards,
+            shard.object_name,
+            shard.object_id,
+            err.message()
+        ),
+    )
+}
+
+impl Store {
+    /// Write a checkpoint from one safetensors container.
+    ///
+    /// Every shard object and the manifest are published in a single group
+    /// commit: either the whole checkpoint is durable or none of it is.
+    pub fn write_checkpoint(
+        &mut self,
+        name: &str,
+        source: &Path,
+        options: &CheckpointWriteOptions,
+    ) -> Result<CheckpointWriteReport> {
+        crate::state::validate_name_bytes(name.as_bytes())?;
+        if options.shards == 0 {
+            return Err(Error::invalid_argument("--shards must be at least 1"));
+        }
+        let file = SafetensorsFile::parse(source)?;
+        if file.tensors.is_empty() {
+            return Err(Error::invalid_argument(format!(
+                "{}: the container has no tensors",
+                source.display()
+            )));
+        }
+        let selected: Vec<&SafetensorsTensor> = file
+            .tensors
+            .iter()
+            .filter(|tensor| selected_by_filters(&tensor.name, &options.filters))
+            .collect();
+        if selected.is_empty() {
+            return Err(Error::not_found(format!(
+                "no tensor in {} matches the requested filters {:?}",
+                source.display(),
+                options.filters
+            )));
+        }
+        let complete = selected.len() == file.tensors.len();
+
+        // Validate every split before writing anything, so a non-divisible
+        // shape never leaves half a checkpoint on disk.
+        let limits = Limits::default();
+        for tensor in &selected {
+            let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+            let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+                Error::unsupported_version(format!(
+                    "tensor `{}` dtype `{}` has no physical layout",
+                    tensor.name, tensor.dtype
+                ))
+            })?;
+            tc::validate_shape(&tensor.shape, &limits)?;
+            tc::payload_len(
+                tensor.shape.iter().try_fold(1u64, |acc, dim| {
+                    acc.checked_mul(*dim)
+                        .ok_or_else(|| Error::limit_exceeded("tensor shape overflow"))
+                })?,
+                physical,
+            )?;
+            if let Err(err) = tc::shard_shape(&tensor.shape, options.axis, options.shards, 0) {
+                let err = Error::from(err);
+                return Err(Error::new(
+                    err.class(),
+                    format!(
+                        "tensor `{}` shape {:?} cannot be split {}-way on axis {} \
+                         (no silent padding): {}",
+                        tensor.name, tensor.shape, options.shards, options.axis, err
+                    ),
+                ));
+            }
+        }
+
+        let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
+        let name_owned = name.to_owned();
+        let options = options.clone();
+        let (report, head) = self.group(|store| {
+            let checkpoints = ensure_dir(store, State::ROOT_ID, CHECKPOINT_ROOT.as_bytes())?;
+            let dir = store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?;
+            let mut tensors = Vec::with_capacity(selected.len());
+            let mut shard_objects = 0usize;
+            for (tensor_index, tensor) in selected.iter().enumerate() {
+                let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+                let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+                    Error::unsupported_version(format!(
+                        "tensor `{}` dtype `{}` has no physical layout",
+                        tensor.name, tensor.dtype
+                    ))
+                })?;
+                let bytes = file.read_tensor(tensor)?;
+                tc::check_payload(physical, &tensor.shape, &bytes, &limits)?;
+                let mut shards = Vec::with_capacity(options.shards as usize);
+                let mut object_names = Vec::with_capacity(options.shards as usize);
+                let mut object_ids = Vec::with_capacity(options.shards as usize);
+                for shard_index in 0..options.shards {
+                    let shard_shape =
+                        tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
+                    let shard_bytes = tc::shard_bytes(
+                        physical,
+                        &tensor.shape,
+                        options.axis,
+                        options.shards,
+                        shard_index,
+                        &bytes,
+                        &limits,
+                    )?;
+                    let object_name = shard_object_name(tensor_index, shard_index);
+                    let (store_dtype, store_shape, hint) = match options.strategy {
+                        // A q8_0 object treats every payload byte as a
+                        // quantized word, so the mode-10 round trip is exact.
+                        // The transport shape doubles the last logical
+                        // dimension by the element size, keeping the payload's
+                        // row-major byte order addressable.
+                        ShardStrategy::TensorSharded => (
+                            "q8_0",
+                            byte_shape(&shard_shape, physical.element_size())?,
+                            TensorStrategy::TensorSharded,
+                        ),
+                        ShardStrategy::Zstd => {
+                            (dtype.as_str(), shard_shape.clone(), TensorStrategy::Zstd)
+                        }
+                        ShardStrategy::Raw => {
+                            (dtype.as_str(), shard_shape.clone(), TensorStrategy::Raw)
+                        }
+                    };
+                    let spec = TensorWriteSpec {
+                        strategy_hint: Some(hint),
+                        ..TensorWriteSpec::default()
+                    };
+                    let id = store
+                        .write_tensor_file_with_spec(
+                            dir,
+                            object_name.as_bytes(),
+                            store_dtype,
+                            &store_shape,
+                            &shard_bytes,
+                            &TensorLayoutSpec::row_major(),
+                            &spec,
+                        )
+                        .map_err(|err| {
+                            let hint = match options.strategy {
+                                ShardStrategy::TensorSharded => {
+                                    " (mode 10 needs a shard byte length divisible by 16; \
+                                     choose --shard-strategy zstd otherwise)"
+                                }
+                                _ => "",
+                            };
+                            Error::new(
+                                err.class(),
+                                format!(
+                                    "checkpoint tensor `{}` shard {}/{}: {}{hint}",
+                                    tensor.name,
+                                    shard_index,
+                                    options.shards,
+                                    err.message()
+                                ),
+                            )
+                        })?;
+                    shard_objects += 1;
+                    shards.push(CheckpointShard {
+                        axis: options.axis,
+                        shards: options.shards,
+                        index: shard_index,
+                        object_name: object_name.clone(),
+                        object_id: id,
+                        content_root: identity::content_hash(&shard_bytes),
+                        logical_root: tc::logical_root(
+                            physical,
+                            &shard_shape,
+                            &shard_bytes,
+                            &limits,
+                        )?,
+                        byte_len: shard_bytes.len() as u64,
+                    });
+                    object_names.push(object_name);
+                    object_ids.push(id);
+                }
+                let logical_root = tc::logical_root(physical, &tensor.shape, &bytes, &limits)?;
+                tensors.push((
+                    CheckpointTensor {
+                        name: tensor.name.clone(),
+                        dtype: dtype.as_str().to_owned(),
+                        shape: tensor.shape.clone(),
+                        logical_root,
+                        content_root: identity::content_hash(&bytes),
+                        element_bytes: bytes.len() as u64,
+                        source_offset: tensor.begin,
+                        shards,
+                    },
+                    object_names,
+                    object_ids,
+                ));
+            }
+            let total_element_bytes = tensors
+                .iter()
+                .map(|(tensor, _, _)| tensor.element_bytes)
+                .sum::<u64>();
+            let manifest = CheckpointManifest {
+                name: name_owned.clone(),
+                container: CHECKPOINT_CONTAINER.to_owned(),
+                complete,
+                element_bytes: total_element_bytes,
+                source_header: Some(file.header_bytes.clone()),
+                source_file_bytes: Some(file.file_bytes),
+                source_sha256: Some(file.sha256),
+                tensors: {
+                    let mut sorted: Vec<CheckpointTensor> = tensors
+                        .iter()
+                        .map(|(tensor, _, _)| tensor.clone())
+                        .collect();
+                    sorted.sort_by(|a, b| a.name.cmp(&b.name));
+                    sorted
+                },
+            };
+            let manifest_bytes = manifest.canonical_bytes()?;
+            let manifest_root = manifest.root()?;
+            let mut attrs = BTreeMap::new();
+            attrs.insert(
+                "weft.checkpoint.schema".to_owned(),
+                Value::Str(CHECKPOINT_SCHEMA.to_owned()),
+            );
+            attrs.insert(
+                "weft.checkpoint.id".to_owned(),
+                wu::hash_value(manifest_root),
+            );
+            let manifest_id = store.create_file(
+                dir,
+                CHECKPOINT_MANIFEST_NAME.as_bytes(),
+                &manifest_bytes,
+                0o644,
+                uid,
+                gid,
+                attrs,
+            )?;
+            let written = tensors
+                .into_iter()
+                .map(|(tensor, object_names, object_ids)| WrittenTensor {
+                    name: tensor.name,
+                    dtype: tensor.dtype,
+                    shape: tensor.shape,
+                    logical_root: tensor.logical_root,
+                    element_bytes: tensor.element_bytes,
+                    axis: options.axis,
+                    shards: options.shards,
+                    object_names,
+                    object_ids,
+                })
+                .collect::<Vec<_>>();
+            Ok(CheckpointWriteReport {
+                name: name_owned.clone(),
+                checkpoint_id: dir,
+                head: Hash32::ZERO,
+                manifest_id,
+                manifest_root,
+                tensors: written,
+                total_element_bytes,
+                shard_objects,
+                complete,
+                source_sha256: file.sha256,
+                source_file_bytes: file.file_bytes,
+            })
+        })?;
+        let mut report = report;
+        report.head = head;
+        Ok(report)
+    }
+
+    /// Load and validate one checkpoint manifest.
+    pub fn load_checkpoint(&self, name: &str) -> Result<CheckpointManifest> {
+        let (_, manifest) = self.load_checkpoint_with_id(name)?;
+        Ok(manifest)
+    }
+
+    fn load_checkpoint_with_id(&self, name: &str) -> Result<(Hash32, CheckpointManifest)> {
+        let id = self.resolve_components(&[
+            CHECKPOINT_ROOT.as_bytes(),
+            name.as_bytes(),
+            CHECKPOINT_MANIFEST_NAME.as_bytes(),
+        ])?;
+        let bytes = self.read_object(id)?;
+        Ok((id, CheckpointManifest::decode(&bytes)?))
+    }
+
+    /// Names of every checkpoint directory.
+    pub fn list_checkpoints(&self) -> Result<Vec<String>> {
+        let dir = match self.resolve_components(&[CHECKPOINT_ROOT.as_bytes()]) {
+            Ok(dir) => dir,
+            Err(err) if err.class() == Class::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(err),
+        };
+        let mut names = Vec::new();
+        for entry in self.list_dir(dir)? {
+            match String::from_utf8(entry.name) {
+                Ok(name) => names.push(name),
+                Err(_) => continue,
+            }
+        }
+        names.sort();
+        Ok(names)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Restore
+// ---------------------------------------------------------------------------
+
+fn checked_product(values: &[u64]) -> Result<u64> {
+    values.iter().try_fold(1u64, |acc, dim| {
+        acc.checked_mul(*dim)
+            .ok_or_else(|| Error::limit_exceeded("tensor dimension product overflows u64"))
+    })
+}
+
+fn row_major_strides(shape: &[u64]) -> Vec<u64> {
+    let mut strides = vec![1u64; shape.len()];
+    for axis in (0..shape.len().saturating_sub(1)).rev() {
+        strides[axis] = strides[axis + 1].saturating_mul(shape[axis + 1]);
+    }
+    strides
+}
+
+#[allow(clippy::too_many_arguments)]
+fn copy_box(
+    dst: &mut [u8],
+    dst_shape: &[u64],
+    dst_start: &[u64],
+    src: &[u8],
+    src_shape: &[u64],
+    src_start: &[u64],
+    extent: &[u64],
+    element_bytes: usize,
+) -> Result<()> {
+    let dst_strides = row_major_strides(dst_shape);
+    let src_strides = row_major_strides(src_shape);
+    fn recurse(
+        axis: usize,
+        dst: &mut [u8],
+        dst_strides: &[u64],
+        dst_start: &[u64],
+        src: &[u8],
+        src_strides: &[u64],
+        src_start: &[u64],
+        extent: &[u64],
+        element_bytes: usize,
+        dst_base: u64,
+        src_base: u64,
+    ) -> Result<()> {
+        if axis + 1 == extent.len() {
+            let dst_off = dst_base
+                .checked_add(dst_start[axis].saturating_mul(dst_strides[axis]))
+                .and_then(|offset| offset.checked_mul(element_bytes as u64))
+                .ok_or_else(|| Error::limit_exceeded("destination offset overflows"))?;
+            let src_off = src_base
+                .checked_add(src_start[axis].saturating_mul(src_strides[axis]))
+                .and_then(|offset| offset.checked_mul(element_bytes as u64))
+                .ok_or_else(|| Error::limit_exceeded("source offset overflows"))?;
+            let len = usize::try_from(extent[axis])
+                .ok()
+                .and_then(|count| count.checked_mul(element_bytes))
+                .ok_or_else(|| Error::limit_exceeded("copy length overflows"))?;
+            let dst_off = usize::try_from(dst_off)
+                .map_err(|_| Error::limit_exceeded("destination offset does not fit usize"))?;
+            let src_off = usize::try_from(src_off)
+                .map_err(|_| Error::limit_exceeded("source offset does not fit usize"))?;
+            let dst_end = dst_off
+                .checked_add(len)
+                .ok_or_else(|| Error::limit_exceeded("destination range overflows"))?;
+            let src_end = src_off
+                .checked_add(len)
+                .ok_or_else(|| Error::limit_exceeded("source range overflows"))?;
+            if dst_end > dst.len() || src_end > src.len() {
+                return Err(Error::corrupt("region copy extends past a tensor buffer"));
+            }
+            dst[dst_off..dst_end].copy_from_slice(&src[src_off..src_end]);
+            return Ok(());
+        }
+        for index in 0..extent[axis] {
+            let dst_next = dst_base
+                .checked_add((dst_start[axis] + index).saturating_mul(dst_strides[axis]))
+                .ok_or_else(|| Error::limit_exceeded("destination base overflows"))?;
+            let src_next = src_base
+                .checked_add((src_start[axis] + index).saturating_mul(src_strides[axis]))
+                .ok_or_else(|| Error::limit_exceeded("source base overflows"))?;
+            recurse(
+                axis + 1,
+                dst,
+                dst_strides,
+                dst_start,
+                src,
+                src_strides,
+                src_start,
+                extent,
+                element_bytes,
+                dst_next,
+                src_next,
+            )?;
+        }
+        Ok(())
+    }
+    recurse(
+        0,
+        dst,
+        &dst_strides,
+        dst_start,
+        src,
+        &src_strides,
+        src_start,
+        extent,
+        element_bytes,
+        0,
+        0,
+    )
+}
+
+struct RestoredBytes {
+    bytes: Vec<u8>,
+    shape: Vec<u64>,
+    shards_read: usize,
+    units_touched: u64,
+    full_root_verified: bool,
+    shard_roots_verified: bool,
+    restored_content_root: Hash32,
+    topology_root: Option<Hash32>,
+}
+
+impl Store {
+    /// Load a checkpoint manifest by name.
+    pub fn checkpoint_manifest(&self, name: &str) -> Result<CheckpointManifest> {
+        self.load_checkpoint(name)
+    }
+
+    /// Restore a checkpoint into `writer`, returning the measured report.
+    ///
+    /// The output is a complete safetensors container. When every tensor of a
+    /// complete checkpoint is restored, the original header is reproduced byte
+    /// for byte and the result's SHA-256 equals the source file's. A partial
+    /// restore (one tensor or a region) writes a synthesized header and reports
+    /// `exact_source_file = false` and `header_reproduced = false`.
+    pub fn restore_checkpoint<W: Write>(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        if options.region.is_some() && options.tensor.is_none() {
+            return Err(Error::invalid_argument(
+                "a region restore requires --tensor (one named tensor)",
+            ));
+        }
+        if options.region.is_some() && options.topology.is_some() {
+            return Err(Error::invalid_argument(
+                "a region restore cannot be verified against a full-tensor topology",
+            ));
+        }
+        let (_, manifest) = self.load_checkpoint_with_id(name)?;
+        let manifest_root = manifest.root()?;
+        let selected: Vec<&CheckpointTensor> = match &options.tensor {
+            Some(tensor) => vec![manifest.tensor(tensor)?],
+            None => manifest.tensors.iter().collect(),
+        };
+        let mut order: Vec<&CheckpointTensor> = selected.clone();
+        order.sort_by_key(|tensor| tensor.source_offset);
+
+        let limits = Limits::default();
+        let before = self.backend_stats();
+
+        let exact_all = options.tensor.is_none()
+            && options.region.is_none()
+            && manifest.complete
+            && manifest.source_header.is_some()
+            && manifest.source_sha256.is_some();
+        let header = match (&manifest.source_header, exact_all) {
+            (Some(header), true) => header.clone(),
+            _ => {
+                let mut entries = Vec::with_capacity(order.len());
+                for tensor in &order {
+                    let shape = match &options.region {
+                        Some(region) => region.extent(),
+                        None => tensor.shape.clone(),
+                    };
+                    let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+                    let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+                        Error::unsupported_version("tensor dtype has no physical layout")
+                    })?;
+                    let len = tc::payload_len(checked_product(&shape)?, physical)?;
+                    entries.push((tensor.name.as_str(), tensor.dtype.as_str(), shape, len));
+                }
+                let metadata = manifest
+                    .source_header
+                    .as_ref()
+                    .and_then(|header| source_metadata(header));
+                let borrowed: Vec<(&str, &str, &[u64], u64)> = entries
+                    .iter()
+                    .map(|(name, dtype, shape, len)| (*name, *dtype, shape.as_slice(), *len))
+                    .collect();
+                safetensors::encode_header(&borrowed, metadata.as_ref())?
+            }
+        };
+
+        let mut hasher = Sha256::new();
+        hasher.update(&header);
+        writer
+            .write_all(&header)
+            .map_err(|err| Error::io(format!("restore output: {err}")))?;
+        let mut file_bytes = header.len() as u64;
+
+        let mut tensors = Vec::with_capacity(order.len());
+        let mut shards_read = 0usize;
+        let mut units_touched = 0u64;
+        for tensor in &order {
+            let restored = self.restore_tensor(
+                name,
+                tensor,
+                options.region.as_ref(),
+                options.topology.as_ref(),
+                &limits,
+            )?;
+            writer
+                .write_all(&restored.bytes)
+                .map_err(|err| Error::io(format!("restore output: {err}")))?;
+            hasher.update(&restored.bytes);
+            file_bytes += restored.bytes.len() as u64;
+            shards_read += restored.shards_read;
+            units_touched += restored.units_touched;
+            tensors.push(RestoredTensor {
+                name: tensor.name.clone(),
+                dtype: tensor.dtype.clone(),
+                shape: restored.shape,
+                full_shape: tensor.shape.clone(),
+                full_logical_root: tensor.logical_root,
+                restored_content_root: restored.restored_content_root,
+                bytes: restored.bytes.len() as u64,
+                shards_read: restored.shards_read,
+                units_touched: restored.units_touched,
+                full_root_verified: restored.full_root_verified,
+                shard_roots_verified: restored.shard_roots_verified,
+                topology_root: restored.topology_root,
+                sha256: safetensors::sha256(&restored.bytes),
+            });
+        }
+        let file_sha256: [u8; 32] = hasher.finalize().into();
+        let exact_source_file = manifest
+            .source_sha256
+            .map(|expected| expected == file_sha256)
+            .unwrap_or(false);
+        let header_reproduced = manifest
+            .source_header
+            .as_ref()
+            .map(|expected| expected.as_slice() == header.as_slice())
+            .unwrap_or(false);
+        if exact_all {
+            if let Some(expected_len) = manifest.source_file_bytes {
+                if file_bytes != expected_len {
+                    return Err(Error::corrupt(format!(
+                        "restored file is {file_bytes} bytes but the source checkpoint records \
+                         {expected_len}"
+                    )));
+                }
+            }
+            if let Some(expected) = manifest.source_sha256 {
+                if file_sha256 != expected {
+                    return Err(Error::corrupt(format!(
+                        "restored file SHA-256 {} does not match the checkpoint's source SHA-256 {}",
+                        hex::encode(file_sha256),
+                        hex::encode(expected)
+                    )));
+                }
+            }
+        }
+        let after = self.backend_stats();
+        Ok(CheckpointRestoreReport {
+            name: name.to_owned(),
+            manifest_root,
+            file_sha256,
+            file_bytes,
+            source_sha256: manifest.source_sha256,
+            exact_source_file,
+            header_reproduced,
+            tensors,
+            shards_read,
+            units_touched,
+            store_bytes_read: after.bytes_read.saturating_sub(before.bytes_read),
+            store_reads: after.reads.saturating_sub(before.reads)
+                + after.range_reads.saturating_sub(before.range_reads),
+        })
+    }
+
+    /// Restore a single tensor to memory (used by `checkpoint verify`).
+    pub fn restore_checkpoint_bytes(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+    ) -> Result<(Vec<u8>, CheckpointRestoreReport)> {
+        let mut out = Vec::new();
+        let report = self.restore_checkpoint(name, options, &mut out)?;
+        Ok((out, report))
+    }
+
+    fn restore_tensor(
+        &self,
+        checkpoint: &str,
+        tensor: &CheckpointTensor,
+        region: Option<&Region>,
+        topology: Option<&RestoreTopology>,
+        limits: &Limits,
+    ) -> Result<RestoredBytes> {
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor `{}` dtype `{}` has no physical layout",
+                tensor.name, tensor.dtype
+            ))
+        })?;
+        let element_bytes = physical.element_size() as usize;
+        match region {
+            None => {
+                let mut shards = tensor.shards.clone();
+                shards.sort_by_key(|shard| shard.index);
+                let mut payloads = Vec::with_capacity(shards.len());
+                let mut verified = 0usize;
+                for shard in &shards {
+                    let bytes = self.read_shard(checkpoint, tensor, shard)?;
+                    if bytes.len() as u64 != shard.byte_len {
+                        return Err(context(
+                            &tensor.name,
+                            shard,
+                            Error::corrupt(format!(
+                                "shard payload is {} bytes but the manifest records {}",
+                                bytes.len(),
+                                shard.byte_len
+                            )),
+                        ));
+                    }
+                    if identity::content_hash(&bytes) != shard.content_root {
+                        return Err(context(
+                            &tensor.name,
+                            shard,
+                            Error::corrupt("shard content root mismatch"),
+                        ));
+                    }
+                    let shard_shape =
+                        tc::shard_shape(&tensor.shape, shard.axis, shard.shards, shard.index)?;
+                    let shard_root = tc::logical_root(physical, &shard_shape, &bytes, limits)
+                        .map_err(|err| context(&tensor.name, shard, Error::from(err)))?;
+                    if shard_root != shard.logical_root {
+                        return Err(context(
+                            &tensor.name,
+                            shard,
+                            Error::corrupt(format!(
+                                "shard logical root {shard_root} does not match the checkpoint's \
+                                 {}",
+                                shard.logical_root
+                            )),
+                        ));
+                    }
+                    verified += 1;
+                    payloads.push(bytes);
+                }
+                let bytes = PhysicalTensor::sharded(
+                    physical,
+                    &tensor.shape,
+                    tensor.shards[0].axis,
+                    payloads,
+                    limits,
+                )?
+                .assemble_with_limits(limits)?;
+                if bytes.len() as u64 != tensor.element_bytes {
+                    return Err(Error::corrupt(format!(
+                        "checkpoint tensor `{}` reassembled to {} bytes, manifest records {}",
+                        tensor.name,
+                        bytes.len(),
+                        tensor.element_bytes
+                    )));
+                }
+                let content_root = identity::content_hash(&bytes);
+                if content_root != tensor.content_root {
+                    return Err(Error::corrupt(format!(
+                        "checkpoint tensor `{}` content root mismatch after reassembly",
+                        tensor.name
+                    )));
+                }
+                let root = tc::logical_root(physical, &tensor.shape, &bytes, limits)?;
+                if root != tensor.logical_root {
+                    return Err(Error::corrupt(format!(
+                        "checkpoint tensor `{}` logical root {root} does not match the \
+                         manifest's {}",
+                        tensor.name, tensor.logical_root
+                    )));
+                }
+                let topology_root = match topology {
+                    Some(topology) => {
+                        let root = verify_layout_roundtrip(
+                            physical,
+                            &tensor.shape,
+                            &bytes,
+                            topology,
+                            limits,
+                        )
+                        .map_err(|err| {
+                            Error::new(
+                                err.class(),
+                                format!("checkpoint tensor `{}`: {}", tensor.name, err.message()),
+                            )
+                        })?;
+                        if root != tensor.logical_root {
+                            return Err(Error::corrupt(format!(
+                                "checkpoint tensor `{}` logical root {root} under the requested \
+                                 topology does not match the manifest's {}",
+                                tensor.name, tensor.logical_root
+                            )));
+                        }
+                        Some(root)
+                    }
+                    None => None,
+                };
+                Ok(RestoredBytes {
+                    bytes,
+                    shape: tensor.shape.clone(),
+                    shards_read: verified,
+                    units_touched: verified as u64,
+                    full_root_verified: true,
+                    shard_roots_verified: true,
+                    restored_content_root: content_root,
+                    topology_root,
+                })
+            }
+            Some(region) => {
+                region.validate(&tensor.shape)?;
+                let extent = region.extent();
+                let byte_len = tc::payload_len(checked_product(&extent)?, physical)?;
+                let byte_len = usize::try_from(byte_len)
+                    .map_err(|_| Error::limit_exceeded("region payload does not fit in memory"))?;
+                let mut out = vec![0u8; byte_len];
+                let axis = tensor.shards[0].axis as usize;
+                let plane = tensor.shape[axis] / u64::from(tensor.shards[0].shards);
+                let mut shards_read = 0usize;
+                let mut units_touched = 0u64;
+                for shard in &tensor.shards {
+                    let slab_start = u64::from(shard.index) * plane;
+                    let slab_end = slab_start + plane;
+                    let lo = region.start[axis].max(slab_start);
+                    let hi = region.end[axis].min(slab_end);
+                    if lo >= hi {
+                        continue;
+                    }
+                    let mut local_start = region.start.clone();
+                    let mut local_end = region.end.clone();
+                    local_start[axis] = lo - slab_start;
+                    local_end[axis] = hi - slab_start;
+                    let local = Region::new(local_start, local_end);
+                    // Confirm the shard entry still resolves to the recorded
+                    // object, then take the region through the stored object.
+                    // The store verifies the shard's own mode-10 root while
+                    // decoding it.
+                    self.verify_shard_entry(checkpoint, tensor, shard)?;
+                    let local_extent = local.extent();
+                    let expected_len = tc::payload_len(checked_product(&local_extent)?, physical)?;
+                    let rank = local_extent.len();
+                    let mut byte_start = local.start.clone();
+                    let mut byte_end = local.end.clone();
+                    let last = rank - 1;
+                    let esize = element_bytes as u64;
+                    byte_start[last] = byte_start[last]
+                        .checked_mul(esize)
+                        .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
+                    byte_end[last] = byte_end[last]
+                        .checked_mul(esize)
+                        .ok_or_else(|| Error::limit_exceeded("region byte offset overflows"))?;
+                    let byte_region = Region::new(byte_start, byte_end);
+                    let read = self
+                        .read_tensor_region(shard.object_id, &byte_region)
+                        .map_err(|err| context(&tensor.name, shard, err))?;
+                    if read.bytes.len() as u64 != expected_len {
+                        return Err(context(
+                            &tensor.name,
+                            shard,
+                            Error::corrupt(format!(
+                                "region read returned {} bytes, expected {expected_len}",
+                                read.bytes.len()
+                            )),
+                        ));
+                    }
+                    // Destination coordinates are relative to the region.
+                    let mut dst_start = vec![0u64; extent.len()];
+                    dst_start[axis] = lo - region.start[axis];
+                    let src_start = vec![0u64; rank];
+                    copy_box(
+                        &mut out,
+                        &extent,
+                        &dst_start,
+                        &read.bytes,
+                        &local_extent,
+                        &src_start,
+                        &local_extent,
+                        element_bytes,
+                    )?;
+                    shards_read += 1;
+                    units_touched += read.units_touched as u64;
+                }
+                let content_root = identity::content_hash(&out);
+                Ok(RestoredBytes {
+                    bytes: out,
+                    shape: extent,
+                    shards_read,
+                    units_touched,
+                    full_root_verified: false,
+                    shard_roots_verified: false,
+                    restored_content_root: content_root,
+                    topology_root: None,
+                })
+            }
+        }
+    }
+
+    fn read_shard(
+        &self,
+        checkpoint: &str,
+        tensor: &CheckpointTensor,
+        shard: &CheckpointShard,
+    ) -> Result<Vec<u8>> {
+        let id = self.verify_shard_entry(checkpoint, tensor, shard)?;
+        self.read_tensor(id)
+            .map_err(|err| context(&tensor.name, shard, err))
+    }
+
+    fn verify_shard_entry(
+        &self,
+        checkpoint: &str,
+        tensor: &CheckpointTensor,
+        shard: &CheckpointShard,
+    ) -> Result<Hash32> {
+        let id = self
+            .resolve_components(&[
+                CHECKPOINT_ROOT.as_bytes(),
+                checkpoint.as_bytes(),
+                shard.object_name.as_bytes(),
+            ])
+            .map_err(|err| context(&tensor.name, shard, err))?;
+        if id != shard.object_id {
+            return Err(context(
+                &tensor.name,
+                shard,
+                Error::corrupt(format!(
+                    "checkpoint shard entry resolves to object {id}, manifest records {}",
+                    shard.object_id
+                )),
+            ));
+        }
+        Ok(id)
+    }
+}
+
+fn verify_layout_roundtrip(
+    dtype: weftcodec::TensorDtype,
+    shape: &[u64],
+    row_major: &[u8],
+    topology: &RestoreTopology,
+    limits: &Limits,
+) -> Result<Hash32> {
+    let (reassembled, layout) = match topology {
+        RestoreTopology::RowMajor => (row_major.to_vec(), "row-major".to_owned()),
+        RestoreTopology::ColumnMajor => {
+            let physical = tc::column_major_bytes(dtype, shape, row_major, limits)?;
+            let assembled = PhysicalTensor::column_major(dtype, shape, physical, limits)?
+                .assemble_with_limits(limits)?;
+            (assembled, "column-major".to_owned())
+        }
+        RestoreTopology::Blocked { block_shape } => {
+            let blocks = tc::blocked_bytes(dtype, shape, block_shape, row_major, limits)?;
+            let assembled = PhysicalTensor::blocked(dtype, shape, block_shape, blocks, limits)?
+                .assemble_with_limits(limits)?;
+            (assembled, format!("blocked{block_shape:?}"))
+        }
+        RestoreTopology::Sharded { axis, shards } => {
+            let payloads = tc::split_shards(dtype, shape, *axis, *shards, row_major, limits)?;
+            let assembled = PhysicalTensor::sharded(dtype, shape, *axis, payloads, limits)?
+                .assemble_with_limits(limits)?;
+            (assembled, format!("sharded({axis},{shards})"))
+        }
+    };
+    if reassembled != row_major {
+        return Err(Error::corrupt(format!(
+            "re-expressing the tensor as {layout} did not reproduce its canonical row-major bytes"
+        )));
+    }
+    tc::logical_root(dtype, shape, &reassembled, limits).map_err(Error::from)
+}
+
+/// Extract the source container's `__metadata__` object from exact header bytes.
+fn source_metadata(header_bytes: &[u8]) -> Option<serde_json::Value> {
+    if header_bytes.len() < 9 {
+        return None;
+    }
+    let header_len = u64::from_le_bytes(header_bytes[0..8].try_into().ok()?) as usize;
+    let end = 8usize.checked_add(header_len)?;
+    if end > header_bytes.len() {
+        return None;
+    }
+    let parsed: serde_json::Value = serde_json::from_slice(&header_bytes[8..end]).ok()?;
+    parsed
+        .as_object()
+        .and_then(|map| map.get("__metadata__"))
+        .cloned()
+}
+
+// ---------------------------------------------------------------------------
+// Verification helper
+// ---------------------------------------------------------------------------
+
+/// Full verification of a checkpoint: every shard decoded, every per-shard and
+/// per-tensor logical root recomputed. Returns the number of tensors verified.
+pub fn verify_checkpoint(store: &Store, name: &str) -> Result<usize> {
+    let manifest = store.checkpoint_manifest(name)?;
+    for tensor in &manifest.tensors {
+        let options = CheckpointRestoreOptions {
+            tensor: Some(tensor.name.clone()),
+            region: None,
+            topology: None,
+        };
+        let (_, report) = store.restore_checkpoint_bytes(name, &options)?;
+        let restored = report
+            .tensors
+            .first()
+            .ok_or_else(|| Error::corrupt("restore report has no tensor"))?;
+        if !restored.full_root_verified || !restored.shard_roots_verified {
+            return Err(Error::corrupt(format!(
+                "checkpoint tensor `{}` was not fully verified",
+                tensor.name
+            )));
+        }
+        if restored.bytes != tensor.element_bytes {
+            return Err(Error::corrupt(format!(
+                "checkpoint tensor `{}` restored to the wrong length",
+                tensor.name
+            )));
+        }
+    }
+    Ok(manifest.tensors.len())
+}
