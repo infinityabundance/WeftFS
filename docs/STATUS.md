@@ -76,6 +76,43 @@ file-backed ZFS run `bench-fs-cold-20261104T014727Z.json` is retained and
 separately labelled. The abstraction mapping, assumptions, and limitations are
 in `verification/README.md`.
 
+**CHECKPOINT TOPOLOGY (P3), 2026-11-05.** A checkpoint is now a store directory
+of named tensors with a canonical `weft.checkpoint.v1` manifest
+(`docs/checkpoint-topology.md`). The manifest records, per tensor, the logical
+dtype/shape/`LogicalTensorRoot`, the content root, the element bytes, and the
+storage topology of every shard (`{axis, shards, index, object_name, object_id,
+content_root, logical_root, byte_len}`). Each shard is a mode-10
+`TENSOR_SHARDED` tensor object whose `q8_0` words are the shard's exact bytes
+(a byte transport, not a lossy quantization), written with the shard shape's
+last dimension scaled by the element size so the codec region API addresses
+logical slices. `checkpoint write` splits a safetensors container along an axis,
+rejects non-divisible splits with "no silent padding", and publishes all shard
+objects plus the manifest in one group commit. `checkpoint restore` reassembles
+from the shard objects, verifies every shard root and the full tensor root, and
+can re-express the bytes under `sharded 8/4/2/1`, row-major, column-major, or
+blocked topologies before writing the container; complete restores reproduce
+the source header and require the source SHA-256. A region restore
+(`--tensor NAME --range ...`) reads only intersecting shard objects through the
+codec region API and reports shard/unit/byte counters. Real-weight court on the
+cached Qwen2.5-0.5B container (BF16, 290 tensors, 988,097,824 bytes, SHA-256
+`88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342`): 8-way
+ingest 41.53 s / 582,028 KiB peak RSS / 825,180,192 store bytes / 2,320 shard
+objects (ingest wall varied 37.04–83.77 s across three runs of the same code);
+complete restores under topology 8 and 4 read the same 821,882,936 bytes and
+reproduce the source SHA-256 exactly (warm pair 20.44 s and 19.89 s; the first
+restore after ingest varied 56.30–111.50 s with host writeback state);
+all 290 logical roots are identical across topologies; a 100-row slice reads
+one shard and 28,053,320 bytes instead of 224,668,493; and a plain mount plus
+the unmodified `safetensors` 0.8.0 loader with NumPy 2.4.6 + `ml_dtypes` 0.6.0
+reads all 290 tensors from the mount and matches the source SHA-256. Receipt:
+`bench/receipts/checkpoint-topology-20261105T062409Z.json`; analysis:
+`bench/RESULTS-checkpoint-topology.md`. Tests `tests/checkpoint_topology.rs`
+9/9 (topology matrix, partial slice counters, missing/corrupt shard, manifest
+root mismatch, non-divisible split, CLI end to end). `cargo test --all-targets`
+154 passed / 0 failed; `cargo test --features fuse --all-targets` 182 passed /
+0 failed / 2 ignored (the pre-existing CAP_SETUID and shared-counter tests).
+The Go store does not implement `weft.checkpoint.v1`; this phase is Rust-only.
+
 **TENSOR_SHARDED (mode 10), 2026-11-04.** Both codecs now implement an
 additive sharded quantized tensor mode (`spec/WEFT-AI-CODEC.md` §11,
 `spec/WEFT-TENSOR.md` §2.1). A shard frame carries a canonical

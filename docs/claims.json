@@ -548,5 +548,79 @@
     ],
     "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
     "kind": "present"
+  },
+  {
+    "id": "p3_receipt_current",
+    "claim": "STATUS and the results document cite the current P3 checkpoint-topology receipt.",
+    "value": "checkpoint-topology-20261105T062409Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-checkpoint-topology.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-topology-20261105T062409Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p3_manifest_schema",
+    "claim": "The status and design document name the checkpoint manifest schema.",
+    "value": "weft.checkpoint.v1",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/checkpoint-topology.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p3_mount_sha256_equal",
+    "claim": "The results and status state that the mounted container SHA-256 equals the source SHA-256.",
+    "value": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "locations": [
+      "bench/RESULTS-checkpoint-topology.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-topology-20261105T062409Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p3_logical_roots_identical",
+    "claim": "The results record the identical logical roots across restore topologies.",
+    "value": "LogicalTensorRoot` in every run",
+    "locations": [
+      "bench/RESULTS-checkpoint-topology.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-topology-20261105T062409Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p3_slice_counter",
+    "claim": "The results report that the region restore touched one shard and one codec unit.",
+    "value": "Shard objects | Codec units",
+    "locations": [
+      "bench/RESULTS-checkpoint-topology.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-topology-20261105T062409Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p3_no_padding_claim",
+    "claim": "The status and design document state that non-divisible splits are rejected rather than padded.",
+    "value": "no silent padding",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/checkpoint-topology.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "p3_go_not_implemented",
+    "claim": "The status discloses that the Go store does not implement the checkpoint schema.",
+    "value": "The Go store does not implement `weft.checkpoint.v1`",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]
