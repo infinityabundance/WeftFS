@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weftcodec"
+version = "0.5.0"
+description = "Independent Python reader for Weft WFT1 frames and canonical WCB, with a PyTorch-facing dataset over a WeftFS mount"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "WeftFS contributors" }]
+keywords = ["weft", "weftfs", "codec", "wft1", "wcb", "blake3", "pytorch"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Filesystems",
+]
+dependencies = ["blake3>=0.3.1", "zstandard>=0.22"]
+
+[project.optional-dependencies]
+torch = ["torch"]
+
+[project.scripts]
+weftcodec-py = "weftcodec.cli:main"
+
+[project.urls]
+Source = "https://github.com/infinityabundance/WeftFS"
+
+[tool.setuptools]
+packages = ["weftcodec"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

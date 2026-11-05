@@ -2,7 +2,7 @@
 # WeftFS OOM-protected Docker court.
 #
 # Usage:
-#   scripts/docker-court.sh <rust|go|fuse|bench|tla|vm> "<shell command>"
+#   scripts/docker-court.sh <rust|go|fuse|bench|tla|vm|python> "<shell command>"
 #
 # `tla` runs TLC only. `vm` additionally gets /dev/kvm when the host exposes
 # it (QEMU falls back to TCG inside the guest runner when it is absent); every
@@ -14,7 +14,7 @@
 set -Eeuo pipefail
 
 if [[ $# -lt 2 ]]; then
-  echo "usage: $0 <rust|go|fuse|bench> \"<command>\"" >&2
+  echo "usage: $0 <rust|go|fuse|bench|tla|vm|python> \"<command>\"" >&2
   exit 64
 fi
 
@@ -23,8 +23,8 @@ shift
 cmd="$*"
 
 case "$kind" in
-  rust|go|fuse|bench|tla|vm) ;;
-  *) echo "unknown court '$kind' (expected rust|go|fuse|bench|tla|vm)" >&2; exit 64 ;;
+  rust|go|fuse|bench|tla|vm|python) ;;
+  *) echo "unknown court '$kind' (expected rust|go|fuse|bench|tla|vm|python)" >&2; exit 64 ;;
 esac
 
 # Hard limits. Environment override is allowed for *smaller* values only.
@@ -46,7 +46,11 @@ validate_limit WEFT_PIDS "$WEFT_PIDS" '^[1-9][0-9]*$'
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cache_root="$repo_root/.docker-cache"
 image="weft/${kind}-court:1"
-dockerfile="$repo_root/docker/${kind}.Dockerfile"
+if [[ "$kind" == "python" ]]; then
+  dockerfile="$repo_root/docker/python-court.Dockerfile"
+else
+  dockerfile="$repo_root/docker/${kind}.Dockerfile"
+fi
 
 mkdir -p "$cache_root"/{cargo-registry,cargo-git,go-mod,go-build,go-tmp,target-rust,target-go}
 # The court runs as uid 0 with cap-drop=ALL (no CAP_DAC_OVERRIDE). Host-owned
@@ -60,6 +64,10 @@ chmod -R a+rwX "$cache_root" 2>/dev/null || true
 mkdir -p "$repo_root/bench/receipts"
 mkdir -p "$repo_root/bench/bundles"
 chmod a+rwX "$repo_root/bench/receipts" "$repo_root/bench/bundles" 2>/dev/null || true
+# The Python court builds a wheel and records its digest. These are generated
+# artifacts, so only the output directories are widened (never source files).
+mkdir -p "$repo_root/python/dist" "$repo_root/python/build"
+chmod a+rwX "$repo_root/python/dist" "$repo_root/python/build" 2>/dev/null || true
 # `Cargo.lock` is a generated build artifact: dependency resolution inside the
 # court must be able to update it. Source files stay read-only for the court.
 chmod a+rw "$repo_root/Cargo.lock" 2>/dev/null || true
