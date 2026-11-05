@@ -35,7 +35,15 @@ receipts are `bench/receipts/context-mounts-20261103T210625Z.json` (6/6),
 `bench/receipts/time-travel-20261103T210633Z.json` (4/4), and
 `bench/receipts/replay-bundle-20261103T210824Z.json` (4/4), each with its raw
 `.log` and `.results.tsv`; the determinism comparison is
-`bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`).
+`bench/receipts/context-mounts-determinism.txt` (`semantic_match=true`). The
+1,000-mount scale receipts are
+`bench/receipts/context-mounts-20261105T122643Z.json` and
+`bench/receipts/context-mounts-20261105T131116Z.json` (5/5 each, 1000/1000
+mounts, `semantic_match=true`), with the directed-limit ceiling in
+`bench/receipts/context-mounts-20261105T140342Z.json` (INCOMPLETE 692/1000) and
+`bench/receipts/context-mounts-20261105T135805Z.json` (400/400 at 24 GiB /
+4,096 pids); analysis `bench/RESULTS-context-mounts-1000.md`. Raw logs and
+results TSVs for those runs are stored as `.log.zst` / `.results.tsv.zst`.
 The F6 cross-language gate is `WeftCodec-Go/hack/cross.sh` (tensor/tokens/
 quantized byte-identical in both directions). The current F7 receipt is
 `bench/receipts/ai-corpus-20261104T021627Z.json` with cost graph JSON/CSV beside
@@ -662,6 +670,30 @@ repositories).
   under that contention was p50 31.6 s / p95 32.5 s / max 32.6 s; wall to
   100-mounted-and-verified was 100.0 s; daemon RSS sum 1.62 GiB and cgroup peak
   1.56 GiB, inside the unchanged 3 GiB court limit.
+- **1,000 concurrent mounts (scale court, explicit overrides):**
+  `WEFT_CONTEXT_MOUNTS=1000` builds 2,000 corpus files, 250 models, 10 grounding
+  docs, 5,999 typed relations, and 1,000 distinct Context Roots (500 `by:task`,
+  250 `by:model`, 250 `by:derived`), spawns 500 Rust + 500 Go daemons before
+  awaiting any, and verifies every mount: listing digest against the corpus
+  construction oracle (all 1,000 distinct), every one of 4,250 mounted files
+  against its declared SHA-256, one `weftfs cat` byte comparison per mount,
+  `context resolve` id-for-id on every 50th mount, read-only denial, clean
+  unmount, no survivors. With `24g / 8 CPUs / 4,096 pids / 4,096 nproc` the
+  court **cannot** reach 1,000: 747 daemons spawned, 692 mounted, 55 mount
+  failures, 107 cgroup OOM kills and 98 pids-limit fork refusals, 156 daemons
+  lost — 400 is the largest N tested that passes every step at that budget.
+  With `52g / 8 CPUs / 16,384 pids / 16,384 nproc` **1,000/1,000 mounts pass
+  twice** (1,000 distinct digests, 4,250 file hashes, 1,000 cat comparisons,
+  1,000 clean unmounts, 0 survivors; `semantic_match=true`), at mount latency
+  p50 197.0 s / p95 330.2 s / max 331.7 s, 1,785.8 s to all-mounted-and-verified,
+  46.44 GiB daemon RSS sum (max 80.5 MiB per daemon), 6,751 threads, cgroup peak
+  40.92 GiB. Above 100 mounts the corpus is built by
+  `examples/context_mount_corpus.rs` through the shipped store API with group
+  commits (the corpus is byte-identical to the CLI fixture; one commit per
+  operation would make commit-chain replay, not mounting, the measured cost).
+  Every limit override is recorded in the receipt; none is disabled. Details,
+  the per-daemon memory curve, and the exact failure modes are in
+  `bench/RESULTS-context-mounts-1000.md`.
 - **Ambiguity:** `require_one` now re-evaluates without pagination and lists
   every competing ObjectId in the `Ambiguous` message. `context materialize
   --require-one` checks cardinality before any filesystem work and leaves no
@@ -696,6 +728,27 @@ repositories).
     100/100 distinct listing digests, 100/100 clean unmounts, 0 survivors;
     determinism `context-mounts-20261104T125344Z.determinism.txt` =
     `semantic_match=true`.
+  - `bench/receipts/context-mounts-20261105T122643Z.json` (5/5) and
+    `bench/receipts/context-mounts-20261105T131116Z.json` (5/5) —
+    `WEFT_CONTEXT_MOUNTS=1000` at `52g / 8 CPUs / 16384 pids / 16384 nproc`:
+    1000/1000 mounts, 4250 file SHA-256 checks, 1000 distinct listing digests,
+    1000 cat comparisons, 20 sampled resolves equal to the construction oracle,
+    1000 clean unmounts, 0 survivors; determinism
+    `context-mounts-20261105T131116Z.determinism.txt` = `semantic_match=true`.
+    Analysis in `bench/RESULTS-context-mounts-1000.md`.
+  - `bench/receipts/context-mounts-20261105T135805Z.json` (5/5) — the same
+    court at `24g / 8 CPUs / 4096 pids / 4096 nproc` with 400 mounts: the
+    largest N tested that passes every step at the directed budget.
+  - `bench/receipts/context-mounts-20261105T145819Z.json` (3/5) — 500 mounts at
+    the directed budget: all 500 mounted and all file/cat checks passed, but 4
+    Go daemons died mid-run (transient thread spikes), so 496 unmounted cleanly.
+  - `bench/receipts/context-mounts-20261105T140342Z.json` (2/5,
+    `INCOMPLETE 692/1000`) — the directed budget at 1,000 requested: 747
+    spawned, 692 mounted, 55 mount failures, 107 OOM kills, 98 pids-limit
+    refusals, 156 daemons lost. Records the exact break point.
+  - `bench/receipts/context-mounts-20261105T150653Z.json` (5/5) —
+    `WEFT_CONTEXT_MOUNTS=100` in the unchanged default court
+    (`3g / 4 CPUs / 1024 pids`).
   - `bench/receipts/time-travel-20261104T125947Z.json` (6/6) — scaled
     `WEFT_TIME_TRAVEL_VERSIONS=10000`: 10,000 sequential versions, 101
     snapshots, 10 mounted at once (`s1`, `s1100` … `s10000`), 164.1 s ingest
@@ -718,13 +771,20 @@ repositories).
   a byte-identity check; the normative content root is the store's BLAKE3
   ContentId, which `verify --full` re-checks (the scaled modes run it before
   mounting). The scaled receipts are labelled single-host Docker FUSE court,
-  synthetic deterministic fixtures, local court bind-mount store, court limits
-  3 GiB / 4 CPUs / 1,024 pids, and **not a fleet claim**. The 100-mount latency
-  includes CPU contention among 100 daemons on 4 vCPUs; it is not a per-mount
-  steady-state cost. Each receipt records its exact revisions: the context
-  mount, ambiguity, and time-travel default runs used WeftFS `f3d1bc1` /
-  WeftFS-Go `acf6df6`; the replay run used WeftFS `bcedd26` / WeftFS-Go
-  `7693ad4`; the scaled runs used WeftFS `6316fd4` / WeftFS-Go `fce700a`.
+  synthetic deterministic fixtures, local court bind-mount store, explicit
+  court limit overrides recorded in the receipt, and **not a fleet claim**. The
+  100-mount run uses the unchanged default court (`3 GiB / 4 CPUs / 1,024
+  pids`); the 1,000-mount run raises the hard limits to `52g / 8 CPUs / 16,384
+  pids / 16,384 nproc` and the ceiling run uses `24g / 8 / 4,096`. No limit is
+  ever disabled, and 1,000 is **not** claimed to fit the default court: at the
+  directed 24 GiB / 4,096 budget the court reached 692 mounted and a complete
+  pass at 400. Mount latency includes CPU contention among all daemons starting
+  at once; it is not a per-mount steady-state cost. Each receipt records its
+  exact revisions: the context mount, ambiguity, and time-travel default runs
+  used WeftFS `f3d1bc1` / WeftFS-Go `acf6df6`; the replay run used WeftFS
+  `bcedd26` / WeftFS-Go `7693ad4`; the 2026-11-04 scaled runs used WeftFS
+  `6316fd4` / WeftFS-Go `fce700a`; the 2026-11-05 1,000-mount and ceiling runs
+  used WeftFS `6e4aea1` / WeftFS-Go `8372e6f`.
 
 ### Twelve-step showcase — implemented, all twelve pass
 
