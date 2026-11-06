@@ -2255,3 +2255,79 @@ fixture and no stock DCP storage plugin was used.
   divisible lengths (reject, never pad). Reads import restored containers into
   the store. Save/load are ~141x/~30x slower than one `torch.save`/`torch.load`
   file on this fixture, while writing 7.1 % fewer physical bytes.
+
+## Q6 — signed, verifiable receipt bundles with store provenance linkage (2026-11-06)
+
+Implemented on `staging`; packaging and verification were run end to end on a
+real ~1,061-file bundle.
+
+- **Canonical manifest.** `src/receipt_bundle.rs` defines
+  `weft.receipt-bundle.manifest.v1`: `generated_at`, `stamp`, `files`
+  (`path`, `size`, `sha256`), and `revisions` (`name`, `revision`, `branch`,
+  `worktree`, `changed_files`). Entries are strictly sorted by canonical encoded
+  bytes; duplicate, unsorted, absolute, traversing, backslash, or control-byte
+  paths are rejected. Decode re-encodes and requires byte equality, so a
+  non-canonical manifest is refused before any signature check.
+- **Signing.** `scripts/package-receipts.sh --sign-key FILE` (32 raw bytes or 64
+  hex) signs `H("weft/receipt-bundle/v1", manifest_canonical_bytes)` with
+  Ed25519 and writes `signature` and `public_key` next to
+  `receipt-manifest.wcb`. It uses `weftcodec::capability::sign_bytes` and
+  `verify_bytes`, the same code path as capability envelopes. Output is
+  `receipts-<stamp>.signed.tar.zst`. Without a key the bundle is
+  `receipts-<stamp>.tar.zst`, carries `UNSIGNED.txt`, and says it is unsigned.
+  The key is copied only into the gitignored `.docker-cache` with mode 0600 and
+  removed on exit; it never enters the archive. The manifest, signature, public
+  key, and `CHECKSUMS.sha256` are metadata and are deliberately not listed in
+  the manifest.
+- **Verification.** `scripts/verify-receipts.sh BUNDLE --public-key <64-hex>`
+  (or `--signature-from-bundle`) re-hashes every listed file, rejects unlisted
+  payload files, decodes the canonical manifest, then verifies the signature.
+  It prints `SIGNATURE OK ed25519:<fingerprint>` or fails closed with a precise
+  reason. An unsigned bundle fails under either key mode with
+  `missing signature file; bundle is unsigned`; a wrong key fails with
+  `public_key file does not match the requested key`; tampering fails with
+  `sha256`, `unlisted payload file`, or `signature does not verify under ...`.
+  Legacy bundles without `receipt-manifest.wcb` still verify structurally and
+  report `signature: not applicable`.
+- **Tests.** `tests/signed_bundle.rs` 11/11: sign/verify round trip, wrong key,
+  tampered same-size file, missing signature, unsigned-with-key, unsigned
+  default, wrong-key library path, deterministic manifest/digest/signature,
+  non-canonical and trailing-byte rejection, traversal rejection, unlisted
+  payload, and `weft provenance show` linkage. Rust `cargo test --all-targets`
+  234 passed / 0 failed across 66 test binaries; FUSE `--features fuse
+  --all-targets` 268 passed / 0 failed / 2 ignored; Go `go test ./...` in
+  `WeftCodec-Go` passed every package. Two earlier full runs hit pre-existing
+  flakes (`tests/quota.rs` writer lock, `tests/representation.rs` chunk
+  counter); each passed standalone and the published full run was clean.
+- **Store linkage.** `scripts/demo-signed-bundle.sh BUNDLE` stores the canonical
+  manifest as a real file, creates snapshot `q6-signed-bundle`, records a
+  `weft.provenance.v1` receipt whose output is the stored manifest's content
+  root, and publishes `derived_from` to the snapshot. `weft provenance show
+  /bundle.manifest` resolves the provenance id, the `derived_from` input, and
+  the snapshot id; `weft relation list --predicate derived_from` resolves the
+  edge. Tampering changes both the signed digest and the recomputed output
+  content root, and the old signature no longer verifies.
+- **Go cross-check.** `WeftCodec-Go/capability` gained `SignBytes`/`VerifyBytes`
+  (same `crypto/ed25519` path) and `cmd/verify-ed25519` verified the Rust
+  signature over the real manifest digest: `VERIFY OK`; a changed digest
+  produced `VERIFY FAIL`. This was run in the Go court.
+- **Bench** (`bench/receipts/signed-bundles-20261106T003902Z.json`, raw log
+  beside it; single host, deterministic benchmark-only keys, revision
+  `9fc1862`, kernel `7.3.1-1-cachyos`, 3 GiB / 4 CPUs / 1024 pids):
+  1,061 payload files, 1,136 tar entries. Signed package 19,600 ms; unsigned
+  12,000 ms. Pinned-key verify 9,015 ms; unsigned verify 9,059 ms. Signature
+  64 raw bytes (129-byte hex file), public key 65 bytes, manifest 128,412 bytes;
+  raw metadata added (manifest + signature + public key − `UNSIGNED.txt`)
+  128,314 bytes. The observed compressed bundle delta was −2,534 bytes because
+  the two runs have different timestamps and one has `UNSIGNED.txt`; it is not
+  attributable to signing. All 13 rejection/acceptance cases passed, including
+  the Go checks and the provenance demo.
+- **Non-claims.** No certificate authority, no transparency log, no key
+  distribution or rotation, and no claim that the signer is trustworthy.
+  Signing proves bundle integrity relative to a key, not the truth of the
+  measurements. Verification is offline; it uses the local repository and its
+  Docker court. A leaked seed permits forged bundles under that key. Bundle
+  timings are one host and warm caches, not a fleet or storage-media claim.
+  The canonical manifest is an advisory artifact for this bundle format, not a
+  new frozen WeftCodec wire mode; the frozen v1/v2 store and codec formats are
+  unchanged.

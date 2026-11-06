@@ -16,6 +16,98 @@ state space. The implementation claims remain test- and receipt-backed.
 
 ---
 
+## 0. Signed receipt bundles (Q6)
+
+`scripts/package-receipts.sh` can attach a canonical bundle manifest and an
+Ed25519 signature. Signing uses
+`weftcodec::capability::sign_bytes`/`verify_bytes`, the same construction as
+capability envelopes; there is no second crypto implementation.
+
+### 0.1 Format
+
+| Artifact | Bytes |
+|---|---|
+| `receipt-manifest.wcb` | canonical WCB, schema `weft.receipt-bundle.manifest.v1` |
+| manifest fields | `generated_at`, `stamp`, `files` (`path`, `size`, `sha256`), `revisions` (`name`, `revision`, `branch`, `worktree`, `changed_files`) |
+| ordering | files and revisions strictly sorted by canonical encoded bytes; no duplicates; paths are relative, no `.`/`..`, no backslash |
+| sign input | `H("weft/receipt-bundle/v1", manifest_canonical_bytes)` (32 bytes) |
+| `signature` | Ed25519 over the 32-byte sign input, lowercase hex + newline (64 raw bytes) |
+| `public_key` | 32-byte Ed25519 public key, lowercase hex + newline |
+| fingerprint | `ed25519:` + first 16 bytes of `H("weft/receipt-bundle/key/v1", public_key)`, hex |
+| unsigned marker | `UNSIGNED.txt`; no `signature` or `public_key` files |
+
+The manifest lists every payload file. Four bundle metadata files are excluded
+and handled separately: `receipt-manifest.wcb`, `signature`, `public_key`, and
+`CHECKSUMS.sha256`. A signature cannot cover itself, and a manifest cannot list
+its own hash. `CHECKSUMS.sha256` still covers every file in the archive.
+
+### 0.2 Commands
+
+```
+# Signed (output: receipts-<stamp>.signed.tar.zst)
+scripts/package-receipts.sh --sign-key /path/to/seed
+
+# Unsigned (output: receipts-<stamp>.tar.zst; writes UNSIGNED.txt)
+scripts/package-receipts.sh
+
+# Pinned-key verification
+scripts/verify-receipts.sh BUNDLE --public-key <64-hex> --repo-root .
+
+# Self-contained verification against the bundled public_key file
+scripts/verify-receipts.sh BUNDLE --signature-from-bundle --repo-root .
+
+# Helper only (runs in the Rust court)
+scripts/receipt-bundle-court.sh digest --root <extracted-bundle>
+scripts/receipt-bundle-court.sh derive --sign-key <seed-file>
+```
+
+A seed file is 32 raw bytes or 64 hex characters. The key is copied into the
+gitignored `.docker-cache` only for the court, with mode 0600, and removed on
+exit; it never enters the bundle.
+
+### 0.3 What verification rejects
+
+The verifier re-hashes every listed file (`sha256`, size, path set), rejects
+unlisted payload files, then decodes and re-encodes the canonical manifest
+before checking the signature. Observed and tested failures:
+
+- missing `receipt-manifest.wcb` when a key is required;
+- missing `signature` (unsigned bundle; the CLI reports
+  `missing signature file; bundle is unsigned`) under `--public-key` or
+  `--signature-from-bundle`;
+- `public_key file does not match the requested key`;
+- `signature does not verify under <fingerprint>` (tampered manifest/signature);
+- `listed file ... sha256 ... does not match manifest ...` (tampered payload);
+- `bundle contains unlisted payload file ...`;
+- non-canonical, unsorted, duplicate, or unsafe manifest paths/bytes;
+- `CHECKSUMS.sha256` mismatch or an unlisted file at the archive level.
+
+### 0.4 Store linkage
+
+`scripts/demo-signed-bundle.sh BUNDLE` stores the canonical manifest as a real
+WeftFS file, creates a snapshot, records a `weft.provenance.v1` receipt whose
+output is that file's content root, and adds a `derived_from` relation to the
+snapshot. `weft provenance show /bundle.manifest` resolves the record, its
+`derived_from` input, and the snapshot id. A tampered bundle produces a
+different manifest digest and a different output content root, and its old
+signature no longer verifies.
+
+### 0.5 Non-claims
+
+Signing proves bundle integrity relative to a key: the same bytes were covered
+by that key's signature. It does **not** prove the measurements are true, that
+the producer is trustworthy, or that the key belongs to anyone. There is **no
+certificate authority, no transparency log, and no key distribution or
+rotation**. Verification is offline (no network); it requires the repository
+and its Docker court to run the helper, not a remote service. A leaked seed
+allows forged bundles under that key.
+
+Evidence: `tests/signed_bundle.rs` (11 tests), the Go cross-check
+`WeftCodec-Go/cmd/verify-ed25519`, and
+`bench/receipts/signed-bundles-20261106T003902Z.json`.
+
+---
+
 ## 1. TLA+ model checking
 
 ### 1.1 Abstraction mapping

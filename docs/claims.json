@@ -1476,5 +1476,102 @@
     ],
     "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
     "kind": "present"
+  },
+  {
+    "id": "q6_signed_bundle_receipt",
+    "claim": "docs cite the signed-bundle benchmark receipt.",
+    "value": "signed-bundles-20261106T003902Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": "bench/receipts/signed-bundles-20261106T003902Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q6_sign_domain",
+    "claim": "the signed value is domain-separated.",
+    "value": "H(\"weft/receipt-bundle/v1\"",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_capability_reuse",
+    "claim": "signing reuses the capability-envelope Ed25519 code path.",
+    "value": "weftcodec::capability::sign_bytes",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_unsigned_fail_closed",
+    "claim": "an unsigned bundle fails closed under a required key.",
+    "value": "missing signature file; bundle is unsigned",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_no_transparency_log",
+    "claim": "signing makes no CA or transparency-log claim.",
+    "value": "no transparency log",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_go_cross_check",
+    "claim": "the Go implementation verified the Rust signature.",
+    "value": "VERIFY OK",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/signed-bundles-20261106T003902Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q6_provenance_show",
+    "claim": "the CLI resolves the bundle-to-snapshot linkage.",
+    "value": "weft provenance show",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_manifest_schema",
+    "claim": "the canonical manifest schema is documented.",
+    "value": "weft.receipt-bundle.manifest.v1",
+    "locations": [
+      "docs/STATUS.md",
+      "verification/README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_test_count",
+    "claim": "the signed-bundle test suite passes.",
+    "value": "11/11",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

@@ -1,0 +1,133 @@
+{
+  "all_cases_pass": true,
+  "branch": "staging",
+  "cases": [
+    {
+      "case": "signature_ok",
+      "detail": "ed25519:70d554c38da03d35feabcaea2dedd743",
+      "result": "pass"
+    },
+    {
+      "case": "unsigned_detected",
+      "detail": "signature: absent (unsigned bundle)",
+      "result": "pass"
+    },
+    {
+      "case": "wrong_key",
+      "detail": "public_key file does not match the requested key",
+      "result": "pass"
+    },
+    {
+      "case": "unsigned_with_key",
+      "detail": "missing signature file; bundle is unsigned",
+      "result": "pass"
+    },
+    {
+      "case": "tampered_file_sha",
+      "detail": "sha256",
+      "result": "pass"
+    },
+    {
+      "case": "tampered_file_manifest",
+      "detail": "sha256",
+      "result": "pass"
+    },
+    {
+      "case": "tampered_manifest_signature",
+      "detail": "signature does not verify under",
+      "result": "pass"
+    },
+    {
+      "case": "missing_signature",
+      "detail": "missing signature file",
+      "result": "pass"
+    },
+    {
+      "case": "unlisted_file",
+      "detail": "unlisted payload file",
+      "result": "pass"
+    },
+    {
+      "case": "non_canonical_manifest",
+      "detail": "not in canonical form|Malformed|canonical",
+      "result": "pass"
+    },
+    {
+      "case": "go_signature_ok",
+      "detail": "VERIFY OK",
+      "result": "pass"
+    },
+    {
+      "case": "go_tamper_reject",
+      "detail": "VERIFY FAIL",
+      "result": "pass"
+    },
+    {
+      "case": "provenance_show_resolved",
+      "detail": "derived_from + snapshot",
+      "result": "pass"
+    }
+  ],
+  "court": {
+    "go_image": "sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166",
+    "kernel": "7.3.1-1-cachyos",
+    "limits": {
+      "cap_drop": "ALL",
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs_tmp": "1g"
+    },
+    "rust_image": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03"
+  },
+  "hosts": 1,
+  "label": "single host; deterministic benchmark-only signing keys; real receipt bundle built from the committed bench/receipts and conformance corpus; process-level signature court, not physical power loss and not a statement about measurement truth",
+  "metrics": {
+    "fingerprint": "ed25519:70d554c38da03d35feabcaea2dedd743",
+    "go_verified": "true",
+    "manifest_content_root": "613552d43ee6de64ebec7849cefd77421fc269a98123092bbab0c87c6e44bf22",
+    "manifest_file_bytes": "128412",
+    "manifest_files": "1061",
+    "manifest_revisions": "4",
+    "manifest_sha256": "e272bffab71a742d24c810d2bba6a0fdec8a9d18c4eedf3e26162eeb7cd09d0c",
+    "observed_compressed_size_delta": "-2534",
+    "observed_compressed_size_delta_note": "signed_bytes_minus_unsigned_bytes; payload timestamps and UNSIGNED.txt differ between the two runs, so this is not attributable to signing",
+    "output_content_id": "21afddc0cd7cb7dd58c247349d2ba57f70487080828a6b76c4a9ea92a4f784a4",
+    "package_signed_ms": "19600",
+    "package_unsigned_ms": "12000",
+    "provenance_id": "0e4deadf8742bf88d488489126e9081e9a58bd22d550df8b603c5bbbda88fd31",
+    "public_key": "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
+    "public_key_file_bytes": "65",
+    "raw_metadata_added_bytes": "128314",
+    "signature_file_bytes": "129",
+    "signature_raw_bytes": "64",
+    "signed_bundle": "/mnt/1tb_kingston/WeftFS/bench/bundles/receipts-20261106T003902Z.signed.tar.zst",
+    "signed_bundle_bytes": "17495392",
+    "signed_bundle_sha256": "6f4473435d85efe091818480b64546a978b425434ba5113328c5b1e17ef1f477",
+    "snapshot_id": "5ac9b25ca4b8f186804a1789f83f2e8b605e473ce05ed829ae500ef0ecd409b4",
+    "tamper_output_content_id": "b083996ba7bc6c7deb121bd6facb5cecf48e8be0c329231bf5055b73a387ef25",
+    "tampered_manifest_sha256": "c55af59eed6974a5ad21db5da3cd43410e3db5fa0764c89e49c3aad1afefe3e7",
+    "tar_entries": "1136",
+    "unsigned_bundle": "/mnt/1tb_kingston/WeftFS/bench/bundles/receipts-20261106T003931Z.tar.zst",
+    "unsigned_bundle_bytes": "17497926",
+    "unsigned_manifest_files": "1062",
+    "unsigned_marker_bytes": "292",
+    "verify_signed_ms": "9015",
+    "verify_unsigned_ms": "9059"
+  },
+  "revision": "9fc186211e32518cd25700362bd7f6a7f34a0772",
+  "schema": "weftfs.signed-bundles/1",
+  "signing": {
+    "algorithm": "Ed25519",
+    "fingerprint": "ed25519:70d554c38da03d35feabcaea2dedd743",
+    "key_is_a_real_identity": false,
+    "public_key": "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
+    "sign_input": "H(\"weft/receipt-bundle/v1\", WCB(manifest))",
+    "signature_bytes": 64
+  },
+  "stamp": "20261106T003902Z",
+  "worktree_changed_files": 14,
+  "worktree_dirty": true
+}

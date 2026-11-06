@@ -20,20 +20,36 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 ALLOW_DIRTY=0
-for arg in "$@"; do
-  case "$arg" in
-    --allow-dirty) ALLOW_DIRTY=1 ;;
-    *) echo "usage: $0 [--allow-dirty]" >&2; exit 64 ;;
+SIGN_KEY=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --allow-dirty) ALLOW_DIRTY=1; shift ;;
+    --sign-key) SIGN_KEY="${2:-}"; shift 2 ;;
+    --sign-key=*) SIGN_KEY="${1#--sign-key=}"; shift ;;
+    *) echo "usage: $0 [--allow-dirty] [--sign-key FILE]" >&2; exit 64 ;;
   esac
 done
+if [ -n "$SIGN_KEY" ] && [ ! -f "$SIGN_KEY" ]; then
+  echo "signing key not found: $SIGN_KEY" >&2
+  exit 66
+fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 BUNDLES="$ROOT/bench/bundles"
-OUT="$BUNDLES/receipts-$STAMP.tar.zst"
-STAGE="$(mktemp -d "${TMPDIR:-/tmp}/weft-receipts-$STAMP.XXXXXX")"
+# The staging directory must be inside the repository because the signing
+# helper runs in the Docker court, which mounts the repository at /work. It is
+# under the gitignored .docker-cache tree and never enters the bundle.
+CACHE="$ROOT/.docker-cache"
+mkdir -p "$CACHE"
+STAGE="$(mktemp -d "$CACHE/weft-receipts-$STAMP.XXXXXX")"
+STAGE_REL="${STAGE#"$ROOT/"}"
 TSV="$STAGE/.manifest.tsv"
-cleanup() { rm -rf "$STAGE"; }
+KEY_COPY=""
+cleanup() {
+  [ -n "$KEY_COPY" ] && rm -f "$KEY_COPY"
+  rm -rf "$STAGE"
+}
 trap cleanup EXIT
 
 mkdir -p "$BUNDLES" "$STAGE/receipts" "$STAGE/corpus" "$STAGE/harness" "$STAGE/revisions"
@@ -108,6 +124,7 @@ meta tmpfs_tmp "1g"
 note "Court limits are the docker-court.sh defaults; each receipt records the actual run limits."
 note "The F5 crash court is a process-fault proxy, not physical power loss."
 note "Text files are sanitized for host paths; original sha256 is in source_sha256."
+note "Signed bundles add receipt-manifest.wcb, signature, and public_key; unsigned bundles add UNSIGNED.txt."
 
 # ---- repositories and revisions ------------------------------------------
 : > "$STAGE/REVISIONS.txt"
@@ -173,7 +190,10 @@ HARNESS_FILES=(
   scripts/docker-court.sh
   scripts/package-receipts.sh
   scripts/verify-receipts.sh
+  scripts/receipt-bundle-court.sh
   scripts/bundle_manifest.go
+  src/receipt_bundle.rs
+  src/bin/weft-receipt-bundle.rs
   docker/rust.Dockerfile
   docker/go.Dockerfile
   docker/fuse.Dockerfile
@@ -221,6 +241,27 @@ Verify it without trusting the producer:
 Manifest: manifest.json   Checksums: CHECKSUMS.sha256   Revisions: REVISIONS.txt
 Raw receipt logs: receipts/*.log   dmesg: dmesg.txt
 
+Signed bundle
+-------------
+Every bundle carries receipt-manifest.wcb: a canonical WCB manifest of each
+payload file (path, size, SHA-256, sorted) and the four git revisions the
+harness ran at. A signed bundle (output name receipts-<stamp>.signed.tar.zst)
+also carries `signature` and `public_key` (lowercase hex plus newline). The
+signature is Ed25519 over H("weft/receipt-bundle/v1", manifest bytes).
+
+  # verify against a pinned public key (64 hex characters)
+  scripts/verify-receipts.sh receipts-<stamp>.signed.tar.zst \
+      --public-key <hex> --repo-root <repo-root>
+
+  # self-contained: trust the bundled public_key file
+  scripts/verify-receipts.sh receipts-<stamp>.signed.tar.zst \
+      --signature-from-bundle --repo-root <repo-root>
+
+An unsigned bundle carries UNSIGNED.txt and fails closed if --public-key or
+--signature-from-bundle is requested. Signing proves bundle integrity relative
+to a key; it does not prove the measurements are true, and there is no
+certificate authority, transparency log, or key distribution/rotation.
+
 Honest scope notes
 ------------------
 - The crash court uses WEFT_CRASH_PHASE to abort a process at a publication
@@ -239,6 +280,39 @@ printf 'FILE\tbundle\tREADME.txt\t%s\t%s\t%s\tfalse\n' "$readme_sha" "$readme_si
 # ---- manifest ------------------------------------------------------------
 ( cd /tmp && GO111MODULE=off go run "$ROOT/scripts/bundle_manifest.go" ) < "$TSV" > "$STAGE/manifest.json"
 rm -f "$TSV"
+
+# ---- canonical manifest and optional signature ---------------------------
+SIGNED=0
+if [ -n "$SIGN_KEY" ]; then
+  KEY_COPY="$CACHE/weft-receipts-key-$STAMP"
+  # The key is copied only into the gitignored cache so the court can read it;
+  # it is removed by the EXIT trap and is never in the staging directory.
+  install -m 0600 "$SIGN_KEY" "$KEY_COPY"
+  KEY_REL="${KEY_COPY#"$ROOT/"}"
+  scripts/receipt-bundle-court.sh create \
+    --root "$STAGE_REL" \
+    --manifest "$STAGE_REL/receipt-manifest.wcb" \
+    --sign-key "$KEY_REL" \
+    --signature "$STAGE_REL/signature" \
+    --public-key "$STAGE_REL/public_key" \
+    --generated-at "$GENERATED_AT" \
+    --stamp "$STAMP"
+  SIGNED=1
+else
+  cat > "$STAGE/UNSIGNED.txt" <<'EOF'
+This bundle is UNSIGNED.
+
+scripts/package-receipts.sh was run without --sign-key. receipt-manifest.wcb is
+present and covers every payload file, but no signature or public_key file was
+written. A verifier that requires a key (--public-key or
+--signature-from-bundle) must reject this bundle.
+EOF
+  scripts/receipt-bundle-court.sh create \
+    --root "$STAGE_REL" \
+    --manifest "$STAGE_REL/receipt-manifest.wcb" \
+    --generated-at "$GENERATED_AT" \
+    --stamp "$STAMP"
+fi
 
 # ---- checksums -----------------------------------------------------------
 ( cd "$STAGE" && find . -type f ! -name CHECKSUMS.sha256 -print0 \
@@ -261,13 +335,25 @@ if find "$STAGE" -type f -path '*research*' | grep -q .; then
 fi
 
 # ---- bundle --------------------------------------------------------------
+if [ "$SIGNED" -eq 1 ]; then
+  OUT="$BUNDLES/receipts-$STAMP.signed.tar.zst"
+else
+  OUT="$BUNDLES/receipts-$STAMP.tar.zst"
+fi
 tar --zstd -cf "$OUT" -C "$STAGE" .
 BUNDLE_SHA="$(sha256_file "$OUT")"
 BUNDLE_SIZE="$(file_size "$OUT")"
 printf '%s  %s\n' "$BUNDLE_SHA" "$(basename "$OUT")" > "$OUT.sha256"
 
 echo "bundle: $OUT"
+echo "signed: $([ "$SIGNED" -eq 1 ] && echo yes || echo no)"
 echo "sha256: $BUNDLE_SHA"
 echo "bytes: $BUNDLE_SIZE"
-echo "manifest: $STAGE/manifest.json (not retained; inside the bundle)"
-echo "verify: scripts/verify-receipts.sh $OUT"
+echo "manifest: $STAGE/receipt-manifest.wcb (not retained; inside the bundle)"
+if [ "$SIGNED" -eq 1 ]; then
+  echo "public_key: $(tr -d '\n' < "$STAGE/public_key")"
+  echo "fingerprint: $(scripts/receipt-bundle-court.sh fingerprint --public-key "$(tr -d '\n' < "$STAGE/public_key")")"
+  echo "verify: scripts/verify-receipts.sh $OUT --signature-from-bundle"
+else
+  echo "verify: scripts/verify-receipts.sh $OUT"
+fi

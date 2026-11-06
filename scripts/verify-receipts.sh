@@ -3,6 +3,7 @@
 #
 # Usage:
 #   scripts/verify-receipts.sh BUNDLE [--repo-root DIR]
+#                                [--public-key HEX | --signature-from-bundle]
 #
 # The verifier never trusts the producer's claims:
 #   - rejects absolute or parent-traversing tar entries;
@@ -12,21 +13,42 @@
 #   - checks the manifest schema and dmesg status;
 #   - checks every revision is 40 lowercase hex and matches revisions/<repo>.txt;
 #   - with --repo-root, checks every revision exists in the corresponding git
-#     repository and resolves to that exact commit.
+#     repository and resolves to that exact commit;
+#   - when receipt-manifest.wcb is present, re-hashes every payload file against
+#     the canonical manifest and rejects unlisted files;
+#   - with --public-key, verifies the detached Ed25519 signature over
+#     H("weft/receipt-bundle/v1", canonical manifest) and fails closed when the
+#     bundle is unsigned, the key is wrong, or the manifest/files were tampered;
+#   - with --signature-from-bundle, does the same using the bundled public key.
 set -Eeuo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 if [ $# -lt 1 ]; then
-  echo "usage: $0 BUNDLE [--repo-root DIR]" >&2
+  echo "usage: $0 BUNDLE [--repo-root DIR] [--public-key HEX | --signature-from-bundle]" >&2
   exit 64
 fi
 BUNDLE="$1"; shift
 REPO_ROOT=""
+PUBLIC_KEY=""
+SIGNATURE_FROM_BUNDLE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo-root) REPO_ROOT="$2"; shift 2 ;;
+    --public-key) PUBLIC_KEY="${2:-}"; shift 2 ;;
+    --public-key=*) PUBLIC_KEY="${1#--public-key=}"; shift ;;
+    --signature-from-bundle) SIGNATURE_FROM_BUNDLE=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 64 ;;
   esac
 done
+if [ -n "$PUBLIC_KEY" ] && [ "$SIGNATURE_FROM_BUNDLE" -eq 1 ]; then
+  echo "--public-key and --signature-from-bundle are mutually exclusive" >&2
+  exit 64
+fi
+if [ -n "$PUBLIC_KEY" ] && ! printf '%s' "$PUBLIC_KEY" | grep -Eq '^[0-9a-fA-F]{64}$'; then
+  echo "--public-key must be 64 hex characters" >&2
+  exit 64
+fi
 if [ ! -f "$BUNDLE" ]; then
   echo "bundle not found: $BUNDLE" >&2
   exit 66
@@ -44,8 +66,16 @@ fi
 
 BUNDLE_SHA="$(sha256sum "$BUNDLE" | awk '{print $1}')"
 BUNDLE_SIZE="$(stat -c %s "$BUNDLE")"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/weft-verify-receipts.XXXXXX")"
-cleanup() { rm -rf "$TMP"; }
+CACHE="$ROOT/.docker-cache"
+mkdir -p "$CACHE"
+# The extraction directory must be inside the repository because the signed
+# manifest helper runs in the Docker court, which mounts the repository at
+# /work. Temporary diff files live outside the extracted tree so they cannot be
+# mistaken for bundle payload.
+TMP="$(mktemp -d "$CACHE/weft-verify-receipts.XXXXXX")"
+META="$(mktemp -d "$CACHE/weft-verify-meta.XXXXXX")"
+TMP_REL="${TMP#"$ROOT/"}"
+cleanup() { rm -rf "$TMP" "$META"; }
 trap cleanup EXIT
 
 echo "bundle: $BUNDLE"
@@ -75,16 +105,38 @@ if ! sha256sum -c CHECKSUMS.sha256 --quiet; then
 fi
 
 # 3. No unlisted files.
-find . -type f ! -name '.actual-files' ! -name '.listed-files' ! -name '.file-diff' \
-  -printf '%P\n' | LC_ALL=C sort > "$TMP/.actual-files"
+find . -type f -printf '%P\n' | LC_ALL=C sort > "$META/.actual-files"
 {
   awk '{print $2}' CHECKSUMS.sha256 | sed 's|^\./||'
   echo CHECKSUMS.sha256
-} | LC_ALL=C sort > "$TMP/.listed-files"
-if ! diff -u "$TMP/.listed-files" "$TMP/.actual-files" > "$TMP/.file-diff"; then
+} | LC_ALL=C sort > "$META/.listed-files"
+if ! diff -u "$META/.listed-files" "$META/.actual-files" > "$META/.file-diff"; then
   echo "FAIL: checksum list and actual files differ" >&2
-  cat "$TMP/.file-diff" >&2 || true
+  cat "$META/.file-diff" >&2 || true
   exit 1
+fi
+
+# 4. Canonical bundle manifest and optional signature.
+if [ -f receipt-manifest.wcb ]; then
+  helper_args=(verify --root "$TMP_REL")
+  if [ -n "$PUBLIC_KEY" ]; then
+    helper_args+=(--public-key "$PUBLIC_KEY")
+  elif [ "$SIGNATURE_FROM_BUNDLE" -eq 1 ]; then
+    helper_args+=(--signature-from-bundle)
+  fi
+  if ! "$ROOT/scripts/receipt-bundle-court.sh" "${helper_args[@]}"; then
+    if [ -n "$PUBLIC_KEY" ] || [ "$SIGNATURE_FROM_BUNDLE" -eq 1 ]; then
+      echo "FAIL: signature verification failed" >&2
+    else
+      echo "FAIL: canonical bundle manifest verification failed" >&2
+    fi
+    exit 1
+  fi
+elif [ -n "$PUBLIC_KEY" ] || [ "$SIGNATURE_FROM_BUNDLE" -eq 1 ]; then
+  echo "FAIL: bundle has no receipt-manifest.wcb; cannot verify a signature" >&2
+  exit 1
+else
+  echo "signature: not applicable (legacy bundle without receipt-manifest.wcb)"
 fi
 
 # 4. Manifest shape and dmesg honesty.
@@ -151,7 +203,7 @@ if grep -RIl -e '/mnt/1tb_kingston' . 2>/dev/null \
   exit 1
 fi
 
-FILE_COUNT="$(wc -l < "$TMP/.listed-files" | tr -d ' ')"
+FILE_COUNT="$(wc -l < "$META/.listed-files" | tr -d ' ')"
 echo "verified files: $FILE_COUNT"
 echo "verified revisions: $REVISION_COUNT"
 echo "dmesg: $(head -1 dmesg.txt)"

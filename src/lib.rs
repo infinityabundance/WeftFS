@@ -31,6 +31,7 @@ pub mod identity;
 pub(crate) mod index;
 pub mod provenance;
 pub mod quota;
+pub mod receipt_bundle;
 pub mod recovery;
 pub mod representation;
 pub mod s3;
