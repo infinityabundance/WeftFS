@@ -1,0 +1,482 @@
+"""PyTorch Distributed Checkpoint adapter tests.
+
+The real-DCP tests call ``torch.distributed.checkpoint.save`` / ``load`` with
+``weftcodec.dcp`` storage classes, then verify the resulting canonical WeftFS
+checkpoint with the Rust CLI. They are skipped with an explicit reason when
+PyTorch or the Rust ``weftfs`` CLI is absent.
+
+``test_contract_mode_without_torch`` is contract-only: it blocks the ``torch``
+import in a subprocess and checks the documented API shape. It is not a real DCP
+run and is labelled as such.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import shutil
+import struct
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+import support
+
+from weftcodec import wcb
+from weftcodec.dcp import (
+    DEFAULT_CLI,
+    DcpError,
+    ExactnessError,
+    StagingLimitExceeded,
+    WeftStorageReader,
+    WeftStorageWriter,
+    init_store,
+    save_checkpoint_async,
+    verify_checkpoint,
+)
+
+HAS_TORCH = importlib.util.find_spec("torch") is not None
+WEFTFS_CLI = Path(os.environ.get("WEFTFS_CLI", DEFAULT_CLI))
+
+
+def _has_weftfs() -> bool:
+    return WEFTFS_CLI.is_file() and os.access(WEFTFS_CLI, os.X_OK)
+
+
+pytestmark = pytest.mark.skipif(
+    not _has_weftfs(),
+    reason="weftfs CLI not found at %s; run this test in the Docker python court"
+    % WEFTFS_CLI,
+)
+
+torch = pytest.importorskip("torch") if HAS_TORCH else None
+dcp = pytest.importorskip("torch.distributed.checkpoint") if HAS_TORCH else None
+if HAS_TORCH:
+    from torch.distributed.checkpoint.api import CheckpointException
+else:  # pragma: no cover - contract-only runs
+    CheckpointException = DcpError
+
+requires_torch = pytest.mark.skipif(
+    not HAS_TORCH, reason="PyTorch is not installed in this court"
+)
+
+
+def _run(*args, expect=0):
+    proc = subprocess.run(
+        [str(WEFTFS_CLI), "--store", str(args[0]), *[str(a) for a in args[1:]]],
+        capture_output=True,
+        check=False,
+    )
+    if expect is not None:
+        assert proc.returncode == expect, (
+            "weftfs %s failed (%d): %s"
+            % (" ".join(str(a) for a in args[1:]), proc.returncode, proc.stderr.decode())
+        )
+    return proc
+
+
+def _write_safetensors(path, tensors):
+    """Write ``{name: tensor}`` exactly, without depending on safetensors."""
+    from weftcodec.dcp import _SAFETENSORS_BY_TORCH, _tensor_bytes
+
+    header = {}
+    payloads = []
+    cursor = 0
+    for name, tensor in sorted(tensors.items()):
+        payload = _tensor_bytes(tensor)
+        header[name] = {
+            "dtype": _SAFETENSORS_BY_TORCH[str(tensor.dtype)][1],
+            "shape": list(tensor.shape),
+            "data_offsets": [cursor, cursor + len(payload)],
+        }
+        cursor += len(payload)
+        payloads.append(payload)
+    raw_header = json.dumps(header, sort_keys=True, separators=(",", ":")).encode()
+    with open(path, "wb") as handle:
+        handle.write(struct.pack("<Q", len(raw_header)))
+        handle.write(raw_header)
+        for payload in payloads:
+            handle.write(payload)
+
+
+class SmallModel(torch.nn.Module if HAS_TORCH else object):
+    """Shapes are divisible by 8 on axis 0 so the topology matrix is real."""
+
+    def __init__(self):
+        super().__init__()
+        generator = torch.Generator().manual_seed(20261105)
+        self.embed = torch.nn.Parameter(
+            torch.randn(16, 8, generator=generator, dtype=torch.float32)
+        )
+        self.bias = torch.nn.Parameter(
+            torch.randn(16, generator=generator, dtype=torch.float32)
+        )
+        self.block = torch.nn.Module()
+        self.block.weight = torch.nn.Parameter(
+            torch.randn(8, 4, generator=generator, dtype=torch.float32)
+        )
+
+
+class BadShapeModel(torch.nn.Module if HAS_TORCH else object):
+    def __init__(self):
+        super().__init__()
+        self.weight = torch.nn.Parameter(torch.arange(10, dtype=torch.float32))
+
+
+@pytest.fixture()
+def store(tmp_path):
+    root = tmp_path / "store"
+    init_store(root, weftfs_cli=WEFTFS_CLI)
+    return root
+
+
+def _assert_state_equal(left, right):
+    assert set(left) == set(right)
+    for name in left:
+        assert torch.equal(left[name], right[name]), "tensor %s differs" % name
+
+
+@requires_torch
+def test_real_dcp_roundtrip_and_rust_verification(store):
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+
+    writer = WeftStorageWriter("roundtrip", store_root=store, topology=1)
+    metadata = dcp.save(model.state_dict(), storage_writer=writer, no_dist=True)
+
+    assert writer.store_name == "roundtrip"
+    assert sorted(metadata.state_dict_metadata) == sorted(source)
+    assert writer.stats["entries"] == len(source)
+
+    target = SmallModel()
+    reader = WeftStorageReader("roundtrip", store_root=store)
+    dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+    _assert_state_equal(source, target.state_dict())
+    assert reader.metadata_source == "dcp"
+    assert reader.storage_name == "roundtrip"
+
+    result = verify_checkpoint(store, "roundtrip", full=True, weftfs_cli=WEFTFS_CLI)
+    assert result["tensors_verified"] == len(source)
+    assert result["full"]["ok"] is True
+    assert result["full"]["problems"] == []
+
+
+@requires_torch
+def test_topology_matrix_8_4_1_and_exactness(store):
+    from weftcodec.dcp import _tensor_bytes
+
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+
+    writer = WeftStorageWriter("matrix", store_root=store, topology=8)
+    dcp.save(model.state_dict(), storage_writer=writer, no_dist=True)
+    assert writer.stats["topology"] == (8, 0)
+
+    target = SmallModel()
+    reader = WeftStorageReader("matrix", store_root=store)
+    dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+    _assert_state_equal(source, target.state_dict())
+
+    manifest = reader._store.checkpoint_show("matrix")["manifest"]
+    manifest_names = {row["name"] for row in manifest["tensors"]}
+    assert manifest_names == set(source)
+    assert all(len(row["shards"]) == 8 for row in manifest["tensors"])
+
+    roots = set()
+    for name in sorted(source):
+        expected = _tensor_bytes(source[name])
+        for shards in (8, 4, 1):
+            restored = reader.restore_entry(name, topology=shards, axis=0)
+            assert restored.data == expected, "%s topology %d bytes differ" % (
+                name,
+                shards,
+            )
+            assert restored.content_root_hex == [
+                row for row in manifest["tensors"] if row["name"] == name
+            ][0]["content_root"]
+            roots.add(restored.content_root_hex)
+    # The reassembled logical tensor is identical under every topology.
+    assert len(roots) == len(source)
+
+    full = verify_checkpoint(store, "matrix", full=True, weftfs_cli=WEFTFS_CLI)
+    assert full["tensors_verified"] == len(source)
+    assert full["full"]["ok"] is True
+
+
+@requires_torch
+def test_rust_written_checkpoint_is_read_by_the_adapter(store, tmp_path):
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+    container = tmp_path / "rust.safetensors"
+    _write_safetensors(container, source)
+
+    # The Rust CLI alone writes the canonical checkpoint: split every tensor
+    # 2 ways on axis 0.
+    _run(store, "checkpoint", "write", "--file", container,
+         "--name", "rustckpt", "--shards", 2, "--axis", 0, "--json")
+
+    target = SmallModel()
+    reader = WeftStorageReader("rustckpt", store_root=store)
+    metadata = reader.read_metadata()
+    assert reader.metadata_source == "manifest"
+    assert set(metadata.state_dict_metadata) == set(source)
+    dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+    _assert_state_equal(source, target.state_dict())
+
+    result = verify_checkpoint(store, "rustckpt", full=True, weftfs_cli=WEFTFS_CLI)
+    assert result["tensors_verified"] == len(source)
+    assert result["full"]["ok"] is True
+
+
+@requires_torch
+def test_adapter_metadata_content_roots_match_the_rust_manifest(store):
+    model = SmallModel()
+    writer = WeftStorageWriter("roots", store_root=store, topology=4)
+    dcp.save(model.state_dict(), storage_writer=writer, no_dist=True)
+
+    reader = WeftStorageReader("roots", store_root=store)
+    metadata = reader.read_metadata()
+    manifest = reader._store.checkpoint_show("roots")["manifest"]
+    rows = {row["name"]: row for row in manifest["tensors"]}
+    for info in metadata.storage_data.values():
+        assert rows[info.entry]["content_root"] == info.content_root.hex()
+        assert rows[info.entry]["dtype"] == {
+            "torch.float32": "f32",
+            "torch.float16": "f16",
+            "torch.bfloat16": "bf16",
+            "torch.float64": "f64",
+            "torch.int8": "i8",
+            "torch.uint8": "u8",
+            "torch.int16": "i16",
+            "torch.int32": "i32",
+            "torch.int64": "i64",
+        }[info.dtype]
+
+
+@requires_torch
+def test_byte_state_objects_roundtrip(store):
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+    source["training"] = {"step": 7, "label": "run-a", "seed": 20261105}
+
+    dcp.save(
+        source,
+        storage_writer=WeftStorageWriter("bytes", store_root=store, topology=1),
+        no_dist=True,
+    )
+
+    target = {name: torch.empty_like(value) for name, value in model.state_dict().items()}
+    target["training"] = {"step": 0, "label": "", "seed": 0}
+    reader = WeftStorageReader("bytes", store_root=store)
+    metadata = reader.read_metadata()
+    assert metadata.state_dict_metadata["training.step"].__class__.__name__ == (
+        "BytesStorageMetadata"
+    )
+    dcp.load(target, storage_reader=reader, no_dist=True)
+    _assert_state_equal(
+        {name: value for name, value in source.items() if name != "training"},
+        {name: value for name, value in target.items() if name != "training"},
+    )
+    assert target["training"] == source["training"]
+
+
+@requires_torch
+def test_save_generations_and_overwrite_semantics(store):
+    model = SmallModel()
+    dcp.save(
+        model.state_dict(),
+        storage_writer=WeftStorageWriter("gen", store_root=store),
+        no_dist=True,
+    )
+    first_entry = WeftStorageReader("gen", store_root=store).restore_entry("bias")
+
+    # Change every value, save again: the adapter publishes <id>.v2 (there is
+    # no store-side recursive delete), and the reader resolves the newest.
+    for parameter in model.parameters():
+        with torch.no_grad():
+            parameter.add_(1.0)
+    dcp.save(
+        model.state_dict(),
+        storage_writer=WeftStorageWriter("gen", store_root=store),
+        no_dist=True,
+    )
+    reader = WeftStorageReader("gen", store_root=store)
+    reader.read_metadata()
+    assert reader.storage_name == "gen.v2"
+    newer = reader.restore_entry("bias")
+    assert newer.data != first_entry.data
+
+    target = SmallModel()
+    target.load_state_dict(model.state_dict())
+    dcp.load(target.state_dict(), storage_reader=WeftStorageReader("gen", store_root=store),
+             no_dist=True)
+    _assert_state_equal(model.state_dict(), target.state_dict())
+
+    with pytest.raises(CheckpointException) as caught:
+        dcp.save(
+            model.state_dict(),
+            storage_writer=WeftStorageWriter("gen", store_root=store, overwrite=False),
+            no_dist=True,
+        )
+    assert "FileExistsError" in _exception_chain(caught.value)
+
+
+@requires_torch
+def test_async_save_completion_and_error_propagation(store):
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+
+    handle = save_checkpoint_async(
+        model.state_dict(),
+        checkpoint_id="async-ok",
+        store_root=store,
+        topology=4,
+        staging_bytes=4 * 1024 * 1024,
+        weftfs_cli=WEFTFS_CLI,
+    )
+    metadata = handle.result(timeout=300)
+    assert handle.done() is True
+    assert metadata is not None
+    assert handle.writer.store_name == "async-ok"
+    assert handle.stats["staging_peak_bytes"] <= 4 * 1024 * 1024
+
+    target = SmallModel()
+    dcp.load(target.state_dict(),
+             storage_reader=WeftStorageReader("async-ok", store_root=store),
+             no_dist=True)
+    _assert_state_equal(source, target.state_dict())
+
+    # A non-divisible topology is a real Rust-CLI rejection, not a fallback.
+    bad = save_checkpoint_async(
+        BadShapeModel().state_dict(),
+        checkpoint_id="async-bad-topology",
+        store_root=store,
+        topology=8,
+        weftfs_cli=WEFTFS_CLI,
+    )
+    with pytest.raises(CheckpointException) as caught:
+        bad.result(timeout=300)
+    assert "InvalidArgument" in _exception_chain(caught.value) or "no silent padding" in _exception_chain(caught.value)
+    assert "async-bad-topology" not in _checkpoint_names(store)
+
+    staged = save_checkpoint_async(
+        model.state_dict(),
+        checkpoint_id="async-staging",
+        store_root=store,
+        topology=1,
+        staging_bytes=16,
+        weftfs_cli=WEFTFS_CLI,
+    )
+    with pytest.raises(CheckpointException) as caught:
+        staged.result(timeout=300)
+    assert "StagingLimitExceeded" in _exception_chain(caught.value)
+    assert "async-staging" not in _checkpoint_names(store)
+
+
+def _exception_chain(exc):
+    parts = []
+    seen = set()
+    current = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        parts.append("%s: %s" % (type(current).__name__, current))
+        for nested in getattr(current, "exceptions", {}).values():
+            parts.append("%s: %s" % (type(nested).__name__, nested))
+        current = current.__cause__ or current.__context__
+    return " | ".join(parts)
+
+
+def _checkpoint_names(store):
+    payload = json.loads(
+        _run(store, "checkpoint", "list", "--json").stdout.decode("utf-8")
+    )
+    return {row["name"] for row in payload.get("checkpoints", [])}
+
+
+@requires_torch
+def test_unsupported_dtype_fails_closed(store):
+    class BoolState(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.mask = torch.nn.Parameter(
+                torch.tensor([True, False, True, False]), requires_grad=False
+            )
+
+    writer = WeftStorageWriter("bad-dtype", store_root=store)
+    with pytest.raises(CheckpointException) as caught:
+        dcp.save(BoolState().state_dict(), storage_writer=writer, no_dist=True)
+    assert "UnsupportedDtype" in _exception_chain(caught.value)
+    assert "bad-dtype" not in _checkpoint_names(store)
+
+
+def test_contract_mode_without_torch(tmp_path):
+    """Contract-only: the documented API shape with torch import blocked.
+
+    This is not a real DCP run; the real round trips are the tests above.
+    """
+    root = tmp_path / "store"
+    script = r"""
+import importlib.abc
+import sys
+
+class Blocker(importlib.abc.MetaPathFinder):
+    def find_spec(self, name, path=None, target=None):
+        if name == "torch" or name.startswith("torch."):
+            raise ImportError("torch blocked by contract test")
+        return None
+
+sys.meta_path.insert(0, Blocker())
+import weftcodec.dcp as dcp
+
+assert dcp.TORCH_AVAILABLE is False, "torch was importable"
+required_writer = {"reset", "write_metadata", "write_data", "finish",
+                   "storage_meta", "set_up_storage_writer", "prepare_local_plan",
+                   "prepare_global_plan", "validate_checkpoint_id"}
+required_reader = {"reset", "read_metadata", "read_data",
+                   "set_up_storage_reader", "prepare_local_plan",
+                   "prepare_global_plan", "validate_checkpoint_id"}
+assert required_writer <= set(dir(dcp.WeftStorageWriter))
+assert required_reader <= set(dir(dcp.WeftStorageReader))
+assert dcp.WeftStorageWriter.validate_checkpoint_id("ok") is True
+assert dcp.WeftStorageWriter.validate_checkpoint_id("not/ok") is False
+w = dcp.WeftStorageWriter("contract", store_root=sys.argv[1])
+assert w.checkpoint_id == "contract"
+try:
+    w.write_data(None, None).value()
+except dcp.TorchRequired:
+    pass
+else:
+    raise AssertionError("write_data did not require torch")
+print("contract-ok")
+"""
+    dcp_dummy = init_store(root, weftfs_cli=WEFTFS_CLI)
+    assert dcp_dummy == root
+    proc = subprocess.run(
+        [sys.executable, "-c", script, str(root)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "contract-ok" in proc.stdout
+
+
+def test_metadata_wcb_roundtrip_is_canonical():
+    """The DCP metadata blob is canonical WCB and decodes back to itself."""
+    from weftcodec.dcp import DCP_METADATA_SCHEMA
+
+    value = {
+        "schema": DCP_METADATA_SCHEMA,
+        "checkpoint_id": "x",
+        "storage_name": "x",
+        "dcp_version": "1.0.0",
+        "state_dict": [],
+        "storage_data": [],
+        "planner_data": {"kind": "none"},
+    }
+    encoded = wcb.encode(value)
+    assert wcb.encode(wcb.decode(encoded)) == encoded
+    assert wcb.decode(encoded)["schema"] == DCP_METADATA_SCHEMA

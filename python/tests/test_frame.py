@@ -48,7 +48,8 @@ def test_varint_u64_max_bytes():
 
 def test_mode_sets_are_disjoint_and_complete():
     assert IMPLEMENTED_MODES.isdisjoint(UNIMPLEMENTED_MODES)
-    assert IMPLEMENTED_MODES | UNIMPLEMENTED_MODES == set(range(15))
+    # Mode 15 (TENSOR_TILED) is allocated; mode 16 and above remain reserved.
+    assert IMPLEMENTED_MODES | UNIMPLEMENTED_MODES == set(range(16))
 
 
 def test_raw_frame_header_and_plaintext():

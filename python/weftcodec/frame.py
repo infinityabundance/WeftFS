@@ -66,6 +66,7 @@ MODE_NAMES = {
     12: "kv_cache",
     13: "activation_stream",
     14: "semantic_delta",
+    15: "tensor_tiled",
 }
 
 #: Modes this Python reader can actually materialize plaintext for.

@@ -13,6 +13,7 @@ from weftcodec.torch import WeftMapDataset
 
 
 def _make_tree(root):
+    root.mkdir(parents=True, exist_ok=True)
     (root / "b.bin").write_bytes(b"BBBB")
     (root / "a.bin").write_bytes(b"A")
     nested = root / "sub"

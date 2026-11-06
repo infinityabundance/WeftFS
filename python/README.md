@@ -78,6 +78,74 @@ path, tensor = tensors[0]                  # torch.frombuffer view
 Entries are sorted by POSIX-relative path, so ordering is deterministic across
 processes.
 
+### PyTorch Distributed Checkpoint adapter
+
+`weftcodec.dcp` implements the shape of
+`torch.distributed.checkpoint.StorageWriter` / `StorageReader` over a WeftFS
+store. The training process does not need a FUSE mount: every durable byte goes
+through the Rust `weftfs` CLI (`checkpoint write` / `checkpoint restore`).
+
+```python
+import torch
+import torch.distributed.checkpoint as dcp
+from weftcodec.dcp import WeftStorageWriter, WeftStorageReader, init_store
+
+init_store("/data/weft-store")
+
+model = MyModel()
+dcp.save(
+    model.state_dict(),
+    storage_writer=WeftStorageWriter(
+        "run-0001",                 # single WeftFS checkpoint name
+        store_root="/data/weft-store",
+        topology=8,                 # store every tensor split 8 ways on axis 0
+        shard_strategy="zstd",      # exact; tensor-sharded is the mode-10 option
+    ),
+    no_dist=True,
+)
+
+fresh = MyModel()
+dcp.load(
+    fresh.state_dict(),
+    storage_reader=WeftStorageReader("run-0001", store_root="/data/weft-store"),
+    no_dist=True,
+)
+```
+
+Async save (the encode/store work runs on a `ThreadPoolExecutor` worker, with a
+hard per-tensor staging bound; tensors are still copied through host memory):
+
+```python
+from weftcodec.dcp import save_checkpoint_async
+
+handle = save_checkpoint_async(
+    model.state_dict(),
+    checkpoint_id="run-0002",
+    store_root="/data/weft-store",
+    topology=8,
+    staging_bytes=256 * 1024 * 1024,   # 256 MiB bound on one resolved tensor copy
+)
+metadata = handle.result()             # raises the save error on this thread
+```
+
+Every checkpoint is a canonical `weft.checkpoint.v1` manifest plus mode-10 or
+exact codec shards; the DCP metadata is canonical WCB at
+`/checkpoints/<name>/dcp.metadata`. The adapter verifies each tensor's BLAKE3
+content root against the Rust manifest before/after every transfer. Verify with:
+
+```sh
+weftfs --store /data/weft-store checkpoint verify --name run-0001 --json
+weftfs --store /data/weft-store verify --full --json
+```
+
+A checkpoint written by the Rust CLI alone (plain safetensors tensor names) is
+readable too: the adapter synthesises DCP metadata from the manifest and reports
+`reader.metadata_source == "manifest"`. Supported tensor dtypes are exactly the
+WEFT-TENSOR v1 set (`f16`, `bf16`, `f32`, `f64`, `i8`, `u8`, `i16`, `i32`,
+`i64`); everything else is rejected, never coerced. ShardedTensor, DTensor and
+custom `planner_data` are not persisted. See `docs/PYTORCH-DCP.md` for the full
+contract and non-claims.
+
 ## Supported modes
 
 | Mode | Value | Python reader |
@@ -97,6 +165,7 @@ processes.
 | `KV_CACHE` | 12 | `UnsupportedMode` |
 | `ACTIVATION_STREAM` | 13 | `UnsupportedMode` |
 | `SEMANTIC_DELTA` | 14 | `UnsupportedMode` |
+| `TENSOR_TILED` | 15 | `UnsupportedMode` |
 
 An unimplemented mode raises `weftcodec.errors.UnsupportedMode`. It is never
 decoded approximately and never treated as opaque bytes.
