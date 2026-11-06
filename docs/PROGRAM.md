@@ -76,9 +76,12 @@ evidence.
    `fuzz-diff-20261104T103431Z.json`, 0 mismatches), not physical power loss.
 7. **F6 — AI codec v1:** `WEFT-AI-CODEC.md`, one real tensor mode + one token
    mode, cross-language, vectors for every implemented mode. **Implemented**
-   (2026-11-03; QUANTIZED_TENSOR added 2026-11-04): `TENSOR` (6),
-   `TOKEN_SEQUENCE` (7), and `QUANTIZED_TENSOR` (8); semantic delta and all
-   other brainstormed modes are `specified, not implemented` with no wire value.
+   (2026-11-03; modes added through 2026-11-06): `TENSOR` (6),
+   `TOKEN_SEQUENCE` (7), `QUANTIZED_TENSOR` (8), `FLOAT_TENSOR` (9),
+   `TENSOR_SHARDED` (10), `WEIGHT_DELTA` (11), `KV_CACHE` (12),
+   `ACTIVATION_STREAM` (13), `SEMANTIC_DELTA` (14), `TENSOR_TILED` (15), and
+   `SPARSE_DELTA` (16). Semantic roots and all other brainstormed modes are
+   `specified, not implemented` with no wire value.
 8. **F7 — AI corpus + cost graph:** C1/C2, real measurements with losses.
    **Implemented** (2026-11-03) on a committed synthetic corpus; results and
    caveats in `bench/RESULTS-ai-v1.md`. (E3, C)

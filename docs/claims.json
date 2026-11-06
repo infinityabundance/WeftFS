@@ -897,21 +897,21 @@
   {
     "id": "conformance_runner_rust_receipt",
     "claim": "docs/CONFORMANCE.md cites the committed Rust adapter receipt.",
-    "value": "conformance-rust-20261105T180000Z.json",
+    "value": "conformance-rust-20261106T050554Z.json",
     "locations": [
       "docs/CONFORMANCE.md"
     ],
-    "receipt": "bench/receipts/conformance-rust-20261105T180000Z.json",
+    "receipt": "bench/receipts/conformance-rust-20261106T050554Z.json",
     "kind": "present"
   },
   {
     "id": "conformance_runner_go_receipt",
     "claim": "docs/CONFORMANCE.md cites the committed Go adapter receipt.",
-    "value": "conformance-go-20261105T180100Z.json",
+    "value": "conformance-go-20261106T050630Z.json",
     "locations": [
       "docs/CONFORMANCE.md"
     ],
-    "receipt": "bench/receipts/conformance-go-20261105T180100Z.json",
+    "receipt": "bench/receipts/conformance-go-20261106T050630Z.json",
     "kind": "present"
   },
   {
@@ -1195,8 +1195,8 @@
   },
   {
     "id": "mode15_reserved16",
-    "claim": "The decoder guide records that modes 16-127 are reserved after mode 15 was allocated.",
-    "value": "Mode values 16\u2013127",
+    "claim": "docs/WRITE-YOUR-OWN-DECODER.md records the reserved mode range after mode 16 was allocated.",
+    "value": "Mode values 17\u2013127",
     "locations": [
       "docs/WRITE-YOUR-OWN-DECODER.md"
     ],
@@ -2349,6 +2349,67 @@
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-real-model.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_vectors",
+    "claim": "docs/STATUS.md records the mode-16 conformance vector counts.",
+    "value": "coverage mode 16 = 4 valid / 14 reject",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_conformance_replay",
+    "claim": "docs/STATUS.md records the full conformance replay result at this manifest.",
+    "value": "224 pass, 0 fail, 102 skip",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_receipt_current",
+    "claim": "docs/STATUS.md cites the real-weight mode-16 receipt.",
+    "value": "sparse-delta-20261106T052333Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/sparse-delta-20261106T052333Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_nineteen_word_result",
+    "claim": "docs/STATUS.md and bench/RESULTS-sparse-delta.md record the 19-word pair sizes.",
+    "value": "29,887 B vs 7,434,959 B",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-sparse-delta.md"
+    ],
+    "receipt": "bench/receipts/sparse-delta-20261106T052333Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_dense_loss",
+    "claim": "The dense fine-tune loss is published, not hidden.",
+    "value": "1.94\u00d7 (loss)",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/sparse-delta-20261106T052333Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "sparse_delta_mode11_unchanged",
+    "claim": "The docs state mode 11 is untouched.",
+    "value": "Mode 11 `WEIGHT_DELTA` is untouched and byte-identical",
+    "locations": [
+      "docs/STATUS.md"
     ],
     "receipt": null,
     "kind": "present"

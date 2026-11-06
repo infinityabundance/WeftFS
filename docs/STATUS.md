@@ -2521,3 +2521,76 @@ Q2 `bench/receipts/tensor-tiles-20261105T222531Z.json`, Q3
 `bench/receipts/s3-court-20261105T233154Z.json`, Q5
 `bench/receipts/pytorch-dcp-20261106T000734Z.json`, Q6
 `bench/receipts/signed-bundles-20261106T010118Z.json`.
+
+## R3 — mode 16 `SPARSE_DELTA` (2026-11-06)
+
+Additive payload mode 16 (`weft.ai.sparse_delta.v1`) in both codecs and both
+stores. Mode 11 `WEIGHT_DELTA` is untouched and byte-identical; mode 16 is the
+sparse counterpart, not a replacement.
+
+- **Format.** Exactly nine descriptor keys (`schema`, `dtype`, `shape`,
+  `element_count`, `storage_bytes`, `op` = `mod-sub`, `sparse_codec` =
+  `zero-run-v1`, `base_content_root`, `delta_root`); one dependency naming the
+  base tensor; body is `u32le(meta_len) || WCB(meta) || u32le(run_count) ||
+  run_count records`, each record `varint(zero_run_len) ||
+  storage_bytes(dtype) bytes`. Trailing zeros are implicit; an all-zero delta is
+  `run_count = 0`; a stored zero word and trailing bytes are rejected. Spec:
+  `spec/WEFT-AI-CODEC.md` §17; mode tables and the reserved range (now
+  `17..=127`) updated in `WEFTCODEC-FORMAT` and `WEFT-COMPATIBILITY`.
+- **Limit.** New `max_sparse_runs` (default 16,777,216, CLI
+  `--max-sparse-runs` in both codecs). A denser delta is `LimitExceeded` at
+  encode and decode; the store planner then keeps mode 11.
+- **Vectors.** `conformance/v1/sparse-delta/` 18 files (4 valid: all-zero, one
+  word, several runs ending exactly at `element_count`, fully dense;
+  14 rejects), byte-identical in both codec repositories.
+  `017_unknown_mode_reserved16` is retained byte-for-byte and marked
+  `superseded_by` `017_unknown_mode_reserved17`. Manifest 326 entries
+  (aggregate `1fc710a8…`), coverage mode 16 = 4 valid / 14 reject. Rust and Go
+  reference adapters replay 326 total, **224 pass, 0 fail, 102 skip**, no
+  sparse-delta skips.
+- **Cross-language.** `WeftCodec-Go/hack/cross.sh` gains three mode-16 fixtures;
+  `YES byte-identical sparse_delta_bf16 / sparse_delta_q8 /
+  sparse_delta_fp32` and decode equivalence in both directions; the whole gate
+  reports "all checks passed".
+- **Planner.** `TensorStrategy::SparseDelta` / `CostClass::SparseDelta` in Rust
+  and Go, offered next to mode 11 whenever a causal parent has the same
+  dtype/shape and priced by the same integer cost table (the SparseDelta row
+  **reuses** the measured weight-delta coefficients; it was not separately
+  calibrated and the table says so). `tests/planner_sparse.rs` (3 tests): a
+  19-word change selects mode 16 and reads back exactly with an independently
+  recomputed `delta_root`; a fully dense delta selects mode 11; a forced dense
+  mode-16 object is still readable after reopen. Go reads and verifies
+  Rust-written mode-16 objects and vice versa (`TestTensorHandoff*` pass in
+  both directions with both modes).
+- **Measurement** (`bench/receipts/sparse-delta-20261106T052333Z.json`,
+  bench court `sha256:4041d66e…`, revisions `weftfs eac3687`, `weftcodec
+  45a319b`, `weftcodec_go e47fa03`, `weftfs_go 47fd4d2`; analysis
+  `bench/RESULTS-sparse-delta.md`). Consecutive pythia-70m pairs:
+  step0→step1 mode 16 **29,887 B vs 7,434,959 B** mode 11 (0.0040×; 0.0002×
+  per-tensor zstd-19; 0.988× the whole-file `zstd --patch-from -3` recorded by
+  P2), 76/76 tensors smaller. step1→step2 0.647× (27/76 tensors smaller);
+  step2→step4 **2.22× (loss)**; step4→step8 **3.29× (loss)** with
+  `embed_out.weight` refused by `max_sparse_runs`. Fine-tune Qwen
+  base→instruct: **1.94× (loss)**, 48/290 tensors smaller,
+  `model.embed_tokens.weight` refused. Mode 16 encoded and decoded faster than
+  mode 11 in every pair (decode 653–815 MB/s vs 290–409 MB/s consecutive;
+  319 vs 195 MB/s fine-tune) but both remain 1.8–9.6× slower than `zstd -19`.
+  Consequences: the planner now stores a 19-byte checkpoint change in ~30 KB
+  instead of ~7.4 MB, and keeps mode 11 for dense pairs instead of paying the
+  run stream.
+- **Tests.** Rust codec `cargo test --all-targets` all pass (new
+  `tests/sparse_delta.rs` 12/12); parent `cargo test --all-targets` 257 passed /
+  0 failed and `--features fuse --all-targets` 291 passed / 0 failed / 2 ignored
+  (the two pre-existing ones); Go codec `go test ./...` all packages pass; Go
+  store `go test -race -count=1 ./...` store package passes and `./fusefs`
+  passes in the fuse court.
+- **Changed expectations (honest, not hidden).** Two Rust planner tests and one
+  Go planner test used a sparse fixture and expected mode 11; the smaller
+  representation is now mode 16, so they expect mode 16 and assert mode 11 is
+  still priced and larger. The mode-reserved structural tests moved 16 → 17.
+  Cross-language handoff fixtures now write both an auto (mode 16) and a forced
+  mode-11 object.
+- **Residual.** Single host and warm cache; the receipt is codec-level
+  per-tensor frames, not store-planner bytes; zstd baselines are copied from a
+  prior receipt; mode 16 is not entropy-coded, so medium-density deltas still
+  lose to mode 11; `max_sparse_runs` refused one tensor in each of two pairs.

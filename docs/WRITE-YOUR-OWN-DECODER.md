@@ -31,7 +31,8 @@ in the frame, the frozen vector, or the normative text.
 | TENSOR (6), TOKEN_SEQUENCE (7), QUANTIZED_TENSOR (8), FLOAT_TENSOR (9) | **Implemented and frozen for the fields listed** | AI-CODEC §2–§5 |
 | TENSOR_SHARDED (10), WEIGHT_DELTA (11), KV_CACHE (12), ACTIVATION_STREAM (13), SEMANTIC_DELTA (14) | **Implemented and frozen for the fields listed** | AI-CODEC §11–§15 |
 | TENSOR_TILED (15) | **Implemented and frozen for the fields listed** | AI-CODEC §16 |
-| Mode values 16–127 | **Reserved**; reject `UnsupportedMode` | FORMAT §3, AI-CODEC §6 |
+| SPARSE_DELTA (16) | **Implemented and frozen for the fields listed** | AI-CODEC §17 |
+| Mode values 17–127 | **Reserved**; reject `UnsupportedMode` | FORMAT §3, AI-CODEC §6 |
 | Mode values 128–255 | **Experimental**; must be rejected for persistence | FORMAT §3 |
 | Self-contained archive layout (`SELF_CONTAINED`) | **Experimental**; v1 readers reject it | FORMAT §7 |
 | WeftFS v2 representation manifests (`weft.manifest.v2`) | **Outside WFT1**; not a frame mode | WEFT-MODEL |
@@ -194,10 +195,13 @@ in one check.
 | 13 | ACTIVATION_STREAM | one chunk per frame; per-chunk digest roots | AI-CODEC §14 |
 | 14 | SEMANTIC_DELTA | exact delta plus a verified semantic policy | AI-CODEC §15 |
 | 15 | TENSOR_TILED | descriptor + independently decodable Huffman-coded tiles | AI-CODEC §16 |
+| 16 | SPARSE_DELTA | exact word delta as a varint zero-run stream | AI-CODEC §17 |
 
-Modes 11 and 14 take a base frame. Resolve it through the dependency table; do
+Modes 11, 14, and 16 take a base frame. Resolve it through the dependency table; do
 not accept an inferred substitute. Mode 14 recomputes the base tensor's
-semantic root from the resolved bytes and fails closed on any mismatch.
+semantic root from the resolved bytes and fails closed on any mismatch. Mode 16
+takes exactly nine descriptor keys, has no payload length (consume the payload
+exactly), and rejects a stored zero word or trailing bytes.
 
 ---
 
