@@ -3427,9 +3427,10 @@ loss is in `bench/RESULTS-rebase-scale.md`.
 * `cargo test --features fuse --all-targets` (fuse court): **422 passed / 0
   failed / 2 ignored** (the two pre-existing ignores).
 * `go test -race -count=1 ./store/... ./cmd/weftfs/...`: **125 passed / 0 failed / 7 skipped**;
-  the skips are the FUSE-mount handoff tests that need a `--features fuse` Rust oracle
-  and `/dev/fuse`, which this court does not have. `go vet ./...` is clean and
-  `CGO_ENABLED=0 go build ./...` succeeds.
+  the skips are the two pre-existing child-process guards and the five FUSE-mount
+  handoff tests that need a `--features fuse` Rust oracle and `/dev/fuse`, which
+  this court does not have. `go vet ./...` is clean and `CGO_ENABLED=0 go build
+  ./...` succeeds.
 * `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass.
 
 ### Residual and non-claims
