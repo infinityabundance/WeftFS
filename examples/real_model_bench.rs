@@ -56,8 +56,10 @@ fn run() -> Result<(), String> {
         "restore" => restore(&args[1..]),
         "tiled" => tiled(&args[1..]),
         "hot" => hot(&args[1..]),
+        "stats" => stats(&args[1..]),
+        "timing" => timing(&args[1..]),
         other => Err(format!(
-            "unknown phase `{other}` (expected `ingest`, `restore`, `tiled`, or `hot`)"
+            "unknown phase `{other}` (expected `ingest`, `restore`, `tiled`, `hot`, `stats`, or `timing`)"
         )),
     }
 }
@@ -1457,6 +1459,50 @@ fn hot(args: &[String]) -> Result<(), String> {
         })
         .transpose()?
         .unwrap_or(10);
+    // Optional contiguous-stride subset, so one checkpoint can be split into
+    // "hot" and "warm" tensor sets without changing the store.
+    let start: usize = value_of(args, "--start")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--start must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(0);
+    let stride: usize = value_of(args, "--stride")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--stride must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(1);
+    if stride == 0 {
+        return Err("--stride must be at least 1".to_owned());
+    }
+    let limit: usize = value_of(args, "--limit")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--limit must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(usize::MAX);
+    let mut named: Vec<String> = Vec::new();
+    if let Some(text) = value_of(args, "--tensors") {
+        named.extend(
+            text.split(',')
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned),
+        );
+    }
+    if let Some(path) = value_of(args, "--tensors-file") {
+        let text = fs::read_to_string(&path).map_err(|err| format!("{path}: {err}"))?;
+        named.extend(
+            text.lines()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .map(str::to_owned),
+        );
+    }
     let ingest_text = fs::read_to_string(&ingest_json)
         .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
     let ingest: Json = serde_json::from_str(&ingest_text)
@@ -1473,7 +1519,31 @@ fn hot(args: &[String]) -> Result<(), String> {
     let started = Instant::now();
     let mut rows = Vec::new();
     let mut total_bytes = 0u64;
-    for record in records {
+    let selected: Vec<(usize, &Json)> = if named.is_empty() {
+        records
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| *index >= start && (*index - start) % stride == 0)
+            .take(limit)
+            .collect()
+    } else {
+        let by_name: BTreeMap<&str, (usize, &Json)> = records
+            .iter()
+            .enumerate()
+            .map(|(index, record)| {
+                (
+                    record.get("name").and_then(Json::as_str).unwrap_or(""),
+                    (index, record),
+                )
+            })
+            .collect();
+        named
+            .iter()
+            .filter_map(|name| by_name.get(name.as_str()).copied())
+            .take(limit)
+            .collect()
+    };
+    for (index, record) in &selected {
         let name = record
             .get("name")
             .and_then(Json::as_str)
@@ -1491,6 +1561,7 @@ fn hot(args: &[String]) -> Result<(), String> {
             total_bytes += data.len() as u64;
         }
         rows.push(json!({
+            "index": index,
             "name": name,
             "object_id": id.to_hex(),
             "access_reads": store.access_reads(id),
@@ -1507,6 +1578,7 @@ fn hot(args: &[String]) -> Result<(), String> {
         "phase": "hot",
         "checkpoint": checkpoint,
         "reads_per_tensor": reads,
+        "selection": {"start": start, "stride": stride, "limit": if limit == usize::MAX { Json::Null } else { json!(limit) }, "named": named},
         "tensors": rows,
         "logical_bytes_read": total_bytes,
         "wall_ms": round(wall_ms),
@@ -1519,6 +1591,291 @@ fn hot(args: &[String]) -> Result<(), String> {
     .map_err(|err| format!("{}: {err}", out.display()))?;
     println!("{}", out.display());
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// stats: per-tensor identity, strategy, physical bytes, and snapshot view.
+// ---------------------------------------------------------------------------
+
+fn stats(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let ingest_json = PathBuf::from(required(args, "--ingest-json")?);
+    let out = PathBuf::from(required(args, "--out")?);
+    let checkpoint = value_of(args, "--checkpoint").unwrap_or_else(|| "instruct".to_owned());
+    let snapshot = value_of(args, "--snapshot");
+    let hash = args.iter().any(|arg| arg == "--sha256");
+    let ingest_text = fs::read_to_string(&ingest_json)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let ingest: Json = serde_json::from_str(&ingest_text)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let records = ingest
+        .get("ingest")
+        .and_then(|value| value.get(checkpoint.as_str()))
+        .and_then(|value| value.get("tensors"))
+        .and_then(Json::as_array)
+        .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
+    let store = Store::open(&store_path, OpenMode::ReadOnly)
+        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+
+    let snapshot_view = match &snapshot {
+        Some(name) => {
+            let commit = store
+                .resolve_snapshot_ref(name)
+                .map_err(|err| format!("snapshot {name}: {err}"))?;
+            let state = store
+                .state_at(commit)
+                .map_err(|err| format!("state at {name}: {err}"))?;
+            Some((name.clone(), commit, state))
+        }
+        None => None,
+    };
+
+    let mut rows = Vec::new();
+    for record in records {
+        let name = record
+            .get("name")
+            .and_then(Json::as_str)
+            .ok_or_else(|| "ingest tensor record is missing name".to_owned())?;
+        let id = store
+            .resolve_components(&[checkpoint.as_bytes(), name.as_bytes()])
+            .map_err(|err| format!("resolve {checkpoint}/{name}: {err}"))?;
+        let content = match &snapshot_view {
+            Some((_, _, state)) => state
+                .objects
+                .get(&id)
+                .map(|record| record.content)
+                .ok_or_else(|| format!("{checkpoint}/{name} is absent from the snapshot"))?,
+            None => {
+                store
+                    .object_meta(id)
+                    .map_err(|err| format!("record {checkpoint}/{name}: {err}"))?
+                    .content
+            }
+        };
+        let manifest = store
+            .manifest_of(content)
+            .map_err(|err| format!("manifest {checkpoint}/{name}: {err}"))?;
+        let physical_bytes = representation_bytes(&store_path, &manifest)?;
+        let meta = match &snapshot_view {
+            Some((_, _, state)) => store.tensor_metadata_at(state, id),
+            None => store.tensor_metadata(id),
+        }
+        .map_err(|err| format!("metadata {checkpoint}/{name}: {err}"))?;
+        let mut row = json!({
+            "name": name,
+            "object_id": id.to_hex(),
+            "strategy": meta.strategy,
+            "dtype": meta.dtype.as_str(),
+            "logical_bytes": manifest.size,
+            "physical_bytes": physical_bytes,
+            "chunk_count": manifest.chunks.len(),
+            "logical_root": meta.logical_root.to_hex(),
+            "access_reads": if snapshot_view.is_some() { 0 } else { store.access_reads(id) },
+        });
+        if hash {
+            let data = store
+                .read_object_at(snapshot_view.as_ref().map(|(_, commit, _)| *commit), id)
+                .map_err(|err| format!("read {checkpoint}/{name}: {err}"))?;
+            row["sha256"] = json!(hex::encode(Sha256::digest(&data)));
+        }
+        rows.push(row);
+    }
+
+    let snapshots: BTreeMap<String, String> = store
+        .snapshot_list()
+        .into_iter()
+        .map(|(name, commit)| (name, commit.to_hex()))
+        .collect();
+    let retained = store
+        .retained_blob_bytes()
+        .map_err(|err| format!("retained bytes: {err}"))?;
+    let breakdown = json!({
+        "objects": tree_bytes(&store_path.join("objects"))?,
+        "manifests": tree_bytes(&store_path.join("manifests"))?,
+        "indexes": tree_bytes(&store_path.join("indexes"))?,
+        "commits": tree_bytes(&store_path.join("commits"))?,
+        "access": tree_bytes(&store_path.join("access"))?,
+        "refs": tree_bytes(&store_path.join("refs"))?,
+    });
+    let receipt = json!({
+        "schema": "weft.real-model.stats.v1",
+        "phase": "stats",
+        "checkpoint": checkpoint,
+        "view": snapshot_view.as_ref().map(|(name, _, _)| format!("snapshot:{name}")).unwrap_or_else(|| "live".to_owned()),
+        "snapshot": snapshot_view.as_ref().map(|(name, commit, _)| json!({"name": name, "commit": commit.to_hex()})),
+        "generation": store.generation(),
+        "head": store.head().to_hex(),
+        "snapshots": snapshots,
+        "tree_bytes": tree_bytes(&store_path)?,
+        "retained_blob_bytes": retained,
+        "breakdown": breakdown,
+        "tensors": rows,
+    });
+    fs::write(
+        &out,
+        serde_json::to_vec_pretty(&receipt).map_err(|err| err.to_string())?,
+    )
+    .map_err(|err| format!("{}: {err}", out.display()))?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// timing: median decoded read time for a named tensor list.
+// ---------------------------------------------------------------------------
+
+fn timing(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let ingest_json = PathBuf::from(required(args, "--ingest-json")?);
+    let out = PathBuf::from(required(args, "--out")?);
+    let checkpoint = value_of(args, "--checkpoint").unwrap_or_else(|| "instruct".to_owned());
+    let reads: usize = value_of(args, "--reads")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--reads must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(3);
+    if reads == 0 {
+        return Err("--reads must be at least 1".to_owned());
+    }
+    let mut names: Vec<String> = Vec::new();
+    if let Some(text) = value_of(args, "--tensors") {
+        names.extend(
+            text.split(',')
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned),
+        );
+    }
+    if let Some(path) = value_of(args, "--tensors-file") {
+        let text = fs::read_to_string(&path).map_err(|err| format!("{path}: {err}"))?;
+        names.extend(
+            text.lines()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .map(str::to_owned),
+        );
+    }
+    let ingest_text = fs::read_to_string(&ingest_json)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let ingest: Json = serde_json::from_str(&ingest_text)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    if names.is_empty() {
+        let records = ingest
+            .get("ingest")
+            .and_then(|value| value.get(checkpoint.as_str()))
+            .and_then(|value| value.get("tensors"))
+            .and_then(Json::as_array)
+            .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
+        for record in records {
+            if let Some(name) = record.get("name").and_then(Json::as_str) {
+                names.push(name.to_owned());
+            }
+        }
+    }
+
+    let store = Store::open(&store_path, OpenMode::ReadOnly)
+        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let mut rows = Vec::new();
+    for name in names {
+        let id = store
+            .resolve_components(&[checkpoint.as_bytes(), name.as_bytes()])
+            .map_err(|err| format!("resolve {checkpoint}/{name}: {err}"))?;
+        let expected = expected_tensor_bytes(&ingest, &checkpoint, &name);
+        let token = store
+            .authorize_read(id, &weftfs::Principal::root(), store.clock_now_ns())
+            .map_err(|err| format!("authorize {checkpoint}/{name}: {err}"))?;
+        // Warm-up read outside the timed runs.
+        store
+            .read_tensor_authorized(&token, &weftfs::TileDecodeOptions::default())
+            .map_err(|err| format!("warmup {checkpoint}/{name}: {err}"))?;
+        let mut runs = Vec::new();
+        let mut backend_bytes = 0u64;
+        let mut exact = true;
+        for _ in 0..reads {
+            let before = store.backend_stats();
+            let started = Instant::now();
+            let data = store
+                .read_tensor_authorized(&token, &weftfs::TileDecodeOptions::default())
+                .map_err(|err| format!("read {checkpoint}/{name}: {err}"))?;
+            let elapsed_ms = started.elapsed().as_secs_f64() * 1000.0;
+            let after = store.backend_stats();
+            backend_bytes = after.bytes_read.saturating_sub(before.bytes_read);
+            exact &= data.len() as u64 == expected;
+            runs.push(json!({
+                "ms": round(elapsed_ms),
+                "backend_bytes_read": after.bytes_read.saturating_sub(before.bytes_read),
+                "backend_reads": after.reads.saturating_sub(before.reads),
+            }));
+        }
+        let mut timings: Vec<f64> = runs
+            .iter()
+            .filter_map(|run| run.get("ms").and_then(Json::as_f64))
+            .collect();
+        timings.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let record = store
+            .object_meta(id)
+            .map_err(|err| format!("meta {name}: {err}"))?;
+        let meta = store
+            .tensor_metadata(id)
+            .map_err(|err| format!("tensor meta {name}: {err}"))?;
+        rows.push(json!({
+            "name": name,
+            "object_id": id.to_hex(),
+            "strategy": meta.strategy,
+            "logical_bytes": record.size,
+            "size_matches_ingest": exact,
+            "access_reads": store.access_reads(id),
+            "runs": runs,
+            "median_ms": round(timings.get(timings.len() / 2).copied().unwrap_or(0.0)),
+            "min_ms": round(timings.first().copied().unwrap_or(0.0)),
+            "max_ms": round(timings.last().copied().unwrap_or(0.0)),
+            "backend_bytes_read": backend_bytes,
+        }));
+    }
+    let receipt = json!({
+        "schema": "weft.real-model.timing.v1",
+        "phase": "timing",
+        "checkpoint": checkpoint,
+        "reads_per_tensor": reads,
+        "tensors": rows,
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    fs::write(
+        &out,
+        serde_json::to_vec_pretty(&receipt).map_err(|err| err.to_string())?,
+    )
+    .map_err(|err| format!("{}: {err}", out.display()))?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+fn representation_bytes(
+    store_path: &Path,
+    manifest: &weftfs::format::Manifest,
+) -> Result<u64, String> {
+    if let Some(rep) = &manifest.representation {
+        if let Some(frame) = rep.frame {
+            // The frame blob lives in the same `manifests/` namespace as the
+            // manifest. A local store can stat it directly; any other backend
+            // falls back to a verified read (correct, but it materialises the
+            // frame).
+            let path = weftfs::recovery::manifest_path(store_path, frame);
+            if let Ok(metadata) = fs::metadata(&path) {
+                return Ok(metadata.len());
+            }
+            let bytes = weftfs::recovery::read_blob_verified(
+                store_path,
+                weftfs::recovery::BlobKind::Manifest,
+                frame,
+                weftfs::identity::MANIFEST_DOMAIN,
+            )
+            .map_err(|err| format!("frame blob {frame}: {err}"))?;
+            return Ok(bytes.len() as u64);
+        }
+    }
+    Ok(manifest.chunks.iter().map(|chunk| chunk.len).sum())
 }
 
 fn round(value: f64) -> f64 {

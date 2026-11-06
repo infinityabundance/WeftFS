@@ -1,0 +1,1804 @@
+{
+  "schema": "weft.rebase-scale.v1",
+  "label": "lineage-aware rebase on the cached Qwen2.5-0.5B family; single-host bench court, warm page cache, host-local decode calibration; not a fleet, media, or portable-constant claim",
+  "generated_utc": "2026-11-06T13:00:54Z",
+  "environment": {
+    "WEFT_COURT_KERNEL": "7.3.1-1-cachyos",
+    "WEFT_COURT_IMAGE": "weft/bench-court:1",
+    "WEFT_COURT_IMAGE_ID": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "WEFT_COURT_MEMORY": "3g",
+    "WEFT_COURT_CPUS": "4",
+    "WEFT_COURT_PIDS": "1024",
+    "WEFT_REPO_WEFTFS": "bfc0990aecf8128c54a4e86c85122b6bb07b3c21",
+    "WEFT_REPO_WEFTFS_GO": "169ce0f38f423f2bb5a286a6679073d806525a9d",
+    "WEFT_REPO_WEFTCODEC": "54cb4f68899c212ce7a12d5c461b400cfe7b3112",
+    "WEFT_REPO_WEFTCODEC_GO": "8957998a64ef93f77877f89327a0dce7755f5b38"
+  },
+  "corpus": {
+    "base": {
+      "blake3": "8cf89b829a9f723eb6350895d81afbaf887a0e9464a06a2607b65650c3df38a7",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "causal_parent_offered": true,
+    "dtype_mismatches": [],
+    "instruct": {
+      "blake3": "59dce3937a1047d8dbd6fdffb67a6f0ce20e056fd657c2c38cb7d76fc35cf7c2",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "order": "safetensors data_offsets order",
+    "same_tensor_names": true,
+    "shape_mismatches": []
+  },
+  "store": {
+    "generation": 585,
+    "options": {
+      "auto_tile_bytes": null,
+      "checkpoint_interval": 256,
+      "chunk_size": 65536,
+      "force_tiled_rank2": false,
+      "max_semantic_candidates": 16,
+      "planner": "TensorPlanOptions (lambda_ns = 0, measured decode table, mode-9 candidate)",
+      "representation": "Raw (frozen v1 manifest)"
+    },
+    "path": "/work/.docker-cache/rebase-scale/store"
+  },
+  "calibration": {
+    "id": "b735d0d71a956e04b34d2155cdbd5b5a8e7dff8155837e9340f5efe4a1190b95",
+    "created_unix_ns": 1793969464246808300,
+    "host": {
+      "arch": "x86_64",
+      "cpus": 4,
+      "hostname": "315084dffd4c",
+      "image": "weft/bench-court:1",
+      "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+      "kernel": "7.3.1-1-cachyos",
+      "memory_limit": "3g",
+      "pids_limit": "1024",
+      "weftcodec_revision": "54cb4f68899c212ce7a12d5c461b400cfe7b3112",
+      "weftfs_revision": "bfc0990aecf8128c54a4e86c85122b6bb07b3c21"
+    },
+    "method": {
+      "fit": "fixed_ns + ns_per_mib * decoded_bytes / 1048576; fit from the small and large medians; delta rows subtract the measured base read",
+      "large_bytes": 16777216,
+      "reps": 7,
+      "small_bytes": 131072,
+      "warmup_reads": 1
+    },
+    "rows": [
+      {
+        "class": "raw",
+        "fixed_ns": 17048,
+        "ns_per_mib": 318866,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "zstd",
+        "fixed_ns": 37037,
+        "ns_per_mib": 799184,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "float-tensor",
+        "fixed_ns": 17848,
+        "ns_per_mib": 4776391,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "tensor-sharded",
+        "fixed_ns": 43735,
+        "ns_per_mib": 8863537,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "tensor-tiled",
+        "fixed_ns": 0,
+        "ns_per_mib": 3549201,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "weight-delta",
+        "fixed_ns": 51380,
+        "ns_per_mib": 5577239,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "sparse-delta",
+        "fixed_ns": 51380,
+        "ns_per_mib": 5577239,
+        "origin": "reused",
+        "samples": 0
+      },
+      {
+        "class": "semantic-delta",
+        "fixed_ns": 51089,
+        "ns_per_mib": 7005272,
+        "origin": "measured",
+        "samples": 14
+      },
+      {
+        "class": "kv-cache",
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576,
+        "origin": "declared",
+        "samples": 0
+      },
+      {
+        "class": "activation",
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576,
+        "origin": "declared",
+        "samples": 0
+      }
+    ],
+    "divergence_vs_baked": [
+      {
+        "class": "raw",
+        "host_fixed_ns": 17048,
+        "host_ns_per_mib": 318866,
+        "baked_fixed_ns": 11757,
+        "baked_ns_per_mib": 307019,
+        "host_1mib_ns": 335914,
+        "baked_1mib_ns": 318776,
+        "estimate_1mib_delta_percent": 5.376
+      },
+      {
+        "class": "zstd",
+        "host_fixed_ns": 37037,
+        "host_ns_per_mib": 799184,
+        "baked_fixed_ns": 21285,
+        "baked_ns_per_mib": 779888,
+        "host_1mib_ns": 836221,
+        "baked_1mib_ns": 801173,
+        "estimate_1mib_delta_percent": 4.375
+      },
+      {
+        "class": "float-tensor",
+        "host_fixed_ns": 17848,
+        "host_ns_per_mib": 4776391,
+        "baked_fixed_ns": 18264,
+        "baked_ns_per_mib": 4683726,
+        "host_1mib_ns": 4794239,
+        "baked_1mib_ns": 4701990,
+        "estimate_1mib_delta_percent": 1.962
+      },
+      {
+        "class": "tensor-sharded",
+        "host_fixed_ns": 43735,
+        "host_ns_per_mib": 8863537,
+        "baked_fixed_ns": 16172,
+        "baked_ns_per_mib": 9123307,
+        "host_1mib_ns": 8907272,
+        "baked_1mib_ns": 9139479,
+        "estimate_1mib_delta_percent": -2.541
+      },
+      {
+        "class": "tensor-tiled",
+        "host_fixed_ns": 0,
+        "host_ns_per_mib": 3549201,
+        "baked_fixed_ns": 14131,
+        "baked_ns_per_mib": 3366772,
+        "host_1mib_ns": 3549201,
+        "baked_1mib_ns": 3380903,
+        "estimate_1mib_delta_percent": 4.978
+      },
+      {
+        "class": "weight-delta",
+        "host_fixed_ns": 51380,
+        "host_ns_per_mib": 5577239,
+        "baked_fixed_ns": 30725,
+        "baked_ns_per_mib": 5293987,
+        "host_1mib_ns": 5628619,
+        "baked_1mib_ns": 5324712,
+        "estimate_1mib_delta_percent": 5.707
+      },
+      {
+        "class": "sparse-delta",
+        "host_fixed_ns": 51380,
+        "host_ns_per_mib": 5577239,
+        "baked_fixed_ns": 30725,
+        "baked_ns_per_mib": 5293987,
+        "host_1mib_ns": 5628619,
+        "baked_1mib_ns": 5324712,
+        "estimate_1mib_delta_percent": 5.707
+      },
+      {
+        "class": "semantic-delta",
+        "host_fixed_ns": 51089,
+        "host_ns_per_mib": 7005272,
+        "baked_fixed_ns": 31891,
+        "baked_ns_per_mib": 6458523,
+        "host_1mib_ns": 7056361,
+        "baked_1mib_ns": 6490414,
+        "estimate_1mib_delta_percent": 8.72
+      },
+      {
+        "class": "kv-cache",
+        "host_fixed_ns": 100000,
+        "host_ns_per_mib": 1048576,
+        "baked_fixed_ns": 100000,
+        "baked_ns_per_mib": 1048576,
+        "host_1mib_ns": 1148576,
+        "baked_1mib_ns": 1148576,
+        "estimate_1mib_delta_percent": 0.0
+      },
+      {
+        "class": "activation",
+        "host_fixed_ns": 100000,
+        "host_ns_per_mib": 1048576,
+        "baked_fixed_ns": 100000,
+        "baked_ns_per_mib": 1048576,
+        "host_1mib_ns": 1148576,
+        "baked_1mib_ns": 1148576,
+        "estimate_1mib_delta_percent": 0.0
+      }
+    ],
+    "console": "calibration_id=b735d0d71a956e04b34d2155cdbd5b5a8e7dff8155837e9340f5efe4a1190b95 | out=/work/.docker-cache/rebase-scale/calibration.json | divergence_vs_baked_measured: |   raw host_fixed_ns=17048 host_ns_per_mib=318866 baked_fixed_ns=11757 baked_ns_per_mib=307019 host_1mib_ns=335914 baked_1mib_ns=318776 delta=+5.376% |   zstd host_fixed_ns=37037 host_ns_per_mib=799184 baked_fixed_ns=21285 baked_ns_per_mib=779888 host_1mib_ns=836221 baked_1mib_ns=801173 delta=+4.375% |   float-tensor host_fixed_ns=17848 host_ns_per_mib=4776391 baked_fixed_ns=18264 baked_ns_per_mib=4683726 host_1mib_ns=4794239 baked_1mib_ns=4701990 delta=+1.962% |   tensor-sharded host_fixed_ns=43735 host_ns_per_mib=8863537 baked_fixed_ns=16172 baked_ns_per_mib=9123307 host_1mib_ns=8907272 baked_1mib_ns=9139479 delta=-2.541% |   tensor-tiled host_fixed_ns=0 host_ns_per_mib=3549201 baked_fixed_ns=14131 baked_ns_per_mib=3366772 host_1mib_ns=3549201 baked_1mib_ns=3380903 delta=+4.978% |   weight-delta host_fixed_ns=51380 host_ns_per_mib=5577239 baked_fixed_ns=30725 baked_ns_per_mib=5293987 host_1mib_ns=5628619 baked_1mib_ns=5324712 delta=+5.707% |   sparse-delta host_fixed_ns=51380 host_ns_per_mib=5577239 baked_fixed_ns=30725 baked_ns_per_mib=5293987 host_1mib_ns=5628619 baked_1mib_ns=5324712 delta=+5.707% |   semantic-delta host_fixed_ns=51089 host_ns_per_mib=7005272 baked_fixed_ns=31891 baked_ns_per_mib=6458523 host_1mib_ns=7056361 baked_1mib_ns=6490414 delta=+8.720% |   kv-cache host_fixed_ns=100000 host_ns_per_mib=1048576 baked_fixed_ns=100000 baked_ns_per_mib=1048576 host_1mib_ns=1148576 baked_1mib_ns=1148576 delta=+0.000% |   activation host_fixed_ns=100000 host_ns_per_mib=1048576 baked_fixed_ns=100000 baked_ns_per_mib=1048576 host_1mib_ns=1148576 baked_1mib_ns=1148576 delta=+0.000%"
+  },
+  "workload": {
+    "threshold_ns": 200000000,
+    "hot": {
+      "tensors": 16,
+      "reads_per_tensor": 32
+    },
+    "warm": {
+      "tensors": 16,
+      "reads_per_tensor": 2
+    },
+    "unread_rebaseable_deltas": 41,
+    "selection_rule": "reads > 0; reads * estimated_decode_ns(current chain) > threshold; a standalone representation decodes strictly faster and is not larger than the logical bytes"
+  },
+  "selection": {
+    "dry_run": true,
+    "scanned": 291,
+    "candidate_count": 16,
+    "applied_count": 16,
+    "cost_model": "measured",
+    "objects": [
+      {
+        "object": "096c37d54f7c8911f3fd31fcf54452e748d7c8c069e3bcba3ea8ca61afb52410",
+        "path": "/model.layers.0.mlp.up_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5781631,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "9cb3efef69f737db435443aeec793100e07c2d2b0acf667ade1de48ce64186a8"
+      },
+      {
+        "object": "09a82c8f9a974beff70022120b2afcaad5d69dabebe71f5a84151dc9c262e372",
+        "path": "/model.layers.1.mlp.up_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5779383,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "88504986a0ee38f541b34107502ee6f93c1c9ebf2231f6af802516a2cf19b45a"
+      },
+      {
+        "object": "0effeea78b6697130af89b1909a6868867fa2c789e1d46085c35b614a293bf44",
+        "path": "/model.layers.12.mlp.down_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5827520,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "aa9dd82659284c1ef155747fbc2e9c68e8d2cdcb26bc49768ffa596fa3764e1a"
+      },
+      {
+        "object": "0f4188c807ff7467a35a609f0dadfb7ae81dee3c3b5d9e087e67fabd2d8491e5",
+        "path": "/model.layers.11.mlp.gate_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5811899,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "bcf7001252eaeaa782398510b8f7a4bd924f584818cbf379c26e8c21c943afc1"
+      },
+      {
+        "object": "201a47e4b49f8b9eebe8c61d606633575df7745da6e1f4b2f5f5a54c78773a10",
+        "path": "/model.layers.0.mlp.gate_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5802340,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "d9e118437e6a01613c26009d7d7dc82fd132c5bfd2a12d8a1e419d02531d837b"
+      },
+      {
+        "object": "24e73a18342fef847805f2c554c8a0f3cee13c4568c62c8bc1b8648a014d8452",
+        "path": "/model.embed_tokens.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 2688453967,
+        "new_decode_ns": 1240237623,
+        "new_physical_bytes": 180547519,
+        "read_cost_ns": 86030526944,
+        "provenance_id": "156be85e9284b2338284e8dfd9c7d9356f41477c72f25b6d437ca2371a8b8cfb"
+      },
+      {
+        "object": "623eb6de2290b4f07a94c8a9e219119c9f06bf3a84d59787b56af2994afb8ff7",
+        "path": "/model.layers.12.mlp.gate_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5815799,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "b89d57437c5490a4bff57c6c90963c3240eaa384d3cb0ab218000908a4d0a1ba"
+      },
+      {
+        "object": "99e0f5ccd6cd0cc3a8aba079e9dbd1acc5928810ebc92d93fece3f2020322682",
+        "path": "/model.layers.11.mlp.down_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5831858,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "7be7dadfac48ced9ddfda8c469a65ceecd7c97689466315d042910ef68f953ed"
+      },
+      {
+        "object": "b411752604cbec82570f4962c2b44cd4f7f042360d22da92ffdd5abb15a72016",
+        "path": "/model.layers.10.mlp.up_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5802438,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "855b80d7286b829cf7ef0c5b18e50b975c040e8a6ad0b7c6bb2a3601e0be66e6"
+      },
+      {
+        "object": "c0b19368698fdca3bcee536dcf43e0194ef2e1808dee4384c11676a22146edad",
+        "path": "/model.layers.1.mlp.down_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5787655,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "6351e35a248682c280e8179c8eca109d24e654842abc5e4f4c9f42886900d40c"
+      },
+      {
+        "object": "c46db961687428785be1f0b33e2a2e2dc65d6d8cbda9a04959d880aa81440320",
+        "path": "/model.layers.10.mlp.down_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5832466,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "51d2d13d9593c009ad5b564412fce0ce3e4470ae4d4a54f3b1c14a17e1392064"
+      },
+      {
+        "object": "d197eae1a2101ca1864958342b94f7fee9b86dc4ef8a9eadf2d398a4ed44135a",
+        "path": "/model.layers.12.mlp.up_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5799772,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "c85ccc94df34910e91bfd1c76f7fdc80366a187b379c0fa84d417901a92ec4e8"
+      },
+      {
+        "object": "dde5d3bdadf83b7c911155db27b5b64e7b1edc5b88cbd359f4f7e7b3c23c6a84",
+        "path": "/model.layers.1.mlp.gate_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5793457,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "87c345a9483036d44c5f01ee9f902c0b3ca6ce474e1b55c3d68427064ca67ab5"
+      },
+      {
+        "object": "eec3a5e8623d0023a41c4eb00f029d6b57f65cb7e61ac15b3770fc5bb6a1e70c",
+        "path": "/model.layers.11.mlp.up_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5803482,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "6895ac3ea215f2f76b6fedcf86c70d7e518e5111669c925fb9a6bfdbc0735dd2"
+      },
+      {
+        "object": "faf10ca2a68fa3a63ad34fcea5da4529b31acd41eb904bd9c4d6a3c4265e33db",
+        "path": "/model.layers.10.mlp.gate_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5819053,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "e1632d6e0f839ff75ff7b7d176c706eeb3fd6fb0656dfd129ab9f0f73f2442e2"
+      },
+      {
+        "object": "feadebfae8e178e5b673e22c1d8fe1c13278c5e745a1c7048724cc5bf637599e",
+        "path": "/model.layers.0.mlp.down_proj.weight",
+        "reads": 32,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "old_decode_ns": 86133777,
+        "new_decode_ns": 39721598,
+        "new_physical_bytes": 5798340,
+        "read_cost_ns": 2756280864,
+        "provenance_id": "50a12675788c51b53a2aaece81a7ca3758b57a543a05b84155eb429c4330f838"
+      }
+    ],
+    "skipped": []
+  },
+  "economics": {
+    "threshold_ns": 200000000,
+    "rule": "policy break-even reads = ceil(threshold / old_decode_ns); storage break-even reads = ceil((new_physical_bytes - old_physical_bytes) / (old_decode_ns - new_decode_ns))",
+    "predicted_selected": 16,
+    "actual_selected": 16,
+    "mismatch_count": 0
+  },
+  "timing": {
+    "before": {
+      "selected_ms": 4501.537,
+      "unselected_ms": 1523.497
+    },
+    "after": {
+      "selected_ms": 1900.812,
+      "unselected_ms": 1510.422
+    }
+  },
+  "restore": {
+    "before": {
+      "instruct_read_ms": 10938.771,
+      "base_read_ms": 4780.238,
+      "instruct_bytes": 988065536
+    },
+    "after": {
+      "instruct_read_ms": 8430.865,
+      "base_read_ms": 4774.037,
+      "instruct_bytes": 988065536
+    }
+  },
+  "physical": {
+    "before": {
+      "tree_bytes": 1276426933,
+      "retained_blob_bytes": 1199335514,
+      "representation_bytes": 541151674,
+      "indexes_bytes": 75882612,
+      "manifests_bytes": 1199901641,
+      "data_bytes_excluding_indexes": 1200544321
+    },
+    "after": {
+      "tree_bytes": 1553658650,
+      "retained_blob_bytes": 1242910330,
+      "representation_bytes": 584727034,
+      "indexes_bytes": 85437940,
+      "manifests_bytes": 1467554851,
+      "data_bytes_excluding_indexes": 1468220710
+    },
+    "delta": {
+      "tree_bytes": 277231717,
+      "retained_blob_bytes": 43574816,
+      "representation_bytes": 43575360,
+      "indexes_bytes": 9555328,
+      "data_bytes_excluding_indexes": 267676389
+    },
+    "selected_representation": {
+      "old_bytes": 224059252,
+      "new_bytes": 267634612,
+      "delta_bytes": 43575360
+    }
+  },
+  "provenance": {
+    "count": 16,
+    "receipts": [
+      {
+        "object": "096c37d54f7c8911f3fd31fcf54452e748d7c8c069e3bcba3ea8ca61afb52410",
+        "old_version": "7ca19fbd02c0f780083c02243d31fa1bfbc7cf01970ec7ed156a13515f0b3ff4",
+        "new_version": "2bc3c3bac95522a6260dd902984a1c3294353522c3d044af5414d44c61e83fb6",
+        "content": "20637feb68b0526cf5037a2a5bb46a2d6ca214656253179d4856eaba03c7f5f5",
+        "provenance_id": "9cb3efef69f737db435443aeec793100e07c2d2b0acf667ade1de48ce64186a8"
+      },
+      {
+        "object": "09a82c8f9a974beff70022120b2afcaad5d69dabebe71f5a84151dc9c262e372",
+        "old_version": "99307dbd5753b37bbe1f859ab67e8b7b54fd163dca9acebc2e211328476d796c",
+        "new_version": "a05a6e1815928d3f7c180727d2a10fb6abd4929714055b23751a8e24a80e77af",
+        "content": "5f9466b57ca85a46eca8fed79876d72f87d2ecc14bb83ed07f523a3113f2667f",
+        "provenance_id": "88504986a0ee38f541b34107502ee6f93c1c9ebf2231f6af802516a2cf19b45a"
+      },
+      {
+        "object": "0effeea78b6697130af89b1909a6868867fa2c789e1d46085c35b614a293bf44",
+        "old_version": "437f26b60782295fc5191e2eae74dc07583f1cf2b5d336d6a750180999b53e5a",
+        "new_version": "f35c092f670742ca212d415d8795ea13c3336b71085c532c108cfbab54dd3bbe",
+        "content": "47f438a3200eecb589b550439125fc711290e64e481496b2f32de00fcc20ab18",
+        "provenance_id": "aa9dd82659284c1ef155747fbc2e9c68e8d2cdcb26bc49768ffa596fa3764e1a"
+      },
+      {
+        "object": "0f4188c807ff7467a35a609f0dadfb7ae81dee3c3b5d9e087e67fabd2d8491e5",
+        "old_version": "3de03df88106c796fe2543a76d8f32d9ee8ee1078ca537062835e6ebc69d1fe9",
+        "new_version": "7b3f0bd7c6fb876c89e14601d306a4e217003a7cb6b6c1a63d8d960685721ff6",
+        "content": "94148edaf70439296aaee573a1d41eb331486f2385d34d6e1c005f112ba423ca",
+        "provenance_id": "bcf7001252eaeaa782398510b8f7a4bd924f584818cbf379c26e8c21c943afc1"
+      },
+      {
+        "object": "201a47e4b49f8b9eebe8c61d606633575df7745da6e1f4b2f5f5a54c78773a10",
+        "old_version": "f2bb800801baaed09ba3d81ad55117d7a5fbd6370467f4b996dc478c18bf4c8b",
+        "new_version": "c2e913a995dd527d7d3000c91a13423bee0089dda6f448531cb53b0a7349dd01",
+        "content": "bda3aa3133b42934d92d1c6bfc6e302e8d91a2139814225dc91e4bf1cdaeb50f",
+        "provenance_id": "d9e118437e6a01613c26009d7d7dc82fd132c5bfd2a12d8a1e419d02531d837b"
+      },
+      {
+        "object": "24e73a18342fef847805f2c554c8a0f3cee13c4568c62c8bc1b8648a014d8452",
+        "old_version": "ecbf489229b2684bd183bcbc997054cc59a7139ecb228ee674c32aa47b89dc26",
+        "new_version": "0ab92dd752ea394da76f72faee21152a591a961b43a941def5b9cbbe3110eb81",
+        "content": "e5c7f7725b6b523a73f8ceb2aaa0fba8ac939b4e1c05625c7ef6d93c0a93a34e",
+        "provenance_id": "156be85e9284b2338284e8dfd9c7d9356f41477c72f25b6d437ca2371a8b8cfb"
+      },
+      {
+        "object": "623eb6de2290b4f07a94c8a9e219119c9f06bf3a84d59787b56af2994afb8ff7",
+        "old_version": "4bc4de5bdb51648a31cc4a10bda754ec578d4954472a8b176206222bac4378f5",
+        "new_version": "a30aaa2e750dcf06b30e1fe3bbb3aa88dcde8ed87367746d8dfe289206763133",
+        "content": "512f86b4dc939e3daacdce117baeb4dca3f82a0d57672d940ddfc3d444e85f7f",
+        "provenance_id": "b89d57437c5490a4bff57c6c90963c3240eaa384d3cb0ab218000908a4d0a1ba"
+      },
+      {
+        "object": "99e0f5ccd6cd0cc3a8aba079e9dbd1acc5928810ebc92d93fece3f2020322682",
+        "old_version": "70bd138d2873611d4b3bfc49d094f61df9eb5580c9490bf91b8ffe9416881b49",
+        "new_version": "fe719cef04e5dcf866e3ee59d15cb8856b555ca10b42de5209a5511c4606f327",
+        "content": "9402c02f5b5a042ef2ab5e6db399de79b141f882453b0ad57d777083f8177b62",
+        "provenance_id": "7be7dadfac48ced9ddfda8c469a65ceecd7c97689466315d042910ef68f953ed"
+      },
+      {
+        "object": "b411752604cbec82570f4962c2b44cd4f7f042360d22da92ffdd5abb15a72016",
+        "old_version": "5459cdbc76f304d50351d965ffd1740cf5098d5f2dff567f44eefc141e39cd80",
+        "new_version": "0d755307c0c4d69c1e65c7e3aac5917205891e8ecf596ca3864cc09d3a5eb7cd",
+        "content": "94a697cf05cbf8aa5efc0d7ad2ebbd9ddacd86d296050d53b646bfa4cd00437e",
+        "provenance_id": "855b80d7286b829cf7ef0c5b18e50b975c040e8a6ad0b7c6bb2a3601e0be66e6"
+      },
+      {
+        "object": "c0b19368698fdca3bcee536dcf43e0194ef2e1808dee4384c11676a22146edad",
+        "old_version": "d5c315d8a69ea2f900ad7b836281a6d68784b6897352fc407df3d197cea4ffb0",
+        "new_version": "251e211b31838964e51d82c12671feb0476da626663f08bb085368e8fdde0283",
+        "content": "453f2984ea84086c555d0a225dc213ce6c37be3d977eb2ffeaa73fefd74e059a",
+        "provenance_id": "6351e35a248682c280e8179c8eca109d24e654842abc5e4f4c9f42886900d40c"
+      },
+      {
+        "object": "c46db961687428785be1f0b33e2a2e2dc65d6d8cbda9a04959d880aa81440320",
+        "old_version": "c33624dad67ee5878e8739c27a74efd17ab0abb34b60ea85acfc584162d1d2f6",
+        "new_version": "cd77768572cdaa497bb37b5bc09654ff0670e293e4e8d716b72ad6972b4603dd",
+        "content": "9b9028f237ff337995c26d7ba3d3a9e895fff54986daeec29bbdd92f93ef6c04",
+        "provenance_id": "51d2d13d9593c009ad5b564412fce0ce3e4470ae4d4a54f3b1c14a17e1392064"
+      },
+      {
+        "object": "d197eae1a2101ca1864958342b94f7fee9b86dc4ef8a9eadf2d398a4ed44135a",
+        "old_version": "6461995d2186c686eb3f2853096410814efebf37b5fcf8b1bc75937a37e5ef93",
+        "new_version": "bc47507ec726112047a75e4a4fbd7d412c3f663574a6a803655e5b367a244400",
+        "content": "125a87b0484b22d346510ad4d68695806f2e386f9036ce32283dd1b320b31ec5",
+        "provenance_id": "c85ccc94df34910e91bfd1c76f7fdc80366a187b379c0fa84d417901a92ec4e8"
+      },
+      {
+        "object": "dde5d3bdadf83b7c911155db27b5b64e7b1edc5b88cbd359f4f7e7b3c23c6a84",
+        "old_version": "3996f9e0dc3e077fdbbda3a0887803be86684d4536bd9eca6c81474f4b453d7e",
+        "new_version": "009f8bab4ac6e16a50e15f607b52e5a73e216a6b3151fd28b437e91a61e7f450",
+        "content": "7a9fbb293256034b04e607e698da5b29d95225c2680f019c7c503ed33cd71f58",
+        "provenance_id": "87c345a9483036d44c5f01ee9f902c0b3ca6ce474e1b55c3d68427064ca67ab5"
+      },
+      {
+        "object": "eec3a5e8623d0023a41c4eb00f029d6b57f65cb7e61ac15b3770fc5bb6a1e70c",
+        "old_version": "d619f98c33d46c2f46424393058dc7a185ab8e14618b51ca93bc469a4a51e5ca",
+        "new_version": "986fc1ceb5e02c6e79fe7930d92e44c7c036f79c9bb5dc9a0fa9abb4cf004658",
+        "content": "29822810a5fe4477c497cb05e2ef26277b28040ab837a2dbfa603a73e6475dc2",
+        "provenance_id": "6895ac3ea215f2f76b6fedcf86c70d7e518e5111669c925fb9a6bfdbc0735dd2"
+      },
+      {
+        "object": "faf10ca2a68fa3a63ad34fcea5da4529b31acd41eb904bd9c4d6a3c4265e33db",
+        "old_version": "6eaea5292a01d7c9dfa1d30755a5c665b2d389edeef8de8cdb399dc5462dd474",
+        "new_version": "ad635d01f33fb3384563955519118af1beda944316d31375c8752800ccfaf566",
+        "content": "881fedb4f0f14f1af3845703469f46e478210765b74d3a7faa0577486f1361c4",
+        "provenance_id": "e1632d6e0f839ff75ff7b7d176c706eeb3fd6fb0656dfd129ab9f0f73f2442e2"
+      },
+      {
+        "object": "feadebfae8e178e5b673e22c1d8fe1c13278c5e745a1c7048724cc5bf637599e",
+        "old_version": "3a684565c5bb110f1a3767cda086e23cb9cfa7b606cefd353bcc28046708375e",
+        "new_version": "85fc538f787d185d952fb2e43761e06ebcbd181f159e8459eac6b61007a6db07",
+        "content": "d66b91fa2714308e8ff9b5928dbea89a78895ca00469456b5c48186fe4d68fe2",
+        "provenance_id": "50a12675788c51b53a2aaece81a7ca3758b57a543a05b84155eb429c4330f838"
+      }
+    ],
+    "read_back": {
+      "content": "20637feb68b0526cf5037a2a5bb46a2d6ca214656253179d4856eaba03c7f5f5",
+      "object_id": "096c37d54f7c8911f3fd31fcf54452e748d7c8c069e3bcba3ea8ca61afb52410",
+      "records": [
+        {
+          "provenance_id": "9cb3efef69f737db435443aeec793100e07c2d2b0acf667ade1de48ce64186a8",
+          "record": {
+            "determinism": "exact",
+            "environment": {
+              "env_hash": null,
+              "tool": "weftfs",
+              "version": "0.8.0"
+            },
+            "inputs": [
+              {
+                "content": "4deac99517c04bc14caeb4b1b432c914c7a7b08e98397f953f4bc189bc52d6c6",
+                "object": "096c37d54f7c8911f3fd31fcf54452e748d7c8c069e3bcba3ea8ca61afb52410",
+                "role": "source"
+              }
+            ],
+            "operation": "rebase",
+            "outputs": [
+              "20637feb68b0526cf5037a2a5bb46a2d6ca214656253179d4856eaba03c7f5f5"
+            ],
+            "params": {
+              "cost_model": "measured",
+              "estimated_decode_ns": 86133777,
+              "from_strategy": "weight-delta",
+              "new_version": "2bc3c3bac95522a6260dd902984a1c3294353522c3d044af5414d44c61e83fb6",
+              "old_version": "7ca19fbd02c0f780083c02243d31fa1bfbc7cf01970ec7ed156a13515f0b3ff4",
+              "read_cost_ns": 2756280864,
+              "reads": 32,
+              "threshold_ns": 200000000,
+              "to_strategy": "float-tensor"
+            },
+            "principal": {
+              "gid": 0,
+              "uid": 0
+            },
+            "schema": "weft.provenance.v1",
+            "timestamp_ns": 1793969918521717992
+          }
+        }
+      ]
+    }
+  },
+  "per_tensor": [
+    {
+      "name": "model.embed_tokens.weight",
+      "object_id": "24e73a18342fef847805f2c554c8a0f3cee13c4568c62c8bc1b8648a014d8452",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 272269312,
+      "old_physical_bytes": 153245489,
+      "new_physical_bytes": 180547519,
+      "physical_delta_bytes": 27302030,
+      "old_decode_ns": 2688453967,
+      "new_decode_ns": 1240237623,
+      "read_cost_ns": 86030526944,
+      "policy_break_even_reads": 1,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 3072.953,
+      "median_ms_after": 1305.284
+    },
+    {
+      "name": "model.layers.0.mlp.down_proj.weight",
+      "object_id": "feadebfae8e178e5b673e22c1d8fe1c13278c5e745a1c7048724cc5bf637599e",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4519095,
+      "new_physical_bytes": 5798340,
+      "physical_delta_bytes": 1279245,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 94.623,
+      "median_ms_after": 40.246
+    },
+    {
+      "name": "model.layers.0.mlp.gate_proj.weight",
+      "object_id": "201a47e4b49f8b9eebe8c61d606633575df7745da6e1f4b2f5f5a54c78773a10",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4564502,
+      "new_physical_bytes": 5802340,
+      "physical_delta_bytes": 1237838,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 94.893,
+      "median_ms_after": 39.406
+    },
+    {
+      "name": "model.layers.0.mlp.up_proj.weight",
+      "object_id": "096c37d54f7c8911f3fd31fcf54452e748d7c8c069e3bcba3ea8ca61afb52410",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4544048,
+      "new_physical_bytes": 5781631,
+      "physical_delta_bytes": 1237583,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 94.734,
+      "median_ms_after": 39.122
+    },
+    {
+      "name": "model.layers.1.mlp.down_proj.weight",
+      "object_id": "c0b19368698fdca3bcee536dcf43e0194ef2e1808dee4384c11676a22146edad",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4644714,
+      "new_physical_bytes": 5787655,
+      "physical_delta_bytes": 1142941,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.168,
+      "median_ms_after": 39.665
+    },
+    {
+      "name": "model.layers.1.mlp.gate_proj.weight",
+      "object_id": "dde5d3bdadf83b7c911155db27b5b64e7b1edc5b88cbd359f4f7e7b3c23c6a84",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4611663,
+      "new_physical_bytes": 5793457,
+      "physical_delta_bytes": 1181794,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.735,
+      "median_ms_after": 39.874
+    },
+    {
+      "name": "model.layers.1.mlp.up_proj.weight",
+      "object_id": "09a82c8f9a974beff70022120b2afcaad5d69dabebe71f5a84151dc9c262e372",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4668718,
+      "new_physical_bytes": 5779383,
+      "physical_delta_bytes": 1110665,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.388,
+      "median_ms_after": 39.875
+    },
+    {
+      "name": "model.layers.10.mlp.down_proj.weight",
+      "object_id": "c46db961687428785be1f0b33e2a2e2dc65d6d8cbda9a04959d880aa81440320",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4800841,
+      "new_physical_bytes": 5832466,
+      "physical_delta_bytes": 1031625,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.853,
+      "median_ms_after": 40.397
+    },
+    {
+      "name": "model.layers.10.mlp.gate_proj.weight",
+      "object_id": "faf10ca2a68fa3a63ad34fcea5da4529b31acd41eb904bd9c4d6a3c4265e33db",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4828071,
+      "new_physical_bytes": 5819053,
+      "physical_delta_bytes": 990982,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.289,
+      "median_ms_after": 39.444
+    },
+    {
+      "name": "model.layers.10.mlp.up_proj.weight",
+      "object_id": "b411752604cbec82570f4962c2b44cd4f7f042360d22da92ffdd5abb15a72016",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4786331,
+      "new_physical_bytes": 5802438,
+      "physical_delta_bytes": 1016107,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.09,
+      "median_ms_after": 39.481
+    },
+    {
+      "name": "model.layers.11.mlp.down_proj.weight",
+      "object_id": "99e0f5ccd6cd0cc3a8aba079e9dbd1acc5928810ebc92d93fece3f2020322682",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4807570,
+      "new_physical_bytes": 5831858,
+      "physical_delta_bytes": 1024288,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.891,
+      "median_ms_after": 40.05
+    },
+    {
+      "name": "model.layers.11.mlp.gate_proj.weight",
+      "object_id": "0f4188c807ff7467a35a609f0dadfb7ae81dee3c3b5d9e087e67fabd2d8491e5",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4839511,
+      "new_physical_bytes": 5811899,
+      "physical_delta_bytes": 972388,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 96.176,
+      "median_ms_after": 39.602
+    },
+    {
+      "name": "model.layers.11.mlp.up_proj.weight",
+      "object_id": "eec3a5e8623d0023a41c4eb00f029d6b57f65cb7e61ac15b3770fc5bb6a1e70c",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4777926,
+      "new_physical_bytes": 5803482,
+      "physical_delta_bytes": 1025556,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.795,
+      "median_ms_after": 39.596
+    },
+    {
+      "name": "model.layers.12.mlp.down_proj.weight",
+      "object_id": "0effeea78b6697130af89b1909a6868867fa2c789e1d46085c35b614a293bf44",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4797509,
+      "new_physical_bytes": 5827520,
+      "physical_delta_bytes": 1030011,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 95.9,
+      "median_ms_after": 39.635
+    },
+    {
+      "name": "model.layers.12.mlp.gate_proj.weight",
+      "object_id": "623eb6de2290b4f07a94c8a9e219119c9f06bf3a84d59787b56af2994afb8ff7",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4845778,
+      "new_physical_bytes": 5815799,
+      "physical_delta_bytes": 970021,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 94.327,
+      "median_ms_after": 39.655
+    },
+    {
+      "name": "model.layers.12.mlp.up_proj.weight",
+      "object_id": "d197eae1a2101ca1864958342b94f7fee9b86dc4ef8a9eadf2d398a4ed44135a",
+      "segment": "hot",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 32,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4777486,
+      "new_physical_bytes": 5799772,
+      "physical_delta_bytes": 1022286,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 2756280864,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": true,
+      "predicted": true,
+      "median_ms_before": 93.722,
+      "median_ms_after": 39.48
+    },
+    {
+      "name": "model.layers.13.mlp.down_proj.weight",
+      "object_id": "903dcf85e04426b0675f9636feaddb2935147d52b750484e7caeedaa3190a0e5",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4781011,
+      "new_physical_bytes": 5827409,
+      "physical_delta_bytes": 1046398,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.882,
+      "median_ms_after": 94.137
+    },
+    {
+      "name": "model.layers.13.mlp.gate_proj.weight",
+      "object_id": "b52bd168cc640821098a89001a4621f71d2ddecf9b4c268f0ddcbeb7ea27df17",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4847579,
+      "new_physical_bytes": 5817948,
+      "physical_delta_bytes": 970369,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.021,
+      "median_ms_after": 94.857
+    },
+    {
+      "name": "model.layers.13.mlp.up_proj.weight",
+      "object_id": "2ec5097089d57c297d695241d03aa8346469cd60df7ffcab2267c5c51a368baf",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4763404,
+      "new_physical_bytes": 5800177,
+      "physical_delta_bytes": 1036773,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 94.147,
+      "median_ms_after": 94.566
+    },
+    {
+      "name": "model.layers.14.mlp.down_proj.weight",
+      "object_id": "7b16ef057d0df77baedd90aee9a2789feb369133c9618238b1d6d904d9a9593e",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4769809,
+      "new_physical_bytes": 5826744,
+      "physical_delta_bytes": 1056935,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 94.05,
+      "median_ms_after": 95.077
+    },
+    {
+      "name": "model.layers.14.mlp.gate_proj.weight",
+      "object_id": "2f60c794e1c04967e0e6a94b7fa2783e3ca37570fdf215eaa563c6a55665fde5",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4838904,
+      "new_physical_bytes": 5815539,
+      "physical_delta_bytes": 976635,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.703,
+      "median_ms_after": 94.417
+    },
+    {
+      "name": "model.layers.14.mlp.up_proj.weight",
+      "object_id": "953b92b6f3f47929b12b724b87066a7b88f4c2f7975c8c1012d9ff057382f07c",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4771607,
+      "new_physical_bytes": 5798878,
+      "physical_delta_bytes": 1027271,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.39,
+      "median_ms_after": 93.703
+    },
+    {
+      "name": "model.layers.15.mlp.down_proj.weight",
+      "object_id": "b176e083ab4b6f88d11b899938a84d91ff9eb72a4fc68b61c25735cd1489cee7",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4747998,
+      "new_physical_bytes": 5835315,
+      "physical_delta_bytes": 1087317,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.73,
+      "median_ms_after": 94.954
+    },
+    {
+      "name": "model.layers.15.mlp.gate_proj.weight",
+      "object_id": "2ad133ef0eadf591d91b7154dc6f5ea567a73061c52e96ea7868a4dd47cbb087",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4827556,
+      "new_physical_bytes": 5819480,
+      "physical_delta_bytes": 991924,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.626,
+      "median_ms_after": 94.738
+    },
+    {
+      "name": "model.layers.15.mlp.up_proj.weight",
+      "object_id": "fcc004a89e71647443dd0b206c8dbb7a67af3c8a6e8b425124d76a1ac2faaab8",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4749900,
+      "new_physical_bytes": 5805202,
+      "physical_delta_bytes": 1055302,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 94.41,
+      "median_ms_after": 94.2
+    },
+    {
+      "name": "model.layers.16.mlp.down_proj.weight",
+      "object_id": "0196de6a04ee3d45c349ff447fe242ae616409d4dd1ada183cd4ac8ea782961b",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4711653,
+      "new_physical_bytes": 5810085,
+      "physical_delta_bytes": 1098432,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.514,
+      "median_ms_after": 95.079
+    },
+    {
+      "name": "model.layers.16.mlp.gate_proj.weight",
+      "object_id": "b208598e48fb66f53f5806363d6dd3b0c16bc4aa3457a13d58b463528009d634",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4800233,
+      "new_physical_bytes": 5822198,
+      "physical_delta_bytes": 1021965,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.185,
+      "median_ms_after": 93.918
+    },
+    {
+      "name": "model.layers.16.mlp.up_proj.weight",
+      "object_id": "11f64fe6e4bdef4cfce48014900607efa88279990d7a70c340a33a2b8ba86abe",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4766055,
+      "new_physical_bytes": 5804337,
+      "physical_delta_bytes": 1038282,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 94.81,
+      "median_ms_after": 93.746
+    },
+    {
+      "name": "model.layers.17.mlp.down_proj.weight",
+      "object_id": "37607a639a6703576d105f7faccbb051b4397cba6fbe63241c8e669868cfcf2b",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4702888,
+      "new_physical_bytes": 5799486,
+      "physical_delta_bytes": 1096598,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.918,
+      "median_ms_after": 94.515
+    },
+    {
+      "name": "model.layers.17.mlp.gate_proj.weight",
+      "object_id": "6dd530d8b31558100a02cd53a89d29af4a963f72b2230359ab1ed2c8991937f4",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4749482,
+      "new_physical_bytes": 5807302,
+      "physical_delta_bytes": 1057820,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.136,
+      "median_ms_after": 94.228
+    },
+    {
+      "name": "model.layers.17.mlp.up_proj.weight",
+      "object_id": "f568c50f2fb3fd98b246dac92ac272e6b101fb5554cf4d81e0a635f5953c0fcc",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4752449,
+      "new_physical_bytes": 5790270,
+      "physical_delta_bytes": 1037821,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.348,
+      "median_ms_after": 93.751
+    },
+    {
+      "name": "model.layers.18.mlp.down_proj.weight",
+      "object_id": "e084ae664e28fc826bc31d829301d39a7b383fad5d30fb81af2078e853b64a6d",
+      "segment": "warm",
+      "from_strategy": "weight-delta",
+      "to_strategy": "float-tensor",
+      "reads": 2,
+      "logical_bytes": 8716288,
+      "old_physical_bytes": 4714335,
+      "new_physical_bytes": 5797929,
+      "physical_delta_bytes": 1083594,
+      "old_decode_ns": 86133777,
+      "new_decode_ns": 39721598,
+      "read_cost_ns": 172267554,
+      "policy_break_even_reads": 3,
+      "storage_break_even_reads": 1,
+      "selected": false,
+      "predicted": false,
+      "median_ms_before": 95.627,
+      "median_ms_after": 94.536
+    }
+  ],
+  "verification": {
+    "verify": {
+      "checked_capabilities": 0,
+      "checked_capability_envelopes": 0,
+      "checked_causal": 290,
+      "checked_chunks": 98,
+      "checked_commits": 618,
+      "checked_context_roots": 0,
+      "checked_manifests": 584,
+      "checked_objects": 582,
+      "checked_provenance": 16,
+      "checked_representations": 484,
+      "commit": "5189ebf9c6c5f26a8d039768908359e09cdd262dcd653e04dc39267cd589194e",
+      "full": true,
+      "generation": 618,
+      "ok": true,
+      "problems": [],
+      "rejected_generations": []
+    },
+    "exact": {
+      "bytes": 988097824,
+      "exact": true,
+      "ms": 10439.197,
+      "path": "/work/.docker-cache/rebase-scale/exact.safetensors",
+      "removed": true,
+      "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "source_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "tile_stats": {
+        "bytes": 988065536,
+        "max_inflight_bytes": 67108864,
+        "observed_max_inflight_bytes": 0,
+        "observed_max_inflight_tasks": 0,
+        "oversized_tiles": 0,
+        "tensors": 290,
+        "threads_effective": 1,
+        "threads_requested": 1,
+        "tiles": 0
+      }
+    },
+    "snapshot": {
+      "name": {
+        "commit": "6d985a1fbb7e7dc267018963b915fe878dc80821da590bbfe5a50c579588dd89",
+        "name": "before-rebase"
+      },
+      "tensors_checked": 32,
+      "content_unchanged": true,
+      "refs_unchanged": true
+    }
+  },
+  "checks": [
+    {
+      "name": "corpus_sha256",
+      "hard": true,
+      "ok": true,
+      "detail": "both cached checkpoints re-hashed against the LFS SHA-256 in the court script"
+    },
+    {
+      "name": "ingest_verify",
+      "hard": true,
+      "ok": true,
+      "detail": "ingest verify ok=True"
+    },
+    {
+      "name": "rebaseable_deltas_present",
+      "hard": true,
+      "ok": true,
+      "detail": "73 weight-delta tensors >= 32"
+    },
+    {
+      "name": "dry_apply_match",
+      "hard": true,
+      "ok": true,
+      "detail": "dry=16 applied=16"
+    },
+    {
+      "name": "reapply_noop",
+      "hard": true,
+      "ok": true,
+      "detail": "second apply wrote 0 objects"
+    },
+    {
+      "name": "verify_full",
+      "hard": true,
+      "ok": true,
+      "detail": "ok=True problems=0"
+    },
+    {
+      "name": "restore_hash_exact",
+      "hard": true,
+      "ok": true,
+      "detail": "every instruct tensor BLAKE3 matches its ingest hash"
+    },
+    {
+      "name": "restore_logical_roots_exact",
+      "hard": true,
+      "ok": true,
+      "detail": "every recomputed LogicalTensorRoot matches the written root"
+    },
+    {
+      "name": "snapshot_content_unchanged",
+      "hard": true,
+      "ok": true,
+      "detail": "snapshot before-rebase returns the same logical root and SHA-256 for every read tensor"
+    },
+    {
+      "name": "snapshot_refs_unchanged",
+      "hard": true,
+      "ok": true,
+      "detail": "snapshots before=['before-rebase'] after=['before-rebase']"
+    },
+    {
+      "name": "source_reassembly_exact",
+      "hard": true,
+      "ok": true,
+      "detail": "reassembled sha256 fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe vs source fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+    },
+    {
+      "name": "selected_decode_faster",
+      "hard": true,
+      "ok": true,
+      "detail": "selected per-tensor medians 4501.537 ms -> 1900.812 ms"
+    },
+    {
+      "name": "provenance_visible",
+      "hard": true,
+      "ok": true,
+      "detail": "weftfs provenance show returns the first applied rebase receipt"
+    },
+    {
+      "name": "policy_matches_economics",
+      "hard": false,
+      "ok": true,
+      "detail": "0 of 32 read tensors differ from the predicted selection"
+    }
+  ],
+  "losses": [
+    {
+      "kind": "physical_growth",
+      "tensor": "model.embed_tokens.weight",
+      "detail": "rebase added 27302030 bytes for 32 reads and 46342923008 ns of saved decode time",
+      "bytes": 27302030
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "detail": "rebase added 1279245 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1279245
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "detail": "rebase added 1237838 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1237838
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "detail": "rebase added 1237583 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1237583
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.1.mlp.down_proj.weight",
+      "detail": "rebase added 1142941 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1142941
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.1.mlp.gate_proj.weight",
+      "detail": "rebase added 1181794 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1181794
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.1.mlp.up_proj.weight",
+      "detail": "rebase added 1110665 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1110665
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.10.mlp.down_proj.weight",
+      "detail": "rebase added 1031625 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1031625
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.10.mlp.gate_proj.weight",
+      "detail": "rebase added 990982 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 990982
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.10.mlp.up_proj.weight",
+      "detail": "rebase added 1016107 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1016107
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.11.mlp.down_proj.weight",
+      "detail": "rebase added 1024288 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1024288
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.11.mlp.gate_proj.weight",
+      "detail": "rebase added 972388 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 972388
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.11.mlp.up_proj.weight",
+      "detail": "rebase added 1025556 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1025556
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.12.mlp.down_proj.weight",
+      "detail": "rebase added 1030011 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1030011
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.12.mlp.gate_proj.weight",
+      "detail": "rebase added 970021 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 970021
+    },
+    {
+      "kind": "physical_growth",
+      "tensor": "model.layers.12.mlp.up_proj.weight",
+      "detail": "rebase added 1022286 bytes for 32 reads and 1485189728 ns of saved decode time",
+      "bytes": 1022286
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.13.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1046398 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.13.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.13.mlp.gate_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 970369 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.13.mlp.gate_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.13.mlp.up_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1036773 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.13.mlp.up_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.14.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1056935 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.14.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.14.mlp.gate_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 976635 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.14.mlp.gate_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.14.mlp.up_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1027271 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.14.mlp.up_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.15.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1087317 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.15.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.15.mlp.gate_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 991924 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.15.mlp.gate_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.15.mlp.up_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1055302 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.15.mlp.up_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.16.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1098432 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.16.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.16.mlp.gate_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1021965 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.16.mlp.gate_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.16.mlp.up_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1038282 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.16.mlp.up_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.17.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1096598 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.17.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.17.mlp.gate_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1057820 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.17.mlp.gate_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.17.mlp.up_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1037821 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.17.mlp.up_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "counterfactual_not_rebased",
+      "tensor": "model.layers.18.mlp.down_proj.weight",
+      "detail": "2 reads did not cross the 200000000 ns policy threshold; rebasing would have added 1083594 bytes to save 92824358 ns",
+      "reads": 2
+    },
+    {
+      "kind": "policy_more_conservative_than_storage",
+      "tensor": "model.layers.18.mlp.down_proj.weight",
+      "detail": "not selected at 2 reads, but the measured bytes/ns trade pays back at 1 read(s); the fixed 200000000 ns policy threshold is the binding constraint",
+      "reads": 2
+    },
+    {
+      "kind": "store_growth_total",
+      "detail": "tree grew 277231717 bytes; data excluding advisory indexes grew 267676389 bytes and indexes grew 9555328; current-state representation bytes grew 43575360; the before-rebase snapshot and the commit history retain the old delta frames, so GC cannot reclaim all of the growth",
+      "bytes": 277231717
+    }
+  ],
+  "notes": [
+    "One process at a time; page cache is warm for the timed reads.",
+    "The before-rebase snapshot pins the old delta frames, so the after-rebase retained-byte total includes both representations.",
+    "Per-tensor read times are medians of 5 reads after one warm-up read; absolute times are host- and cache-dependent.",
+    "The counterfactual economics come from a second dry run at threshold=1; it writes nothing.",
+    "The calibration was measured with the release build in this court; it is not portable to another host."
+  ]
+}
