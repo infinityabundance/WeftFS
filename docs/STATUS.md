@@ -4044,7 +4044,7 @@ conditional `PUT` and is recorded as a residual, not as a pass.
 
 ### Evidence
 
-* `tests/s3_fencing.rs` (MinIO court): **8/8** in 10.72 s. Real `SIGSTOP` child
+* `tests/s3_fencing.rs` (MinIO court): **8/8** in 15.23 s. Real `SIGSTOP` child
   (the test binary re-executes itself), reclaimed lease, `SIGCONT`; paused
   writer fence 2 → successor fence 3, `Busy`, paused generation and head
   unchanged, published head the successor's, `/fenced` absent, `verify --full`

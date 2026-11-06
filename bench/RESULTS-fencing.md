@@ -176,7 +176,7 @@ All runs are in the repository's Docker courts under unchanged hard limits
 (memory 3g / swap 3g, pids 1024, cpus 4, bounded `/tmp`, `cap-drop=ALL`,
 `no-new-privileges`).
 
-### 4.1 `tests/s3_fencing.rs` — 8/8 in the MinIO court (15.23 s)
+### 4.1 `tests/s3_fencing.rs` — 8/8 in the MinIO court (15.23 s, 3 s lease)
 
 Receipt `bench/receipts/s3-court-20261106T174609Z.json` (6 backend + 8 fencing
 tests, MinIO RELEASE.2025-04-22T22-12-26Z sha256 `53e2a2cb…bb817c`).
