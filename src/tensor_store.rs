@@ -72,6 +72,10 @@ pub enum TensorStrategy {
     TensorTiled,
     /// One mode-11 `WEIGHT_DELTA` frame against the causal parent.
     WeightDelta,
+    /// One mode-16 `SPARSE_DELTA` frame against the causal parent. The same
+    /// exact word-wise delta as mode 11, stored as a zero-run stream; it is
+    /// cheaper only when the delta is sparse.
+    SparseDelta,
     /// One mode-14 `SEMANTIC_DELTA` frame against a same-semantic-root base.
     SemanticDelta,
     /// One mode-12 `KV_CACHE` frame (readable; never produced by this planner).
@@ -90,6 +94,7 @@ impl TensorStrategy {
             TensorStrategy::TensorSharded => "tensor-sharded",
             TensorStrategy::TensorTiled => "tensor-tiled",
             TensorStrategy::WeightDelta => "weight-delta",
+            TensorStrategy::SparseDelta => "sparse-delta",
             TensorStrategy::SemanticDelta => "semantic-delta",
             TensorStrategy::KvCache => "kv-cache",
             TensorStrategy::Activation => "activation",
@@ -105,6 +110,7 @@ impl TensorStrategy {
             "tensor-sharded" => Ok(TensorStrategy::TensorSharded),
             "tensor-tiled" => Ok(TensorStrategy::TensorTiled),
             "weight-delta" => Ok(TensorStrategy::WeightDelta),
+            "sparse-delta" => Ok(TensorStrategy::SparseDelta),
             "semantic-delta" => Ok(TensorStrategy::SemanticDelta),
             "kv-cache" => Ok(TensorStrategy::KvCache),
             "activation" => Ok(TensorStrategy::Activation),
@@ -122,6 +128,7 @@ impl TensorStrategy {
             TensorStrategy::TensorSharded => Some(10),
             TensorStrategy::TensorTiled => Some(15),
             TensorStrategy::WeightDelta => Some(11),
+            TensorStrategy::SparseDelta => Some(16),
             TensorStrategy::KvCache => Some(12),
             TensorStrategy::Activation => Some(13),
             TensorStrategy::SemanticDelta => Some(14),
@@ -132,7 +139,9 @@ impl TensorStrategy {
     pub fn uses_dependency(self) -> bool {
         matches!(
             self,
-            TensorStrategy::WeightDelta | TensorStrategy::SemanticDelta
+            TensorStrategy::WeightDelta
+                | TensorStrategy::SparseDelta
+                | TensorStrategy::SemanticDelta
         )
     }
 
@@ -151,6 +160,7 @@ impl TensorStrategy {
             TensorStrategy::TensorSharded => CostClass::TensorSharded,
             TensorStrategy::TensorTiled => CostClass::TensorTiled,
             TensorStrategy::WeightDelta => CostClass::WeightDelta,
+            TensorStrategy::SparseDelta => CostClass::SparseDelta,
             TensorStrategy::SemanticDelta => CostClass::SemanticDelta,
             TensorStrategy::KvCache => CostClass::KvCache,
             TensorStrategy::Activation => CostClass::Activation,
@@ -1639,6 +1649,62 @@ impl Store {
             }
         }
 
+        // Mode 16 sparse-delta against the causal parent. The same exact delta
+        // as mode 11, priced like it; the planner keeps mode 11 whenever its
+        // Huffman planes are smaller (dense deltas) and mode 16 when the
+        // zero-run stream is smaller (sparse deltas).
+        if independent_only {
+            out.push(skipped(
+                TensorStrategy::SparseDelta,
+                "rebase requires an independent representation".to_owned(),
+            ));
+        } else {
+            match self.prepare_delta(
+                dtype,
+                shape,
+                logical,
+                causal,
+                &limits,
+                TensorStrategy::SparseDelta,
+            ) {
+                Ok(Some((frame, dependency))) => {
+                    let physical = frame.len() as u64;
+                    let estimate =
+                        estimated_decode_ns(TensorStrategy::SparseDelta, size, options.cost_model);
+                    out.push(PreparedCandidate {
+                        candidate: TensorPlanCandidate {
+                            strategy: TensorStrategy::SparseDelta,
+                            applicable: true,
+                            detail: "mode 16 against the causal parent".to_owned(),
+                            physical_bytes: Some(physical),
+                            estimated_decode_ns: Some(estimate),
+                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            dependency: Some(dependency),
+                        },
+                        artifact: Some(PreparedArtifact {
+                            kind: RepresentationKind::Tensor,
+                            strategy_name: "sparse-delta".to_owned(),
+                            frame: Some(frame),
+                            dependencies: vec![dependency],
+                            tensor: Some(TensorRepresentation {
+                                tensor_mode: 16,
+                                dtype,
+                                shape: shape.to_vec(),
+                                logical_root: self
+                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                layout: layout.to_value(dtype, shape)?,
+                            }),
+                        }),
+                    });
+                }
+                Ok(None) => out.push(skipped(
+                    TensorStrategy::SparseDelta,
+                    "no usable causal parent with the same dtype/shape".to_owned(),
+                )),
+                Err(err) => out.push(skipped(TensorStrategy::SparseDelta, err.to_string())),
+            }
+        }
+
         // Mode 14 semantic-delta against a same-semantic-root candidate.
         if independent_only {
             out.push(skipped(
@@ -1772,7 +1838,10 @@ impl Store {
         limits: &Limits,
         strategy: TensorStrategy,
     ) -> Result<Option<(Vec<u8>, Hash32)>> {
-        if strategy != TensorStrategy::WeightDelta {
+        if !matches!(
+            strategy,
+            TensorStrategy::WeightDelta | TensorStrategy::SparseDelta
+        ) {
             return Ok(None);
         }
         let Some(weight) = dtype.weight_dtype() else {
@@ -1789,7 +1858,11 @@ impl Store {
             return Ok(None);
         }
         let base_frame = mode6_base_frame(&base_bytes, dtype, shape)?;
-        let frame = weftcodec::encode_weight_delta(logical, weight, shape, &base_frame, limits)?;
+        let frame = if strategy == TensorStrategy::SparseDelta {
+            weftcodec::encode_sparse_delta(logical, weight, shape, &base_frame, limits)?
+        } else {
+            weftcodec::encode_weight_delta(logical, weight, shape, &base_frame, limits)?
+        };
         Ok(Some((frame, base_root)))
     }
 
@@ -2167,6 +2240,7 @@ impl Store {
             13 => Mode::ActivationStream,
             14 => Mode::SemanticDelta,
             15 => Mode::TensorTiled,
+            16 => Mode::SparseDelta,
             other => {
                 return Err(Error::corrupt(format!(
                     "tensor_mode {other} is not a defined tensor frame mode"
@@ -2183,8 +2257,21 @@ impl Store {
         let logical = match tensor.tensor_mode {
             9 => self.decode_mode9(&frame, tensor, manifest, &limits)?,
             10 => self.decode_mode10(&frame, tensor, manifest, &limits)?,
-            11 => self.decode_delta(&frame, tensor, rep, &limits, depth, seen, false)?,
-            14 => self.decode_delta(&frame, tensor, rep, &limits, depth, seen, true)?,
+            11 => {
+                self.decode_delta(&frame, tensor, rep, &limits, depth, seen, DeltaKind::Weight)?
+            }
+            14 => self.decode_delta(
+                &frame,
+                tensor,
+                rep,
+                &limits,
+                depth,
+                seen,
+                DeltaKind::Semantic,
+            )?,
+            16 => {
+                self.decode_delta(&frame, tensor, rep, &limits, depth, seen, DeltaKind::Sparse)?
+            }
             12 => self.decode_kv_page(&frame, tensor, &limits)?,
             13 => self.decode_activation(&frame, tensor, &limits)?,
             15 => self.decode_mode15(&frame, tensor, manifest, &limits)?,
@@ -2366,22 +2453,33 @@ impl Store {
         limits: &Limits,
         depth: usize,
         seen: &mut Vec<Hash32>,
-        semantic: bool,
+        kind: DeltaKind,
     ) -> Result<Vec<u8>> {
-        let (descriptor_dtype, descriptor_shape, base_hash) = if semantic {
-            let meta = weftcodec::semantic_delta_metadata(frame, limits)?;
-            (
-                TensorElementDtype::from_weight_name(meta.dtype.as_str())?,
-                meta.shape,
-                meta.base,
-            )
-        } else {
-            let meta = weftcodec::weight_delta_metadata(frame, limits)?;
-            (
-                TensorElementDtype::from_weight_name(meta.dtype.as_str())?,
-                meta.shape,
-                meta.base,
-            )
+        let (descriptor_dtype, descriptor_shape, base_hash) = match kind {
+            DeltaKind::Semantic => {
+                let meta = weftcodec::semantic_delta_metadata(frame, limits)?;
+                (
+                    TensorElementDtype::from_weight_name(meta.dtype.as_str())?,
+                    meta.shape,
+                    meta.base,
+                )
+            }
+            DeltaKind::Sparse => {
+                let meta = weftcodec::sparse_delta_metadata(frame, limits)?;
+                (
+                    TensorElementDtype::from_weight_name(meta.dtype.as_str())?,
+                    meta.shape,
+                    meta.base,
+                )
+            }
+            DeltaKind::Weight => {
+                let meta = weftcodec::weight_delta_metadata(frame, limits)?;
+                (
+                    TensorElementDtype::from_weight_name(meta.dtype.as_str())?,
+                    meta.shape,
+                    meta.base,
+                )
+            }
         };
         if descriptor_dtype != tensor.dtype {
             return Err(Error::corrupt(format!(
@@ -2430,15 +2528,22 @@ impl Store {
             ));
         }
         let base_frame = mode6_base_frame(&base_bytes, tensor.dtype, &tensor.shape)?;
-        let logical = if semantic {
-            weftcodec::decode_semantic_delta_with_base(
+        let logical = match kind {
+            DeltaKind::Semantic => weftcodec::decode_semantic_delta_with_base(
                 frame,
                 &base_frame,
                 &MapResolver::new(),
                 limits,
-            )?
-        } else {
-            weftcodec::decode_with_base_frame(frame, &base_frame, &MapResolver::new(), limits)?
+            )?,
+            DeltaKind::Sparse => weftcodec::decode_sparse_delta_with_base(
+                frame,
+                &base_frame,
+                &MapResolver::new(),
+                limits,
+            )?,
+            DeltaKind::Weight => {
+                weftcodec::decode_with_base_frame(frame, &base_frame, &MapResolver::new(), limits)?
+            }
         };
         if logical.len() as u64 != rep.decoded_size {
             return Err(Error::corrupt(
@@ -2551,6 +2656,17 @@ fn apply_tensor_attrs(
         Value::Str(strategy.to_owned()),
     );
     Ok(())
+}
+
+/// Which exact word-wise delta frame a `kind:"tensor"` manifest names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DeltaKind {
+    /// Mode 11 `WEIGHT_DELTA` (Huffman byte planes).
+    Weight,
+    /// Mode 14 `SEMANTIC_DELTA` (semantic-root-checked mode 11 planes).
+    Semantic,
+    /// Mode 16 `SPARSE_DELTA` (zero-run stream).
+    Sparse,
 }
 
 /// Copy a region into a row-major tensor buffer.

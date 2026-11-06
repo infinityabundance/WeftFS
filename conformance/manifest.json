@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "753c8b3e2cbd76e1270b3ea194890100d16783ad9c73fae09a50a5532897ff30",
+  "aggregate_sha256": "1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 186,
+    "frame": 205,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
-      "aggregate_sha256_from": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
-      "aggregate_sha256_to": "276e37bd8a9b13b055fc484cf9e43a21824eb07218f108389e354d3136cb65b7",
-      "common_files": 300,
+      "aggregate_sha256_common": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
+      "aggregate_sha256_from": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
+      "aggregate_sha256_to": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
+      "common_files": 319,
       "differing": [],
-      "files_from": 300,
-      "files_to": 300,
+      "files_from": 319,
+      "files_to": 319,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -351,10 +351,34 @@
       ]
     },
     "16": {
+      "error": 14,
+      "valid": 4,
+      "vectors": [
+        "WeftCodec/conformance/v1/sparse-delta/001_bf16_all_zero_delta.json",
+        "WeftCodec/conformance/v1/sparse-delta/002_fp32_one_nonzero_word.json",
+        "WeftCodec/conformance/v1/sparse-delta/003_q8_0_several_runs_to_the_end.json",
+        "WeftCodec/conformance/v1/sparse-delta/004_fp16_dense_every_word.json",
+        "WeftCodec/conformance/v1/sparse-delta/101_unknown_op.json",
+        "WeftCodec/conformance/v1/sparse-delta/102_unknown_sparse_codec.json",
+        "WeftCodec/conformance/v1/sparse-delta/103_storage_bytes_inconsistent.json",
+        "WeftCodec/conformance/v1/sparse-delta/104_delta_root_mismatch.json",
+        "WeftCodec/conformance/v1/sparse-delta/105_base_dtype_mismatch.json",
+        "WeftCodec/conformance/v1/sparse-delta/106_base_shape_mismatch.json",
+        "WeftCodec/conformance/v1/sparse-delta/107_missing_base.json",
+        "WeftCodec/conformance/v1/sparse-delta/108_run_count_exceeds_element_count.json",
+        "WeftCodec/conformance/v1/sparse-delta/109_run_past_element_count.json",
+        "WeftCodec/conformance/v1/sparse-delta/110_run_record_truncated.json",
+        "WeftCodec/conformance/v1/sparse-delta/111_trailing_bytes.json",
+        "WeftCodec/conformance/v1/sparse-delta/112_zero_nonzero_word.json",
+        "WeftCodec/conformance/v1/sparse-delta/113_run_count_limit.json",
+        "WeftCodec/conformance/v1/sparse-delta/114_dependency_cycle.json"
+      ]
+    },
+    "17": {
       "error": 1,
       "valid": 0,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json"
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json"
       ]
     },
     "2": {
@@ -483,7 +507,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 307,
+  "vector_count": 326,
   "vectors": [
     {
       "expect": {
@@ -1802,13 +1826,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved16.json"
       ],
       "mode": 16,
-      "mode_name": null,
+      "mode_name": "sparse_delta",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json",
-      "sha256": "f9657ceee0c3c5103ec4feb7901c68b473727c681036a767e995db285a67969e",
+      "sha256": "20a9777c7bcac2c17d61955d623283a08dae148d333014035fb9f9199c094b9c",
+      "superseded_by": "017_unknown_mode_reserved17",
       "supersedes": [
         "017_unknown_mode_reserved15"
       ],
       "vector_name": "017_unknown_mode_reserved16"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved17.json"
+      ],
+      "mode": 17,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json",
+      "sha256": "3a62bb12795145b816f2ffcc06cddd68734c320c1ab4aa0c85bba2822ec7d534",
+      "supersedes": [
+        "017_unknown_mode_reserved16"
+      ],
+      "vector_name": "017_unknown_mode_reserved17"
     },
     {
       "expect": {
@@ -3855,6 +3897,284 @@
       "sha256": "f07f2cc12e31961178820bbcea5e73706c868e51507469c25b688c336b4720c0",
       "subkind": "sharded",
       "vector_name": "108_malformed_huffman"
+    },
+    {
+      "expect": {
+        "content_root": "986de55fea15ba96e045178e3434ba9278c2ff12b396e770e60a5b3249a5f33d",
+        "decoded_sha256": "8148a49e8dbeb38468f9c9cada496dd8ec57c0ac63fe462b6f8fcf700b29df79",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/001_bf16_all_zero_delta.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/001_bf16_all_zero_delta.json",
+      "sha256": "0ec1bc440871c7f65034a5b05309037a801e8aca87985449901cc9a8d76df000",
+      "subkind": "sparse_delta",
+      "vector_name": "001_bf16_all_zero_delta"
+    },
+    {
+      "expect": {
+        "content_root": "0c9520d53fd2a8866d551621b2993be172188de695780c6435e44ec09c14eb2b",
+        "decoded_sha256": "31eefedfc6b9e3fa576d378ed8a48795ed7a09c4fa726ade1d086ffd40c0391f",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/002_fp32_one_nonzero_word.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/002_fp32_one_nonzero_word.json",
+      "sha256": "46ffcef456298d33bc7aa28f25012cff4fb0ef26cf34b2ae542d5a2cedf6e68b",
+      "subkind": "sparse_delta",
+      "vector_name": "002_fp32_one_nonzero_word"
+    },
+    {
+      "expect": {
+        "content_root": "c9d7c111c626469ac5a87e43d5fd88baa79eb182393be0870f975aa9682140ea",
+        "decoded_sha256": "07e83574f0a12c13f79d7945f522efdf5580cf7df1867cee5ac2953f06d773ae",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/003_q8_0_several_runs_to_the_end.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/003_q8_0_several_runs_to_the_end.json",
+      "sha256": "c3c6283d7c1b98d180dd31398db1b0b36a2105d66dcd2446672038e5ca058c7b",
+      "subkind": "sparse_delta",
+      "vector_name": "003_q8_0_several_runs_to_the_end"
+    },
+    {
+      "expect": {
+        "content_root": "ce16029c260b58dd7c9c360fc183c31f29ef01a20af664b067163a5f60424cc3",
+        "decoded_sha256": "3441053c61d1679ccde04c9bcaa372357574911bdb11e178be0699dffd03783f",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/004_fp16_dense_every_word.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/004_fp16_dense_every_word.json",
+      "sha256": "39e4136cb2571ddba58ddc4f2980067c7a7f03b892c94408ea2678f65c515d38",
+      "subkind": "sparse_delta",
+      "vector_name": "004_fp16_dense_every_word"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/101_unknown_op.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/101_unknown_op.json",
+      "sha256": "32d40f3c96c354e268a893f67e50f3f223950833b210fbff0774bd98461010c4",
+      "subkind": "sparse_delta",
+      "vector_name": "101_unknown_op"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/102_unknown_sparse_codec.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/102_unknown_sparse_codec.json",
+      "sha256": "ae978304afc9a52beea106defdaf64c721033f67045a55d3f8af62ae11c42e6f",
+      "subkind": "sparse_delta",
+      "vector_name": "102_unknown_sparse_codec"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/103_storage_bytes_inconsistent.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/103_storage_bytes_inconsistent.json",
+      "sha256": "c2ab20419f8f8e5b216e978a8ac700647de554f9762aa9240a4ad82a21dd7f21",
+      "subkind": "sparse_delta",
+      "vector_name": "103_storage_bytes_inconsistent"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/104_delta_root_mismatch.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/104_delta_root_mismatch.json",
+      "sha256": "79d13fd8e26882bd57db5632fc785496d8f2190fd9b2ca9250dbdd5035d84a7b",
+      "subkind": "sparse_delta",
+      "vector_name": "104_delta_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/105_base_dtype_mismatch.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/105_base_dtype_mismatch.json",
+      "sha256": "d199e7417c27c7c1ce1c0820729318529efd0b32a237cd13aa4264984879437a",
+      "subkind": "sparse_delta",
+      "vector_name": "105_base_dtype_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMismatch"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/106_base_shape_mismatch.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/106_base_shape_mismatch.json",
+      "sha256": "c7e5a69cec6c9d72b7814efb25cd9bfb74696c46b3137e8c6af935b73fec041c",
+      "subkind": "sparse_delta",
+      "vector_name": "106_base_shape_mismatch"
+    },
+    {
+      "expect": {
+        "error": "DependencyMissing"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/107_missing_base.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/107_missing_base.json",
+      "sha256": "074c7fc606f98d59723a30ef716ed677e904c16062d9e8b8727e42f0fb29b750",
+      "subkind": "sparse_delta",
+      "vector_name": "107_missing_base"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/108_run_count_exceeds_element_count.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/108_run_count_exceeds_element_count.json",
+      "sha256": "5b8be11fac396df21b3fe46611a60b90bae66850cc7711a4e99b4cb5384f7443",
+      "subkind": "sparse_delta",
+      "vector_name": "108_run_count_exceeds_element_count"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/109_run_past_element_count.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/109_run_past_element_count.json",
+      "sha256": "ab2983773d50450437c27700ea0591af128c04367d8989be7ce43110473b7fdb",
+      "subkind": "sparse_delta",
+      "vector_name": "109_run_past_element_count"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/110_run_record_truncated.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/110_run_record_truncated.json",
+      "sha256": "77e293e4ef88bc3de2c09b8e8782fcfc9fcc9cc013e0fe078cd11ce81a1bb3c0",
+      "subkind": "sparse_delta",
+      "vector_name": "110_run_record_truncated"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/111_trailing_bytes.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/111_trailing_bytes.json",
+      "sha256": "bde045fd89aa82eb6dae9a2b16fb601cf62d53093333b62450c69027adb42d15",
+      "subkind": "sparse_delta",
+      "vector_name": "111_trailing_bytes"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/112_zero_nonzero_word.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/112_zero_nonzero_word.json",
+      "sha256": "2b14c7a54a110e4dfcebf00f6b0b293792be263868258f7275505b6ed534408a",
+      "subkind": "sparse_delta",
+      "vector_name": "112_zero_nonzero_word"
+    },
+    {
+      "expect": {
+        "error": "LimitExceeded"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/113_run_count_limit.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/113_run_count_limit.json",
+      "sha256": "cdb423f2d6fa6309bcaab27614a36f13b3934940e12759333cb2d0f113a4271e",
+      "subkind": "sparse_delta",
+      "vector_name": "113_run_count_limit"
+    },
+    {
+      "expect": {
+        "error": "DependencyCycle"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/sparse-delta/114_dependency_cycle.json"
+      ],
+      "mode": 16,
+      "mode_name": "sparse_delta",
+      "path": "WeftCodec/conformance/v1/sparse-delta/114_dependency_cycle.json",
+      "sha256": "3b3e0fcc5acb17b2bb26e44731350449a10a8161d894f8d3f67f0010e0087532",
+      "subkind": "sparse_delta",
+      "vector_name": "114_dependency_cycle"
     },
     {
       "expect": {

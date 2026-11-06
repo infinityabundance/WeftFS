@@ -315,6 +315,7 @@ impl TensorRepresentation {
             "activation" => Some(13),
             "semantic-delta" => Some(14),
             "tensor-tiled" => Some(15),
+            "sparse-delta" => Some(16),
             _ => None,
         }
     }
@@ -329,13 +330,14 @@ impl TensorRepresentation {
             13 => Some("activation"),
             14 => Some("semantic-delta"),
             15 => Some("tensor-tiled"),
+            16 => Some("sparse-delta"),
             _ => None,
         }
     }
 
-    /// True when the mode carries a base-frame dependency (11/14).
+    /// True when the mode carries a base-frame dependency (11/14/16).
     pub fn mode_has_dependency(mode: u32) -> bool {
-        matches!(mode, 11 | 14)
+        matches!(mode, 11 | 14 | 16)
     }
 }
 
@@ -523,7 +525,7 @@ impl Representation {
         if TensorRepresentation::mode_has_dependency(tensor_mode) {
             if dependencies.len() != 1 {
                 return Err(Error::malformed(
-                    "weight-delta/semantic-delta representation requires exactly one dependency",
+                    "weight-delta/semantic-delta/sparse-delta representation requires exactly one dependency",
                 ));
             }
         } else if !dependencies.is_empty() {

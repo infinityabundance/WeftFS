@@ -267,7 +267,7 @@ fn mode11_round_trips_exact_bytes_and_stable_root_across_layouts() {
 }
 
 #[test]
-fn planner_bytes_only_chooses_weight_delta_for_a_near_duplicate_pair() {
+fn planner_bytes_only_chooses_the_smallest_delta_for_a_near_duplicate_pair() {
     let shape = [256u64, 512];
     let v1 = smooth_tensor(256 * 512 * 2, 0x33);
     let v2 = nudge_low_mantissa(&v1, 1_000);
@@ -298,7 +298,22 @@ fn planner_bytes_only_chooses_weight_delta_for_a_near_duplicate_pair() {
             &TensorPlanOptions::default(),
         )
         .unwrap();
-    assert_eq!(plan.chosen, TensorStrategy::WeightDelta, "plan {plan:?}");
+    // 1,000 changed words out of 131,072 elements: the mode-16 zero-run stream
+    // is the smaller of the two exact delta representations, so the planner
+    // picks it. Mode 11 is still priced and must be the larger one.
+    assert_eq!(plan.chosen, TensorStrategy::SparseDelta, "plan {plan:?}");
+    let weight = plan
+        .candidates
+        .iter()
+        .find(|candidate| candidate.strategy == TensorStrategy::WeightDelta)
+        .expect("weight-delta is a candidate");
+    assert!(weight.applicable);
+    assert!(
+        plan.chosen_physical_bytes < weight.physical_bytes.unwrap(),
+        "mode 16 {} bytes is not smaller than mode 11 {}",
+        plan.chosen_physical_bytes,
+        weight.physical_bytes.unwrap()
+    );
     let zstd = weftcodec::modes::encode_zstd(&v2, 3, Some(64 * 1024), &Limits::default()).unwrap();
     assert!(
         plan.chosen_physical_bytes * 2 < zstd.len() as u64,
@@ -405,7 +420,7 @@ fn planner_latency_weight_switches_to_the_faster_representation() {
             &TensorPlanOptions::default(),
         )
         .unwrap();
-    assert_eq!(bytes_only.chosen, TensorStrategy::WeightDelta);
+    assert_eq!(bytes_only.chosen, TensorStrategy::SparseDelta);
 
     let latency = store
         .plan_tensor(

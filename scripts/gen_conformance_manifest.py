@@ -52,6 +52,7 @@ MODE_NAMES = {
     13: "activation_stream",
     14: "semantic_delta",
     15: "tensor_tiled",
+    16: "sparse_delta",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -64,6 +65,7 @@ CODEC_DIRS = {
     "activation-stream": ("frame", "activation_stream", 13, "activation_stream"),
     "semantic-delta": ("frame", "semantic_delta", 14, "semantic_delta"),
     "tensor-tiled": ("frame", "tensor_tiled", 15, "frame"),
+    "sparse-delta": ("frame", "sparse_delta", 16, "sparse_delta"),
     "structured": ("wcb", None, None, "wcb"),
     "selectors": ("selector", None, None, "selector"),
     "context": ("context", "context_root", None, "context"),
@@ -379,6 +381,12 @@ def expectation_semantic_delta(vector):
     return ok(vector.get("target_hash"), decode_sha(vector.get("target_hex"))), None
 
 
+def expectation_sparse_delta(vector):
+    if "expect_error" in vector:
+        return error(vector["expect_error"]), None
+    return ok(vector.get("target_hash"), decode_sha(vector.get("target_hex"))), None
+
+
 def expectation_kv_cache(vector):
     if "expect_error" in vector:
         return error(vector["expect_error"]), None
@@ -425,6 +433,7 @@ EXPECTATIONS = {
     "sharded": expectation_sharded,
     "weight_delta": expectation_weight_delta,
     "semantic_delta": expectation_semantic_delta,
+    "sparse_delta": expectation_sparse_delta,
     "kv_cache": expectation_kv_cache,
     "activation_stream": expectation_activation_stream,
     "capability": expectation_capability,

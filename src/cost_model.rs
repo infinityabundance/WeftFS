@@ -68,6 +68,7 @@ pub enum CostClass {
     TensorSharded,
     TensorTiled,
     WeightDelta,
+    SparseDelta,
     SemanticDelta,
     KvCache,
     Activation,
@@ -82,6 +83,7 @@ impl CostClass {
             CostClass::TensorSharded => "tensor-sharded",
             CostClass::TensorTiled => "tensor-tiled",
             CostClass::WeightDelta => "weight-delta",
+            CostClass::SparseDelta => "sparse-delta",
             CostClass::SemanticDelta => "semantic-delta",
             CostClass::KvCache => "kv-cache",
             CostClass::Activation => "activation",
@@ -96,6 +98,7 @@ impl CostClass {
             "tensor-sharded" => CostClass::TensorSharded,
             "tensor-tiled" => CostClass::TensorTiled,
             "weight-delta" => CostClass::WeightDelta,
+            "sparse-delta" => CostClass::SparseDelta,
             "semantic-delta" => CostClass::SemanticDelta,
             "kv-cache" => CostClass::KvCache,
             "activation" => CostClass::Activation,
@@ -125,7 +128,7 @@ impl Coefficients {
 /// The original formulas were `size/200`, `size`, `size*3`, `size*4`; here
 /// `1_048_576/200` is rounded to `5_243` ns/MiB so the same integer arithmetic
 /// can run in both languages.
-const DECLARED: [(CostClass, Coefficients); 9] = [
+const DECLARED: [(CostClass, Coefficients); 10] = [
     (CostClass::Raw, Coefficients::new(20_000, 5_243)),
     (CostClass::Zstd, Coefficients::new(50_000, 1_048_576)),
     (
@@ -142,6 +145,14 @@ const DECLARED: [(CostClass, Coefficients); 9] = [
     ),
     (
         CostClass::WeightDelta,
+        Coefficients::new(100_000, 3_145_728),
+    ),
+    // SPARSE_DELTA reuses the WEIGHT_DELTA row: both decode one exact
+    // word-wise delta against the same base frame, and the run-stream decode
+    // was not separately calibrated. The row is labelled as reused, not
+    // measured.
+    (
+        CostClass::SparseDelta,
         Coefficients::new(100_000, 3_145_728),
     ),
     (
@@ -171,7 +182,7 @@ pub const MEASURED_CALIBRATION: &str = "weftfs-r2/decode-calibration/v1";
 /// Re-measured after the R2 Huffman and plane-join work; the previous table
 /// was `float-tensor 15_403_165`, `tensor-sharded 13_788_933`,
 /// `tensor-tiled 10_056_794`, `semantic-delta 7_228_350`.
-const MEASURED: [(CostClass, Coefficients); 9] = [
+const MEASURED: [(CostClass, Coefficients); 10] = [
     (CostClass::Raw, Coefficients::new(11_757, 307_019)),
     (CostClass::Zstd, Coefficients::new(21_285, 779_888)),
     (CostClass::FloatTensor, Coefficients::new(18_264, 4_683_726)),
@@ -181,6 +192,10 @@ const MEASURED: [(CostClass, Coefficients); 9] = [
     ),
     (CostClass::TensorTiled, Coefficients::new(14_131, 3_366_772)),
     (CostClass::WeightDelta, Coefficients::new(30_725, 5_293_987)),
+    // SPARSE_DELTA reuses the measured WEIGHT_DELTA row (not separately
+    // calibrated): the run-stream decoder does the same base read plus a
+    // varint walk, so mode 11's per-MiB cost is the conservative choice.
+    (CostClass::SparseDelta, Coefficients::new(30_725, 5_293_987)),
     (
         CostClass::SemanticDelta,
         Coefficients::new(31_891, 6_458_523),
@@ -251,6 +266,7 @@ mod tests {
             CostClass::TensorSharded,
             CostClass::TensorTiled,
             CostClass::WeightDelta,
+            CostClass::SparseDelta,
             CostClass::SemanticDelta,
             CostClass::KvCache,
             CostClass::Activation,

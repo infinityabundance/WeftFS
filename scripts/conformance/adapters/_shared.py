@@ -516,7 +516,7 @@ def frame_vector(binary, vector, work):
                 raise AdapterFailure("no error class in stderr: %s" % stderr.strip())
             return err(cls)
         raise Skip("adversarial verb %r has no adapter" % verb)
-    if subkind == "weight_delta" or subkind == "semantic_delta":
+    if subkind in ("weight_delta", "semantic_delta", "sparse_delta"):
         return decode_delta(binary, vector, work)
     if subkind == "sharded":
         return sharded(binary, vector, work)
@@ -580,6 +580,7 @@ def annotate(path, vector):
         "kv-cache": ("frame", "kv_cache"),
         "activation-stream": ("frame", "activation_stream"),
         "semantic-delta": ("frame", "semantic_delta"),
+        "sparse-delta": ("frame", "sparse_delta"),
         "structured": ("wcb", None),
         "selectors": ("selector", None),
         "context": ("context", "context_root"),
