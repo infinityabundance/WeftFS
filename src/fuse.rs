@@ -109,8 +109,10 @@ pub struct MountOptions {
     pub read_only: bool,
     /// Pinned commit for `--snapshot` / `--at` / context mounts.
     pub snapshot: Option<Hash32>,
-    /// Replayed state of `snapshot`, cached so lookups do not replay.
-    pub snapshot_state: Option<State>,
+    /// Replayed state of `snapshot`, cached so lookups do not replay. Shared
+    /// views of one server hold clones of one `Arc`, so N views pinned to the
+    /// same commit pay for the replay (and the state memory) once.
+    pub snapshot_state: Option<Arc<State>>,
     /// Optional capability narrowing for exact-id and saved-context views.
     pub capability: Option<CapabilityContext>,
     /// When present, the mount root is this Context Root's result set.
@@ -360,11 +362,92 @@ struct DirHandle {
 }
 
 /// The mounted filesystem.
+/// How a [`WeftFuse`] view reaches the store.
+///
+/// A single mount owns an exclusive handle (`Arc<Mutex<Store>>`) because it may
+/// write. A shared read-only server owns exactly one [`Store`] opened
+/// `ReadOnly` and hands every view an `Arc<Store>`; reads borrow it immutably
+/// (the read APIs already take `&self` and `Store` is `Sync`). The variants are
+/// deliberately not interchangeable: a shared view can never obtain `&mut
+/// Store`, so it cannot mutate, pin, or publish.
+enum StoreHandle {
+    Exclusive(Arc<Mutex<Store>>),
+    Shared(Arc<Store>),
+}
+
+/// Immutable borrow of the store held by one callback.
+struct StoreReadGuard<'a>(GuardInner<'a>);
+
+enum GuardInner<'a> {
+    Exclusive(std::sync::MutexGuard<'a, Store>),
+    Shared(&'a Store),
+}
+
+impl std::ops::Deref for StoreReadGuard<'_> {
+    type Target = Store;
+    fn deref(&self) -> &Store {
+        match &self.0 {
+            GuardInner::Exclusive(guard) => guard,
+            GuardInner::Shared(store) => store,
+        }
+    }
+}
+
+/// Exclusive borrow. Only an exclusive (single-mount) view can obtain one.
+struct StoreWriteGuard<'a>(std::sync::MutexGuard<'a, Store>);
+
+impl std::ops::Deref for StoreWriteGuard<'_> {
+    type Target = Store;
+    fn deref(&self) -> &Store {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for StoreWriteGuard<'_> {
+    fn deref_mut(&mut self) -> &mut Store {
+        &mut self.0
+    }
+}
+
+impl StoreHandle {
+    /// Borrow the store for a read. Never blocks on a shared view beyond the
+    /// store's own interior locks.
+    fn read(&self) -> StoreReadGuard<'_> {
+        match self {
+            StoreHandle::Exclusive(store) => StoreReadGuard(GuardInner::Exclusive(
+                store
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner()),
+            )),
+            StoreHandle::Shared(store) => StoreReadGuard(GuardInner::Shared(store)),
+        }
+    }
+
+    /// Borrow the store for a mutation. A shared read-only view refuses with
+    /// the same `ReadOnly` class the store itself uses, which maps to `EROFS`.
+    fn write(&self) -> Result<StoreWriteGuard<'_>> {
+        match self {
+            StoreHandle::Exclusive(store) => Ok(StoreWriteGuard(
+                store
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner()),
+            )),
+            StoreHandle::Shared(_) => Err(Error::read_only(
+                "shared read-only mount views refuse mutations; use a single writable mount",
+            )),
+        }
+    }
+
+    fn is_shared(&self) -> bool {
+        matches!(self, StoreHandle::Shared(_))
+    }
+}
+
 pub struct WeftFuse {
-    store: Arc<Mutex<Store>>,
+    store: StoreHandle,
     read_only: bool,
     snapshot: Option<Hash32>,
-    snapshot_state: Option<State>,
+    snapshot_state: Option<Arc<State>>,
     capability: Option<CapabilityContext>,
     context: Option<ContextMount>,
     write_back: bool,
@@ -390,13 +473,28 @@ struct GroupSession {
 
 impl WeftFuse {
     pub fn new(store: Store, options: &MountOptions) -> Self {
-        let store = Arc::new(Mutex::new(store));
+        Self::build(StoreHandle::Exclusive(Arc::new(Mutex::new(store))), options)
+    }
+
+    /// Build one view of a shared read-only server. `store` is the server's
+    /// single `ReadOnly` handle; this view holds no mutable access to it.
+    pub fn new_shared(store: Arc<Store>, options: &MountOptions) -> Self {
+        Self::build(StoreHandle::Shared(store), options)
+    }
+
+    fn build(store: StoreHandle, options: &MountOptions) -> Self {
+        let exclusive = !store.is_shared();
         let group: Arc<Mutex<Option<GroupSession>>> = Arc::new(Mutex::new(None));
         let group_stop = Arc::new(AtomicBool::new(false));
         let publish_failed = Arc::new(AtomicBool::new(false));
-        let group_thread = if options.group_commit && !options.read_only {
+        let group_thread = if options.group_commit && !options.read_only && exclusive {
             Some(spawn_group_committer(
-                Arc::clone(&store),
+                match &store {
+                    StoreHandle::Exclusive(store) => Arc::clone(store),
+                    StoreHandle::Shared(_) => {
+                        unreachable!("group commit requires an exclusive view")
+                    }
+                },
                 Arc::clone(&group),
                 Arc::clone(&group_stop),
                 Arc::clone(&publish_failed),
@@ -583,7 +681,7 @@ impl WeftFuse {
 
     fn state<'a>(&'a self, store: &'a Store) -> &'a State {
         match &self.snapshot_state {
-            Some(state) => state,
+            Some(state) => state.as_ref(),
             None => store.current_state(),
         }
     }
@@ -1314,24 +1412,7 @@ pub fn run(store: Store, mountpoint: PathBuf, options: MountOptions) -> Result<(
     }
 
     let fuse = WeftFuse::new(store, &options);
-    let mut mount_options = vec![
-        MountOption::FSName("weftfs".to_owned()),
-        MountOption::DefaultPermissions,
-        MountOption::AutoUnmount,
-    ];
-    if options.allow_other {
-        mount_options.push(MountOption::AllowOther);
-    } else {
-        // `AutoUnmount` requires an allow-* option. Allowing root in addition
-        // to the mounting user is the least-privilege choice when
-        // `--allow-other` was not requested.
-        mount_options.push(MountOption::AllowRoot);
-    }
-    mount_options.push(if options.read_only {
-        MountOption::RO
-    } else {
-        MountOption::RW
-    });
+    let mount_options = session_mount_options(options.allow_other, options.read_only);
 
     let session = fuser::spawn_mount2(fuse, &mountpoint, &mount_options).map_err(|err| {
         Error::io(format!(
@@ -1354,6 +1435,198 @@ pub fn run(store: Store, mountpoint: PathBuf, options: MountOptions) -> Result<(
     Ok(())
 }
 
+/// Documented hard bound on the number of views one shared server may serve.
+///
+/// Each view is exactly one FUSE session thread (fuser dispatches a session's
+/// callbacks on the thread that runs the loop), so a shared server holds at
+/// most `MAX_SHARED_VIEWS + 1` threads (the views plus the supervisor). A
+/// request above the bound is refused before anything is mounted.
+pub const MAX_SHARED_VIEWS: usize = 256;
+
+/// One read-only view of a shared server.
+///
+/// `snapshot_state` is the replay of `snapshot`; every view pinned to the same
+/// commit can share one `Arc<State>` instead of cloning the replayed state.
+pub struct SharedViewSpec {
+    pub mountpoint: PathBuf,
+    pub snapshot: Option<Hash32>,
+    pub snapshot_state: Option<Arc<State>>,
+    pub context: Option<ContextMount>,
+    pub capability: Option<CapabilityContext>,
+}
+
+/// N read-only FUSE views over one `Store` opened `ReadOnly`, in one process.
+///
+/// The store, its selector index cache, and its backend handle are shared; each
+/// view holds only its own snapshot pin, context result set, capability, inode
+/// table, and open handles. Views are strictly read-only: a write-like request
+/// is refused with `ReadOnly` (`EROFS`), exactly like a single read-only mount.
+pub struct SharedMount {
+    store: Arc<Store>,
+    sessions: Vec<Option<fuser::BackgroundSession>>,
+    mountpoints: Vec<PathBuf>,
+}
+
+impl SharedMount {
+    /// Mount every view. All-or-nothing: if one mount fails, the views already
+    /// mounted are unmounted before the error is returned.
+    pub fn start(
+        store: Store,
+        views: Vec<SharedViewSpec>,
+        allow_other: bool,
+    ) -> Result<SharedMount> {
+        if views.is_empty() {
+            return Err(Error::invalid_argument(
+                "mount-many needs at least one view",
+            ));
+        }
+        if views.len() > MAX_SHARED_VIEWS {
+            return Err(Error::limit_exceeded(format!(
+                "mount-many: {} views exceeds the documented maximum of {MAX_SHARED_VIEWS} per shared server (one FUSE session thread per view)",
+                views.len()
+            )));
+        }
+        if std::fs::metadata("/dev/fuse").is_err() {
+            return Err(Error::io(
+                "cannot open /dev/fuse: the FUSE device is unavailable in this environment",
+            ));
+        }
+        init_diagnostics();
+        let store = Arc::new(store);
+        let mut sessions: Vec<Option<fuser::BackgroundSession>> = Vec::with_capacity(views.len());
+        let mut mountpoints: Vec<PathBuf> = Vec::with_capacity(views.len());
+        for view in views {
+            if !view.mountpoint.is_dir() {
+                drop(sessions);
+                return Err(Error::invalid_argument(format!(
+                    "mountpoint {} is not an existing directory",
+                    view.mountpoint.display()
+                )));
+            }
+            let options = MountOptions {
+                allow_other,
+                read_only: true,
+                snapshot: view.snapshot,
+                snapshot_state: view.snapshot_state,
+                capability: view.capability,
+                context: view.context,
+                write_back: false,
+                group_commit: false,
+            };
+            let fuse = WeftFuse::new_shared(Arc::clone(&store), &options);
+            match fuser::spawn_mount2(
+                fuse,
+                &view.mountpoint,
+                &session_mount_options(allow_other, true),
+            ) {
+                Ok(session) => {
+                    sessions.push(Some(session));
+                    mountpoints.push(view.mountpoint);
+                }
+                Err(err) => {
+                    // Dropping the sessions already started unmounts them, so a
+                    // partial failure never leaves stray mounts behind.
+                    drop(sessions);
+                    return Err(Error::io(format!(
+                        "cannot mount {} (is /dev/fuse usable?): {err}",
+                        view.mountpoint.display()
+                    )));
+                }
+            }
+        }
+        Ok(SharedMount {
+            store,
+            sessions,
+            mountpoints,
+        })
+    }
+
+    pub fn view_count(&self) -> usize {
+        self.sessions.len()
+    }
+
+    pub fn mountpoints(&self) -> &[PathBuf] {
+        &self.mountpoints
+    }
+
+    /// The one store every view shares.
+    pub fn store(&self) -> &Store {
+        &self.store
+    }
+
+    /// True while the view's FUSE session thread is still serving.
+    pub fn is_running(&self, index: usize) -> bool {
+        self.sessions
+            .get(index)
+            .and_then(|session| session.as_ref())
+            .map(|session| !session.guard.is_finished())
+            .unwrap_or(false)
+    }
+
+    /// True while at least one view is still serving.
+    pub fn any_running(&self) -> bool {
+        (0..self.sessions.len()).any(|index| self.is_running(index))
+    }
+
+    /// Unmount one view. The shared store and every other view are untouched.
+    pub fn unmount(&mut self, index: usize) -> Result<()> {
+        let Some(session) = self
+            .sessions
+            .get_mut(index)
+            .and_then(|session| session.take())
+        else {
+            return Err(Error::invalid_argument(format!(
+                "no shared view at index {index}"
+            )));
+        };
+        // Dropping the background session closes the mount; the session thread
+        // observes ENODEV and exits.
+        drop(session);
+        Ok(())
+    }
+}
+
+/// Serve `views` from one shared `Store` until SIGINT/SIGTERM or until every
+/// view has been unmounted externally.
+pub fn run_shared(store: Store, views: Vec<SharedViewSpec>, allow_other: bool) -> Result<()> {
+    let mount = SharedMount::start(store, views, allow_other)?;
+    let stop = Arc::new(AtomicBool::new(false));
+    {
+        let stop = Arc::clone(&stop);
+        ctrlc::set_handler(move || stop.store(true, Ordering::SeqCst))
+            .map_err(|err| Error::io(format!("cannot install signal handler: {err}")))?;
+    }
+    while !stop.load(Ordering::SeqCst) && mount.any_running() {
+        thread::sleep(Duration::from_millis(50));
+    }
+    // Dropping the mount unmounts every view that is still active.
+    drop(mount);
+    Ok(())
+}
+
+/// Mount options for one session, shared by the single and multi-mount paths.
+fn session_mount_options(allow_other: bool, read_only: bool) -> Vec<MountOption> {
+    let mut mount_options = vec![
+        MountOption::FSName("weftfs".to_owned()),
+        MountOption::DefaultPermissions,
+        MountOption::AutoUnmount,
+    ];
+    if allow_other {
+        mount_options.push(MountOption::AllowOther);
+    } else {
+        // `AutoUnmount` requires an allow-* option. Allowing root in addition
+        // to the mounting user is the least-privilege choice when
+        // `--allow-other` was not requested.
+        mount_options.push(MountOption::AllowRoot);
+    }
+    mount_options.push(if read_only {
+        MountOption::RO
+    } else {
+        MountOption::RW
+    });
+    mount_options
+}
+
 impl Filesystem for WeftFuse {
     fn init(
         &mut self,
@@ -1367,16 +1640,17 @@ impl Filesystem for WeftFuse {
     fn destroy(&mut self) {
         // Best effort: publish the open group and every buffered handle so an
         // orderly unmount never discards acknowledged writes. A crash still
-        // leaves the previous whole generation.
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        // leaves the previous whole generation. A shared read-only view owns
+        // nothing to publish, and has no mutable handle to publish it with.
+        let Ok(mut store) = self.store.write() else {
+            return;
+        };
         let _ = self.flush_all_pending(&mut store);
         let _ = self.publish_group(&mut store);
     }
 
     fn lookup(&mut self, req: &Request<'_>, parent: u64, name: &OsStr, reply: ReplyEntry) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let principal = principal_of(req);
         let mut table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
@@ -1416,8 +1690,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn getattr(&mut self, _req: &Request<'_>, ino: u64, fh: Option<u64>, reply: ReplyAttr) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let mut table = self.inodes.lock().unwrap();
         let state = self.state(&store);
         let pending_size = if self.write_back {
@@ -1466,8 +1739,10 @@ impl Filesystem for WeftFuse {
         _flags: Option<u32>,
         reply: ReplyAttr,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -1548,8 +1823,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn readlink(&mut self, _req: &Request<'_>, ino: u64, reply: ReplyData) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -1580,8 +1854,10 @@ impl Filesystem for WeftFuse {
         _rdev: u32,
         reply: ReplyEntry,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -1643,8 +1919,10 @@ impl Filesystem for WeftFuse {
         umask: u32,
         reply: ReplyEntry,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -1691,8 +1969,10 @@ impl Filesystem for WeftFuse {
     }
 
     fn unlink(&mut self, _req: &Request<'_>, parent: u64, name: &OsStr, reply: ReplyEmpty) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -1724,8 +2004,10 @@ impl Filesystem for WeftFuse {
     }
 
     fn rmdir(&mut self, _req: &Request<'_>, parent: u64, name: &OsStr, reply: ReplyEmpty) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -1766,8 +2048,10 @@ impl Filesystem for WeftFuse {
         flags: u32,
         reply: ReplyEmpty,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let (Some(old_node), Some(new_node)) = (table.node_of(parent), table.node_of(newparent))
         else {
@@ -1823,8 +2107,10 @@ impl Filesystem for WeftFuse {
         newname: &OsStr,
         reply: ReplyEntry,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let (Some(node), Some(new_node)) = (table.node_of(ino), table.node_of(newparent)) else {
             return reply.error(libc::ENOENT);
@@ -1873,8 +2159,10 @@ impl Filesystem for WeftFuse {
         target: &Path,
         reply: ReplyEntry,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -1920,8 +2208,6 @@ impl Filesystem for WeftFuse {
     }
 
     fn open(&mut self, req: &Request<'_>, ino: u64, flags: i32, reply: ReplyOpen) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -1935,6 +2221,7 @@ impl Filesystem for WeftFuse {
         let read_only_surface = node.is_virtual();
         let object_id = node.object();
         let (content, size, kind) = {
+            let store = self.store.read();
             let state = self.state(&store);
             let Some(id) = object_id else {
                 return reply.error(libc::EISDIR);
@@ -1954,6 +2241,12 @@ impl Filesystem for WeftFuse {
             (record.content, record.size, record.kind)
         };
         if flags & O_TRUNC != 0 && !read_only_surface {
+            // Unreachable for a read-only view (write intent was refused above),
+            // so this branch always has an exclusive handle.
+            let mut store = match self.store.write() {
+                Ok(guard) => guard,
+                Err(err) => return reply.error(errno(&err)),
+            };
             if self.write_back {
                 if let Err(err) = self.flush_pending_for_ino(&mut store, ino) {
                     return reply.error(errno(&err));
@@ -1974,17 +2267,23 @@ impl Filesystem for WeftFuse {
         let mut pinned_object = false;
         let mut pinned_content = false;
         if let Some(id) = object_id {
-            if read_only_surface {
-                store.pin_content(content);
-                pinned_content = true;
-            } else {
-                if let Err(err) = store.pin_object(id) {
-                    return reply.error(errno(&err));
+            // Pins are process-local GC protection. A shared read-only view
+            // cannot pin (no `&mut Store`) and does not need to: this process
+            // never runs a writer or GC over the shared store.
+            if let Ok(mut store) = self.store.write() {
+                if read_only_surface {
+                    store.pin_content(content);
+                    pinned_content = true;
+                } else {
+                    if let Err(err) = store.pin_object(id) {
+                        return reply.error(errno(&err));
+                    }
+                    pinned_object = true;
                 }
-                pinned_object = true;
             }
         }
         let (content, size) = {
+            let store = self.store.read();
             let state = self.state(&store);
             match object_id.and_then(|id| state.objects.get(&id)) {
                 Some(record) => (record.content, record.size),
@@ -2028,8 +2327,7 @@ impl Filesystem for WeftFuse {
         if offset < 0 {
             return reply.error(libc::EINVAL);
         }
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let handles = self.handles.lock().unwrap();
         let Some(handle) = handles.get(&fh) else {
             return reply.error(libc::EBADF);
@@ -2106,8 +2404,10 @@ impl Filesystem for WeftFuse {
         if offset < 0 {
             return reply.error(libc::EINVAL);
         }
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let handles = self.handles.lock().unwrap();
         let Some(handle) = handles.get(&fh) else {
             return reply.error(libc::EBADF);
@@ -2221,8 +2521,10 @@ impl Filesystem for WeftFuse {
         // With write-back it publishes the buffered ranges, so it is the point
         // where the data becomes visible to other readers and durable.
         if self.write_back {
-            let store_arc = Arc::clone(&self.store);
-            let mut store = store_arc.lock().unwrap();
+            let mut store = match self.store.write() {
+                Ok(guard) => guard,
+                Err(err) => return reply.error(errno(&err)),
+            };
             if let Err(err) = self.flush_pending(&mut store, fh) {
                 eprintln!("weftfs: flush failed: {err}");
                 return reply.error(errno(&err));
@@ -2241,25 +2543,29 @@ impl Filesystem for WeftFuse {
         _flush: bool,
         reply: ReplyEmpty,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
-        // Close publishes buffered writes even when the kernel did not issue a
-        // separate flush, matching the documented write-back contract.
-        let flush_result = if self.write_back {
-            self.flush_pending(&mut store, fh)
-        } else {
-            Ok(())
-        };
+        let mut flush_result = Ok(());
+        if self.write_back {
+            match self.store.write() {
+                Ok(mut store) => flush_result = self.flush_pending(&mut store, fh),
+                Err(err) => flush_result = Err(err),
+            }
+        }
         let handle = self.handles.lock().unwrap().remove(&fh);
         if let Some(handle) = handle {
-            if handle.pinned_content {
-                store.unpin_content(handle.content);
-            }
-            if handle.pinned_object {
-                if let Some(id) = handle.object {
-                    // A failed cleanup commit is not reportable through close;
-                    // the unreferenced record is retained and reclaimed by GC.
-                    let _ = store.unpin_object(id);
+            // A shared view never pins (see `open`), so it never unpins either.
+            if (handle.pinned_content || handle.pinned_object) && !self.store.is_shared() {
+                let Ok(mut store) = self.store.write() else {
+                    return reply.error(libc::EIO);
+                };
+                if handle.pinned_content {
+                    store.unpin_content(handle.content);
+                }
+                if handle.pinned_object {
+                    if let Some(id) = handle.object {
+                        // A failed cleanup commit is not reportable through close;
+                        // the unreferenced record is retained and reclaimed by GC.
+                        let _ = store.unpin_object(id);
+                    }
                 }
             }
         }
@@ -2282,15 +2588,19 @@ impl Filesystem for WeftFuse {
         // this is the durability point: buffered ranges are published and the
         // group committed before the reply.
         if self.write_back {
-            let store_arc = Arc::clone(&self.store);
-            let mut store = store_arc.lock().unwrap();
+            let mut store = match self.store.write() {
+                Ok(guard) => guard,
+                Err(err) => return reply.error(errno(&err)),
+            };
             if let Err(err) = self.flush_pending(&mut store, fh) {
                 eprintln!("weftfs: fsync failed: {err}");
                 return reply.error(errno(&err));
             }
-        } else {
-            let store_arc = Arc::clone(&self.store);
-            let mut store = store_arc.lock().unwrap();
+        } else if !self.read_only {
+            let mut store = match self.store.write() {
+                Ok(guard) => guard,
+                Err(err) => return reply.error(errno(&err)),
+            };
             if let Err(err) = self.publish_group(&mut store) {
                 return reply.error(errno(&err));
             }
@@ -2299,8 +2609,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn opendir(&mut self, _req: &Request<'_>, ino: u64, _flags: i32, reply: ReplyOpen) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let principal = principal_of(_req);
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
@@ -2470,8 +2779,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn statfs(&mut self, _req: &Request<'_>, _ino: u64, reply: ReplyStatfs) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let state = self.state(&store);
         let stats = Store::statfs_at(state);
         reply.statfs(
@@ -2509,8 +2817,10 @@ impl Filesystem for WeftFuse {
         if value.len() as u64 > MAX_XATTR_VALUE_BYTES {
             return reply.error(libc::ERANGE);
         }
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2562,8 +2872,7 @@ impl Filesystem for WeftFuse {
             Some(name) => name,
             None => return reply.error(libc::EINVAL),
         };
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2593,8 +2902,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn listxattr(&mut self, _req: &Request<'_>, ino: u64, size: u32, reply: ReplyXattr) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2639,8 +2947,10 @@ impl Filesystem for WeftFuse {
             Some(name) => name,
             None => return reply.error(libc::EINVAL),
         };
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2674,8 +2984,7 @@ impl Filesystem for WeftFuse {
     }
 
     fn access(&mut self, req: &Request<'_>, ino: u64, mask: i32, reply: ReplyEmpty) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2730,8 +3039,10 @@ impl Filesystem for WeftFuse {
         flags: i32,
         reply: ReplyCreate,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(parent_node) = table.node_of(parent) else {
             return reply.error(libc::ENOENT);
@@ -2906,8 +3217,10 @@ impl Filesystem for WeftFuse {
         if offset as u64 > MAX_FILE_BYTES || end > MAX_FILE_BYTES {
             return reply.error(libc::EFBIG);
         }
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let mut table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -2990,8 +3303,7 @@ impl Filesystem for WeftFuse {
         whence: i32,
         reply: ReplyLseek,
     ) {
-        let store_arc = Arc::clone(&self.store);
-        let store = store_arc.lock().unwrap();
+        let store = self.store.read();
         let table = self.inodes.lock().unwrap();
         let Some(node) = table.node_of(ino) else {
             return reply.error(libc::ENOENT);
@@ -3061,8 +3373,10 @@ impl Filesystem for WeftFuse {
         if len == 0 {
             return reply.written(0);
         }
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let mut store = match self.store.write() {
+            Ok(guard) => guard,
+            Err(err) => return reply.error(errno(&err)),
+        };
         let (source_id, source_content, source_size, dest_id, dest_ino) = {
             let handles = self.handles.lock().unwrap();
             let Some(source) = handles.get(&fh_in) else {
@@ -3137,8 +3451,9 @@ impl Drop for WeftFuse {
         if let Some(handle) = self.group_thread.take() {
             let _ = handle.join();
         }
-        let store_arc = Arc::clone(&self.store);
-        let mut store = store_arc.lock().unwrap();
+        let Ok(mut store) = self.store.write() else {
+            return;
+        };
         let _ = self.flush_all_pending(&mut store);
         let _ = self.publish_group(&mut store);
     }

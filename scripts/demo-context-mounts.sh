@@ -184,8 +184,20 @@ run_scaled_mounts() {
   local step=$((files / derived_views))
   local relation_count=$((files * 3 - 1))
   local object_count=$((files + models + ground + 4))
-  local corpus_build=cli
-  [ "$target" -gt 100 ] && corpus_build=harness
+  local corpus_build="${WEFT_CONTEXT_CORPUS_BUILD:-}"
+  if [ -z "$corpus_build" ]; then
+    corpus_build=cli
+    [ "$target" -gt 100 ] && corpus_build=harness
+  fi
+  case "$corpus_build" in
+    cli|harness) ;;
+    *) echo "WEFT_CONTEXT_CORPUS_BUILD=$corpus_build unsupported: use cli or harness" >&2; exit 64 ;;
+  esac
+  local mount_mode="${WEFT_CONTEXT_MOUNTS_MODE:-per-daemon}"
+  case "$mount_mode" in
+    per-daemon|shared) ;;
+    *) echo "WEFT_CONTEXT_MOUNTS_MODE=$mount_mode unsupported: use per-daemon or shared" >&2; exit 64 ;;
+  esac
   CORPUS_MANIFEST_DIR=""
   local SS="$STORES/context-mounts-$RUN_ID-n$target"
   rm -rf "$SS"
@@ -198,6 +210,7 @@ run_scaled_mounts() {
   meta label "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); not a fleet claim"
   meta metric.target_mounts "$target"
   meta metric.corpus_build "$corpus_build"
+  meta metric.mount_mode "$mount_mode"
   meta metric.corpus_files "$files"
   meta metric.corpus_models "$models"
   meta metric.corpus_relations "$relation_count"
@@ -230,7 +243,7 @@ run_scaled_mounts() {
   step_end pass "objects=$object_count relations=$((relation_count + target)) contexts=$target target_mounts=$target build=$corpus_build"
 
   # ---- spawn every mount before awaiting any of them --------------------
-  step_begin "mounts" "$target concurrent Context mounts, Rust/Go alternating"
+  step_begin "mounts" "$target concurrent Context mounts ($mount_mode)"
   local free_before free_after cgroup_peak mount_wall_start
   local LAT_FILE="$STEP_DIR/latencies.txt"
   free_before="$(sample_free_mb)"
@@ -238,39 +251,77 @@ run_scaled_mounts() {
   : > "$LAT_FILE"
   declare -a M_MOUNT=() M_IMPL=() M_PID=() M_T0=() M_NAME=() M_STATE=()
   local impl mount t0 i
-  # Spawning must leave cgroup task headroom for the verification CLIs that
-  # run while every daemon is still alive. The ceiling is a bounded hard limit
-  # (`--pids-limit`), never a disabled one.
-  local pids_max pids_used reserve spawned=0 ceiling_hit=0
+  local spawned=0 ceiling_hit=0
+  local pids_max pids_used reserve
   pids_max="$(cgroup_pids_max)"
   reserve="${WEFT_SPAWN_RESERVE:-256}"
   meta metric.cgroup_pids_max "$pids_max"
   meta metric.spawn_reserve_tasks "$reserve"
-  for i in $(seq 0 $((target - 1))); do
-    if [ "$pids_max" != "unavailable" ] && [ "$pids_max" -gt 0 ]; then
-      pids_used="$(cgroup_pids_current)"
-      if [ "$pids_used" != "unavailable" ] && [ $((pids_used + reserve)) -ge "$pids_max" ]; then
-        ceiling_hit=1
-        note "spawn ceiling: cgroup pids.current=$pids_used pids.max=$pids_max reserve=$reserve reached before mount $i; started $spawned of $target daemons"
-        record_assert "daemon spawns under the cgroup pids limit" "mount $i of $target" \
-          "ceiling: pids.current=$pids_used pids.max=$pids_max" false
+  local SHARED_PID=""
+  if [ "$mount_mode" = shared ]; then
+    # One process, one Store, N read-only views. The spec is the strict JSON
+    # schema documented in docs/shared-mounts.md.
+    local spec="$STEP_DIR/mount-spec.json"
+    {
+      printf '{"version":1,"views":['
+      for i in $(seq 0 $((target - 1))); do
+        [ "$i" -gt 0 ] && printf ','
+        mount="$MOUNT_ROOT/f3m-$RUN_ID-$i"
+        mkdir -p "$mount"
+        printf '{"mountpoint":"%s","context":"%s"}' "$mount" "${CTX_NAMES[$i]}"
+      done
+      printf ']}'
+    } > "$spec"
+    meta metric.mount_spec "$(rel "$spec")"
+    start_shared_mount_async "$SS" "$spec"
+    SHARED_PID="$MOUNT_PID_LAST"
+    if [ -z "$SHARED_PID" ] || ! kill -0 "$SHARED_PID" 2>/dev/null; then
+      record_assert "shared server started" running "exited immediately: $(tail -3 "$MOUNT_LOG_LAST" 2>/dev/null | tr '\n' ' ')" false
+    else
+      spawned=$target
+      for i in $(seq 0 $((target - 1))); do
+        M_MOUNT[$i]="$MOUNT_ROOT/f3m-$RUN_ID-$i"
+        M_IMPL[$i]=shared
+        M_PID[$i]="$SHARED_PID"
+        M_T0[$i]="$mount_wall_start"
+        M_NAME[$i]="${CTX_NAMES[$i]}"
+        M_STATE[$i]=0
+      done
+    fi
+    meta metric.shared_server_pid "$SHARED_PID"
+    meta metric.mount_processes 1
+    meta metric.spawned_daemons 1
+  else
+    # Spawning must leave cgroup task headroom for the verification CLIs that
+    # run while every daemon is still alive. The ceiling is a bounded hard limit
+    # (`--pids-limit`), never a disabled one.
+    for i in $(seq 0 $((target - 1))); do
+      if [ "$pids_max" != "unavailable" ] && [ "$pids_max" -gt 0 ]; then
+        pids_used="$(cgroup_pids_current)"
+        if [ "$pids_used" != "unavailable" ] && [ $((pids_used + reserve)) -ge "$pids_max" ]; then
+          ceiling_hit=1
+          note "spawn ceiling: cgroup pids.current=$pids_used pids.max=$pids_max reserve=$reserve reached before mount $i; started $spawned of $target daemons"
+          record_assert "daemon spawns under the cgroup pids limit" "mount $i of $target" \
+            "ceiling: pids.current=$pids_used pids.max=$pids_max" false
+          break
+        fi
+      fi
+      mount="$MOUNT_ROOT/f3m-$RUN_ID-$i"
+      if [ $((i % 2)) -eq 0 ]; then impl=rust; else impl=go; fi
+      t0="$(now_ns)"
+      if ! start_mount_async "$impl" "$SS" "$mount" --context "${CTX_NAMES[$i]}" \
+          || [ -z "$MOUNT_PID_LAST" ] || ! kill -0 "$MOUNT_PID_LAST" 2>/dev/null; then
+        note "spawn failed at mount $i ($impl ${CTX_NAMES[$i]})"
+        record_assert "daemon spawns under the cgroup pids limit" "mount $i of $target" "spawn failed" false
         break
       fi
-    fi
-    mount="$MOUNT_ROOT/f3m-$RUN_ID-$i"
-    if [ $((i % 2)) -eq 0 ]; then impl=rust; else impl=go; fi
-    t0="$(now_ns)"
-    if ! start_mount_async "$impl" "$SS" "$mount" --context "${CTX_NAMES[$i]}" \
-        || [ -z "$MOUNT_PID_LAST" ] || ! kill -0 "$MOUNT_PID_LAST" 2>/dev/null; then
-      note "spawn failed at mount $i ($impl ${CTX_NAMES[$i]})"
-      record_assert "daemon spawns under the cgroup pids limit" "mount $i of $target" "spawn failed" false
-      break
-    fi
-    M_MOUNT[$i]="$mount"; M_IMPL[$i]="$impl"; M_PID[$i]="$MOUNT_PID_LAST"
-    M_T0[$i]="$t0"; M_NAME[$i]="${CTX_NAMES[$i]}"; M_STATE[$i]=0
-    spawned=$((spawned + 1))
-  done
-  meta metric.spawned_daemons "$spawned"
+      M_MOUNT[$i]="$mount"; M_IMPL[$i]="$impl"; M_PID[$i]="$MOUNT_PID_LAST"
+      M_T0[$i]="$t0"; M_NAME[$i]="${CTX_NAMES[$i]}"; M_STATE[$i]=0
+      spawned=$((spawned + 1))
+    done
+    meta metric.spawned_daemons "$spawned"
+    meta metric.mount_processes "$spawned"
+  fi
   meta metric.spawn_ceiling_hit "$ceiling_hit"
 
   local mounted=0 failed=0 t1 now
@@ -315,21 +366,37 @@ run_scaled_mounts() {
       [ "$pending" -gt 0 ] && sleep 0.2
     done
   else
+    local tries_limit="${WEFT_WAIT_MOUNT_TRIES:-1500}"
+    meta metric.wait_mount_tries "$tries_limit"
     for i in $(seq 0 $((spawned - 1))); do
-      if wait_mount "${M_MOUNT[$i]}" 0.02 1500; then
+      if wait_mount "${M_MOUNT[$i]}" 0.02 "$tries_limit"; then
         t1="$(now_ns)"
         echo "$(( (t1 - M_T0[$i]) / 1000000 ))" >> "$LAT_FILE"
         M_STATE[$i]=1; mounted=$((mounted + 1))
       else
         M_STATE[$i]=2; failed=$((failed + 1))
-        record_assert "mount $i (${M_IMPL[$i]} ${M_NAME[$i]}) started" mounted \
-          "failed: $(tail -3 "$SCRATCH/mount-$RUN_ID-$(basename "${M_MOUNT[$i]}").log" 2>/dev/null | tr '\n' ' ')" false
+        if [ "$mount_mode" = shared ]; then
+          record_assert "mount $i (${M_IMPL[$i]} ${M_NAME[$i]}) started" mounted \
+            "failed: $(tail -3 "$MOUNT_LOG_LAST" 2>/dev/null | tr '\n' ' ')" false
+        else
+          record_assert "mount $i (${M_IMPL[$i]} ${M_NAME[$i]}) started" mounted \
+            "failed: $(tail -3 "$SCRATCH/mount-$RUN_ID-$(basename "${M_MOUNT[$i]}").log" 2>/dev/null | tr '\n' ' ')" false
+        fi
       fi
     done
   fi
   free_after="$(sample_free_mb)"
   cgroup_peak="$(cgroup_peak_bytes)"
-  sample_daemons "${M_PID[@]}"
+  local all_mounted_ms mount_latency_min
+  all_mounted_ms="$(( ( $(now_ns) - mount_wall_start ) / 1000000 ))"
+  mount_latency_min="$(sort -n "$LAT_FILE" 2>/dev/null | head -1)"
+  meta metric.all_mounted_ms "$all_mounted_ms"
+  meta metric.mount_latency_min_ms "${mount_latency_min:-n/a}"
+  if [ "$mount_mode" = shared ]; then
+    if [ -n "$SHARED_PID" ]; then sample_daemons "$SHARED_PID"; else sample_daemons; fi
+  else
+    sample_daemons "${M_PID[@]}"
+  fi
   meta metric.mounts_verified "$mounted"
   meta metric.mount_failures "$failed"
   meta metric.free_mb_before "${free_before:-unavailable}"
@@ -347,9 +414,9 @@ run_scaled_mounts() {
     "$([ "$mounted" -eq "$target" ] && echo true || echo false)"
   if [ "$mounted" -lt "$target" ]; then
     note "mount failure: requested $target, spawned $spawned, mounted $mounted, failed $failed; the exact daemon/resource error is in the assertion above and the per-mount logs under $SCRATCH"
-    meta label "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); INCOMPLETE $mounted/$target mounts verified (resource failure recorded); not a fleet claim"
+    meta label "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; mode=$mount_mode; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); INCOMPLETE $mounted/$target mounts verified (resource failure recorded); not a fleet claim"
   else
-    meta label "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); $mounted/$target mounts verified; not a fleet claim"
+    meta label "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; mode=$mount_mode; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); $mounted/$target mounts verified; not a fleet claim"
   fi
   step_end "$([ "$failed" -eq 0 ] && echo pass || echo fail)" "spawned=$spawned mounted=$mounted failed=$failed"
 
@@ -522,6 +589,8 @@ run_scaled_mounts() {
   meta metric.mount_latency_max_ms "$pmax"
   meta metric.mount_wall_ms "$wall_ms"
   meta metric.unique_listing_digests "$unique_digests"
+  meta metric.verified_files_sha256 "$FILECHECK"
+  meta metric.listing_digests_sha256 "$(sha256_file "$STEP_DIR/digests.txt")"
   step_end "$([ "$verified" -eq "$mounted" ] && [ "$FILECHECK" -gt 0 ] && echo pass || echo fail)" \
     "files=$FILECHECK verified=$verified unique_digests=$unique_digests resolved=$resolved"
 
@@ -537,7 +606,7 @@ run_scaled_mounts() {
     checked=$((checked + 1))
   done
   record_assert "read-only denials exercised" "2" "$checked" "$([ "$checked" -eq 2 ] && echo true || echo false)"
-  step_end pass "write denied on the first Rust and Go mounts"
+  step_end pass "write denied on the first two mounts"
 
   # ---- clean unmount; assert no daemon survives -------------------------
   step_begin "unmount" "Unmount every mount and prove no daemon survives"
@@ -553,18 +622,26 @@ run_scaled_mounts() {
   survivor_deadline=$(( $(now_ns) + 60000000000 ))
   while :; do
     alive=0
-    for i in $(seq 0 $((spawned - 1))); do
-      kill -0 "${M_PID[$i]}" 2>/dev/null && alive=$((alive + 1))
-    done
+    if [ "$mount_mode" = shared ]; then
+      [ -n "$SHARED_PID" ] && kill -0 "$SHARED_PID" 2>/dev/null && alive=1
+    else
+      for i in $(seq 0 $((spawned - 1))); do
+        kill -0 "${M_PID[$i]}" 2>/dev/null && alive=$((alive + 1))
+      done
+    fi
     [ "$alive" -eq 0 ] && break
     [ "$(now_ns)" -ge "$survivor_deadline" ] && break
     sleep 0.1
   done
   survivors="$alive"
   if [ "$survivors" -gt 0 ]; then
-    for i in $(seq 0 $((spawned - 1))); do
-      kill -0 "${M_PID[$i]}" 2>/dev/null && kill "${M_PID[$i]}" 2>/dev/null || true
-    done
+    if [ "$mount_mode" = shared ]; then
+      [ -n "$SHARED_PID" ] && kill -0 "$SHARED_PID" 2>/dev/null && kill "$SHARED_PID" 2>/dev/null || true
+    else
+      for i in $(seq 0 $((spawned - 1))); do
+        kill -0 "${M_PID[$i]}" 2>/dev/null && kill "${M_PID[$i]}" 2>/dev/null || true
+      done
+    fi
   fi
   assert_eq "clean unmounts" "$mounted" "$unmounted"
   assert_eq "daemons surviving unmount" 0 "$survivors"
@@ -574,6 +651,15 @@ run_scaled_mounts() {
 }
 
 MOUNT_TARGET="${WEFT_CONTEXT_MOUNTS:-3}"
+MOUNT_MODE="${WEFT_CONTEXT_MOUNTS_MODE:-per-daemon}"
+case "$MOUNT_MODE" in
+  per-daemon|shared) ;;
+  *) echo "WEFT_CONTEXT_MOUNTS_MODE=$MOUNT_MODE unsupported: use per-daemon or shared" >&2; exit 64 ;;
+esac
+if [ "$MOUNT_MODE" = shared ] && [ "$MOUNT_TARGET" -eq 3 ]; then
+  echo "WEFT_CONTEXT_MOUNTS_MODE=shared requires an explicit WEFT_CONTEXT_MOUNTS (the 4..1000 scaled court); the 3-mount showcase path stays per-daemon" >&2
+  exit 64
+fi
 case "$MOUNT_TARGET" in
   ''|*[!0-9]*) echo "WEFT_CONTEXT_MOUNTS must be a positive integer" >&2; exit 64 ;;
 esac

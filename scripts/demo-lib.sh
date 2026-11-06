@@ -207,6 +207,19 @@ start_mount() {
   fi
   return 0
 }
+# start_shared_mount_async <store> <spec>
+# Starts one `mount-many` process that serves every view listed in the spec.
+# Sets MOUNT_PID_LAST/MOUNT_LOG_LAST and records the pid for cleanup.
+start_shared_mount_async() {
+  local store="$1" spec="$2"
+  local logfile="$SCRATCH/mount-shared-$RUN_ID.log"
+  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount-many --spec "$spec" \
+    >"$logfile" 2>&1 &
+  MOUNT_PID_LAST=$!
+  MOUNT_PIDS+=("$MOUNT_PID_LAST")
+  MOUNT_LOG_LAST="$logfile"
+  record_cmd "rust mount-many --store $store --spec $spec"
+}
 stop_mount() {
   local mount="$1"
   if mountpoint -q "$mount" 2>/dev/null; then
@@ -330,6 +343,14 @@ cgroup_oom_kills() {
 
 build_tools() {
   log "===== BUILD ====="
+  if [ "${WEFT_DEMO_SKIP_BUILD:-0}" = 1 ]; then
+    # Used only by courts that pre-built in a larger container and then run a
+    # deliberately small memory limit; it does not change what is measured.
+    log "WEFT_DEMO_SKIP_BUILD=1: reusing the binaries built by the build phase"
+    [ -x "$RUSTFS" ] && [ -x "$GOFS" ] && [ -x "$JSONQ" ] && [ -x "$RECEIPTGEN" ] \
+      && [ -x "$BIN/context-corpus" ]
+    return
+  fi
   ( cd "$ROOT" && cargo build --quiet --features fuse --bin weftfs )
   ( cd "$ROOT/WeftFS-Go" && CGO_ENABLED=0 go build -o "$GOFS" ./cmd/weftfs )
   ( cd /tmp && GO111MODULE=off go build -o "$JSONQ" "$ROOT/scripts/showcase/jsonq.go" )
@@ -425,6 +446,7 @@ demo_init() {
   meta env.cap_add "SYS_ADMIN"
   meta env.device "/dev/fuse"
   meta env.fixed_timestamps "$TS1,$TS2,$TS3"
+  meta env.skip_build "${WEFT_DEMO_SKIP_BUILD:-0}"
   meta env.host_nproc "$(nproc 2>/dev/null || echo unknown)"
   meta env.scratch "$(rel "$SCRATCH")"
   repo WeftFS "${WEFT_REPO_WEFTFS:-unknown}"
@@ -432,5 +454,13 @@ demo_init() {
   repo WeftCodec "${WEFT_REPO_WEFTCODEC:-unknown}"
   repo WeftCodec-Go "${WEFT_REPO_WEFTCODEC_GO:-unknown}"
   build_tools
+  if [ "${WEFT_DEMO_BUILD_ONLY:-0}" = 1 ]; then
+    # Courts that need the binaries before a tightly limited run use this to
+    # build once in a roomy container. It writes no receipt and mounts nothing.
+    log "WEFT_DEMO_BUILD_ONLY=1: build phase complete"
+    FINALIZED=1
+    trap - EXIT ERR
+    exit 0
+  fi
   log "receipt: $RECEIPT"
 }

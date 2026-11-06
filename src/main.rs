@@ -9,6 +9,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
+use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 use serde_json::json;
@@ -581,6 +582,17 @@ enum Command {
         /// durable commit. Off by default.
         #[arg(long = "group-commit")]
         group_commit: bool,
+    },
+    /// Serve several read-only mounts from one process over one shared store.
+    /// The spec is a strict JSON document; see docs/shared-mounts.md.
+    #[cfg(feature = "fuse")]
+    MountMany {
+        /// JSON spec listing the read-only views.
+        #[arg(long, value_name = "FILE")]
+        spec: PathBuf,
+        /// Allow users other than the mounting user.
+        #[arg(long = "allow-other")]
+        allow_other: bool,
     },
     /// Build the deterministic handoff fixture.
     ConformanceStore {
@@ -2369,7 +2381,7 @@ fn run(cli: Cli) -> Result<()> {
                         store.clock_now_ns(),
                     )?;
                     let snapshot = resolved.stored.root.snapshot;
-                    let state = store.state_at(snapshot)?;
+                    let state = Arc::new(store.state_at(snapshot)?);
                     let context_mount = weftfs::fuse::ContextMount {
                         name: resolved.stored.name.clone(),
                         context_root_id: resolved.stored.context_root_id,
@@ -2397,13 +2409,13 @@ fn run(cli: Cli) -> Result<()> {
                                     "no commit at or before {at_ns} ns in the mounted lineage"
                                 ))
                             })?;
-                        let state = store.state_at(selected.commit)?;
+                        let state = Arc::new(store.state_at(selected.commit)?);
                         (None, Some(selected.commit), Some(state))
                     }
                     None => match snapshot {
                         Some(name) => {
                             let commit = lookup_snapshot(&store, &name)?;
-                            let state = store.state_at(commit)?;
+                            let state = Arc::new(store.state_at(commit)?);
                             (None, Some(commit), Some(state))
                         }
                         None => (None, None, None),
@@ -2424,6 +2436,93 @@ fn run(cli: Cli) -> Result<()> {
                     group_commit,
                 },
             )
+        }
+        #[cfg(feature = "fuse")]
+        Command::MountMany { spec, allow_other } => {
+            let spec = read_mount_spec(&spec)?;
+            if spec.views.len() > weftfs::fuse::MAX_SHARED_VIEWS {
+                return Err(Error::limit_exceeded(format!(
+                    "mount-many: {} views exceeds the documented maximum of {} per shared server (one FUSE session thread per view)",
+                    spec.views.len(),
+                    weftfs::fuse::MAX_SHARED_VIEWS
+                )));
+            }
+            // One read-only store for every view: shared state, shared selector
+            // index cache, shared backend handle. A shared view can never
+            // obtain a mutable store handle, so the server cannot write.
+            let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+            let limits = weftcodec::Limits::default();
+            let mut state_cache: BTreeMap<Hash32, Arc<weftfs::state::State>> = BTreeMap::new();
+            let mut views = Vec::with_capacity(spec.views.len());
+            for view in spec.views {
+                let capability = read_capability(&view.capability)?;
+                if view.context.is_some() && view.at.is_some() {
+                    return Err(Error::invalid_argument(format!(
+                        "mount-many view {}: context and at are mutually exclusive",
+                        view.mountpoint.display()
+                    )));
+                }
+                let (context_mount, snapshot_commit, snapshot_state) = match view.context {
+                    Some(target) => {
+                        let resolved = store.resolve_context(
+                            &target,
+                            capability.as_ref(),
+                            &Principal::root(),
+                            &limits,
+                            store.clock_now_ns(),
+                        )?;
+                        let snapshot = resolved.stored.root.snapshot;
+                        let state = cached_state(&store, &mut state_cache, snapshot)?;
+                        let context_mount = weftfs::fuse::ContextMount {
+                            name: resolved.stored.name.clone(),
+                            context_root_id: resolved.stored.context_root_id,
+                            snapshot,
+                            selector_id: resolved.resolution.selector_id,
+                            results: resolved
+                                .resolution
+                                .results
+                                .iter()
+                                .map(|result| result.object_id)
+                                .collect(),
+                        };
+                        (Some(context_mount), Some(snapshot), Some(state))
+                    }
+                    None => match view.at {
+                        Some(at_text) => {
+                            let at_ns = weftfs::timeparse::parse_at_ns(&at_text)?;
+                            let base = match &view.snapshot {
+                                Some(name) => lookup_snapshot(&store, name)?,
+                                None => store.head(),
+                            };
+                            let selected =
+                                store.commit_at_or_before(base, at_ns)?.ok_or_else(|| {
+                                    Error::not_found(format!(
+                                        "mount-many view {}: no commit at or before {at_ns} ns",
+                                        view.mountpoint.display()
+                                    ))
+                                })?;
+                            let state = cached_state(&store, &mut state_cache, selected.commit)?;
+                            (None, Some(selected.commit), Some(state))
+                        }
+                        None => match view.snapshot {
+                            Some(name) => {
+                                let commit = lookup_snapshot(&store, &name)?;
+                                let state = cached_state(&store, &mut state_cache, commit)?;
+                                (None, Some(commit), Some(state))
+                            }
+                            None => (None, None, None),
+                        },
+                    },
+                };
+                views.push(weftfs::fuse::SharedViewSpec {
+                    mountpoint: view.mountpoint,
+                    snapshot: snapshot_commit,
+                    snapshot_state,
+                    context: context_mount,
+                    capability,
+                });
+            }
+            weftfs::fuse::run_shared(store, views, allow_other)
         }
         Command::ConformanceStore {
             out,
@@ -3471,6 +3570,82 @@ fn run_capability(
             }
         }
     }
+}
+
+/// Strict schema for `weftfs mount-many --spec`. Unknown fields are rejected so
+/// a typo can never silently change what is mounted.
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MountSpec {
+    version: u32,
+    views: Vec<MountSpecView>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MountSpecView {
+    mountpoint: PathBuf,
+    /// Snapshot name or commit hex. Absent means the state visible at open.
+    #[serde(default)]
+    snapshot: Option<String>,
+    /// Context Root name or `weft://` URI; implies its pinned snapshot.
+    #[serde(default)]
+    context: Option<String>,
+    /// Newest commit at or before this RFC 3339 / unix-ns time.
+    #[serde(default)]
+    at: Option<String>,
+    /// Capability JSON or canonical-hex file narrowing this view.
+    #[serde(default)]
+    capability: Option<PathBuf>,
+}
+
+/// The only accepted `weftfs mount-many` spec schema.
+const MOUNT_SPEC_VERSION: u32 = 1;
+
+fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+    let text = fs::read_to_string(path)
+        .map_err(|err| Error::io(format!("cannot read mount spec {}: {err}", path.display())))?;
+    let spec: MountSpec = serde_json::from_str(&text)
+        .map_err(|err| Error::invalid_argument(format!("mount spec {}: {err}", path.display())))?;
+    if spec.version != MOUNT_SPEC_VERSION {
+        return Err(Error::unsupported_version(format!(
+            "mount spec {}: version {} (expected {MOUNT_SPEC_VERSION})",
+            path.display(),
+            spec.version
+        )));
+    }
+    if spec.views.is_empty() {
+        return Err(Error::invalid_argument(format!(
+            "mount spec {}: no views",
+            path.display()
+        )));
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    for view in &spec.views {
+        if !seen.insert(view.mountpoint.clone()) {
+            return Err(Error::invalid_argument(format!(
+                "mount spec {}: mountpoint {} appears twice",
+                path.display(),
+                view.mountpoint.display()
+            )));
+        }
+    }
+    Ok(spec)
+}
+
+/// Replay `commit` at most once per shared-server start: every view pinned to
+/// the same commit holds a clone of one `Arc<State>`.
+fn cached_state(
+    store: &Store,
+    cache: &mut BTreeMap<Hash32, Arc<weftfs::state::State>>,
+    commit: Hash32,
+) -> Result<Arc<weftfs::state::State>> {
+    if let Some(state) = cache.get(&commit) {
+        return Ok(Arc::clone(state));
+    }
+    let state = Arc::new(store.state_at(commit)?);
+    cache.insert(commit, Arc::clone(&state));
+    Ok(state)
 }
 
 fn read_capability(path: &Option<PathBuf>) -> Result<Option<CapabilityContext>> {
