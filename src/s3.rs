@@ -1340,6 +1340,11 @@ impl S3Backend {
     /// tombstone under a conditional write. Never called by the store, which
     /// only ever releases a lease it still holds.
     pub fn release_stale_lease(&self) -> Result<Option<PublishedLock>> {
+        // A fresh handle has not negotiated the endpoint's `If-Match` form yet
+        // (the store's writable open does that in `acquire_lock`). Ceph RGW
+        // compares the header literally against an unquoted ETag, so skipping
+        // this would turn every court reset into a 412.
+        self.probe_conditional_writes()?;
         let response = self.get(&Key::lock(), None)?;
         if response.status == 404 {
             return Ok(None);

@@ -15,6 +15,11 @@
 //! | `renewal_keeps_the_writer_valid` | the bounded renewal interval extends the deadline under a conditional write |
 //! | `fencing_token_is_monotonic_across_reclaims` | each takeover takes exactly the next token |
 //!
+//! The lease here is deliberately short (`WEFT_S3_FENCE_LEASE_SECS`, 3 s in the
+//! court) so a court can let it expire. The general S3 suites use a long lease
+//! because a writer that is idle past its deadline must reopen rather than
+//! publish.
+//!
 //! The `SIGSTOP` case is a real child process: the test binary re-executes
 //! itself with `--exact child_fenced_writer`, and the parent stops and resumes
 //! it with the shell's `kill` builtin.
@@ -58,9 +63,10 @@ fn court() -> Option<Court> {
         eprintln!("SKIP s3_fencing: WEFT_S3_TEST_ENDPOINT is not set; run scripts/s3_court.sh");
         return None;
     };
-    let lease = env("WEFT_S3_LOCK_LEASE_SECS")
+    let lease = env("WEFT_S3_FENCE_LEASE_SECS")
+        .or_else(|| env("WEFT_S3_LOCK_LEASE_SECS"))
         .and_then(|text| text.parse::<u64>().ok())
-        .unwrap_or(2)
+        .unwrap_or(3)
         .max(1);
     Some(Court {
         endpoint,
@@ -284,31 +290,54 @@ fn two_writers_racing_on_release_leave_one_valid_lock() {
         );
         let fence = holding.fence;
 
-        // Race a release (dropping the holder) against a fresh acquire. The
-        // acquire may lose (Busy) while the release is in flight; retry a
-        // bounded number of times. Whichever order wins, the lock must never
-        // disappear and the token must never go backwards.
-        let path_clone = path.clone();
-        let release = std::thread::spawn(move || {
-            drop(holder);
-            path_clone
-        });
-        let release_path = release.join().expect("release thread");
-
-        let mut winner = None;
-        for _ in 0..40 {
-            match Store::open_with_backend(&release_path, OpenMode::ReadWrite, kind.clone()) {
-                Ok(store) => {
-                    winner = Some(store);
-                    break;
-                }
-                Err(err) => {
-                    assert_eq!(err.class_name(), "Busy", "unexpected error: {err}");
-                    std::thread::sleep(Duration::from_millis(5));
+        // Race a release against an acquire, deterministically: the acquirer
+        // retries the open until it has observed the live lock at least once,
+        // then this thread releases, and the acquirer must win with the next
+        // token. The two conditional writes therefore genuinely overlap.
+        let observed_live = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let acquirer_flag = observed_live.clone();
+        let acquirer_path = path.clone();
+        let acquirer_kind = kind.clone();
+        let acquire = std::thread::spawn(move || {
+            let mut attempts = 0u32;
+            let mut last_class = None;
+            for _ in 0..400 {
+                attempts += 1;
+                match Store::open_with_backend(
+                    &acquirer_path,
+                    OpenMode::ReadWrite,
+                    acquirer_kind.clone(),
+                ) {
+                    Ok(store) => return (Some(store), attempts, last_class),
+                    Err(err) => {
+                        last_class = Some(err.class_name().to_owned());
+                        acquirer_flag.store(true, Ordering::SeqCst);
+                        std::thread::sleep(Duration::from_millis(2));
+                    }
                 }
             }
+            (None, attempts, last_class)
+        });
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while !observed_live.load(Ordering::SeqCst) {
+            if Instant::now() >= deadline {
+                panic!("iteration {iteration}: the acquirer never observed the live lock");
+            }
+            std::thread::sleep(Duration::from_millis(1));
         }
-        let winner = winner.expect("the acquire never observed the released lock");
+        drop(holder);
+        let (winner, attempts, last_class) = acquire.join().expect("acquirer thread");
+        let winner = winner.expect("the acquirer never observed the released lock");
+        assert_eq!(
+            last_class.as_deref(),
+            Some("Busy"),
+            "iteration {iteration}: the acquirer only ever saw {last_class:?}"
+        );
+        assert!(
+            attempts >= 2,
+            "iteration {iteration}: the acquirer succeeded before observing the live lock"
+        );
+        eprintln!("release/acquire race {iteration}: acquired after {attempts} attempt(s)");
 
         let after = lock_record(&config).expect("lock");
         assert_eq!(

@@ -212,7 +212,12 @@ export WEFT_S3_ACCESS_KEY="$access_key"
 export WEFT_S3_SECRET_KEY="$secret_key"
 export WEFT_S3_TEST_ENDPOINT="$endpoint"
 export WEFT_S3_TEST_PREFIX="weft-s3-test-$suffix"
-export WEFT_S3_LOCK_LEASE_SECS="${WEFT_S3_LOCK_LEASE_SECS:-2}"
+# The general suites do many operations between publications; a writer that is
+# idle longer than its lease must reopen (that is the R17 contract), so give
+# them a lease long enough not to trip on a slow endpoint. The fencing tests
+# deliberately use a short one.
+export WEFT_S3_LOCK_LEASE_SECS="${WEFT_S3_LOCK_LEASE_SECS:-60}"
+export WEFT_S3_FENCE_LEASE_SECS="${WEFT_S3_FENCE_LEASE_SECS:-3}"
 export WEFT_S3_SERVER_LABEL="$minio_version"
 export WEFT_S3_SERVER_VERSION="$minio_release"
 export WEFT_S3_SERVER_SHA256="$actual_sha256"

@@ -238,7 +238,11 @@ export WEFT_S3_ACCESS_KEY="$access_key"
 export WEFT_S3_SECRET_KEY="$secret_key"
 export WEFT_S3_TEST_ENDPOINT="$endpoint"
 export WEFT_S3_TEST_PREFIX="weft-ceph-test-$suffix"
-export WEFT_S3_LOCK_LEASE_SECS="${WEFT_S3_LOCK_LEASE_SECS:-2}"
+# General suites: long enough that ordinary idle time between publications does
+# not expire the lease on a slower endpoint (RGW round trips are ~10x MinIO's).
+# The fencing suite uses its own short lease on purpose.
+export WEFT_S3_LOCK_LEASE_SECS="${WEFT_S3_LOCK_LEASE_SECS:-60}"
+export WEFT_S3_FENCE_LEASE_SECS="${WEFT_S3_FENCE_LEASE_SECS:-3}"
 export WEFT_S3_SERVER_LABEL="Ceph RGW $ceph_version_short"
 export WEFT_S3_SERVER_VERSION="$ceph_version_short"
 export WEFT_S3_SERVER_SHA256="none (container image, not a standalone binary)"
@@ -250,7 +254,7 @@ export WEFT_COMPAT_RECEIPT="$matrix_receipt"
 if [[ "$matrix_only" == 1 ]]; then
   court_cmd="cd /work && cargo run --quiet --example s3_court_bucket && cargo run --quiet --example s3_compat_matrix -- --out $matrix_receipt"
 else
-  court_cmd="cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend -- --test-threads=1 --nocapture && cargo run --quiet --example s3_compat_matrix -- --out $matrix_receipt"
+  court_cmd="cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture && cargo run --quiet --example s3_compat_matrix -- --out $matrix_receipt"
 fi
 scripts/docker-court.sh rust "$court_cmd"
 
@@ -306,7 +310,7 @@ cat > "$court_receipt" <<JSON
     "cluster_status_file": "$status_file"
   },
   "tests": {
-    "suite": $(if [[ "$matrix_only" == 1 ]]; then echo '"matrix only"'; else echo '"cargo test --test s3_backend -- --test-threads=1"'; fi),
+    "suite": $(if [[ "$matrix_only" == 1 ]]; then echo '"matrix only"'; else echo '"cargo test --test s3_backend --test s3_fencing -- --test-threads=1"'; fi),
     "matrix": "$matrix_receipt",
     "minio_matrix": $(if [[ -n "$minio_receipt" ]]; then echo "\"$minio_receipt\""; else echo "null"; fi),
     "comparison": $(if [[ -n "$comparison_receipt" ]]; then echo "\"$comparison_receipt\""; else echo "null"; fi),

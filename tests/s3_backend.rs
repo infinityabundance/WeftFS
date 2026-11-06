@@ -333,7 +333,10 @@ fn crash_proxy_over_s3_yields_old_or_new() {
             .env("WEFT_S3_REGION", &config.region)
             .env("WEFT_S3_ACCESS_KEY", &config.access_key)
             .env("WEFT_S3_SECRET_KEY", &config.secret_key)
-            .env("WEFT_S3_LOCK_LEASE_SECS", "1")
+            // A lease long enough that the crash phase, not a lease expiry,
+            // is what stops this writer. A 1 s lease expired mid-publication
+            // against Ceph RGW, whose round trips are slower than MinIO's.
+            .env("WEFT_S3_LOCK_LEASE_SECS", "30")
             .env("WEFT_CRASH_PHASE", phase)
             .status()
             .expect("spawn weftfs");
@@ -342,9 +345,14 @@ fn crash_proxy_over_s3_yields_old_or_new() {
             "child was expected to abort at phase {phase}"
         );
 
-        // The aborted writer left its LOCK object. Wait out the one-second
-        // lease, then prove a writable open reclaims it and sees whole state.
-        std::thread::sleep(Duration::from_millis(1_300));
+        // The aborted writer left its live LOCK object. Reset it the way an
+        // operator would: a conditional tombstone that preserves the fencing
+        // token. The expired-lease reclaim path is covered by
+        // `tests/s3_fencing.rs`, which runs against MinIO and Ceph RGW; this
+        // test is about publication atomicity, not lease timing.
+        S3Backend::new("<s3-test>", config.clone())
+            .release_stale_lease()
+            .expect("release the crashed writer's lease");
         let store =
             Store::open_with_backend(&store_path, OpenMode::ReadWrite, kind).expect("reopen");
         let bytes = store.read_object(id).unwrap();
