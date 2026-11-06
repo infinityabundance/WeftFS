@@ -1243,6 +1243,20 @@ fn clear_stale_lock(spec: &StoreSpec) -> Result<(), String> {
     }
 }
 
+/// Store identity for the receipt: layout, bucket, local commit root, and the
+/// loopback endpoint. Credentials are never written to a receipt.
+fn spec_detail(spec: &StoreSpec) -> Value {
+    json!({
+        "layout": match spec.layout {
+            Layout::SingleS3 => "s3",
+            Layout::SplitS3BlobsLocalCommits => "s3-blobs-local-commits",
+        },
+        "bucket": spec.bucket.clone(),
+        "local_commit_root": spec.local_root.as_ref().map(|path| path.display().to_string()),
+        "endpoint": spec.endpoint.clone(),
+    })
+}
+
 fn verify_spec(spec: &StoreSpec, label: &str) -> Result<Value, String> {
     let store = open_store(spec, OpenMode::ReadOnly)?;
     let report = store
@@ -1305,6 +1319,7 @@ fn write_path(store: &mut Store, path: &str, bytes: &[u8]) -> Result<Hash32, Str
 fn run_s1_interlock(court: &mut Court) -> Result<Value, String> {
     let mut set = CheckSet::new(court, 1, "S1", "single-writer interlock (20 iterations)")?;
     let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s1")?;
+    set.set("store", spec_detail(&spec));
     {
         let mut store = spec.init()?;
         create_file(&spec, &mut store, b"f", b"interlock-bytes", b"s1-f")?;
@@ -1463,6 +1478,7 @@ fn crash_publication(
     ];
     let mut runs = 0usize;
     let mut heads = Vec::new();
+    let mut buckets = Vec::new();
     let mut old_count = 0usize;
     let mut new_count = 0usize;
     let mut partial_count = 0usize;
@@ -1475,6 +1491,7 @@ fn crash_publication(
             runs += 1;
             let label = format!("{id}-{phase_index}-{iteration}");
             let (spec_path, spec) = court.write_spec(layout, &label)?;
+            buckets.push(spec.bucket.clone());
             let (generation, head) = {
                 let mut store = spec.init()?;
                 create_file(&spec, &mut store, b"alpha", ALPHA_OLD, b"dist-alpha")?;
@@ -1599,6 +1616,7 @@ fn crash_publication(
     set.set("partial_count", json!(partial_count));
     set.set("unpublished_tail_reported", json!(tail_reported));
     set.set("head_before_sequence", json!(heads));
+    set.set("buckets", json!(buckets));
     set.set(
         "stale_lease_note",
         json!("a crashed S3 writer's LOCK object was cleared explicitly before each retry; production waits out its 30 s lease, which is never disabled"),
@@ -1703,6 +1721,7 @@ fn run_s3_retry(court: &mut Court) -> Result<Value, String> {
     // reuse the generation number and produce the identical commit.
     {
         let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s3a")?;
+        set.set("store_after_objects", spec_detail(&spec));
         let dir = court.run_dir.join("s3a");
         let generation_before = spec.init()?.generation();
         set.generation(generation_before);
@@ -1779,6 +1798,7 @@ fn run_s3_retry(court: &mut Court) -> Result<Value, String> {
     // visible state.
     {
         let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s3b")?;
+        set.set("store_after_commit_file", spec_detail(&spec));
         let dir = court.run_dir.join("s3b");
         let generation_before = spec.init()?.generation();
         set.generation(generation_before);
@@ -1876,6 +1896,7 @@ fn run_s3_retry(court: &mut Court) -> Result<Value, String> {
     // nothing.
     {
         let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s3c")?;
+        set.set("store_after_superblock_write", spec_detail(&spec));
         let dir = court.run_dir.join("s3c");
         let generation_before = spec.init()?.generation();
         set.generation(generation_before);
@@ -2515,6 +2536,7 @@ fn concurrent_readers(
     const VERSIONS: usize = 10;
     let mut set = CheckSet::new(court, scenario, id, name)?;
     let (spec_path, spec) = court.write_spec(layout, &format!("s{scenario}-readers"))?;
+    set.set("store", spec_detail(&spec));
 
     let pinned_generation;
     let pinned_head;
@@ -2645,6 +2667,7 @@ fn stale_reader(
     const READS: usize = 4;
     let mut set = CheckSet::new(court, scenario, id, name)?;
     let (spec_path, spec) = court.write_spec(layout, &format!("s{scenario}-stale"))?;
+    set.set("store", spec_detail(&spec));
     let opened_generation;
     let opened_head;
     {
@@ -2733,6 +2756,7 @@ fn run_s5_stale_reader(court: &mut Court) -> Result<Value, String> {
 fn run_s6_unreachable(court: &mut Court) -> Result<Value, String> {
     let mut set = CheckSet::new(court, 6, "S6", "unreachable store fails closed (single S3)")?;
     let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s6")?;
+    set.set("store", spec_detail(&spec));
     let alive_generation;
     {
         let mut store = spec.init()?;
@@ -2904,6 +2928,7 @@ fn run_s7_gc_race(court: &mut Court) -> Result<Value, String> {
         "gc --apply racing a snapshot reader (single S3)",
     )?;
     let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s7")?;
+    set.set("store", spec_detail(&spec));
     let dir = court.run_dir.join("s7");
     let keep_object;
     let gone_object;
@@ -3103,6 +3128,7 @@ fn run_s8_content_hash(court: &mut Court) -> Result<Value, String> {
         "a known content hash is not authority (single S3)",
     )?;
     let (spec_path, spec) = court.write_spec(Layout::SingleS3, "s8")?;
+    set.set("store", spec_detail(&spec));
     let envelope_path = court.run_dir.join("s8").join("envelope.bin");
     let secret_object;
     let visible_object;

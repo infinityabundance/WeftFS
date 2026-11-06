@@ -3450,3 +3450,106 @@ loss is in `bench/RESULTS-rebase-scale.md`.
   rebased.
 * Go rebase parity is tested at the store and CLI levels; the scale court itself
   is Rust-only.
+
+## Subphase R13 — distributed correctness court (2026-11-06)
+
+The S3 backend, the blob/commit plane split, conditional head publication with
+a probed stale-CAS refusal, GC, capabilities, and snapshots each had a court,
+but none of them drove **separate writer/reader/GC processes** through the
+distributed contract under failure. R13 adds that court before any further
+performance claim. No wire format, manifest, commit, superblock, or vector
+changed.
+
+### The court
+
+`bench/scripts/distributed_court.sh` runs in the bench court. It starts the
+verified MinIO `RELEASE.2025-04-22T22-12-26Z` binary
+(sha256 `53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c`)
+itself on loopback so it can stop and restart the server process. The harness
+(`examples/distributed_court.rs`) drives real processes and records, for every
+scenario, the exact command line, PID, exit code or signal, observed
+generations, verification result, and raw log path:
+
+* **S1** single-writer interlock: 20 alternating pairs; every second open is
+  refused `Busy`; a third process opens after the first exits and the store
+  verifies (64/64 checks).
+* **S2** atomic publication under a process fault at `after_objects`,
+  `after_commit_file`, and `after_superblock_write` (15 runs): 10 old, 5 new,
+  **0 mixed/partial**; the 5 pre-head tails are reported by `verify`, never
+  hidden (34/34).
+* **S3** at-least-once retry: after `after_objects` the retried commit is
+  **byte-identical** to the uninterrupted head (`32a0ba3d…9431`); after
+  `after_commit_file` the visible state is identical and one entry per path
+  exists, with lineage `[3, 1]` and the abandoned generation never reused;
+  after publication the retry is refused `Exists` and writes nothing (21/21).
+* **S4** 8 reader processes keep the exact pinned bytes across 10 commits
+  (64/64 reads at pinned generation 3, published 4–13) (19/19).
+* **S5** an open reader keeps its generation and bytes after the writer
+  publishes; only a reopen observes generation 3 (4 stale + 4 fresh reads)
+  (4/4).
+* **S6** an endpoint with no listener fails at open with `Io`; stopping the
+  live MinIO process makes a read fail with `Io` and emit **0** bytes;
+  restarting on the same data verifies and serves the same pinned bytes
+  (2 starts, 1 stop) (9/9).
+* **S7** `gc --apply` racing a reader pinned to a snapshot-only object:
+  48 blobs / 16,435 bytes reclaimed; the snapshot-only object, the live file,
+  the snapshot state, the checkpoint, and the provenance receipt all still
+  read exactly; `verify --full` is clean (8/8).
+* **S8** knowing a `ContentId` is not authority under a signed capability
+  envelope: the denial is `NotFound: no such object`, byte-identical to an
+  absent hash; a token for another object cannot cover the content root; the
+  CLI denies `/secret` with the same text and no bytes (10/10).
+* **S9** S2/S4/S5 repeated for `--blob-backend s3 --commit-backend local`
+  (60/60).
+
+The passing receipt is
+`bench/receipts/distributed-20261106T134839Z.json`: **9/9 scenarios, 229 checks
+passed, 0 failed, 120 processes recorded**, 42 isolated buckets, 6,192 ms of
+harness wall time, 7,404 KiB peak RSS. The first run,
+`bench/receipts/distributed-20261106T133534Z.json`, is retained as the failing
+receipt (206 passed / 23 failed) that found the defects below. Analysis and
+every limit: `bench/RESULTS-distributed.md`.
+
+`tests/distributed_semantics.rs` is the always-on half: **12 passed / 0
+failed**. It pins the interlock, stale reader (local and local split),
+8-thread concurrent readers, the crash matrix (local and split), the three
+retry cases, the unreachable endpoint, the GC race, and content-hash
+non-disclosure without needing MinIO.
+
+### Defects found and fixed
+
+1. Opening a store whose `FORMAT` read failed reported every error as
+   `Corrupt`, including a connection refusal. `Store::open_impl` now preserves
+   `Class::Io` with the same context text.
+2. A transport failure during a read was reported as
+   `Corrupt: missing blob …: Io: …`. The recovery blob/superblock/commit
+   wrappers and the three chunk-read wrappers now preserve `Class::Io`; a
+   genuinely missing or mismatched record is still `Corrupt`. This is what
+   makes S6's "fails closed with a transport error" literally true.
+
+### Verification and gates
+
+* `cargo test --all-targets` (rust court): **392 passed / 0 failed**.
+* `cargo test --features fuse --all-targets` (fuse court): **434 passed / 0
+  failed / 2 ignored** (the two pre-existing ignores).
+* `scripts/s3_court.sh` (single-node MinIO unit court): **6/6**.
+* `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass.
+
+### Residual and non-claims
+
+* Not a cloud, multi-node, fleet, device-cache, media, or production claim:
+  one host, one MinIO process on loopback, a tmpfs data directory.
+* No TCP-level partition: the only network faults are an endpoint with no
+  listener and stopping/restarting the server process. There is no packet
+  filter, delay, duplication, or split-brain case.
+* No physical media or power-loss claim; S3 durability means the server
+  acknowledged the write.
+* Writers are exclusive by design (one at a time); no multi-writer protocol is
+  claimed or tested.
+* The `after_commit_file` retry produces a new generation (3 instead of the
+  reference 2) because an unconfirmed commit file is never reused. Its visible
+  state is identical and there is no second visible state.
+* A crashed S3 writer's 30 s lease is cleared explicitly by the court before
+  each retry; production waits it out and the lease is never disabled. The
+  receipt records this.
+* The court is Rust-only; the split layout's commit plane is local in S9.

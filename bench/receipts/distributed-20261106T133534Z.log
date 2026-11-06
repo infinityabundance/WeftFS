@@ -1,0 +1,133 @@
+== distributed correctness court ==
+utc=20261106T133534Z
+court_image=weft/bench-court:1
+court_image_id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+memory=3g cpus=4 pids=1024 nproc=2048
+revision_weftfs=446a094fa03f671d42b611ac36c5d5f028c5af6d
+revision_weftcodec=54cb4f68899c212ce7a12d5c461b400cfe7b3112
+minio_bin=/work/.docker-cache/minio/minio
+minio_sha256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c
+work_root=/tmp/weft-distributed-court
+
+   Compiling weftfs v0.8.0 (/work)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4089:8
+     |
+4089 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4096:8
+     |
+4096 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4113:7
+     |
+4113 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4115:4
+     |
+4115 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4148:4
+     |
+4148 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `release` profile [optimized] target(s) in 18.45s
+     Running tests/distributed_semantics.rs (.docker-cache/target-rust/release/deps/distributed_semantics-c7111f41ee156b96)
+
+running 12 tests
+test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok
+test content_hash_knowledge_does_not_authorize_retrieval ... ok
+test crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok
+test distributed_group_crash_child ... ok
+test gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok
+test retry_after_commit_file_crash_has_one_visible_state ... ok
+test retry_after_objects_crash_reaches_the_uninterrupted_head ... ok
+test retry_after_published_crash_does_not_create_a_second_state ... ok
+test single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok
+test stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok
+test stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok
+test unreachable_endpoint_fails_closed_without_partial_bytes ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.72s
+
+---- distributed semantics test summary ----
+test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok
+test content_hash_knowledge_does_not_authorize_retrieval ... ok
+test crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok
+test distributed_group_crash_child ... ok
+test gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok
+test retry_after_commit_file_crash_has_one_visible_state ... ok
+test retry_after_objects_crash_reaches_the_uninterrupted_head ... ok
+test retry_after_published_crash_does_not_create_a_second_state ... ok
+test single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok
+test stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok
+test stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok
+test unreachable_endpoint_fails_closed_without_partial_bytes ... ok
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.72s
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4089:8
+     |
+4089 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4096:8
+     |
+4096 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4113:7
+     |
+4113 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4115:4
+     |
+4115 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4148:4
+     |
+4148 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+   Compiling weftfs v0.8.0 (/work)
+    Finished `release` profile [optimized] target(s) in 1.99s
+distributed_court: 7/9 scenarios, 206 checks passed, 23 failed
+distributed_court: receipt bench/receipts/distributed-20261106T133534Z.json
+distributed_court: the distributed court did not pass
+distributed_court: receipt does not report pass
+distributed receipt: bench/receipts/distributed-20261106T133534Z.json
+raw log: bench/receipts/distributed-20261106T133534Z.log
+35543e8ec713100a028a7d99c5b78e435253493a6d087d0afc335dbd93a21671  bench/receipts/distributed-20261106T133534Z.json
+16f88dddb9a953d5a947568c9624a82fc3c7101be32700577ea9a10f6d115f1e  bench/receipts/distributed-20261106T133534Z.log
+a6bd5bb5ae0e6f0fe8e22afe8a198a64d8c33f82da1d0e0ff5309dd80b90911c  bench/receipts/distributed-20261106T133534Z.tests.txt
+a18bd64c204e92636437914607ea91b19840fa88ddd74e0e64ef82f1947fc5f4  bench/receipts/distributed-20261106T133534Z.s1.log
+da712460b3962ea8a1cf005bf1aa0bd26d7156b7c21f02e252cc3a71fb0fa973  bench/receipts/distributed-20261106T133534Z.s10.log
+41bed0d6741743a12161b8bd59a9fe5ef9188d2a0420d0ae5b0ec461f639f200  bench/receipts/distributed-20261106T133534Z.s11.log
+9d82629f165e8cf633d3ec40a4e12c22e022f20253fb0a78bc38af5c0fdc5e15  bench/receipts/distributed-20261106T133534Z.s2.log
+a7bb037aebfac6ae3a37e08fb4bd4a39384262987a48f007553797ea926d0b7f  bench/receipts/distributed-20261106T133534Z.s3.log
+9b6b84d9b3f0ba00eda74d5c53fa729a0ea01648cf43327f73ff980673b0f919  bench/receipts/distributed-20261106T133534Z.s4.log
+9305facc526215318715d1e18da46b10d89dfe84cb39f51a07ee8e4205edcb2c  bench/receipts/distributed-20261106T133534Z.s5.log
+bbe3775fbbf9653c264f11006d72e6854b54fb78ad11bc049e96bf1efe919259  bench/receipts/distributed-20261106T133534Z.s6.log
+f109395fc4865a60875929a0dc2640445fbbdae6dd08f967c2f2d69e707351a9  bench/receipts/distributed-20261106T133534Z.s7.log
+a82564e1766ab7003577a63f8a6a1579324a9901ee2f748c43f05ec684588ee3  bench/receipts/distributed-20261106T133534Z.s8.log
+69ff662a0f0bc40d6c3e3192aa8d763adf168468765daf3d5404b71def661fab  bench/receipts/distributed-20261106T133534Z.s9.log

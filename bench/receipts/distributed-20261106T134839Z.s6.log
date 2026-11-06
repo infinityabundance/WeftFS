@@ -1,0 +1,14 @@
+  process unroutable pid=228 exit=exit 70 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child reader
+    err: child reader: open failed: Io: cannot read FORMAT: Io: S3 GET s3://dist-unroutable-130-22/FORMAT failed: http://127.0.0.1:39839/dist-unroutable-130-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)
+[S6] PASS 6a an endpoint with no listener fails closed with Io: exit=exit 70 class="Io" message="cannot read FORMAT: Io: S3 GET s3://dist-unroutable-130-22/FORMAT failed: http://127.0.0.1:39839/dist-unroutable-130-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)"
+[S6] PASS 6a no bytes were emitted: stdout_tail=""
+[S6] PASS 6b the reader opened and read before the stop: generation=2
+[S6] PASS 6b the MinIO process is stopped: stop=Ok(())
+  process stopped pid=229 exit=exit 0 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child reader-fail
+[S6] PASS 6b a read against the stopped server fails with a transport error: exit=exit 0 class="Io" message="missing blob manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Io: S3 GET s3://dist-130-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206 failed: http://127.0.0.1:37825/dist-130-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Connection Failed: Connect error: Connection refused (os error 111)"
+[S6] PASS 6b no partial or zero-filled bytes were returned: bytes_emitted=0 stdout_tail=""
+[S6] PASS 6b the MinIO process restarts on the same data: start=Ok(())
+  process after-restart-verify pid=239 exit=exit 0 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child verify
+[S6] PASS 6b a subsequent successful reopen verifies: exit=exit 0 generation=2 problems=Array []
+  process after-restart-reader pid=240 exit=exit 0 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child reader
+[S6] PASS 6b the recovery reader completes without a mismatch: exit=exit 0 stale_reads=2

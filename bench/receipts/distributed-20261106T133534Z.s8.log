@@ -1,0 +1,15 @@
+  process capability pid=426 exit=exit 0 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child capability
+[S8] PASS the envelope principal is a valid authenticated grant: exit=exit 0
+[S8] PASS the secret is POSIX-readable, so the denial is the capability: posix_readable=true
+[S8] PASS knowing the secret ContentId is denied as NotFound: class="NotFound" message="no such object"
+[S8] PASS an absent ContentId produces the identical answer: absent_class="NotFound" absent_message="no such object"
+[S8] PASS the granted object is addressable by its ContentId: result={"object":"d497e7774bfb77520940f7420878473361d34226a89f336cba4c72b1f1c1b1ab","ok":true}
+[S8] PASS an authorized token cannot cover another content root: class="Unauthorized" message="authorization token does not cover this content root"
+[S8] PASS no denial text reveals the secret's name: texts=["no such object", "authorization token does not cover this content root"]
+  process cat-visible pid=427 exit=exit 0 argv=/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:37525 --s3-bucket dist-311-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-311/s8/envelope.bin /visible
+    out: visible-payload-0000
+[S8] PASS the CLI reads the granted object with the envelope: exit=exit 0
+  process cat-secret pid=428 exit=exit 1 argv=/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:37525 --s3-bucket dist-311-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-311/s8/envelope.bin /secret
+    err: NotFound: no such object
+[S8] PASS the CLI denies the ungranted object with the non-disclosing error: exit=exit 1 stderr="NotFound: no such object"
+[S8] PASS verification is clean: problems=Array []

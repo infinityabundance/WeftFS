@@ -60,7 +60,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.8.0.md`](docs/RELEA
 - **PyTorch DCP (Q5):** real torch 2.15.0+cpu `save`/`load`, **9/9 topology-identical restores**, save **1,223.6 ms**, load **152.2 ms**, single-tensor **67.2 ms**, async submit **0.72 ms**, **0.9294×** `torch.save` bytes. Losses: **141× slower save, 30× slower load**; no GPU path, one process.
 - **Signed bundles (Q6):** Ed25519 over a canonical manifest, `SIGNATURE OK ed25519:…`, **15/15** acceptance/rejection cases, Go verifier agrees. Signing adds a ~128 KB manifest to a 1,064-file bundle. Non-claims: no CA, transparency log, or rotation; integrity is relative to a key only.
 - **Verification:** `verify-20261106T083428Z.json` is **27/27 courts pass** at WeftFS `a4e2c3d` (the R7 shared-mount tree); `verify-20261106T053501Z.json` (27/27 at `36bbbef`, the mode-16 tree), `verify-20261106T052933Z.json` (27/27 at `e4cdc55`), `verify-20261106T044258Z.json` (27/27 at `a8f8a3e`), and the v0.8.0 release receipt `verify-20261106T011444Z.json` (also 27/27) are retained. Retained failures and flakes are listed in the release note.
-- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, multi-writer/distributed store, Go parity for checkpoint/training-ready/mode-15 writing, Go host calibration, a multi-host rebase policy, and any fleet claim.
+- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, a multi-writer or multi-node store, Go parity for checkpoint/training-ready/mode-15 writing, Go host calibration, a multi-host rebase policy, and any fleet claim.
 
 ### Blob and commit planes (R10, post-0.8.0 work)
 
@@ -94,6 +94,25 @@ for those 16. Every loss, the break-even analysis, and the method are in
 [`bench/RESULTS-rebase-scale.md`](bench/RESULTS-rebase-scale.md); receipt
 `rebase-scale-20261106T130054Z.json`. The new reopen test also found and fixed a
 real consumed-counter persistence bug in both languages.
+
+### Distributed correctness court (R13, post-0.8.0 work)
+
+One court now drives separate writer, reader, and GC processes against a real
+MinIO server and checks the distributed contract under failure: a 20-pair
+single-writer interlock (`Busy`), old-or-new whole state at every exposed
+publication transition (30 crash runs across the single and split layouts, no
+mixed generation), idempotent retry after a crash, 8 concurrent readers keeping
+the exact pinned bytes across 10 commits, a stale reader that waits for reopen,
+fail-closed `Io` with no partial bytes when the server is stopped mid-run and a
+clean verify after restart, `gc --apply` racing a snapshot-only reader while a
+checkpoint and provenance record are present, and proof that a known `ContentId`
+is not authority under an authenticated envelope. The court also found and fixed
+a real defect: an unreachable store was reported as `Corrupt`, not `Io`, both at
+open and on the read path. Passing receipt:
+`distributed-20261106T134839Z.json` (**9/9 scenarios, 229 checks, 0 failed**);
+the first failing receipt is retained. Every limit (single node, process faults
+rather than media loss, no TCP partition, exclusive writers, Rust-only) is in
+[`bench/RESULTS-distributed.md`](bench/RESULTS-distributed.md).
 
 Prior release: [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).
 
