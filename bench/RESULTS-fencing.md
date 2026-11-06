@@ -1,9 +1,11 @@
-# R17 — fenced writer protocol for the S3 writer lease
+# R17/R18 — fenced writer protocol for the S3 and GCS writer leases
 
-Status: **implemented and tested** on `staging` (Rust only; Go has no S3
-backend). This document is the evidence, the exact atomicity statement, and
-the list of what is still missing. It is the companion to the
-`Subphase R17` section of `docs/STATUS.md`.
+Status: **implemented and tested** on `staging` (Rust only; Go has no S3 or GCS
+backend). R17 covered S3; R18 maps the same protocol onto GCS generation
+preconditions and makes the invariant tests shared. This document is the
+evidence, the exact atomicity statement, and the list of what is still missing.
+It is the companion to the `Subphase R17` and `Subphase R18` sections of
+`docs/STATUS.md`.
 
 Label: one host, one OOM-protected Docker court, one MinIO process on loopback
 with a tmpfs data directory. Real conditional writes against a real endpoint.
@@ -27,6 +29,14 @@ The reviewer's report was accurate. In `src/s3.rs` before this subphase:
 3. A conditional head compare-and-swap alone was **not** ownership proof: it
    proves only that the *head* did not move. A writer can still win that race
    while another writer has already taken the lease.
+
+R18 found the same three defects in `src/gcs.rs`, in the generation-precondition
+shape: `release_lock()` read `LOCK`, checked the owner line, then deleted it
+unconditionally; `acquire_lock` wrote `owner` + `expires_ns` and nothing read the
+lease at publication time; and `verify_write_lease` was not implemented, so the
+trait default `Ok(())` let a stale writer publish and
+`fence_head_publication` fell back to the same no-op. That gap is closed by
+section 2.6 and the shared courts in section 4.5.
 
 ## 2. The protocol
 
@@ -143,11 +153,42 @@ the `LOCK` *name* still resolves to the exact `(dev, ino)` this handle locked.
 Replacing or removing the file hands the namespace to someone else, and the old
 handle then fails `Busy` before the commit record or the head is written.
 
+### 2.6 The same protocol on GCS (R18)
+
+GCS has no ETags: its conditional write is a **generation precondition**. The
+records are the same
+(`weftfs-gcs-lock v2` / `weftfs-gcs-lock-released v1`, identical fields to S3's;
+encode/parse/describe live in `src/writer_fence.rs`), and only the primitive and
+the token source change:
+
+| concern | S3 | GCS |
+|---|---|---|
+| create once | `If-None-Match: *` | `ifGenerationMatch=0` |
+| observed token | ETag string | object generation (`u64`) |
+| token source | response `ETag` header | upload reply object resource; if absent, a read-after-write that must return exactly the published bytes |
+| takeover | `If-Match` on the observed ETag | `ifGenerationMatch` on the observed generation |
+| fence | conditional rewrite of `LOCK` | conditional upload of `LOCK` |
+| renewal | same conditional write | same conditional upload |
+| release | tombstone with `If-Match` | tombstone with `ifGenerationMatch` |
+| writable-open proof | `If-Match` accepted, stale refused | matching generation accepted, stale refused |
+
+Everything that is *not* the primitive is identical: the fence precedes the
+head CAS, it carries `pending_generation` / `pending_commit`, it renews the
+deadline when one publication budget remains, a writer refuses once its own
+deadline passed, and release is a conditional tombstone that never deletes
+`LOCK`. A stale writer's conditional upload names an old generation, so a
+successor's reclaim makes it fail `412` → `Busy` before the head is touched.
+
+Because the generation must name *this* writer's bytes, an endpoint that
+returns neither the object resource nor the same bytes on re-read is refused
+`UnsupportedVersion`: a guessed token could let a successor's generation be
+recorded as this writer's own.
+
 ## 3. Exact atomicity statement
 
-S3 gives one conditional write per object and no multi-object transaction. The
-protocol is built to be safe under that constraint, and the boundary is stated
-plainly:
+S3 and GCS each give one conditional write per object and no multi-object
+transaction. The protocol is built to be safe under that constraint, and the
+boundary is stated plainly:
 
 * The fence and the head write are **two** operations on **two** objects.
   They cannot be fused on a plain S3 endpoint.
@@ -176,10 +217,13 @@ All runs are in the repository's Docker courts under unchanged hard limits
 (memory 3g / swap 3g, pids 1024, cpus 4, bounded `/tmp`, `cap-drop=ALL`,
 `no-new-privileges`).
 
-### 4.1 `tests/s3_fencing.rs` — 8/8 in the MinIO court (15.23 s, 3 s lease)
+### 4.1 `tests/s3_fencing.rs` — 8/8 in the MinIO court (15.19 s at the R18
+tree; 15.23 s at R17, 3 s lease)
 
 Receipt `bench/receipts/s3-court-20261106T174609Z.json` (6 backend + 8 fencing
-tests, MinIO RELEASE.2025-04-22T22-12-26Z sha256 `53e2a2cb…bb817c`).
+tests, MinIO RELEASE.2025-04-22T22-12-26Z sha256 `53e2a2cb…bb817c`). The same
+courts re-ran at the R18 tree (shared test bodies) as
+`bench/receipts/s3-court-20261106T182043Z.json`: 6/6 and 8/8 in 15.19 s.
 
 | test | property | observed |
 |---|---|---|
@@ -229,23 +273,81 @@ S3 implementation), not only `s3_backend`:
 This is the first time the fence runs against an endpoint that (a) compares
 `If-Match` literally against a dequoted ETag and (b) is roughly an order of
 magnitude slower per round trip than MinIO. Both exposed real defects in the
-harness, not in the protocol (section 6).
+harness, not in the protocol (section 6). At the R18 tree the same suites re-ran
+against RGW as `bench/receipts/ceph-rgw-20261106T183427Z.json` (6/6 in
+41.94 s, 8/8 in 80.87 s) with the shared invariant bodies.
 
-### 4.4 Backend and suite counts
+### 4.4 `tests/gcs_fencing.rs` — 7/7 against `fake-gcs-server` v1.56.1
+
+The pinned emulator is a single static binary (`fake-gcs-server_1.56.1_Linux_amd64.tar.gz`,
+sha256 `0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469`)
+started on loopback inside the OOM-protected rust court with a memory backend.
+Receipts: `bench/receipts/gcs-court-20261106T182003Z.json` (court, with the
+emulator release, tarball sha256, container limits, commands, logs) and
+`bench/receipts/gcs-20261106T182003Z.json` (end-to-end harness), plus
+`.fencing.log` / `.tests.log`.
 
 | suite | result |
 |---|---|
-| `cargo test --all-targets` (rust court) | 94 targets, **431 passed, 0 failed, 0 ignored** |
-| `cargo test --features fuse --all-targets -- --test-threads=1` (fuse court) | 94 targets, **473 passed, 0 failed, 2 ignored** (both pre-existing: same-inode direct-I/O EIO, and `CAP_SETUID` absent) |
+| `tests/gcs_backend.rs` (in-process fake service) | **15/15**, 1.42 s |
+| `tests/gcs_fencing.rs` (emulator, 3 s lease) | **7/7**, 14.60 s |
+| end-to-end court (local vs GCS) | `content_root_match=true`, `generation_match=true`, `generation_sequence_match=true` |
+
+The default GCS lease is 900 s. The crash-proxy court keeps its 2 s lease
+(`WEFT_GCS_LOCK_LEASE_SECS`); the fencing suite uses 3 s
+(`WEFT_GCS_FENCE_LEASE_SECS`) because it must be able to expire a lease.
+
+GCS-specific observed detail: the end-to-end court ran 21 commits and the
+backend diagnostics reported **`GCS fence CAS proved the lease 42 time(s), 0
+with a renewal`** — exactly two conditional `LOCK` uploads per commit (the
+proof before the commit record and the fenced proof naming the head).
+
+### 4.5 One test body, three courts
+
+`tests/support/fencing.rs` contains the invariants; the two test files import
+it and supply only endpoint configuration and observer hooks. The S3 court
+runs the file on MinIO **and** on Ceph RGW; the GCS court runs it on
+`fake-gcs-server`.
+
+| invariant | MinIO (s3) | Ceph RGW 19.2.0 (s3) | fake-gcs-server 1.56.1 (gcs) |
+|---|---|---|---|
+| expired lease, no successor | pass | pass | pass |
+| paused writer reclaimed → `Busy`, head unchanged | pass | pass | pass |
+| release of a replaced lock leaves successor bytes + token | pass | pass | pass |
+| renewal: fence constant, deadline increases | pass | pass | pass |
+| takeover tokens `1..5`, each naming its head | pass | pass | pass |
+| `SIGSTOP` child (`child_fenced_writer`) | pass | pass | pass |
+| observer reads the live record without a lease | pass | pass | pass |
+| release/acquire race (S3-only) | pass (20/20) | pass (20/20) | not applicable |
+
+The GCS observer test additionally asserts that the conditional token is a real
+object generation (`generation_for_test(LOCK) > 0`), so the fence is proven to
+condition on the provider's own token rather than a local guess.
+
+### 4.6 Backend and suite counts (R18 tree)
+
+| suite | result |
+|---|---|
+| `cargo test --all-targets` (rust court) | 95 targets, **445 passed, 0 failed, 0 ignored** |
+| `cargo test --features fuse --all-targets -- --test-threads=1` (fuse court) | 95 targets, **487 passed, 0 failed, 2 ignored** (both pre-existing: same-inode direct-I/O EIO, and `CAP_SETUID` absent) |
 | `tests/writer_fencing.rs` (local + object) | 4/4 |
-| `tests/s3_backend.rs` (MinIO) | 6/6, 0.53 s |
-| `tests/s3_fencing.rs` (MinIO) | 8/8, 15.23 s |
-| `tests/s3_fencing.rs` (Ceph RGW) | 8/8, 80.85 s |
-| `distributed_semantics` + harness | 12/12 tests, 10/10 scenarios |
-| `scripts/verify-all.sh` | **28/28 courts pass, 0 skipped** (`verify-20261106T174703Z.json` at `37a3a39`) |
+| `tests/s3_backend.rs` (MinIO) | 6/6 |
+| `tests/s3_fencing.rs` (MinIO) | 8/8, 15.19 s |
+| `tests/s3_backend.rs` (Ceph RGW) | 6/6, 41.94 s |
+| `tests/s3_fencing.rs` (Ceph RGW) | 8/8, 80.87 s |
+| `tests/gcs_backend.rs` (in-process fake) | 15/15, 1.42 s |
+| `tests/gcs_fencing.rs` (`fake-gcs-server`) | 7/7, 14.60 s |
+| `distributed_semantics` + harness (R17) | 12/12 tests, 10/10 scenarios |
+| `scripts/verify-all.sh` | **not rerun for R18**; last aggregate at R17 is 28/28 (`verify-20261106T174703Z.json` at `37a3a39`) |
 
 The two ignored FUSE tests are the pre-existing ones recorded in
 `docs/fuse-status.md`; nothing new is ignored or filtered.
+
+One flake is disclosed: the first full Rust run after stage 1 failed
+`distributed_semantics::single_writer_interlock_is_exclusive_and_reopens_cleanly`
+at its `Store::open(...).unwrap()` after the first handle was dropped. It passed
+standalone immediately, that binary passed 5/5 consecutive runs, and the full
+suite rerun was 445/0. R18 touches no local-backend code.
 
 ## 5. What did not change
 
@@ -261,7 +363,13 @@ The two ignored FUSE tests are the pre-existing ones recorded in
   to the caller.
 * The writable-open probe: `If-None-Match: *`, a matching `If-Match`, and a
   stale `If-Match` that must be refused, plus the measured quoted/dequoted
-  entity-tag form.
+  entity-tag form. On GCS the same gate proves `ifGenerationMatch=0` creates
+  once, a matching generation succeeds, and a stale generation is refused.
+* The GCS logical key layout (`objects/`, `manifests/`, `commits/`,
+  `indexes/`, `refs/`, the two-slot superblock) and the commit protocol are
+  unchanged. Only the control object `LOCK` changed shape, from
+  `weftfs-gcs-lock v1` (`owner` + `expires_ns`) to the fenced v2 record. It is
+  not content-addressed and is not part of any commit.
 
 ## 6. Costs
 
@@ -292,8 +400,24 @@ The two ignored FUSE tests are the pre-existing ones recorded in
 
   That receipt (`verify-20261106T171925Z.json`) is retained as the evidence
   for the behaviour; the lease split above is the fix.
+* GCS: the fence adds two small conditional uploads per commit (proof before
+  the commit record, fenced proof naming the head). A single-run comparison of
+  the same 21-commit court workload against the pre-fence receipt
+  (`gcs-20261106T150444Z.json`) gave 14.64 → 15.96 ms create, 11.52 → 12.62 ms
+  range write, 4.49 → 4.89 ms read, 9.86 → 9.22 ms reopen, 27.84 → 27.56 ms
+  verify. These are two runs, not interleaved repetitions, so this is an
+  observation and **not** a performance claim.
+* GCS: `upload_tracked` reads the generation from the upload reply. When an
+  endpoint omits the object resource it costs one extra read-after-write per
+  `LOCK` upload to confirm the bytes (and therefore the generation) are this
+  writer's. `fake-gcs-server` returns the resource, so the court does not take
+  that path in the court (fake-gcs-server returns the resource). The fallback is
+  exercised end-to-end by `tests/gcs_backend.rs`'s FakeGcs
+  `omit_upload_generation` mode: a full store init/create/range-write/verify and
+  a read-only reopen take the verified-read path for every lease write, and the
+  published record still carries one live fence token.
 
-## 6b. Defects the fence found in its own harness (Ceph RGW)
+## 6b. Defects the fence found in its own harness (Ceph RGW, GCS)
 
 1. **A 1 s lease is not enough to publish on RGW.** `crash_proxy_over_s3_yields_old_or_new`
    gave its child a 1 s lease so the harness could sleep it out; on RGW the
@@ -309,6 +433,12 @@ The two ignored FUSE tests are the pre-existing ones recorded in
    began acquiring, so every iteration won on the first attempt. It now retries
    until it has observed the live lock (at least one `Busy`), and only then
    releases; every iteration records `acquired after 2 attempt(s)`.
+4. **The GCS court's environment allowlist was incomplete (R18).**
+   `scripts/docker-court.sh` forwards an explicit list of `WEFT_*` names; the
+   new `WEFT_GCS_FENCING_LOG` was not on it, so the first court run failed with
+   `WEFT_GCS_FENCING_LOG is required`. The allowlist now carries
+   `WEFT_GCS_FENCING_LOG` and `WEFT_GCS_FENCE_LEASE_SECS`; the failed court
+   receipt `gcs-court-20261106T180729Z.json` is retained.
 
 ## 7. What a real multi-writer protocol would still require
 
@@ -330,14 +460,20 @@ following exists:
    within the lease budget. A writer with a badly skewed clock is not defended
    against; a monotonic clock source and a bounded skew assumption would be
    needed.
-5. **The GCS backend.** `GcsBackend` still has the older read-then-release code
-   path and no fence; `CommitPlane::verify_write_lease` defaults to `Ok(())`
-   there. A GCS commit plane is still single-writer by its own lock, but it does
-   not get the R17 guarantee. This is a real gap, recorded here rather than
-   implied to be closed.
-6. **Go.** WeftFS-Go has no S3 backend, so there is no cross-language fence.
-7. **Physical media and power loss.** Everything here is a process-fault court
-   on a tmpfs-backed endpoint.
+5. **Cross-object atomicity.** The fence and the head write are two
+   conditional writes on two objects on both S3 and GCS. Keeping the
+   two-write ordering argument is deliberate; a provider with multi-object
+   transactions is not used.
+6. **The GCS backend is now fenced (R18), but against an emulator.**
+   `fake-gcs-server` proves the generation-precondition protocol, not the
+   behaviour of a real Google Cloud Storage deployment: no multi-region
+   consistency, TLS, credential rotation, service-side throttling, or
+   partition was tested. The release is a single-node memory-backed process on
+   loopback.
+7. **Go.** There is no Go parity: WeftFS-Go has no S3 and no GCS backend, so
+   there is no cross-language fence and no Go GCS court.
+8. **Physical media and power loss.** Everything here is a process-fault court
+   on a tmpfs-backed endpoint or an emulator's memory backend.
 
 ## 8. Reproduction
 
@@ -345,8 +481,14 @@ following exists:
 # S3 unit + fencing court (real MinIO in the rust court)
 bash scripts/s3_court.sh
 
+# GCS unit + fencing + end-to-end court (pinned fake-gcs-server)
+bash bench/scripts/gcs_court.sh
+
 # Multi-process court including scenario S10
 bash scripts/s3_court.sh --distributed
+
+# Independent S3 implementation (Ceph RGW) including the shared fencing suite
+bash scripts/ceph_court.sh
 
 # Full suites
 bash scripts/docker-court.sh rust "cargo test --all-targets"

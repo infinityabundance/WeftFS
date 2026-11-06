@@ -34,11 +34,12 @@ warning: `weftfs` (bin "weftfs") generated 5 warnings
     Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
      Running tests/gcs_backend.rs (.docker-cache/target-rust/debug/deps/gcs_backend-5221f9ecc9281727)
 
-running 14 tests
+running 15 tests
 test anonymous_emulator_mode_sends_no_authorization_header ... ok
 test configuration_refuses_an_ambiguous_credential ... ok
 test control_create_is_create_once_and_delete_is_reported ... ok
 test create_once_succeeds_is_idempotent_and_rejects_different_bytes ... ok
+test generation_is_confirmed_by_read_back_when_the_upload_reply_omits_it ... ok
 test listing_round_trips_the_normative_layout ... ok
 test matched_generation_succeeds_and_a_stale_generation_is_busy ... ok
 test missing_object_is_not_found_everywhere ... ok
@@ -50,9 +51,8 @@ test store_refuses_a_stale_accepting_endpoint_before_publishing ... ok
 test store_round_trip_is_byte_identical_to_local_and_reopens ... ok
 test transport_failure_stays_io_and_is_not_reported_as_corruption ... ok
 
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
 
-   Compiling weftfs v0.9.0 (/work)
 warning: struct `MountSpec` is never constructed
     --> src/main.rs:4164:8
      |
@@ -86,4 +86,4 @@ warning: function `cached_state` is never used
      |    ^^^^^^^^^^^^
 
 warning: `weftfs` (bin "weftfs") generated 5 warnings
-    Finished `release` profile [optimized] target(s) in 18.79s
+    Finished `release` profile [optimized] target(s) in 0.02s

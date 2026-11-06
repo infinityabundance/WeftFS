@@ -193,7 +193,13 @@ Retained failing receipts: `bench/receipts/gcs-court-20261106T145714Z.json`
 * The in-process fake serves one listing page; pagination is implemented in the
   backend and exercised only against the single-page case.
 * Writers are exclusive by design (one `LOCK` object, advisory lease). No
-  multi-writer protocol is claimed or tested.
+  multi-writer protocol is claimed or tested. Since R18 that lease is fenced:
+  `weftfs-gcs-lock v2` (same fields as S3's record), takeover and renewal are
+  `ifGenerationMatch` uploads, the fence is the last conditional upload before
+  the head CAS, release is a conditional tombstone, and a writer past its own
+  deadline refuses before touching the head. `bench/RESULTS-fencing.md` has
+  the protocol and the adversarial evidence; `tests/gcs_fencing.rs` (7/7) runs
+  the same bodies as the MinIO and Ceph RGW courts.
 * The crash proxy is a process-fault proxy, not physical power loss. Each phase
   waits out the 2 s lease before reopening.
 * Rust only. WeftFS-Go has no GCS backend; there is no cross-language GCS

@@ -1,6 +1,6 @@
 {
   "schema": "weft-s3-court-v1",
-  "generated_utc": "20261106T180848Z",
+  "generated_utc": "20261106T183427Z",
   "server": {
     "product": "MinIO",
     "release": "RELEASE.2025-04-22T22-12-26Z",
@@ -21,12 +21,12 @@
     "no_new_privileges": true,
     "data": "tmpfs 1g",
     "network": "user-defined bridge (container-name DNS)",
-    "host_port": 32828
+    "host_port": 32833
   },
   "tests": {
-    "command": "cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture",
-    "bucket_prefix": "weft-s3-test-20261106t180848z"
+    "command": "cargo run --example s3_compat_matrix -- --out bench/receipts/s3-compat-minio-20261106T183427Z.json",
+    "bucket_prefix": "weft-s3-test-20261106t183427z"
   },
-  "benchmark": null,
+  "benchmark": "bench/receipts/s3-compat-minio-20261106T183427Z.json",
   "label": "Single-node MinIO on localhost in the OOM-protected Docker court with a tmpfs data directory. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }

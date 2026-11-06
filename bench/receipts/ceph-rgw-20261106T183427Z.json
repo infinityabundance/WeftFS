@@ -1,6 +1,6 @@
 {
   "schema": "weft-ceph-rgw-court-v1",
-  "generated_utc": "20261106T180921Z",
+  "generated_utc": "20261106T183427Z",
   "server": {
     "product": "Ceph RADOS Gateway (independent S3 implementation)",
     "image": "quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723",
@@ -33,19 +33,19 @@
       "threads": 319,
       "pids_current": 316,
       "pids_max": 1024,
-      "memory_peak_bytes": 1117536256,
+      "memory_peak_bytes": 1116258304,
       "cgroup_oom": 0,
       "cgroup_oom_kills": 0
     },
     "cluster_status": "health: HEALTH_WARN",
-    "cluster_status_file": "bench/receipts/ceph-rgw-20261106T180921Z.cluster.txt"
+    "cluster_status_file": "bench/receipts/ceph-rgw-20261106T183427Z.cluster.txt"
   },
   "tests": {
     "suite": "cargo test --test s3_backend --test s3_fencing -- --test-threads=1",
-    "matrix": "bench/receipts/s3-compat-ceph-20261106T180921Z.json",
-    "minio_matrix": "bench/receipts/s3-compat-minio-20261106T180921Z.json",
-    "comparison": "bench/receipts/s3-compat-matrix-20261106T180921Z.json",
-    "bucket_prefix": "weft-ceph-test-20261106t180921z"
+    "matrix": "bench/receipts/s3-compat-ceph-20261106T183427Z.json",
+    "minio_matrix": "bench/receipts/s3-compat-minio-20261106T183427Z.json",
+    "comparison": "bench/receipts/s3-compat-matrix-20261106T183427Z.json",
+    "bucket_prefix": "weft-ceph-test-20261106t183427z"
   },
   "label": "Single-node Ceph RGW 19.2.0 with a tmpfs bluestore OSD in the OOM-protected Docker court. Not a cloud, multi-node, fleet, media, power-loss, or production claim."
 }

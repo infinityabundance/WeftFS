@@ -89,11 +89,15 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
 - **Distributed court (R13):** **9/9 scenarios, 229 checks, 0 failed** against
   real MinIO, including split planes; it found and fixed a real
   `Corrupt`-versus-`Io` defect.
-- **GCS backend (R14):** JSON API with OAuth2 bearer tokens and **generation
-  preconditions** (`ifGenerationMatch`), the same blob/commit plane contract,
-  and a real `fake-gcs-server` court: same content root, generation 21, and
-  commit sequence 1…21 as local, clean `verify --full`, and a stale-generation
-  probe that refuses any endpoint accepting a stale write.
+- **GCS backend (R14, fenced writers in R18):** JSON API with OAuth2 bearer
+  tokens and **generation preconditions** (`ifGenerationMatch`), the same
+  blob/commit plane contract, and a real `fake-gcs-server` court: same content
+  root, generation 21, and commit sequence 1…21 as local, clean `verify --full`,
+  and a stale-generation probe that refuses any endpoint accepting a stale
+  write. Since R18 the writer lease is fenced on the same protocol as S3:
+  takeover, renewal, and release are all generation-conditioned, the fence is
+  the last upload before the head CAS, and the shared invariant tests run on
+  MinIO, Ceph RGW, and the emulator.
 - **Verification:** `verify-20261106T174703Z.json` is **28/28 courts pass** at
   WeftFS `37a3a39`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
   `007bf11`; the 28th court is `ceph_rgw` (Ceph RGW 19.2.0, an independent S3
@@ -122,7 +126,10 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.8.0.md`](docs/RELEA
 - **PyTorch DCP (Q5):** real torch 2.15.0+cpu `save`/`load`, **9/9 topology-identical restores**, save **1,223.6 ms**, load **152.2 ms**, single-tensor **67.2 ms**, async submit **0.72 ms**, **0.9294×** `torch.save` bytes. Losses: **141× slower save, 30× slower load**; no GPU path, one process.
 - **Signed bundles (Q6):** Ed25519 over a canonical manifest, `SIGNATURE OK ed25519:…`, **15/15** acceptance/rejection cases, Go verifier agrees. Signing adds a ~128 KB manifest to a 1,064-file bundle. Non-claims: no CA, transparency log, or rotation; integrity is relative to a key only.
 - **Verification:** `verify-20261106T083428Z.json` is **27/27 courts pass** at WeftFS `a4e2c3d` (the R7 shared-mount tree); `verify-20261106T053501Z.json` (27/27 at `36bbbef`, the mode-16 tree), `verify-20261106T052933Z.json` (27/27 at `e4cdc55`), `verify-20261106T044258Z.json` (27/27 at `a8f8a3e`), and the v0.8.0 release receipt `verify-20261106T011444Z.json` (also 27/27) are retained. Retained failures and flakes are listed in the release note.
-- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, a multi-writer or multi-node store, Go parity for checkpoint/training-ready/mode-15 writing, Go host calibration, a multi-host rebase policy, and any fleet claim.
+- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD
+  paths, a real GCS/Azure/3FS service, PyPI publication, a multi-writer or
+  multi-node store, Go parity for checkpoint/training-ready/mode-15 writing, Go
+  host calibration, a multi-host rebase policy, and any fleet claim.
 
 ### Blob and commit planes (R10, post-0.8.0 work)
 
@@ -162,9 +169,20 @@ binary on loopback inside the rust court: local and GCS produce the same
 content root, the same commit sequence, a clean `verify --full`, and a matching
 read-only reopen; the crash proxy is old-or-new in all three phases; the
 superblock's GCS generation is strictly increasing. Unit tests use an
-in-process fake GCS service (no new dependency). Every loss and non-claim — the
-emulator is not GCS, no media or cloud claim, bearer tokens only — is in
-[`bench/RESULTS-gcs.md`](bench/RESULTS-gcs.md).
+in-process fake GCS service (no new dependency).
+
+Since **R18** the GCS writer lease is fenced exactly as S3's: `LOCK` is
+`weftfs-gcs-lock v2` with the same fields as S3's record, takeover and renewal
+are `ifGenerationMatch` uploads, the fence is the last conditional upload
+before the head compare-and-swap, release is a conditional tombstone, and a
+writer whose own deadline passed refuses before touching the head. The GCS
+court now also runs the backend-agnostic invariant suite from
+`tests/support/fencing.rs` (7/7), the same bodies MinIO and Ceph RGW run —
+receipts `gcs-court-20261106T182003Z.json` and
+`bench/receipts/s3-court-20261106T182043Z.json`. Every loss and non-claim — the
+emulator is not GCS, no media or cloud claim, bearer tokens only, single writer
+only — is in [`bench/RESULTS-gcs.md`](bench/RESULTS-gcs.md) and
+[`bench/RESULTS-fencing.md`](bench/RESULTS-fencing.md).
 
 ### Rebase parity and host calibration (R12, post-0.8.0 work)
 

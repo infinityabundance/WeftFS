@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87\u00d7",
+    "value": "7.87×",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -528,7 +528,7 @@
   {
     "id": "p2_delta_restore_loss",
     "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-    "value": "44.0\u00d7",
+    "value": "44.0×",
     "locations": [
       "bench/RESULTS-float-tensor-real.md",
       "docs/STATUS.md"
@@ -1121,7 +1121,7 @@
   {
     "id": "writeback_p50_gain",
     "claim": "README.md and docs/STATUS.md record the measured Rust merkle write-back p50 gain.",
-    "value": "27.3 ms to 8.8 \u00b5s",
+    "value": "27.3 ms to 8.8 µs",
     "locations": [
       "README.md",
       "docs/STATUS.md"
@@ -1143,7 +1143,7 @@
   {
     "id": "tensor_tiles_100row_speedup",
     "claim": "STATUS and the Q2 results record the measured 100-row slice speedup.",
-    "value": "10.8\u00d7",
+    "value": "10.8×",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1154,7 +1154,7 @@
   {
     "id": "tensor_tiles_1row_speedup",
     "claim": "STATUS and the Q2 results record the measured 1-row slice speedup.",
-    "value": "40.4\u00d7",
+    "value": "40.4×",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1196,7 +1196,7 @@
   {
     "id": "mode15_reserved16",
     "claim": "docs/WRITE-YOUR-OWN-DECODER.md records the reserved mode range after mode 16 was allocated.",
-    "value": "Mode values 17\u2013127",
+    "value": "Mode values 17–127",
     "locations": [
       "docs/WRITE-YOUR-OWN-DECODER.md"
     ],
@@ -1632,7 +1632,7 @@
   {
     "id": "q1_writeback_rust",
     "claim": "the Rust 4 KiB overwrite p50 with write-back is recorded.",
-    "value": "7.46 \u00b5s",
+    "value": "7.46 µs",
     "locations": [
       "docs/RELEASE-v0.8.0.md",
       "README.md"
@@ -1643,7 +1643,7 @@
   {
     "id": "q1_writeback_go",
     "claim": "the Go 4 KiB overwrite p50 with write-back is recorded.",
-    "value": "10.61 \u00b5s",
+    "value": "10.61 µs",
     "locations": [
       "docs/RELEASE-v0.8.0.md",
       "README.md"
@@ -1687,7 +1687,7 @@
   {
     "id": "q1_group_commit_p99",
     "claim": "the group-commit tail loss is recorded.",
-    "value": "611\u2013804 ms",
+    "value": "611–804 ms",
     "locations": [
       "docs/RELEASE-v0.8.0.md"
     ],
@@ -1882,7 +1882,7 @@
   {
     "id": "q5_save_slowdown",
     "claim": "the save slowdown is recorded.",
-    "value": "141\u00d7",
+    "value": "141×",
     "locations": [
       "docs/RELEASE-v0.8.0.md",
       "README.md"
@@ -2396,7 +2396,7 @@
   {
     "id": "sparse_delta_dense_loss",
     "claim": "The dense fine-tune loss is published, not hidden.",
-    "value": "1.94\u00d7 (loss)",
+    "value": "1.94× (loss)",
     "locations": [
       "docs/STATUS.md"
     ],
@@ -2582,7 +2582,7 @@
   {
     "id": "python_reader_all_modes",
     "claim": "The Python reader implements every allocated mode 0-16.",
-    "value": "mode 0\u201316",
+    "value": "mode 0–16",
     "locations": [
       "docs/STATUS.md",
       "docs/CONFORMANCE.md",
@@ -4035,9 +4035,119 @@
     "kind": "present"
   },
   {
-    "id": "r17_gcs_gap",
-    "claim": "The GCS backend is recorded as lacking the fence.",
-    "value": "GCS backend",
+    "id": "r18_gcs_lock_schema",
+    "claim": "The GCS writer lock is the fenced v2 record, field-identical to S3's.",
+    "value": "weftfs-gcs-lock v2",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_release_tombstone",
+    "claim": "GCS release is a conditional tombstone, not a delete.",
+    "value": "weftfs-gcs-lock-released v1",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_generation_fence",
+    "claim": "The GCS fence is a generation-conditioned upload of LOCK.",
+    "value": "ifGenerationMatch=0",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_shared_fencing_bodies",
+    "claim": "The same fencing assertions run on MinIO, Ceph RGW, and the GCS emulator.",
+    "value": "tests/support/fencing.rs",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_atomicity",
+    "claim": "The GCS fence and head write are two conditional writes on two objects.",
+    "value": "conditional writes on two objects",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_court_receipt",
+    "claim": "The GCS fencing court receipt names the emulator release and shared bodies.",
+    "value": "gcs-court-20261106T182003Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261106T182003Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_emulator",
+    "claim": "The GCS court ran the pinned fake-gcs-server release.",
+    "value": "v1.56.1",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_gcs_fencing_time",
+    "claim": "The GCS fencing suite result is recorded with its wall time.",
+    "value": "14.60 s",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r18_minio_court_receipt",
+    "claim": "The refactored shared fencing suite re-ran on MinIO.",
+    "value": "s3-court-20261106T182043Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261106T182043Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r18_ceph_court_receipt",
+    "claim": "The shared fencing suite ran on Ceph RGW 19.2.0.",
+    "value": "ceph-rgw-20261106T183427Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": "bench/receipts/ceph-rgw-20261106T183427Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r18_no_go_gcs",
+    "claim": "There is no Go GCS backend or cross-language fence.",
+    "value": "no Go parity",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-fencing.md"

@@ -76,12 +76,26 @@ S3 key mapping is the local logical layout, not a private encoding:
 3. Every S3 `write_at` is a whole-object rewrite because object stores have no
    in-place range write. This preserves the two-slot protocol, not a physical
    in-place update.
-4. `LOCK` is an S3 object with `owner=` and `expires_ns=`. A live second writer
-   fails `Busy`. A crashed writer leaves a lease; a later writable open replaces
-   it with `If-Match` after expiry. The lock is advisory and provider-side, not
-   a POSIX file lock.
+4. `LOCK` is a fenced control object: `weftfs-s3-lock v2` on S3 and
+   `weftfs-gcs-lock v2` on GCS, with identical fields (`owner`, monotonic
+   `fence`, `sequence`, absolute `lease_deadline_ns`, `renewed_ns`, the pending
+   head). A live second writer fails `Busy`. Before every publication the
+   holder rewrites `LOCK` conditionally on the token it last published
+   (`If-Match` on S3, `ifGenerationMatch` on GCS), which both proves ownership
+   and renews the lease; a successor's takeover makes that write fail `412` and
+   the stale writer returns `Busy` before the head is touched. A writer whose
+   own deadline passed refuses locally. Release writes a conditional tombstone
+   (`weftfs-*-lock-released v1`); it never deletes `LOCK` after a read. The lock
+   is advisory and provider-side, not a POSIX file lock.
 5. Writable open probes both conditional forms on a temporary key. Ignoring
    either one fails closed with `UnsupportedVersion`; there is no degraded mode.
+   GCS uses the same gate with `ifGenerationMatch=0` (create-once) and a stale
+   generation that must be refused.
+6. GCS replaces `LOCK` and the `superblock` with generation-conditioned
+   uploads; it has no `If-Match`. A successful upload's reply carries the
+   generation the fence must quote next. If an endpoint omits it, the backend
+   confirms the generation with a read-after-write whose bytes must match the
+   publication exactly, and refuses `UnsupportedVersion` otherwise.
 
 ### 0.3 MinIO court and measured result
 

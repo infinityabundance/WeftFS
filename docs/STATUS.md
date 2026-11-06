@@ -4098,8 +4098,9 @@ lock, records at least one `Busy`, and then wins with the next token.
 Not a multi-writer protocol: exactly one writer is admitted, and there is no
 merge, queue, or consensus point for the head. No single atomic fence+head
 operation (not expressible on plain S3). No defence against a badly skewed
-writer clock beyond the budget assumption. The **GCS backend keeps its older
-lease code and no fence** (`verify_write_lease` defaults to a no-op there). No
+writer clock beyond the budget assumption. The **GCS backend kept its older
+lease code and no fence** in R17 (`verify_write_lease` defaulted to a no-op
+there); that gap is closed in R18 below. No
 Go parity (WeftFS-Go has no S3 backend). No physical-media or power-loss claim.
 `scripts/verify-all.sh` passes 28/28 after this subphase
 (`bench/receipts/verify-20261106T174703Z.json`); the aggregate includes the
@@ -4108,3 +4109,171 @@ multi-process `s3_court.sh --distributed` run.
 
 Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
 pass; no frozen format changed, so no spec edition was needed.
+
+## Subphase R18 — fenced writers on GCS (2026-11-06)
+
+Closes the reviewer-reported gap in `src/gcs.rs`. Before this subphase the GCS
+backend still had the pre-R17 shape:
+
+* `release_lock()` read `LOCK`, checked that the body named this owner, then
+  issued an **unconditional delete**; a successor that had reclaimed the lease
+  in between lost its lock.
+* `acquire_lock` wrote `owner` + `expires_ns` (`weftfs-gcs-lock v1`) and
+  nothing consulted the lease at publication time.
+* `verify_write_lease` was not implemented, so the trait default (`Ok(())`)
+  let a stale writer publish, and `fence_head_publication` fell back to the
+  same no-op. The head compare-and-swap only proves the head did not move; it
+  says nothing about who holds the lease.
+
+### What is implemented
+
+* `LOCK` is now `weftfs-gcs-lock v2` with the **same field set as S3's record**:
+  `owner`, monotonic `fence`, `sequence`, absolute `lease_deadline_ns`,
+  `renewed_ns`, `pending_generation`, `pending_commit`. A legacy
+  `weftfs-gcs-lock v1` record is read as fence 0, so the chain stays monotonic
+  across the upgrade. Encode/parse/describe now live in `src/writer_fence.rs`
+  and are shared by both backends; only the schema header differs.
+* **Takeover** of an expired lease or a released tombstone is one upload with
+  `ifGenerationMatch=<the generation read>`, taking `previous.fence + 1`
+  (checked). A lost race retries from a fresh read.
+* **The fence is one generation-conditioned upload.** Before every publication
+  the store uploads `LOCK` with `ifGenerationMatch=<the generation this handle
+  last published>`. That succeeds only while the object still carries this
+  writer's token, so a successor's reclaim (which changes the generation) makes
+  a stale writer fail `412` → `Busy` before the head is written. The store calls
+  the proof before the commit record and again, naming the head, immediately
+  before the superblock CAS.
+* **The upload path reports the generation** (`upload_tracked`). The JSON API
+  returns the object resource in the reply; if an endpoint omits it, the
+  generation is confirmed by a read-after-write that must return exactly the
+  bytes just published. An endpoint that can do neither is refused
+  `UnsupportedVersion` rather than guessed at.
+* **Renewal** happens inside the same conditional upload, once per publication,
+  when at most one publication budget remains (`deadline - now <= lease/2`),
+  extending the deadline to `now + lease`.
+* **Own-deadline stop**: a writer whose `now >= lease_deadline_ns` refuses
+  before any head object is touched, even with no successor.
+* **Release is a conditional tombstone** (`weftfs-gcs-lock-released v1`) written
+  with `ifGenerationMatch` on the observed generation, carrying the released
+  token and `released_from` (sha256 of the exact bytes replaced). A lock that
+  now names another writer is never touched. `LOCK` is never deleted after a
+  read.
+* `verify_write_lease` and `fence_head_publication` are implemented on both the
+  `StorageBackend` and `CommitPlane` impls; `CompositeBackend` already delegates
+  to its commit plane, so a split store with GCS commits is fenced too.
+* Diagnostics gained the same counters as S3 (`fence_checks`,
+  `lease_renewals`, `fence_refusals`, `lease_expired_publications`). The
+  end-to-end court observed **42 fence CAS operations for 21 commits**
+  (proof before the commit record and fenced proof before the head).
+
+### Protocol mapping
+
+| concern | S3 (R17) | GCS (R18) |
+|---|---|---|
+| conditional primitive | `PUT` with `If-Match` | upload with `ifGenerationMatch` |
+| create once | `If-None-Match: *` | `ifGenerationMatch=0` |
+| observed token | ETag string | object generation (`u64`) |
+| token source | response `ETag` header | upload reply object resource (verified re-read fallback) |
+| stale write | `412` → `Busy` | `412` → `Busy` |
+| takeover | `If-Match` on observed ETag | `ifGenerationMatch` on observed generation |
+| fence | conditional rewrite of `LOCK` | conditional upload of `LOCK` |
+| renewal | same conditional write | same conditional upload |
+| release | tombstone with `If-Match` | tombstone with `ifGenerationMatch` |
+| record | `weftfs-s3-lock v2` | `weftfs-gcs-lock v2` (identical fields) |
+| tombstone | `weftfs-s3-lock-released v1` | `weftfs-gcs-lock-released v1` |
+| writable-open proof | `If-Match` accepted, stale refused | matching generation accepted, stale refused |
+
+### Shared invariant tests
+
+`tests/support/fencing.rs` holds the test bodies; `tests/s3_fencing.rs` and
+`tests/gcs_fencing.rs` import them and supply only the court configuration and
+observer hooks. The same five invariants therefore run on MinIO, Ceph RGW, and
+`fake-gcs-server`:
+
+1. an expired lease with **no successor** refuses publication; head,
+   generation, commit count, bytes, and the still-live token are unchanged;
+2. a **paused** writer (real `SIGSTOP` child, reclaimed lease, `SIGCONT`) fails
+   `Busy`; its own generation and head do not move; the successor's head is
+   published and its file is the only visible one;
+3. **release of a replaced lock** leaves the successor's `LOCK` bytes and
+   conditional token byte-for-byte and value-for-value identical;
+4. **renewal** extends the deadline under the same conditional write, keeps
+   `fence` constant, and advances the sequence across two windows;
+5. **takeover monotonicity**: five leases produce fences 1–5 and every
+   publication names its pending head generation.
+
+The S3 court additionally keeps its release/acquire race (20 iterations, the
+acquirer records at least one `Busy` and wins with `fence + 1`, the object is
+never deleted).
+
+### Exact atomicity statement
+
+Unchanged from R17 in form, but GCS makes the two operations even more explicit:
+the fence is an upload of `LOCK` conditioned on the old `LOCK` generation, and
+the head is a compare-and-swap on `superblock` conditioned on the old superblock
+generation. These are two conditional writes on two objects; GCS offers no
+multi-object transaction. Safety does not depend on fusing them: a publication
+may only start while `now + budget <= deadline` (`budget = lease/2`), and a
+takeover is only allowed at `now > deadline`, so the publication window closes
+before any successor may touch the lock; the fence is the last write before the
+head CAS. A lost upload reply remains the standard at-least-once ambiguity of
+any conditional write and is a recorded residual.
+
+### Evidence
+
+* **GCS (`fake-gcs-server` v1.56.1, tarball sha256
+  `0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469`)** at
+  `5667c7c`: `tests/gcs_backend` **15/15** (1.42 s, including the
+  omitted-generation fallback) and `tests/gcs_fencing` **7/7** (14.60 s, 3 s
+  lease), then the end-to-end court with `content_root_match=true`,
+  `generation_match=true`, `generation_sequence_match=true`. Court receipt
+  `bench/receipts/gcs-court-20261106T182003Z.json`; harness receipt
+  `bench/receipts/gcs-20261106T182003Z.json`; raw logs
+  `gcs-20261106T182003Z.fencing.log` and `.tests.log`.
+* **MinIO `RELEASE.2025-04-22T22-12-26Z`**: `s3_backend` **6/6** and the
+  refactored shared suite `s3_fencing` **8/8** (15.19 s). Receipt
+  `bench/receipts/s3-court-20261106T182043Z.json`.
+* **Ceph RGW 19.2.0** (`quay.io/ceph/demo@sha256:522483cf...`): `s3_backend`
+  **6/6** (41.94 s), `s3_fencing` **8/8** (80.87 s), compatibility matrix
+  **8/8**. Receipts `bench/receipts/ceph-rgw-20261106T183427Z.json` and
+  `bench/receipts/s3-compat-*-20261106T183427Z.json`.
+* Rust `cargo test --all-targets`: **95 test binaries, 445 passed, 0 failed**.
+  FUSE `cargo test --features fuse --all-targets -- --test-threads=1`:
+  **95 test binaries, 487 passed, 0 failed, 2 ignored** (both pre-existing).
+* Single-run cost observation (not a benchmark; two runs, not interleaved):
+  the same 21-commit GCS workload was 14.64 → 15.96 ms create, 11.52 → 12.62 ms
+  range write, 4.49 → 4.89 ms read, 9.86 → 9.22 ms reopen, 27.84 → 27.56 ms
+  verify against `bench/receipts/gcs-20261106T150444Z.json` (pre-fence). The
+  fence is two extra small conditional uploads per commit.
+* Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
+  pass. No frozen format changed, so no spec edition was needed.
+
+### Flake disclosure
+
+The first full Rust run after stage 1 failed
+`distributed_semantics::single_writer_interlock_is_exclusive_and_reopens_cleanly`
+at its `Store::open(...).unwrap()` after the first handle was dropped. It passed
+standalone immediately, that whole binary passed **5/5** consecutive runs, and
+the full suite rerun was **445 passed / 0 failed**. R18 touches no local-backend
+code. Recorded here rather than silently omitted; the same intermittent
+fresh-reopen shape was already noted for `tests/quota.rs` in R9.
+
+One harness defect was found by the first court run and fixed:
+`scripts/docker-court.sh` forwards an explicit environment allowlist, so
+`WEFT_GCS_FENCING_LOG` did not reach the container. The failed court receipt
+`bench/receipts/gcs-court-20261106T180729Z.json` is retained as evidence.
+
+### Not claimed
+
+No multi-writer protocol: exactly one writer is admitted, and there is no merge,
+queue, or consensus point for the head. No single atomic fence+head operation
+(not expressible on GCS's per-object preconditions). No defence against a badly
+skewed writer clock beyond the budget assumption. **No Go parity: WeftFS-Go has
+no GCS backend.** No claim about a real Google Cloud Storage service: the
+evidence is one single-node emulator with a memory backend, so no multi-node,
+device-cache, media, power-loss, or production claim is made. No performance
+claim from the single-run phase comparison above.
+
+`scripts/verify-all.sh` was **not** rerun for R18 (the GCS court is not part of
+the 28-court aggregate); the suites, both gates, and the three fencing courts
+were run directly and are cited above.

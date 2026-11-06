@@ -1,7 +1,7 @@
 {
   "schema": "weft-gcs-court-v1",
   "status": "ok",
-  "generated_utc": "20261106T180749Z",
+  "generated_utc": "20261106T182003Z",
   "emulator": {
     "product": "fake-gcs-server (fsouza/fake-gcs-server)",
     "release": "v1.56.1",
@@ -23,23 +23,23 @@
     "tmpfs": "/tmp 1g"
   },
   "endpoint": "http://127.0.0.1:4443",
-  "bucket": "weft-gcs-court-20261106t180749z",
+  "bucket": "weft-gcs-court-20261106t182003z",
   "tests": {
     "command": "cargo test --test gcs_backend -- --test-threads=1",
-    "log": "bench/receipts/gcs-20261106T180749Z.tests.log",
-    "summary": "bench/receipts/gcs-20261106T180749Z.tests.txt"
+    "log": "bench/receipts/gcs-20261106T182003Z.tests.log",
+    "summary": "bench/receipts/gcs-20261106T182003Z.tests.txt"
   },
   "fencing": {
     "command": "cargo test --test gcs_fencing -- --test-threads=1 --nocapture",
-    "log": "bench/receipts/gcs-20261106T180749Z.fencing.log",
-    "summary": "bench/receipts/gcs-20261106T180749Z.fencing.txt",
+    "log": "bench/receipts/gcs-20261106T182003Z.fencing.log",
+    "summary": "bench/receipts/gcs-20261106T182003Z.fencing.txt",
     "lease_secs": "3",
     "shared_bodies": "tests/support/fencing.rs (also run by scripts/s3_court.sh on MinIO and scripts/ceph_court.sh on Ceph RGW)",
     "note": "Generation-precondition fencing: takeover, fence-before-head, renewal, own-deadline stop, and a conditional tombstone release."
   },
   "court": {
-    "command": "cargo run --release --quiet --example gcs_court -- --out bench/receipts/gcs-20261106T180749Z.json",
-    "receipt": "bench/receipts/gcs-20261106T180749Z.json"
+    "command": "cargo run --release --quiet --example gcs_court -- --out bench/receipts/gcs-20261106T182003Z.json",
+    "receipt": "bench/receipts/gcs-20261106T182003Z.json"
   },
   "label": "Single-host GCS-compatible emulator on loopback in the OOM-protected Docker court with a memory backend. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }

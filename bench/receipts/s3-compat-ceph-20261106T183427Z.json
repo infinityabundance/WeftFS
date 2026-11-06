@@ -1,5 +1,5 @@
 {
-  "bucket": "weft-s3-court-20261106t180921z",
+  "bucket": "weft-ceph-court-20261106t183427z",
   "checks": [
     {
       "detail": {
@@ -14,8 +14,8 @@
         "second": {
           "content_range": null,
           "error_code": "PreconditionFailed",
-          "error_message": "At least one of the pre-conditions you specified did not hold",
-          "etag": "\"8b04d5e3775d298e78455efc5ca404d5\"",
+          "error_message": "",
+          "etag": null,
           "status": 412
         }
       },
@@ -25,9 +25,16 @@
     },
     {
       "detail": {
+        "dequoted_accepted": true,
         "etag_as_returned": "\"9abcde3c584628a02620bf796dee1204\"",
-        "matching_accepted": true,
         "matching_if_match_as_returned": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "matching_if_match_dequoted": {
           "content_range": null,
           "error_code": null,
           "error_message": null,
@@ -44,14 +51,14 @@
         "stale_if_match": {
           "content_range": null,
           "error_code": "PreconditionFailed",
-          "error_message": "At least one of the pre-conditions you specified did not hold",
-          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "error_message": "",
+          "etag": null,
           "status": 412
         },
         "winner_bytes_kept": true
       },
       "name": "if-match-conditional-overwrite",
-      "summary": "matching accepted; stale=412 PreconditionFailed",
+      "summary": "accepted only after de-quoting; stale=412 PreconditionFailed",
       "supported": true
     },
     {
@@ -75,14 +82,14 @@
         "at_eof": {
           "content_range": null,
           "error_code": "InvalidRange",
-          "error_message": "The requested range &#39;bytes=16--1&#39; is not satisfiable",
+          "error_message": "",
           "etag": null,
           "status": 416
         },
         "past_end": {
           "content_range": null,
           "error_code": "InvalidRange",
-          "error_message": "The requested range &#39;bytes=999--1&#39; is not satisfiable",
+          "error_message": "",
           "etag": null,
           "status": 416
         }
@@ -138,18 +145,18 @@
         "complete": true,
         "duplicates": 0,
         "expected_keys": [
-          "weft-s3-test-20261106t180921z/run-15-1795423150/list/00",
-          "weft-s3-test-20261106t180921z/run-15-1795423150/list/01",
-          "weft-s3-test-20261106t180921z/run-15-1795423150/list/02",
-          "weft-s3-test-20261106t180921z/run-15-1795423150/list/03",
-          "weft-s3-test-20261106t180921z/run-15-1795423150/list/04"
+          "weft-ceph-test-20261106t183427z/run-65-1778594377/list/00",
+          "weft-ceph-test-20261106t183427z/run-65-1778594377/list/01",
+          "weft-ceph-test-20261106t183427z/run-65-1778594377/list/02",
+          "weft-ceph-test-20261106t183427z/run-65-1778594377/list/03",
+          "weft-ceph-test-20261106t183427z/run-65-1778594377/list/04"
         ],
         "pages": [
           {
             "is_truncated": true,
             "keys": [
-              "weft-s3-test-20261106t180921z/run-15-1795423150/list/00",
-              "weft-s3-test-20261106t180921z/run-15-1795423150/list/01"
+              "weft-ceph-test-20261106t183427z/run-65-1778594377/list/00",
+              "weft-ceph-test-20261106t183427z/run-65-1778594377/list/01"
             ],
             "next_token_present": true,
             "status": 200
@@ -157,8 +164,8 @@
           {
             "is_truncated": true,
             "keys": [
-              "weft-s3-test-20261106t180921z/run-15-1795423150/list/02",
-              "weft-s3-test-20261106t180921z/run-15-1795423150/list/03"
+              "weft-ceph-test-20261106t183427z/run-65-1778594377/list/02",
+              "weft-ceph-test-20261106t183427z/run-65-1778594377/list/03"
             ],
             "next_token_present": true,
             "status": 200
@@ -166,7 +173,7 @@
           {
             "is_truncated": false,
             "keys": [
-              "weft-s3-test-20261106t180921z/run-15-1795423150/list/04"
+              "weft-ceph-test-20261106t183427z/run-65-1778594377/list/04"
             ],
             "next_token_present": false,
             "status": 200
@@ -180,12 +187,12 @@
     {
       "detail": {
         "head_etag": "\"e1740315d3459ff864d6e5e7841cb2b5\"",
-        "if_match_form": "as-returned",
+        "if_match_form": "dequoted",
         "loser": {
           "content_range": null,
           "error_code": "PreconditionFailed",
-          "error_message": "At least one of the pre-conditions you specified did not hold",
-          "etag": "\"6f423b2de0c5fd2cd3fccd5c0b921834\"",
+          "error_message": "",
+          "etag": null,
           "status": 412
         },
         "winner": {
@@ -195,18 +202,26 @@
           "etag": "\"6f423b2de0c5fd2cd3fccd5c0b921834\"",
           "status": 200
         },
-        "winner_bytes_kept": true
+        "winner_as_returned": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "winner_bytes_kept": true,
+        "winner_dequoted_form": true
       },
       "name": "stale-cas-probe",
-      "summary": "winner=200 (form=as-returned) loser=412 winner_bytes_kept=true",
+      "summary": "winner=200 (form=dequoted) loser=412 winner_bytes_kept=true",
       "supported": true
     }
   ],
-  "endpoint": "http://weft-s3-minio-2802854:9000",
-  "generated_utc": "20261106T180921Z",
-  "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+  "endpoint": "http://10.213.77.10:8080",
+  "generated_utc": "20261106T183427Z",
+  "implementation": "Ceph RGW 19.2.0",
   "label": "Single-host S3-compatible endpoint on localhost, synthetic objects. Protocol behaviour only; not a durability, media, power-loss, cloud, fleet, or production claim.",
-  "run_prefix": "weft-s3-test-20261106t180921z/run-15-1795423150",
+  "run_prefix": "weft-ceph-test-20261106t183427z/run-65-1778594377",
   "schema": "weft-s3-compat-matrix-v1",
   "summary": {
     "supported": 8,
