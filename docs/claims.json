@@ -3758,5 +3758,126 @@
     ],
     "receipt": null,
     "kind": "absent"
+  },
+  {
+    "id": "r16_ceph_court_receipt",
+    "claim": "docs/STATUS.md and bench/RESULTS-ceph.md cite the Ceph RGW court receipt.",
+    "value": "ceph-rgw-20261106T160906Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/ceph-rgw-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_ceph_matrix_receipt",
+    "claim": "Both documents cite the side-by-side MinIO/Ceph compatibility matrix receipt.",
+    "value": "s3-compat-matrix-20261106T160906Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-matrix-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_ceph_matrix_ceph_receipt",
+    "claim": "Both documents cite the Ceph-only matrix receipt.",
+    "value": "s3-compat-ceph-20261106T160906Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-ceph-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_ceph_matrix_minio_receipt",
+    "claim": "Both documents cite the MinIO matrix receipt from the same harness and stamp.",
+    "value": "s3-compat-minio-20261106T160906Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-minio-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_rgw_version",
+    "claim": "The measured RGW version is recorded.",
+    "value": "ceph version 19.2.0",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/ceph-rgw-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_if_match_dequoted",
+    "claim": "The RGW If-Match deviation (quoted ETag rejected, de-quoted accepted) is recorded.",
+    "value": "accepted only after de-quoting",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-ceph-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_s3_backend_against_rgw",
+    "claim": "The existing S3 backend suite result against RGW is recorded.",
+    "value": "6 passed; 0 failed",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/ceph-rgw-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_matrix_both_eight_of_eight",
+    "claim": "Both implementations pass all eight matrix behaviours (with the If-Match form noted).",
+    "value": "8/8",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-matrix-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_matrix_behaviour_required",
+    "claim": "The matrix explicitly covers create-once semantics.",
+    "value": "if-none-match-create-once",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/s3-compat-ceph-20261106T160906Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_no_ceph_durability_claim",
+    "claim": "No document claims power-loss or media durability over Ceph RGW.",
+    "value": "power-loss durable over Ceph RGW",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": null,
+    "kind": "absent"
+  },
+  {
+    "id": "r16_no_ceph_fleet_claim",
+    "claim": "No document claims a Ceph fleet, multi-node, or multisite result.",
+    "value": "multi-node Ceph RGW passed",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": null,
+    "kind": "absent"
   }
 ]

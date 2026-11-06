@@ -1,0 +1,51 @@
+{
+  "schema": "weft-ceph-rgw-court-v1",
+  "generated_utc": "20261106T160906Z",
+  "server": {
+    "product": "Ceph RADOS Gateway (independent S3 implementation)",
+    "image": "quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723",
+    "image_digest": "quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723",
+    "image_id": "sha256:637a5761b2549743c465dae594a6a48f86d96e969cb3a3d5193894c1dcb742d5",
+    "tag": "quay.io/ceph/demo:latest",
+    "version_line": "ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13) squid (stable)",
+    "daemons": "mon + mgr + 1 bluestore OSD + rgw (beast), all in one demo container",
+    "rgw_endpoint": "http://10.213.77.10:8080",
+    "addressing": "path-style; the client uses an IP-literal Host because RGW's demo config sets rgw dns name to the container hostname and treats a matching Host as a virtual-hosted bucket",
+    "server_settings": {
+      "rgw_thread_pool_size": 32,
+      "why_thread_pool": "the default 512-thread RGW pool plus radosgw-admin's own 512-thread pool exceeds the 1024-pid court bound; thread-creation failure aborts ceph-mon and radosgw",
+      "rgw_frontends": "beast endpoint=0.0.0.0:8080"
+    }
+  },
+  "container": {
+    "kind": "sidecar for the rust court",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "pids": "1024",
+    "cpus": "4",
+    "nproc": "2048",
+    "cap_drop": "ALL",
+    "cap_add": ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"],
+    "why_capabilities": "Ceph daemons run as uid/gid 167 and write keyrings owned by that user; MinIO needs no capability",
+    "no_new_privileges": true,
+    "tmpfs": {"/var/lib/ceph": "2g", "/etc/ceph": "64m", "/tmp": "512m", "/var/log": "256m"},
+    "observed": {
+      "threads": 319,
+      "pids_current": 316,
+      "pids_max": 1024,
+      "memory_peak_bytes": 1120411648,
+      "cgroup_oom": 0,
+      "cgroup_oom_kills": 0
+    },
+    "cluster_status": "health: HEALTH_WARN",
+    "cluster_status_file": "bench/receipts/ceph-rgw-20261106T160906Z.cluster.txt"
+  },
+  "tests": {
+    "suite": "cargo test --test s3_backend -- --test-threads=1",
+    "matrix": "bench/receipts/s3-compat-ceph-20261106T160906Z.json",
+    "minio_matrix": "bench/receipts/s3-compat-minio-20261106T160906Z.json",
+    "comparison": "bench/receipts/s3-compat-matrix-20261106T160906Z.json",
+    "bucket_prefix": "weft-ceph-test-20261106t160906z"
+  },
+  "label": "Single-node Ceph RGW 19.2.0 with a tmpfs bluestore OSD in the OOM-protected Docker court. Not a cloud, multi-node, fleet, media, power-loss, or production claim."
+}

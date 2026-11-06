@@ -3844,3 +3844,107 @@ include every loss above.
 Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
 pass, and the Python court receipt is
 `bench/receipts/python-bindings-20261106T153054Z.json`.
+
+## Subphase R16 — independent S3 implementation (Ceph RGW) (2026-11-06)
+
+MinIO (Q4) and `fake-gcs-server` (R14) are single implementations of their
+protocols, so neither can answer whether "S3-compatible" means the wire
+behaviour the store depends on. This subphase adds a **Ceph RADOS Gateway**
+court: a genuinely independent S3 implementation (Ceph shares no code with
+MinIO), plus a reusable compatibility matrix that can be pointed at any
+S3-compatible endpoint.
+
+### What is implemented
+
+* `scripts/ceph_court.sh` — starts `quay.io/ceph/demo` (Ceph 19.2.0 squid:
+  mon + mgr + one bluestore OSD + rgw/beast, pinned by image digest) on a
+  dedicated bridge, waits for a real HTTP answer from the frontend, runs the
+  existing S3 court logic and the matrix against it, optionally runs the same
+  matrix against MinIO, and writes a court receipt plus a side-by-side
+  comparison.
+* `examples/s3_compat_matrix.rs` — the eight behaviours that commonly differ
+  between "S3-compatible" servers, measured rather than assumed. Harness check
+  names: `if-none-match-create-once`, `if-match-conditional-overwrite`,
+  `range-open-ended`, `range-out-of-range`, `head-missing-key`,
+  `delete-idempotent`, `list-pagination`, `stale-cas-probe`
+  (`If-None-Match: *` create-once, `If-Match` conditional overwrite,
+  open-ended range read, out-of-range `416`, `HEAD` on a missing key, delete
+  idempotence, `ListObjectsV2` pagination with `max-keys` +
+  `continuation-token`, and a stale compare-and-swap probe on an
+  8192-byte superblock-shaped object). `--compare a.json b.json` prints and
+  writes the two-implementation matrix.
+* `scripts/s3_court.sh --matrix` — the same matrix against MinIO, sharing the
+  run stamp so the two receipts compare cleanly.
+* `S3Backend` now **measures** the `If-Match` comparison form at writable open
+  (`IfMatchForm::{AsReturned, Dequoted}`) instead of assuming the AWS/MinIO
+  rule. The chosen form is reported in diagnostics as
+  `S3 If-Match form measured at open: ...`. It is accepted only if a matching
+  value succeeds, a stale value in the *same* form is refused `412`, and the
+  winner's bytes survive; otherwise the endpoint is refused
+  (`UnsupportedVersion`) exactly as before. No capability is inferred and no
+  check is skipped. The writer lock negotiates the form itself, because the
+  store locks before it probes the planes.
+
+### Evidence
+
+Ceph RGW 19.2.0, `ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13)
+squid (stable)`, image
+`quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723`:
+
+* court: `bench/receipts/ceph-rgw-20261106T160906Z.json`
+  (+ `.cluster.txt` for the raw `ceph -s`)
+* matrix: `bench/receipts/s3-compat-ceph-20261106T160906Z.json`
+* MinIO matrix: `bench/receipts/s3-compat-minio-20261106T160906Z.json`
+* comparison: `bench/receipts/s3-compat-matrix-20261106T160906Z.json`
+* MinIO regression receipt for the modified client:
+  `bench/receipts/s3-court-20261106T160906Z.json`
+
+The existing S3 court logic passes against RGW: `cargo test --test s3_backend`
+reports **6 passed; 0 failed** (44.77 s) — store round trip (content root,
+generation sequence, read-only reopen match, clean `verify --full`), writer
+lock with a lost conditional head update, the three-phase crash proxy, GC, and
+local-vs-S3 byte identity.
+
+Both implementations are **8/8** on the matrix. The one deviation is the
+`If-Match` entity-tag quoting rule: MinIO accepts the quoted ETag it returned;
+Ceph RGW compares the header bytes literally, so its own quoted ETag is
+**accepted only after de-quoting** — `412 PreconditionFailed` for
+`If-Match: "9abcde3c..."` and `200` for `If-Match: 9abcde3c...`, with the stale
+value still refused `412`. Without the measured form the store refused RGW
+writable open (`S3 conditional probe: a matching If-Match was unexpectedly
+rejected`) and five store-level tests could not run.
+
+Two RGW-specific configuration facts are recorded in the receipt:
+`--rgw-thread-pool-size 32` (the default 512-thread RGW pool plus
+`radosgw-admin`'s own 512-thread pool exceeds the 1024-pid court bound; the
+kernel refuses thread creation and `ceph-mon`/`radosgw` abort silently — the
+pids limit was not raised), and IP-literal addressing (RGW's demo config sets
+`rgw dns name` to the container hostname and treats a matching `Host` as a
+virtual-hosted bucket, so path-style requests need an endpoint whose Host is not
+that name).
+
+### Repository suites at this change
+
+* `cargo test --all-targets`: 92 suites, **418 passed, 0 failed**.
+* `cargo test --features fuse --all-targets`: 92 suites,
+  **460 passed, 0 failed, 2 ignored** (the two pre-existing ignores for kernel
+  7.3 direct-I/O EIO and the missing CAP_SETUID ownership test).
+* Sidecar limits: 3g memory/swap, 1024 pids (observed 316 used, 319 threads,
+  0 OOM kills), 4 cpus, bounded tmpfs, `cap-drop=ALL` plus CHOWN,
+  DAC_OVERRIDE, FOWNER, SETGID, SETUID for the Ceph daemons' uid 167; peak
+  container memory 1,120,411,648 B.
+
+### What is not covered
+
+No physical media or power-loss claim (the RGW OSD is a tmpfs file in one
+container, and there is no RGW process-crash scenario); no multi-node,
+multisite, or zone-replication claim; only the eight matrix behaviours (no TLS,
+presigned URLs, multipart upload, policies/ACLs, versioning, object lock,
+lifecycle, SSE); listing pagination exercised at `max-keys=2`, not at the
+1000-key boundary; no Go-side S3 backend, so no cross-language claim against
+RGW; no AWS or third-vendor measurement; no concurrency court beyond two
+writers; no performance claim. The analysis, exact commands, and the raw
+`If-Match` evidence are in `bench/RESULTS-ceph.md`.
+
+Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
+pass (the frozen formats and spec files are untouched by this subphase).
