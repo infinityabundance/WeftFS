@@ -1076,6 +1076,9 @@ impl Store {
         let record = self.object_meta(id)?;
         let manifest =
             self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        if manifest.size != record.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
@@ -1165,6 +1168,12 @@ impl Store {
         rep: &Representation,
         options: &TileDecodeOptions,
     ) -> Result<(Vec<u8>, TileDecodeStats)> {
+        let (layout_dtype, layout_shape, _) = TensorLayoutSpec::from_value(&tensor.layout)?;
+        if layout_dtype != tensor.dtype || layout_shape != tensor.shape {
+            return Err(Error::corrupt(
+                "tensor layout descriptor disagrees with the manifest dtype/shape",
+            ));
+        }
         let frame_bytes = self.with_backend(|backend| {
             recovery::read_blob_verified_via(
                 backend,
