@@ -43,22 +43,14 @@ weftfs = "0.9.0"
   `f70b404c530c111fe30eda4c721d0be1c9cdb0d28793bd1179e0d98fae2f0e90`,
   `weftfs`
   `017bd760791f0f6551b35ac9fd49d441aec517fc2515779d036a9a937da84382`.
-- Images: pushing `v0.9.0` triggered the container workflows. All four runs
-  completed `success` (`WeftFS` run 42234670919 at `8410d99`, `WeftCodec` run
-  42234675021 at `a888d79`, `WeftCodec-Go` run 42234681320 at `8957998`,
-  `WeftFS-Go` run 42234686495 at `007bf11`), and
+- Images: pushing `v0.9.0` triggered each repository's container workflow; every
+  tag run completed `success`, and
   `docker manifest inspect ghcr.io/infinityabundance/<image>:v0.9.0` returned a
   manifest index for `weftfs`, `weftcodec`, `weftcodec-go`, and `weftfs-go`.
-  Observed index digests: `weftfs`
-  `sha256:ae9e45e463be0c63c69f777954a60d7ad76ccac23a6242070d635c7479450cc2`,
-  `weftcodec`
-  `sha256:7ea50ec87fedba1df196fb86e92c88228c87b51ec98bddcc87fc8e6e8d4c2316`,
-  `weftcodec-go`
-  `sha256:e73929f3c2d63946dd39d8f7df253f18a8011faf53788c56fda9ea2195d03e80`,
-  `weftfs-go`
-  `sha256:41d0bfc82fdd28dd56bad61a04a911e7324c0f4233c972e9e81f1cb501959be3`.
-  FUSE mounts need `--device /dev/fuse --cap-add SYS_ADMIN`; codec and
-  store-only commands do not. See `docs/containers.md`.
+  Container builds are not bit-reproducible, so image digests are deliberately
+  not pinned in this note; the digests observed at release time are recorded
+  with the release report. FUSE mounts need `--device /dev/fuse --cap-add
+  SYS_ADMIN`; codec and store-only commands do not. See `docs/containers.md`.
 
 ## Verification at the release tree
 
