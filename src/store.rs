@@ -20,7 +20,9 @@ use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
 use crate::auth::Principal;
-use crate::backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
+use crate::backend::{
+    BackendKind, BackendStats, Capabilities, HeadExpectation, Key, KeyKind, StorageBackend,
+};
 use crate::cost_model::CostClass;
 use crate::error::{Class, Error, Result};
 use crate::format::{
@@ -596,6 +598,10 @@ pub struct Store {
     index_cache: Mutex<StateIndexCache>,
     /// Advisory index diagnostics and reject/write-failure notes.
     index_stats: Mutex<IndexStats>,
+    /// Capability evidence from the writable open: two plane probes for a
+    /// split backend, a blob+commit probe of the single backend otherwise.
+    /// `None` on a read-only open, which never writes a probe.
+    plane_probes: Option<crate::planes::PlaneProbes>,
     /// Write-budget policy and cumulative admitted usage, derived from the
     /// committed state and the published commit chain.
     quota: QuotaState,
@@ -762,9 +768,13 @@ impl Store {
         backend_kind: BackendKind,
     ) -> Result<Store> {
         validate_options(&options)?;
+        // A split is refused by *plane*, with a message that names the plane
+        // that cannot honour the contract, before the generic capability gate.
+        backend_kind.require_plane_contract()?;
         let capabilities = backend_kind.capabilities();
         capabilities.require_durable_fsync("a writable store")?;
         capabilities.require_atomic_publish("initial store publication")?;
+        capabilities.require_conditional_head("a writable store")?;
         let root = path.as_ref().to_path_buf();
 
         if backend_kind.is_remote() {
@@ -798,6 +808,10 @@ impl Store {
         backend.put_atomic(&Key::format(), FORMAT_CONTENTS.as_bytes())?;
         backend.create_zeroed(&Key::superblock(), SUPERBLOCK_BYTES as u64)?;
         backend.acquire_writer_lock()?;
+        // Prove the physical capabilities this handle will rely on. A probe
+        // that contradicts a declared capability fails closed here, before any
+        // commit is published.
+        let plane_probes = backend.probe_planes()?;
 
         let cache_enabled = options.cache_bytes > 0;
         let single_flight_options = SingleFlightOptions::from_options(&options);
@@ -827,6 +841,7 @@ impl Store {
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
+            plane_probes,
             access: Mutex::new(crate::access::AccessCounts::default()),
             single_flight: SingleFlight::new(single_flight_options),
             object_cache: Mutex::new(ObjectCache::new(cache_options)),
@@ -874,9 +889,10 @@ impl Store {
     ) -> Result<Store> {
         let root = path.as_ref().to_path_buf();
         if mode == OpenMode::ReadWrite {
-            backend_kind
-                .capabilities()
-                .require_durable_fsync("a read-write store")?;
+            backend_kind.require_plane_contract()?;
+            let capabilities = backend_kind.capabilities();
+            capabilities.require_durable_fsync("a read-write store")?;
+            capabilities.require_conditional_head("a read-write store")?;
         }
         let mut backend = backend_kind.open(&root);
         let format_bytes = backend
@@ -895,6 +911,13 @@ impl Store {
             backend.ensure_layout()?;
             backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
         }
+        // A read-only open never writes, so it never probes. A writable open
+        // proves both planes before it is trusted with a commit.
+        let plane_probes = if mode == OpenMode::ReadWrite {
+            backend.probe_planes()?
+        } else {
+            None
+        };
 
         // Read-only opens use the directory-free fast path. Writable opens
         // must observe the highest commit generation so `next_generation`
@@ -938,6 +961,7 @@ impl Store {
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
+            plane_probes,
             access: Mutex::new(access),
             single_flight: SingleFlight::new(SingleFlightOptions::default()),
             object_cache: Mutex::new(ObjectCache::new(ObjectCacheOptions::default())),
@@ -1047,6 +1071,27 @@ impl Store {
     pub fn backend_diagnostics(&self) -> Vec<String> {
         self.with_backend(|backend| Ok(backend.diagnostics()))
             .unwrap_or_default()
+    }
+
+    /// Per-plane capabilities when the store runs a split backend.
+    pub fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
+        self.with_backend(|backend| Ok(backend.plane_capabilities()))
+            .ok()
+            .flatten()
+    }
+
+    /// Per-plane request and byte counters when the store runs a split
+    /// backend. A single backend reports `None`, because its one request
+    /// stream is already exposed by [`Store::backend_stats`].
+    pub fn plane_stats(&self) -> Option<crate::planes::PlaneStats> {
+        self.with_backend(|backend| Ok(backend.plane_stats()))
+            .ok()
+            .flatten()
+    }
+
+    /// Capability evidence from the writable open, if any.
+    pub fn plane_probes(&self) -> Option<&crate::planes::PlaneProbes> {
+        self.plane_probes.as_ref()
     }
 
     /// Read a backend key. Test/diagnostic surface: the store's normal API
@@ -7602,9 +7647,10 @@ impl Store {
     ///
     /// The physical primitives come from the backend; this sequence is the
     /// protocol. `put_atomic` supplies all-or-nothing visibility for the commit
-    /// record and `write_at` updates the inactive 4 KiB slot. Both are gated on
-    /// `atomic_publish` and `durable_fsync`; a backend lacking either is
-    /// refused rather than downgraded.
+    /// record and `publish_head` updates the inactive 4 KiB slot. Both are
+    /// gated on `atomic_publish` and `durable_fsync`; a backend that cannot
+    /// publish the head conditionally is refused for a writable open rather
+    /// than downgraded.
     fn publish_commit(&self, commit: &Commit) -> Result<Hash32> {
         let wcb = commit.encode()?;
         let hash = identity::commit_id(&wcb);
@@ -7632,10 +7678,23 @@ impl Store {
             timestamp_ns: commit.timestamp_ns,
         };
         let offset = (commit.generation % 2) * SLOT_BYTES as u64;
+        let expected = HeadExpectation {
+            generation: self.generation,
+            commit: self.head,
+        };
         self.with_backend_mut(|backend| {
             let capabilities = backend.capabilities();
             capabilities.require_durable_fsync("superblock publication")?;
-            backend.write_at(&Key::superblock(), offset, &slot.encode())
+            capabilities.require_conditional_head("superblock publication")?;
+            backend.publish_head(
+                expected,
+                commit.generation,
+                hash,
+                wcb.len() as u64,
+                commit.timestamp_ns,
+                offset,
+                &slot.encode(),
+            )
         })?;
 
         crash_point("after_superblock_write");

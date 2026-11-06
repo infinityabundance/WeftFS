@@ -33,6 +33,7 @@ pub mod identity;
 pub(crate) mod index;
 pub mod object_cache;
 pub mod parallel;
+pub mod planes;
 pub mod provenance;
 pub mod quota;
 pub mod rebase;
@@ -50,7 +51,10 @@ pub mod training_ready;
 pub mod wcb_util;
 
 pub use auth::Principal;
-pub use backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
+pub use backend::{
+    BackendKind, BackendStats, Capabilities, CompositeBackend, HeadExpectation, Key, KeyKind,
+    StorageBackend,
+};
 pub use checkpoint::{
     CheckpointManifest, CheckpointRestoreOptions, CheckpointRestoreReport, CheckpointShard,
     CheckpointTensor, CheckpointWriteOptions, CheckpointWriteReport, RestoreTopology,
@@ -65,6 +69,10 @@ pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStat
 pub use parallel::{
     effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
     DEFAULT_MAX_INFLIGHT_BYTES,
+};
+pub use planes::{
+    BlobCapabilities, BlobPlane, BlobProbe, CommitCapabilities, CommitHead, CommitPlane,
+    CommitProbe, ControlRecord, PlaneCapabilities, PlaneProbes, PlaneStats,
 };
 pub use provenance::{
     choose_recovery, Determinism, NoEligibleStrategy, ProvenanceClosure, ProvenanceEnvironment,

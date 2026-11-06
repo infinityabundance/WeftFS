@@ -328,6 +328,7 @@ impl S3Backend {
             durable_fsync: true,
             true_range_reads: true,
             max_object_bytes: MAX_OBJECT_BYTES,
+            conditional_head: true,
             consistency: "single-node S3-compatible endpoint; read-after-write and \
                           list-after-write for published keys; conditional writes \
                           (If-None-Match/If-Match) are required and probed by the court"
@@ -885,6 +886,10 @@ impl Drop for S3Backend {
 }
 
 impl StorageBackend for S3Backend {
+    fn label(&self) -> &'static str {
+        "s3"
+    }
+
     fn capabilities(&self) -> Capabilities {
         S3Backend::capabilities()
     }
@@ -1095,6 +1100,48 @@ impl StorageBackend for S3Backend {
         )))
     }
 
+    fn compare_and_swap(&mut self, key: &Key, expected: Option<&str>, bytes: &[u8]) -> Result<()> {
+        // Native conditional write: read the record and its ETag, require the
+        // caller's content token to match the bytes just read, then publish
+        // with If-Match (or If-None-Match: * when the caller expects absence).
+        // A 412 is a lost race and stays `Busy`.
+        let current = self.get(key, None)?;
+        let (present, etag) = match current.status {
+            200 => (true, current.etag.clone()),
+            404 => (false, None),
+            403 => {
+                return Err(Error::unauthorized(format!(
+                    "S3 denied {} during a compare-and-swap",
+                    key.display_path()
+                )))
+            }
+            status => {
+                return Err(Error::io(format!(
+                    "S3 compare-and-swap read {} returned HTTP {status}",
+                    key.display_path()
+                )))
+            }
+        };
+        let token = if present {
+            Some(crate::planes::control_token(&current.body))
+        } else {
+            None
+        };
+        if token.as_deref() != expected {
+            return Err(Error::busy(format!(
+                "control record {} changed since it was read; compare-and-swap refused",
+                key.display_path()
+            )));
+        }
+        match self.put_conditional(key, bytes, etag.as_deref())? {
+            Some(_) => Ok(()),
+            None => Err(Error::busy(format!(
+                "S3 conditional replacement lost a race for {}",
+                key.display_path()
+            ))),
+        }
+    }
+
     fn create_zeroed(&mut self, key: &Key, len: u64) -> Result<()> {
         let len = usize::try_from(len)
             .map_err(|_| Error::limit_exceeded("zeroed object does not fit the address space"))?;
@@ -1259,6 +1306,12 @@ impl StorageBackend for S3Backend {
             ));
         }
         out
+    }
+
+    fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {
+        let blobs = crate::planes::probe_blob_plane(self)?;
+        let commits = crate::planes::probe_commit_plane(self)?;
+        Ok(Some(crate::planes::PlaneProbes { blobs, commits }))
     }
 }
 

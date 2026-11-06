@@ -6,7 +6,14 @@
 //! commit record, publish the superblock slot, fsync the root) is unchanged;
 //! only the publication primitive differs per backend.
 //!
-//! Two backends ship today:
+//! [`StorageBackend`] is the store's unified I/O surface. Since subphase R10
+//! it is also the adapter over two narrower contracts in [`crate::planes`]:
+//! [`crate::planes::BlobPlane`] (immutable bytes) and
+//! [`crate::planes::CommitPlane`] (versioned control state). A
+//! [`BackendKind::Split`] runs both planes on different physical systems; the
+//! [`CompositeBackend`] below routes each [`Key`] to one of them.
+//!
+//! Three single backends ship today:
 //!
 //! * [`LocalBackend`] — the normative layout from `WEFT-MODEL.md` §2:
 //!   `tmp/` staging plus `fsync` + `rename(2)` + directory `fsync`.
@@ -15,12 +22,13 @@
 //!   the temporary name, so it does not depend on POSIX `rename` replacement.
 //!   If `link(2)` is unavailable the backend uses `rename(2)` and says so in
 //!   its [`Capabilities::publication`] text and diagnostics.
+//! * [`S3Backend`] — a real S3-compatible endpoint (see `src/s3.rs`).
 //!
 //! A caller may also declare a [`BackendKind::Posix`] backend with weaker
 //! capabilities (for example a network filesystem that does not honour
 //! `fsync`). The store consults [`Capabilities`] and fails closed: a writable
-//! open requires `durable_fsync`, and any publication requires
-//! `atomic_publish`. No degraded mode exists.
+//! open requires `durable_fsync`, any publication requires `atomic_publish`,
+//! and a writable open requires `conditional_head`. No degraded mode exists.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{ErrorKind, Write};
@@ -30,6 +38,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 
 use fs2::FileExt as Fs2FileExt;
+use serde::Serialize;
 
 use crate::error::{Error, Result};
 use crate::format::MAX_CHUNK_SIZE;
@@ -305,6 +314,12 @@ pub struct Capabilities {
     pub true_range_reads: bool,
     /// Largest single object the backend accepts.
     pub max_object_bytes: u64,
+    /// Conditional control-state publication: the backend can replace the
+    /// superblock/head only if it still holds the record the caller read. The
+    /// local and object backends satisfy this under the exclusive writer lock
+    /// plus a content-token check; S3 satisfies it with `If-Match` and proves
+    /// it at open.
+    pub conditional_head: bool,
     /// Human-readable consistency description. No machine interpretation.
     pub consistency: String,
     /// The publication primitive actually exercised, for receipts.
@@ -319,6 +334,7 @@ impl Capabilities {
             durable_fsync: true,
             true_range_reads: true,
             max_object_bytes: MAX_CHUNK_SIZE * 64,
+            conditional_head: true,
             consistency: "single-host POSIX namespace; read-after-write; rename(2) is atomic; \
                           parent directory fsync orders the new name"
                 .to_owned(),
@@ -333,6 +349,7 @@ impl Capabilities {
             durable_fsync: true,
             true_range_reads: true,
             max_object_bytes: MAX_CHUNK_SIZE * 64,
+            conditional_head: true,
             consistency: "single-host immutable object namespace; a key appears only after its \
                           bytes are fsynced; read-after-write"
                 .to_owned(),
@@ -359,6 +376,23 @@ impl Capabilities {
         }
         Ok(())
     }
+
+    /// Refuse an operation that requires conditional head publication.
+    ///
+    /// Only the declared conditional-head capability is checked here; atomic
+    /// publication is checked where a publication actually happens, so a
+    /// backend that declares weak publication but supports a conditional head
+    /// still opens and is refused at the first write (the historical, tested
+    /// behaviour).
+    pub fn require_conditional_head(&self, what: &str) -> Result<()> {
+        if !self.conditional_head {
+            return Err(Error::unsupported_version(format!(
+                "storage backend does not provide conditional_update for control state; refusing \
+                 {what}"
+            )));
+        }
+        Ok(())
+    }
 }
 
 /// Which physical backend the store uses.
@@ -375,32 +409,138 @@ pub enum BackendKind {
     /// durability claims have been measured. The declared capabilities are
     /// enforced exactly.
     Posix { capabilities: Capabilities },
+    /// Split planes: immutable blobs on one backend, commit/control state on
+    /// another. Each plane is a single (non-split) backend. `blob_root` names a
+    /// second local directory when both planes are POSIX-shaped; `None` means
+    /// "use the store path", which is what a remote blob plane needs.
+    Split {
+        blobs: Box<BackendKind>,
+        commits: Box<BackendKind>,
+        blob_root: Option<PathBuf>,
+    },
 }
 
 impl BackendKind {
+    /// Build a split configuration, rejecting nested splits. The blob plane
+    /// uses the store path.
+    pub fn split(blobs: BackendKind, commits: BackendKind) -> Result<BackendKind> {
+        BackendKind::split_with_blob_root(blobs, commits, None)
+    }
+
+    /// Build a split configuration whose blob plane lives at `blob_root`.
+    pub fn split_with_blob_root(
+        blobs: BackendKind,
+        commits: BackendKind,
+        blob_root: Option<PathBuf>,
+    ) -> Result<BackendKind> {
+        if matches!(blobs, BackendKind::Split { .. })
+            || matches!(commits, BackendKind::Split { .. })
+        {
+            return Err(Error::invalid_argument(
+                "a split backend takes exactly one blob plane and one commit plane; nesting is not \
+                 a supported configuration",
+            ));
+        }
+        Ok(BackendKind::Split {
+            blobs: Box::new(blobs),
+            commits: Box::new(commits),
+            blob_root,
+        })
+    }
+
     pub fn label(&self) -> &'static str {
         match self {
             BackendKind::Local => "local",
             BackendKind::Object => "object",
             BackendKind::S3 { .. } => "s3",
             BackendKind::Posix { .. } => "posix",
+            BackendKind::Split { .. } => "split",
         }
     }
 
-    /// Declared capabilities without touching disk.
+    /// Stable description used in receipts: `s3-blobs/local-commits` for a
+    /// split, the plain label otherwise.
+    pub fn describe(&self) -> String {
+        match self {
+            BackendKind::Split { blobs, commits, .. } => {
+                format!("{}-blobs/{}-commits", blobs.label(), commits.label())
+            }
+            other => other.label().to_owned(),
+        }
+    }
+
+    /// Declared capabilities without touching disk. For a split this is the
+    /// intersection: a store is only as strong as its weaker plane.
     pub fn capabilities(&self) -> Capabilities {
         match self {
             BackendKind::Local => Capabilities::local_posix(),
             BackendKind::Object => Capabilities::immutable_object(),
             BackendKind::S3 { .. } => S3Backend::capabilities(),
             BackendKind::Posix { capabilities } => capabilities.clone(),
+            BackendKind::Split { blobs, commits, .. } => combine_capabilities(
+                &blobs.capabilities(),
+                &commits.capabilities(),
+                self.describe(),
+            ),
         }
     }
 
-    /// Whether the backend stores bytes outside the local filesystem, so the
-    /// store must not require or create a local directory.
+    /// The two planes' declared capabilities, when this is a split.
+    pub fn split_planes(&self) -> Option<(Capabilities, Capabilities)> {
+        match self {
+            BackendKind::Split { blobs, commits, .. } => {
+                Some((blobs.capabilities(), commits.capabilities()))
+            }
+            _ => None,
+        }
+    }
+
+    /// Refuse a split whose planes cannot honour the store's contract.
+    ///
+    /// Blobs must be published atomically and durably (a manifest or chunk that
+    /// appears half-written would break exactness). Control state must be
+    /// published atomically, durably, and conditionally, because the head is
+    /// what makes a commit visible.
+    pub fn require_plane_contract(&self) -> Result<()> {
+        let Some((blobs, commits)) = self.split_planes() else {
+            return Ok(());
+        };
+        if !blobs.atomic_publish {
+            return Err(Error::unsupported_version(
+                "split store: blob plane does not provide atomic_publish; refusing to store \
+                 manifest and chunk bytes that could appear half-written",
+            ));
+        }
+        if !blobs.durable_fsync {
+            return Err(Error::unsupported_version(
+                "split store: blob plane does not provide durable_fsync; refusing to publish \
+                 manifest and chunk bytes that may not reach storage",
+            ));
+        }
+        if !commits.atomic_publish {
+            return Err(Error::unsupported_version(
+                "split store: commit plane does not provide atomic_publish; refusing to publish a \
+                 commit record that could be observed torn",
+            ));
+        }
+        if !(commits.conditional_head && commits.durable_fsync) {
+            return Err(Error::unsupported_version(
+                "split store: commit plane does not provide conditional_update and \
+                 durable_fsync; refusing a writable store whose head could be overwritten or \
+                 lost",
+            ));
+        }
+        Ok(())
+    }
+
+    /// Whether the backend stores commit/control bytes outside the local
+    /// filesystem, so the store must not require or create a local directory.
     pub fn is_remote(&self) -> bool {
-        matches!(self, BackendKind::S3 { .. })
+        match self {
+            BackendKind::S3 { .. } => true,
+            BackendKind::Split { commits, .. } => commits.is_remote(),
+            _ => false,
+        }
     }
 
     /// Construct the backend rooted at `root`.
@@ -413,12 +553,81 @@ impl BackendKind {
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
+            BackendKind::Split {
+                blobs,
+                commits,
+                blob_root,
+            } => {
+                let blob_path = blob_root.as_deref().unwrap_or(&root);
+                Box::new(CompositeBackend::new(
+                    blobs.open_blob_plane(blob_path),
+                    commits.open_commit_plane(&root),
+                    format!("{}-blobs/{}-commits", blobs.label(), commits.label()),
+                ))
+            }
+        }
+    }
+
+    /// Construct the blob plane as a [`crate::planes::BlobPlane`].
+    pub fn open_blob_plane(
+        &self,
+        root: impl AsRef<Path>,
+    ) -> Box<dyn crate::planes::BlobPlane + Send> {
+        let root = root.as_ref().to_path_buf();
+        match self {
+            BackendKind::Local => Box::new(LocalBackend::new(root)),
+            BackendKind::Object => Box::new(ObjectBackend::new(root)),
+            BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
+            BackendKind::Posix { capabilities } => {
+                Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
+            }
+            BackendKind::Split { blobs, .. } => blobs.open_blob_plane(&root),
+        }
+    }
+
+    /// Construct the commit plane as a [`crate::planes::CommitPlane`].
+    pub fn open_commit_plane(
+        &self,
+        root: impl AsRef<Path>,
+    ) -> Box<dyn crate::planes::CommitPlane + Send> {
+        let root = root.as_ref().to_path_buf();
+        match self {
+            BackendKind::Local => Box::new(LocalBackend::new(root)),
+            BackendKind::Object => Box::new(ObjectBackend::new(root)),
+            BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
+            BackendKind::Posix { capabilities } => {
+                Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
+            }
+            BackendKind::Split { commits, .. } => commits.open_commit_plane(&root),
         }
     }
 }
 
+/// Intersect two declared capability sets into one description of a split.
+fn combine_capabilities(
+    blobs: &Capabilities,
+    commits: &Capabilities,
+    description: String,
+) -> Capabilities {
+    Capabilities {
+        atomic_publish: blobs.atomic_publish && commits.atomic_publish,
+        durable_fsync: blobs.durable_fsync && commits.durable_fsync,
+        true_range_reads: blobs.true_range_reads,
+        max_object_bytes: blobs.max_object_bytes.min(commits.max_object_bytes),
+        conditional_head: commits.conditional_head,
+        consistency: format!(
+            "split planes ({description}): blobs [{}]; commit/control [{}]",
+            blobs.consistency, commits.consistency
+        ),
+        publication: format!(
+            "blobs: {}; commits: {}",
+            blobs.publication, commits.publication
+        ),
+    }
+}
+
 /// Counters for receipts and tests. Backends update these with relaxed atomics.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct BackendStats {
     pub reads: u64,
     pub range_reads: u64,
@@ -428,6 +637,26 @@ pub struct BackendStats {
     pub link_publications: u64,
     pub rename_publications: u64,
     pub rename_fallbacks: u64,
+}
+
+impl BackendStats {
+    /// Element-wise sum, used to report two planes as one request stream.
+    pub fn merged(&self, other: &BackendStats) -> BackendStats {
+        BackendStats {
+            reads: self.reads.saturating_add(other.reads),
+            range_reads: self.range_reads.saturating_add(other.range_reads),
+            bytes_read: self.bytes_read.saturating_add(other.bytes_read),
+            writes: self.writes.saturating_add(other.writes),
+            bytes_written: self.bytes_written.saturating_add(other.bytes_written),
+            link_publications: self
+                .link_publications
+                .saturating_add(other.link_publications),
+            rename_publications: self
+                .rename_publications
+                .saturating_add(other.rename_publications),
+            rename_fallbacks: self.rename_fallbacks.saturating_add(other.rename_fallbacks),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -457,8 +686,35 @@ impl AtomicStats {
     }
 }
 
+/// The head a caller expected to be published when it began a commit.
+///
+/// `generation == 0` is the sentinel for "no head yet": the superblock is still
+/// all zeros. Generation 1 is the genesis commit, so zero is never a real head.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct HeadExpectation {
+    pub generation: u64,
+    pub commit: Hash32,
+}
+
+impl HeadExpectation {
+    /// The expectation for a store that has no published commit yet.
+    pub fn none() -> HeadExpectation {
+        HeadExpectation {
+            generation: 0,
+            commit: Hash32::ZERO,
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        self.generation == 0
+    }
+}
+
 /// Physical I/O abstraction used by the store core.
 pub trait StorageBackend: Send {
+    /// Backend label used in receipts and diagnostics.
+    fn label(&self) -> &'static str;
+
     /// Declared capabilities (cloned so a backend may revise them after a
     /// publication-primitive probe).
     fn capabilities(&self) -> Capabilities;
@@ -536,6 +792,68 @@ pub trait StorageBackend: Send {
 
     /// Backend diagnostics (for example a rename fallback).
     fn diagnostics(&self) -> Vec<String>;
+
+    /// Atomically replace `key` with `bytes` iff it still holds the record
+    /// whose [`crate::planes::control_token`] is `expected`. `None` means the
+    /// record must be absent. A lost race is `Busy`.
+    ///
+    /// The default implementation reads the record, compares content tokens,
+    /// then replaces it. Under the exclusive writer lock the store holds, that
+    /// is a genuine compare-and-swap for a single-writer POSIX namespace. A
+    /// backend with a native conditional write (S3) overrides it.
+    fn compare_and_swap(&mut self, key: &Key, expected: Option<&str>, bytes: &[u8]) -> Result<()> {
+        let current = match self.read_all(key) {
+            Ok(current) => Some(crate::planes::control_token(&current)),
+            Err(err) if err.class() == crate::error::Class::NotFound => None,
+            Err(err) => return Err(err),
+        };
+        if current.as_deref() != expected {
+            return Err(Error::busy(format!(
+                "control record {} changed since it was read; compare-and-swap refused",
+                key.display_path()
+            )));
+        }
+        self.put_replace(key, bytes)
+    }
+
+    /// Publish the superblock slot for `generation` iff the published head is
+    /// still `expected`.
+    ///
+    /// A single backend under the writer lock may use the unconditional slot
+    /// write (the default). A split store's commit plane uses
+    /// [`crate::planes::CommitPlane::compare_exchange_head`] instead, so a
+    /// lost head race is refused rather than silently applied.
+    fn publish_head(
+        &mut self,
+        expected: HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+        offset: u64,
+        slot_bytes: &[u8],
+    ) -> Result<()> {
+        let _ = (expected, generation, commit, commit_len, timestamp_ns);
+        self.write_at(&Key::superblock(), offset, slot_bytes)
+    }
+
+    /// Per-plane capabilities when this backend is a split over two planes.
+    fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
+        None
+    }
+
+    /// Per-plane counters when this backend is a split over two planes.
+    fn plane_stats(&self) -> Option<crate::planes::PlaneStats> {
+        None
+    }
+
+    /// Probe the plane capabilities on a writable open.
+    ///
+    /// Returns `None` for a backend that has no separate planes. A probe that
+    /// contradicts a declared capability fails closed.
+    fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {
+        Ok(None)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -711,6 +1029,10 @@ impl LocalBackend {
 static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 impl StorageBackend for LocalBackend {
+    fn label(&self) -> &'static str {
+        "local"
+    }
+
     fn capabilities(&self) -> Capabilities {
         self.capabilities.clone()
     }
@@ -1021,6 +1343,12 @@ impl StorageBackend for LocalBackend {
 
     fn diagnostics(&self) -> Vec<String> {
         Vec::new()
+    }
+
+    fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {
+        let blobs = crate::planes::probe_blob_plane(self)?;
+        let commits = crate::planes::probe_commit_plane(self)?;
+        Ok(Some(crate::planes::PlaneProbes { blobs, commits }))
     }
 }
 
@@ -1367,6 +1695,10 @@ fn link_unavailable(err: &std::io::Error) -> bool {
 }
 
 impl StorageBackend for ObjectBackend {
+    fn label(&self) -> &'static str {
+        "object"
+    }
+
     fn capabilities(&self) -> Capabilities {
         self.capabilities
             .lock()
@@ -1672,6 +2004,12 @@ impl StorageBackend for ObjectBackend {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
+
+    fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {
+        let blobs = crate::planes::probe_blob_plane(self)?;
+        let commits = crate::planes::probe_commit_plane(self)?;
+        Ok(Some(crate::planes::PlaneProbes { blobs, commits }))
+    }
 }
 
 fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
@@ -1874,4 +2212,345 @@ pub(crate) fn clean_stale_tmp_dir(dir: &Path, grace_secs: u64) -> Result<()> {
         let _ = fs::remove_file(entry.path());
     }
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Composite backend: blobs on one plane, control state on another
+// ---------------------------------------------------------------------------
+
+/// A [`StorageBackend`] that routes every [`Key`] to one of two planes.
+///
+/// Blob keys (`objects/`, `manifests/`, `indexes/`) go to the blob plane; every
+/// other key (`FORMAT`, `LOCK`, `superblock`, `commits/`, `refs/`, `quota`,
+/// `access/`, `tmp/`) goes to the commit plane. The on-disk bytes, logical key
+/// names, and commit protocol are identical to a single backend; only the
+/// physical system differs.
+///
+/// The advisory `access/` counters live on the commit plane because they are
+/// small mutable records; they are never consulted by commits, recovery,
+/// verification, or GC.
+pub struct CompositeBackend {
+    blobs: Box<dyn crate::planes::BlobPlane + Send>,
+    commits: Box<dyn crate::planes::CommitPlane + Send>,
+    description: String,
+}
+
+impl CompositeBackend {
+    /// Assemble from two planes. `description` is `s3-blobs/local-commits` and
+    /// similar; it is recorded in receipts and in error messages.
+    pub fn new(
+        blobs: Box<dyn crate::planes::BlobPlane + Send>,
+        commits: Box<dyn crate::planes::CommitPlane + Send>,
+        description: String,
+    ) -> CompositeBackend {
+        CompositeBackend {
+            blobs,
+            commits,
+            description,
+        }
+    }
+
+    /// The routing rule, stated once.
+    fn key_is_blob(key: &Key) -> bool {
+        matches!(
+            key.kind(),
+            KeyKind::Object | KeyKind::Manifest | KeyKind::Index
+        )
+    }
+
+    /// Plane description used in receipts.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+}
+
+impl StorageBackend for CompositeBackend {
+    fn label(&self) -> &'static str {
+        "split"
+    }
+
+    fn capabilities(&self) -> Capabilities {
+        let blobs = self.blobs.blob_capabilities();
+        let commits = self.commits.commit_capabilities();
+        Capabilities {
+            atomic_publish: blobs.atomic_publish && commits.atomic_publish,
+            durable_fsync: blobs.durable_fsync && commits.durable_fsync,
+            true_range_reads: blobs.true_range_reads,
+            max_object_bytes: blobs.max_object_bytes.min(commits.max_control_bytes),
+            conditional_head: commits.conditional_update,
+            consistency: format!(
+                "split planes ({}) — blobs [{}]; commit/control [{}]",
+                self.description, blobs.consistency, commits.consistency
+            ),
+            publication: format!(
+                "blobs: {}; commits: {}",
+                blobs.publication, commits.publication
+            ),
+        }
+    }
+
+    fn read(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {
+        if Self::key_is_blob(key) {
+            return self.blobs.get_range(key, offset, len);
+        }
+        let record = self.commits.read_control(key)?.ok_or_else(|| {
+            Error::not_found(format!("key {} does not exist", key.display_path()))
+        })?;
+        slice_control(&record.bytes, key, offset, len)
+    }
+
+    fn read_all(&self, key: &Key) -> Result<Vec<u8>> {
+        if Self::key_is_blob(key) {
+            return self.blobs.get(key);
+        }
+        self.commits
+            .read_control(key)?
+            .map(|record| record.bytes)
+            .ok_or_else(|| Error::not_found(format!("key {} does not exist", key.display_path())))
+    }
+
+    fn write_at(&mut self, key: &Key, offset: u64, bytes: &[u8]) -> Result<()> {
+        if Self::key_is_blob(key) {
+            return Err(Error::unsupported_representation(format!(
+                "blob plane objects are immutable; refusing an in-place write to {}",
+                key.display_path()
+            )));
+        }
+        // Read-modify-write under a compare-and-swap. Only the two-slot
+        // superblock takes this path, and the CAS makes a lost race loud.
+        let record = self.commits.read_control(key)?.ok_or_else(|| {
+            Error::not_found(format!("key {} does not exist", key.display_path()))
+        })?;
+        let start = usize::try_from(offset)
+            .map_err(|_| Error::limit_exceeded("write offset does not fit memory"))?;
+        let end = start
+            .checked_add(bytes.len())
+            .ok_or_else(|| Error::limit_exceeded("write end overflows memory"))?;
+        if end > record.bytes.len() {
+            return Err(Error::invalid_argument(format!(
+                "write range {offset}..{end} exceeds {} bytes",
+                record.bytes.len()
+            )));
+        }
+        let mut image = record.bytes;
+        image[start..end].copy_from_slice(bytes);
+        self.commits
+            .compare_exchange(key, record.token.as_deref(), &image)?;
+        Ok(())
+    }
+
+    fn put_atomic(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
+        if Self::key_is_blob(key) {
+            self.blobs.put_if_absent(key, bytes)
+        } else {
+            self.commits.put_control_if_absent(key, bytes)
+        }
+    }
+
+    fn put_replace(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
+        if Self::key_is_blob(key) {
+            return Err(Error::unsupported_representation(format!(
+                "blob plane objects are immutable; refusing to replace {}",
+                key.display_path()
+            )));
+        }
+        self.commits.write_control(key, bytes)
+    }
+
+    fn create_zeroed(&mut self, key: &Key, len: u64) -> Result<()> {
+        if Self::key_is_blob(key) {
+            return Err(Error::unsupported_representation(format!(
+                "blob plane has no zero-filled creation path; refusing {}",
+                key.display_path()
+            )));
+        }
+        self.commits.create_control(key, len)
+    }
+
+    fn delete(&mut self, key: &Key) -> Result<()> {
+        if Self::key_is_blob(key) {
+            self.blobs.delete(key)
+        } else {
+            self.commits.delete_control(key)
+        }
+    }
+
+    fn list_prefix(&self, prefix: &Key) -> Result<Vec<Key>> {
+        let Key::Prefix(kind) = prefix else {
+            return Err(Error::invalid_argument(
+                "list_prefix requires a Key::Prefix selector",
+            ));
+        };
+        if matches!(kind, KeyKind::Object | KeyKind::Manifest | KeyKind::Index) {
+            self.blobs.list(prefix)
+        } else {
+            self.commits.list_control(prefix)
+        }
+    }
+
+    fn sync(&mut self, key: &Key) -> Result<()> {
+        if Self::key_is_blob(key) {
+            return Ok(());
+        }
+        self.commits.sync_dir(key)
+    }
+
+    fn sync_dir(&mut self, key: &Key) -> Result<()> {
+        if Self::key_is_blob(key) {
+            // Blob publication is durable per the plane contract; there is no
+            // directory to fsync in a content-addressed namespace.
+            return Ok(());
+        }
+        self.commits.sync_dir(key)
+    }
+
+    fn len(&self, key: &Key) -> Result<u64> {
+        if Self::key_is_blob(key) {
+            self.blobs.len(key)
+        } else {
+            self.commits.control_len(key)
+        }
+    }
+
+    fn exists(&self, key: &Key) -> Result<bool> {
+        if Self::key_is_blob(key) {
+            self.blobs.exists(key)
+        } else {
+            self.commits.control_exists(key)
+        }
+    }
+
+    fn is_file(&self, key: &Key) -> Result<bool> {
+        self.exists(key)
+    }
+
+    fn modified(&self, key: &Key) -> Result<Option<SystemTime>> {
+        if Self::key_is_blob(key) {
+            return Ok(None);
+        }
+        self.commits.modified(key)
+    }
+
+    fn init_layout(&mut self) -> Result<()> {
+        self.blobs.init_layout()?;
+        self.commits.init_layout()?;
+        Ok(())
+    }
+
+    fn ensure_layout(&mut self) -> Result<()> {
+        self.blobs.ensure_layout()?;
+        self.commits.ensure_layout()?;
+        Ok(())
+    }
+
+    fn acquire_writer_lock(&mut self) -> Result<()> {
+        self.commits.acquire_lock()
+    }
+
+    fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
+        self.blobs.clean_stale(grace_secs)?;
+        self.commits.clean_stale(grace_secs)
+    }
+
+    fn root(&self) -> &Path {
+        self.commits.root()
+    }
+
+    fn stats(&self) -> BackendStats {
+        self.blobs.stats().merged(&self.commits.stats())
+    }
+
+    fn diagnostics(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        for line in self.blobs.diagnostics() {
+            out.push(format!("blob plane: {line}"));
+        }
+        for line in self.commits.diagnostics() {
+            out.push(format!("commit plane: {line}"));
+        }
+        out
+    }
+
+    fn compare_and_swap(&mut self, key: &Key, expected: Option<&str>, bytes: &[u8]) -> Result<()> {
+        if Self::key_is_blob(key) {
+            return Err(Error::unsupported_representation(format!(
+                "blob plane objects are immutable; refusing a compare-and-swap on {}",
+                key.display_path()
+            )));
+        }
+        self.commits
+            .compare_exchange(key, expected, bytes)
+            .map(|_| ())
+    }
+
+    fn publish_head(
+        &mut self,
+        expected: HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+        _offset: u64,
+        _slot_bytes: &[u8],
+    ) -> Result<()> {
+        let next = crate::planes::CommitHead {
+            generation,
+            commit,
+            commit_len,
+            timestamp_ns,
+        };
+        let expected = if expected.is_none() {
+            None
+        } else {
+            Some(crate::planes::CommitHead {
+                generation: expected.generation,
+                commit: expected.commit,
+                commit_len: 0,
+                timestamp_ns: 0,
+            })
+        };
+        // `compare_exchange_head` compares generation and commit hash only, so
+        // the placeholder length/timestamp above cannot cause a false match.
+        self.commits.compare_exchange_head(expected.as_ref(), &next)
+    }
+
+    fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
+        Some(crate::planes::PlaneCapabilities {
+            blobs: self.blobs.blob_capabilities(),
+            commits: self.commits.commit_capabilities(),
+        })
+    }
+
+    fn plane_stats(&self) -> Option<crate::planes::PlaneStats> {
+        Some(crate::planes::PlaneStats {
+            blobs: self.blobs.stats(),
+            commits: self.commits.stats(),
+        })
+    }
+
+    fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {
+        let bytes = crate::planes::probe_bytes();
+        let blobs = self.blobs.head_part(&bytes)?;
+        let commits = self.commits.probe()?;
+        Ok(Some(crate::planes::PlaneProbes { blobs, commits }))
+    }
+}
+
+/// Bounded slice of a control record for [`CompositeBackend::read`].
+fn slice_control(bytes: &[u8], key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {
+    let total = bytes.len() as u64;
+    if offset > total {
+        return Err(Error::invalid_argument(format!(
+            "read offset {offset} is beyond {} ({total} bytes)",
+            key.display_path()
+        )));
+    }
+    let start = usize::try_from(offset)
+        .map_err(|_| Error::limit_exceeded("read offset does not fit memory"))?;
+    let want = total.saturating_sub(offset).min(len);
+    let end = start
+        .checked_add(usize::try_from(want).unwrap_or(usize::MAX))
+        .ok_or_else(|| Error::limit_exceeded("read range overflows memory"))?
+        .min(bytes.len());
+    Ok(bytes[start..end].to_vec())
 }
