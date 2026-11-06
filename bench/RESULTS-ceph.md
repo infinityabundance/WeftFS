@@ -217,6 +217,18 @@ First aggregate run including the court:
 at WeftFS `0e3670a`; Ceph court receipt
 `bench/receipts/ceph-rgw-20261106T162208Z.json`.
 
+The skip path is measured, not asserted. A second aggregate run at the same
+code with `WEFT_CEPH_IMAGE` pointed at a nonexistent digest produced
+`bench/receipts/verify-20261106T162933Z.json`:
+`summary {courts 28, passed 27, failed 0, skipped 1}`, `"ceph_rgw": "skip"`,
+`skips.ceph_rgw = "cannot obtain pinned image ... manifest unknown"`,
+`result_note = "1 court(s) skipped explicitly; a skip is not a pass"` and
+`result = pass`. The other 27 courts passed. That run also re-ran the Buck2,
+agent-memory, and fuzz-diff courts green; their output is inside the run's
+committed log, and the duplicate side receipts are not committed separately.
+This negative run is **not** the current pass receipt: the all-pass run above
+is.
+
 ## 8. Reproduce
 
 ```sh

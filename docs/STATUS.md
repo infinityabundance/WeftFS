@@ -3972,5 +3972,12 @@ at WeftFS `0e3670a`, with the Ceph court's own receipt at
 `bench/receipts/ceph-rgw-20261106T162208Z.json` (named in the verify receipt's
 `receipts` block).
 
+The skip path itself is measured: a second aggregate run at the same code with
+`WEFT_CEPH_IMAGE` pointed at a nonexistent digest produced
+`bench/receipts/verify-20261106T162933Z.json` (27 passed, 0 failed, 1 skipped;
+`ceph_rgw: skip` with the reason `cannot obtain pinned image ... manifest
+unknown`). That run is a deliberate negative test of the skip mechanism and is
+not the current pass receipt; the all-pass run above is.
+
 Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
 pass (the frozen formats and spec files are untouched by this subphase).
