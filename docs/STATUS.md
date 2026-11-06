@@ -2627,3 +2627,73 @@ sparse counterpart, not a replacement.
   per-tensor frames, not store-planner bytes; zstd baselines are copied from a
   prior receipt; mode 16 is not entropy-coded, so medium-density deltas still
   lose to mode 11; `max_sparse_runs` refused one tensor in each of two pairs.
+
+## Subphase R5 — entropy-coder court (2026-11-06)
+
+Experimental, no wire change. `WeftCodec/src/experimental/entropy/` adds a
+Tunstall coder (k=8/10/12), a static order-0 32-bit rANS coder, zstd levels
+3/19, raw, and the shipped `huffman-canonical-v1` as the baseline. No
+persistent encode/decode path calls the module; the court script fails if a
+production source file references `experimental::`. No wire mode, table, or
+frozen format changed.
+
+- **Inputs.** Real cached weights (all 7 files re-hashed in court; manifest
+  sha256 `89fce691…`): Qwen2.5-0.5B/Instruct BF16 and pythia-70m step0/1.
+  Plane inputs are extracted through the shipped encoders for modes 9 (exponent
+  and sign+mantissa), 11 (dense fine-tune and sparse step0→step1 residuals,
+  anchored at changed row 2304), 12 (1 MiB KV page), and 15 (tile [64,128],
+  532 tiles). Workload shapes: whole, 100 rows, 1 row (KV: page, 100 rows,
+  1 row). 252 rows, 14 coder configurations.
+- **Correctness.** Every row round-trips byte-exactly. `tests/
+  entropy_experimental.rs` 10/10 covers empty/one-symbol/all-256/skewed/
+  incompressible/non-granular inputs, the documented Tunstall rule, shared
+  dictionaries over unseen symbols, malformed headers, and 5,000 randomised
+  cases plus 5,000 mutated streams each for Tunstall and rANS against
+  independent reference decoders. WeftCodec and parent `cargo test
+  --all-targets` pass. Cross gate: all checks passed, modes 14/15/16
+  byte-identical. Conformance replays: Rust and Go 224 pass, 0 fail, 102
+  skip against manifest
+  `1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0`.
+- **Bytes.** rANS is the smallest coder on mode-9 BF16 whole planes
+  (**5,753,076 B**, 0.6600; 0.86% under zstd-19 and 0.64% under Huffman),
+  mode-11 dense whole planes (**4,357,033 B**, 0.4999; 2.40% / 3.58% under
+  them), mode-15 tiles (5,804,101 B), KV pages (698,896 B), and the sparse
+  whole planes (**1,188 B** vs 3,288 B zstd-19). zstd-19 is smallest on FP32
+  mode-9 (**2,014,728 B**, 12.1% under rANS) and on 1-row regions.
+- **Speed.** Shipped Huffman 1,161/1,229 MiB/s encode/decode; rANS
+  312/305 MiB/s; zstd-19 28.5/9,652 MiB/s; zstd-3 1,807/6,808 MiB/s.
+  rANS is 2.0× slower than Huffman on BF16 decode and 23.7× slower than
+  zstd-19; on sparse whole planes the gap is 74.4×.
+- **Tunstall.** k=8 cannot split (`256+255 > 256`), so it is raw plus
+  dictionary (ratio 1.0001–1.0002). k=10/12 compress some planes but are
+  47–59% above the best coder on non-sparse whole planes and ~3,000× above
+  zstd-19 on the sparse whole planes; on 1-row regions their total is
+  6.6–30.5× the best non-sparse coder. Tunstall wins nothing.
+- **Dictionary scopes.** Per-plane is the best byte scope at k=12 for whole
+  and 100-row multi-plane sets in five of six classes (34,465 B mode 9/tiles,
+  38,290 B dense, 34,210 B KV, 171,440 B sparse). The sparse whole planes
+  are the exception: 171 KB per-plane loses to 42,860 B per-tensor on total
+  bytes. Per-tensor is not a default. Family-shared is an amortisation tool,
+  not a compression win: 18,125–42,860 B charged once and amortised to
+  62–564 B per tensor (N=290/76/169) or 2,234 B for 8 KV pages; it does not
+  improve stream bytes. At 1-row granularity every static dictionary loses.
+- **Memory.** The dense full-checkpoint family histogram peaked at
+  **2,248,448 KiB (2.14 GiB)** through the shipped delta encoder on the 272 MB
+  embedding; the per-row matrix peak was 520,708 KiB. Inside the 3 GiB court,
+  about 0.86 GiB headroom.
+- **Recommendation: Promote nothing.** Keep `huffman-canonical-v1`. rANS's
+  0.5–3.6% size win is not worth a wire change plus a 2× decode loss; zstd-19
+  is a size reference but its 28.5 MiB/s encode rules it out as a write path;
+  Tunstall is rejected at every k and scope. Conditional follow-up only:
+  rANS with a decoder at Huffman throughput; a frame-based coder if 1-row
+  reads become first-class.
+- **Evidence.** Receipt `bench/receipts/entropy-coder-20261106T065154Z.json`
+  (252 rows; supersedes `entropy-coder-20261106T064820Z.json`, whose build-peak
+  field was captured after a reset and is not meaningful). Revisions `weftfs
+  4e5cb95`, `weftcodec 72cd119`, `weftcodec_go e47fa03`, `weftfs_go 47fd4d2`.
+  Analysis `bench/RESULTS-entropy-coders.md`. Court runner
+  `bench/scripts/entropy_coder_court.sh`, renderer
+  `bench/scripts/render_entropy_results.py`.
+- **Residual.** One host/warm cache; one tensor per class; codec-level plane
+  streams, not a shipped frame or store planner; no zstd dictionary/long-window;
+  rANS not micro-optimised; no substring-frequency Tunstall dictionary.
