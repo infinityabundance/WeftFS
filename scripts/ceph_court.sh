@@ -24,6 +24,13 @@
 #   scripts/ceph_court.sh --matrix-only   # skip the s3_backend test suite
 #   scripts/ceph_court.sh --no-minio      # skip the MinIO comparison
 #
+# Exit status: 0 = every check passed, 1 = the court ran and failed, 78 =
+# **skipped**. 78 is printed as exactly one `ceph_court: skip <reason>` line and
+# is used only for environment refusals detected before the server starts:
+# non-x86_64, no Docker daemon, the pinned image cannot be obtained, or the
+# court's private subnet is already taken. `scripts/verify-all.sh` records that
+# as an explicit `skip` in its receipt; a skip never counts as a pass.
+#
 # The RGW container needs a *bounded* capability set that MinIO does not:
 # CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, because Ceph runs its daemons as
 # uid/gid 167 and writes keyrings owned by that user. Every memory, swap, pid,
@@ -56,7 +63,7 @@ for arg in "$@"; do
     --matrix-only) matrix_only=1 ;;
     --no-minio) with_minio=0 ;;
     -h|--help)
-      sed -n '2,47p' "$0"
+      sed -n '2,56p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
@@ -68,9 +75,24 @@ WEFT_CPUS="${WEFT_CPUS:-4}"
 WEFT_PIDS="${WEFT_PIDS:-1024}"
 WEFT_NPROC="${WEFT_NPROC:-2048}"
 
-if [[ "$(uname -m)" != "x86_64" ]]; then
-  echo "ceph_court: only the verified linux-amd64 Ceph image is supported (host is $(uname -m))" >&2
+# A skip is an environment refusal, not a result and never a pass. Every skip
+# path prints exactly one `ceph_court: skip <reason>` line and exits 78
+# (EX_CONFIG); `scripts/verify-all.sh` maps that to an explicit `skip` entry in
+# its receipt. Everything after this preflight is the court's own
+# responsibility and fails closed with exit 1.
+skip() {
+  echo "ceph_court: skip $*" >&2
   exit 78
+}
+
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  skip "unsupported architecture $(uname -m); only linux-amd64 is verified"
+fi
+if ! command -v docker >/dev/null 2>&1; then
+  skip "no docker CLI on PATH"
+fi
+if ! docker info >/dev/null 2>&1; then
+  skip "docker daemon unavailable: $(docker info 2>&1 | head -1)"
 fi
 
 # Pinned by digest so a tag move cannot silently change the server under test.
@@ -91,18 +113,23 @@ chmod a+rwX bench/receipts 2>/dev/null || true
 
 if ! docker image inspect "$ceph_image" >/dev/null 2>&1; then
   echo "ceph_court: pulling pinned image $ceph_image" >&2
-  docker pull "$ceph_image" >/dev/null
+  if ! pull_error="$(docker pull "$ceph_image" 2>&1 >/dev/null)"; then
+    skip "cannot obtain pinned image $ceph_image: ${pull_error:-docker pull failed}"
+  fi
 fi
-ceph_image_id="$(docker image inspect "$ceph_image" --format '{{.Id}}')"
+if ! ceph_image_id="$(docker image inspect "$ceph_image" --format '{{.Id}}' 2>/dev/null)"; then
+  skip "pinned image $ceph_image is not present after pull"
+fi
 ceph_image_digest="$(docker image inspect "$ceph_image" --format '{{index .RepoDigests 0}}')"
 
 # A fixed subnet is needed because the monitor must be told its own public
-# address before it starts. Refuse to reuse a subnet that Docker already knows.
+# address before it starts. Refuse to reuse a subnet that Docker already knows;
+# this is an environment collision (another court or a stale network), so it is
+# an explicit skip with the exact owner named.
 for network_id in $(docker network ls -q); do
   for existing in $(docker network inspect "$network_id" --format '{{range .IPAM.Config}}{{.Subnet}} {{end}}' 2>/dev/null); do
     if [[ "$existing" == "$subnet" ]]; then
-      echo "ceph_court: subnet $subnet is already in use by network $network_id; set WEFT_CEPH_SUBNET" >&2
-      exit 78
+      skip "subnet $subnet is already in use by network $network_id; set WEFT_CEPH_SUBNET"
     fi
   done
 done

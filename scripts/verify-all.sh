@@ -12,8 +12,10 @@ mkdir -p bench/receipts
 receipt="bench/receipts/verify-${stamp}.json"
 log="bench/receipts/verify-${stamp}.log"
 results="bench/receipts/.verify-${stamp}.results"
+skips="bench/receipts/.verify-${stamp}.skips"
 : > "$log"
 : > "$results"
+: > "$skips"
 
 status=0
 run_court() {
@@ -106,6 +108,33 @@ run_court fuse "buck2_cas_store" \
 run_court fuse "agent_memory" \
   "bash scripts/demo-agent-memory.sh"
 
+# R16 independent S3 implementation: a Ceph RGW sidecar, the existing S3 backend
+# suite against it, the eight-behaviour compatibility matrix against RGW and
+# MinIO, and a side-by-side comparison. This court orchestrates its own
+# containers, so it is invoked directly instead of through run_court. Exit 78 is
+# an explicit environment skip (non-x86_64, no Docker daemon, pinned image
+# unavailable, private subnet taken) and is recorded as `skip`, never as a pass.
+echo "=== ceph_rgw ===" | tee -a "$log"
+if WEFT_COMPAT_STAMP="$stamp" bash scripts/ceph_court.sh >>"$log" 2>&1; then
+  echo "ceph_rgw=pass" >> "$results"
+  echo "PASS ceph_rgw"
+else
+  ceph_rc=$?
+  if [[ "$ceph_rc" -eq 78 ]]; then
+    ceph_reason="$(grep -h '^ceph_court: skip ' "$log" | tail -1 | sed 's/^ceph_court: skip //' || true)"
+    [[ -z "$ceph_reason" ]] && ceph_reason="ceph_court.sh exited 78 without a printed reason"
+    # Reasons may quote Docker errors; keep the receipt valid JSON.
+    ceph_reason="$(printf '%s' "$ceph_reason" | tr -d '"\\' | tr '\n\t' ' ')"
+    echo "ceph_rgw=skip" >> "$results"
+    printf '%s\t%s\n' ceph_rgw "$ceph_reason" >> "$skips"
+    echo "SKIP ceph_rgw: $ceph_reason"
+  else
+    echo "ceph_rgw=fail" >> "$results"
+    echo "FAIL ceph_rgw (exit $ceph_rc)"
+    status=1
+  fi
+fi
+
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
 run_court rust "context_cross_rust_gen" \
@@ -145,6 +174,13 @@ else
   status=1
 fi
 
+# Aggregate counts. Recounted from the results file so the receipt can never
+# disagree with the per-court entries it prints below.
+total="$(grep -c . "$results" || true)"
+passed="$(grep -c '=pass$' "$results" || true)"
+failed="$(grep -c '=fail$' "$results" || true)"
+skipped="$(grep -c '=skip$' "$results" || true)"
+
 {
   echo "{"
   echo "  \"kind\": \"correctness-verification\","
@@ -159,6 +195,12 @@ fi
   echo "    \"WeftCodec-Go\": \"$(git -C WeftCodec-Go rev-parse HEAD)\","
   echo "    \"WeftFS-Go\": \"$(git -C WeftFS-Go rev-parse HEAD)\""
   echo "  },"
+  echo "  \"summary\": {"
+  echo "    \"courts\": $total,"
+  echo "    \"passed\": $passed,"
+  echo "    \"failed\": $failed,"
+  echo "    \"skipped\": $skipped"
+  echo "  },"
   echo "  \"courts\": {"
   first=1
   while IFS='=' read -r label result; do
@@ -168,11 +210,26 @@ fi
   done < "$results"
   echo ""
   echo "  },"
+  if [[ "$skipped" -gt 0 ]]; then
+    echo "  \"skips\": {"
+    first=1
+    while IFS=$'\t' read -r label reason; do
+      [[ -z "$label" ]] && continue
+      if [[ "$first" -eq 1 ]]; then first=0; else echo ","; fi
+      printf '    "%s": "%s"' "$label" "$reason"
+    done < "$skips"
+    echo ""
+    echo "  },"
+    echo "  \"result_note\": \"$skipped court(s) skipped explicitly; a skip is not a pass\","
+  fi
+  echo "  \"receipts\": {"
+  echo "    \"ceph_rgw\": \"bench/receipts/ceph-rgw-${stamp}.json\""
+  echo "  },"
   echo "  \"result\": \"$([ "$status" -eq 0 ] && echo pass || echo fail)\","
   echo "  \"raw_log\": \"$log\""
   echo "}"
 } > "$receipt"
 
-rm -f "$results"
-echo "receipt: $receipt (result=$([ "$status" -eq 0 ] && echo pass || echo fail))"
+rm -f "$results" "$skips"
+echo "receipt: $receipt (result=$([ "$status" -eq 0 ] && echo pass || echo fail), courts=$total passed=$passed failed=$failed skipped=$skipped)"
 exit "$status"
