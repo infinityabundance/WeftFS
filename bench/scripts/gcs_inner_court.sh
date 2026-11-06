@@ -14,8 +14,10 @@
 #   WEFT_GCS_TEST_BUCKET      bucket name prefix for the court
 #   WEFT_GCS_PROJECT          project used for bucket creation
 #   WEFT_GCS_LOCK_LEASE_SECS  writer-lock lease used by the crash proxy
+#   WEFT_GCS_FENCE_LEASE_SECS lease used by the fencing suite (short, expireable)
 #   WEFT_GCS_RECEIPT          receipt path
 #   WEFT_GCS_TESTS_LOG        unit-test log path
+#   WEFT_GCS_FENCING_LOG      fencing-suite log path
 set -Eeuo pipefail
 
 cd /work
@@ -24,6 +26,9 @@ bin="${WEFT_GCS_BIN:?WEFT_GCS_BIN is required}"
 receipt="${WEFT_GCS_RECEIPT:?WEFT_GCS_RECEIPT is required}"
 tests_log="${WEFT_GCS_TESTS_LOG:?WEFT_GCS_TESTS_LOG is required}"
 tests_summary="${tests_log%.log}.txt"
+fencing_log="${WEFT_GCS_FENCING_LOG:?WEFT_GCS_FENCING_LOG is required}"
+fencing_summary="${fencing_log%.log}.txt"
+export WEFT_GCS_FENCE_LEASE_SECS="${WEFT_GCS_FENCE_LEASE_SECS:-3}"
 endpoint="${WEFT_GCS_TEST_ENDPOINT:?WEFT_GCS_TEST_ENDPOINT is required}"
 port="${endpoint##*:}"
 port="${port%%/*}"
@@ -73,7 +78,13 @@ echo "gcs_inner_court: emulator ready at ${endpoint} (pid ${server_pid})"
 cargo test --test gcs_backend -- --test-threads=1 >"$tests_log" 2>&1
 grep -E '^(test |test result)' "$tests_log" >"$tests_summary" || true
 
-# 2. End-to-end court over the emulator. The CLI is built first because the
+# 2. Fenced-writer court over the emulator. These are the same backend-agnostic
+#    invariants the S3 and Ceph RGW courts run (tests/support/fencing.rs); the
+#    lease is short so a test can let it expire.
+cargo test --test gcs_fencing -- --test-threads=1 --nocapture >"$fencing_log" 2>&1
+grep -E '^(test |test result)' "$fencing_log" >"$fencing_summary" || true
+
+# 3. End-to-end court over the emulator. The CLI is built first because the
 #    crash proxy re-executes it with WEFT_CRASH_PHASE set.
 cargo build --release --bins >>"$tests_log" 2>&1
 cargo run --release --quiet --example gcs_court -- \

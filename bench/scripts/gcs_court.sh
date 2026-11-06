@@ -126,8 +126,12 @@ export WEFT_GCS_TEST_BUCKET="weft-gcs-court-${suffix}"
 export WEFT_GCS_PROJECT="${WEFT_GCS_PROJECT:-weft-court}"
 export WEFT_GCS_ANONYMOUS=1
 export WEFT_GCS_LOCK_LEASE_SECS="${WEFT_GCS_LOCK_LEASE_SECS:-2}"
+# The fencing suite needs a lease a court can expire; the general court uses a
+# short but longer-lived one for the crash proxy. Same split as the S3 court.
+export WEFT_GCS_FENCE_LEASE_SECS="${WEFT_GCS_FENCE_LEASE_SECS:-3}"
 export WEFT_GCS_RECEIPT="bench/receipts/gcs-${stamp}.json"
 export WEFT_GCS_TESTS_LOG="bench/receipts/gcs-${stamp}.tests.log"
+export WEFT_GCS_FENCING_LOG="bench/receipts/gcs-${stamp}.fencing.log"
 export WEFT_GCS_STAMP="$stamp"
 export WEFT_GCS_SERVER_LABEL="fake-gcs-server"
 export WEFT_GCS_SERVER_VERSION="$gcs_release_version"
@@ -171,6 +175,14 @@ cat > "$court_receipt" <<JSON
     "command": "cargo test --test gcs_backend -- --test-threads=1",
     "log": "${WEFT_GCS_TESTS_LOG}",
     "summary": "${WEFT_GCS_TESTS_LOG%.log}.txt"
+  },
+  "fencing": {
+    "command": "cargo test --test gcs_fencing -- --test-threads=1 --nocapture",
+    "log": "${WEFT_GCS_FENCING_LOG}",
+    "summary": "${WEFT_GCS_FENCING_LOG%.log}.txt",
+    "lease_secs": "$WEFT_GCS_FENCE_LEASE_SECS",
+    "shared_bodies": "tests/support/fencing.rs (also run by scripts/s3_court.sh on MinIO and scripts/ceph_court.sh on Ceph RGW)",
+    "note": "Generation-precondition fencing: takeover, fence-before-head, renewal, own-deadline stop, and a conditional tombstone release."
   },
   "court": {
     "command": "cargo run --release --quiet --example gcs_court -- --out ${WEFT_GCS_RECEIPT}",

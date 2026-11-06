@@ -1,0 +1,286 @@
+{
+  "configs": [
+    {
+      "config": "local",
+      "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+      "diagnostics": [],
+      "generation": 21,
+      "generation_sequence": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "phases_ms": {
+        "create": 1.6307209999999999,
+        "range_write": 0.985117,
+        "read": 0.459788,
+        "reopen": 0.207437,
+        "verify": 1.880085
+      },
+      "planes": {
+        "capabilities": null,
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "local",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "local",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        }
+      },
+      "reopen": {
+        "generation": 21,
+        "match": true,
+        "problems": [],
+        "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f"
+      },
+      "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+      "status": "ok",
+      "store": "/tmp/weft-gcs-court/local",
+      "superblock_generation_observed": [],
+      "verified_bytes": 393216,
+      "verify": {
+        "problems": []
+      },
+      "wall_ms": 7.086823
+    },
+    {
+      "config": "gcs",
+      "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+      "diagnostics": [
+        "GCS generation preconditions observed 2 lost/retried race(s)",
+        "GCS fence CAS proved the lease 42 time(s), 0 with a renewal"
+      ],
+      "generation": 21,
+      "generation_sequence": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "phases_ms": {
+        "create": 16.296405,
+        "range_write": 12.769259,
+        "read": 4.654679,
+        "reopen": 9.399115,
+        "verify": 27.923705
+      },
+      "planes": {
+        "capabilities": null,
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "gcs",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `GCS JSON API upload with ifGenerationMatch=0 (create-once) or ifGenerationMatch=<observed generation> (compare-and-swap); both forms and a stale-generation refusal are probed before any commit is published. The writer lease is a fenced record whose takeover, renewal, and release are all generation-conditioned; the fence is the last upload before the head compare-and-swap` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "gcs",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `GCS JSON API upload with ifGenerationMatch=0 (create-once) or ifGenerationMatch=<observed generation> (compare-and-swap); both forms and a stale-generation refusal are probed before any commit is published. The writer lease is a fenced record whose takeover, renewal, and release are all generation-conditioned; the fence is the last upload before the head compare-and-swap` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        }
+      },
+      "reopen": {
+        "generation": 21,
+        "match": true,
+        "problems": [],
+        "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f"
+      },
+      "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+      "status": "ok",
+      "store": "/tmp/weft-gcs-court/gcs",
+      "superblock_generation_observed": [
+        1793988512737330,
+        1793988512753643,
+        1793988512766385
+      ],
+      "verified_bytes": 393216,
+      "verify": {
+        "problems": []
+      },
+      "wall_ms": 101.351434
+    }
+  ],
+  "crash_proxy": {
+    "aborted_by_signal": true,
+    "note": "process-fault proxy: the writer is aborted at each publication phase; this is not a physical power-loss test",
+    "old_or_new_only": true,
+    "partial_states": 0,
+    "phases": [
+      {
+        "aborted_by_signal": true,
+        "bytes": "old",
+        "generation_after": 2,
+        "generation_before": 2,
+        "phase": "after_objects",
+        "state": "old",
+        "superblock_generation": 1793988512838754,
+        "verify_problems": [],
+        "verify_state": "clean"
+      },
+      {
+        "aborted_by_signal": true,
+        "bytes": "old",
+        "generation_after": 2,
+        "generation_before": 2,
+        "phase": "after_commit_file",
+        "state": "old",
+        "superblock_generation": 1793988515907576,
+        "verify_problems": [
+          "Corrupt: commit file for generation 3 exists above the highest published superblock generation 2"
+        ],
+        "verify_state": "unpublished-tail"
+      },
+      {
+        "aborted_by_signal": true,
+        "bytes": "new content, longer than old",
+        "generation_after": 3,
+        "generation_before": 2,
+        "phase": "after_superblock_write",
+        "state": "new",
+        "superblock_generation": 1793988518974740,
+        "verify_problems": [],
+        "verify_state": "clean"
+      }
+    ]
+  },
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "court_kernel": "7.3.1-1-cachyos",
+    "cpus": "4",
+    "gcs_bucket": "weft-gcs-court-20261106t180749z",
+    "gcs_emulator": "fake-gcs-server",
+    "gcs_emulator_release": "1.56.1",
+    "gcs_emulator_sha256": "0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469",
+    "gcs_endpoint": "http://127.0.0.1:4443",
+    "memory": "3g",
+    "pids": "1024",
+    "revision_weftfs": "06a0b8a16abe5e97d615a44704e99294d125993e"
+  },
+  "exactness": {
+    "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+    "content_digest_match": true,
+    "content_root_match": true,
+    "generation": 21,
+    "generation_match": true,
+    "generation_sequence": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "generation_sequence_match": true,
+    "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+    "verified_bytes": 393216,
+    "verified_bytes_match": true
+  },
+  "generated_utc": "20261106T180749Z",
+  "label": "Single-host GCS-compatible emulator on loopback in the OOM-protected Docker court with a memory backend. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim.",
+  "peak_rss_kib": 6444,
+  "schema": "weft-gcs-court-v1",
+  "tests": {
+    "summary": [
+      "test anonymous_emulator_mode_sends_no_authorization_header ... ok",
+      "test configuration_refuses_an_ambiguous_credential ... ok",
+      "test control_create_is_create_once_and_delete_is_reported ... ok",
+      "test create_once_succeeds_is_idempotent_and_rejects_different_bytes ... ok",
+      "test listing_round_trips_the_normative_layout ... ok",
+      "test matched_generation_succeeds_and_a_stale_generation_is_busy ... ok",
+      "test missing_object_is_not_found_everywhere ... ok",
+      "test probe_records_create_once_matching_and_stale_rejection ... ok",
+      "test probe_refuses_an_endpoint_that_accepts_a_stale_generation ... ok",
+      "test range_reads_are_exact_and_end_of_object_is_not_an_error ... ok",
+      "test resumable_upload_carries_the_payload_above_the_simple_bound ... ok",
+      "test store_refuses_a_stale_accepting_endpoint_before_publishing ... ok",
+      "test store_round_trip_is_byte_identical_to_local_and_reopens ... ok",
+      "test transport_failure_stays_io_and_is_not_reported_as_corruption ... ok",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s"
+    ],
+    "summary_file": "bench/receipts/gcs-20261106T180749Z.tests.txt"
+  },
+  "workload": {
+    "chunk_size": 8192,
+    "file_bytes": 32768,
+    "files": 12,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "note": "deterministic bytes, seeded ObjectIds, fixed clock; local and GCS must reproduce the same root and the same commit sequence",
+    "range_write_bytes": 4096,
+    "range_writes": 8,
+    "visible_bytes": 393216
+  }
+}
