@@ -13,10 +13,99 @@ the complete storage and restore cost is compared with independent `zstd -19`,
   [`bench/receipts/planner-float-20261106T025351Z.json`](receipts/planner-float-20261106T025351Z.json).
   The storage headline **flips** (WeftFS now beats ZipNN); the restore table
   gets worse. Both measurements are kept below.
+* **R2 (2026-11-06):** table-driven `huffman-canonical-v1` decode and a
+  word-at-a-time `FLOAT_TENSOR` plane join. **Storage is byte-identical**; the
+  base read is 2.98x faster and the instruct read 2.37x. Receipt
+  [`bench/receipts/planner-float-20261106T035316Z.json`](receipts/planner-float-20261106T035316Z.json).
+  R2 still loses to zstd on single-threaded decode; that is stated below.
 
 Label: single-host bench court, synthetic-free public corpus, no fleet or
 production claim. **The comparison is at matched exactness: every method is
 lossless, and every restored checkpoint matched the upstream LFS SHA-256.**
+
+## R2 update: decoder throughput (no wire change)
+
+Two internal changes, no new mode and no encoder-output change:
+
+1. **`huffman-canonical-v1` decode** (modes 9-15): a 12-bit primary lookup
+   table over an MSB-aligned 64-bit accumulator. The original canonical
+   bit-at-a-time loop is retained for codes longer than 12 bits and for stream
+   tails, so validation order, error classes, padding and consumed-byte
+   accounting are unchanged. Rust and Go both changed.
+2. **`FLOAT_TENSOR` plane join:** one `sign+mantissa` extraction per element
+   from an MSB accumulator, written in place into an exactly sized buffer. The
+   former loop read two bit fields one bit at a time (~17 ns/element).
+
+Evidence that the bytes did not move: a test-only verbatim reference decoder
+in each language, 10,000-case randomized differentials comparing output bytes
+**and** error class (Rust and Go), the cross-language gate (`compare`), and
+both conformance replays - all unchanged at 206 pass / 0 fail / 101 skip.
+
+### Planner decode table, re-measured
+
+Median of three independent 7-repetition calibrations (128 KiB + 16 MiB, warm
+cache, synthetic weight-like BF16), same court:
+
+| class | R1 ns per MiB | **R2 ns per MiB** | speedup |
+|---|---:|---:|---:|
+| float-tensor (9) | 15,403,165 | **4,683,726** | **3.29x** |
+| tensor-tiled (15) | 10,056,794 | **3,366,772** | **2.99x** |
+| tensor-sharded (10) | 13,788,933 | **9,123,307** | 1.51x |
+| weight-delta (11, incremental) | 5,297,277 | **5,293,987** | 1.00x |
+| semantic-delta (14, incremental) | 7,228,350 | **6,458,523** | 1.12x |
+| zstd | 814,267 | 779,888 | unchanged path |
+| raw | 318,321 | 307,019 | unchanged path |
+
+Isolated single-thread coder microbenchmarks: Huffman decode 4.7-5.0x (Rust)
+and 4.1-5.3x (Go); plane join 3.1-5.7x (Rust) and 4.8-6.5x (Go).
+
+`weight-delta` barely moved because its cost is dominated by reconstructing
+full byte planes, not by the join, and `tensor-sharded` is now the slowest
+class per MiB - the next targeted optimization, not a solved one.
+
+### Restore, same corpus and court
+
+| operation | R1 | **R2** | speedup |
+|---|---:|---:|---:|
+| base read-only | 13,775.8 ms | **4,627.5 ms** | **2.98x** |
+| base materialize | 16,736.9 ms | **6,494.3 ms** | 2.58x |
+| instruct read-only | 26,935.7 ms | **11,371.2 ms** | **2.37x** |
+| instruct materialize | 29,950.5 ms | **12,092.2 ms** | 2.48x |
+| single tensor base | 111.4 ms | **39.8 ms** | 2.80x |
+| single tensor instruct | 221.9 ms | **92.7 ms** | 2.39x |
+
+Storage is **byte-identical** to R1: 1,276,128,956 B total, 1,199,958,505 B
+data-only, 3.07 % under ZipNN. The planner's default objective is bytes, so a
+decoder change cannot move selection at `lambda = 0`. Ingest also got faster
+because the planner and verifier decode each candidate: base 147.2 s -> 65.2 s,
+instruct phase 241.4 s -> 111.6 s.
+
+The hot-instruct rebase selection falls from 73 of 241 to **1 of 241** at the
+same 1e9 ns threshold, because the chain cost per read is now ~3x lower; the
+baked table was re-measured rather than reusing the R1 constants.
+
+### What still loses (R2 is not parity)
+
+* Base read-only is still **4.8x** the F10 zstd-strategy read (968.8 ms) and
+  ~19x ZipNN's 240 ms in-memory decompressor. Mode 9 is 6.0x zstd per MiB
+  (4.68 vs 0.78 ms/MiB), down from 18.9x.
+* The bottleneck is now the dependent L1 table lookup per symbol plus the
+  per-byte verification and hashing on the read path. The decode is still
+  **sequential across the 290 tensors**, and frames are not yet split into
+  block-independent streams with an offset table, so neither intra-frame nor
+  inter-tensor parallelism exists. That is the next lever; another small loop
+  rewrite is not.
+* `tensor-sharded` (mode 10) is the slowest class at 9.12 ms/MiB and is used by
+  checkpoint shards, not by this store planner.
+* Single host, warm cache; the table is court-bound. No fleet claim.
+
+Revisions: WeftFS `ba5a0e6`, WeftCodec `1ee5d90`, WeftCodec-Go `d1aab12`,
+WeftFS-Go `bb15514`. Tests at that tree: WeftCodec 204 passed; WeftCodec-Go
+`go test ./...` all packages; parent 244 passed; FUSE `--all-targets` 278
+passed / 2 ignored; WeftFS-Go `-race` all packages. One transient
+`extent_cow::chunk_size_comes_from_the_manifest` failure occurred in the first
+fully loaded parallel FUSE run; 10/10 standalone repeats and the rerun pass,
+and it is recorded here rather than hidden.
 
 ## R1 update: mode-9 planner, measured decode table, rebasing
 

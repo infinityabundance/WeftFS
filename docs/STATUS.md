@@ -1759,6 +1759,62 @@ old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
   the real-model court); the Go store has no CLI `rebase` verb yet (API + tests
   only); index segments are 5.92 % of the total.
 
+## Subphase R2 — decoder throughput (no wire change)
+
+**Implemented, measured once, single host, one subphase.** Receipt
+`bench/receipts/planner-float-20261106T035316Z.json`; analysis and both
+old-vs-new tables in `bench/RESULTS-real-model.md` (R2 section). Revisions:
+WeftFS `ba5a0e6`, WeftCodec `1ee5d90`, WeftCodec-Go `d1aab12`, WeftFS-Go
+`bb15514`. This is the governing objective from the R1 review: reconstruction
+cost, not more format coverage.
+
+- **Huffman decode:** `huffman-canonical-v1` now uses a 12-bit primary table
+  over an MSB-aligned 64-bit accumulator; the original canonical bit-at-a-time
+  loop is kept for codes longer than 12 bits and for stream tails. Wire format,
+  encoder bytes, validation order, error classes, padding and consumed-byte
+  accounting are unchanged. Isolated microbench: 4.7-5.0x (Rust), 4.1-5.3x
+  (Go).
+- **FLOAT_TENSOR plane join:** `join_float_tensor_payload` /
+  `JoinFloatTensorPayload` extract `sign+mantissa` once per element and write in
+  place, replacing a loop that read two bit fields one bit at a time. Microbench:
+  3.1-5.7x (Rust), 4.8-6.5x (Go).
+- **Proof the bytes did not move:** a test-only verbatim reference decoder in
+  each language plus 10,000-case randomized differentials comparing output
+  bytes **and** error class, in Rust and Go; the cross-language `compare` gate
+  and both conformance replays unchanged at 206 pass / 0 fail / 101 skip.
+- **Planner table re-measured and re-baked:** median of three independent
+  7-repetition calibrations. mode 9 15,403,165 -> **4,683,726 ns/MiB (3.29x)**;
+  mode 15 10,056,794 -> **3,366,772 (2.99x)**; mode 10 13,788,933 ->
+  **9,123,307 (1.51x)**; weight-delta 5,297,277 -> 5,293,987 (1.00x);
+  semantic-delta 7,228,350 -> 6,458,523 (1.12x). `src/cost_model.rs` and
+  `WeftFS-Go/store/cost_model.go` carry identical integers and
+  `MEASURED_CALIBRATION` moves to `weftfs-r2/decode-calibration/v1`.
+- **Restore:** base read 13,775.8 -> **4,627.5 ms (2.98x)**, base materialize
+  16,736.9 -> 6,494.3 ms; instruct read 26,935.7 -> **11,371.2 ms (2.37x)**,
+  instruct materialize 29,950.5 -> 12,092.2 ms; single tensor base 111.4 ->
+  **39.8 ms**, instruct 221.9 -> **92.7 ms**. Storage unchanged at
+  1,276,128,956 B (3.07 % under ZipNN) because the planner is bytes-only at
+  `lambda = 0`. Ingest also fell (base 147.2 -> 65.2 s, family 241.4 -> 111.6 s)
+  because planning and verification decode candidates.
+- **Rebase:** with the cheaper measured table, the 1e9 ns threshold on the hot
+  instruct checkpoint selects **1 of 241** objects (R1: 73 of 241); the check
+  remains non-zero and the dry run still writes nothing.
+- **Still a loss:** base read is 4.8x the F10 zstd-strategy read (968.8 ms) and
+  ~19x ZipNN's 240 ms; mode 9 is 6.0x zstd per MiB (4.68 vs 0.78). Decode is
+  sequential across tensors and frames are not yet block-independent streams
+  with an offset table, so there is no parallelism yet. `tensor-sharded` is now
+  the slowest class (9.12 ms/MiB).
+- **Tests at that tree:** WeftCodec `cargo test --all-targets` 204 passed / 0
+  failed; WeftCodec-Go `go test ./...` + `go vet` all packages; parent 244
+  passed; FUSE `--all-targets` 278 passed / 0 failed / 2 ignored; WeftFS-Go
+  `go test -race -count=1 ./...` all packages. One transient
+  `extent_cow::chunk_size_comes_from_the_manifest` failure appeared in the
+  first fully loaded parallel FUSE run; 10/10 standalone repeats and the rerun
+  passed. It is recorded, not deleted.
+- **Residual:** single host, warm cache; the table is court-bound; no parallel
+  reconstruction; no block-independent coded streams; no Go writer for the
+  checkpoint/mode-15 paths; no fleet claim.
+
 ## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
 
 **Implemented, measured once, single host.** This court settles two empirical
