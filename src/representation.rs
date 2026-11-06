@@ -10,6 +10,7 @@
 //! v2 manifests (unknown schema) until parity lands. See
 //! `docs/store-status.md`.
 
+use std::cell::Cell;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::error::{Error, Result};
@@ -26,24 +27,50 @@ pub const CODEC_CHUNK_SIZE_MIN: u64 = 4 * 1024;
 /// zstd level used by the experimental auto representation.
 pub const CODEC_ZSTD_LEVEL: i32 = 3;
 
-static CODEC_CHUNK_DECODES: AtomicU64 = AtomicU64::new(0);
+thread_local! {
+    /// Chunk decodes observed by **this thread**.
+    ///
+    /// The counter is deliberately per-thread: `cargo test` runs the tests of
+    /// one binary in parallel on a thread pool, and a process-global counter
+    /// let an unrelated test that decodes chunks inflate another test's
+    /// observation (the historical
+    /// `codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks`
+    /// flake, which read 5 chunks instead of 1). Representation reads decode
+    /// on the calling thread, so a per-thread observation is exactly the work
+    /// the calling test performed and the assertion keeps its original
+    /// meaning. The process-wide total is still available from
+    /// [`codec_chunk_decode_total`].
+    static CODEC_CHUNK_DECODES: Cell<u64> = const { Cell::new(0) };
+}
 
-/// Number of codec chunks decoded by the store since the last reset.
+static CODEC_CHUNK_DECODES_TOTAL: AtomicU64 = AtomicU64::new(0);
+
+/// Number of codec chunks decoded by the calling thread since the last reset.
 ///
 /// `#[doc(hidden)]` test/bench hook only; it is not a format feature.
 #[doc(hidden)]
 pub fn codec_chunk_decode_count() -> u64 {
-    CODEC_CHUNK_DECODES.load(Ordering::Relaxed)
+    CODEC_CHUNK_DECODES.with(|count| count.get())
 }
 
-/// Reset [`codec_chunk_decode_count`].
+/// Reset this thread's [`codec_chunk_decode_count`].
 #[doc(hidden)]
 pub fn reset_codec_chunk_decode_count() {
-    CODEC_CHUNK_DECODES.store(0, Ordering::Relaxed);
+    CODEC_CHUNK_DECODES.with(|count| count.set(0));
+}
+
+/// Number of codec chunks decoded by the whole process since start-up.
+///
+/// This is a diagnostic aggregate only; it can never be reset, so concurrent
+/// tests cannot make each other's observation of it exact. `#[doc(hidden)]`.
+#[doc(hidden)]
+pub fn codec_chunk_decode_total() -> u64 {
+    CODEC_CHUNK_DECODES_TOTAL.load(Ordering::Relaxed)
 }
 
 pub(crate) fn note_codec_chunk_decode() {
-    CODEC_CHUNK_DECODES.fetch_add(1, Ordering::Relaxed);
+    CODEC_CHUNK_DECODES.with(|count| count.set(count.get().saturating_add(1)));
+    CODEC_CHUNK_DECODES_TOTAL.fetch_add(1, Ordering::Relaxed);
 }
 
 /// The codec frame chunk size for a store chunk size.

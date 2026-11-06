@@ -45,6 +45,7 @@ fn codec_opts(chunk_size: u64) -> Options {
         codec_min_bytes: 4_096,
         codec_delta_margin_percent: 10,
         quotas: Vec::new(),
+        ..Options::default()
     }
 }
 
@@ -544,4 +545,86 @@ fn codec_store_reopens_and_raw_mode_preserves_v1_reads() {
         Some(&Value::Str(MANIFEST_SCHEMA.to_owned()))
     );
     assert!(raw.verify(true).unwrap().ok);
+}
+
+/// Regression for the parallel-test flake in
+/// `codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks`:
+/// the chunk-decode counter used to be one process-global atomic, so another
+/// test that decoded chunks on another thread inflated this test's observation
+/// (the retained failing receipt saw 5 decoded chunks instead of 1). The
+/// counter is now per-thread; this test decodes four chunks on another thread,
+/// waits for that thread to finish, and then proves this thread still observes
+/// exactly its own one chunk.
+#[test]
+fn chunk_decode_counter_observes_only_the_calling_thread() {
+    use std::sync::mpsc;
+    use std::sync::Arc;
+
+    // This thread's store: 256 KiB over 64 KiB chunks.
+    let here_dir = tempdir().unwrap();
+    let mut here = Store::init(here_dir.path(), codec_opts(64 * 1024)).unwrap();
+    let here_root = here.resolve_path("/").unwrap();
+    let here_bytes = compressible_text(256 * 1024);
+    let here_id = here
+        .create_file_seeded(
+            here_root,
+            b"here",
+            &here_bytes,
+            0o644,
+            0,
+            0,
+            BTreeMap::new(),
+            b"counter-here",
+        )
+        .unwrap();
+
+    // Another thread's store: its own object of the same shape.
+    let there_dir = tempdir().unwrap();
+    let mut there = Store::init(there_dir.path(), codec_opts(64 * 1024)).unwrap();
+    let there_root = there.resolve_path("/").unwrap();
+    let there_bytes = compressible_text(256 * 1024);
+    let there_id = there
+        .create_file_seeded(
+            there_root,
+            b"there",
+            &there_bytes,
+            0o644,
+            0,
+            0,
+            BTreeMap::new(),
+            b"counter-there",
+        )
+        .unwrap();
+    let there = Arc::new(there);
+
+    let (tx, rx) = mpsc::channel();
+    // Make the two `reset_` calls readable: reset before the worker starts, so
+    // a leftover count from a previous test on this pool thread cannot matter.
+    reset_codec_chunk_decode_count();
+    let worker = std::thread::spawn(move || {
+        let bytes = there.read_object(there_id).unwrap();
+        tx.send(bytes.len()).unwrap();
+    });
+    // The worker decodes all four chunks before signalling.
+    assert_eq!(rx.recv().unwrap(), there_bytes.len());
+    worker.join().unwrap();
+    assert_eq!(
+        codec_chunk_decode_count(),
+        0,
+        "another thread's decodes must not be visible here"
+    );
+
+    reset_codec_chunk_decode_count();
+    let got = here.read_range(here_id, 100_000, 1024).unwrap();
+    assert_eq!(got, &here_bytes[100_000..101_024]);
+    assert_eq!(
+        codec_chunk_decode_count(),
+        1,
+        "exactly one chunk is decoded on the calling thread"
+    );
+
+    // A full read on this thread still decodes every chunk.
+    reset_codec_chunk_decode_count();
+    here.read_object(here_id).unwrap();
+    assert_eq!(codec_chunk_decode_count(), 4);
 }
