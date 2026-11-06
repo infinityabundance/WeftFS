@@ -2859,5 +2859,99 @@
     ],
     "receipt": null,
     "kind": "present"
+  },
+  {
+    "id": "r9_overlay_write_layer",
+    "claim": "docs state an overlay range write publishes one new manifest version (a base plus one extent).",
+    "value": "publish one new manifest version per range write",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_bounds",
+    "claim": "The writer bound defaults are documented.",
+    "value": "default 64",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_helpers_refuse",
+    "claim": "Whole-file helpers that cannot be an overlay layer return UnsupportedRepresentation.",
+    "value": "UnsupportedRepresentation",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_court_checks",
+    "claim": "The overlay court passed all six checks on the local backend.",
+    "value": "6/6 checks",
+    "locations": [
+      "bench/RESULTS-overlay.md"
+    ],
+    "receipt": "bench/receipts/overlay-20261106T103115Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_court_s3",
+    "claim": "The overlay court also ran over the MinIO S3 backend with six checks.",
+    "value": "overlay-s3-20261106T103120Z",
+    "locations": [
+      "bench/RESULTS-overlay.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/overlay-s3-20261106T103120Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_root_equality",
+    "claim": "The court proves the chunk-COW and overlay writers produce the same content root.",
+    "value": "content root matches between representations",
+    "locations": [
+      "bench/RESULTS-overlay.md"
+    ],
+    "receipt": "bench/receipts/overlay-20261106T103115Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_full_read_loss",
+    "claim": "The results document records that full reads are not cheaper.",
+    "value": "Full reads are not cheaper",
+    "locations": [
+      "bench/RESULTS-overlay.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r9_go_no_v4_writer",
+    "claim": "Docs state Go has no v4 writer (read/verify/GC only).",
+    "value": "Go has no v4 writer",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r9_overlay_compaction_root",
+    "claim": "Compaction must preserve the pre-compaction content root.",
+    "value": "root unchanged",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/overlay-20261106T103115Z.json",
+    "kind": "present"
   }
 ]

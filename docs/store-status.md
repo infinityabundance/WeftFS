@@ -539,6 +539,84 @@ reads / 87.9 MB. Go whole-file p50 202.7 ms / 134.3 GB `rchar` / 437 MiB peak
 RSS; Go Merkle p50 4.38 ms / 87.9 MB / 43 MiB. Every run verified full, kept
 its identity, and changed the root.
 
+## 2d. Immutable write overlays (`weft.manifest.v4`)
+
+**Status: Rust write path + compaction implemented; Go read/verify/GC only.**
+`spec/WEFT-MODEL.md` §2.3.3 defines `kind:"overlay"`: an immutable base manifest
+plus ordered extents, no top-level chunk table, and a `content_root` equal to
+the Merkle root of the derived canonical table. v1/v2/v3 bytes are unchanged,
+and a v4 manifest is written only when overlay representation is selected.
+
+Selecting the writer:
+
+```
+weftfs --store DIR --representation overlay --content-identity merkle create /f --file big.bin
+weftfs --store DIR --representation overlay write /f --offset 4096 --file patch
+weftfs --store DIR compact /f
+```
+
+`--representation overlay` selects the Merkle identity when no identity is
+named (an overlay layer is only composable over a Merkle chunk table); an
+explicit `--content-identity whole-file` is refused, not upgraded.
+
+Write behaviour:
+
+- A range write publishes **one new manifest version**: the previous version as
+  an immutable base plus one extent. Only chunks the write touches are read and,
+  when their bytes change, stored; untouched chunks inside the extent keep their
+  references and their blobs are not read. The chunk table and Merkle root are
+  derived without reading any unchanged chunk.
+- A misaligned write is widened to the enclosing chunk grid and the untouched
+  bytes of the widened chunks come from the previous version, so the logical
+  content is exact.
+- Adjacent or overlapping extents are folded into the current layer (the layer
+  may list up to 64 extents); only a full layer starts a new one. Chain depth
+  therefore grows per 64 disjoint extents, not per write.
+- Before publishing, the writer derives the canonical table twice: from the
+  previous table plus the edit, and from the base manifest plus the new extent
+  list. They must be identical or the write fails with `Corrupt` and nothing is
+  published. The result is exactly the root a canonical v3 table produces.
+- Bounds: `Options::max_overlay_depth` (default 64, hard reader bound 256) and
+  `Options::max_overlay_bytes` (default 1 GiB) refuse with `LimitExceeded` and a
+  message naming `weftfs compact`. Publication uses the unchanged commit
+  protocol; old versions and their chunks stay valid for snapshots.
+
+Whole-file helpers on an overlay object (no silent materialisation):
+
+| helper | behaviour |
+|---|---|
+| `write_file` / `write_file_ranges` | publish an overlay layer |
+| `zero_range` (extend or not) | publish an overlay layer of zeros; a full zero chunk is stored once |
+| `truncate` to a larger size | publish an overlay layer of zeros |
+| `truncate` to the same size | no-op, publishes nothing |
+| `truncate` to a smaller size | `UnsupportedRepresentation` |
+| `insert_range` | `UnsupportedRepresentation` (shifts every following byte) |
+| `collapse_range` | `UnsupportedRepresentation` (shortens and shifts) |
+| `append_file_streaming` | `InvalidArgument` (unchanged; use a range write at EOF) |
+
+`Store::compact(id)` re-reads and re-hashes every logical chunk in order
+(bounded to one chunk of memory), recomputes the root, and refuses to publish
+unless it equals the pre-compaction root. It then writes one canonical
+`weft.manifest.v3` table through the normal commit protocol, so the object is
+readable by both implementations again and snapshots pinned to the old chain
+remain exact. A non-overlay object is refused with
+`UnsupportedRepresentation`. CLI: `weftfs compact <path>`.
+
+Go: `weft-model` parses v4, and the Go store reads, range-reads, verifies, GCs,
+and charges quota for an overlay object. Go has no v4 writer and no
+compaction; a range write to an overlay object returns `InvalidArgument`.
+There is no Go write parity to claim.
+
+Measured (`bench/RESULTS-overlay.md`, receipts
+`bench/receipts/overlay-20261106T103115Z.json` local and
+`bench/receipts/overlay-s3-20261106T103120Z.json` MinIO): 128 MiB object,
+500 4 KiB overwrites, 64 KiB chunks. Local 500-write wall 917.3 ms (COW) vs
+415.5 ms (overlay), 87.4 MB vs 36.7 MB written; S3 2,308.3 ms vs 1,702.9 ms.
+Warm 4 KiB range read 0.919 ms vs 0.030 ms; **cold first read 0.920 ms vs
+5.594 ms (2 vs 10 requests)** because a new process resolves the depth-8 chain.
+Compaction 34.0 ms local / 444.1 ms S3, root unchanged, snapshot unchanged
+after compaction and GC. Full-read cost is the same.
+
 ---
 
 ## 3. Format interpretations and spec notes
@@ -658,6 +736,17 @@ reading. They are part of the Go handoff contract.
   authorship.** Explicitly out of scope (see `security/THREAT_MODEL.md`).
 - **Model checking.** Invariants I1–I8 are exercised by tests only.
 - **WeftFS-Go** consumption of the fixture (P6).
+- **Go `weft.manifest.v4` writer and compaction.** Go reads, range-reads,
+  verifies, GCs, and charges quota for an overlay object, and refuses a range
+  write to one with `InvalidArgument`. There is no Go write or compaction
+  parity.
+- **Overlay whole-file rewrites that shorten or shift the file.** A shrinking
+  `truncate`, `collapse_range`, and `insert_range` return
+  `UnsupportedRepresentation` on an overlay object; compact first or use the
+  raw representation.
+- **CLI flags for the overlay writer bounds.** `max_overlay_depth` and
+  `max_overlay_bytes` are library options with documented defaults (64 and
+  1 GiB).
 - **Persisting `Options`.** `owner_uid`, `chunk_size`, `checkpoint_interval`,
   and `gc_grace_secs` are per-process options, not stored in the superblock.
   New files record their chunk size in the manifest, so readers do not depend
@@ -675,14 +764,17 @@ reading. They are part of the Go handoff contract.
    A latent silent bit flip in an unread chunk is therefore not detected at
    open.
 2. **`write_file` materializes the file.** The raised 1 TiB bound no longer
-   keeps memory bounded for a buffered write: `write_file`, `truncate`,
-   `zero_range`, `collapse_range`, and `insert_range` still read the whole file
-   and allocate the new size. Use `create_file_streaming` /
-   `append_file_streaming` for large content. The whole-file `ContentId` still
-   costs one O(size) digest pass even on the streaming append path; range
-   reads are chunk-bounded, but `read_object` returns the whole file and is
-   memory-limited by design. The Go store still enforces its 256 MiB
-   `MaxFileBytes`; Go matches the same bound and chunk limit.
+   keeps memory bounded for a buffered write: in the frozen raw representation
+   `write_file`, `truncate`, `zero_range`, `collapse_range`, and `insert_range`
+   still read the whole file and allocate the new size. Use
+   `create_file_streaming` / `append_file_streaming` for large content, or the
+   overlay representation, where a range write, `zero_range`, and a growing
+   `truncate` are chunk-bounded (a shrinking truncate, collapse, and insert
+   refuse instead). The whole-file `ContentId` still costs one O(size) digest
+   pass even on the streaming append path; range reads are chunk-bounded, but
+   `read_object` returns the whole file and is memory-limited by design. The Go
+   store still enforces its 256 MiB `MaxFileBytes`; Go matches the same bound
+   and chunk limit.
 3. **Checkpoint cost.** A checkpoint manifest contains the whole state; a
    checkpoint commit is O(state). The default interval of 256 is a
    replay-cost/memory tradeoff not yet measured.

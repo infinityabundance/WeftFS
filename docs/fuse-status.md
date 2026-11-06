@@ -177,7 +177,7 @@ semantics and is exercised by `tests/fuse_posix.rs`, `fuse_crash.rs`, or
 | `InvalidName`, `InvalidArgument`, `Parse` | `EINVAL` |
 | `LimitExceeded` | `EFBIG` (size) / `ERANGE` (xattr value at the API edge) |
 | `Busy` | `EBUSY` |
-| `Corrupt`, `Malformed`, `NonCanonical`, `UnsupportedVersion`, `Io` | `EIO` |
+| `Corrupt`, `Malformed`, `NonCanonical`, `UnsupportedVersion`, `UnsupportedRepresentation`, `Io` | `EIO` |
 
 Hash or length mismatch fails closed: a read never returns bytes from a content
 root that did not verify.

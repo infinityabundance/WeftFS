@@ -2966,7 +2966,7 @@ no normative spec changed (R8 is read-path only, no wire/format change).
 Not done: no Go parity, no mode-15 whole-object caching, no FUSE range caching,
 no persistence across processes, no multi-host claim.
 
-## R9 overlay format + read path (implemented; write/compaction absent)
+## Subphase R9 — immutable write overlays and compaction (experimental, Rust write path)
 
 `weft.manifest.v4` (`spec/WEFT-MODEL.md` §2.3.3) adds `kind:"overlay"`: an
 immutable base manifest plus an ordered list of immutable extents. A v4
@@ -2977,7 +2977,7 @@ accepts chains up to 256 manifests, at most 64 extents per manifest, requires
 extents to be chunk-aligned, sorted, non-overlapping within a layer, and exact
 in count/length/sum, and fails closed (`Malformed`, `Corrupt`, `LimitExceeded`,
 `UnsupportedVersion`) on every violated rule. v1/v2/v3 encodings are
-byte-identical (frozen fixture tests unchanged).
+byte-identical (the frozen fixture tests are unchanged).
 
 Read path: the resolver reads manifest blobs only, validates every base
 cross-check (`base_content_root`, `base_size`, `chunk_size`, Merkle identity,
@@ -2989,34 +2989,118 @@ chain, so bases and chunks reachable only through an overlay are retained and
 unreferenced overlay chunks are collectable. Shallow `verify` resolves the
 chain; full `verify` decodes every logical chunk and reports the root.
 
+Write path (stage 4): `RepresentationMode::Overlay` and
+`--representation overlay` publish one new manifest version per range write —
+the previous version as an immutable base plus one extent. Only chunks the edit
+touches are read and, when their bytes change, stored. A misaligned edit is
+widened to the enclosing chunk grid and the untouched bytes of the widened
+chunks come from the previous version, so the logical content is exact.
+Adjacent or overlapping extents fold into the current layer (up to 64 extents
+per manifest), so chain depth grows per 64 disjoint extents rather than per
+write. Before publishing, the writer derives the canonical table twice (from
+the previous table plus the edit, and from the base manifest plus the new
+extent list) and refuses with `Corrupt` unless they are identical, so the
+manifest a reader resolves is exactly the table the writer priced. Bounds:
+`Options::max_overlay_depth` (default 64; the hard reader bound is 256) and
+`Options::max_overlay_bytes` (default 1 GiB) refuse with `LimitExceeded` naming
+`weftfs compact`. Publication uses the unchanged commit protocol, so old
+versions and their chunks stay valid for snapshots. `--representation overlay`
+selects the Merkle identity when no identity is named; an explicit
+`--content-identity whole-file` is refused rather than upgraded.
+
+Whole-file helpers never silently materialise an overlay object: `zero_range`
+(both modes) and a growing `truncate` publish an overlay layer (a full zero
+chunk is content-addressed once, so memory stays at one chunk); `truncate` to
+the same size is a no-op; a shrinking `truncate`, `collapse_range`, and
+`insert_range` return the new `UnsupportedRepresentation` class because an
+immutable extent can replace or append chunks but cannot shorten or shift the
+tail. `append_file_streaming` keeps refusing overlay objects; a range write at
+EOF is the supported append.
+
+Compaction (stage 5): `Store::compact(id)` re-reads and re-hashes every logical
+chunk in order (one chunk of memory), recomputes the Merkle root, and refuses
+to publish unless it equals the pre-compaction root. It then encodes one
+canonical `weft.manifest.v3` table, decodes it back, checks chunks/size/root
+again, and publishes through the normal commit protocol. No content blob is
+rewritten: every chunk is content-addressed and was just verified. A
+non-overlay object is refused with `UnsupportedRepresentation`. CLI:
+`weftfs compact <path>` (`--json` reports `content_root`, `chunks`,
+`overlay_depth`, `overlay_bytes`, `verified_bytes`).
+
+Court (stage 6): `bench/scripts/overlay_court.sh` runs the same seeded workload
+through both writers in separate child processes — one 128 MiB object with
+64 KiB chunks and 500 4 KiB overwrites at 4 KiB-aligned random offsets — plus a
+4 KiB range read (warm and through a freshly opened handle), a full read,
+`verify --full`, compaction, GC, and six checks. It runs over the local backend
+and, through `scripts/s3_court.sh --overlay`, over single-node MinIO.
+
+| metric (local / MinIO) | chunk COW | overlay |
+|---|---|---|
+| 500 writes, wall | 917.3 / 2,308.3 ms | **415.5 / 1,702.9 ms** |
+| write p50 / p99 (local) | 1.819 / 1.912 ms | 0.717 / 1.698 ms |
+| backend bytes written | 87,403,237 / 89,451,237 | **36,731,767 / 38,779,767** |
+| backend requests (writes) | 3,501 | 3,993 |
+| 4 KiB range read, warm p50 | 0.919 / 1.422 ms | **0.030 / 0.414 ms** |
+| 4 KiB range read, cold first | 0.920 / 1.502 ms, 2 req | **5.594 / 7.557 ms, 10 req** |
+| full read before compaction | 40.6 / 439.3 ms | 39.9 / 437.8 ms |
+| `verify --full` before | 53.5 / 1,773.0 ms, ok | 52.0 / 782.5 ms, ok |
+| compaction | refused (`UnsupportedRepresentation`) | 34.0 / 444.1 ms, root unchanged |
+| `verify --full` after | 53.2 / 1,759.5 ms, ok | 52.9 / 1,879.8 ms, ok |
+| retained blob bytes before / after compact / after GC | 134,322,319 each | 166,480,149 / 134,322,319 / 134,322,319 |
+| GC after compaction | 775 blobs, 70,338,845 B | 501 blobs, 2,289,555 B |
+| on-disk bytes after GC | 149,348,604 | 166,831,597 (about 32.5 MB is the snapshot-pinned old chain) |
+| peak RSS per child | 402,348 / 403,964 KiB | 411,248 / 412,348 KiB |
+
+The content root after the writes is identical in all four runs
+(`c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22`), and so is
+the full-read digest. Compaction changes no byte and no root. A snapshot taken
+before compaction reads byte-identically after compaction and after GC, so the
+old chain is retained exactly as long as the snapshot exists.
+
+Losses, recorded in `bench/RESULTS-overlay.md`: a cold range read is 6.1x
+(local) / 5.0x (MinIO) slower because a new process resolves the depth-8 chain
+(10 requests / 215,317 B instead of 2 / 170,127 B); extent coalescing widens
+extents so `overlay_bytes` reached 30.6 MiB for 2.0 MiB of logical writes (the
+accounting metric the byte bound limits, not extra I/O); full reads are not
+cheaper; a snapshot pins the old chain, so the overlay store keeps 17.5 MB more
+on disk after compaction + GC in this court; compaction is O(file size); the
+overlay child peaks 8.9 MB higher; S3 `verify --full` timings are noisy; and
+this is not a durability, media, power-loss, cloud, or fleet claim.
+
 Go reads the same v4 objects: `model.ManifestFromWCB` validates the exact key
-set and grid, and the store resolves the chain, verifies every chunk/root,
-adds overlay retention to GC and quota accounting, and refuses range writes to
-an overlay object with `InvalidArgument` (there is no v4 writer). The committed
-fixture `conformance/overlay/v1` (also mirrored at
-`WeftFS-Go/conformance/overlay/v1`) is generated by
-`examples/gen_overlay_fixture.rs` and read by both
+set and grid, and the store resolves the chain, verifies every chunk/root, adds
+overlay retention to GC and quota accounting, and refuses range writes to an
+overlay object with `InvalidArgument`. **Go has no v4 writer and no
+compaction**; there is no Go write-parity claim. The committed fixture
+`conformance/overlay/v1` (also mirrored at `WeftFS-Go/conformance/overlay/v1`)
+is generated by `examples/gen_overlay_fixture.rs` and read by both
 `tests/overlay_fixture.rs` and `WeftFS-Go/store/overlay_handoff_test.go`.
 
-Evidence:
+Evidence (all in the Docker courts):
 
-- `bash scripts/docker-court.sh rust "cd /work && cargo test --release --all-targets"`
-  -> **315 passed / 0 failed** (79 binaries), including
-  `overlay_format` 6/6, `overlay_read` 9/9, `overlay_fixture` 1/1.
-- `bash scripts/docker-court.sh fuse "cd /work && cargo test --features fuse --all-targets"`
-  -> **357 passed / 0 failed / 2 ignored** (pre-existing ignored tests).
+- `bash scripts/docker-court.sh rust "cd /work && cargo test --release --all-targets --no-fail-fast"`
+  -> **336 passed / 0 failed**, including `overlay_format` 6/6,
+  `overlay_read` 9/9, `overlay_fixture` 1/1, `overlay_write` 13/13, and
+  `overlay_compact` 8/8.
+- `bash scripts/docker-court.sh fuse "cd /work && cargo test --release --features fuse --all-targets"`
+  -> **378 passed / 0 failed / 2 ignored** (the two pre-existing ignored tests).
 - `bash scripts/docker-court.sh go "cd /work/WeftFS-Go && go test -race -count=1 ./store/..."`
-  -> **ok** (98.4 s), including `TestOverlayHandoffRustFixtureGoReads`,
-  `TestOverlayRangeReadsOnlyIntersectingChunks`,
-  `TestOverlayGCRetainsBaseChainAndCollectsUnreferencedChunks`, and
-  `TestOverlayFailsClosedOnBrokenBaseChain`.
-- `go vet ./...` and `CGO_ENABLED=0 go build ./...` clean.
-- `scripts/check-spec-drift.sh` 42/42; `scripts/check-claims.sh` 268/268.
+  -> **ok**.
+- `bash scripts/docker-court.sh bench "cd /work && bash bench/scripts/overlay_court.sh --local"`
+  -> **6/6 checks**, receipt `bench/receipts/overlay-20261106T103115Z.json`.
+- `bash scripts/s3_court.sh --overlay` -> **6/6 checks**, receipt
+  `bench/receipts/overlay-s3-20261106T103120Z.json`, court receipt
+  `bench/receipts/s3-court-20261106T103120Z.json`.
+- `scripts/check-spec-drift.sh` 42/42; `scripts/check-claims.sh` all entries.
 
-Stage commits: `fa37197` (format + spec mirrors), `eaad6eb` (read path), and
-this stage's commit (Go read + fixture + docs). Not implemented: the v4 write
-path, compaction, a Go v4 writer, and Rust whole-file rewrite semantics for an
-overlay object (range writes and streaming append refuse it; whole-file
-helpers still materialize a canonical v3 manifest). The Go court has no
-`/bin/fusermount`, so `go test ./...` reports the existing `fusefs` mount
-failures in that court; the required `./store/...` suite passes.
+Stage commits: `fa37197` (format + spec mirrors), `eaad6eb` (read path),
+`4fc75fa` (Go read + fixture), `ca34643` (Rust write path), `9776c5e`
+(compaction + `weftfs compact`), `e9b9bae` (court harness + S3 flag), and the
+docs/receipts commit. The writer-bound spec paragraph was exported to WeftCodec
+`54cb4f6`, WeftCodec-Go `8957998`, WeftFS-Go `17cef27`.
+
+Residual: write and compaction parity is Rust-only; the truncate-shrink,
+insert, and collapse paths refuse rather than rewrite; the writer bounds are
+library options, not CLI flags; coalescing can inflate `overlay_bytes`; a
+fresh-process read pays chain resolution; the court is one host with a warm
+page cache and one synthetic workload; no physical power loss or fleet claim.
