@@ -85,10 +85,10 @@ with open(out_path, "w", encoding="utf-8") as handle:
 PY
 
 echo "== experimental module reachability =="
-refs="$(grep -rn "experimental" "$root/WeftCodec/src" --include='*.rs' \
-  | grep -v "/src/experimental/" | grep -v "/src/lib.rs:" || true)"
+refs="$(grep -rn "experimental::" "$root/WeftCodec/src" --include='*.rs' \
+  | grep -v "/src/experimental/" || true)"
 if [[ -n "$refs" ]]; then
-  echo "FAIL: experimental module referenced outside its own tree:" >&2
+  echo "FAIL: the experimental module tree is referenced from a production source file:" >&2
   echo "$refs" >&2
   exit 1
 fi
