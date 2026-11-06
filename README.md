@@ -109,9 +109,9 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   court reports **331 tests, 0 failures, 9 skipped**
   (`python-bindings-20261106T142616Z.json`).
 - **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD,
-  3FS/Azure/Ceph, a real Google Cloud Storage deployment, PyPI publication,
+  a real 3FS deployment, PyPI publication,
   multi-writer/multi-node/fleet, Go v4 writer/compaction, Go packs, Go
-  `--calibration`, Go split parity, and Python
+  `--calibration`, Go split parity, Go 3FS transport, and Python
   selectors/context/capabilities/checkpoints/archives.
 
 ## What's new in v0.8.0

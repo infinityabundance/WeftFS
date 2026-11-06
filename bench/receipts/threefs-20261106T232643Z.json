@@ -1,0 +1,92 @@
+{
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "court_kernel": "7.3.1-1-cachyos",
+    "cpu_limit": "4",
+    "host_cpus": 4,
+    "memory_limit": "3g",
+    "peak_rss_kib": 397196,
+    "pids_limit": "1024",
+    "weftfs_revision": "393fe5e199a4800b6c7c9ead4c409489cd0a9d28"
+  },
+  "label": "single-host court; conformance shim for the 3FS USRBIO ABI, not a 3FS run; synthetic fixtures; local filesystem",
+  "losses": [
+    "The scalar side reuses its destinations while the ring side returns owned vectors and allocates per rep; the ring number is therefore an upper bound on its cost, not a like-for-like win.",
+    "The USRBIO path opens and registers one descriptor per read. A production adapter should keep immutable keys registered; this receipt prices the cost of not doing so.",
+    "The shim performs pread per request inside wait_for_ios, so the batched path cannot exhibit a transport advantage; any difference it shows is adapter overhead, not 3FS behaviour.",
+    "No 3FS deployment, no RDMA, no kernel bypass, no multi-node consistency test.",
+    "The store's write phase enters through the ring for staging only; fsync and rename still order each publication, so this is not a write-throughput claim."
+  ],
+  "range_reads": {
+    "bytes_identical": true,
+    "bytes_per_file": 262144,
+    "bytes_read": 393216000,
+    "completions": 1500,
+    "files": 300,
+    "reps": 5,
+    "requests": 1500,
+    "requests_per_submission": 30.0,
+    "ring_median_ms": 11.15922,
+    "ring_mib_per_s": 6720.899847838828,
+    "ring_ms": [
+      21.541451,
+      11.061218,
+      10.973284,
+      11.15922,
+      11.844218
+    ],
+    "ring_vs_scalar_ratio": 1.1273147556520955,
+    "scalar_median_ms": 9.898939,
+    "scalar_mib_per_s": 7576.569569728634,
+    "scalar_ms": [
+      13.069475,
+      9.898939,
+      10.643409,
+      8.946673,
+      9.500926
+    ],
+    "submissions": 50
+  },
+  "schema": "weft.receipt.threefs.v1",
+  "stamp": "20261106T232643Z",
+  "store_round_trip": {
+    "bytes_per_file": 16384,
+    "files": 100,
+    "posix": {
+      "generation": 101,
+      "snapshot_root": "9dcdc31f8edd098a528337e903fa0fcf9b9759590bd5af539f43c7d72e44a0dd",
+      "verify_ok": true,
+      "write_ms": 11.309922
+    },
+    "same_generation": true,
+    "same_snapshot_root": true,
+    "usrbio": {
+      "counters_total": {
+        "bytes_read": 393216000,
+        "bytes_written": 0,
+        "completions": 1500,
+        "direct_reads": 0,
+        "registrations": 1500,
+        "requests": 1500,
+        "staged_reads": 0,
+        "submissions": 50
+      },
+      "generation": 101,
+      "reopen_ms": 1.707746,
+      "reopen_verify_ok": true,
+      "snapshot_root": "9dcdc31f8edd098a528337e903fa0fcf9b9759590bd5af539f43c7d72e44a0dd",
+      "verify_ok": true,
+      "write_ms": 12.27899
+    }
+  },
+  "transport": {
+    "entries": 128,
+    "io_bytes": 8388608,
+    "library": "/work/.docker-cache/threefs/lib/libhf3fs_api_shared.so",
+    "mode": "usrbio",
+    "mount_is_3fs": false,
+    "mount_point": "/tmp/weft-threefs/data",
+    "note": "hf3fs_is_hf3fs=false: this library is the conformance shim, so no 3FS throughput, latency, RDMA, or deployment claim follows from this receipt"
+  }
+}

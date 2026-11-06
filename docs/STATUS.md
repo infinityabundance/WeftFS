@@ -4715,3 +4715,107 @@ token supplied out of band.
 * The Azure backend has **no performance claim** and was not added to
   `scripts/verify-all.sh`. The GCS auth suite likewise runs inside the existing
   standalone `gcs_court`, not the aggregate.
+
+## Subphase R22 — 3FS transports: POSIX and USRBIO (2026-11-06)
+
+The store can now run over DeepSeek 3FS through two transports that share the
+normative layout: `posix` (positional I/O through the 3FS FUSE mount) and
+`usrbio` (the hf3fs user-space ring API for the immutable data plane).
+**No 3FS deployment is run by this repository**, so nothing here is a 3FS
+throughput, latency, RDMA, durability, or multi-node claim.
+
+### What is implemented
+
+**Buffer-oriented plane boundary** (`src/planes.rs`, `src/backend.rs`)
+
+* `BlobPlane::read_into` / `StorageBackend::read_into` fill a caller-owned
+  buffer. The local and 3FS backends implement it as one positional `pread`
+  into that buffer — no intermediate `Vec`.
+* `read_ranges(&[RangeRead]) -> Vec<Vec<u8>>` expresses a batch; output order is
+  input order and each entry keeps the exact `read` contract (short tail at EOF,
+  `InvalidArgument` past EOF).
+* `publish_file` fills its staging file through the write ring when the
+  transport is `usrbio`; `fsync` + `rename` + directory `fsync` still order the
+  publication, so the commit protocol is unchanged.
+
+**`src/threefs/`** — the only module allowed to use `unsafe`
+(`src/lib.rs` is `#![deny(unsafe_code)]`, and `tests/threefs.rs` fails if
+`unsafe` appears anywhere else under `src/`).
+
+* `ffi.rs` transcribes `hf3fs_usrbio.h`: `hf3fs_iov` (312 B), `hf3fs_ior`
+  (600 B), `hf3fs_cqe` (24 B), and the eleven entry points. Sizes and field
+  offsets are pinned by `const` assertions here and by `_Static_assert` in the C
+  conformance library, so a transcription error fails a build.
+* `dlopen(RTLD_NOW|RTLD_LOCAL)`; a missing library or missing symbol is
+  `UnsupportedVersion` naming every missing symbol. No fallback to POSIX.
+* Registration lifetime is owned by a `Drop` guard that deregisters and closes
+  on every path; one mutex serialises prep/submit against wait, which is what
+  makes `Send`/`Sync` sound; destinations reach the ABI only through
+  `region_contains`, so `[ptr, ptr+len)` is inside the region by construction.
+* Bounds: entries ≤ 4096, one request ≤ 32 MiB, region ≤ 1 GiB.
+* `Usrbio::counters()` reports submissions, requests, completions, bytes,
+  direct versus staged reads, and registrations; `ThreeFsStatus` carries the
+  library path and the measured `hf3fs_is_hf3fs` answer.
+* `BackendKind::ThreeFs { config }`, `--backend 3fs`, `--threefs-mode`,
+  `--threefs-mount`, `--threefs-lib`, `--threefs-entries`, `--threefs-io-bytes`,
+  `--threefs-require-mount`. An unrelated `.so` is refused by name.
+* Declared capabilities carry the literal text "Declared, not measured", and a
+  test asserts that wording is present.
+
+### Court
+
+`scripts/threefs_court.sh` builds `bench/threefs/hf3fs_shim.c` — a conformance
+implementation of the published ABI over real POSIX `pread`/`pwrite` with
+layout assertions — then runs `tests/threefs.rs` **13/13** single-threaded:
+
+* POSIX transport byte-identical to local: commits, chunks, manifests, indexes,
+  generation, snapshot root, full verify, reopen;
+* the shim's `hf3fs_is_hf3fs` is `false` and the adapter records it;
+* 300 requests over 128-entry rings produce exactly 3 submissions, exact bytes;
+* partial completion (two CQEs per wait) still yields exact bytes;
+* short read at EOF, `InvalidArgument` past EOF, and an empty request;
+* direct path inside the region (`direct_reads=1`, `staged_reads=0`) versus a
+  staged read;
+* injected `prep_io` failure propagates as `Io` with zero live registrations
+  afterwards (the `Drop` guard ran);
+* a full store round trip over the ring is byte-identical to local, including
+  `verify --full` and a read-only reopen;
+* `unsafe` is confined to `src/threefs/`;
+* unbounded configuration is refused, and `require_3fs_mount` refuses the shim.
+
+Receipt `bench/receipts/threefs-20261106T232643Z.json`, analysis
+`bench/RESULTS-threefs.md`, design `docs/THREEFS.md`.
+
+### Measured (single host, warm cache, shim)
+
+300 × 256 KiB range reads, 5 reps: positional **9.899 ms**, ring **11.159 ms
+(1.127× slower)**; 1,500 requests in **50 submissions**; bytes identical. Store
+round trip 100 × 16 KiB: POSIX 11.31 ms, USRBIO 12.28 ms (+8.5 %); same
+generation 101 and same snapshot root; reopen + verify 1.69 ms. Peak RSS
+397,196 KiB.
+
+The loss has three named causes, all recorded in the receipt: the shim performs
+`pread` per request inside `wait_for_ios` and has no RDMA or kernel bypass; the
+adapter opens and registers one descriptor per read (`registrations = 1500`); and
+the positional side reuses destinations while the ring side returns owned
+vectors.
+
+### Environment fact
+
+The court's `/tmp` is a Docker tmpfs mounted `noexec`, so `dlopen` of a shared
+object there fails with *"failed to map segment from shared object"*. The court
+builds the shim under `./.docker-cache/`, an executable bind mount.
+`scripts/docker-court.sh` now forwards `WEFT_3FS_LIB`, `WEFT_3FS_SHIM`,
+`WEFT_3FS_SHIM_DIR`, `WEFT_THREEFS_REPS`, `WEFT_THREEFS_RECEIPT`,
+`WEFT_THREEFS_LOG`, and `WEFT_STAMP`.
+
+### Not done
+
+* No real 3FS deployment, RDMA, kernel bypass, multi-node consistency, or
+  power-loss scenario.
+* No registration cache: each read opens and registers a descriptor.
+* `read_batch` still returns owned vectors at the store boundary; the zero-copy
+  property covers storage → shared region only.
+* No Go 3FS transport.
+* The writer lock remains the store's single-writer `LOCK` file on the POSIX
+  plane; USRBIO does not add or replace coordination.

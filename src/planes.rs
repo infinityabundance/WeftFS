@@ -256,6 +256,27 @@ pub trait BlobPlane: Send {
     /// an offset strictly beyond the object is an error.
     fn get_range(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>>;
 
+    /// Read into a caller-owned buffer, without an intermediate owned
+    /// allocation. The returned count is short only at end of object; an
+    /// offset past end of object is an error.
+    fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
+        let bytes = self.get_range(key, offset, buf.len() as u64)?;
+        let count = bytes.len();
+        buf[..count].copy_from_slice(&bytes);
+        Ok(count)
+    }
+
+    /// Read several ranges. Output order is input order, and each entry keeps
+    /// the exact contract of [`Self::get_range`]. The default issues one ranged
+    /// read per request; a shared-buffer transport overrides it so N ranges cost
+    /// one submission.
+    fn read_ranges(&self, requests: &[crate::backend::RangeRead]) -> Result<Vec<Vec<u8>>> {
+        requests
+            .iter()
+            .map(|request| self.get_range(&request.key, request.offset, request.len))
+            .collect()
+    }
+
     /// Publish `bytes` under `key` all-or-nothing, create-once.
     fn put_if_absent(&mut self, key: &Key, bytes: &[u8]) -> Result<()>;
 

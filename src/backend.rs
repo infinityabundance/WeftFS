@@ -50,6 +50,7 @@ use crate::format::MAX_CHUNK_SIZE;
 use crate::gcs::{GcsBackend, GcsConfig};
 use crate::identity::Hash32;
 use crate::s3::{S3Backend, S3Config};
+use crate::threefs::{self, SharedUsrbio, ThreeFsConfig, ThreeFsMode};
 
 /// Logical namespace of a key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -553,6 +554,10 @@ pub enum BackendKind {
     /// durability claims have been measured. The declared capabilities are
     /// enforced exactly.
     Posix { capabilities: Capabilities },
+    /// A 3FS namespace: the normative layout served through the 3FS FUSE
+    /// client (`posix`), or with USRBIO rings carrying the immutable data
+    /// plane (`usrbio`). Control state is POSIX in both modes.
+    ThreeFs { config: ThreeFsConfig },
     /// Split planes: immutable blobs on one backend, commit/control state on
     /// another. Each plane is a single (non-split) backend. `blob_root` names a
     /// second local directory when both planes are POSIX-shaped; `None` means
@@ -635,6 +640,7 @@ impl BackendKind {
             BackendKind::Gcs { .. } => "gcs",
             BackendKind::Azure { .. } => "azure",
             BackendKind::Posix { .. } => "posix",
+            BackendKind::ThreeFs { .. } => "3fs",
             BackendKind::Split { .. } => "split",
             BackendKind::Packed { .. } => "packed",
         }
@@ -648,6 +654,7 @@ impl BackendKind {
                 format!("{}-blobs/{}-commits", blobs.label(), commits.label())
             }
             BackendKind::Packed { inner, .. } => format!("packed-{}", inner.describe()),
+            BackendKind::ThreeFs { config } => format!("3fs:{}", config.mode.as_str()),
             other => other.label().to_owned(),
         }
     }
@@ -679,6 +686,7 @@ impl BackendKind {
             BackendKind::Gcs { .. } => GcsBackend::capabilities(),
             BackendKind::Azure { .. } => AzureBackend::capabilities(),
             BackendKind::Posix { capabilities } => capabilities.clone(),
+            BackendKind::ThreeFs { config } => threefs::capabilities_for(config.mode),
             BackendKind::Split { blobs, commits, .. } => combine_capabilities(
                 &blobs.capabilities(),
                 &commits.capabilities(),
@@ -765,6 +773,18 @@ impl BackendKind {
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
+            BackendKind::ThreeFs { config } => {
+                let capabilities = threefs::capabilities_for(config.mode);
+                let mount = config.mount_point.clone().unwrap_or_else(|| root.clone());
+                let usrbio = config.open(&root)?;
+                Box::new(LocalBackend::with_threefs(
+                    root,
+                    capabilities,
+                    config.mode,
+                    mount,
+                    usrbio,
+                ))
+            }
             BackendKind::Split {
                 blobs,
                 commits,
@@ -800,6 +820,18 @@ impl BackendKind {
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
+            BackendKind::ThreeFs { config } => {
+                let capabilities = threefs::capabilities_for(config.mode);
+                let mount = config.mount_point.clone().unwrap_or_else(|| root.clone());
+                let usrbio = config.open(&root)?;
+                Box::new(LocalBackend::with_threefs(
+                    root,
+                    capabilities,
+                    config.mode,
+                    mount,
+                    usrbio,
+                ))
+            }
             BackendKind::Split { blobs, .. } => blobs.open_blob_plane(&root)?,
             BackendKind::Packed { inner, options } => {
                 // The catalog lives on the same commit plane the store uses, so
@@ -829,6 +861,14 @@ impl BackendKind {
             BackendKind::Azure { config } => Box::new(AzureBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
+            }
+            BackendKind::ThreeFs { config } => {
+                // Control state never uses a ring: USRBIO carries data I/O
+                // only, and a commit record must go through fsync + rename.
+                Box::new(LocalBackend::with_capabilities(
+                    root,
+                    threefs::capabilities_for(config.mode),
+                ))
             }
             BackendKind::Split { commits, .. } => commits.open_commit_plane(&root)?,
             BackendKind::Packed { inner, .. } => inner.open_commit_plane(&root)?,
@@ -943,6 +983,24 @@ impl HeadExpectation {
     }
 }
 
+/// One ranged read in a batch.
+///
+/// A batch is a transport hint, never a semantic unit: each entry keeps the
+/// exact contract of [`StorageBackend::read`] (a short tail is allowed, an
+/// offset past end of object is an error), and the output is in input order.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RangeRead {
+    pub key: Key,
+    pub offset: u64,
+    pub len: u64,
+}
+
+impl RangeRead {
+    pub fn new(key: Key, offset: u64, len: u64) -> RangeRead {
+        RangeRead { key, offset, len }
+    }
+}
+
 /// Physical I/O abstraction used by the store core.
 pub trait StorageBackend: Send {
     /// Backend label used in receipts and diagnostics.
@@ -955,6 +1013,34 @@ pub trait StorageBackend: Send {
     /// Read at most `len` bytes starting at `offset`. Returns fewer bytes at
     /// end of object. `offset` beyond the object is an error.
     fn read(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>>;
+
+    /// Read into a caller-owned buffer, without an intermediate owned
+    /// allocation.
+    ///
+    /// Semantics match [`Self::read`]: the returned count is short only at end
+    /// of object, and an offset past end of object is an error. The default
+    /// implementation materialises through `read` and copies; a POSIX-shaped
+    /// backend overrides it with a single positional read. This is the boundary
+    /// a shared-buffer transport (3FS USRBIO) needs: the caller can pass a
+    /// slice of a registered region and the backend writes into it directly.
+    fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
+        let bytes = self.read(key, offset, buf.len() as u64)?;
+        let count = bytes.len();
+        buf[..count].copy_from_slice(&bytes);
+        Ok(count)
+    }
+
+    /// Read several ranges. Output order is input order.
+    ///
+    /// The default issues one `read` per request. A transport with batched
+    /// submission (3FS USRBIO) overrides this so N ranges cost one submission
+    /// round trip; the bytes and the error semantics are identical either way.
+    fn read_ranges(&self, requests: &[RangeRead]) -> Result<Vec<Vec<u8>>> {
+        requests
+            .iter()
+            .map(|request| self.read(&request.key, request.offset, request.len))
+            .collect()
+    }
 
     /// Read the whole object.
     fn read_all(&self, key: &Key) -> Result<Vec<u8>>;
@@ -1155,6 +1241,14 @@ pub struct LocalBackend {
     capabilities: Capabilities,
     lock: Option<File>,
     stats: AtomicStats,
+    /// Receipt label. `"local"` for the normative backend, `"3fs"` for a 3FS
+    /// transport, so a receipt never reports one as the other.
+    label: &'static str,
+    /// USRBIO rings for the immutable data plane, when this backend is a 3FS
+    /// `usrbio` transport. `None` means every read is a positional `pread`.
+    usrbio: Option<SharedUsrbio>,
+    threefs_mode: Option<ThreeFsMode>,
+    threefs_mount: Option<PathBuf>,
 }
 
 impl LocalBackend {
@@ -1168,7 +1262,56 @@ impl LocalBackend {
             capabilities,
             lock: None,
             stats: AtomicStats::default(),
+            label: "local",
+            usrbio: None,
+            threefs_mode: None,
+            threefs_mount: None,
         }
+    }
+
+    /// A 3FS namespace: the normative layout, optionally with USRBIO rings for
+    /// the data plane. The publication primitive is unchanged.
+    pub fn with_threefs(
+        root: impl Into<PathBuf>,
+        capabilities: Capabilities,
+        mode: ThreeFsMode,
+        mount_point: PathBuf,
+        usrbio: Option<SharedUsrbio>,
+    ) -> LocalBackend {
+        LocalBackend {
+            root: root.into(),
+            capabilities,
+            lock: None,
+            stats: AtomicStats::default(),
+            label: "3fs",
+            usrbio,
+            threefs_mode: Some(mode),
+            threefs_mount: Some(mount_point),
+        }
+    }
+
+    /// Live 3FS transport status, for `info --json` and receipts.
+    pub fn threefs_status(&self) -> Option<threefs::ThreeFsStatus> {
+        let mode = self.threefs_mode?;
+        Some(threefs::ThreeFsStatus {
+            mode: Some(mode),
+            mount_point: self.threefs_mount.clone(),
+            library: self.usrbio.as_ref().map(|u| u.library_path().to_path_buf()),
+            mount_is_3fs: self.usrbio.as_ref().and_then(|u| u.cached_mount_is_3fs()),
+            counters: self
+                .usrbio
+                .as_ref()
+                .map(|usrbio| usrbio.counters())
+                .unwrap_or_default(),
+            detail: match mode {
+                ThreeFsMode::Posix => {
+                    "positional pread/pwrite through the 3FS mount; no ring".to_owned()
+                }
+                ThreeFsMode::Usrbio => "batched data reads and staging writes through hf3fs \
+                     USRBIO rings; control state stays POSIX"
+                    .to_owned(),
+            },
+        })
     }
 
     fn path(&self, key: &Key) -> PathBuf {
@@ -1284,9 +1427,25 @@ impl LocalBackend {
             .mode(0o600)
             .open(&tmp)
             .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        drop(file);
+        match &self.usrbio {
+            // Data-plane publication through the ring. The bytes reach the
+            // staging file via hf3fs_prep_io/submit_ios/wait_for_ios instead of
+            // write(2); fsync + rename still order the publication, so the
+            // commit protocol is unchanged.
+            Some(usrbio) if !bytes.is_empty() => {
+                drop(file);
+                if let Err(err) = usrbio.write_all(&tmp, bytes) {
+                    fs::remove_file(&tmp).ok();
+                    return Err(err);
+                }
+                File::open(&tmp)?.sync_all()?;
+            }
+            _ => {
+                file.write_all(bytes)?;
+                file.sync_all()?;
+                drop(file);
+            }
+        }
         fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
         if final_path.exists() {
             let existing = fs::read(&final_path)?;
@@ -1331,7 +1490,95 @@ static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 impl StorageBackend for LocalBackend {
     fn label(&self) -> &'static str {
-        "local"
+        self.label
+    }
+
+    fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
+        let path = self.path(key);
+        if let Some(usrbio) = &self.usrbio {
+            let read = usrbio.read_into(&path, offset, buf)?;
+            self.stats.reads.fetch_add(1, Ordering::Relaxed);
+            self.stats.range_reads.fetch_add(1, Ordering::Relaxed);
+            self.stats
+                .bytes_read
+                .fetch_add(read as u64, Ordering::Relaxed);
+            return Ok(read);
+        }
+        // One positional read into the caller's storage: no temporary Vec, so a
+        // 1 MiB region read allocates nothing inside the backend.
+        let file = File::open(&path)
+            .map_err(|err| Error::io(format!("cannot open {}: {err}", path.display())))?;
+        let total = file
+            .metadata()
+            .map_err(|err| Error::io(format!("cannot stat {}: {err}", path.display())))?
+            .len();
+        if offset > total {
+            return Err(Error::invalid_argument(format!(
+                "read offset {offset} is beyond {} ({total} bytes)",
+                key.display_path()
+            )));
+        }
+        let wanted = usize::try_from((total - offset).min(buf.len() as u64))
+            .map_err(|_| Error::limit_exceeded("requested range does not fit the address space"))?;
+        file.read_exact_at(&mut buf[..wanted], offset)
+            .map_err(|err| Error::io(format!("cannot read {}: {err}", path.display())))?;
+        self.stats.reads.fetch_add(1, Ordering::Relaxed);
+        self.stats.range_reads.fetch_add(1, Ordering::Relaxed);
+        self.stats
+            .bytes_read
+            .fetch_add(wanted as u64, Ordering::Relaxed);
+        Ok(wanted)
+    }
+
+    fn read_ranges(&self, requests: &[RangeRead]) -> Result<Vec<Vec<u8>>> {
+        let Some(usrbio) = &self.usrbio else {
+            return requests
+                .iter()
+                .map(|request| self.read(&request.key, request.offset, request.len))
+                .collect();
+        };
+        if requests.is_empty() {
+            return Ok(Vec::new());
+        }
+        // A single request has nothing to batch; keep the plain positional path
+        // so a scalar read never pays registration cost.
+        if requests.len() == 1 {
+            let request = &requests[0];
+            let mut out = vec![
+                0u8;
+                usize::try_from(request.len).map_err(|_| Error::limit_exceeded(
+                    "3FS request length does not fit the address space"
+                ))?
+            ];
+            let read = self.read_into(&request.key, request.offset, &mut out)?;
+            out.truncate(read);
+            return Ok(vec![out]);
+        }
+        let paths: Vec<PathBuf> = requests
+            .iter()
+            .map(|request| self.path(&request.key))
+            .collect();
+        let batch: Vec<threefs::ReadRequest<'_>> = requests
+            .iter()
+            .zip(paths.iter())
+            .map(|(request, path)| threefs::ReadRequest {
+                path: path.as_path(),
+                offset: request.offset,
+                len: request.len,
+            })
+            .collect();
+        let out = usrbio.read_batch(&batch)?;
+        self.stats
+            .reads
+            .fetch_add(requests.len() as u64, Ordering::Relaxed);
+        self.stats
+            .range_reads
+            .fetch_add(requests.len() as u64, Ordering::Relaxed);
+        self.stats.bytes_read.fetch_add(
+            out.iter().map(|bytes| bytes.len() as u64).sum(),
+            Ordering::Relaxed,
+        );
+        Ok(out)
     }
 
     fn capabilities(&self) -> Capabilities {
@@ -1654,7 +1901,10 @@ impl StorageBackend for LocalBackend {
     }
 
     fn diagnostics(&self) -> Vec<String> {
-        Vec::new()
+        match self.threefs_status() {
+            Some(status) => vec![status.describe()],
+            None => Vec::new(),
+        }
     }
 
     fn probe_planes(&mut self) -> Result<Option<crate::planes::PlaneProbes>> {

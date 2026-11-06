@@ -2,7 +2,7 @@
 name = "weftfs"
 version = "0.9.0"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.77"
 description = "WeftFS v1 transactional store core and Linux FUSE frontend"
 license = "Apache-2.0"
 repository = "https://github.com/infinityabundance/WeftFS"
@@ -46,14 +46,17 @@ log = { version = "0.4", optional = true }
 # writes under kernel 7.3 while the daemon logged a successful reply.
 fuser = { version = "=0.15.1", optional = true, features = ["abi-7-31"] }
 ctrlc = { version = "3", optional = true }
-libc = { version = "0.2", optional = true }
+# Used by the 3FS USRBIO C-ABI boundary (`src/threefs/ffi.rs`) for `dlopen`,
+# `dlsym`, `close`, and `timespec`. Already in the dependency graph through
+# `fuser`; making it unconditional does not add a crate to the lock file.
+libc = "0.2"
 # Minimal blocking HTTP client for the S3-compatible backend (subphase Q4).
 # rustls-backed; the court talks plain HTTP to MinIO, while a real endpoint can
 # use HTTPS. No ASGI/async runtime is pulled in.
 ureq = { version = "2.12", default-features = false, features = ["tls"] }
 
 [features]
-fuse = ["dep:fuser", "dep:ctrlc", "dep:libc", "dep:log"]
+fuse = ["dep:fuser", "dep:ctrlc", "dep:log"]
 
 [dev-dependencies]
 tempfile = "3"

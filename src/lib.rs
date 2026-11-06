@@ -12,10 +12,18 @@
 //! * [`auth`] — POSIX mode + `weft.acl.read` principals.
 //! * [`conformance`] — deterministic WeftFS-Go handoff fixture.
 //!
-//! All parsing of untrusted files returns `Result`; the crate forbids unsafe
-//! code. On-disk bytes are canonical WCB; `serde` is used only for CLI JSON.
+//! All parsing of untrusted files returns `Result`. On-disk bytes are canonical
+//! WCB; `serde` is used only for CLI JSON.
+//!
+//! # `unsafe`
+//!
+//! The crate is `#![deny(unsafe_code)]`. Exactly one module is allowed to opt
+//! out: [`threefs::ffi`], the 3FS USRBIO C-ABI boundary, which is a transcription
+//! of the upstream header plus the invariant list at the top of that file. Every
+//! other module is safe Rust, and `tests/threefs.rs` grows this into a failure if
+//! an `unsafe` block appears anywhere else in `src/`.
 
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 
 pub mod access;
 pub mod auth;
@@ -47,12 +55,13 @@ pub mod recovery;
 pub mod representation;
 pub mod restore_pipeline;
 pub mod s3;
-pub mod service_account;
 pub mod safetensors;
+pub mod service_account;
 pub mod singleflight;
 pub mod state;
 pub mod store;
 pub mod tensor_store;
+pub mod threefs;
 pub mod timeparse;
 pub mod training_ready;
 pub mod wcb_util;

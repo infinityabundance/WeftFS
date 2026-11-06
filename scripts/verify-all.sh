@@ -104,6 +104,13 @@ run_court go "buck2_cas" \
 run_court fuse "buck2_cas_store" \
   "bash scripts/demo-buck2-cas.sh"
 
+# R22 3FS transports: the POSIX transport must be byte-identical to the local
+# backend, and the USRBIO transport is driven against a conformance library that
+# implements the published ABI over real POSIX I/O. No 3FS deployment is run, so
+# this court proves the adapter, not 3FS throughput.
+run_court rust "threefs" \
+  "bash scripts/threefs_court.sh"
+
 # D2 agent long-term memory with simulated timestamps and a months-later replay.
 run_court fuse "agent_memory" \
   "bash scripts/demo-agent-memory.sh"

@@ -34,8 +34,12 @@ power loss.
 > publications each, same head, physical bytes identical, 3,612 `link(2)`
 > publications for the object backend and 0 rename fallbacks). The release
 > binary
-> selects it with `--backend local|object`. No 3FS run is claimed; see
-> `spec/WEFT-MODEL.md` §4.1.
+> selects it with `--backend local|object`. A 3FS namespace is selectable as
+> `--backend 3fs` (POSIX) or `--backend 3fs --threefs-mode usrbio`; see
+> `docs/THREEFS.md`. **No 3FS deployment was run**, so no 3FS throughput,
+> latency, RDMA, durability, or multi-node claim is made; the POSIX transport is
+> byte-identical to local and the USRBIO transport is exercised against a
+> conformance library. Spec: `spec/WEFT-MODEL.md` §4.1.
 
 > **S3 backend addendum (subphase Q4, 2026-11-05).** `S3Backend` implements the
 > same `StorageBackend` contract over a real S3-compatible endpoint using SigV4
@@ -55,6 +59,8 @@ power loss.
 | `ObjectBackend` | `--backend object` | `tmp` + `fsync` + `link(2)` + unlink + dir `fsync` (rename fallback stated) | yes | `flock(2)` on `LOCK` | `tests/backend.rs` |
 | `S3Backend` | `--backend s3` + `--s3-*` | `PUT` `If-None-Match: *`; superblock `GET` + `PUT` `If-Match` | yes | `LOCK` object, owner + lease, `If-Match` reclaim | `scripts/s3_court.sh` |
 | `Posix` | caller-declared capabilities | whatever the declaration says (enforced) | declared | `flock(2)` | capability-refusal tests |
+| `ThreeFs` (posix) | `--backend 3fs` | `tmp` + `fsync` + `rename(2)` + dir `fsync` through the 3FS mount | yes | `flock(2)` on `LOCK` | `tests/threefs.rs` |
+| `ThreeFs` (usrbio) | `--backend 3fs --threefs-mode usrbio` | same publication; staging filled through hf3fs rings | yes (rings) | `flock(2)` on `LOCK` | `scripts/threefs_court.sh` (conformance library, not 3FS) |
 
 S3 key mapping is the local logical layout, not a private encoding:
 `FORMAT`, `superblock` (the same two 4096-byte slots), `LOCK`,
@@ -151,7 +157,10 @@ localhost with a tmpfs data directory, so this court proves protocol behaviour
 and conditional-write safety, not media durability or power-loss recovery. The
 writer lock is a lease, so a paused writer longer than the lease can lose the
 lock; the default lease is 900 s and the court uses 2 s. No remote
-multi-writer, fleet, AWS, GCS, or 3FS run is claimed.
+multi-writer, fleet, AWS, GCS, or 3FS run is claimed. The 3FS transports are
+Rust-only and were never run against a 3FS deployment: the POSIX transport is
+byte-identical to `LocalBackend`, and the USRBIO transport is tested against
+`bench/threefs/hf3fs_shim.c`, which reports `hf3fs_is_hf3fs = 0`.
 
 ---
 

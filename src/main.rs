@@ -47,6 +47,7 @@ use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
 use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
+use weftfs::threefs::ThreeFsConfig;
 use weftfs::training_ready::{verify_training_ready_output, TrainingReadyOptions};
 use weftfs::wcb_util as wu;
 use weftfs::wcb_util::value_to_json;
@@ -121,6 +122,32 @@ struct Cli {
     /// addressed by its bucket instead.
     #[arg(long = "blob-root", global = true, value_name = "DIR")]
     blob_root: Option<PathBuf>,
+    /// 3FS transport, selected with `--backend 3fs`: `posix` uses ordinary
+    /// positional I/O through the 3FS FUSE client; `usrbio` moves the immutable
+    /// data plane onto the native hf3fs rings. Control state is POSIX in both.
+    #[arg(
+        long = "threefs-mode",
+        global = true,
+        value_name = "posix|usrbio",
+        default_value = "posix"
+    )]
+    threefs_mode: String,
+    /// 3FS mount point handed to the USRBIO rings (default: the store root).
+    #[arg(long = "threefs-mount", global = true, value_name = "DIR")]
+    threefs_mount: Option<PathBuf>,
+    /// Explicit `libhf3fs_api_shared.so`; defaults to `$WEFT_3FS_LIB`, then the
+    /// soname. `usrbio` mode refuses to open when it cannot be loaded.
+    #[arg(long = "threefs-lib", global = true, value_name = "FILE")]
+    threefs_lib: Option<PathBuf>,
+    /// USRBIO ring entries (1..=4096, default 256).
+    #[arg(long = "threefs-entries", global = true, value_name = "N")]
+    threefs_entries: Option<usize>,
+    /// USRBIO shared data-region bytes (default 8 MiB).
+    #[arg(long = "threefs-io-bytes", global = true, value_name = "N")]
+    threefs_io_bytes: Option<usize>,
+    /// Refuse `usrbio` unless `hf3fs_is_hf3fs` reports the mount really is 3FS.
+    #[arg(long = "threefs-require-mount", global = true)]
+    threefs_require_mount: bool,
     /// S3-compatible endpoint, e.g. `http://127.0.0.1:9000`.
     #[arg(long = "s3-endpoint", global = true, value_name = "URL")]
     s3_endpoint: Option<String>,
@@ -1138,6 +1165,8 @@ enum CliBackend {
     S3(S3Config),
     Gcs(GcsConfig),
     Azure(AzureConfig),
+    /// 3FS namespace, `posix` or `usrbio`.
+    ThreeFs(ThreeFsConfig),
     /// Blobs on one plane, commit/control state on another.
     Split {
         blobs: Box<CliBackend>,
@@ -1158,6 +1187,9 @@ impl CliBackend {
                 config: config.clone(),
             },
             CliBackend::Azure(config) => BackendKind::Azure {
+                config: config.clone(),
+            },
+            CliBackend::ThreeFs(config) => BackendKind::ThreeFs {
                 config: config.clone(),
             },
             CliBackend::Split {
@@ -1246,6 +1278,12 @@ struct RemoteOptions {
     azure_key: Option<String>,
     azure_sas: Option<String>,
     azure_anonymous: bool,
+    threefs_mode: String,
+    threefs_mount: Option<PathBuf>,
+    threefs_lib: Option<PathBuf>,
+    threefs_entries: Option<usize>,
+    threefs_io_bytes: Option<usize>,
+    threefs_require_mount: bool,
 }
 
 fn parse_backend(text: &str, remote: &RemoteOptions) -> Result<CliBackend> {
@@ -1278,8 +1316,16 @@ fn parse_backend(text: &str, remote: &RemoteOptions) -> Result<CliBackend> {
             Some(remote.azure_anonymous).filter(|value| *value),
             None,
         )?)),
+        "3fs" => Ok(CliBackend::ThreeFs(ThreeFsConfig::resolve(
+            &remote.threefs_mode,
+            remote.threefs_mount.clone(),
+            remote.threefs_lib.clone(),
+            remote.threefs_entries,
+            remote.threefs_io_bytes,
+            remote.threefs_require_mount,
+        )?)),
         other => Err(Error::invalid_argument(format!(
-            "--backend must be `local`, `object`, `s3`, `gcs`, or `azure` (got `{other}`)"
+            "--backend must be `local`, `object`, `s3`, `gcs`, `azure`, or `3fs` (got `{other}`)"
         ))),
     }
 }
@@ -1391,6 +1437,12 @@ fn run(cli: Cli) -> Result<()> {
         azure_key,
         azure_sas,
         azure_anonymous,
+        threefs_mode,
+        threefs_mount,
+        threefs_lib,
+        threefs_entries,
+        threefs_io_bytes,
+        threefs_require_mount,
         pack,
         pack_target_bytes,
         pack_member_threshold,
@@ -1475,6 +1527,12 @@ fn run(cli: Cli) -> Result<()> {
                 azure_key,
                 azure_sas,
                 azure_anonymous,
+                threefs_mode,
+                threefs_mount,
+                threefs_lib,
+                threefs_entries,
+                threefs_io_bytes,
+                threefs_require_mount,
             },
         )?,
         pack: if pack {
