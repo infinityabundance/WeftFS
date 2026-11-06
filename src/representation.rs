@@ -18,6 +18,18 @@ use crate::error::{Error, Result};
 /// Maximum transitive dependency depth for a codec or tensor representation.
 pub const MAX_CODEC_DEPENDENCY_DEPTH: usize = 8;
 
+/// Hard bound on the number of chained immutable overlay manifests a reader
+/// will resolve (`WEFT-MODEL.md` §2.3.3). A reader refuses a deeper chain with
+/// `LimitExceeded`; a writer MUST stay at or below this bound and compact
+/// instead. It is a reader bound so that a future writer option can never make
+/// already-published data unreadable.
+pub const MAX_OVERLAY_CHAIN_DEPTH: u64 = 256;
+
+/// Largest number of extents a single `weft.manifest.v4` overlay manifest may
+/// list. A writer may publish several non-overlapping extents in one manifest;
+/// they MUST be sorted by offset and may touch but not overlap.
+pub const MAX_OVERLAY_EXTENTS_PER_MANIFEST: usize = 64;
+
 /// Largest codec frame chunk size the writer will choose.
 pub const CODEC_CHUNK_SIZE_MAX: u64 = 64 * 1024;
 

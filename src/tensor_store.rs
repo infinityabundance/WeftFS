@@ -2466,6 +2466,7 @@ impl Store {
                     strategy: "raw".to_owned(),
                     decoded_size: size,
                     tensor: None,
+                    overlay: None,
                 }
                 .clone_into_manifest(manifest)
             }
@@ -2488,6 +2489,7 @@ impl Store {
                         strategy: "zstd".to_owned(),
                         decoded_size: size,
                         tensor: None,
+                        overlay: None,
                     }),
                     identity: crate::format::ContentIdentity::WholeFileV1,
                 }
@@ -2516,9 +2518,15 @@ impl Store {
                         strategy: artifact.strategy_name.clone(),
                         decoded_size: size,
                         tensor: Some(tensor),
+                        overlay: None,
                     }),
                     identity: crate::format::ContentIdentity::WholeFileV1,
                 }
+            }
+            RepresentationKind::Overlay => {
+                return Err(Error::invalid_argument(
+                    "overlay representations are not produced by the tensor writer",
+                ))
             }
         };
         self.store_manifest(representation)

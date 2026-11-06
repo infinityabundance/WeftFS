@@ -43,6 +43,11 @@ pub const MANIFEST_SCHEMA_V2: &str = "weft.manifest.v2";
 /// spelling, no alias. The `content_hash` field of a v1/v2 manifest is replaced
 /// by `content_root` plus `content_identity: "merkle-v1"`.
 pub const MANIFEST_SCHEMA_V3: &str = "weft.manifest.v3";
+/// Immutable-overlay manifest (`WEFT-MODEL.md` §2.3.3). A v4 manifest carries
+/// a Merkle root and a `kind:"overlay"` representation: an immutable base
+/// manifest plus an ordered list of immutable extents. It carries no
+/// top-level chunk table; the canonical table is derived from the base chain.
+pub const MANIFEST_SCHEMA_V4: &str = "weft.manifest.v4";
 /// The only `content_identity` value a v3 manifest may carry.
 pub const CONTENT_IDENTITY_MERKLE: &str = "merkle-v1";
 /// Checkpoint state manifest schema string.
@@ -264,6 +269,10 @@ pub enum RepresentationKind {
     Codec,
     /// The logical bytes are decoded from a WeftTensor frame (modes 10-14).
     Tensor,
+    /// The logical bytes are an immutable base manifest plus ordered extents
+    /// (`weft.manifest.v4`). The canonical chunk table is derived from the
+    /// base chain; no top-level table is stored.
+    Overlay,
 }
 
 impl RepresentationKind {
@@ -272,6 +281,7 @@ impl RepresentationKind {
             RepresentationKind::Raw => "raw",
             RepresentationKind::Codec => "codec",
             RepresentationKind::Tensor => "tensor",
+            RepresentationKind::Overlay => "overlay",
         }
     }
 
@@ -280,6 +290,7 @@ impl RepresentationKind {
             "raw" => Ok(RepresentationKind::Raw),
             "codec" => Ok(RepresentationKind::Codec),
             "tensor" => Ok(RepresentationKind::Tensor),
+            "overlay" => Ok(RepresentationKind::Overlay),
             other => Err(Error::malformed(format!(
                 "unknown representation kind `{other}`"
             ))),
@@ -341,6 +352,301 @@ impl TensorRepresentation {
     }
 }
 
+/// One immutable overlay extent (`weft.manifest.v4`).
+///
+/// `offset` is chunk-grid aligned, `length` is the logical byte length the
+/// extent covers, and `chunks` is the content-addressed chunk list for exactly
+/// those bytes. Only the final chunk of the file may be shorter than
+/// `chunk_size`; every other chunk is full.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OverlayExtent {
+    pub offset: u64,
+    pub length: u64,
+    pub chunks: Vec<ChunkRef>,
+}
+
+impl OverlayExtent {
+    /// Structural checks for this extent at a known grid and file size.
+    pub fn validate_shape(&self, chunk_size: u64, size: u64) -> Result<()> {
+        if chunk_size == 0 || chunk_size > MAX_CHUNK_SIZE {
+            return Err(Error::malformed("overlay chunk_size is out of range"));
+        }
+        if self.length == 0 {
+            return Err(Error::malformed("overlay extent length must be positive"));
+        }
+        if self.offset % chunk_size != 0 {
+            return Err(Error::malformed(format!(
+                "overlay extent offset {} is not chunk-aligned",
+                self.offset
+            )));
+        }
+        let end = self
+            .offset
+            .checked_add(self.length)
+            .ok_or_else(|| Error::malformed("overlay extent end overflows"))?;
+        if end > size {
+            return Err(Error::corrupt(format!(
+                "overlay extent [{}, {end}) lies past the {size}-byte file",
+                self.offset
+            )));
+        }
+        let count = self.chunks.len() as u64;
+        let expected_count = self.length / chunk_size + u64::from(self.length % chunk_size != 0);
+        if count != expected_count {
+            return Err(Error::corrupt(format!(
+                "overlay extent at {} has {count} chunks, expected {expected_count}",
+                self.offset
+            )));
+        }
+        let mut sum: u64 = 0;
+        for (index, chunk) in self.chunks.iter().enumerate() {
+            let chunk_start = self.offset + (index as u64) * chunk_size;
+            let expected_len = chunk_size.min(size - chunk_start);
+            if chunk.len != expected_len {
+                return Err(Error::corrupt(format!(
+                    "overlay chunk {index} at {chunk_start} is {} bytes, expected {expected_len}",
+                    chunk.len
+                )));
+            }
+            sum = sum
+                .checked_add(chunk.len)
+                .ok_or_else(|| Error::corrupt("overlay extent length overflows"))?;
+        }
+        if sum != self.length {
+            return Err(Error::corrupt(format!(
+                "overlay extent chunks sum to {sum}, declared length is {}",
+                self.length
+            )));
+        }
+        Ok(())
+    }
+}
+
+/// The `kind:"overlay"` representation payload.
+///
+/// `base` is the immutable previous manifest id; `base_content_root` and
+/// `base_size` are cross-checks that the base read for resolution is the
+/// one the writer named. `depth` counts chained overlay manifests (this one
+/// included); `overlay_bytes` is the total logical bytes carried by the
+/// chain's extents, including the base chain.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OverlayRepresentation {
+    pub base: Hash32,
+    pub base_content_root: Hash32,
+    pub base_size: u64,
+    pub depth: u64,
+    pub overlay_bytes: u64,
+    pub extents: Vec<OverlayExtent>,
+}
+
+pub(crate) fn chunk_value(chunk: &ChunkRef) -> Value {
+    wu::map([
+        ("hash", wu::hash_value(chunk.hash)),
+        ("len", Value::U64(chunk.len)),
+    ])
+}
+
+fn parse_chunks(items: &[Value]) -> Result<Vec<ChunkRef>> {
+    let mut chunks = Vec::with_capacity(items.len());
+    for item in items {
+        let chunk_map = wu::as_map(item)?;
+        wu::check_keys(chunk_map, &["hash", "len"])?;
+        let len = wu::get_u64(chunk_map, "len")?;
+        if len == 0 {
+            return Err(Error::corrupt("overlay chunk has zero length"));
+        }
+        let hash = wu::get_hash(chunk_map, "hash")?;
+        if hash == Hash32::ZERO {
+            return Err(Error::malformed("overlay chunk hash must be non-zero"));
+        }
+        chunks.push(ChunkRef { hash, len });
+    }
+    Ok(chunks)
+}
+
+impl OverlayRepresentation {
+    const KEYS: &'static [&'static str] = &[
+        "kind",
+        "base",
+        "base_content_root",
+        "base_size",
+        "depth",
+        "overlay_bytes",
+        "decoded_size",
+        "extents",
+        "strategy",
+    ];
+
+    pub fn to_value(&self, strategy: &str, decoded_size: u64) -> Value {
+        let extents: Vec<Value> = self
+            .extents
+            .iter()
+            .map(|extent| {
+                wu::map([
+                    ("offset", Value::U64(extent.offset)),
+                    ("length", Value::U64(extent.length)),
+                    (
+                        "chunks",
+                        Value::Array(extent.chunks.iter().map(chunk_value).collect()),
+                    ),
+                ])
+            })
+            .collect();
+        wu::map([
+            ("kind", Value::Str("overlay".to_owned())),
+            ("base", wu::hash_value(self.base)),
+            ("base_content_root", wu::hash_value(self.base_content_root)),
+            ("base_size", Value::U64(self.base_size)),
+            ("depth", Value::U64(self.depth)),
+            ("overlay_bytes", Value::U64(self.overlay_bytes)),
+            ("decoded_size", Value::U64(decoded_size)),
+            ("strategy", Value::Str(strategy.to_owned())),
+            ("extents", Value::Array(extents)),
+        ])
+    }
+
+    pub fn from_wcb(map: &BTreeMap<String, Value>) -> Result<Self> {
+        wu::check_keys(map, Self::KEYS)?;
+        let base = wu::get_hash(map, "base")?;
+        if base == Hash32::ZERO {
+            return Err(Error::malformed(
+                "overlay base must be a non-zero manifest id",
+            ));
+        }
+        let base_content_root = wu::get_hash(map, "base_content_root")?;
+        if base_content_root == Hash32::ZERO {
+            return Err(Error::malformed(
+                "overlay base_content_root must be non-zero",
+            ));
+        }
+        let base_size = wu::get_u64(map, "base_size")?;
+        let depth = wu::get_u64(map, "depth")?;
+        if depth == 0 {
+            return Err(Error::malformed("overlay depth must be positive"));
+        }
+        if depth > crate::representation::MAX_OVERLAY_CHAIN_DEPTH {
+            return Err(Error::limit_exceeded(format!(
+                "overlay depth {depth} exceeds the hard bound {}",
+                crate::representation::MAX_OVERLAY_CHAIN_DEPTH
+            )));
+        }
+        let overlay_bytes = wu::get_u64(map, "overlay_bytes")?;
+        if overlay_bytes == 0 {
+            return Err(Error::malformed("overlay_bytes must be positive"));
+        }
+        let extent_items = wu::get_array(map, "extents")?;
+        if extent_items.is_empty() {
+            return Err(Error::malformed("overlay representation has no extents"));
+        }
+        if extent_items.len() > crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST {
+            return Err(Error::limit_exceeded(format!(
+                "overlay manifest lists more than {} extents",
+                crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST
+            )));
+        }
+        let mut extents = Vec::with_capacity(extent_items.len());
+        for item in extent_items {
+            let extent_map = wu::as_map(item)?;
+            wu::check_keys(extent_map, &["offset", "length", "chunks"])?;
+            let offset = wu::get_u64(extent_map, "offset")?;
+            let length = wu::get_u64(extent_map, "length")?;
+            if length == 0 {
+                return Err(Error::malformed("overlay extent length must be positive"));
+            }
+            let chunks = parse_chunks(wu::get_array(extent_map, "chunks")?)?;
+            if chunks.is_empty() {
+                return Err(Error::malformed("overlay extent has no chunks"));
+            }
+            extents.push(OverlayExtent {
+                offset,
+                length,
+                chunks,
+            });
+        }
+        Ok(OverlayRepresentation {
+            base,
+            base_content_root,
+            base_size,
+            depth,
+            overlay_bytes,
+            extents,
+        })
+    }
+
+    /// Structural checks that need the manifest's `size` and `chunk_size`.
+    ///
+    /// The base chain is not consulted here (that needs a backend); this proves
+    /// the extent grid and the layer's canonical ordering are internally exact.
+    /// Extents MUST be sorted by offset and MUST NOT overlap inside one layer;
+    /// adjacency is allowed. Overlap across layers is the intended newest-wins
+    /// rule.
+    pub fn validate_shape(&self, chunk_size: u64, size: u64) -> Result<()> {
+        if chunk_size == 0 || chunk_size > MAX_CHUNK_SIZE {
+            return Err(Error::malformed("overlay chunk_size is out of range"));
+        }
+        if self.base == Hash32::ZERO {
+            return Err(Error::malformed(
+                "overlay base must be a non-zero manifest id",
+            ));
+        }
+        if self.base_content_root == Hash32::ZERO {
+            return Err(Error::malformed(
+                "overlay base_content_root must be non-zero",
+            ));
+        }
+        if self.depth == 0 {
+            return Err(Error::malformed("overlay depth must be positive"));
+        }
+        if self.depth > crate::representation::MAX_OVERLAY_CHAIN_DEPTH {
+            return Err(Error::limit_exceeded(format!(
+                "overlay depth {} exceeds the hard bound {}",
+                self.depth,
+                crate::representation::MAX_OVERLAY_CHAIN_DEPTH
+            )));
+        }
+        if self.extents.is_empty() {
+            return Err(Error::malformed("overlay representation has no extents"));
+        }
+        if self.extents.len() > crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST {
+            return Err(Error::limit_exceeded(format!(
+                "overlay manifest lists more than {} extents",
+                crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST
+            )));
+        }
+        if self.overlay_bytes == 0 {
+            return Err(Error::malformed("overlay_bytes must be positive"));
+        }
+        let mut extent_total: u64 = 0;
+        let mut previous_end: Option<u64> = None;
+        for extent in &self.extents {
+            extent.validate_shape(chunk_size, size)?;
+            let end = extent
+                .offset
+                .checked_add(extent.length)
+                .ok_or_else(|| Error::malformed("overlay extent end overflows"))?;
+            if let Some(previous) = previous_end {
+                if extent.offset < previous {
+                    return Err(Error::malformed(format!(
+                        "overlay extents are not canonically ordered or overlap at {}",
+                        extent.offset
+                    )));
+                }
+            }
+            previous_end = Some(end);
+            extent_total = extent_total
+                .checked_add(extent.length)
+                .ok_or_else(|| Error::corrupt("overlay byte total overflows"))?;
+        }
+        if self.overlay_bytes < extent_total {
+            return Err(Error::corrupt(format!(
+                "overlay_bytes {} is smaller than this manifest's extents ({extent_total})",
+                self.overlay_bytes
+            )));
+        }
+        Ok(())
+    }
+}
+
 /// Physical representation descriptor carried by a v2 manifest.
 ///
 /// `frame` is a manifest-domain blob id: the blob under `manifests/<ab>/<hex>`
@@ -357,6 +663,8 @@ pub struct Representation {
     pub strategy: String,
     pub decoded_size: u64,
     pub tensor: Option<TensorRepresentation>,
+    /// Present exactly when `kind` is [`RepresentationKind::Overlay`].
+    pub overlay: Option<OverlayRepresentation>,
 }
 
 impl Representation {
@@ -381,6 +689,17 @@ impl Representation {
             .iter()
             .map(|hash| wu::hash_value(*hash))
             .collect();
+        if self.kind == RepresentationKind::Overlay {
+            let overlay = self.overlay.clone().unwrap_or(OverlayRepresentation {
+                base: Hash32::ZERO,
+                base_content_root: Hash32::ZERO,
+                base_size: 0,
+                depth: 1,
+                overlay_bytes: 1,
+                extents: Vec::new(),
+            });
+            return overlay.to_value(&self.strategy, self.decoded_size);
+        }
         if self.kind == RepresentationKind::Tensor {
             let tensor = self.tensor.clone().unwrap_or(TensorRepresentation {
                 tensor_mode: 0,
@@ -416,6 +735,25 @@ impl Representation {
         let map = wu::as_map(value)?;
         let kind_text = wu::get_text(map, "kind")?;
         let kind = RepresentationKind::parse(&kind_text)?;
+        if kind == RepresentationKind::Overlay {
+            let overlay = OverlayRepresentation::from_wcb(map)?;
+            let strategy = wu::get_text(map, "strategy")?;
+            if strategy != "overlay" {
+                return Err(Error::malformed(
+                    "overlay representation strategy must be `overlay`",
+                ));
+            }
+            let decoded_size = wu::get_u64(map, "decoded_size")?;
+            return Ok(Representation {
+                kind,
+                frame: None,
+                dependencies: Vec::new(),
+                strategy,
+                decoded_size,
+                tensor: None,
+                overlay: Some(overlay),
+            });
+        }
         if kind == RepresentationKind::Tensor {
             return Self::tensor_from_wcb(map);
         }
@@ -472,6 +810,7 @@ impl Representation {
                 }
             }
             RepresentationKind::Tensor => unreachable!("handled above"),
+            RepresentationKind::Overlay => unreachable!("handled above"),
         }
         Ok(Representation {
             kind,
@@ -480,6 +819,7 @@ impl Representation {
             strategy,
             decoded_size,
             tensor: None,
+            overlay: None,
         })
     }
 
@@ -546,6 +886,7 @@ impl Representation {
                 logical_root,
                 layout,
             }),
+            overlay: None,
         })
     }
 }
@@ -660,18 +1001,33 @@ impl Manifest {
         "content_identity",
         "representation",
     ];
+    /// A v4 overlay manifest has no top-level chunk table.
+    const KEYS_V4: &'static [&'static str] = &[
+        "schema",
+        "size",
+        "chunk_size",
+        "content_root",
+        "content_identity",
+        "representation",
+    ];
 
     pub fn to_value(&self) -> Value {
-        let chunks: Vec<Value> = self
-            .chunks
-            .iter()
-            .map(|chunk| {
-                wu::map([
-                    ("hash", wu::hash_value(chunk.hash)),
-                    ("len", Value::U64(chunk.len)),
-                ])
-            })
-            .collect();
+        let chunks: Vec<Value> = self.chunks.iter().map(chunk_value).collect();
+        if let Some(representation) = &self.representation {
+            if representation.kind == RepresentationKind::Overlay {
+                return wu::map([
+                    ("schema", Value::Str(MANIFEST_SCHEMA_V4.to_owned())),
+                    ("size", Value::U64(self.size)),
+                    ("chunk_size", Value::U64(self.chunk_size)),
+                    ("content_root", wu::hash_value(self.content_hash)),
+                    (
+                        "content_identity",
+                        Value::Str(CONTENT_IDENTITY_MERKLE.to_owned()),
+                    ),
+                    ("representation", representation.to_value()),
+                ]);
+            }
+        }
         if self.identity == ContentIdentity::MerkleV3 {
             let base = [
                 ("schema", Value::Str(MANIFEST_SCHEMA_V3.to_owned())),
@@ -713,12 +1069,44 @@ impl Manifest {
         }
     }
 
+    /// Canonical WCB bytes of the manifest.
+    ///
+    /// A `kind:"overlay"` manifest is validated before encoding: it must use the
+    /// Merkle identity, carry no top-level chunk table, and have an internally
+    /// exact extent grid.
     pub fn encode(&self) -> Result<Vec<u8>> {
+        if let Some(representation) = &self.representation {
+            if representation.kind == RepresentationKind::Overlay {
+                if self.identity != ContentIdentity::MerkleV3 {
+                    return Err(Error::malformed(
+                        "a kind:\"overlay\" manifest requires the Merkle content identity",
+                    ));
+                }
+                if !self.chunks.is_empty() {
+                    return Err(Error::malformed(
+                        "a kind:\"overlay\" manifest must not carry a top-level chunk table",
+                    ));
+                }
+                if representation.frame.is_some()
+                    || !representation.dependencies.is_empty()
+                    || representation.tensor.is_some()
+                {
+                    return Err(Error::malformed(
+                        "a kind:\"overlay\" representation carries only overlay fields",
+                    ));
+                }
+                if representation.decoded_size != self.size {
+                    return Err(Error::malformed(
+                        "overlay decoded_size must equal the manifest size",
+                    ));
+                }
+                let overlay = representation.overlay.as_ref().ok_or_else(|| {
+                    Error::malformed("kind:\"overlay\" representation is missing its overlay map")
+                })?;
+                overlay.validate_shape(self.chunk_size, self.size)?;
+            }
+        }
         wu::encode(&self.to_value())
-    }
-
-    pub fn id(&self) -> Result<Hash32> {
-        Ok(identity::manifest_id(&self.encode()?))
     }
 
     pub fn from_wcb(value: &Value) -> Result<Self> {
@@ -734,14 +1122,16 @@ impl Manifest {
             V1,
             V2,
             V3,
+            V4,
         }
         let (schema_kind, keys): (Schema, &[&str]) = match schema.as_str() {
             MANIFEST_SCHEMA | MANIFEST_SCHEMA_V1_LEGACY => (Schema::V1, Self::KEYS_V1),
             MANIFEST_SCHEMA_V2 => (Schema::V2, Self::KEYS_V2),
             MANIFEST_SCHEMA_V3 => (Schema::V3, Self::KEYS_V3),
+            MANIFEST_SCHEMA_V4 => (Schema::V4, Self::KEYS_V4),
             other => {
                 return Err(Error::unsupported_version(format!(
-                    "manifest schema `{other}` is not a supported v1/v2/v3 schema"
+                    "manifest schema `{other}` is not a supported v1/v2/v3/v4 schema"
                 )))
             }
         };
@@ -758,7 +1148,7 @@ impl Manifest {
         }
         let identity = match schema_kind {
             Schema::V1 | Schema::V2 => ContentIdentity::WholeFileV1,
-            Schema::V3 => {
+            Schema::V3 | Schema::V4 => {
                 let name = wu::get_text(map, "content_identity")?;
                 if name != CONTENT_IDENTITY_MERKLE {
                     return Err(Error::malformed(format!(
@@ -768,12 +1158,18 @@ impl Manifest {
                 ContentIdentity::MerkleV3
             }
         };
-        let representation = if matches!(schema_kind, Schema::V2 | Schema::V3) {
+        let representation = if matches!(schema_kind, Schema::V2 | Schema::V3 | Schema::V4) {
             match map.get("representation") {
                 Some(value) => Some(Representation::from_wcb(value)?),
                 // A v2 manifest must always carry one; a v3 manifest may
-                // omit it (the writer does, because a Merkle file is raw).
+                // omit it (the writer does, because a Merkle file is raw); a
+                // v4 manifest must always carry it.
                 None if matches!(schema_kind, Schema::V3) => None,
+                None if matches!(schema_kind, Schema::V4) => {
+                    return Err(Error::malformed(
+                        "weft.manifest.v4 is missing its overlay representation",
+                    ))
+                }
                 None => {
                     return Err(Error::malformed(
                         "weft.manifest.v2 is missing its representation map",
@@ -783,6 +1179,55 @@ impl Manifest {
         } else {
             None
         };
+        if matches!(schema_kind, Schema::V4) {
+            let overlay = representation
+                .as_ref()
+                .and_then(|rep| rep.overlay.as_ref())
+                .ok_or_else(|| {
+                    Error::corrupt("weft.manifest.v4 requires a kind:\"overlay\" representation")
+                })?;
+            if representation
+                .as_ref()
+                .map(|rep| rep.kind != RepresentationKind::Overlay)
+                .unwrap_or(true)
+            {
+                return Err(Error::corrupt(
+                    "weft.manifest.v4 may only carry a kind:\"overlay\" representation",
+                ));
+            }
+            overlay.validate_shape(chunk_size, size)?;
+            let declared = wu::get_hash(map, "content_root")?;
+            if declared == Hash32::ZERO {
+                return Err(Error::malformed("overlay content_root must be non-zero"));
+            }
+            if representation
+                .as_ref()
+                .map(|rep| rep.decoded_size != size)
+                .unwrap_or(true)
+            {
+                return Err(Error::corrupt(
+                    "overlay decoded_size differs from manifest size",
+                ));
+            }
+            return Ok(Manifest {
+                size,
+                chunk_size,
+                chunks: Vec::new(),
+                content_hash: declared,
+                representation,
+                identity: ContentIdentity::MerkleV3,
+            });
+        }
+        if matches!(schema_kind, Schema::V2)
+            && representation
+                .as_ref()
+                .map(|rep| rep.kind == RepresentationKind::Overlay)
+                .unwrap_or(false)
+        {
+            return Err(Error::malformed(
+                "kind:\"overlay\" requires schema weft.manifest.v4",
+            ));
+        }
         if identity == ContentIdentity::MerkleV3 {
             if let Some(rep) = &representation {
                 if rep.kind != RepresentationKind::Raw {

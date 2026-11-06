@@ -3112,6 +3112,7 @@ impl Store {
                 strategy: "raw".to_owned(),
                 decoded_size: new_size,
                 tensor: None,
+                overlay: None,
             })
         } else {
             None
@@ -6995,6 +6996,7 @@ impl Store {
                 strategy: "raw".to_owned(),
                 decoded_size: size,
                 tensor: None,
+                overlay: None,
             })
         } else {
             None
@@ -7127,6 +7129,7 @@ impl Store {
                     strategy: "raw".to_owned(),
                     decoded_size: bytes.len() as u64,
                     tensor: None,
+                    overlay: None,
                 }),
                 ..manifest
             };
@@ -7251,6 +7254,7 @@ impl Store {
                 strategy,
                 decoded_size: bytes.len() as u64,
                 tensor: None,
+                overlay: None,
             },
         )))
     }
@@ -7646,6 +7650,7 @@ fn manifest_cost_class(manifest: &Manifest) -> CostClass {
     };
     match rep.kind {
         RepresentationKind::Raw => CostClass::Raw,
+        RepresentationKind::Overlay => CostClass::Raw,
         RepresentationKind::Tensor => match rep.tensor.as_ref().map(|t| t.tensor_mode) {
             Some(9) => CostClass::FloatTensor,
             Some(10) => CostClass::TensorSharded,
