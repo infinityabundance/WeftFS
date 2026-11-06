@@ -73,6 +73,45 @@ fn required(args: &[String], flag: &str) -> Result<String, String> {
     value_of(args, flag).ok_or_else(|| format!("missing required {flag}"))
 }
 
+/// Optional R8 read layers for the read-side phases.
+///
+/// `--cache-bytes N` enables the verified decoded-object cache and
+/// `--single-flight` enables coalescing. Both default to off, so a harness run
+/// without the flags is the shipped read path. `tiled` deliberately does not
+/// use these (mode 15 returns per-request tile statistics and bypasses the
+/// layers by design).
+fn read_layer_options(args: &[String]) -> Result<Options, String> {
+    let cache_bytes: u64 = value_of(args, "--cache-bytes")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--cache-bytes must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(0);
+    let single_flight = args.iter().any(|arg| arg == "--single-flight");
+    let max_entries: usize = value_of(args, "--single-flight-max-entries")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--single-flight-max-entries must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(64);
+    let max_bytes: u64 = value_of(args, "--single-flight-max-bytes")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--single-flight-max-bytes must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(256 * 1024 * 1024);
+    Ok(Options {
+        cache_bytes,
+        single_flight,
+        single_flight_max_entries: max_entries,
+        single_flight_max_bytes: max_bytes,
+        ..Options::default()
+    })
+}
+
 // ---------------------------------------------------------------------------
 // safetensors parsing (no transformers/model dependency)
 // ---------------------------------------------------------------------------
@@ -691,8 +730,9 @@ fn restore(args: &[String]) -> Result<(), String> {
         .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
 
     let open_start = Instant::now();
-    let store = Store::open(&store_path, OpenMode::ReadOnly)
-        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let store =
+        Store::open_with_options(&store_path, OpenMode::ReadOnly, read_layer_options(args)?)
+            .map_err(|err| format!("open {}: {err}", store_path.display()))?;
     let open_ms = open_start.elapsed().as_secs_f64() * 1000.0;
     let open_stats = store.backend_stats();
 
@@ -720,8 +760,11 @@ fn restore(args: &[String]) -> Result<(), String> {
         for _ in 0..single_runs {
             let before = store.backend_stats();
             let started = Instant::now();
+            let token = store
+                .authorize_read(id, &weftfs::Principal::root(), store.clock_now_ns())
+                .map_err(|err| format!("authorize {dir_name}/{single_tensor}: {err}"))?;
             let data = store
-                .read_tensor(id)
+                .read_tensor_authorized(&token, &weftfs::TileDecodeOptions::default())
                 .map_err(|err| format!("read {dir_name}/{single_tensor}: {err}"))?;
             let elapsed = started.elapsed().as_secs_f64() * 1000.0;
             let after = store.backend_stats();
@@ -1254,10 +1297,18 @@ fn restore_checkpoint(
     let mut root_inputs = Vec::new();
     let mut restored_bytes = 0u64;
     let mut read_stats = ReadStatsTotal::default();
+    let tokens = ids
+        .iter()
+        .map(|id| {
+            store
+                .authorize_read(*id, &weftfs::Principal::root(), store.clock_now_ns())
+                .map_err(|err| format!("authorize tensor: {err}"))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     for (start, end) in &batches {
         let batch_ids = &ids[*start..*end];
         let (datas, stats) = store
-            .read_tensors_bounded_with_stats(batch_ids, options)
+            .read_tensors_bounded_authorized(&tokens[*start..*end], options)
             .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
         read_stats.merge(&stats);
         if datas.len() != batch_ids.len() {
@@ -1327,16 +1378,15 @@ fn restore_checkpoint(
         // Same batching, same bytes, same order: the reassembly buffer never
         // holds more than the staging bound plus one oversized tensor.
         for (start, end) in &batches {
-            let batch_ids = &ids[*start..*end];
             let (datas, stats) = store
-                .read_tensors_bounded_with_stats(batch_ids, options)
+                .read_tensors_bounded_authorized(&tokens[*start..*end], options)
                 .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
             materialize_stats.merge(&stats);
-            if datas.len() != batch_ids.len() {
+            if datas.len() != end - start {
                 return Err(format!(
                     "read {dir_name} batch {start}..{end}: {} results for {} tensors",
                     datas.len(),
-                    batch_ids.len()
+                    end - start
                 ));
             }
             for data in datas {
@@ -1417,8 +1467,9 @@ fn hot(args: &[String]) -> Result<(), String> {
         .and_then(|value| value.get("tensors"))
         .and_then(Json::as_array)
         .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
-    let store = Store::open(&store_path, OpenMode::ReadWrite)
-        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let store =
+        Store::open_with_options(&store_path, OpenMode::ReadWrite, read_layer_options(args)?)
+            .map_err(|err| format!("open {}: {err}", store_path.display()))?;
     let started = Instant::now();
     let mut rows = Vec::new();
     let mut total_bytes = 0u64;
@@ -1430,9 +1481,12 @@ fn hot(args: &[String]) -> Result<(), String> {
         let id = store
             .resolve_components(&[checkpoint.as_bytes(), name.as_bytes()])
             .map_err(|err| format!("resolve {checkpoint}/{name}: {err}"))?;
+        let token = store
+            .authorize_read(id, &weftfs::Principal::root(), store.clock_now_ns())
+            .map_err(|err| format!("authorize {checkpoint}/{name}: {err}"))?;
         for _ in 0..reads {
             let data = store
-                .read_tensor(id)
+                .read_tensor_authorized(&token, &weftfs::TileDecodeOptions::default())
                 .map_err(|err| format!("read {checkpoint}/{name}: {err}"))?;
             total_bytes += data.len() as u64;
         }

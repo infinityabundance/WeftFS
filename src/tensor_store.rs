@@ -1053,6 +1053,42 @@ impl Store {
         self.read_tensor_with_options(id, &TileDecodeOptions::default())
     }
 
+    /// Read one tensor object after authorization, through the R8 read layers.
+    ///
+    /// A `tensor_mode` 15 (`TENSOR_TILED`) object keeps its shipped tile path
+    /// (and returns no per-request tile counters here); every other tensor
+    /// representation is a whole-object decode and is served by the
+    /// decoded-object cache / single-flight registry. Callers that need tile
+    /// statistics for mode 15 must use
+    /// [`Store::read_tensor_with_options_and_stats`].
+    pub fn read_tensor_authorized(
+        &self,
+        authorized: &AuthorizedRead,
+        options: &TileDecodeOptions,
+    ) -> Result<Vec<u8>> {
+        let record = self.object_meta(authorized.object_id())?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        if manifest.size != record.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        if let Some(rep) = &manifest.representation {
+            if rep.kind == RepresentationKind::Tensor {
+                if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 15 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        return self
+                            .read_tiled_object(frame_id, tensor, &manifest, rep, options)
+                            .map(|(bytes, _stats)| bytes);
+                    }
+                }
+            }
+        }
+        self.read_object_authorized(authorized)
+    }
+
     /// Read one tensor object with an explicit mode-15 tile worker bound.
     ///
     /// A mode-15 `TENSOR_TILED` object decodes its tiles on the bounded pool and

@@ -13,7 +13,8 @@ use weftfs::error::Class;
 use weftfs::identity::Hash32;
 use weftfs::state::RelationTarget;
 use weftfs::store::{Options, Store};
-use weftfs::Principal;
+use weftfs::tensor_store::TensorLayoutSpec;
+use weftfs::{Principal, TileDecodeOptions};
 
 const CHUNK: u64 = 64 * 1024;
 
@@ -391,4 +392,40 @@ fn single_flight_shares_a_miss_but_the_cache_alone_does_not() {
     );
     assert_eq!(stats.admissions, 1, "the leader admits the result once");
     assert_eq!(store.decode_calls(), 1);
+}
+
+/// The tensor restore path (`Store::read_tensor_authorized`, used by the
+/// real-model restore harness) enters the same cache and still verifies the
+/// logical root and whole-content hash.
+#[test]
+fn tensor_reads_use_the_cache_and_keep_exactness() {
+    let data = bytes(8 * 16 * 2, 21);
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts(1024 * 1024)).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let id = store
+        .write_tensor_file(
+            root,
+            b"t",
+            "bf16",
+            &[8, 16],
+            &data,
+            &TensorLayoutSpec::row_major(),
+            None,
+        )
+        .unwrap();
+    let token = auth(&store, id);
+    let first = store
+        .read_tensor_authorized(&token, &TileDecodeOptions::default())
+        .unwrap();
+    assert_eq!(first, data);
+    let second = store
+        .read_tensor_authorized(&token, &TileDecodeOptions::default())
+        .unwrap();
+    assert_eq!(second, data);
+    assert_eq!(store.decode_calls(), 1);
+    let stats = store.cache_stats();
+    assert_eq!(stats.hits, 1);
+    assert_eq!(stats.entries, 1);
+    assert!(store.verify(true).unwrap().ok);
 }

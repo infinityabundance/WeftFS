@@ -409,6 +409,43 @@ impl Store {
         ))
     }
 
+    /// Bounded-parallel tensor restore after authorization.
+    ///
+    /// Same ordering, determinism, error, and staging guarantees as
+    /// [`Store::read_tensors_bounded`]; each task enters the R8 read layers
+    /// through its token, so whole-object tensors are cached/coalesced and a
+    /// mode-15 object keeps its shipped tile path.
+    pub fn read_tensors_bounded_authorized(
+        &self,
+        authorized: &[crate::store::AuthorizedRead],
+        options: &ParallelReadOptions,
+    ) -> Result<(Vec<Vec<u8>>, ParallelReadStats)> {
+        let declared: Vec<Result<usize>> = authorized
+            .iter()
+            .map(|token| self.declared_decode_len(token.object_id()))
+            .collect();
+        let (bytes, stats) = run_bounded(
+            authorized,
+            &declared,
+            options.threads,
+            options.max_inflight_bytes,
+            |_index, token| self.read_tensor_authorized(token, &TileDecodeOptions::default()),
+            |bytes| bytes.len(),
+        )?;
+        Ok((
+            bytes,
+            ParallelReadStats {
+                requested_threads: stats.requested_threads,
+                effective_threads: stats.effective_threads,
+                tasks: stats.tasks,
+                max_inflight_bytes: stats.max_inflight_bytes,
+                observed_max_inflight_bytes: stats.observed_max_inflight_bytes,
+                observed_max_inflight_tasks: stats.observed_max_inflight_tasks,
+                oversized_tasks: stats.oversized_tasks,
+            },
+        ))
+    }
+
     /// Declared decoded size of one tensor object, from in-memory state only.
     fn declared_decode_len(&self, id: Hash32) -> Result<usize> {
         let record = self.object_meta(id)?;
