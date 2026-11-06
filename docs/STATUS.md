@@ -3007,7 +3007,8 @@ Evidence:
   -> **357 passed / 0 failed / 2 ignored** (pre-existing ignored tests).
 - `bash scripts/docker-court.sh go "cd /work/WeftFS-Go && go test -race -count=1 ./store/..."`
   -> **ok** (98.4 s), including `TestOverlayHandoffRustFixtureGoReads`,
-  `TestOverlayRangeReadsOnlyIntersectingChunks`, and
+  `TestOverlayRangeReadsOnlyIntersectingChunks`,
+  `TestOverlayGCRetainsBaseChainAndCollectsUnreferencedChunks`, and
   `TestOverlayFailsClosedOnBrokenBaseChain`.
 - `go vet ./...` and `CGO_ENABLED=0 go build ./...` clean.
 - `scripts/check-spec-drift.sh` 42/42; `scripts/check-claims.sh` 268/268.
