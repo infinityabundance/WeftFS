@@ -22,7 +22,7 @@ use std::collections::BTreeMap;
 
 use weftcodec::wcb::Value;
 
-use crate::cost_model::{self, CostClass, CostModelKind};
+use crate::cost_model::{self, CostClass, CostModelKind, CostTable};
 use crate::error::{Error, Result};
 use crate::format::RepresentationKind;
 use crate::identity::Hash32;
@@ -46,6 +46,10 @@ pub struct RebaseOptions {
     pub lambda_ns: u64,
     /// Decode cost table.
     pub cost_model: CostModelKind,
+    /// Optional host-local calibration table. `None` uses the baked
+    /// `cost_model` rows; `Some` replaces the whole table (the loader guarantees
+    /// completeness), so pricing never mixes host and baked rows.
+    pub calibration: Option<std::sync::Arc<CostTable>>,
     /// Force a standalone strategy (`raw`, `zstd`, `float-tensor`, ...).
     pub strategy_hint: Option<TensorStrategy>,
     /// Bound on the number of objects examined.
@@ -60,6 +64,7 @@ impl Default for RebaseOptions {
             threshold_ns: 1_000_000_000,
             lambda_ns: 0,
             cost_model: CostModelKind::default(),
+            calibration: None,
             strategy_hint: None,
             max_objects: 100_000,
             dry_run: true,
@@ -156,6 +161,7 @@ impl Store {
         let plan_options = TensorPlanOptions {
             lambda_ns: options.lambda_ns,
             cost_model: options.cost_model,
+            calibration: options.calibration.clone(),
             ..TensorPlanOptions::default()
         };
         for (object, path) in objects {
@@ -206,7 +212,11 @@ impl Store {
                 }
             }
             let class = CostClass::parse(&from_strategy).unwrap_or(CostClass::Raw);
-            let decode_cost_ns = match self.current_decode_cost(&record, options.cost_model) {
+            let decode_cost_ns = match self.current_decode_cost(
+                &record,
+                options.cost_model,
+                options.calibration.as_deref(),
+            ) {
                 Ok(cost) => cost,
                 Err(err) => {
                     plan.skipped.push(RebaseSkip {
@@ -295,9 +305,17 @@ impl Store {
         &self,
         record: &crate::state::ObjectRecord,
         model: CostModelKind,
+        calibration: Option<&CostTable>,
     ) -> Result<u64> {
         let mut seen = std::collections::BTreeSet::new();
-        self.decode_cost_of_content(record.content, record.size, model, 0, &mut seen)
+        self.decode_cost_of_content(
+            record.content,
+            record.size,
+            model,
+            calibration,
+            0,
+            &mut seen,
+        )
     }
 
     fn decode_cost_of_content(
@@ -305,6 +323,7 @@ impl Store {
         content: Hash32,
         size: u64,
         model: CostModelKind,
+        calibration: Option<&CostTable>,
         depth: usize,
         seen: &mut std::collections::BTreeSet<Hash32>,
     ) -> Result<u64> {
@@ -325,7 +344,10 @@ impl Store {
             .map(|rep| rep.strategy.as_str())
             .unwrap_or("raw");
         let class = CostClass::parse(strategy).unwrap_or(CostClass::Raw);
-        let mut total = cost_model::estimate_ns(class, size, model);
+        let mut total = match calibration {
+            Some(table) => table.estimate_ns(class, size),
+            None => cost_model::estimate_ns(class, size, model),
+        };
         if let Some(rep) = &manifest.representation {
             for dependency in &rep.dependencies {
                 let dependency_manifest =
@@ -334,6 +356,7 @@ impl Store {
                     *dependency,
                     dependency_manifest.size,
                     model,
+                    calibration,
                     depth + 1,
                     seen,
                 )?);
@@ -356,6 +379,7 @@ impl Store {
         let plan_options = TensorPlanOptions {
             lambda_ns: options.lambda_ns,
             cost_model: options.cost_model,
+            calibration: options.calibration.clone(),
             ..TensorPlanOptions::default()
         };
         let mut applied = Vec::with_capacity(plan.candidates.len());

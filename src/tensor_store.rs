@@ -23,6 +23,7 @@
 //! schema has no field for planner bookkeeping.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use weftcodec::dependency::MapResolver;
 use weftcodec::frame::{Frame, Mode};
@@ -452,8 +453,13 @@ pub struct TensorPlanOptions {
     /// Bytes charged per estimated nanosecond of decode time. `0` is
     /// bytes-only.
     pub lambda_ns: u64,
-    /// Which decode-cost table prices candidates.
+    /// Which baked decode-cost table prices candidates. Ignored when
+    /// `calibration` is set.
     pub cost_model: crate::cost_model::CostModelKind,
+    /// Optional host-local calibration table. `None` uses the baked
+    /// `cost_model` rows; `Some` replaces the entire table, so a calibration
+    /// must be complete (the loader enforces that).
+    pub calibration: Option<Arc<crate::cost_model::CostTable>>,
     /// Semantic grouping policy for the semantic-delta candidate. `None` uses
     /// `mantissa_truncate:3` for the floating dtypes.
     pub semantic_policy: Option<SemanticPolicy>,
@@ -478,11 +484,23 @@ impl Default for TensorPlanOptions {
         TensorPlanOptions {
             lambda_ns: 0,
             cost_model: crate::cost_model::CostModelKind::default(),
+            calibration: None,
             semantic_policy: None,
             max_candidates: DEFAULT_TENSOR_MAX_CANDIDATES,
             candidates: Vec::new(),
             tile_shape: None,
             auto_tile_bytes: None,
+        }
+    }
+}
+
+impl TensorPlanOptions {
+    /// Price one class: the host calibration when present, otherwise the baked
+    /// table. Both use the same integer arithmetic.
+    pub fn estimate_ns(&self, class: crate::cost_model::CostClass, size: u64) -> u64 {
+        match &self.calibration {
+            Some(table) => table.estimate_ns(class, size),
+            None => crate::cost_model::estimate_ns(class, size, self.cost_model),
         }
     }
 }
@@ -580,17 +598,6 @@ struct PreparedArtifact {
 struct PreparedCandidate {
     candidate: TensorPlanCandidate,
     artifact: Option<PreparedArtifact>,
-}
-
-/// Integer estimate of decode time in nanoseconds from the shared cost model.
-/// `measured` is the host-calibrated table; `declared` is the historical
-/// hand-written linear model. Both languages use identical integer arithmetic.
-fn estimated_decode_ns(
-    strategy: TensorStrategy,
-    size: u64,
-    model: crate::cost_model::CostModelKind,
-) -> u64 {
-    crate::cost_model::estimate_ns(strategy.cost_class(), size, model)
 }
 
 fn price(physical_bytes: u64, estimated_ns: u64, lambda_ns: u64) -> u128 {
@@ -1697,14 +1704,12 @@ impl Store {
                     applicable: true,
                     detail: "canonical row-major chunks".to_owned(),
                     physical_bytes: Some(size),
-                    estimated_decode_ns: Some(estimated_decode_ns(
-                        TensorStrategy::Raw,
-                        size,
-                        options.cost_model,
-                    )),
+                    estimated_decode_ns: Some(
+                        options.estimate_ns(crate::cost_model::CostClass::Raw, size),
+                    ),
                     cost: Some(price(
                         size,
-                        estimated_decode_ns(TensorStrategy::Raw, size, options.cost_model),
+                        options.estimate_ns(crate::cost_model::CostClass::Raw, size),
                         options.lambda_ns,
                     )),
                     dependency: None,
@@ -1737,8 +1742,7 @@ impl Store {
             ) {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
-                    let estimate =
-                        estimated_decode_ns(TensorStrategy::Zstd, size, options.cost_model);
+                    let estimate = options.estimate_ns(crate::cost_model::CostClass::Zstd, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::Zstd,
@@ -1796,11 +1800,8 @@ impl Store {
                                 ),
                             ));
                         } else {
-                            let estimate = estimated_decode_ns(
-                                TensorStrategy::FloatTensor,
-                                size,
-                                options.cost_model,
-                            );
+                            let estimate = options
+                                .estimate_ns(crate::cost_model::CostClass::FloatTensor, size);
                             let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
                             out.push(PreparedCandidate {
                                 candidate: TensorPlanCandidate {
@@ -1848,11 +1849,8 @@ impl Store {
             match self.prepare_mode10(dtype, shape, logical, &limits) {
                 Ok((frame, root)) => {
                     let physical = frame.len() as u64;
-                    let estimate = estimated_decode_ns(
-                        TensorStrategy::TensorSharded,
-                        size,
-                        options.cost_model,
-                    );
+                    let estimate =
+                        options.estimate_ns(crate::cost_model::CostClass::TensorSharded, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::TensorSharded,
@@ -1914,11 +1912,8 @@ impl Store {
                 match self.prepare_mode15(dtype, shape, logical, &tile_shape, &limits) {
                     Ok((frame, root)) => {
                         let physical = frame.len() as u64;
-                        let estimate = estimated_decode_ns(
-                            TensorStrategy::TensorTiled,
-                            size,
-                            options.cost_model,
-                        );
+                        let estimate =
+                            options.estimate_ns(crate::cost_model::CostClass::TensorTiled, size);
                         out.push(PreparedCandidate {
                             candidate: TensorPlanCandidate {
                                 strategy: TensorStrategy::TensorTiled,
@@ -1978,7 +1973,7 @@ impl Store {
                 Ok(Some((frame, dependency))) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        estimated_decode_ns(TensorStrategy::WeightDelta, size, options.cost_model);
+                        options.estimate_ns(crate::cost_model::CostClass::WeightDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::WeightDelta,
@@ -2035,7 +2030,7 @@ impl Store {
                 Ok(Some((frame, dependency))) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        estimated_decode_ns(TensorStrategy::SparseDelta, size, options.cost_model);
+                        options.estimate_ns(crate::cost_model::CostClass::SparseDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::SparseDelta,
@@ -2081,11 +2076,8 @@ impl Store {
             match self.prepare_semantic(dtype, shape, logical, options, &limits) {
                 Ok(Some((frame, dependency, policy))) => {
                     let physical = frame.len() as u64;
-                    let estimate = estimated_decode_ns(
-                        TensorStrategy::SemanticDelta,
-                        size,
-                        options.cost_model,
-                    );
+                    let estimate =
+                        options.estimate_ns(crate::cost_model::CostClass::SemanticDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::SemanticDelta,

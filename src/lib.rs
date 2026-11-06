@@ -20,6 +20,7 @@
 pub mod access;
 pub mod auth;
 pub mod backend;
+pub mod calibration;
 pub mod checkpoint;
 pub mod conformance;
 pub mod context;
@@ -56,13 +57,17 @@ pub use backend::{
     BackendKind, BackendStats, Capabilities, CompositeBackend, HeadExpectation, Key, KeyKind,
     StorageBackend,
 };
+pub use calibration::{
+    Calibration, CalibrationMethod, CalibrationRow, Divergence, HostIdentity, MeasuredClass,
+    MeasurementOptions, MeasurementOutcome, RowOrigin,
+};
 pub use checkpoint::{
     CheckpointManifest, CheckpointRestoreOptions, CheckpointRestoreReport, CheckpointShard,
     CheckpointTensor, CheckpointWriteOptions, CheckpointWriteReport, RestoreTopology,
     ShardStrategy, WrittenTensor,
 };
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
-pub use cost_model::{CostClass, CostModelKind};
+pub use cost_model::{CostClass, CostModelKind, CostTable};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;

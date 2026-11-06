@@ -213,6 +213,11 @@ struct Cli {
         default_value = "measured"
     )]
     planner_cost_model: String,
+    /// Host-local decode-cost calibration (written by `calibrate`). Requires
+    /// `--planner-cost-model measured`; the file's rows then replace the baked
+    /// table entirely. A malformed or incomplete file fails before planning.
+    #[arg(long = "calibration", global = true, value_name = "FILE")]
+    calibration: Option<PathBuf>,
     #[command(subcommand)]
     command: Command,
 }
@@ -624,6 +629,29 @@ enum Command {
         /// Bound on the number of objects examined.
         #[arg(long = "max-objects", default_value_t = 100_000)]
         max_objects: usize,
+    },
+    /// Measure and record this host's decode cost table, and report its
+    /// divergence from the baked table. Reuses the shipped measurement code.
+    Calibrate {
+        /// Write the calibration document here (default: decode-calibration.json).
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
+        /// Load an existing document instead of measuring, and report its
+        /// divergence from the baked table.
+        #[arg(long = "from", value_name = "FILE")]
+        from: Option<PathBuf>,
+        /// Install the document into `<store>/calibrations/<id>.json`.
+        #[arg(long)]
+        install: bool,
+        /// Timed repetitions per representation and size (at least 5).
+        #[arg(long, default_value_t = 7)]
+        reps: usize,
+        /// Large payload size in MiB (at least 8).
+        #[arg(long = "large-mib", default_value_t = 16)]
+        large_mib: u64,
+        /// Small payload size in KiB (at least 64).
+        #[arg(long = "small-kib", default_value_t = 128)]
+        small_kib: u64,
     },
     /// Mount the store over FUSE (requires the `fuse` feature).
     #[cfg(feature = "fuse")]
@@ -1234,6 +1262,30 @@ fn parse_codec_min_bytes(text: Option<&str>) -> Result<u64> {
     }
 }
 
+/// One-line summary of how a loaded host calibration differs from the baked
+/// `measured` table, used when `--calibration` is active.
+fn divergence_summary(record: &weftfs::Calibration) -> String {
+    let divergence = record.divergence(weftfs::CostModelKind::Measured);
+    let differing = divergence
+        .iter()
+        .filter(|row| row.estimate_1mib_delta_ppm() != 0)
+        .count();
+    match divergence.iter().max_by_key(|row| {
+        row.estimate_1mib_delta_ppm().unsigned_abs()
+    }) {
+        Some(worst) => format!(
+            "vs baked measured: largest 1 MiB divergence {} {:+.3}% (host {} ns vs baked {} ns), {} of {} rows differ",
+            worst.class.as_str(),
+            worst.estimate_1mib_delta_percent(),
+            worst.host_1mib_ns,
+            worst.baked_1mib_ns,
+            differing,
+            divergence.len(),
+        ),
+        None => "vs baked measured: no rows".to_owned(),
+    }
+}
+
 fn run(cli: Cli) -> Result<()> {
     let Cli {
         store,
@@ -1265,9 +1317,30 @@ fn run(cli: Cli) -> Result<()> {
         cache_entries,
         content_identity,
         planner_cost_model,
+        calibration,
         command,
     } = cli;
     let planner_cost_model = weftfs::CostModelKind::parse(&planner_cost_model)?;
+    let calibration = match calibration {
+        None => None,
+        Some(path) => {
+            if planner_cost_model != weftfs::CostModelKind::Measured {
+                return Err(Error::invalid_argument(
+                    "--calibration requires --planner-cost-model measured",
+                ));
+            }
+            let record = weftfs::Calibration::load(&path)?;
+            if !json {
+                eprintln!(
+                    "calibration {}: {}",
+                    record.id.to_hex(),
+                    divergence_summary(&record)
+                );
+            }
+            Some(Arc::new(record))
+        }
+    };
+    let calibration_table = calibration.as_ref().map(|record| record.table());
     let mut budgets: Vec<weftfs::quota::QuotaBudget> = quotas
         .iter()
         .map(|text| weftfs::quota::parse_budget(text))
@@ -1336,7 +1409,7 @@ fn run(cli: Cli) -> Result<()> {
     }
     let needs_store = !matches!(
         command,
-        Command::ConformanceStore { .. } | Command::Capability { .. }
+        Command::ConformanceStore { .. } | Command::Capability { .. } | Command::Calibrate { .. }
     ) && !matches!(
         &command,
         Command::TrainingReady {
@@ -1552,6 +1625,7 @@ fn run(cli: Cli) -> Result<()> {
                     plan: TensorPlanOptions {
                         lambda_ns,
                         cost_model: planner_cost_model,
+                        calibration: calibration_table.clone(),
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                         candidates: parse_object_ids(candidates.as_deref())?,
                         auto_tile_bytes,
@@ -1630,6 +1704,7 @@ fn run(cli: Cli) -> Result<()> {
             let options = TensorPlanOptions {
                 lambda_ns,
                 cost_model: planner_cost_model,
+                calibration: calibration_table.clone(),
                 semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                 candidates: parse_object_ids(candidates.as_deref())?,
                 tile_shape: match tile_shape.as_deref() {
@@ -2486,6 +2561,7 @@ fn run(cli: Cli) -> Result<()> {
                 threshold_ns,
                 lambda_ns,
                 cost_model: planner_cost_model,
+                calibration: calibration_table.clone(),
                 strategy_hint: match strategy.as_deref() {
                     None => None,
                     Some(text) => parse_tensor_strategy(text)?,
@@ -2586,6 +2662,131 @@ fn run(cli: Cli) -> Result<()> {
                     println!(
                         "applied {} {} version={} provenance={}",
                         item.object, item.path, item.new_version, item.provenance_id,
+                    );
+                }
+                Ok(())
+            }
+        }
+        Command::Calibrate {
+            out,
+            from,
+            install,
+            reps,
+            large_mib,
+            small_kib,
+        } => {
+            let options = weftfs::MeasurementOptions {
+                reps,
+                large_mib,
+                small_kib,
+            };
+            let (record, output_path) = match from {
+                Some(path) => {
+                    let record = weftfs::Calibration::load(&path)?;
+                    let output_path = match out {
+                        Some(path) => {
+                            record.write(&path)?;
+                            Some(path)
+                        }
+                        None => None,
+                    };
+                    (record, output_path)
+                }
+                None => {
+                    options.validate()?;
+                    let outcome = weftfs::calibration::measure_decode_costs_scratch(&options)?;
+                    let host = weftfs::HostIdentity::current();
+                    let created_unix_ns = match fixed_timestamp_ns
+                        .and_then(|v| u64::try_from(v).ok())
+                    {
+                        Some(value) if value > 0 => value,
+                        _ => std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|elapsed| u64::try_from(elapsed.as_nanos()).unwrap_or(u64::MAX))
+                            .unwrap_or(0),
+                    };
+                    let record = weftfs::calibration::record_from_measurement(
+                        &outcome,
+                        &options,
+                        host,
+                        created_unix_ns,
+                    )?;
+                    let path = out
+                        .clone()
+                        .unwrap_or_else(|| PathBuf::from("decode-calibration.json"));
+                    record.write(&path)?;
+                    (record, Some(path))
+                }
+            };
+            let installed = if install {
+                if store.as_os_str().is_empty() || policy.backend.is_remote() {
+                    return Err(Error::invalid_argument(
+                        "calibrate --install requires a local --store <DIR>",
+                    ));
+                }
+                Some(record.install(&store)?)
+            } else {
+                None
+            };
+            let divergence = record.divergence(weftfs::CostModelKind::Measured);
+            if json {
+                let rows: Vec<serde_json::Value> = record
+                    .rows()
+                    .iter()
+                    .map(|row| {
+                        json!({
+                            "class": row.class.as_str(),
+                            "fixed_ns": row.fixed_ns,
+                            "ns_per_mib": row.ns_per_mib,
+                            "samples": row.samples,
+                            "origin": row.origin.as_str(),
+                        })
+                    })
+                    .collect();
+                let divergence_rows: Vec<serde_json::Value> = divergence
+                    .iter()
+                    .map(|row| {
+                        json!({
+                            "class": row.class.as_str(),
+                            "host_fixed_ns": row.host.fixed_ns,
+                            "host_ns_per_mib": row.host.ns_per_mib,
+                            "baked_fixed_ns": row.baked.fixed_ns,
+                            "baked_ns_per_mib": row.baked.ns_per_mib,
+                            "host_1mib_ns": row.host_1mib_ns,
+                            "baked_1mib_ns": row.baked_1mib_ns,
+                            "estimate_1mib_delta_ppm": row.estimate_1mib_delta_ppm(),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({
+                    "schema": weftfs::calibration::CALIBRATION_SCHEMA,
+                    "calibration_id": record.id.to_hex(),
+                    "created_unix_ns": record.created_unix_ns,
+                    "out": output_path.as_ref().map(|path| path.display().to_string()),
+                    "installed": installed.as_ref().map(|path| path.display().to_string()),
+                    "rows": rows,
+                    "divergence": divergence_rows,
+                }))
+            } else {
+                println!("calibration_id={}", record.id.to_hex());
+                if let Some(path) = &output_path {
+                    println!("out={}", path.display());
+                }
+                if let Some(path) = &installed {
+                    println!("installed={}", path.display());
+                }
+                println!("divergence_vs_baked_measured:");
+                for row in &divergence {
+                    println!(
+                        "  {} host_fixed_ns={} host_ns_per_mib={} baked_fixed_ns={} baked_ns_per_mib={} host_1mib_ns={} baked_1mib_ns={} delta={:+.3}%",
+                        row.class.as_str(),
+                        row.host.fixed_ns,
+                        row.host.ns_per_mib,
+                        row.baked.fixed_ns,
+                        row.baked.ns_per_mib,
+                        row.host_1mib_ns,
+                        row.baked_1mib_ns,
+                        row.estimate_1mib_delta_percent(),
                     );
                 }
                 Ok(())

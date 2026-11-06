@@ -75,6 +75,29 @@ pub enum CostClass {
 }
 
 impl CostClass {
+    /// Every class in canonical order. The on-disk calibration record must
+    /// carry exactly one row for each of these.
+    pub const ALL: [CostClass; 10] = [
+        CostClass::Raw,
+        CostClass::Zstd,
+        CostClass::FloatTensor,
+        CostClass::TensorSharded,
+        CostClass::TensorTiled,
+        CostClass::WeightDelta,
+        CostClass::SparseDelta,
+        CostClass::SemanticDelta,
+        CostClass::KvCache,
+        CostClass::Activation,
+    ];
+
+    /// Position in [`CostClass::ALL`]. Used as the index into a [`CostTable`].
+    pub fn index(self) -> usize {
+        CostClass::ALL
+            .iter()
+            .position(|candidate| *candidate == self)
+            .expect("every CostClass is listed in CostClass::ALL")
+    }
+
     pub fn as_str(self) -> &'static str {
         match self {
             CostClass::Raw => "raw",
@@ -204,30 +227,66 @@ const MEASURED: [(CostClass, Coefficients); 10] = [
     (CostClass::Activation, Coefficients::new(100_000, 1_048_576)),
 ];
 
-/// The affine coefficients for one class under one model.
-pub fn coefficients(class: CostClass, model: CostModelKind) -> Coefficients {
-    let table = match model {
-        CostModelKind::Declared => &DECLARED,
-        CostModelKind::Measured => &MEASURED,
-    };
-    table
-        .iter()
-        .find(|(candidate, _)| *candidate == class)
-        .map(|(_, row)| *row)
-        .unwrap_or(Coefficients::new(0, 1_048_576))
+/// A complete affine coefficient table, one row per [`CostClass`].
+///
+/// The baked tables ([`CostModelKind::Declared`], [`CostModelKind::Measured`])
+/// and a host-local calibration file both become a `CostTable`. Pricing always
+/// goes through this type, so the integer arithmetic cannot drift between a
+/// baked and a loaded table.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CostTable {
+    rows: [Coefficients; 10],
 }
 
-/// Estimated decode nanoseconds for `decoded_bytes` logical bytes.
-pub fn estimate_ns(class: CostClass, decoded_bytes: u64, model: CostModelKind) -> u64 {
-    let row = coefficients(class, model);
+impl CostTable {
+    /// Build a table from exactly ten rows in [`CostClass::ALL`] order.
+    pub fn from_rows(rows: [Coefficients; 10]) -> Self {
+        CostTable { rows }
+    }
+
+    /// The baked table for a model.
+    pub fn baked(model: CostModelKind) -> Self {
+        let rows = match model {
+            CostModelKind::Declared => &DECLARED,
+            CostModelKind::Measured => &MEASURED,
+        };
+        let mut table = [Coefficients::new(0, 1_048_576); 10];
+        for (class, row) in rows.iter() {
+            table[class.index()] = *row;
+        }
+        CostTable { rows: table }
+    }
+
+    /// The row for one class.
+    pub fn row(&self, class: CostClass) -> Coefficients {
+        self.rows[class.index()]
+    }
+
+    /// Estimated decode nanoseconds for `decoded_bytes` logical bytes.
+    pub fn estimate_ns(&self, class: CostClass, decoded_bytes: u64) -> u64 {
+        estimate_with(self.row(class), decoded_bytes)
+    }
+}
+
+fn estimate_with(row: Coefficients, decoded_bytes: u64) -> u64 {
     let scaled = (u128::from(decoded_bytes) * u128::from(row.ns_per_mib)) / 1_048_576u128;
     u64::try_from(scaled)
         .unwrap_or(u64::MAX)
         .saturating_add(row.fixed_ns)
 }
 
-/// Every row for a model, in canonical order. Used by the CLI and tests so the
-/// table has exactly one definition.
+/// The affine coefficients for one class under one baked model.
+pub fn coefficients(class: CostClass, model: CostModelKind) -> Coefficients {
+    CostTable::baked(model).row(class)
+}
+
+/// Estimated decode nanoseconds for `decoded_bytes` logical bytes.
+pub fn estimate_ns(class: CostClass, decoded_bytes: u64, model: CostModelKind) -> u64 {
+    CostTable::baked(model).estimate_ns(class, decoded_bytes)
+}
+
+/// Every row for a baked model, in canonical order. Used by the CLI and tests
+/// so the table has exactly one definition.
 pub fn table(model: CostModelKind) -> Vec<(CostClass, Coefficients)> {
     let rows = match model {
         CostModelKind::Declared => &DECLARED,
