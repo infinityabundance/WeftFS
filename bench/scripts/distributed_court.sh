@@ -19,6 +19,9 @@
 #   S7  `gc --apply` racing a snapshot reader deletes only garbage
 #   S8  a known content hash is not authority under an authenticated envelope
 #   S9  S2/S4/S5 repeated for `--blob-backend s3 --commit-backend local`
+#   S10 fenced writer protocol: a SIGSTOPped writer is reclaimed and cannot
+#       publish after SIGCONT; release racing a reclaim; bounded renewal; an
+#       expired lease that blocks publication with no successor
 #
 # Run inside the OOM-protected bench court:
 #

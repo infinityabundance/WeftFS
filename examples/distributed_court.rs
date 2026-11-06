@@ -17,6 +17,7 @@
 //! | S7 | `gc --apply` racing a snapshot reader, checkpoint, and provenance |
 //! | S8 | a known content hash is not authority under an envelope |
 //! | S9 | S2/S4/S5 repeated for `--blob-backend s3 --commit-backend local` |
+//! | S10 | fenced writer protocol: a `SIGSTOP`ped writer is reclaimed and cannot publish; release racing a reclaim; renewal; an expired lease with no successor |
 //!
 //! Every scenario records its exact command lines, process PIDs and exit
 //! codes, observed generations, verification result, and a raw log path in
@@ -40,7 +41,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
 use weftfs::auth::Principal;
-use weftfs::backend::{BackendKind, Key, StorageBackend};
+use weftfs::backend::BackendKind;
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::identity::Hash32;
 use weftfs::provenance::{
@@ -57,6 +58,8 @@ const CHUNK_SIZE: u64 = 4096;
 const CHECKPOINT_INTERVAL: u64 = 256;
 const LOCK_LEASE_SECS: u64 = 30;
 const REQUEST_TIMEOUT_SECS: u64 = 30;
+/// The fencing scenario uses a lease short enough for a court to let it expire.
+const FENCING_LEASE_SECS: u64 = 3;
 /// How long a child may take to open a store and report ready.
 const READY_TIMEOUT: Duration = Duration::from_secs(60);
 
@@ -67,6 +70,7 @@ const BETA_NEW: &[u8] = b"beta-new-payload-111111111111";
 const PINNED: &[u8] = b"pinned-reader-payload-0000";
 const KEEP: &[u8] = b"keep-payload-000000";
 const INPUT: &[u8] = b"input-payload-00000";
+const FENCED_PAYLOAD: &[u8] = b"fenced-payload-must-not-land";
 
 static BUCKET_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -109,7 +113,7 @@ impl Layout {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct StoreSpec {
+pub struct StoreSpec {
     layout: Layout,
     label: String,
     bucket: String,
@@ -121,6 +125,14 @@ struct StoreSpec {
     chunk_size: u64,
     checkpoint_interval: u64,
     fixed_timestamp_ns: i64,
+    /// Writer-lock lease. 30 s for the general scenarios; the fencing scenario
+    /// lowers it so the court can let a lease expire.
+    #[serde(default = "default_lock_lease_secs")]
+    lock_lease_secs: u64,
+}
+
+fn default_lock_lease_secs() -> u64 {
+    LOCK_LEASE_SECS
 }
 
 impl StoreSpec {
@@ -133,7 +145,7 @@ impl StoreSpec {
             secret_key: self.secret_key.clone(),
             session_token: None,
             path_style: true,
-            lock_lease: Duration::from_secs(LOCK_LEASE_SECS),
+            lock_lease: Duration::from_secs(self.lock_lease_secs),
             request_timeout: Duration::from_secs(REQUEST_TIMEOUT_SECS),
         }
     }
@@ -798,6 +810,7 @@ fn run_parent(args: &[String]) -> Result<(), String> {
         run_s7_gc_race,
         run_s8_content_hash,
         run_s9_split,
+        run_s10_fencing,
     ] {
         let result = scenario(&mut ctx);
         match result {
@@ -878,17 +891,18 @@ fn run_parent(args: &[String]) -> Result<(), String> {
             "checkpoint_interval": CHECKPOINT_INTERVAL,
             "fixed_timestamp_ns": FIXED_TS,
             "writers": "one at a time by design; the interlock is the contract",
+            "fencing": "S10 exercises the fenced lease: SIGSTOP reclaim, release race, renewal, and an expired lease with no successor",
             "buckets_created": ctx.buckets,
         },
         "scenarios": scenarios,
         "summary": {
-            "scenarios_total": 9,
+            "scenarios_total": 10,
             "scenarios_passed": scenarios_passed,
-            "scenarios_failed": 9 - scenarios_passed,
+            "scenarios_failed": 10 - scenarios_passed,
             "checks_passed": checks_passed,
             "checks_failed": checks_failed,
             "processes_recorded": processes_recorded,
-            "result": if checks_failed == 0 && scenarios_passed == 9 { "pass" } else { "fail" },
+            "result": if checks_failed == 0 && scenarios_passed == 10 { "pass" } else { "fail" },
         },
         "tests": tests,
         "residual": [
@@ -910,11 +924,11 @@ fn run_parent(args: &[String]) -> Result<(), String> {
     )
     .map_err(|err| format!("cannot write {}: {err}", args.out.display()))?;
     println!(
-        "distributed_court: {}/9 scenarios, {} checks passed, {} failed",
+        "distributed_court: {}/10 scenarios, {} checks passed, {} failed",
         scenarios_passed, checks_passed, checks_failed
     );
     println!("distributed_court: receipt {}", args.out.display());
-    if checks_failed != 0 || scenarios_passed != 9 {
+    if checks_failed != 0 || scenarios_passed != 10 {
         return Err("the distributed court did not pass".to_owned());
     }
     Ok(())
@@ -948,6 +962,17 @@ struct Court {
 impl Court {
     /// Write a store spec for a child and return its path.
     fn write_spec(&mut self, layout: Layout, label: &str) -> Result<(PathBuf, StoreSpec), String> {
+        self.write_spec_with_lease(layout, label, LOCK_LEASE_SECS)
+    }
+
+    /// Write a spec with an explicit writer-lock lease (the fencing scenario
+    /// needs a lease short enough to expire inside the court).
+    fn write_spec_with_lease(
+        &mut self,
+        layout: Layout,
+        label: &str,
+        lock_lease_secs: u64,
+    ) -> Result<(PathBuf, StoreSpec), String> {
         self.buckets += 1;
         let bucket = format!(
             "dist-{}-{}-{}",
@@ -970,6 +995,7 @@ impl Court {
             chunk_size: CHUNK_SIZE,
             checkpoint_interval: CHECKPOINT_INTERVAL,
             fixed_timestamp_ns: FIXED_TS,
+            lock_lease_secs,
         };
         spec.ensure_bucket()?;
         let path = self.run_dir.join("specs").join(format!("{label}.json"));
@@ -1009,6 +1035,7 @@ impl Court {
             chunk_size: CHUNK_SIZE,
             checkpoint_interval: CHECKPOINT_INTERVAL,
             fixed_timestamp_ns: FIXED_TS,
+            lock_lease_secs: LOCK_LEASE_SECS,
         };
         let path = self.run_dir.join("specs").join(format!("{label}.json"));
         write_json_file(
@@ -2019,6 +2046,463 @@ fn group_create_alpha_beta(store: &mut Store) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------------------
+// S10 — fenced writer protocol
+// ---------------------------------------------------------------------------
+
+/// Send a signal with the shell builtin, so the court needs no `libc` surface.
+fn signal_child(pid: u32, name: &str) -> Result<(), String> {
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg(format!("kill -{name} {pid}"))
+        .status()
+        .map_err(|err| format!("run kill: {err}"))?;
+    if !status.success() {
+        return Err(format!("kill -{name} {pid} failed: {status}"));
+    }
+    Ok(())
+}
+
+fn run_s10_fencing(court: &mut Court) -> Result<Value, String> {
+    let mut set = CheckSet::new(
+        court,
+        10,
+        "S10",
+        "fenced writer protocol (SIGSTOP reclaim, release race, renewal, expiry)",
+    )?;
+    let dir = court.run_dir.join("s10");
+    let grace = FENCING_LEASE_SECS * 1_000;
+    // Renewal fires once half the lease is left, so a 60% sleep lands inside
+    // the deadline but past the renewal point.
+    let renew_sleep = format!("{}", FENCING_LEASE_SECS * 1_000 * 6 / 10);
+    let expire_sleep = format!("{}", FENCING_LEASE_SECS * 1_000 + 400);
+
+    // ---- F1: a paused writer whose lease is reclaimed must not publish ----
+    let (spec_path, spec) =
+        court.write_spec_with_lease(Layout::SingleS3, "s10-paused", FENCING_LEASE_SECS)?;
+    set.set("store", spec_detail(&spec));
+    let head_before;
+    let generation_before;
+    {
+        let mut store = spec.init()?;
+        create_file(&spec, &mut store, b"keep", KEEP, b"s10-keep")?;
+        head_before = store.snapshot_root().to_hex();
+        generation_before = store.generation();
+        drop(store);
+    }
+    let released = lock_state(&spec)?.ok_or("no LOCK record after init")?;
+    set.check(
+        "a clean exit publishes a released tombstone, not a delete",
+        released["released"] == json!(true) && released["fence"].as_u64() == Some(1),
+        format!("lock={released}"),
+    );
+    let paused_fence = released["fence"].as_u64().unwrap_or(0) + 1;
+
+    let paused = court.spawn_mode(
+        &dir,
+        "s10-paused",
+        "lease-writer",
+        &spec_path,
+        &[
+            ("WEFT_DIST_LEASE_HOLD_GATE", "1"),
+            ("WEFT_DIST_LEASE_ROUNDS", "1"),
+            ("WEFT_DIST_LEASE_NAME", "must-not-land"),
+        ],
+    )?;
+    let paused_ready = wait_for_json(&paused.ready_file(), READY_TIMEOUT)?;
+    set.check(
+        "the paused writer took exactly the next fencing token",
+        paused_ready["fence"].as_u64() == Some(paused_fence),
+        format!(
+            "expected fence {paused_fence}, observed {}",
+            paused_ready["fence"]
+        ),
+    );
+    set.generation(paused_ready["generation"].as_u64().unwrap_or(0));
+    let paused_pid = paused.pid;
+    signal_child(paused_pid, "STOP")?;
+    set.line(&format!(
+        "[S10] F1 writer pid={paused_pid} stopped with SIGSTOP"
+    ));
+
+    // Let the lease expire while the writer is stopped, then reclaim it.
+    std::thread::sleep(Duration::from_millis(grace + 500));
+    let successor = court.spawn_mode(
+        &dir,
+        "s10-successor",
+        "lease-writer",
+        &spec_path,
+        &[
+            ("WEFT_DIST_LEASE_WRITE_FIRST", "1"),
+            ("WEFT_DIST_LEASE_HOLD_GATE", "1"),
+            ("WEFT_DIST_LEASE_ROUNDS", "1"),
+            ("WEFT_DIST_LEASE_NAME", "alpha"),
+        ],
+    )?;
+    let successor_ready = wait_for_json(&successor.ready_file(), READY_TIMEOUT)?;
+    let successor_fence = successor_ready["fence"].as_u64().unwrap_or(0);
+    set.check(
+        "the reclaiming writer took the next token, not the fenced writer's",
+        successor_fence == paused_fence + 1,
+        format!("paused fence {paused_fence}, successor fence {successor_fence}"),
+    );
+    set.generation(successor_ready["generation"].as_u64().unwrap_or(0));
+
+    // Resume the paused writer: its publication must fail Busy.
+    signal_child(paused_pid, "CONT")?;
+    std::fs::write(paused.gate_file(), b"go").map_err(|err| format!("gate: {err}"))?;
+    let (paused_record, paused_status) = paused.finish(Duration::from_secs(60))?;
+    set.process(&paused_record);
+    let paused_status = paused_status.ok_or("the paused writer wrote no status")?;
+    let round = paused_status["first_round"].clone();
+    set.check(
+        "the fenced writer's publication failed Busy after SIGCONT",
+        round["ok"] == json!(false) && round["class"] == json!("Busy"),
+        format!("round={round}"),
+    );
+    set.check(
+        "the refusal names the fenced lease or the deadline",
+        round["message"]
+            .as_str()
+            .map(|text| {
+                text.contains("fence") || text.contains("deadline") || text.contains("taken over")
+            })
+            .unwrap_or(false),
+        format!("message={}", round["message"]),
+    );
+    set.check(
+        "the fenced writer's own generation and head did not move",
+        round["generation"].as_u64() == Some(generation_before)
+            && round["head"].as_str() == Some(head_before.as_str()),
+        format!("generation={} head={}", round["generation"], round["head"]),
+    );
+    let after_attempt = lock_state(&spec)?.ok_or("LOCK vanished")?;
+    set.check(
+        "the fenced writer did not disturb the successor's lock",
+        after_attempt["fence"].as_u64() == Some(successor_fence)
+            && after_attempt["released"] == json!(false),
+        format!("lock={after_attempt}"),
+    );
+
+    // Release the successor and prove the published head is its own.
+    std::fs::write(successor.gate_file(), b"go").map_err(|err| format!("gate: {err}"))?;
+    let (successor_record, successor_status) = successor.finish(Duration::from_secs(60))?;
+    set.process(&successor_record);
+    let successor_status = successor_status.ok_or("the successor wrote no status")?;
+    let successor_head = successor_status["head"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    let successor_generation = successor_status["generation"].as_u64().unwrap_or(0);
+    set.check(
+        "the successor's publication succeeded under its own fence",
+        successor_status["ok"] == json!(true) && successor_generation == generation_before + 1,
+        format!(
+            "ok={} generation {generation_before} -> {successor_generation}",
+            successor_status["ok"]
+        ),
+    );
+    let verification = verify_spec(&spec, "s10")?;
+    set.set_verification(verification.clone());
+    let (alpha, keep, fenced_visible) = {
+        let store = open_store(&spec, OpenMode::ReadOnly)?;
+        let alpha = read_path(&store, "/alpha")?;
+        let keep = read_path(&store, "/keep")?;
+        let fenced_visible = store.resolve_path("/must-not-land").is_ok();
+        (alpha, keep, fenced_visible)
+    };
+    set.check(
+        "the successor's file is visible and the fenced file is not",
+        alpha.1 == FENCED_PAYLOAD && !fenced_visible && verification["ok"] == json!(true),
+        format!(
+            "alpha={} bytes fenced_visible={fenced_visible} verify={}",
+            alpha.1.len(),
+            verification["ok"]
+        ),
+    );
+    set.check(
+        "the pre-existing file is byte-exact after the fenced attempt",
+        keep.1 == KEEP,
+        format!("keep={} bytes", keep.1.len()),
+    );
+    set.check(
+        "the published head is the successor's, not the fenced writer's",
+        verification["commit"].as_str().unwrap_or_default() == successor_head,
+        format!(
+            "successor head {successor_head}, verified commit {}",
+            verification["commit"]
+        ),
+    );
+    set.set(
+        "f1",
+        json!({
+            "paused_fence": paused_fence,
+            "successor_fence": successor_fence,
+            "generation_before": generation_before,
+            "generation_after": successor_generation,
+            "head_before": head_before,
+            "head_after": successor_head,
+            "paused_status": paused_status,
+            "successor_status": successor_status,
+        }),
+    );
+
+    // ---- F2: release racing a reclaim ----
+    let (race_spec_path, race_spec) =
+        court.write_spec_with_lease(Layout::SingleS3, "s10-release", FENCING_LEASE_SECS)?;
+    {
+        let mut store = race_spec.init()?;
+        create_file(&race_spec, &mut store, b"keep", KEEP, b"s10-race-keep")?;
+        drop(store);
+    }
+    let holder = court.spawn_mode(
+        &dir,
+        "s10-holder",
+        "lease-writer",
+        &race_spec_path,
+        &[
+            ("WEFT_DIST_LEASE_WRITE_FIRST", "1"),
+            ("WEFT_DIST_LEASE_HOLD_GATE", "1"),
+            ("WEFT_DIST_LEASE_ROUNDS", "1"),
+            ("WEFT_DIST_LEASE_NAME", "holder"),
+        ],
+    )?;
+    let holder_ready = wait_for_json(&holder.ready_file(), READY_TIMEOUT)?;
+    let holder_fence = holder_ready["fence"].as_u64().unwrap_or(0);
+    set.generation(holder_ready["generation"].as_u64().unwrap_or(0));
+
+    // A reclaiming writer retries while the holder's release is in flight.
+    let racer = court.spawn_mode(
+        &dir,
+        "s10-racer",
+        "lease-writer",
+        &race_spec_path,
+        &[
+            ("WEFT_DIST_LEASE_HOLD_GATE", "1"),
+            ("WEFT_DIST_LEASE_ROUNDS", "1"),
+            ("WEFT_DIST_LEASE_OPEN_RETRIES", "400"),
+            ("WEFT_DIST_LEASE_NAME", "racer"),
+        ],
+    )?;
+    std::thread::sleep(Duration::from_millis(200));
+    // Release the holder while the racer is retrying the open.
+    std::fs::write(holder.gate_file(), b"go").map_err(|err| format!("gate: {err}"))?;
+    let racer_ready = wait_for_json(&racer.ready_file(), READY_TIMEOUT)?;
+    let racer_fence = racer_ready["fence"].as_u64().unwrap_or(0);
+    let (holder_record, holder_status) = holder.finish(Duration::from_secs(60))?;
+    set.process(&holder_record);
+    set.check(
+        "the releasing writer exited cleanly under a racing reclaim",
+        holder_record.succeeded() && holder_status.is_some(),
+        format!("exit={}", holder_record.exit),
+    );
+    let during_race = lock_state(&race_spec)?.ok_or("LOCK vanished during the race")?;
+    set.check(
+        "the racer took exactly the next token from the release",
+        racer_fence == holder_fence + 1,
+        format!("holder fence {holder_fence}, racer fence {racer_fence}"),
+    );
+    set.check(
+        "the released lock was replaced, never deleted",
+        during_race["released"] == json!(false)
+            && during_race["fence"].as_u64() == Some(racer_fence),
+        format!("lock={during_race}"),
+    );
+    std::fs::write(racer.gate_file(), b"go").map_err(|err| format!("gate: {err}"))?;
+    let (racer_record, racer_status) = racer.finish(Duration::from_secs(60))?;
+    set.process(&racer_record);
+    let racer_status = racer_status.ok_or("the racer wrote no status")?;
+    let race_verification = verify_spec(&race_spec, "s10-race")?;
+    set.check(
+        "the racer published and the store verifies",
+        racer_status["ok"] == json!(true) && race_verification["ok"] == json!(true),
+        format!(
+            "racer ok={} verify={}",
+            racer_status["ok"], race_verification["ok"]
+        ),
+    );
+    let race_end = lock_state(&race_spec)?.ok_or("LOCK vanished")?;
+    set.check(
+        "the last release kept the token monotonic",
+        race_end["released"] == json!(true) && race_end["fence"].as_u64() == Some(racer_fence),
+        format!("lock={race_end}"),
+    );
+    set.set(
+        "f2",
+        json!({
+            "holder_fence": holder_fence,
+            "racer_fence": racer_fence,
+            "lock_during_race": during_race,
+            "lock_after": race_end,
+            "racer_status": racer_status,
+        }),
+    );
+
+    // ---- F3: bounded renewal keeps the writer valid ----
+    let (renew_spec_path, renew_spec) =
+        court.write_spec_with_lease(Layout::SingleS3, "s10-renew", FENCING_LEASE_SECS)?;
+    {
+        let mut store = renew_spec.init()?;
+        create_file(&renew_spec, &mut store, b"keep", KEEP, b"s10-renew-keep")?;
+    }
+    let renew = court.spawn_mode(
+        &dir,
+        "s10-renew",
+        "lease-writer",
+        &renew_spec_path,
+        &[
+            ("WEFT_DIST_LEASE_ROUNDS", "2"),
+            ("WEFT_DIST_LEASE_NAME", "renewed"),
+            ("WEFT_DIST_LEASE_SLEEP_MS", renew_sleep.as_str()),
+        ],
+    )?;
+    let renew_ready = wait_for_json(&renew.ready_file(), READY_TIMEOUT)?;
+    let renew_fence = renew_ready["fence"].as_u64().unwrap_or(0);
+    let (renew_record, renew_status) = renew.finish(Duration::from_secs(120))?;
+    set.process(&renew_record);
+    let renew_status = renew_status.ok_or("the renewing writer wrote no status")?;
+    let rounds = renew_status["rounds"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    let deadlines: Vec<i64> = rounds
+        .iter()
+        .filter_map(|round| {
+            round["lock_after"]["deadline_ns"]
+                .as_i64()
+                .or_else(|| round["deadline_before"].as_i64())
+        })
+        .collect();
+    let fences: Vec<u64> = rounds
+        .iter()
+        .filter_map(|round| round["lock_after"]["fence"].as_u64())
+        .collect();
+    set.check(
+        "two publications survived two renewal windows",
+        rounds.len() == 2 && rounds.iter().all(|round| round["ok"] == json!(true)),
+        format!("rounds={rounds:?}"),
+    );
+    set.check(
+        "renewal extended the deadline without changing the fencing token",
+        deadlines.windows(2).all(|pair| pair[1] > pair[0])
+            && fences.iter().all(|fence| *fence == renew_fence),
+        format!("deadlines={deadlines:?} fences={fences:?} open fence={renew_fence}"),
+    );
+    let renew_verification = verify_spec(&renew_spec, "s10-renew")?;
+    set.check(
+        "the renewed writer's state verifies",
+        renew_verification["ok"] == json!(true),
+        format!("verify={}", renew_verification["ok"]),
+    );
+    set.set(
+        "f3",
+        json!({
+            "fence": renew_fence,
+            "deadlines": deadlines,
+            "fences": fences,
+            "status": renew_status,
+        }),
+    );
+
+    // ---- F4: an expired lease blocks publication with no successor ----
+    let (expire_spec_path, expire_spec) =
+        court.write_spec_with_lease(Layout::SingleS3, "s10-expire", FENCING_LEASE_SECS)?;
+    let (expire_head, expire_generation) = {
+        let mut store = expire_spec.init()?;
+        create_file(&expire_spec, &mut store, b"keep", KEEP, b"s10-expire-keep")?;
+        let head = store.snapshot_root().to_hex();
+        let generation = store.generation();
+        drop(store);
+        (head, generation)
+    };
+    let expire_tombstone = lock_state(&expire_spec)?.ok_or("no LOCK record after init")?;
+    set.check(
+        "the expired scenario starts from a released tombstone",
+        expire_tombstone["released"] == json!(true),
+        format!("lock={expire_tombstone}"),
+    );
+    let expire_fence = expire_tombstone["fence"].as_u64().unwrap_or(0) + 1;
+    let expired = court.spawn_mode(
+        &dir,
+        "s10-expired",
+        "lease-writer",
+        &expire_spec_path,
+        &[
+            ("WEFT_DIST_LEASE_ROUNDS", "1"),
+            ("WEFT_DIST_LEASE_NAME", "expired"),
+            ("WEFT_DIST_LEASE_SLEEP_MS", expire_sleep.as_str()),
+        ],
+    )?;
+    let (expired_record, expired_status) = expired.finish(Duration::from_secs(120))?;
+    set.process(&expired_record);
+    let expired_status = expired_status.ok_or("the expired writer wrote no status")?;
+    let round = expired_status["first_round"].clone();
+    set.check(
+        "an expired lease blocks publication even with no successor",
+        round["ok"] == json!(false) && round["class"] == json!("Busy"),
+        format!("round={round}"),
+    );
+    set.check(
+        "the refusal names the deadline and the writer's own token",
+        round["message"]
+            .as_str()
+            .map(|text| text.contains("deadline passed") && text.contains("fence"))
+            .unwrap_or(false),
+        format!("message={}", round["message"]),
+    );
+    set.check(
+        "the head and generation are untouched by the expired writer",
+        round["generation"].as_u64() == Some(expire_generation)
+            && round["head"].as_str() == Some(expire_head.as_str()),
+        format!("generation={} head={}", round["generation"], round["head"]),
+    );
+    let still = round["lock_after"].clone();
+    set.check(
+        "no successor took over: the LOCK still names the expired writer",
+        still["released"] == json!(false) && still["fence"].as_u64() == Some(expire_fence),
+        format!("lock={still}"),
+    );
+    let final_lock = lock_state(&expire_spec)?.ok_or("LOCK vanished")?;
+    set.check(
+        "the exiting writer released only its own token, as a tombstone",
+        final_lock["released"] == json!(true) && final_lock["fence"].as_u64() == Some(expire_fence),
+        format!("lock={final_lock}"),
+    );
+    let expire_verification = verify_spec(&expire_spec, "s10-expire")?;
+    set.check(
+        "the store verifies after the refused publication",
+        expire_verification["ok"] == json!(true),
+        format!("verify={}", expire_verification["ok"]),
+    );
+    set.set(
+        "f4",
+        json!({
+            "fence": expire_fence,
+            "generation": expire_generation,
+            "head": expire_head,
+            "status": expired_status,
+        }),
+    );
+
+    set.set(
+        "fencing_tokens",
+        json!({
+            "paused": paused_fence,
+            "successor": successor_fence,
+            "release_holder": holder_fence,
+            "release_racer": racer_fence,
+            "renew": renew_fence,
+            "expired": expire_fence,
+        }),
+    );
+    set.command(&sh_quote(&[
+        court.args.weftfs_bin.display().to_string(),
+        "--child".to_owned(),
+        "lease-writer".to_owned(),
+    ]));
+    Ok(set.finish())
+}
+
+// ---------------------------------------------------------------------------
 // Child implementations
 // ---------------------------------------------------------------------------
 
@@ -2037,8 +2521,36 @@ fn child_main(mode: &str, _args: &[String]) -> Result<(), String> {
         "gc" => child_gc(&spec, status),
         "verify" => child_verify(&spec, status),
         "capability" => child_capability(&spec, status),
+        "lease-writer" => child_lease_writer(&spec, ready, status, gate),
         other => Err(format!("unknown child mode `{other}`")),
     }
+}
+
+fn env_u64(name: &str) -> Option<u64> {
+    std::env::var(name).ok().and_then(|text| text.parse().ok())
+}
+
+fn env_flag(name: &str) -> bool {
+    matches!(std::env::var(name).as_deref(), Ok("1") | Ok("true"))
+}
+
+/// The published `LOCK` record, read fresh through a lease-free handle.
+fn lock_state(spec: &StoreSpec) -> Result<Option<Value>, String> {
+    let backend = S3Backend::new("<distributed-court>", spec.config());
+    let record = backend
+        .read_lock_record()
+        .map_err(|err| format!("read LOCK: {err}"))?;
+    Ok(record.map(|record| {
+        json!({
+            "owner": record.owner,
+            "fence": record.fence,
+            "sequence": record.sequence,
+            "deadline_ns": record.deadline_ns,
+            "released": record.released,
+            "pending_generation": record.pending_generation,
+            "pending_commit": record.pending_commit,
+        })
+    }))
 }
 
 fn env_path(name: &str) -> Option<PathBuf> {
@@ -2108,6 +2620,177 @@ fn child_hold_writer(
     }
     drop(store);
     Ok(())
+}
+
+/// A writer whose whole behaviour is driven by environment variables, so one
+/// child mode covers every fencing scenario.
+///
+/// * `WEFT_DIST_LEASE_WRITE_FIRST=1` publish before waiting on the gate
+/// * `WEFT_DIST_LEASE_HOLD_GATE=1` wait for the gate file before exiting
+/// * `WEFT_DIST_LEASE_ROUNDS=N` number of publications (default 1)
+/// * `WEFT_DIST_LEASE_SLEEP_MS=N` sleep before each publication (default 0)
+/// * `WEFT_DIST_LEASE_OPEN_RETRIES=N` retry a `Busy` open (default 0)
+/// * `WEFT_DIST_LEASE_NAME=...` the file name to create (default `fenced`)
+fn child_lease_writer(
+    spec: &StoreSpec,
+    ready: Option<PathBuf>,
+    status: Option<PathBuf>,
+    gate: Option<PathBuf>,
+) -> Result<(), String> {
+    let write_first = env_flag("WEFT_DIST_LEASE_WRITE_FIRST");
+    let hold_gate = env_flag("WEFT_DIST_LEASE_HOLD_GATE");
+    let rounds = env_u64("WEFT_DIST_LEASE_ROUNDS").unwrap_or(1);
+    let sleep_ms = env_u64("WEFT_DIST_LEASE_SLEEP_MS").unwrap_or(0);
+    let retries = env_u64("WEFT_DIST_LEASE_OPEN_RETRIES").unwrap_or(0);
+    let name = std::env::var("WEFT_DIST_LEASE_NAME").unwrap_or_else(|_| "fenced".to_owned());
+
+    let mut attempts = 0u64;
+    let mut open_error = None;
+    let mut store = {
+        let mut chosen = None;
+        for attempt in 0..=retries {
+            attempts = attempt + 1;
+            match spec.open_typed(OpenMode::ReadWrite) {
+                Ok(store) => {
+                    chosen = Some(store);
+                    break;
+                }
+                Err(err) => {
+                    open_error = Some(json!({
+                        "class": err.class_name(),
+                        "message": err.message(),
+                    }));
+                    if err.class() != weftfs::error::Class::Busy || attempt == retries {
+                        break;
+                    }
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+            }
+        }
+        chosen
+    };
+    let Some(store_ref) = store.as_mut() else {
+        if let Some(path) = &status {
+            write_json_file(
+                path,
+                &json!({
+                    "ok": false,
+                    "phase": "open",
+                    "attempts": attempts,
+                    "open_error": open_error,
+                    "rounds": [],
+                }),
+            )?;
+        }
+        return Ok(());
+    };
+    let store: &mut Store = store_ref;
+    let opening = lock_state(spec)?;
+    if let Some(path) = &ready {
+        write_json_file(
+            path,
+            &json!({
+                "pid": std::process::id(),
+                "phase": "open",
+                "attempts": attempts,
+                "fence": opening.as_ref().and_then(|v| v["fence"].as_u64()),
+                "generation": store.generation(),
+                "head": store.snapshot_root().to_hex(),
+                "lock": opening,
+            }),
+        )?;
+    }
+
+    let mut published = Vec::new();
+    let mut index = 0u64;
+    if write_first && rounds > 0 {
+        published.push(publish_round(store, spec, index, &name)?);
+        index += 1;
+    }
+    if hold_gate {
+        if let Some(gate) = &gate {
+            let _ = wait_for_file(gate, Duration::from_secs(180));
+        }
+    }
+    while index < rounds {
+        if sleep_ms > 0 {
+            std::thread::sleep(Duration::from_millis(sleep_ms));
+        }
+        published.push(publish_round(store, spec, index, &name)?);
+        index += 1;
+    }
+
+    if let Some(path) = &status {
+        let first = published.first().cloned().unwrap_or_else(|| json!({}));
+        write_json_file(
+            path,
+            &json!({
+                "ok": published.iter().all(|round| round["ok"] == json!(true)),
+                "phase": "done",
+                "attempts": attempts,
+                "open_error": open_error,
+                "fence_on_open": opening.as_ref().and_then(|v| v["fence"].as_u64()),
+                "generation": store.generation(),
+                "head": store.snapshot_root().to_hex(),
+                "first_round": first,
+                "rounds": published,
+            }),
+        )?;
+    }
+    let _ = store;
+    Ok(())
+}
+
+/// One publication attempt, with the lock record observed before and after.
+fn publish_round(
+    store: &mut Store,
+    spec: &StoreSpec,
+    index: u64,
+    name: &str,
+) -> Result<Value, String> {
+    let before = lock_state(spec)?;
+    let root = store.resolve_path("/").map_err(|err| err.to_string())?;
+    let seed = format!("dist-fence-{}-{index}", std::process::id());
+    // A second round cannot reuse an entry name; the first keeps the caller's
+    // name so single-round scenarios read /alpha, /renewed, /fenced directly.
+    let entry = if index == 0 {
+        name.to_owned()
+    } else {
+        format!("{name}-{index}")
+    };
+    let outcome = store.create_file_seeded(
+        root,
+        entry.as_bytes(),
+        FENCED_PAYLOAD,
+        0o644,
+        0,
+        0,
+        BTreeMap::new(),
+        seed.as_bytes(),
+    );
+    let after = lock_state(spec)?;
+    Ok(match outcome {
+        Ok(_) => json!({
+            "index": index,
+            "ok": true,
+            "generation": store.generation(),
+            "head": store.snapshot_root().to_hex(),
+            "fence_before": before.as_ref().and_then(|v| v["fence"].as_u64()),
+            "deadline_before": before.as_ref().and_then(|v| v["deadline_ns"].as_i64()),
+            "lock_after": after,
+        }),
+        Err(err) => json!({
+            "index": index,
+            "ok": false,
+            "class": err.class_name(),
+            "message": err.message(),
+            "generation": store.generation(),
+            "head": store.snapshot_root().to_hex(),
+            "fence_before": before.as_ref().and_then(|v| v["fence"].as_u64()),
+            "deadline_before": before.as_ref().and_then(|v| v["deadline_ns"].as_i64()),
+            "lock_after": after,
+        }),
+    })
 }
 
 fn child_group(spec: &StoreSpec, status: Option<PathBuf>, op: &str) -> Result<(), String> {

@@ -1095,11 +1095,21 @@ impl S3Backend {
                         ));
                     };
                     if observed.is_live(now) {
-                        return Err(Error::busy(format!(
-                            "store is locked by another S3 writer (fence {}, lease ends in {} ms)",
+                        // The refusal text is a fixed sentence on purpose: the
+                        // R13 court asserts that every interlocked open returns
+                        // the same non-disclosing message. The operational
+                        // detail (owner, fencing token, remaining lease) goes to
+                        // diagnostics, never to the caller.
+                        self.note(format!(
+                            "writable open refused: the LOCK is live (owner {} fence {}, lease ends \
+                             in {} ms)",
+                            observed.owner,
                             observed.fence,
                             (observed.deadline_ns - now) / 1_000_000
-                        )));
+                        ));
+                        return Err(Error::busy(
+                            "store is locked by another S3 writer (live LOCK object)",
+                        ));
                     }
                     // Expired lease or a released tombstone: take over with the
                     // next fencing token, conditional on the exact record read.
