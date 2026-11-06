@@ -13,7 +13,11 @@
 //!   directory for physical accounting.
 //! * `restore` — reopens the store read-only, reads and hashes every tensor,
 //!   recomputes every logical root, reassembles the original safetensors file
-//!   byte-for-byte, and measures a single-tensor restore.
+//!   byte-for-byte, and measures a single-tensor restore. With
+//!   `--materialize-pipeline` the reassembly streams decoded tensors to the
+//!   destination in source order while workers keep decoding
+//!   (`RestorePipelineOptions`); without it the shipped batched materialize is
+//!   measured.
 //!
 //! The safetensors header (including its 8-byte length prefix) is stored as a
 //! raw object so the complete original file can be reconstructed exactly.
@@ -35,6 +39,7 @@ use serde_json::{json, Value as Json};
 use sha2::{Digest, Sha256};
 use weftfs::backend::BackendStats;
 use weftfs::parallel::{ParallelReadOptions, ParallelReadStats};
+use weftfs::restore_pipeline::{RestorePipelineOptions, RestorePipelineStats};
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
 use weftfs::TileDecodeOptions;
@@ -698,6 +703,25 @@ fn restore(args: &[String]) -> Result<(), String> {
     let reassemble_dir = value_of(args, "--reassemble-dir").map(PathBuf::from);
     let single_tensor = value_of(args, "--single-tensor")
         .unwrap_or_else(|| "model.layers.10.mlp.down_proj.weight".to_owned());
+    // Benchmark scoping only: `base`/`instruct` restore one checkpoint instead
+    // of both. The library and CLI always restore exactly what is asked for.
+    let only_checkpoint = value_of(args, "--checkpoint");
+    if let Some(only) = &only_checkpoint {
+        if only != "base" && only != "instruct" {
+            return Err(format!(
+                "--checkpoint must be `base` or `instruct` (got `{only}`)"
+            ));
+        }
+    }
+    let requested: Vec<(&str, &str)> = [("base", "base"), ("instruct", "instruct")]
+        .into_iter()
+        .filter(|(name, _)| {
+            only_checkpoint
+                .as_deref()
+                .map(|only| only == *name)
+                .unwrap_or(true)
+        })
+        .collect();
     let single_runs: usize = value_of(args, "--single-runs")
         .map(|text| {
             text.parse()
@@ -725,6 +749,7 @@ fn restore(args: &[String]) -> Result<(), String> {
         threads,
         max_inflight_bytes: max_inflight_mib.saturating_mul(1024 * 1024),
     };
+    let materialize_pipeline = args.iter().any(|arg| arg == "--materialize-pipeline");
 
     let ingest_text = fs::read_to_string(&ingest_json)
         .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
@@ -739,7 +764,7 @@ fn restore(args: &[String]) -> Result<(), String> {
     let open_stats = store.backend_stats();
 
     let mut checkpoints = Vec::new();
-    for (name, dir_name) in [("base", "base"), ("instruct", "instruct")] {
+    for (name, dir_name) in requested.iter().copied() {
         let result = restore_checkpoint(
             &store,
             &ingest,
@@ -747,12 +772,13 @@ fn restore(args: &[String]) -> Result<(), String> {
             dir_name,
             reassemble_dir.as_deref(),
             &parallel,
+            materialize_pipeline,
         )?;
         checkpoints.push(result);
     }
 
     let mut single = Vec::new();
-    for (checkpoint, dir_name) in [("base", "base"), ("instruct", "instruct")] {
+    for (checkpoint, dir_name) in requested.iter().copied() {
         let id = store
             .resolve_components(&[dir_name.as_bytes(), single_tensor.as_bytes()])
             .map_err(|err| format!("resolve {dir_name}/{single_tensor}: {err}"))?;
@@ -802,6 +828,8 @@ fn restore(args: &[String]) -> Result<(), String> {
         "threads": threads,
         "effective_threads": weftfs::parallel::effective_threads(threads),
         "max_inflight_bytes": parallel.max_inflight_bytes,
+        "materialize_mode": if materialize_pipeline { "pipeline" } else { "batch" },
+        "checkpoints_requested": requested.iter().map(|(name, _)| *name).collect::<Vec<_>>(),
         "open_ms": round(open_ms),
         "open_backend": stats_json(&open_stats),
         "checkpoints": checkpoints,
@@ -1228,6 +1256,28 @@ impl ReadStatsTotal {
     }
 }
 
+/// JSON view of one ordered restore pipeline.
+fn pipeline_stats_json(stats: &RestorePipelineStats) -> Json {
+    json!({
+        "threads_requested": stats.requested_threads,
+        "threads_effective": stats.effective_threads,
+        "tasks": stats.tasks,
+        "tensors_written": stats.tensors_written,
+        "bytes_written": stats.bytes_written,
+        "tensors_dropped": stats.tensors_dropped,
+        "bytes_dropped": stats.bytes_dropped,
+        "max_inflight_bytes": stats.max_inflight_bytes,
+        "observed_max_inflight_bytes": stats.observed_max_inflight_bytes,
+        "observed_max_inflight_tasks": stats.observed_max_inflight_tasks,
+        "oversized_tasks": stats.oversized_tasks,
+        "decode_wall_ms": round(stats.decode_wall_ms),
+        "decode_sum_ms": round(stats.decode_sum_ms),
+        "transfer_ms": round(stats.transfer_ms),
+        "write_ms": round(stats.write_ms),
+        "total_ms": round(stats.total_ms),
+    })
+}
+
 /// Split `sizes` into contiguous batches whose declared bytes fit `budget`.
 /// A single tensor larger than the budget gets a batch of its own, so the
 /// reassembly buffer never holds more than one oversized tensor plus the bound.
@@ -1261,6 +1311,7 @@ fn restore_checkpoint(
     dir_name: &str,
     reassemble_dir: Option<&Path>,
     options: &ParallelReadOptions,
+    materialize_pipeline: bool,
 ) -> Result<Json, String> {
     let records = ingest
         .get("ingest")
@@ -1377,23 +1428,38 @@ fn restore_checkpoint(
             File::create(&target).map_err(|err| format!("{}: {err}", target.display()))?;
         file.write_all(&header)
             .map_err(|err| format!("{}: {err}", target.display()))?;
-        // Same batching, same bytes, same order: the reassembly buffer never
-        // holds more than the staging bound plus one oversized tensor.
-        for (start, end) in &batches {
-            let (datas, stats) = store
-                .read_tensors_bounded_authorized(&tokens[*start..*end], options)
-                .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
-            materialize_stats.merge(&stats);
-            if datas.len() != end - start {
-                return Err(format!(
-                    "read {dir_name} batch {start}..{end}: {} results for {} tensors",
-                    datas.len(),
-                    end - start
-                ));
-            }
-            for data in datas {
-                file.write_all(&data)
-                    .map_err(|err| format!("{}: {err}", target.display()))?;
+        let pipeline_stats = if materialize_pipeline {
+            let pipeline_options = RestorePipelineOptions {
+                threads: options.threads,
+                max_inflight_bytes: options.max_inflight_bytes,
+            };
+            Some(
+                store
+                    .restore_tensors_pipelined_authorized(&tokens, &mut file, &pipeline_options)
+                    .map_err(|err| format!("pipeline restore {dir_name}: {err}"))?,
+            )
+        } else {
+            None
+        };
+        if pipeline_stats.is_none() {
+            // Same batching, same bytes, same order: the reassembly buffer never
+            // holds more than the staging bound plus one oversized tensor.
+            for (start, end) in &batches {
+                let (datas, stats) = store
+                    .read_tensors_bounded_authorized(&tokens[*start..*end], options)
+                    .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
+                materialize_stats.merge(&stats);
+                if datas.len() != end - start {
+                    return Err(format!(
+                        "read {dir_name} batch {start}..{end}: {} results for {} tensors",
+                        datas.len(),
+                        end - start
+                    ));
+                }
+                for data in datas {
+                    file.write_all(&data)
+                        .map_err(|err| format!("{}: {err}", target.display()))?;
+                }
             }
         }
         file.flush()
@@ -1414,7 +1480,16 @@ fn restore_checkpoint(
             "reassembled_blake3": reassembled_blake3,
             "source_blake3": source_blake3,
             "exact": reassembled_blake3 == source_blake3,
-            "parallel": materialize_stats.to_json(options, batch_bytes),
+            "mode": if pipeline_stats.is_some() { "pipeline" } else { "batch" },
+            "pipeline": pipeline_stats
+                .as_ref()
+                .map(pipeline_stats_json)
+                .unwrap_or(Json::Null),
+            "parallel": if pipeline_stats.is_some() {
+                Json::Null
+            } else {
+                materialize_stats.to_json(options, batch_bytes)
+            },
         });
     }
 

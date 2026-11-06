@@ -43,6 +43,7 @@ pub mod rebase;
 pub mod receipt_bundle;
 pub mod recovery;
 pub mod representation;
+pub mod restore_pipeline;
 pub mod s3;
 pub mod safetensors;
 pub mod singleflight;
@@ -91,6 +92,7 @@ pub use provenance::{
 pub use rebase::{
     RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
 };
+pub use restore_pipeline::{run_ordered_pipeline, RestorePipelineOptions, RestorePipelineStats};
 pub use s3::{S3Backend, S3Config};
 pub use singleflight::{
     CancelToken, ReconstructionKey, RegionKey, SingleFlightOptions, SingleFlightStats,
