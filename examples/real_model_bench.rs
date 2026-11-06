@@ -32,10 +32,12 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use serde_json::{json, Value as Json};
+use sha2::{Digest, Sha256};
 use weftfs::backend::BackendStats;
 use weftfs::parallel::{ParallelReadOptions, ParallelReadStats};
 use weftfs::store::{OpenMode, Options, Store};
-use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorWriteSpec};
+use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
+use weftfs::TileDecodeOptions;
 
 const HEADER_OBJECT: &str = "__safetensors_header__";
 
@@ -52,9 +54,10 @@ fn run() -> Result<(), String> {
     match phase.as_str() {
         "ingest" => ingest(&args[1..]),
         "restore" => restore(&args[1..]),
+        "tiled" => tiled(&args[1..]),
         "hot" => hot(&args[1..]),
         other => Err(format!(
-            "unknown phase `{other}` (expected `ingest`, `restore`, or `hot`)"
+            "unknown phase `{other}` (expected `ingest`, `restore`, `tiled`, or `hot`)"
         )),
     }
 }
@@ -300,6 +303,16 @@ fn ingest(args: &[String]) -> Result<(), String> {
         })
         .transpose()?
         .unwrap_or(256);
+    let auto_tile_bytes: Option<u64> = value_of(args, "--auto-tile-bytes")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--auto-tile-bytes must be an integer".to_owned())
+        })
+        .transpose()?;
+    // Control configuration for the tiled-parallel court: force mode 15 for
+    // rank-2 tensors with an auto-derived tile shape. Rank > 2 keeps the
+    // planner, because v1 auto-tile derivation is defined for rank 2 only.
+    let force_tiled = args.iter().any(|arg| arg == "--force-tiled");
 
     let base = parse_safetensors(&base_file)?;
     let instruct = parse_safetensors(&instruct_file)?;
@@ -379,7 +392,18 @@ fn ingest(args: &[String]) -> Result<(), String> {
     for tensor in &base.tensors {
         let bytes = read_tensor_bytes(&base, tensor)?;
         let hash = blake3::hash(&bytes).to_hex().to_string();
-        let spec = TensorWriteSpec::default();
+        let spec = TensorWriteSpec {
+            strategy_hint: if force_tiled && tensor.shape.len() == 2 {
+                Some(TensorStrategy::TensorTiled)
+            } else {
+                None
+            },
+            plan: TensorPlanOptions {
+                auto_tile_bytes,
+                ..TensorPlanOptions::default()
+            },
+            ..TensorWriteSpec::default()
+        };
         let started = Instant::now();
         let id = store
             .write_tensor_file_with_spec(
@@ -410,6 +434,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
             "version": record.version.to_hex(),
             "logical_root": meta.logical_root.to_hex(),
             "strategy": meta.strategy,
+            "tile_shape": meta.tile_shape,
         }));
     }
     let base_ingest_ms = base_start.elapsed().as_secs_f64() * 1000.0;
@@ -438,7 +463,15 @@ fn ingest(args: &[String]) -> Result<(), String> {
         let bytes = read_tensor_bytes(&instruct, tensor)?;
         let hash = blake3::hash(&bytes).to_hex().to_string();
         let mut spec = TensorWriteSpec {
-            plan: TensorPlanOptions::default(),
+            strategy_hint: if force_tiled && tensor.shape.len() == 2 {
+                Some(TensorStrategy::TensorTiled)
+            } else {
+                None
+            },
+            plan: TensorPlanOptions {
+                auto_tile_bytes,
+                ..TensorPlanOptions::default()
+            },
             ..TensorWriteSpec::default()
         };
         if causal_possible {
@@ -476,6 +509,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
             "version": record.version.to_hex(),
             "logical_root": meta.logical_root.to_hex(),
             "strategy": meta.strategy,
+            "tile_shape": meta.tile_shape,
             "causal": if spec.causal.is_empty() { Json::Null } else { json!(spec.causal[0].to_hex()) },
         }));
     }
@@ -500,7 +534,9 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 "chunk_size": chunk_size,
                 "checkpoint_interval": checkpoint_interval,
                 "representation": "Raw (frozen v1 manifest)",
-                "planner": "TensorPlanOptions::default() (lambda_ns = 0, measured decode table, mode-9 candidate)",
+                "planner": "TensorPlanOptions (lambda_ns = 0, measured decode table, mode-9 candidate)",
+                "auto_tile_bytes": auto_tile_bytes,
+                "force_tiled_rank2": force_tiled,
                 "max_semantic_candidates": weftfs::tensor_store::DEFAULT_TENSOR_MAX_CANDIDATES,
             },
             "generation": generation,
@@ -725,6 +761,363 @@ fn restore(args: &[String]) -> Result<(), String> {
         "open_backend": stats_json(&open_stats),
         "checkpoints": checkpoints,
         "single_tensor_restore": single,
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    fs::write(
+        &out,
+        serde_json::to_vec_pretty(&receipt).map_err(|err| err.to_string())?,
+    )
+    .map_err(|err| format!("{}: {err}", out.display()))?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+/// Aggregate of mode-15 tile counters over a pass.
+#[derive(Default)]
+struct TileTotals {
+    tensors: usize,
+    tiles: usize,
+    effective_threads: usize,
+    max_inflight_bytes: usize,
+    observed_max_inflight_bytes: usize,
+    observed_max_inflight_tasks: usize,
+    oversized_tiles: usize,
+    bytes: u64,
+}
+
+impl TileTotals {
+    fn merge(&mut self, stats: &weftfs::TileDecodeStats) {
+        self.tensors += 1;
+        self.tiles += stats.tiles;
+        self.effective_threads = stats.effective_threads;
+        self.max_inflight_bytes = stats.max_inflight_bytes;
+        self.observed_max_inflight_bytes = self
+            .observed_max_inflight_bytes
+            .max(stats.observed_max_inflight_bytes);
+        self.observed_max_inflight_tasks = self
+            .observed_max_inflight_tasks
+            .max(stats.observed_max_inflight_tasks);
+        self.oversized_tiles += stats.oversized_tiles;
+    }
+
+    fn to_json(&self, options: &TileDecodeOptions) -> Json {
+        json!({
+            "threads_requested": options.threads,
+            "threads_effective": weftfs::effective_threads(options.threads),
+            "max_inflight_bytes": options.max_inflight_bytes,
+            "tensors": self.tensors,
+            "tiles": self.tiles,
+            "bytes": self.bytes,
+            "observed_max_inflight_bytes": self.observed_max_inflight_bytes,
+            "observed_max_inflight_tasks": self.observed_max_inflight_tasks,
+            "oversized_tiles": self.oversized_tiles,
+        })
+    }
+}
+
+fn tile_stats_json(stats: &weftfs::TileDecodeStats) -> Json {
+    json!({
+        "threads_requested": stats.requested_threads,
+        "threads_effective": stats.effective_threads,
+        "tiles": stats.tiles,
+        "max_inflight_bytes": stats.max_inflight_bytes,
+        "observed_max_inflight_bytes": stats.observed_max_inflight_bytes,
+        "observed_max_inflight_tasks": stats.observed_max_inflight_tasks,
+        "oversized_tiles": stats.oversized_tiles,
+    })
+}
+
+fn file_sha256(path: &Path) -> Result<String, String> {
+    let mut file = File::open(path).map_err(|err| format!("{}: {err}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; 1 << 20];
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .map_err(|err| format!("{}: {err}", path.display()))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+fn region_bytes(full: &[u8], shape: &[u64], region: &weftcodec::Region, element: usize) -> Vec<u8> {
+    let mut out = Vec::new();
+    for row in region.start[0]..region.end[0] {
+        for col in region.start[1]..region.end[1] {
+            let at = ((row * shape[1] + col) as usize) * element;
+            out.extend_from_slice(&full[at..at + element]);
+        }
+    }
+    out
+}
+
+/// Full-checkpoint restore with intra-tensor mode-15 tile workers.
+///
+/// The read and materialize passes both call
+/// `Store::read_tensor_with_options`, so the requested worker count applies to
+/// every mode-15 tensor. Non-tiled representations keep the shipped sequential
+/// read. Region reads verify the returned bytes against the source container.
+fn tiled(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let ingest_json = PathBuf::from(required(args, "--ingest-json")?);
+    let out = PathBuf::from(required(args, "--out")?);
+    let source_path = PathBuf::from(required(args, "--file")?);
+    let checkpoint = value_of(args, "--checkpoint").unwrap_or_else(|| "base".to_owned());
+    let dir_name = value_of(args, "--dir").unwrap_or_else(|| checkpoint.clone());
+    let config = value_of(args, "--config").unwrap_or_else(|| "default".to_owned());
+    let embedding =
+        value_of(args, "--embedding").unwrap_or_else(|| "model.embed_tokens.weight".to_owned());
+    let threads: usize = value_of(args, "--threads")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--threads must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(1);
+    let max_inflight_mib: usize = value_of(args, "--max-inflight-mib")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--max-inflight-mib must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(64);
+    let remove_materialized = args.iter().any(|arg| arg == "--remove-materialized");
+    let out_file = value_of(args, "--out-file")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| out.with_extension("safetensors"));
+
+    let options = TileDecodeOptions {
+        threads,
+        max_inflight_bytes: max_inflight_mib.saturating_mul(1024 * 1024),
+    };
+
+    let ingest_text = fs::read_to_string(&ingest_json)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let ingest: Json = serde_json::from_str(&ingest_text)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let records = ingest
+        .get("ingest")
+        .and_then(|value| value.get(checkpoint.as_str()))
+        .and_then(|value| value.get("tensors"))
+        .and_then(Json::as_array)
+        .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
+    let storage = json!({
+        "physical": ingest.get("physical").cloned().unwrap_or(Json::Null),
+        "strategy_distribution": ingest
+            .get("strategy_distribution")
+            .and_then(|value| value.get(checkpoint.as_str()))
+            .cloned()
+            .unwrap_or(Json::Null),
+    });
+
+    let source = parse_safetensors(&source_path)?;
+    let source_sha256 = file_sha256(&source_path)?;
+    let source_by_name: BTreeMap<&str, &TensorHeader> = source
+        .tensors
+        .iter()
+        .map(|tensor| (tensor.name.as_str(), tensor))
+        .collect();
+
+    let open_start = Instant::now();
+    let store = Store::open(&store_path, OpenMode::ReadOnly)
+        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let open_ms = open_start.elapsed().as_secs_f64() * 1000.0;
+
+    let mut names = Vec::with_capacity(records.len());
+    let mut ids = Vec::with_capacity(records.len());
+    for record in records {
+        let name = record
+            .get("name")
+            .and_then(Json::as_str)
+            .ok_or_else(|| "ingest tensor record is missing name".to_owned())?;
+        let id = store
+            .resolve_components(&[dir_name.as_bytes(), name.as_bytes()])
+            .map_err(|err| format!("resolve {dir_name}/{name}: {err}"))?;
+        names.push(name.to_owned());
+        ids.push(id);
+    }
+
+    // Pass 1: decode every tensor with the requested tile worker count.
+    let before = store.backend_stats();
+    let started = Instant::now();
+    let mut hash_mismatches = Vec::new();
+    let mut restored_bytes = 0u64;
+    let mut read_stats = TileTotals::default();
+    let mut strategy_count: BTreeMap<String, usize> = BTreeMap::new();
+    for (index, record) in records.iter().enumerate() {
+        let (data, stats) = store
+            .read_tensor_with_options_and_stats(ids[index], &options)
+            .map_err(|err| format!("read {dir_name}/{}: {err}", names[index]))?;
+        restored_bytes += data.len() as u64;
+        read_stats.bytes += data.len() as u64;
+        let hash = blake3::hash(&data).to_hex().to_string();
+        if hash
+            != record
+                .get("blake3")
+                .and_then(Json::as_str)
+                .unwrap_or_default()
+        {
+            hash_mismatches.push(names[index].clone());
+        }
+        read_stats.merge(&stats);
+        let strategy = record
+            .get("strategy")
+            .and_then(Json::as_str)
+            .unwrap_or("unknown")
+            .to_owned();
+        *strategy_count.entry(strategy).or_default() += 1;
+    }
+    let read_ms = started.elapsed().as_secs_f64() * 1000.0;
+    let after = store.backend_stats();
+
+    // Pass 2: every stored logical root must recompute to the recorded value.
+    let roots_started = Instant::now();
+    let mut root_mismatches = Vec::new();
+    for (index, record) in records.iter().enumerate() {
+        let root = store
+            .tensor_logical_root(ids[index])
+            .map_err(|err| format!("logical root {dir_name}/{}: {err}", names[index]))?;
+        if root.to_hex()
+            != record
+                .get("logical_root")
+                .and_then(Json::as_str)
+                .unwrap_or_default()
+        {
+            root_mismatches.push(names[index].clone());
+        }
+    }
+    let root_ms = roots_started.elapsed().as_secs_f64() * 1000.0;
+
+    // Pass 3: reassemble the exact source container byte-for-byte.
+    let header_id = store
+        .resolve_components(&[dir_name.as_bytes(), HEADER_OBJECT.as_bytes()])
+        .map_err(|err| format!("resolve {dir_name}/{HEADER_OBJECT}: {err}"))?;
+    let header = store
+        .read_object(header_id)
+        .map_err(|err| format!("read {dir_name}/{HEADER_OBJECT}: {err}"))?;
+    let materialize_started = Instant::now();
+    let mut materialize_stats = TileTotals::default();
+    {
+        let mut file =
+            File::create(&out_file).map_err(|err| format!("{}: {err}", out_file.display()))?;
+        file.write_all(&header)
+            .map_err(|err| format!("{}: {err}", out_file.display()))?;
+        for id in &ids {
+            let (data, stats) = store
+                .read_tensor_with_options_and_stats(*id, &options)
+                .map_err(|err| format!("materialize read: {err}"))?;
+            materialize_stats.merge(&stats);
+            materialize_stats.bytes += data.len() as u64;
+            file.write_all(&data)
+                .map_err(|err| format!("{}: {err}", out_file.display()))?;
+        }
+        file.flush()
+            .map_err(|err| format!("{}: {err}", out_file.display()))?;
+    }
+    let materialize_ms = materialize_started.elapsed().as_secs_f64() * 1000.0;
+    let reassembled_sha256 = file_sha256(&out_file)?;
+    let materialized_bytes = fs::metadata(&out_file).map(|m| m.len()).unwrap_or(0);
+    let materialize_exact = reassembled_sha256 == source_sha256;
+    if remove_materialized {
+        let _ = fs::remove_file(&out_file);
+    }
+
+    // Region reads of the embedding at this worker count.
+    let embedding_header = source_by_name
+        .get(embedding.as_str())
+        .ok_or_else(|| format!("source container has no tensor {embedding}"))?;
+    if embedding_header.shape.len() != 2 {
+        return Err(format!(
+            "{embedding} is rank {}, region reads need rank 2",
+            embedding_header.shape.len()
+        ));
+    }
+    let embedding_id = store
+        .resolve_components(&[dir_name.as_bytes(), embedding.as_bytes()])
+        .map_err(|err| format!("resolve {dir_name}/{embedding}: {err}"))?;
+    let embedding_bytes = read_tensor_bytes(&source, embedding_header)?;
+    let rows = embedding_header.shape[0];
+    let cols = embedding_header.shape[1];
+    let element = element_bytes(&embedding_header.dtype) as usize;
+    let regions = [
+        ("whole", vec![0, 0], vec![rows, cols]),
+        ("rows_100", vec![0, 0], vec![rows.min(100), cols]),
+        ("row_1", vec![0, 0], vec![rows.min(1), cols]),
+    ];
+    let mut region_rows = Vec::new();
+    for (label, start, end) in regions {
+        let region = weftcodec::Region::new(start, end);
+        let expected = region_bytes(&embedding_bytes, &embedding_header.shape, &region, element);
+        let region_before = store.backend_stats();
+        let region_started = Instant::now();
+        let (read, stats) = store
+            .read_tensor_region_with_options_and_stats(embedding_id, &region, &options)
+            .map_err(|err| format!("region {label}: {err}"))?;
+        let ms = region_started.elapsed().as_secs_f64() * 1000.0;
+        let region_after = store.backend_stats();
+        region_rows.push(json!({
+            "label": label,
+            "shape": read.shape,
+            "bytes": read.bytes.len(),
+            "ms": round(ms),
+            "exact": read.bytes == expected,
+            "tiles_touched": read.units_touched,
+            "tile_stats": tile_stats_json(&stats),
+            "backend_bytes_read": region_after.bytes_read.saturating_sub(region_before.bytes_read),
+            "backend_range_reads": region_after.range_reads.saturating_sub(region_before.range_reads),
+        }));
+    }
+
+    let receipt = json!({
+        "schema": "weft.tiled-parallel.v1",
+        "phase": "tiled",
+        "config": config,
+        "checkpoint": checkpoint,
+        "threads": threads,
+        "effective_threads": weftfs::effective_threads(threads),
+        "max_inflight_bytes": options.max_inflight_bytes,
+        "open_ms": round(open_ms),
+        "store": store_path.display().to_string(),
+        "source": {
+            "path": source_path.display().to_string(),
+            "sha256": source_sha256.clone(),
+            "tensor_count": source.tensors.len(),
+        },
+        "storage": storage,
+        "restore": {
+            "tensors": records.len(),
+            "read_ms": round(read_ms),
+            "restored_bytes": restored_bytes,
+            "hash_exact": hash_mismatches.is_empty(),
+            "hash_mismatches": hash_mismatches,
+            "logical_root_check_ms": round(root_ms),
+            "logical_roots_exact": root_mismatches.is_empty(),
+            "logical_root_mismatches": root_mismatches,
+            "tile_stats": read_stats.to_json(&options),
+            "observed_strategy_count": strategy_count,
+            "backend": {
+                "bytes_read": after.bytes_read.saturating_sub(before.bytes_read),
+                "reads": after.reads.saturating_sub(before.reads),
+                "range_reads": after.range_reads.saturating_sub(before.range_reads),
+            },
+        },
+        "materialize": {
+            "path": out_file.display().to_string(),
+            "ms": round(materialize_ms),
+            "bytes": materialized_bytes,
+            "sha256": reassembled_sha256,
+            "source_sha256": source_sha256,
+            "exact": materialize_exact,
+            "tile_stats": materialize_stats.to_json(&options),
+            "removed": remove_materialized,
+        },
+        "region_reads": {
+            "tensor": embedding,
+            "rows": region_rows,
+        },
         "peak_rss_kib": peak_rss_kib(),
     });
     fs::write(

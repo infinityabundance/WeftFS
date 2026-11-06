@@ -60,7 +60,8 @@ pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
 pub use parallel::{
-    effective_threads, ParallelReadOptions, ParallelReadStats, DEFAULT_MAX_INFLIGHT_BYTES,
+    effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
+    DEFAULT_MAX_INFLIGHT_BYTES,
 };
 pub use provenance::{
     choose_recovery, Determinism, NoEligibleStrategy, ProvenanceClosure, ProvenanceEnvironment,

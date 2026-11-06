@@ -238,6 +238,10 @@ enum Command {
         /// Also selects the tiled strategy explicitly.
         #[arg(long = "tile-shape")]
         tile_shape: Option<String>,
+        /// Derive a dividing mode-15 tile shape from this canonical tile-byte
+        /// budget and offer it to the planner.
+        #[arg(long = "auto-tile-bytes")]
+        auto_tile_bytes: Option<u64>,
     },
     /// Write file bytes to stdout.
     Cat {
@@ -249,6 +253,9 @@ enum Command {
         /// Logical tensor hyper-rectangle `s0,s1:e0,e1` (row-major).
         #[arg(long)]
         region: Option<String>,
+        /// Tile decode workers for a mode-15 tensor read (0 and 1 mean one).
+        #[arg(long, default_value_t = 1)]
+        threads: usize,
         /// Verified capability envelope blob; the read is denied unless it
         /// authorizes the object in addition to POSIX permissions.
         #[arg(long)]
@@ -290,6 +297,10 @@ enum Command {
         /// Tile extents for the mode-15 `TENSOR_TILED` candidate (comma-separated).
         #[arg(long = "tile-shape")]
         tile_shape: Option<String>,
+        /// Derive a dividing mode-15 tile shape from this canonical tile-byte
+        /// budget and offer it to the planner.
+        #[arg(long = "auto-tile-bytes")]
+        auto_tile_bytes: Option<u64>,
     },
     /// List a directory.
     Ls { path: String },
@@ -1269,6 +1280,7 @@ fn run(cli: Cli) -> Result<()> {
             semantic_policy,
             candidates,
             tile_shape,
+            auto_tile_bytes,
         } => {
             let bytes = read_input(text, input_file)?;
             let causal = parse_causal_entries(causal.as_deref())?;
@@ -1297,6 +1309,7 @@ fn run(cli: Cli) -> Result<()> {
                         cost_model: planner_cost_model,
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                         candidates: parse_object_ids(candidates.as_deref())?,
+                        auto_tile_bytes,
                         ..TensorPlanOptions::default()
                     },
                     tile_shape: match tile_shape.as_deref() {
@@ -1318,6 +1331,7 @@ fn run(cli: Cli) -> Result<()> {
                         "shape": meta.shape,
                         "layout": meta.layout.name(),
                         "strategy": meta.strategy,
+                        "tile_shape": meta.tile_shape,
                         "logical_root": meta.logical_root.to_hex(),
                         "size": bytes.len(),
                         "generation": store.generation(),
@@ -1355,6 +1369,7 @@ fn run(cli: Cli) -> Result<()> {
             semantic_policy,
             candidates,
             tile_shape,
+            auto_tile_bytes,
         } => {
             let bytes = fs::read(&input_file)
                 .map_err(|err| Error::io(format!("cannot read {}: {err}", input_file.display())))?;
@@ -1376,6 +1391,7 @@ fn run(cli: Cli) -> Result<()> {
                     Some(text) => Some(parse_u64_list(text, "--tile-shape")?),
                     None => None,
                 },
+                auto_tile_bytes,
                 ..TensorPlanOptions::default()
             };
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
@@ -1442,6 +1458,7 @@ fn run(cli: Cli) -> Result<()> {
             offset,
             len,
             region,
+            threads,
             envelope,
             revocations,
             uid,
@@ -1463,11 +1480,23 @@ fn run(cli: Cli) -> Result<()> {
                 // POSIX rules must both allow this object.
                 store.exact_id_object(id, None, &principal, store.clock_now_ns())?;
             }
+            let tile_options = weftfs::TileDecodeOptions {
+                threads,
+                ..weftfs::TileDecodeOptions::default()
+            };
             let bytes = if let Some(region) = region {
                 let region = parse_region(&region)?;
-                store.read_tensor_region(id, &region)?.bytes
+                store
+                    .read_tensor_region_with_options(id, &region, &tile_options)?
+                    .bytes
             } else if offset == 0 && len.is_none() {
-                store.read_object(id)?
+                // `--threads` only changes mode-15 tensor reads; every other
+                // object keeps the shipped byte read.
+                if threads > 1 && store.tensor_metadata(id).is_ok() {
+                    store.read_tensor_with_options(id, &tile_options)?
+                } else {
+                    store.read_object(id)?
+                }
             } else {
                 store.read_range(id, offset, len.unwrap_or(u64::MAX))?
             };

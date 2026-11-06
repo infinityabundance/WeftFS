@@ -33,6 +33,7 @@ use weftcodec::{Limits, SemanticPolicy};
 use crate::error::{Error, Result};
 use crate::format::{Manifest, Representation, RepresentationKind, TensorRepresentation};
 use crate::identity::{self, Hash32};
+use crate::parallel::{run_bounded, BoundedRunStats, TileDecodeOptions, TileDecodeStats};
 use crate::recovery::{self, BlobKind};
 use crate::representation::{TensorElementDtype, MAX_CODEC_DEPENDENCY_DEPTH};
 use crate::state::{ObjectKind, ObjectRecord, State};
@@ -50,6 +51,9 @@ pub const ATTR_TENSOR_LOGICAL_ROOT: &str = "weft.tensor.logical_root";
 pub const ATTR_TENSOR_LAYOUT: &str = "weft.tensor.layout";
 /// Reserved object attribute holding the chosen representation strategy name.
 pub const ATTR_TENSOR_STRATEGY: &str = "weft.tensor.strategy";
+/// Reserved object attribute holding the derived/explicit mode-15 tile extents
+/// as an array of u64. Absent for every non-tiled representation.
+pub const ATTR_TENSOR_TILE_SHAPE: &str = "weft.tensor.tile_shape";
 
 /// Default bound on the semantic-delta candidate search.
 pub const DEFAULT_TENSOR_MAX_CANDIDATES: usize = 16;
@@ -458,9 +462,14 @@ pub struct TensorPlanOptions {
     /// exactly this list instead of scanning live tensor objects.
     pub candidates: Vec<Hash32>,
     /// Tile extents for the mode-15 `TENSOR_TILED` candidate. `None` skips
-    /// mode 15 entirely, which keeps existing objects on their current
-    /// representations.
+    /// mode 15 entirely unless `auto_tile_bytes` is set, which keeps existing
+    /// objects on their current representations.
     pub tile_shape: Option<Vec<u64>>,
+    /// Opt-in automatic mode-15 tile derivation. When set and `tile_shape` is
+    /// `None`, the planner derives a dividing tile shape whose canonical tile
+    /// bytes fit in this budget and offers mode 15 alongside the other
+    /// candidates. `None` (the default) never offers mode 15 implicitly.
+    pub auto_tile_bytes: Option<u64>,
 }
 
 impl Default for TensorPlanOptions {
@@ -472,6 +481,7 @@ impl Default for TensorPlanOptions {
             max_candidates: DEFAULT_TENSOR_MAX_CANDIDATES,
             candidates: Vec::new(),
             tile_shape: None,
+            auto_tile_bytes: None,
         }
     }
 }
@@ -548,6 +558,10 @@ pub struct StoredTensorMetadata {
     pub logical_root: Hash32,
     pub layout: TensorLayoutSpec,
     pub strategy: String,
+    /// Tile extents recorded for a mode-15 `TENSOR_TILED` representation.
+    /// `None` for every other representation and for mode-15 objects written
+    /// before the attribute existed.
+    pub tile_shape: Option<Vec<u64>>,
 }
 
 #[derive(Clone, Debug)]
@@ -557,6 +571,8 @@ struct PreparedArtifact {
     frame: Option<Vec<u8>>,
     dependencies: Vec<Hash32>,
     tensor: Option<TensorRepresentation>,
+    /// Tile extents for a mode-15 artifact, recorded in the object attributes.
+    tile_shape: Option<Vec<u64>>,
 }
 
 #[derive(Clone, Debug)]
@@ -578,6 +594,130 @@ fn estimated_decode_ns(
 
 fn price(physical_bytes: u64, estimated_ns: u64, lambda_ns: u64) -> u128 {
     u128::from(physical_bytes) + u128::from(lambda_ns) * u128::from(estimated_ns)
+}
+
+/// Project the generic bounded-run counters onto the tile-facing stats type.
+fn tile_stats(run: &BoundedRunStats) -> TileDecodeStats {
+    TileDecodeStats {
+        requested_threads: run.requested_threads,
+        effective_threads: run.effective_threads,
+        tiles: run.tasks,
+        max_inflight_bytes: run.max_inflight_bytes,
+        observed_max_inflight_bytes: run.observed_max_inflight_bytes,
+        observed_max_inflight_tasks: run.observed_max_inflight_tasks,
+        oversized_tiles: run.oversized_tasks,
+    }
+}
+
+/// Ascending positive divisors of `n` (`n >= 1`).
+fn positive_divisors(n: u64) -> Vec<u64> {
+    let mut small = Vec::new();
+    let mut large = Vec::new();
+    let mut d = 1u64;
+    while d.checked_mul(d).map(|square| square <= n).unwrap_or(false) {
+        if n % d == 0 {
+            small.push(d);
+            let other = n / d;
+            if other != d {
+                large.push(other);
+            }
+        }
+        d += 1;
+    }
+    large.reverse();
+    small.extend(large);
+    small
+}
+
+/// `(max, min)` of a tile pair; `min` is never zero because divisors are >= 1.
+fn tile_balance(a: u64, b: u64) -> (u64, u64) {
+    if a >= b {
+        (a, b)
+    } else {
+        (b, a)
+    }
+}
+
+/// Derive a mode-15 tile shape from a byte budget.
+///
+/// Mode 15 defines full tiles only, so every tile extent must divide the
+/// corresponding logical extent exactly. This searches the divisors of each
+/// extent and chooses the pair whose element count is the largest at or below
+/// `budget_bytes / dtype.element_bytes()`. Ties go to the more balanced pair
+/// (the smaller max/min extent ratio, compared without floats) and then to the
+/// lexicographically smaller pair.
+///
+/// v1 implements this for rank-2 tensors; any other rank returns a typed error
+/// naming the shape rather than guessing a padding rule.
+pub fn derive_auto_tile_shape(
+    shape: &[u64],
+    dtype: TensorElementDtype,
+    budget_bytes: u64,
+) -> Result<Vec<u64>> {
+    if shape.len() != 2 {
+        return Err(Error::invalid_argument(format!(
+            "auto-tile derivation requires a rank-2 tensor; shape {shape:?} has rank {}",
+            shape.len()
+        )));
+    }
+    let (rows, cols) = (shape[0], shape[1]);
+    if rows == 0 || cols == 0 {
+        return Err(Error::invalid_argument(format!(
+            "auto-tile derivation needs non-zero extents, got {rows} and {cols}"
+        )));
+    }
+    let element_bytes = dtype.element_bytes();
+    let capacity = budget_bytes / element_bytes;
+    if capacity == 0 {
+        return Err(Error::invalid_argument(format!(
+            "auto-tile budget {budget_bytes} B is smaller than one {} element ({element_bytes} B) \
+             for extents {rows} and {cols}",
+            dtype.as_str()
+        )));
+    }
+    let row_divisors = positive_divisors(rows);
+    let col_divisors = positive_divisors(cols);
+    let mut best: Option<(u64, u64, u64)> = None;
+    for &r in &row_divisors {
+        for &c in &col_divisors {
+            let Some(elements) = r.checked_mul(c) else {
+                continue;
+            };
+            if elements > capacity {
+                continue;
+            }
+            let candidate = (elements, r, c);
+            let replace = match best {
+                None => true,
+                Some(current) => {
+                    if candidate.0 != current.0 {
+                        candidate.0 > current.0
+                    } else {
+                        let (c_max, c_min) = tile_balance(candidate.1, candidate.2);
+                        let (b_max, b_min) = tile_balance(current.1, current.2);
+                        let left = u128::from(c_max) * u128::from(b_min);
+                        let right = u128::from(b_max) * u128::from(c_min);
+                        if left != right {
+                            left < right
+                        } else {
+                            (candidate.1, candidate.2) < (current.1, current.2)
+                        }
+                    }
+                }
+            };
+            if replace {
+                best = Some(candidate);
+            }
+        }
+    }
+    let (_, r, c) = best.ok_or_else(|| {
+        Error::invalid_argument(format!(
+            "no divisor pair of extents {rows} and {cols} fits the {capacity}-element tile budget \
+             ({budget_bytes} B / {element_bytes} B per {} element)",
+            dtype.as_str()
+        ))
+    })?;
+    Ok(vec![r, c])
 }
 
 /// Build the self-contained mode-6 `TENSOR` frame used as a delta base.
@@ -718,6 +858,7 @@ impl Store {
             root,
             layout,
             artifact.strategy_name.as_str(),
+            artifact.tile_shape.as_deref(),
         )?;
         let seed = identity::os_random_32()?;
         let (owner_uid, owner_gid) = (self.options().owner_uid, self.options().owner_gid);
@@ -873,6 +1014,7 @@ impl Store {
             root,
             &meta.layout,
             artifact.strategy_name.as_str(),
+            artifact.tile_shape.as_deref(),
         )?;
         let causal = vec![old.version];
         let old_content = old.content;
@@ -903,19 +1045,34 @@ impl Store {
     }
 
     /// Read one tensor object's canonical logical bytes.
+    ///
+    /// This is the default [`TileDecodeOptions`] form (`threads = 1`), so it is
+    /// byte- and cost-equivalent to the shipped sequential read.
     pub fn read_tensor(&self, id: Hash32) -> Result<Vec<u8>> {
-        self.tensor_metadata(id)?;
-        self.read_object(id)
+        self.read_tensor_with_options(id, &TileDecodeOptions::default())
     }
 
-    /// Read a logical hyper-rectangle of a tensor object in row-major order.
+    /// Read one tensor object with an explicit mode-15 tile worker bound.
     ///
-    /// A mode-15 `TENSOR_TILED` object reads only the byte ranges of the tiles
-    /// the region intersects and decodes only those tiles. Every other tensor
-    /// representation is not independently seekable, so the whole object is
-    /// decoded before the region is sliced; the returned region is exact and
-    /// the touched-unit count is one.
-    pub fn read_tensor_region(&self, id: Hash32, region: &Region) -> Result<RegionRead> {
+    /// A mode-15 `TENSOR_TILED` object decodes its tiles on the bounded pool and
+    /// still verifies every tile root, the assembled logical root, and the
+    /// whole-content hash. Every other representation has no independent tile
+    /// unit, so it falls back to the shipped sequential read.
+    pub fn read_tensor_with_options(
+        &self,
+        id: Hash32,
+        options: &TileDecodeOptions,
+    ) -> Result<Vec<u8>> {
+        self.read_tensor_with_options_and_stats(id, options)
+            .map(|(bytes, _stats)| bytes)
+    }
+
+    /// [`Store::read_tensor_with_options`] plus the observed tile counters.
+    pub fn read_tensor_with_options_and_stats(
+        &self,
+        id: Hash32,
+        options: &TileDecodeOptions,
+    ) -> Result<(Vec<u8>, TileDecodeStats)> {
         let record = self.object_meta(id)?;
         let manifest =
             self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
@@ -926,7 +1083,62 @@ impl Store {
                         let frame_id = rep.frame.ok_or_else(|| {
                             Error::corrupt("tensor representation has no frame id")
                         })?;
-                        return self.read_tiled_region(frame_id, tensor, region);
+                        let (bytes, stats) =
+                            self.read_tiled_object(frame_id, tensor, &manifest, rep, options)?;
+                        self.note_object_read(id);
+                        return Ok((bytes, stats));
+                    }
+                }
+            }
+        }
+        // Non-tiled representation: the shipped sequential read, which verifies
+        // the whole-content hash. `tensor_metadata` keeps the historical
+        // "object is not a tensor" error for non-tensor files.
+        self.tensor_metadata(id)?;
+        let bytes = self.read_object(id)?;
+        Ok((bytes, TileDecodeStats::none(options)))
+    }
+
+    /// Read a logical hyper-rectangle of a tensor object in row-major order.
+    ///
+    /// A mode-15 `TENSOR_TILED` object reads only the byte ranges of the tiles
+    /// the region intersects and decodes only those tiles, in canonical tile
+    /// order. Every other tensor representation is not independently seekable,
+    /// so the whole object is decoded before the region is sliced; the returned
+    /// region is exact and the touched-unit count is one.
+    pub fn read_tensor_region(&self, id: Hash32, region: &Region) -> Result<RegionRead> {
+        self.read_tensor_region_with_options(id, region, &TileDecodeOptions::default())
+    }
+
+    /// Region read with an explicit mode-15 tile worker bound.
+    pub fn read_tensor_region_with_options(
+        &self,
+        id: Hash32,
+        region: &Region,
+        options: &TileDecodeOptions,
+    ) -> Result<RegionRead> {
+        self.read_tensor_region_with_options_and_stats(id, region, options)
+            .map(|(read, _stats)| read)
+    }
+
+    /// [`Store::read_tensor_region_with_options`] plus the observed counters.
+    pub fn read_tensor_region_with_options_and_stats(
+        &self,
+        id: Hash32,
+        region: &Region,
+        options: &TileDecodeOptions,
+    ) -> Result<(RegionRead, TileDecodeStats)> {
+        let record = self.object_meta(id)?;
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        if let Some(rep) = &manifest.representation {
+            if rep.kind == RepresentationKind::Tensor {
+                if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 15 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        return self.read_tiled_region(frame_id, tensor, region, options);
                     }
                 }
             }
@@ -938,9 +1150,43 @@ impl Store {
             .physical_tensor_dtype()
             .ok_or_else(|| Error::unsupported_version("tensor dtype has no physical layout"))?;
         let tensor = PhysicalTensor::row_major(physical, &meta.shape, bytes, &Limits::default())?;
-        tensor
+        let read = tensor
             .read_region_with_limits(region, &Limits::default())
-            .map_err(Error::from)
+            .map_err(Error::from)?;
+        Ok((read, TileDecodeStats::none(options)))
+    }
+
+    /// Decode a complete mode-15 object from its verified frame blob.
+    fn read_tiled_object(
+        &self,
+        frame_id: Hash32,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        rep: &Representation,
+        options: &TileDecodeOptions,
+    ) -> Result<(Vec<u8>, TileDecodeStats)> {
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
+        let limits = Limits::default();
+        let frame = Frame::parse(&frame_bytes, &limits)?;
+        if frame.header.mode != Mode::TensorTiled {
+            return Err(Error::corrupt(format!(
+                "tensor representation mode 15 has frame mode `{}`",
+                frame.header.mode.as_str()
+            )));
+        }
+        let (logical, stats) =
+            self.decode_mode15_with_options(&frame, tensor, manifest, rep, options)?;
+        if identity::content_hash(&logical) != manifest.content_hash {
+            return Err(Error::corrupt("whole-content hash mismatch"));
+        }
+        Ok((logical, stats))
     }
 
     /// Region read for a mode-15 object using per-tile backend range reads.
@@ -949,12 +1195,15 @@ impl Store {
     /// intersecting tiles are read. Each decoded tile is verified against its
     /// own `tile_root`; the descriptor's dtype, shape and logical root are
     /// checked against the representation manifest before any tile is read.
+    /// This path deliberately does **not** re-verify the whole-frame trailer or
+    /// content hash: it ranges over a frame it never reads in full.
     fn read_tiled_region(
         &self,
         frame_id: Hash32,
         tensor: &TensorRepresentation,
         region: &Region,
-    ) -> Result<RegionRead> {
+        options: &TileDecodeOptions,
+    ) -> Result<(RegionRead, TileDecodeStats)> {
         let limits = Limits::default();
         let key = crate::backend::Key::manifest(frame_id);
 
@@ -1032,28 +1281,68 @@ impl Store {
                 "mode-15 logical_root disagrees with the manifest logical_root",
             ));
         }
-        let payload_base = prefix_len;
-        let mut captured: Option<Error> = None;
-        let outcome = weftcodec::modes::read_region_with(&meta, region, &limits, |entry| {
-            let offset = payload_base
-                .checked_add(entry.offset)
-                .ok_or_else(|| weftcodec::Error::corrupt("tile offset overflows"))?;
-            match self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len)) {
-                Ok(bytes) => Ok(bytes),
-                Err(err) => {
-                    captured = Some(err);
-                    Err(weftcodec::Error::corrupt("tile range read failed"))
-                }
-            }
-        });
-        match outcome {
-            Ok((bytes, tiles)) => Ok(RegionRead {
-                shape: region.extent(),
-                bytes,
-                units_touched: tiles,
-            }),
-            Err(err) => Err(captured.unwrap_or_else(|| Error::from(err))),
+
+        let indices = weftcodec::tiled_region_indices(&meta, region)?;
+        if indices.is_empty() {
+            return Ok((
+                RegionRead {
+                    shape: region.extent(),
+                    bytes: Vec::new(),
+                    units_touched: 0,
+                },
+                TileDecodeStats::none(options),
+            ));
         }
+        let extent = region.extent();
+        let element_size = meta.dtype.element_size();
+        let count = extent.iter().try_fold(1u64, |acc, dim| {
+            acc.checked_mul(*dim)
+                .ok_or_else(|| Error::limit_exceeded("region element count overflows u64"))
+        })?;
+        let byte_len = count
+            .checked_mul(element_size)
+            .ok_or_else(|| Error::limit_exceeded("region payload length overflows u64"))?;
+        weftcodec::limits::check_len(byte_len, limits.max_decoded_bytes, "region payload")?;
+        let byte_len = usize::try_from(byte_len)
+            .map_err(|_| Error::limit_exceeded("region payload does not fit usize"))?;
+        let mut out = vec![0u8; byte_len];
+
+        let sizes: Vec<Result<usize>> = indices
+            .iter()
+            .map(|index| {
+                usize::try_from(meta.tiles[*index].element_len)
+                    .map_err(|_| Error::limit_exceeded("tensor tile length does not fit usize"))
+            })
+            .collect();
+        let payload_base = prefix_len;
+        let (tiles, run) = run_bounded(
+            &indices,
+            &sizes,
+            options.threads,
+            options.max_inflight_bytes,
+            |_position, index| {
+                let entry = &meta.tiles[*index];
+                let offset = payload_base
+                    .checked_add(entry.offset)
+                    .ok_or_else(|| Error::limit_exceeded("tile offset overflows"))?;
+                let stored =
+                    self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len))?;
+                weftcodec::decode_tiled_tile(meta.dtype, entry, &stored, &limits)
+                    .map_err(Error::from)
+            },
+            |tile| tile.len(),
+        )?;
+        for (index, tile) in indices.iter().zip(tiles.iter()) {
+            weftcodec::place_tiled_tile_region(&mut out, region, &meta, &meta.tiles[*index], tile)?;
+        }
+        Ok((
+            RegionRead {
+                shape: extent,
+                bytes: out,
+                units_touched: indices.len() as u64,
+            },
+            tile_stats(&run),
+        ))
     }
 
     /// Recompute and verify an object's `LogicalTensorRoot`.
@@ -1198,6 +1487,7 @@ impl Store {
                     logical_root: tensor.logical_root,
                     layout,
                     strategy: rep.strategy.clone(),
+                    tile_shape: tile_shape_attr(record)?,
                 });
             }
         }
@@ -1243,6 +1533,7 @@ impl Store {
             logical_root,
             layout,
             strategy,
+            tile_shape: tile_shape_attr(record)?,
         })
     }
 
@@ -1307,6 +1598,7 @@ impl Store {
             root,
             &meta.layout,
             artifact.strategy_name.as_str(),
+            artifact.tile_shape.as_deref(),
         )?;
         self.publish_file_version_with_attrs(
             id,
@@ -1377,6 +1669,7 @@ impl Store {
                     frame: None,
                     dependencies: Vec::new(),
                     tensor: None,
+                    tile_shape: None,
                 }),
             }
         });
@@ -1416,6 +1709,7 @@ impl Store {
                             frame: Some(frame),
                             dependencies: Vec::new(),
                             tensor: None,
+                            tile_shape: None,
                         }),
                     });
                 }
@@ -1487,6 +1781,7 @@ impl Store {
                                         logical_root: root,
                                         layout: layout.to_value(dtype, shape)?,
                                     }),
+                                    tile_shape: None,
                                 }),
                             });
                         }
@@ -1534,6 +1829,7 @@ impl Store {
                                 logical_root: root,
                                 layout: layout.to_value(dtype, shape)?,
                             }),
+                            tile_shape: None,
                         }),
                     });
                 }
@@ -1550,11 +1846,26 @@ impl Store {
         }
 
         // Mode 15 tensor-tiled. The tiled representation is never planned
-        // implicitly: a caller must name the tile shape, so existing objects
-        // stay on mode 10 / zstd / raw.
-        match tile_shape {
-            Some(tile_shape) => {
-                match self.prepare_mode15(dtype, shape, logical, tile_shape, &limits) {
+        // implicitly: a caller must name the tile shape or opt into
+        // `auto_tile_bytes`, so existing objects stay on mode 10 / zstd / raw.
+        let tiled = match tile_shape {
+            Some(tile_shape) => Some((tile_shape.to_vec(), "explicit".to_owned())),
+            None => match options.auto_tile_bytes {
+                Some(budget) => match derive_auto_tile_shape(shape, dtype, budget) {
+                    Ok(tile_shape) => {
+                        Some((tile_shape, format!("auto from a {budget}-byte budget")))
+                    }
+                    Err(err) => {
+                        out.push(skipped(TensorStrategy::TensorTiled, err.to_string()));
+                        None
+                    }
+                },
+                None => None,
+            },
+        };
+        match tiled {
+            Some((tile_shape, origin)) => {
+                match self.prepare_mode15(dtype, shape, logical, &tile_shape, &limits) {
                     Ok((frame, root)) => {
                         let physical = frame.len() as u64;
                         let estimate = estimated_decode_ns(
@@ -1566,7 +1877,9 @@ impl Store {
                             candidate: TensorPlanCandidate {
                                 strategy: TensorStrategy::TensorTiled,
                                 applicable: true,
-                                detail: format!("one mode-15 frame tiled {:?}", tile_shape),
+                                detail: format!(
+                                    "one mode-15 frame tiled {tile_shape:?} ({origin})"
+                                ),
                                 physical_bytes: Some(physical),
                                 estimated_decode_ns: Some(estimate),
                                 cost: Some(price(physical, estimate, options.lambda_ns)),
@@ -1584,16 +1897,21 @@ impl Store {
                                     logical_root: root,
                                     layout: layout.to_value(dtype, shape)?,
                                 }),
+                                tile_shape: Some(tile_shape),
                             }),
                         });
                     }
                     Err(err) => out.push(skipped(TensorStrategy::TensorTiled, err.to_string())),
                 }
             }
-            None => out.push(skipped(
-                TensorStrategy::TensorTiled,
-                "no tile shape supplied".to_owned(),
-            )),
+            None => {
+                if options.auto_tile_bytes.is_none() {
+                    out.push(skipped(
+                        TensorStrategy::TensorTiled,
+                        "no tile shape supplied".to_owned(),
+                    ));
+                }
+            }
         }
 
         // Mode 11 weight-delta against the causal parent.
@@ -1638,6 +1956,7 @@ impl Store {
                                     .logical_root_for_bytes(dtype, shape, logical, None)?,
                                 layout: layout.to_value(dtype, shape)?,
                             }),
+                            tile_shape: None,
                         }),
                     });
                 }
@@ -1694,6 +2013,7 @@ impl Store {
                                     .logical_root_for_bytes(dtype, shape, logical, None)?,
                                 layout: layout.to_value(dtype, shape)?,
                             }),
+                            tile_shape: None,
                         }),
                     });
                 }
@@ -1745,6 +2065,7 @@ impl Store {
                                     .logical_root_for_bytes(dtype, shape, logical, None)?,
                                 layout: layout.to_value(dtype, shape)?,
                             }),
+                            tile_shape: None,
                         }),
                     });
                 }
@@ -2274,7 +2595,7 @@ impl Store {
             }
             12 => self.decode_kv_page(&frame, tensor, &limits)?,
             13 => self.decode_activation(&frame, tensor, &limits)?,
-            15 => self.decode_mode15(&frame, tensor, manifest, &limits)?,
+            15 => self.decode_mode15(&frame, tensor, manifest, rep, &limits)?,
             _ => unreachable!("checked above"),
         };
         if logical.len() as u64 != manifest.size || logical.len() as u64 != rep.decoded_size {
@@ -2406,14 +2727,35 @@ impl Store {
         Ok(words.iter().map(|word| *word as u8).collect())
     }
 
+    /// Sequential form used by the generic `kind:"tensor"` read dispatch.
     fn decode_mode15(
         &self,
         frame: &Frame<'_>,
         tensor: &TensorRepresentation,
         manifest: &Manifest,
-        limits: &Limits,
+        rep: &Representation,
+        _limits: &Limits,
     ) -> Result<Vec<u8>> {
-        let meta = weftcodec::tiled_tensor_metadata(frame, limits)?;
+        self.decode_mode15_with_options(frame, tensor, manifest, rep, &TileDecodeOptions::default())
+            .map(|(bytes, _stats)| bytes)
+    }
+
+    /// Decode a mode-15 frame, optionally on a bounded tile worker pool.
+    ///
+    /// Every tile root is verified, the assembled logical root is recomputed,
+    /// and the declared lengths are checked. Order is deterministic because the
+    /// tiles are placed in descriptor order regardless of completion order.
+    fn decode_mode15_with_options(
+        &self,
+        frame: &Frame<'_>,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        rep: &Representation,
+        options: &TileDecodeOptions,
+    ) -> Result<(Vec<u8>, TileDecodeStats)> {
+        let limits = Limits::default();
+        let descriptor = weftcodec::parse_tiled_tensor(frame, &limits)?;
+        let meta = &descriptor.meta;
         let physical = tensor
             .dtype
             .physical_tensor_dtype()
@@ -2435,13 +2777,68 @@ impl Store {
                 "mode-15 logical_root disagrees with the manifest logical_root",
             ));
         }
-        let logical = weftcodec::decode_tiled_tensor(frame, limits)?;
-        if logical.len() as u64 != manifest.size {
+        let total_u64 = meta
+            .element_count
+            .checked_mul(meta.dtype.element_size())
+            .ok_or_else(|| Error::limit_exceeded("tiled tensor decoded bytes overflow u64"))?;
+        if total_u64 != manifest.size || total_u64 != rep.decoded_size {
             return Err(Error::corrupt(
                 "mode-15 decoded length disagrees with the manifest",
             ));
         }
-        Ok(logical)
+        let total = usize::try_from(total_u64)
+            .map_err(|_| Error::limit_exceeded("tiled tensor decoded bytes do not fit usize"))?;
+        let mut out = vec![0u8; total];
+        let sizes: Vec<Result<usize>> = meta
+            .tiles
+            .iter()
+            .map(|entry| {
+                usize::try_from(entry.element_len)
+                    .map_err(|_| Error::limit_exceeded("tensor tile length does not fit usize"))
+            })
+            .collect();
+        let (tiles, run) = run_bounded(
+            &meta.tiles,
+            &sizes,
+            options.threads,
+            options.max_inflight_bytes,
+            |_position, entry| {
+                let start = usize::try_from(entry.offset)
+                    .map_err(|_| Error::limit_exceeded("tensor tile offset does not fit usize"))?;
+                let end = start
+                    .checked_add(usize::try_from(entry.compressed_len).map_err(|_| {
+                        Error::limit_exceeded("tensor tile length does not fit usize")
+                    })?)
+                    .ok_or_else(|| Error::limit_exceeded("tensor tile range overflows usize"))?;
+                let stored = descriptor
+                    .payload
+                    .get(start..end)
+                    .ok_or_else(|| Error::corrupt("tensor tile range is outside the payload"))?;
+                weftcodec::decode_tiled_tile(meta.dtype, entry, stored, &limits)
+                    .map_err(Error::from)
+            },
+            |tile| tile.len(),
+        )?;
+        let mut tiles_bytes = 0usize;
+        for (entry, tile) in meta.tiles.iter().zip(tiles.iter()) {
+            tiles_bytes = tiles_bytes.checked_add(tile.len()).ok_or_else(|| {
+                Error::limit_exceeded("tiled tensor decoded length overflows usize")
+            })?;
+            weftcodec::place_tiled_tile(&mut out, meta, entry, tile)?;
+        }
+        if tiles_bytes != total {
+            return Err(Error::corrupt(format!(
+                "tiled tensor decoded to {tiles_bytes} bytes but the descriptor requires {total}"
+            )));
+        }
+        let logical = weftcodec::tensor::logical_root(meta.dtype, &meta.shape, &out, &limits)?;
+        if logical != meta.logical_root {
+            return Err(Error::corrupt(format!(
+                "tiled tensor logical root {logical} does not match the descriptor's {}",
+                meta.logical_root
+            )));
+        }
+        Ok((out, tile_stats(&run)))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2627,6 +3024,34 @@ fn skipped(strategy: TensorStrategy, detail: String) -> PreparedCandidate {
     }
 }
 
+fn tile_shape_attr(record: &ObjectRecord) -> Result<Option<Vec<u64>>> {
+    match record.attrs.get(ATTR_TENSOR_TILE_SHAPE) {
+        None => Ok(None),
+        Some(Value::Array(items)) => {
+            let mut shape = Vec::with_capacity(items.len());
+            for item in items {
+                match item {
+                    Value::U64(dim) if *dim > 0 => shape.push(*dim),
+                    Value::U64(_) => {
+                        return Err(Error::corrupt(
+                            "tensor tile_shape attribute contains a zero extent",
+                        ))
+                    }
+                    _ => {
+                        return Err(Error::corrupt(
+                            "tensor tile_shape attribute is not an array of u64",
+                        ))
+                    }
+                }
+            }
+            Ok(Some(shape))
+        }
+        Some(_) => Err(Error::corrupt(
+            "tensor tile_shape attribute is not an array",
+        )),
+    }
+}
+
 fn apply_tensor_attrs(
     attrs: &mut BTreeMap<String, Value>,
     dtype: TensorElementDtype,
@@ -2634,6 +3059,7 @@ fn apply_tensor_attrs(
     root: Hash32,
     layout: &TensorLayoutSpec,
     strategy: &str,
+    tile_shape: Option<&[u64]>,
 ) -> Result<()> {
     attrs.insert(
         ATTR_TENSOR_DTYPE.to_owned(),
@@ -2655,6 +3081,17 @@ fn apply_tensor_attrs(
         ATTR_TENSOR_STRATEGY.to_owned(),
         Value::Str(strategy.to_owned()),
     );
+    match tile_shape {
+        Some(tile_shape) => {
+            attrs.insert(
+                ATTR_TENSOR_TILE_SHAPE.to_owned(),
+                Value::Array(tile_shape.iter().map(|dim| Value::U64(*dim)).collect()),
+            );
+        }
+        None => {
+            attrs.remove(ATTR_TENSOR_TILE_SHAPE);
+        }
+    }
     Ok(())
 }
 

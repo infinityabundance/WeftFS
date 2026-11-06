@@ -839,7 +839,7 @@ impl Store {
 
     /// Record one successful object read in the advisory counter table and
     /// flush periodically. Never fails and never affects the read result.
-    fn note_object_read(&self, id: Hash32) {
+    pub(crate) fn note_object_read(&self, id: Hash32) {
         let mut guard = self
             .access
             .lock()
