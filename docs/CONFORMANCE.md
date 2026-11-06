@@ -220,13 +220,13 @@ Committed reference results (current manifest aggregate
 `1fc710a8…`, 326 entries, including mode 16 `SPARSE_DELTA`; receipts:
 `bench/receipts/conformance-rust-20261106T050554Z.json`,
 `bench/receipts/conformance-go-20261106T050630Z.json`,
-`bench/receipts/conformance-python-20261105T175000Z.json`):
+`bench/receipts/conformance-python-20261106T052855Z.json`):
 
 | Implementation | Pass | Fail | Skip |
 |---|---:|---:|---:|
 | Rust `weftcodec` | 224 | 0 | 102 |
 | Go `weftcodec` | 224 | 0 | 102 |
-| Python `weftcodec` | 56 | 0 | 239 |
+| Python `weftcodec` | 56 | 0 | 270 |
 
 No sparse-delta vector is skipped by either reference adapter. The earlier
 aggregate `3c981f03…` receipt pair (206/89) is superseded and retained.

@@ -1,0 +1,1094 @@
+{
+  "fail": 0,
+  "implementation": "scripts/conformance-adapter-python.sh",
+  "manifest": "conformance/manifest.json",
+  "manifest_aggregate_sha256": "1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0",
+  "mismatches": [],
+  "pass": 56,
+  "result": "pass",
+  "schema": "weft.conformance.run.v1",
+  "skip": 270,
+  "skips": [
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/001_activation_bf16_two_chunks.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/002_gradient_fp32_two_chunks.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/003_activation_fp16_single_chunk.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/101_unknown_dtype.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/102_unknown_stream.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/103_rank_not_below_world.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/104_chunk_index_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/105_element_count_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/106_digest_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/107_payload_len_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/activation-stream/108_decoded_len_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/001_declared_10gib.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/002_zstd_expansion_low_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/003_zstd_output_length_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/004_zstd_declared_4gib_body_one_byte.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/005_delta_copy_offset_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/006_delta_insert_length_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/007_delta_op_count_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/008_dependency_depth_chain.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/009_dependency_cycle_frame_source.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/010_dependency_cycle_archive.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/011_dependency_count_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/012_chunk_extent_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/013_chunk_overlap.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/014_chunk_gap.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/015_chunk_count_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/016_length_arithmetic_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/017_unknown_mode.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/018_unknown_critical_flag.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/019_unknown_critical_feature.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/020_non_minimal_varint_structured.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/021_overflow_varint_structured.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/022_wcb_depth_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/023_wcb_item_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/024_selector_depth_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/025_selector_input_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/026_archive_entry_count_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/027_archive_non_topological.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/028_archive_entry_count_absurd.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/029_dictionary_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/030_dictionary_size_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/031_reference_total_fetch_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/032_truncated_frame_99.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/033_truncated_frame_50.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/034_empty_frame.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/035_frame_size_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/adversarial/036_archive_truncated_short.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/001_valid_envelope.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/101_bad_signature.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/102_wrong_grantee.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/103_expired.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/104_revoked.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/capability/105_non_canonical.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/001_single_parent.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/003_three_parents.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/004_empty_closure.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/101_unsorted.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/102_duplicate.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode.json",
+      "reason": "superseded by 017_unknown_mode_reserved8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved10.json",
+      "reason": "superseded by 017_unknown_mode_reserved11"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved11.json",
+      "reason": "superseded by 017_unknown_mode_reserved12"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved12.json",
+      "reason": "superseded by 017_unknown_mode_reserved14"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved14.json",
+      "reason": "superseded by unknown_mode_reserved15"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json",
+      "reason": "superseded by 017_unknown_mode_reserved16"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json",
+      "reason": "superseded by 017_unknown_mode_reserved17"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved8.json",
+      "reason": "superseded by 017_unknown_mode_reserved9"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved9.json",
+      "reason": "superseded by 017_unknown_mode_reserved10"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/029_limits_exceeded.json",
+      "reason": "Python CLI does not expose lowered decoder limits"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/108_float_bf16_2x2.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/109_float_fp16_3d.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/110_float_fp32_4d.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/126_tensor_element_limit.json",
+      "reason": "Python CLI does not expose lowered decoder limits"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/127_tensor_rank_limit.json",
+      "reason": "Python CLI does not expose lowered decoder limits"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/135_tokens_count_limit.json",
+      "reason": "Python CLI does not expose lowered decoder limits"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/140_float_tensor_unknown_dtype.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/141_float_tensor_element_count_mismatch.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/142_float_tensor_rank_zero.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/143_float_tensor_zero_dimension.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/144_float_tensor_field_widths_mismatch.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/145_float_tensor_plane_length_overflow.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/146_float_tensor_unknown_exponent_coder.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/147_float_tensor_decoded_len_mismatch.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/148_float_tensor_exponent_over_subscribed.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/149_float_tensor_exponent_incomplete.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/150_float_tensor_exponent_code_length_too_long.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/151_float_tensor_exponent_nonzero_padding.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/152_float_tensor_exponent_table_truncated.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/codec/153_float_tensor_exponent_stream_truncated.json",
+      "reason": "Python reader implements modes 0-8"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/001_root_true.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/002_root_filter_budget.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/003_root_causal_capability.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/005_root_custom_resolver.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/006_root_empty_causal.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/context/110_unknown_key.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/001_bf16_two_pages.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/002_fp32_two_pages.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/003_bf16_seq_boundary.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/101_unknown_dtype.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/102_zero_dimension.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/103_page_index_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/104_seq_range_invalid.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/105_shape_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/106_page_bytes_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/107_seq_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/kv-cache/108_payload_len_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/001_select_true.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/002_select_false.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/003_select_not_false.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/004_select_not_not_true.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/006_select_tag_demo.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/001_bf16_near_duplicate.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/002_fp32_small_change.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/003_q8_0_mixed_changes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/101_base_semantic_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/102_policy_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/103_delta_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/104_missing_base.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/105_base_shape_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-delta/106_payload_length_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/105_levels_zero.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/001_q8_0_rank2_2shards.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/002_q4_0_rank3_4shards.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/003_q8_0_rank1_1shard.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/101_unknown_dtype.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/102_quant_scale_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/103_element_count_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/104_block_size_invalid.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/105_shape_not_divisible.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/106_index_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/107_duplicate_shard.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sharded/108_malformed_huffman.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/001_bf16_all_zero_delta.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/002_fp32_one_nonzero_word.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/003_q8_0_several_runs_to_the_end.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/004_fp16_dense_every_word.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/101_unknown_op.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/102_unknown_sparse_codec.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/103_storage_bytes_inconsistent.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/104_delta_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/105_base_dtype_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/106_base_shape_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/107_missing_base.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/108_run_count_exceeds_element_count.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/109_run_past_element_count.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/110_run_record_truncated.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/111_trailing_bytes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/112_zero_nonzero_word.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/113_run_count_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/sparse-delta/114_dependency_cycle.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/001_null.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/002_true.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/003_false.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/004_u64_zero.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/005_u64_max.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/006_i64_min.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/007_i64_neg_one.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/008_timestamp.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/009_text.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/010_bytes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/011_array.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/012_map.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/013_non_minimal_varint.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/016_non_text_map_key.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/017_trailing_bytes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/018_unknown_tag.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/019_truncated_text.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/structured/020_depth_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/001_tiled_bf16_4x4.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/002_tiled_fp32_2x2x2.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/003_tiled_f16_single_tile.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/101_non_dividing_tile_shape.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/102_tile_count_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/103_overlapping_tile_offsets.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/104_tile_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/105_payload_length_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/106_unknown_tile_codec.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/107_zero_dimension.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor-tiled/108_logical_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/002_logical_f32_3.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/001_bf16_small_changes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/002_fp32_zero_delta.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/003_q8_0_mixed_changes.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/101_base_dtype_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/102_base_shape_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/103_unknown_op.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/104_word_bits_inconsistent.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/105_delta_root_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/106_payload_length_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/107_missing_base.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "WeftCodec/conformance/v1/weight-delta/108_dependency_cycle.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/checkpoint/v1/101_unknown_schema.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/checkpoint/v1/103_duplicate_tensor.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/context/v1/causal_versions.json",
+      "reason": "Python adapter covers codec frame vectors only"
+    },
+    {
+      "path": "conformance/fuzz/v1/seeds.txt",
+      "reason": "composite fixture (use --include-fixtures)"
+    },
+    {
+      "path": "conformance/store/v1",
+      "reason": "composite fixture (use --include-fixtures)"
+    }
+  ],
+  "total": 326
+}
