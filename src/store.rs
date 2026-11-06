@@ -7716,6 +7716,11 @@ impl Store {
             let capabilities = backend.capabilities();
             capabilities.require_atomic_publish("commit publication")?;
             capabilities.require_durable_fsync("commit publication")?;
+            // Prove the writer still owns a valid lease *before* the commit
+            // record is published. A fenced-out writer fails here and leaves
+            // no commit record, no head change, and no mutated blob: every
+            // blob is create-once.
+            backend.verify_write_lease()?;
             // A blob plane may buffer small members in memory (packs). The
             // commit record must not name a blob that is not yet durable, so
             // flush before the record is published.
@@ -7746,6 +7751,12 @@ impl Store {
             let capabilities = backend.capabilities();
             capabilities.require_durable_fsync("superblock publication")?;
             capabilities.require_conditional_head("superblock publication")?;
+            // The fence sits as close to the head compare-and-swap as the
+            // backend's conditional writes allow: one atomic write on LOCK
+            // that names this head. A successor that reclaimed the lease makes
+            // it fail `Busy`, so the head is never written under a stale token.
+            // See `docs/RESULTS-fencing.md` for the exact atomicity statement.
+            backend.fence_head_publication(commit.generation, &hash)?;
             backend.publish_head(
                 expected,
                 commit.generation,

@@ -32,7 +32,7 @@
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{ErrorKind, Write};
-use std::os::unix::fs::{FileExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{FileExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
@@ -1000,6 +1000,27 @@ pub trait StorageBackend: Send {
     /// backend until it is dropped.
     fn acquire_writer_lock(&mut self) -> Result<()>;
 
+    /// Prove this handle may still publish, renewing a provider lease when one
+    /// is due, and fail closed when it may not.
+    ///
+    /// The default is a POSIX store with no lease: nothing to prove. `S3Backend`
+    /// implements it as one conditional write on the `LOCK` object whose
+    /// `If-Match` names the bytes this handle last published, so a successor
+    /// that reclaimed the lease makes it fail `Busy`. The store calls it before
+    /// the commit record is written and again immediately before the head
+    /// compare-and-swap.
+    fn verify_write_lease(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// The fenced form of [`Self::verify_write_lease`]: the same proof, and the
+    /// head it names as about to be published. A backend with one conditional
+    /// write per object falls back to the plain proof.
+    fn fence_head_publication(&mut self, generation: u64, commit: &Hash32) -> Result<()> {
+        let _ = (generation, commit);
+        self.verify_write_lease()
+    }
+
     /// Remove stale staging files older than `grace_secs`.
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()>;
 
@@ -1600,6 +1621,10 @@ impl StorageBackend for LocalBackend {
             .map_err(|err| Error::busy(format!("store is locked by another writer: {err}")))?;
         self.lock = Some(file);
         Ok(())
+    }
+
+    fn verify_write_lease(&mut self) -> Result<()> {
+        verify_lockfile_identity(&self.root.join("LOCK"), self.lock.as_ref())
     }
 
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
@@ -2272,6 +2297,13 @@ impl StorageBackend for ObjectBackend {
         Ok(())
     }
 
+    fn verify_write_lease(&mut self) -> Result<()> {
+        verify_lockfile_identity(
+            &self.root.join("objects").join("00").join("LOCK"),
+            self.lock.as_ref(),
+        )
+    }
+
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
         clean_stale_tmp_dir(&self.root.join("tmp"), grace_secs)
     }
@@ -2440,6 +2472,39 @@ fn list_flat(dir: &Path, kind: KeyKind) -> Result<Vec<Key>> {
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
+
+/// A POSIX writer's lease is its `flock` on the `LOCK` file. Prove the name
+/// still resolves to the exact inode this handle locked: replacing or removing
+/// the file hands the namespace to someone else, so a publication under the old
+/// handle must fail closed rather than write under a lock it no longer holds.
+fn verify_lockfile_identity(path: &Path, held: Option<&File>) -> Result<()> {
+    let Some(held) = held else {
+        return Err(Error::busy(
+            "writer holds no LOCK handle; refusing to publish without the writer lock",
+        ));
+    };
+    let locked = held
+        .metadata()
+        .map_err(|err| Error::io(format!("cannot stat the locked LOCK handle: {err}")))?;
+    let named = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            return Err(Error::busy(format!(
+                "LOCK {} was removed while this handle held it; refusing to publish",
+                path.display()
+            )))
+        }
+        Err(err) => return Err(Error::io(format!("cannot stat LOCK: {err}"))),
+    };
+    if locked.dev() != named.dev() || locked.ino() != named.ino() {
+        return Err(Error::busy(format!(
+            "LOCK {} was replaced while this handle held it; refusing to publish under a \
+             lock this writer does not hold",
+            path.display()
+        )));
+    }
+    Ok(())
+}
 
 fn create_lock_file(path: &Path) -> Result<()> {
     if path.exists() {
@@ -2756,6 +2821,16 @@ impl StorageBackend for CompositeBackend {
 
     fn acquire_writer_lock(&mut self) -> Result<()> {
         self.commits.acquire_lock()
+    }
+
+    fn verify_write_lease(&mut self) -> Result<()> {
+        // The writer lease belongs to the commit plane: it is the plane that
+        // owns `LOCK` and the head compare-and-swap.
+        self.commits.verify_write_lease()
+    }
+
+    fn fence_head_publication(&mut self, generation: u64, commit: &Hash32) -> Result<()> {
+        self.commits.fence_head_publication(generation, commit)
     }
 
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {

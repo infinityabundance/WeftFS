@@ -1228,18 +1228,24 @@ fn open_store(spec: &StoreSpec, mode: OpenMode) -> Result<Store, String> {
     spec.open(mode)
 }
 
-/// Release the S3 writer lease left by a process that died mid-commit.
+/// Replace a possibly stale writer lease with a released tombstone under a
+/// conditional write (the court reset).
 ///
 /// In production a crashed writer's `LOCK` object becomes reclaimable when its
-/// lease expires. The court clears it explicitly so a retry does not spend the
-/// lease window waiting; the lease itself is still the production mechanism and
-/// is never disabled.
+/// lease expires, and the court could simply wait. It clears the lease
+/// explicitly so a retry does not spend the lease window waiting; the lease
+/// itself is still the production mechanism and is never disabled. The reset
+/// keeps the fencing token monotonic, so a stale writer from a previous
+/// iteration can never reuse the token of the iteration that follows.
 fn clear_stale_lock(spec: &StoreSpec) -> Result<(), String> {
-    let mut backend = S3Backend::new("<distributed-court>", spec.config());
-    match backend.delete(&Key::lock()) {
-        Ok(()) => Ok(()),
-        Err(err) if err.class() == weftfs::error::Class::NotFound => Ok(()),
-        Err(err) => Err(format!("cannot clear the stale S3 lease: {err}")),
+    let backend = S3Backend::new("<distributed-court>", spec.config());
+    match backend.read_lock_record() {
+        Ok(None) => Ok(()),
+        Ok(Some(_)) => backend
+            .release_stale_lease()
+            .map(|_| ())
+            .map_err(|err| format!("cannot release the stale S3 lease: {err}")),
+        Err(err) => Err(format!("cannot read the S3 lease: {err}")),
     }
 }
 

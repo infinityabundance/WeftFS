@@ -262,7 +262,7 @@ elif [[ "$overlay" == 1 ]]; then
     "cd /work && cargo run --release --quiet --example s3_court_bucket && bash bench/scripts/overlay_court.sh --s3"
 else
   scripts/docker-court.sh rust \
-    "cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend -- --test-threads=1 --nocapture"
+    "cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture"
 fi
 
 receipt="bench/receipts/s3-backend-${stamp}.json"
@@ -299,7 +299,7 @@ cat > "$court_receipt" <<JSON
     "host_port": $host_port
   },
   "tests": {
-    "command": "$(if [[ "$matrix" == 1 ]]; then echo "cargo run --example s3_compat_matrix -- --out $matrix_receipt"; elif [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend -- --test-threads=1 --nocapture"; fi)",
+    "command": "$(if [[ "$matrix" == 1 ]]; then echo "cargo run --example s3_compat_matrix -- --out $matrix_receipt"; elif [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture"; fi)",
     "bucket_prefix": "$WEFT_S3_TEST_PREFIX"
   },
   "benchmark": $(if [[ "$matrix" == 1 && -n "$matrix_receipt" ]]; then echo "\"$matrix_receipt\""; elif [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$packs" == 1 && -n "$packs_receipt" ]]; then echo "\"$packs_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),

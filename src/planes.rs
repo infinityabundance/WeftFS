@@ -457,6 +457,24 @@ pub trait CommitPlane: Send {
     /// Acquire the exclusive single-writer lock.
     fn acquire_lock(&mut self) -> Result<()>;
 
+    /// Prove this writer may still publish, renewing a provider lease when one
+    /// publication budget remains. Default: the plane has no lease.
+    fn verify_write_lease(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// The fenced form: the same proof, naming the head about to be published.
+    /// A plane with only one conditional write per object calls
+    /// [`Self::verify_write_lease`] here.
+    fn fence_head_publication(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+    ) -> Result<()> {
+        let _ = (generation, commit);
+        self.verify_write_lease()
+    }
+
     /// Remove stale staging files older than `grace_secs`.
     fn clean_stale(&mut self, grace_secs: u64) -> Result<()>;
 
@@ -885,6 +903,18 @@ macro_rules! impl_planes_for_storage_backend {
 
             fn acquire_lock(&mut self) -> Result<()> {
                 StorageBackend::acquire_writer_lock(self)
+            }
+
+            fn verify_write_lease(&mut self) -> Result<()> {
+                StorageBackend::verify_write_lease(self)
+            }
+
+            fn fence_head_publication(
+                &mut self,
+                generation: u64,
+                commit: &crate::identity::Hash32,
+            ) -> Result<()> {
+                StorageBackend::fence_head_publication(self, generation, commit)
             }
 
             fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {
