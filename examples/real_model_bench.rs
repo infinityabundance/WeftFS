@@ -33,6 +33,7 @@ use std::time::Instant;
 
 use serde_json::{json, Value as Json};
 use weftfs::backend::BackendStats;
+use weftfs::parallel::{ParallelReadOptions, ParallelReadStats};
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorWriteSpec};
 
@@ -627,6 +628,26 @@ fn restore(args: &[String]) -> Result<(), String> {
         })
         .transpose()?
         .unwrap_or(5);
+    let threads: usize = value_of(args, "--threads")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--threads must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(1);
+    // Staging bound for bounded parallel reads. Default 64 MiB matches
+    // `ParallelReadOptions::default()`.
+    let max_inflight_mib: usize = value_of(args, "--max-inflight-mib")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--max-inflight-mib must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(64);
+    let parallel = ParallelReadOptions {
+        threads,
+        max_inflight_bytes: max_inflight_mib.saturating_mul(1024 * 1024),
+    };
 
     let ingest_text = fs::read_to_string(&ingest_json)
         .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
@@ -641,8 +662,14 @@ fn restore(args: &[String]) -> Result<(), String> {
 
     let mut checkpoints = Vec::new();
     for (name, dir_name) in [("base", "base"), ("instruct", "instruct")] {
-        let result =
-            restore_checkpoint(&store, &ingest, name, dir_name, reassemble_dir.as_deref())?;
+        let result = restore_checkpoint(
+            &store,
+            &ingest,
+            name,
+            dir_name,
+            reassemble_dir.as_deref(),
+            &parallel,
+        )?;
         checkpoints.push(result);
     }
 
@@ -691,6 +718,9 @@ fn restore(args: &[String]) -> Result<(), String> {
         "schema": "weft.real-model.restore.v1",
         "phase": "restore",
         "store": store_path.display().to_string(),
+        "threads": threads,
+        "effective_threads": weftfs::parallel::effective_threads(threads),
+        "max_inflight_bytes": parallel.max_inflight_bytes,
         "open_ms": round(open_ms),
         "open_backend": stats_json(&open_stats),
         "checkpoints": checkpoints,
@@ -720,12 +750,79 @@ fn expected_tensor_bytes(ingest: &Json, checkpoint: &str, name: &str) -> u64 {
         .unwrap_or(0)
 }
 
+/// Aggregate of `ParallelReadStats` over the batches of one pass.
+#[derive(Default)]
+struct ReadStatsTotal {
+    batches: usize,
+    tasks: usize,
+    observed_max_inflight_bytes: usize,
+    observed_max_inflight_tasks: usize,
+    oversized_tasks: usize,
+    effective_threads: usize,
+}
+
+impl ReadStatsTotal {
+    fn merge(&mut self, stats: &ParallelReadStats) {
+        self.batches += 1;
+        self.tasks += stats.tasks;
+        self.effective_threads = stats.effective_threads;
+        self.observed_max_inflight_bytes = self
+            .observed_max_inflight_bytes
+            .max(stats.observed_max_inflight_bytes);
+        self.observed_max_inflight_tasks = self
+            .observed_max_inflight_tasks
+            .max(stats.observed_max_inflight_tasks);
+        self.oversized_tasks += stats.oversized_tasks;
+    }
+
+    fn to_json(&self, options: &ParallelReadOptions, batch_bytes: u64) -> Json {
+        json!({
+            "threads_requested": options.threads,
+            "threads_effective": weftfs::parallel::effective_threads(options.threads),
+            "max_inflight_bytes": options.max_inflight_bytes,
+            "batch_bytes": batch_bytes,
+            "batches": self.batches,
+            "tasks": self.tasks,
+            "observed_max_inflight_bytes": self.observed_max_inflight_bytes,
+            "observed_max_inflight_tasks": self.observed_max_inflight_tasks,
+            "oversized_tasks": self.oversized_tasks,
+        })
+    }
+}
+
+/// Split `sizes` into contiguous batches whose declared bytes fit `budget`.
+/// A single tensor larger than the budget gets a batch of its own, so the
+/// reassembly buffer never holds more than one oversized tensor plus the bound.
+fn plan_batches(sizes: &[u64], budget: u64) -> Vec<(usize, usize)> {
+    let mut batches = Vec::new();
+    let mut start = 0usize;
+    while start < sizes.len() {
+        let mut end = start;
+        let mut accumulated = 0u64;
+        while end < sizes.len() {
+            let next = sizes[end];
+            if end > start && accumulated.saturating_add(next) > budget {
+                break;
+            }
+            accumulated = accumulated.saturating_add(next);
+            end += 1;
+            if accumulated >= budget {
+                break;
+            }
+        }
+        batches.push((start, end));
+        start = end;
+    }
+    batches
+}
+
 fn restore_checkpoint(
     store: &Store,
     ingest: &Json,
     checkpoint: &str,
     dir_name: &str,
     reassemble_dir: Option<&Path>,
+    options: &ParallelReadOptions,
 ) -> Result<Json, String> {
     let records = ingest
         .get("ingest")
@@ -734,13 +831,11 @@ fn restore_checkpoint(
         .and_then(Json::as_array)
         .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
 
-    // Timed pass: read and hash every tensor, compare against the source hash
-    // recorded during ingest.
-    let before = store.backend_stats();
-    let started = Instant::now();
-    let mut mismatches = Vec::new();
-    let mut root_inputs = Vec::new();
-    let mut restored_bytes = 0u64;
+    // Resolve every tensor once. Sizes come from the ingest receipt (the same
+    // logical sizes the store recorded) so batch planning needs no I/O.
+    let mut names: Vec<String> = Vec::with_capacity(records.len());
+    let mut ids: Vec<weftfs::identity::Hash32> = Vec::with_capacity(records.len());
+    let mut sizes: Vec<u64> = Vec::with_capacity(records.len());
     for record in records {
         let name = record
             .get("name")
@@ -749,19 +844,51 @@ fn restore_checkpoint(
         let id = store
             .resolve_components(&[dir_name.as_bytes(), name.as_bytes()])
             .map_err(|err| format!("resolve {dir_name}/{name}: {err}"))?;
-        let data = store
-            .read_tensor(id)
-            .map_err(|err| format!("read {dir_name}/{name}: {err}"))?;
-        restored_bytes += data.len() as u64;
-        let hash = blake3::hash(&data).to_hex().to_string();
-        let expected = record
-            .get("blake3")
-            .and_then(Json::as_str)
-            .unwrap_or_default();
-        if hash != expected {
-            mismatches.push(name.to_owned());
+        names.push(name.to_owned());
+        ids.push(id);
+        sizes.push(record.get("bytes").and_then(Json::as_u64).unwrap_or(0));
+    }
+    let largest = sizes.iter().copied().max().unwrap_or(0);
+    let batch_bytes = (options.max_inflight_bytes as u64).max(largest).max(1);
+    let batches = plan_batches(&sizes, batch_bytes);
+
+    // Timed pass: read and hash every tensor, compare against the source hash
+    // recorded during ingest. Reads are bounded-parallel; hashing and ordering
+    // stay in the caller's thread and in input order.
+    let before = store.backend_stats();
+    let started = Instant::now();
+    let mut mismatches = Vec::new();
+    let mut root_inputs = Vec::new();
+    let mut restored_bytes = 0u64;
+    let mut read_stats = ReadStatsTotal::default();
+    for (start, end) in &batches {
+        let batch_ids = &ids[*start..*end];
+        let (datas, stats) = store
+            .read_tensors_bounded_with_stats(batch_ids, options)
+            .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
+        read_stats.merge(&stats);
+        if datas.len() != batch_ids.len() {
+            return Err(format!(
+                "read {dir_name} batch {start}..{end}: {} results for {} tensors",
+                datas.len(),
+                batch_ids.len()
+            ));
         }
-        root_inputs.push((name.to_owned(), id));
+        for (offset, data) in datas.into_iter().enumerate() {
+            let index = start + offset;
+            let name = &names[index];
+            restored_bytes += data.len() as u64;
+            let hash = blake3::hash(&data).to_hex().to_string();
+            let expected = records
+                .get(index)
+                .and_then(|record| record.get("blake3"))
+                .and_then(Json::as_str)
+                .unwrap_or_default();
+            if hash != expected {
+                mismatches.push(name.clone());
+            }
+            root_inputs.push((name.clone(), ids[index]));
+        }
     }
     let read_ms = started.elapsed().as_secs_f64() * 1000.0;
     let after = store.backend_stats();
@@ -799,23 +926,30 @@ fn restore_checkpoint(
             .map_err(|err| format!("read {dir_name}/{HEADER_OBJECT}: {err}"))?;
         let target = dir.join(format!("{checkpoint}.safetensors"));
         let started = Instant::now();
+        let mut materialize_stats = ReadStatsTotal::default();
         let mut file =
             File::create(&target).map_err(|err| format!("{}: {err}", target.display()))?;
         file.write_all(&header)
             .map_err(|err| format!("{}: {err}", target.display()))?;
-        for record in records {
-            let name = record
-                .get("name")
-                .and_then(Json::as_str)
-                .unwrap_or_default();
-            let id = store
-                .resolve_components(&[dir_name.as_bytes(), name.as_bytes()])
-                .map_err(|err| format!("resolve {dir_name}/{name}: {err}"))?;
-            let data = store
-                .read_tensor(id)
-                .map_err(|err| format!("read {dir_name}/{name}: {err}"))?;
-            file.write_all(&data)
-                .map_err(|err| format!("{}: {err}", target.display()))?;
+        // Same batching, same bytes, same order: the reassembly buffer never
+        // holds more than the staging bound plus one oversized tensor.
+        for (start, end) in &batches {
+            let batch_ids = &ids[*start..*end];
+            let (datas, stats) = store
+                .read_tensors_bounded_with_stats(batch_ids, options)
+                .map_err(|err| format!("read {dir_name} batch {start}..{end}: {err}"))?;
+            materialize_stats.merge(&stats);
+            if datas.len() != batch_ids.len() {
+                return Err(format!(
+                    "read {dir_name} batch {start}..{end}: {} results for {} tensors",
+                    datas.len(),
+                    batch_ids.len()
+                ));
+            }
+            for data in datas {
+                file.write_all(&data)
+                    .map_err(|err| format!("{}: {err}", target.display()))?;
+            }
         }
         file.flush()
             .map_err(|err| format!("{}: {err}", target.display()))?;
@@ -835,6 +969,7 @@ fn restore_checkpoint(
             "reassembled_blake3": reassembled_blake3,
             "source_blake3": source_blake3,
             "exact": reassembled_blake3 == source_blake3,
+            "parallel": materialize_stats.to_json(options, batch_bytes),
         });
     }
 
@@ -842,6 +977,7 @@ fn restore_checkpoint(
         "checkpoint": checkpoint,
         "tensors_read": root_inputs.len(),
         "read_ms": round(read_ms),
+        "parallel_read": read_stats.to_json(options, batch_bytes),
         "restored_bytes": restored_bytes,
         "backend": {
             "bytes_read": after.bytes_read.saturating_sub(before.bytes_read),

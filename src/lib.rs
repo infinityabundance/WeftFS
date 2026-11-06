@@ -31,6 +31,7 @@ pub mod format;
 pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
+pub mod parallel;
 pub mod provenance;
 pub mod quota;
 pub mod rebase;
@@ -58,6 +59,9 @@ pub use cost_model::{CostClass, CostModelKind};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
+pub use parallel::{
+    effective_threads, ParallelReadOptions, ParallelReadStats, DEFAULT_MAX_INFLIGHT_BYTES,
+};
 pub use provenance::{
     choose_recovery, Determinism, NoEligibleStrategy, ProvenanceClosure, ProvenanceEnvironment,
     ProvenanceInput, ProvenanceNode, ProvenancePrincipal, ProvenanceRecord, RecoveryCandidate,
