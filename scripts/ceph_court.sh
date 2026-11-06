@@ -56,7 +56,7 @@ for arg in "$@"; do
     --matrix-only) matrix_only=1 ;;
     --no-minio) with_minio=0 ;;
     -h|--help)
-      sed -n '2,45p' "$0"
+      sed -n '2,47p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
