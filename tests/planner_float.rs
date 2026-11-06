@@ -383,6 +383,11 @@ fn rebase_rewrites_a_hot_delta_and_is_idempotent() {
         store.object_meta(delta_id).unwrap().content,
         outcome.content
     );
+    // The new version's causal parent is the version it replaced.
+    let closure = weftfs::state::object_causal_closure(&store.object_meta(delta_id).unwrap())
+        .unwrap()
+        .expect("rebase publishes causal attributes");
+    assert_eq!(closure.parents, vec![before_version]);
     // The provenance receipt is attached to the object and says `rebase`.
     let records = store.provenance_records_of(delta_id).unwrap();
     let (provenance_id, record) = records
