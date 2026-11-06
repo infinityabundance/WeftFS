@@ -55,6 +55,8 @@ pub enum Class {
     Conflict,
     /// A declared causal dependency is missing, unreachable, or mismatched.
     DependencyMismatch,
+    /// The caller cancelled a read while it was waiting for shared work.
+    Cancelled,
     /// Transport/read/write failure.
     Io,
 }
@@ -85,6 +87,7 @@ impl Class {
             Class::BudgetExceeded => "BudgetExceeded",
             Class::Conflict => "Conflict",
             Class::DependencyMismatch => "DependencyMismatch",
+            Class::Cancelled => "Cancelled",
             Class::Io => "Io",
         }
     }
@@ -189,6 +192,9 @@ impl Error {
     }
     pub fn dependency_mismatch(message: impl Into<String>) -> Self {
         Self::new(Class::DependencyMismatch, message)
+    }
+    pub fn cancelled(message: impl Into<String>) -> Self {
+        Self::new(Class::Cancelled, message)
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)

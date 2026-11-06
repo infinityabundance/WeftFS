@@ -31,6 +31,7 @@ pub mod format;
 pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
+pub mod object_cache;
 pub mod parallel;
 pub mod provenance;
 pub mod quota;
@@ -40,6 +41,7 @@ pub mod recovery;
 pub mod representation;
 pub mod s3;
 pub mod safetensors;
+pub mod singleflight;
 pub mod state;
 pub mod store;
 pub mod tensor_store;
@@ -59,6 +61,7 @@ pub use cost_model::{CostClass, CostModelKind};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
+pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStats};
 pub use parallel::{
     effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
     DEFAULT_MAX_INFLIGHT_BYTES,
@@ -72,10 +75,13 @@ pub use rebase::{
     RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
 };
 pub use s3::{S3Backend, S3Config};
+pub use singleflight::{
+    CancelToken, ReconstructionKey, RegionKey, SingleFlightOptions, SingleFlightStats,
+};
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
-    GcReport, LineageEntry, OpenMode, Options, RepresentationMode, SavedContext, SetAttr, StatFs,
-    Store, VerifyReport,
+    AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, ReadLayerStats, RepresentationMode,
+    SavedContext, SetAttr, StatFs, Store, VerifyReport,
 };
 pub use tensor_store::{
     StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec, TensorPlan, TensorPlanCandidate,

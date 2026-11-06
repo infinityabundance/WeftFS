@@ -36,8 +36,9 @@ use crate::identity::{self, Hash32};
 use crate::parallel::{run_bounded, BoundedRunStats, TileDecodeOptions, TileDecodeStats};
 use crate::recovery::{self, BlobKind};
 use crate::representation::{TensorElementDtype, MAX_CODEC_DEPENDENCY_DEPTH};
+use crate::singleflight::CancelToken;
 use crate::state::{ObjectKind, ObjectRecord, State};
-use crate::store::Store;
+use crate::store::{AuthorizedRead, Store};
 use crate::wcb_util as wu;
 
 /// Reserved object attribute holding the canonical tensor dtype name.
@@ -2533,6 +2534,8 @@ impl Store {
         verify_whole: bool,
         depth: usize,
         seen: &mut Vec<Hash32>,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
     ) -> Result<Vec<u8>> {
         if depth > MAX_CODEC_DEPENDENCY_DEPTH {
             return Err(Error::corrupt(format!(
@@ -2587,9 +2590,17 @@ impl Store {
         let logical = match tensor.tensor_mode {
             9 => self.decode_mode9(&frame, tensor, manifest, &limits)?,
             10 => self.decode_mode10(&frame, tensor, manifest, &limits)?,
-            11 => {
-                self.decode_delta(&frame, tensor, rep, &limits, depth, seen, DeltaKind::Weight)?
-            }
+            11 => self.decode_delta(
+                &frame,
+                tensor,
+                rep,
+                &limits,
+                depth,
+                seen,
+                DeltaKind::Weight,
+                gate,
+                cancel,
+            )?,
             14 => self.decode_delta(
                 &frame,
                 tensor,
@@ -2598,10 +2609,20 @@ impl Store {
                 depth,
                 seen,
                 DeltaKind::Semantic,
+                gate,
+                cancel,
             )?,
-            16 => {
-                self.decode_delta(&frame, tensor, rep, &limits, depth, seen, DeltaKind::Sparse)?
-            }
+            16 => self.decode_delta(
+                &frame,
+                tensor,
+                rep,
+                &limits,
+                depth,
+                seen,
+                DeltaKind::Sparse,
+                gate,
+                cancel,
+            )?,
             12 => self.decode_kv_page(&frame, tensor, &limits)?,
             13 => self.decode_activation(&frame, tensor, &limits)?,
             15 => self.decode_mode15(&frame, tensor, manifest, rep, &limits)?,
@@ -2851,6 +2872,7 @@ impl Store {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)]
     fn decode_delta(
         &self,
         frame: &Frame<'_>,
@@ -2860,6 +2882,8 @@ impl Store {
         depth: usize,
         seen: &mut Vec<Hash32>,
         kind: DeltaKind,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
     ) -> Result<Vec<u8>> {
         let (descriptor_dtype, descriptor_shape, base_hash) = match kind {
             DeltaKind::Semantic => {
@@ -2910,13 +2934,15 @@ impl Store {
         let dep_manifest =
             self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
         seen.push(dep_root);
-        let base_bytes = self.read_manifest_bytes_inner(
+        let base_bytes = self.read_manifest_bytes_inner_gated(
             &dep_manifest,
             0,
             dep_manifest.size,
             true,
             depth + 1,
             seen,
+            gate,
+            cancel,
         )?;
         seen.pop();
         let element_count = weftcodec::tensor::validate_shape(&tensor.shape, limits)?;

@@ -21,19 +21,26 @@ use weftcodec::Limits;
 
 use crate::auth::Principal;
 use crate::backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, StorageBackend};
-use crate::error::{Error, Result};
+use crate::cost_model::CostClass;
+use crate::error::{Class, Error, Result};
 use crate::format::{
     encode_commit_file, encode_state, ChunkRef, Commit, ContentIdentity, Manifest, Representation,
     RepresentationKind, SuperblockSlot, FORMAT_CONTENTS, SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
 use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
+use crate::object_cache::{
+    CacheKey, ObjectCache, ObjectCacheOptions, ObjectCacheStats, MAX_CACHE_ENTRIES,
+};
 use crate::quota::{
     normalize_policy, QuotaBudget, QuotaCounters, QuotaPolicyRecord, QuotaPrincipal, QuotaRecord,
     QuotaState, QuotaUsageOp, QUOTA_MAGIC, QUOTA_POLICY_MAGIC,
 };
 use crate::recovery::{self, BlobKind};
 use crate::representation::{self, MAX_CODEC_DEPENDENCY_DEPTH};
+use crate::singleflight::{
+    CancelToken, ReconstructionKey, RegionKey, SingleFlight, SingleFlightOptions, SingleFlightStats,
+};
 use crate::state::ATTR_TENANT;
 use crate::state::{
     derive_entry_id, derive_version_id, derive_version_id_with_identity, validate_name_bytes,
@@ -143,6 +150,20 @@ pub struct Options {
     /// persisted policy untouched. A writable open with a non-empty list is an
     /// admin operation: it rewrites the `quota` record, retaining usage.
     pub quotas: Vec<QuotaBudget>,
+    /// Coalesce identical concurrent reconstructions (object id + content
+    /// version + region). Off by default: with it disabled every read does the
+    /// shipped work. See `src/singleflight.rs`.
+    pub single_flight: bool,
+    /// Maximum number of reconstructions that may be in flight at once.
+    pub single_flight_max_entries: usize,
+    /// Maximum decoded bytes reserved by in-flight reconstructions.
+    pub single_flight_max_bytes: u64,
+    /// Bound on the verified decoded-object cache. `0` (the default) disables
+    /// the cache entirely; reads then behave exactly as they did before R8.
+    pub cache_bytes: u64,
+    /// Bound on the number of cached entries (books keeping). The byte bound is
+    /// the primary limit; this bounds the eviction scan for tiny objects.
+    pub cache_entries: usize,
 }
 
 impl Default for Options {
@@ -159,6 +180,31 @@ impl Default for Options {
             codec_min_bytes: DEFAULT_CODEC_MIN_BYTES,
             codec_delta_margin_percent: DEFAULT_CODEC_DELTA_MARGIN_PERCENT,
             quotas: Vec::new(),
+            single_flight: false,
+            single_flight_max_entries: crate::singleflight::DEFAULT_MAX_ENTRIES,
+            single_flight_max_bytes: crate::singleflight::DEFAULT_MAX_BYTES,
+            cache_bytes: 0,
+            cache_entries: MAX_CACHE_ENTRIES,
+        }
+    }
+}
+
+impl SingleFlightOptions {
+    fn from_options(options: &Options) -> Self {
+        SingleFlightOptions {
+            enabled: options.single_flight,
+            max_entries: options.single_flight_max_entries,
+            max_bytes: options.single_flight_max_bytes,
+        }
+    }
+}
+
+impl ObjectCacheOptions {
+    fn from_options(options: &Options) -> Self {
+        ObjectCacheOptions {
+            max_bytes: options.cache_bytes,
+            max_entries: options.cache_entries,
+            ..ObjectCacheOptions::default()
         }
     }
 }
@@ -532,6 +578,78 @@ pub struct Store {
     /// Advisory per-object read counters (`src/access.rs`). Never consulted by
     /// commits, recovery, verification, or GC.
     access: Mutex<crate::access::AccessCounts>,
+    /// R8 single-flight registry for identical reconstructions. Disabled unless
+    /// `Options::single_flight` is set.
+    single_flight: SingleFlight<ReconstructionKey, Arc<Vec<u8>>>,
+    /// R8 verified decoded-object cache. Disabled unless `Options::cache_bytes`
+    /// is non-zero; a disabled cache is never consulted on the read path.
+    object_cache: Mutex<ObjectCache>,
+    /// Fast flag mirroring `cache_bytes > 0` so the read path does not take the
+    /// cache mutex just to learn that the cache is off.
+    cache_enabled: std::sync::atomic::AtomicBool,
+    /// Reconstructions actually executed (cache miss + single-flight leader).
+    decode_calls: AtomicU64,
+    /// Logical bytes those reconstructions produced.
+    decode_bytes: AtomicU64,
+    /// Lazily built, head-keyed reverse index of the relation graph and the
+    /// content-root -> object map. Derived data only; rebuilt when the head
+    /// changes. Used for cache admission scoring.
+    content_index: Mutex<Option<(Hash32, ContentIndex)>>,
+    /// Test-only leader dwell. `0` in production; see
+    /// [`Store::set_single_flight_test_dwell`].
+    single_flight_test_dwell_nanos: AtomicU64,
+}
+
+/// Reverse index used by cache admission scoring (derived data only).
+#[derive(Default)]
+struct ContentIndex {
+    /// Lowest ObjectId for each content (manifest) identity.
+    object_by_content: BTreeMap<Hash32, Hash32>,
+    /// `derived_from` relation edges that target each object.
+    dependents: BTreeMap<Hash32, u64>,
+}
+
+/// An authorized read of one object version.
+///
+/// The token is the only way into the cache and single-flight paths. Its
+/// fields are private; it can only be produced by [`Store::authorize_read`] or
+/// [`Store::authorize_read_at`], which both evaluate POSIX mode, the
+/// `weft.acl.read` ACL, and any attached capability envelope. A cache hit can
+/// therefore never stand in for authorization.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AuthorizedRead {
+    id: Hash32,
+    content: Hash32,
+    size: u64,
+    kind: ObjectKind,
+}
+
+impl AuthorizedRead {
+    pub fn object_id(&self) -> Hash32 {
+        self.id
+    }
+
+    pub fn content(&self) -> Hash32 {
+        self.content
+    }
+
+    pub fn size(&self) -> u64 {
+        self.size
+    }
+
+    pub fn kind(&self) -> ObjectKind {
+        self.kind
+    }
+}
+
+/// Read-path instrumentation: reconstruction work, single-flight activity, and
+/// cache outcomes. Counters are cumulative over the open store handle.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ReadLayerStats {
+    pub decode_calls: u64,
+    pub decode_bytes: u64,
+    pub single_flight: SingleFlightStats,
+    pub cache: ObjectCacheStats,
 }
 
 /// Accepted quota outcome for one commit. `usage_after` is the cumulative
@@ -597,6 +715,9 @@ impl Store {
         backend.create_zeroed(&Key::superblock(), SUPERBLOCK_BYTES as u64)?;
         backend.acquire_writer_lock()?;
 
+        let cache_enabled = options.cache_bytes > 0;
+        let single_flight_options = SingleFlightOptions::from_options(&options);
+        let cache_options = ObjectCacheOptions::from_options(&options);
         let mut store = Store {
             root,
             mode: OpenMode::ReadWrite,
@@ -623,6 +744,13 @@ impl Store {
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
             access: Mutex::new(crate::access::AccessCounts::default()),
+            single_flight: SingleFlight::new(single_flight_options),
+            object_cache: Mutex::new(ObjectCache::new(cache_options)),
+            cache_enabled: std::sync::atomic::AtomicBool::new(cache_enabled),
+            decode_calls: AtomicU64::new(0),
+            decode_bytes: AtomicU64::new(0),
+            content_index: Mutex::new(None),
+            single_flight_test_dwell_nanos: AtomicU64::new(0),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -726,6 +854,13 @@ impl Store {
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
             access: Mutex::new(access),
+            single_flight: SingleFlight::new(SingleFlightOptions::default()),
+            object_cache: Mutex::new(ObjectCache::new(ObjectCacheOptions::default())),
+            cache_enabled: std::sync::atomic::AtomicBool::new(false),
+            decode_calls: AtomicU64::new(0),
+            decode_bytes: AtomicU64::new(0),
+            content_index: Mutex::new(None),
+            single_flight_test_dwell_nanos: AtomicU64::new(0),
         };
         store.load_quota_record();
         Ok(store)
@@ -754,7 +889,55 @@ impl Store {
             store.install_quota_policy(options.quotas.clone())?;
         }
         store.options = options;
+        store.apply_read_layer_options();
         Ok(store)
+    }
+
+    /// Re-derive the R8 read layers from `self.options`.
+    ///
+    /// Called once at open (and by [`Store::set_read_layer_options`]). Never
+    /// called while reads are in flight: the cache is resized and the flight
+    /// configuration is replaced in place.
+    fn apply_read_layer_options(&mut self) {
+        self.single_flight
+            .set_options(SingleFlightOptions::from_options(&self.options));
+        self.object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .set_options(ObjectCacheOptions::from_options(&self.options));
+        self.cache_enabled.store(
+            self.options.cache_bytes > 0,
+            std::sync::atomic::Ordering::Relaxed,
+        );
+    }
+
+    /// Replace the R8 read-layer configuration on an open store.
+    ///
+    /// Must not be called concurrently with reads: shrinking the cache bound is
+    /// applied by evicting entries (never by returning a stale value), and the
+    /// single-flight configuration is replaced, not merged. The CLI applies the
+    /// options at open, so this exists for tests and long-lived embedders that
+    /// quiesce their readers first.
+    pub fn set_read_layer_options(&mut self, options: Options) -> Result<()> {
+        validate_options(&options)?;
+        self.options = options;
+        self.apply_read_layer_options();
+        Ok(())
+    }
+
+    /// Enable or disable the decoded-object cache on an open store.
+    ///
+    /// Shrinking evicts down to the new bound immediately. Disabling clears
+    /// the cache (pins are retained). Must not run concurrently with reads.
+    pub fn set_cache_bytes(&mut self, bytes: u64) {
+        self.options.cache_bytes = bytes;
+        self.apply_read_layer_options();
+    }
+
+    /// Enable or disable single-flight on an open store.
+    pub fn set_single_flight(&mut self, enabled: bool) {
+        self.options.single_flight = enabled;
+        self.apply_read_layer_options();
     }
 
     /// The backend selected for this store.
@@ -1294,19 +1477,106 @@ impl Store {
     /// Read a complete object. Files verify every chunk hash and the
     /// whole-content hash; symlinks return their target bytes; directories are
     /// `IsDir`.
+    ///
+    /// This is the **internal** read: it never consults the R8 read layers
+    /// (cache / single-flight), so verification, planning, recovery, and GC see
+    /// exactly the shipped path. Callers that have authorized a read should use
+    /// [`Store::read_object_authorized`].
     pub fn read_object(&self, id: Hash32) -> Result<Vec<u8>> {
-        let bytes = self.read_object_inner(id)?;
+        let bytes = self.read_object_inner(id, None, None)?;
         self.note_object_read(id);
+        Ok(bytes)
+    }
+
+    /// Authorize a read and return the evidence token.
+    ///
+    /// Evaluates POSIX mode, the `weft.acl.read` ACL, and (when the principal
+    /// carries one) the capability envelope's validity window, revocation, and
+    /// scope-independent authorization rules. Denials are `Unauthorized` and
+    /// never mention whether any cached bytes exist.
+    pub fn authorize_read(
+        &self,
+        id: Hash32,
+        principal: &Principal,
+        now_ns: i64,
+    ) -> Result<AuthorizedRead> {
+        let state = &self.state;
+        self.authorize_read_in(state, id, principal, now_ns)
+    }
+
+    /// [`Store::authorize_read`] against an explicit (snapshot) state.
+    pub fn authorize_read_at(
+        &self,
+        snapshot: Hash32,
+        id: Hash32,
+        principal: &Principal,
+        now_ns: i64,
+    ) -> Result<AuthorizedRead> {
+        let state = self.state_at(snapshot)?;
+        self.authorize_read_in(&state, id, principal, now_ns)
+    }
+
+    /// [`Store::authorize_read`] against a state the caller already holds.
+    pub fn authorize_read_in(
+        &self,
+        state: &State,
+        id: Hash32,
+        principal: &Principal,
+        now_ns: i64,
+    ) -> Result<AuthorizedRead> {
+        if let Some(capability) = crate::context::principal_capability(principal)? {
+            capability.check_valid_at(now_ns)?;
+        }
+        let record = state
+            .objects
+            .get(&id)
+            .ok_or_else(|| Error::not_found("no such object"))?;
+        if !crate::auth::can_read(record, principal) {
+            return Err(Error::new(
+                Class::Unauthorized,
+                "object is not readable by this principal",
+            ));
+        }
+        Ok(AuthorizedRead {
+            id: record.id,
+            content: record.content,
+            size: record.size,
+            kind: record.kind,
+        })
+    }
+
+    /// Read a complete object after authorization, through the R8 read layers.
+    pub fn read_object_authorized(&self, authorized: &AuthorizedRead) -> Result<Vec<u8>> {
+        self.read_object_authorized_cancellable(authorized, None)
+    }
+
+    /// [`Store::read_object_authorized`] with cooperative cancellation.
+    ///
+    /// Cancellation only applies while the caller waits for an identical
+    /// in-flight read; a leader always finishes so other waiters still get
+    /// their result.
+    pub fn read_object_authorized_cancellable(
+        &self,
+        authorized: &AuthorizedRead,
+        cancel: Option<&CancelToken>,
+    ) -> Result<Vec<u8>> {
+        let bytes = self.read_object_inner(authorized.id, Some(authorized), cancel)?;
+        self.note_object_read(authorized.id);
         Ok(bytes)
     }
 
     /// Read without touching the advisory access counters. Internal store
     /// work (planning, rebase dry runs, verification) must not inflate them.
     pub(crate) fn read_object_uncounted(&self, id: Hash32) -> Result<Vec<u8>> {
-        self.read_object_inner(id)
+        self.read_object_inner(id, None, None)
     }
 
-    fn read_object_inner(&self, id: Hash32) -> Result<Vec<u8>> {
+    fn read_object_inner(
+        &self,
+        id: Hash32,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
+    ) -> Result<Vec<u8>> {
         let record = self.object_meta(id)?;
         let bytes = match record.kind {
             ObjectKind::Dir => return Err(Error::is_dir("object is a directory")),
@@ -1320,7 +1590,15 @@ impl Store {
                 if manifest.size != record.size {
                     return Err(Error::corrupt("object size disagrees with manifest"));
                 }
-                self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)?
+                self.read_manifest_bytes_gated(
+                    &manifest,
+                    record.content,
+                    0,
+                    manifest.size,
+                    true,
+                    gate,
+                    cancel,
+                )?
             }
         };
         Ok(bytes)
@@ -1358,7 +1636,50 @@ impl Store {
         }
     }
 
-    /// Read a byte range from a file object.
+    /// Read a byte range after authorization, through the R8 read layers.
+    pub fn read_range_authorized(
+        &self,
+        authorized: &AuthorizedRead,
+        offset: u64,
+        length: u64,
+    ) -> Result<Vec<u8>> {
+        self.read_range_authorized_cancellable(authorized, offset, length, None)
+    }
+
+    /// [`Store::read_range_authorized`] with cooperative cancellation.
+    pub fn read_range_authorized_cancellable(
+        &self,
+        authorized: &AuthorizedRead,
+        offset: u64,
+        length: u64,
+        cancel: Option<&CancelToken>,
+    ) -> Result<Vec<u8>> {
+        if authorized.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("read_range requires a file object"));
+        }
+        let record = self.object_meta(authorized.id)?;
+        if record.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("read_range requires a file object"));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        if manifest.size != record.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        let bytes = self.read_manifest_bytes_gated(
+            &manifest,
+            record.content,
+            offset,
+            length,
+            false,
+            Some(authorized),
+            cancel,
+        )?;
+        self.note_object_read(authorized.id);
+        Ok(bytes)
+    }
+
+    /// Read a byte range from a file object (internal path).
     pub fn read_range(&self, id: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
         let record = self.object_meta(id)?;
         if record.kind != ObjectKind::File {
@@ -1381,6 +1702,118 @@ impl Store {
             self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
         let whole = offset == 0 && length >= manifest.size;
         self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
+    }
+
+    /// Read from a content root after authorization, through the R8 read
+    /// layers.
+    ///
+    /// The authorization token carries the object that produced this content
+    /// root; the read itself uses the content root so it can never mix two
+    /// versions. A token from [`Store::authorize_read`] for a different content
+    /// identity than the current object version still authorizes the object,
+    /// but the cache key is the *current* content root, so an old token cannot
+    /// make stale bytes hit.
+    pub fn read_content_authorized(
+        &self,
+        authorized: &AuthorizedRead,
+        content_root: Hash32,
+        offset: u64,
+        length: u64,
+    ) -> Result<Vec<u8>> {
+        if authorized.content != content_root {
+            return Err(Error::new(
+                Class::Unauthorized,
+                "authorization token does not cover this content root",
+            ));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
+        let whole = offset == 0 && length >= manifest.size;
+        self.read_manifest_bytes_gated(
+            &manifest,
+            content_root,
+            offset,
+            length,
+            whole,
+            Some(authorized),
+            None,
+        )
+    }
+
+    /// Cumulative R8 read-layer counters.
+    pub fn read_layer_stats(&self) -> ReadLayerStats {
+        ReadLayerStats {
+            decode_calls: self.decode_calls.load(Ordering::Relaxed),
+            decode_bytes: self.decode_bytes.load(Ordering::Relaxed),
+            single_flight: self.single_flight.stats(),
+            cache: self
+                .object_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .stats(),
+        }
+    }
+
+    /// Verified decoded-object cache counters only.
+    pub fn cache_stats(&self) -> ObjectCacheStats {
+        self.read_layer_stats().cache
+    }
+
+    /// Single-flight counters only.
+    pub fn single_flight_stats(&self) -> SingleFlightStats {
+        self.single_flight.stats()
+    }
+
+    /// Number of reconstructions the store actually executed.
+    pub fn decode_calls(&self) -> u64 {
+        self.decode_calls.load(Ordering::Relaxed)
+    }
+
+    /// True when at least one R8 read layer is enabled.
+    pub fn read_layers_enabled(&self) -> bool {
+        self.cache_enabled.load(Ordering::Relaxed) || self.single_flight.enabled()
+    }
+
+    /// Pin an object so cached versions of it are never evicted.
+    pub fn pin_cache_object(&self, id: Hash32) -> Result<()> {
+        self.object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .pin(id)
+    }
+
+    /// Remove a cache pin. The entry stays until normal eviction selects it.
+    pub fn unpin_cache_object(&self, id: Hash32) {
+        self.object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .unpin(id);
+    }
+
+    /// True when `id` is pinned in the decoded-object cache.
+    pub fn is_cache_object_pinned(&self, id: Hash32) -> bool {
+        self.object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .is_pinned(id)
+    }
+
+    /// Test-only: make a single-flight leader dwell before it starts decoding.
+    ///
+    /// This makes coalescing observable without depending on scheduler timing;
+    /// production code never calls it and the default is zero. `#[doc(hidden)]`.
+    #[doc(hidden)]
+    pub fn set_single_flight_test_dwell(&self, nanos: u64) {
+        self.single_flight_test_dwell_nanos
+            .store(nanos, Ordering::Relaxed);
+    }
+
+    /// Drop every cached decoded object (pins are retained).
+    pub fn clear_object_cache(&self) {
+        self.object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clear();
     }
 
     /// Verify only the chunks a range touches for a `weft.manifest.v3` file.
@@ -1482,8 +1915,42 @@ impl Store {
         length: u64,
         verify_whole: bool,
     ) -> Result<Vec<u8>> {
+        self.read_manifest_bytes_gated(
+            manifest,
+            content_root,
+            offset,
+            length,
+            verify_whole,
+            None,
+            None,
+        )
+    }
+
+    /// The R8 read path: cache and single-flight are consulted only when an
+    /// authorized token is present, and the same token (and cancellation) is
+    /// propagated to dependency reconstructions.
+    #[allow(clippy::too_many_arguments)]
+    fn read_manifest_bytes_gated(
+        &self,
+        manifest: &Manifest,
+        content_root: Hash32,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
+    ) -> Result<Vec<u8>> {
         let mut seen = vec![content_root];
-        self.read_manifest_bytes_inner(manifest, offset, length, verify_whole, 0, &mut seen)
+        self.read_manifest_bytes_inner_gated(
+            manifest,
+            offset,
+            length,
+            verify_whole,
+            0,
+            &mut seen,
+            gate,
+            cancel,
+        )
     }
 
     pub(crate) fn read_manifest_bytes_inner(
@@ -1494,6 +1961,109 @@ impl Store {
         verify_whole: bool,
         depth: usize,
         seen: &mut Vec<Hash32>,
+    ) -> Result<Vec<u8>> {
+        self.read_manifest_bytes_inner_gated(
+            manifest,
+            offset,
+            length,
+            verify_whole,
+            depth,
+            seen,
+            None,
+            None,
+        )
+    }
+
+    /// One reconstruction step with the optional R8 layers.
+    ///
+    /// A whole, verified read of an authorized object is served from the
+    /// decoded-object cache when possible, and otherwise coalesced with any
+    /// identical in-flight reconstruction. Every other read keeps the shipped
+    /// path but still coalesces when single-flight is enabled (identical region
+    /// and identical verification flag).
+    pub(crate) fn read_manifest_bytes_inner_gated(
+        &self,
+        manifest: &Manifest,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        depth: usize,
+        seen: &mut Vec<Hash32>,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
+    ) -> Result<Vec<u8>> {
+        if gate.is_none() {
+            return self.decode_manifest(
+                manifest,
+                offset,
+                length,
+                verify_whole,
+                depth,
+                seen,
+                gate,
+                cancel,
+            );
+        }
+        let content = seen.last().copied().unwrap_or(manifest.content_hash);
+        let whole = verify_whole && offset == 0 && length >= manifest.size;
+        if whole {
+            if let Some(bytes) = self.cache_lookup(content) {
+                return Ok(bytes);
+            }
+        }
+        let object = match gate {
+            Some(authorized) if authorized.content == content => authorized.id,
+            _ => self.object_id_for_content(content).unwrap_or(content),
+        };
+        let region = if offset == 0 && length >= manifest.size {
+            RegionKey::Whole
+        } else {
+            RegionKey::Bytes { offset, length }
+        };
+        let key = ReconstructionKey {
+            object,
+            content,
+            region,
+            verified: verify_whole,
+        };
+        let hint = region.bytes_hint(manifest.size);
+        let shared = self.single_flight.run(key, hint, cancel, || {
+            self.decode_calls.fetch_add(1, Ordering::Relaxed);
+            self.decode_bytes.fetch_add(hint, Ordering::Relaxed);
+            let dwell = self.single_flight_test_dwell_nanos.load(Ordering::Relaxed);
+            if dwell > 0 {
+                std::thread::sleep(std::time::Duration::from_nanos(dwell));
+            }
+            let bytes = self.decode_manifest(
+                manifest,
+                offset,
+                length,
+                verify_whole,
+                depth,
+                seen,
+                gate,
+                cancel,
+            )?;
+            Ok(Arc::new(bytes))
+        })?;
+        if whole && gate.is_some() {
+            self.cache_admit(content, manifest, Arc::clone(&shared));
+        }
+        Ok(shared.as_ref().clone())
+    }
+
+    /// The shipped dispatch: raw, tensor, or codec reconstruction.
+    #[allow(clippy::too_many_arguments)]
+    fn decode_manifest(
+        &self,
+        manifest: &Manifest,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        depth: usize,
+        seen: &mut Vec<Hash32>,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
     ) -> Result<Vec<u8>> {
         match &manifest.representation {
             None => self.read_raw_manifest_bytes(manifest, offset, length, verify_whole),
@@ -1508,6 +2078,8 @@ impl Store {
                 verify_whole,
                 depth,
                 seen,
+                gate,
+                cancel,
             ),
             Some(rep) => self.read_codec_manifest_bytes(
                 manifest,
@@ -1517,8 +2089,84 @@ impl Store {
                 verify_whole,
                 depth,
                 seen,
+                gate,
+                cancel,
             ),
         }
+    }
+
+    /// Look up a verified decoded object. A disabled cache is never consulted.
+    fn cache_lookup(&self, content: Hash32) -> Option<Vec<u8>> {
+        if !self.cache_enabled.load(Ordering::Relaxed) {
+            return None;
+        }
+        let object = self.object_id_for_content(content).unwrap_or(content);
+        let key = CacheKey::new(object, content);
+        let mut cache = self
+            .object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        cache.lookup(key).map(|bytes| bytes.as_ref().clone())
+    }
+
+    /// Admit verified decoded bytes with the documented score.
+    fn cache_admit(&self, content: Hash32, manifest: &Manifest, bytes: Arc<Vec<u8>>) {
+        if !self.cache_enabled.load(Ordering::Relaxed) {
+            return;
+        }
+        let object = self.object_id_for_content(content).unwrap_or(content);
+        let (class, dependents) = self.cache_score_inputs(object, manifest);
+        let reads = self.access_reads(object);
+        let mut cache = self
+            .object_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let score = cache.score_for(class, manifest.size, dependents, reads);
+        cache.admit(CacheKey::new(object, content), bytes, score);
+    }
+
+    /// The measured cost class and relation-graph dependent count for one
+    /// object version. The reverse index is rebuilt when the head changes.
+    fn cache_score_inputs(&self, object: Hash32, manifest: &Manifest) -> (CostClass, u64) {
+        let dependents =
+            self.with_content_index(|index| index.dependents.get(&object).copied().unwrap_or(0));
+        (manifest_cost_class(manifest), dependents)
+    }
+
+    /// The lowest ObjectId whose content root is `content`, if any.
+    fn object_id_for_content(&self, content: Hash32) -> Option<Hash32> {
+        self.with_content_index(|index| index.object_by_content.get(&content).copied())
+    }
+
+    /// Run `f` against the head-keyed reverse index, rebuilding it if stale.
+    fn with_content_index<T>(&self, f: impl FnOnce(&ContentIndex) -> T) -> T {
+        let mut guard = self
+            .content_index
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let stale = match guard.as_ref() {
+            Some((head, _)) => *head != self.head,
+            None => true,
+        };
+        if stale {
+            let mut index = ContentIndex::default();
+            for record in self.state.objects.values() {
+                index
+                    .object_by_content
+                    .entry(record.content)
+                    .or_insert(record.id);
+            }
+            for relation in self.state.relations.values() {
+                if relation.predicate == crate::context::CONTEXT_LINEAGE_PREDICATE {
+                    if let RelationTarget::Object(target) = &relation.target {
+                        *index.dependents.entry(*target).or_default() += 1;
+                    }
+                }
+            }
+            *guard = Some((self.head, index));
+        }
+        let (_, index) = guard.as_ref().expect("content index was just built");
+        f(index)
     }
 
     /// The frozen v1 (and v2 `kind:"raw"`) assembly path.
@@ -1599,6 +2247,7 @@ impl Store {
     /// unreadable, or mismatched dependency returns `Corrupt`; no partial or
     /// approximate bytes are ever returned.
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)]
     fn read_codec_manifest_bytes(
         &self,
         manifest: &Manifest,
@@ -1608,6 +2257,8 @@ impl Store {
         verify_whole: bool,
         depth: usize,
         seen: &mut Vec<Hash32>,
+        gate: Option<&AuthorizedRead>,
+        cancel: Option<&CancelToken>,
     ) -> Result<Vec<u8>> {
         if depth > MAX_CODEC_DEPENDENCY_DEPTH {
             return Err(Error::corrupt(format!(
@@ -1670,13 +2321,15 @@ impl Store {
             let dep_manifest =
                 self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
             seen.push(dep_root);
-            let bytes = self.read_manifest_bytes_inner(
+            let bytes = self.read_manifest_bytes_inner_gated(
                 &dep_manifest,
                 0,
                 dep_manifest.size,
                 true,
                 depth + 1,
                 seen,
+                gate,
+                cancel,
             )?;
             seen.pop();
             if bytes.len() as u64 != dependency.decoded_len {
@@ -6980,6 +7633,39 @@ fn validate_xattr_name(name: &str) -> Result<()> {
     Ok(())
 }
 
+/// The cost-model class used to price one object version's reconstruction.
+///
+/// The class is read from the representation the object actually uses, so a
+/// cached base stored as a weight delta is priced with the delta row and a
+/// plain zstd object with the zstd row. An unknown strategy falls back to the
+/// conservative row for its representation kind instead of guessing a cheaper
+/// one.
+fn manifest_cost_class(manifest: &Manifest) -> CostClass {
+    let Some(rep) = manifest.representation.as_ref() else {
+        return CostClass::Raw;
+    };
+    match rep.kind {
+        RepresentationKind::Raw => CostClass::Raw,
+        RepresentationKind::Tensor => match rep.tensor.as_ref().map(|t| t.tensor_mode) {
+            Some(9) => CostClass::FloatTensor,
+            Some(10) => CostClass::TensorSharded,
+            Some(11) => CostClass::WeightDelta,
+            Some(12) => CostClass::KvCache,
+            Some(13) => CostClass::Activation,
+            Some(14) => CostClass::SemanticDelta,
+            Some(15) => CostClass::TensorTiled,
+            Some(16) => CostClass::SparseDelta,
+            _ => CostClass::parse(&rep.strategy).unwrap_or(CostClass::TensorSharded),
+        },
+        RepresentationKind::Codec => match rep.strategy.as_str() {
+            "zstd" => CostClass::Zstd,
+            // Both codec strategies that name a base decode the base first.
+            "delta" | "reference" => CostClass::WeightDelta,
+            other => CostClass::parse(other).unwrap_or(CostClass::Zstd),
+        },
+    }
+}
+
 fn validate_options(options: &Options) -> Result<()> {
     if options.chunk_size == 0 || options.chunk_size > crate::format::MAX_CHUNK_SIZE {
         return Err(Error::invalid_argument("chunk_size must be 1..=16 MiB"));
@@ -7006,6 +7692,13 @@ fn validate_options(options: &Options) -> Result<()> {
     }
     // Reject duplicate principals before any store I/O.
     normalize_policy(options.quotas.clone())?;
+    SingleFlightOptions::from_options(options).validate()?;
+    ObjectCacheOptions::from_options(options).validate()?;
+    if options.cache_bytes > 0 && options.cache_entries == 0 {
+        return Err(Error::invalid_argument(
+            "cache_entries must be at least 1 when the decoded-object cache is enabled",
+        ));
+    }
     Ok(())
 }
 

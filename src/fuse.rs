@@ -2315,7 +2315,7 @@ impl Filesystem for WeftFuse {
 
     fn read(
         &mut self,
-        _req: &Request<'_>,
+        req: &Request<'_>,
         _ino: u64,
         fh: u64,
         offset: i64,
@@ -2338,11 +2338,32 @@ impl Filesystem for WeftFuse {
         if handle.kind != ObjectKind::File {
             return reply.error(libc::EINVAL);
         }
-        let (content, file_size) = {
+        let (content, file_size, authorized) = {
             let state = self.state(&store);
-            match handle.object.and_then(|id| state.objects.get(&id)) {
-                Some(record) => (record.content, record.size),
-                None => (handle.content, handle.size),
+            match handle
+                .object
+                .and_then(|id| state.objects.get(&id).map(|record| (id, record)))
+            {
+                Some((id, record)) => {
+                    // The R8 layers are only consulted through an authorized
+                    // token. When they are off (the default) this branch is
+                    // never taken, so the shipped read path is unchanged.
+                    let token = if store.read_layers_enabled() {
+                        let principal =
+                            Principal::new(u64::from(req.uid()), u64::from(req.gid()), Vec::new());
+                        match store.authorize_read_in(state, id, &principal, store.clock_now_ns()) {
+                            Ok(token) => Some(token),
+                            Err(err) => {
+                                eprintln!("weftfs: read denied: {err}");
+                                return reply.error(errno(&err));
+                            }
+                        }
+                    } else {
+                        None
+                    };
+                    (record.content, record.size, token)
+                }
+                None => (handle.content, handle.size, None),
             }
         };
         let offset = offset as u64;
@@ -2358,7 +2379,11 @@ impl Filesystem for WeftFuse {
         }
         let length = (visible_size - offset).min(size as u64);
         let committed = file_size.saturating_sub(offset).min(length);
-        let mut out = match store.read_content(content, offset, committed) {
+        let read = match authorized {
+            Some(token) => store.read_content_authorized(&token, content, offset, committed),
+            None => store.read_content(content, offset, committed),
+        };
+        let mut out = match read {
             Ok(bytes) => bytes,
             Err(err) => {
                 eprintln!("weftfs: read failed at offset {offset} length {committed}: {err}");

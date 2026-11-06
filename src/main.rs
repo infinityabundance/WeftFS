@@ -127,6 +127,45 @@ struct Cli {
     /// Read write budgets from a file (one `--quota` directive per line).
     #[arg(long = "quota-file", global = true, value_name = "FILE")]
     quota_file: Option<PathBuf>,
+    /// Coalesce identical concurrent reconstructions (same object, content
+    /// version, and region) into one backend read and one decode. Reads only;
+    /// off by default. Applies to `cat`, `mount`, and library callers that use
+    /// an authorized read.
+    #[arg(long = "single-flight", global = true)]
+    single_flight: bool,
+    /// Maximum number of reconstructions in flight when `--single-flight` is on.
+    #[arg(
+        long = "single-flight-max-entries",
+        global = true,
+        value_name = "N",
+        default_value_t = 64
+    )]
+    single_flight_max_entries: usize,
+    /// Maximum decoded bytes reserved by in-flight reconstructions.
+    #[arg(
+        long = "single-flight-max-bytes",
+        global = true,
+        value_name = "BYTES",
+        default_value_t = 268435456
+    )]
+    single_flight_max_bytes: u64,
+    /// Bound on the verified decoded-object cache, in bytes. `0` (the default)
+    /// disables it. Reads only; never part of any on-disk format.
+    #[arg(
+        long = "cache-bytes",
+        global = true,
+        value_name = "BYTES",
+        default_value_t = 0
+    )]
+    cache_bytes: u64,
+    /// Maximum number of cached decoded objects (bookkeeping bound).
+    #[arg(
+        long = "cache-entries",
+        global = true,
+        value_name = "N",
+        default_value_t = 65536
+    )]
+    cache_entries: usize,
     /// Decode-cost table used by the tensor planner and `rebase`:
     /// `measured` (host-calibrated in the bench court) or `declared` (the
     /// historical hand-written linear estimate).
@@ -986,6 +1025,11 @@ struct OpenPolicy {
     codec_min_bytes: u64,
     backend: CliBackend,
     quotas: Vec<weftfs::quota::QuotaBudget>,
+    single_flight: bool,
+    single_flight_max_entries: usize,
+    single_flight_max_bytes: u64,
+    cache_bytes: u64,
+    cache_entries: usize,
 }
 
 impl OpenPolicy {
@@ -996,6 +1040,11 @@ impl OpenPolicy {
             content_identity: self.content_identity,
             codec_min_bytes: self.codec_min_bytes,
             quotas: self.quotas.clone(),
+            single_flight: self.single_flight,
+            single_flight_max_entries: self.single_flight_max_entries,
+            single_flight_max_bytes: self.single_flight_max_bytes,
+            cache_bytes: self.cache_bytes,
+            cache_entries: self.cache_entries,
             ..Options::default()
         }
     }
@@ -1068,6 +1117,11 @@ fn run(cli: Cli) -> Result<()> {
         codec_min_bytes,
         quotas,
         quota_file,
+        single_flight,
+        single_flight_max_entries,
+        single_flight_max_bytes,
+        cache_bytes,
+        cache_entries,
         content_identity,
         planner_cost_model,
         command,
@@ -1103,6 +1157,11 @@ fn run(cli: Cli) -> Result<()> {
             s3_session_token,
         )?,
         quotas: budgets,
+        single_flight,
+        single_flight_max_entries,
+        single_flight_max_bytes,
+        cache_bytes,
+        cache_entries,
     };
     let needs_store = !matches!(
         command,
@@ -1478,20 +1537,29 @@ fn run(cli: Cli) -> Result<()> {
         } => {
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
             let id = store.resolve_path(&path)?;
-            if let Some(envelope_path) = envelope.as_ref() {
-                let (default_uid, default_gid) = current_ids();
-                let principal = build_principal(
-                    uid.unwrap_or(default_uid),
-                    gid.unwrap_or(default_gid),
-                    Vec::new(),
-                    Some(envelope_path),
-                    revocations.as_ref(),
-                    store.clock_now_ns(),
-                )?;
+            let (default_uid, default_gid) = current_ids();
+            let principal = build_principal(
+                uid.unwrap_or(default_uid),
+                gid.unwrap_or(default_gid),
+                Vec::new(),
+                envelope.as_ref(),
+                revocations.as_ref(),
+                store.clock_now_ns(),
+            )?;
+            if envelope.is_some() {
                 // Possession of a path or id is not authority: the envelope and
                 // POSIX rules must both allow this object.
                 store.exact_id_object(id, None, &principal, store.clock_now_ns())?;
             }
+            // The cache and single-flight layers are only reachable through an
+            // authorized token. Without `--envelope` a denial is not fatal (the
+            // CLI never enforced POSIX on `cat`), but the uncached read below is
+            // then used, so a cache hit can never stand in for authorization.
+            let authorized = match store.authorize_read(id, &principal, store.clock_now_ns()) {
+                Ok(token) => Some(token),
+                Err(err) if envelope.is_some() => return Err(err),
+                Err(_) => None,
+            };
             let tile_options = weftfs::TileDecodeOptions {
                 threads,
                 ..weftfs::TileDecodeOptions::default()
@@ -1506,17 +1574,42 @@ fn run(cli: Cli) -> Result<()> {
                 // object keeps the shipped byte read.
                 if threads > 1 && store.tensor_metadata(id).is_ok() {
                     store.read_tensor_with_options(id, &tile_options)?
+                } else if let Some(token) = authorized.as_ref() {
+                    store.read_object_authorized(token)?
                 } else {
                     store.read_object(id)?
                 }
             } else {
-                store.read_range(id, offset, len.unwrap_or(u64::MAX))?
+                match authorized.as_ref() {
+                    Some(token) => {
+                        store.read_range_authorized(token, offset, len.unwrap_or(u64::MAX))?
+                    }
+                    None => store.read_range(id, offset, len.unwrap_or(u64::MAX))?,
+                }
             };
             if json {
+                let stats = store.read_layer_stats();
                 print_json(&json!({
                     "object_id": id.to_hex(),
                     "size": bytes.len(),
                     "hex": hex::encode(&bytes),
+                    "decode_calls": stats.decode_calls,
+                    "decode_bytes": stats.decode_bytes,
+                    "single_flight": {
+                        "enabled": stats.single_flight.enabled,
+                        "leaders": stats.single_flight.leaders,
+                        "waiters": stats.single_flight.waiters,
+                        "degraded": stats.single_flight.degraded,
+                    },
+                    "cache": {
+                        "enabled": stats.cache.enabled,
+                        "hits": stats.cache.hits,
+                        "misses": stats.cache.misses,
+                        "admissions": stats.cache.admissions,
+                        "evictions": stats.cache.evictions,
+                        "entries": stats.cache.entries,
+                        "bytes": stats.cache.bytes,
+                    },
                 }))
             } else {
                 std::io::stdout()
