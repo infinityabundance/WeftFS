@@ -1691,7 +1691,7 @@ reproduce commands: `bench/RESULTS-real-model.md`.
 ## Subphase R1 — measured decode cost, mode-9 planner candidate, rebasing
 
 **Implemented, measured once, single host; Go parity in the store API.**
-Receipt `bench/receipts/planner-float-20261106T023519Z.json`; analysis and
+Receipt `bench/receipts/planner-float-20261106T025351Z.json`; analysis and
 old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
 
 - **Candidate set:** mode 9 `FLOAT_TENSOR` is now priced by the planner for
@@ -1711,7 +1711,7 @@ old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
   the old hand-written linear model. Delta rows are incremental and the rebase
   planner sums the dependency chain. Modes 12/13 are never produced and keep
   declared rows. Calibration is host/court-bound, not a portable constant; this
-  run reproduced mode 9 to 0.003 %, zstd 5 %, raw 20 % (host noise).
+  run reproduced mode 9 to 0.003 %, zstd 5 %, raw 0.7 % in this run (a previous run varied 20 %, host noise).
 - **Access counters:** advisory, per-object, bounded (1,000,000 counters;
   8,192 journal records), persisted as `access/counts.v1` (epoch + digest) and
   `access/journal.v1`, rebuildable from the journal, and never consulted by
@@ -1737,10 +1737,10 @@ old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
   601,399,654 B. Base strategy mix: 169 mode 9 + 73 zstd + 48 raw; instruct:
   241 weight-delta + 1 zstd + 48 raw. Exactness unchanged (both files match the
   LFS SHA-256, every logical root matches, `verify --full` clean).
-- **Restore cost (the honest loss):** base read 13,770 ms / materialize
-  16,492 ms (F10 968.8 / 6,464); instruct read 26,925 ms / materialize
-  29,789 ms (F10 14,367 / 23,752). Single tensor base 110.5 ms, instruct
-  223.0 ms (F10 7.3 / 118.6). Mode 9 is 14.2x slower than the F10 base path and
+- **Restore cost (the honest loss):** base read 13,776 ms / materialize
+  16,737 ms (F10 968.8 / 6,464); instruct read 26,936 ms / materialize
+  29,951 ms (F10 14,367 / 23,752). Single tensor base 111.4 ms, instruct
+  221.9 ms (F10 7.3 / 118.6). Mode 9 is 14.2x slower than the F10 base path and
   ~57x slower than ZipNN's in-memory decompressor; the storage win is bought
   with decode time. Ingest also costs more (147.6 s base + 248.4 s instruct;
   peak RSS 2,720,500 KiB of 3 GiB) because both candidates are encoded.

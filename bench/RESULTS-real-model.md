@@ -10,7 +10,7 @@ the complete storage and restore cost is compared with independent `zstd -19`,
   Receipt [`bench/receipts/real-model-20261105T012000Z.json`](receipts/real-model-20261105T012000Z.json).
 * **R1 (2026-11-06):** measured decode-cost table, mode-9 `FLOAT_TENSOR`
   candidate, and lineage-aware rebasing. Receipt
-  [`bench/receipts/planner-float-20261106T023519Z.json`](receipts/planner-float-20261106T023519Z.json).
+  [`bench/receipts/planner-float-20261106T025351Z.json`](receipts/planner-float-20261106T025351Z.json).
   The storage headline **flips** (WeftFS now beats ZipNN); the restore table
   gets worse. Both measurements are kept below.
 
@@ -29,18 +29,19 @@ table instead of hand-written linear constants.
 
 | class | fixed ns | ns per MiB | this run / baked |
 |---|---:|---:|---:|
-| raw | 10,000 | 318,321 | 1.198 |
-| zstd | 17,000 | 814,267 | 1.051 |
-| float-tensor (9) | 0 | 15,403,165 | **1.000** |
-| tensor-sharded (10) | 32,000 | 13,788,933 | 1.010 |
-| tensor-tiled (15) | 14,000 | 10,056,794 | 1.000 |
-| weight-delta (11, incremental) | 31,000 | 5,297,277 | 1.040 |
-| semantic-delta (14, incremental) | 18,000 | 7,228,350 | 1.044 |
+| raw | 10,000 | 318,321 | 0.993 |
+| zstd | 17,000 | 814,267 | 1.011 |
+| float-tensor (9) | 0 | 15,403,165 | **0.996** |
+| tensor-sharded (10) | 32,000 | 13,788,933 | 1.005 |
+| tensor-tiled (15) | 14,000 | 10,056,794 | 0.998 |
+| weight-delta (11, incremental) | 31,000 | 5,297,277 | 1.024 |
+| semantic-delta (14, incremental) | 18,000 | 7,228,350 | 0.994 |
 
 Baked values are the median of three independent 7-repetition calibration runs
 (128 KiB + 16 MiB, warm cache, synthetic weight-like BF16). The last column is
 this run's calibration divided by the baked value: mode 9 is reproducible to
-0.003 %, zstd to 5 %, raw to 20 % (raw is cheap and dominated by host noise).
+0.4 %, zstd to 1.1 %, raw to 0.7 % (a previous run varied 20 % on raw, which
+is cheap and dominated by host noise).
 Modes 12/13 are never produced by the store and keep the declared rows. `--planner-cost-model=declared`
 reproduces the old linear model; the default is `measured`.
 
@@ -79,12 +80,12 @@ already represented by weight deltas; mode 9 does not displace them.
 
 | operation | F10 WeftFS | **R1 WeftFS** | ZipNN (recorded) |
 |---|---:|---:|---:|
-| base read-only | 968.8 ms | **13,770 ms** | 240 ms |
-| base materialize | 6,464 ms | **16,492 ms** | 508 ms |
-| instruct read-only | 14,367 ms | **26,925 ms** | 196 ms |
-| instruct materialize | 23,752 ms | **29,789 ms** | 455 ms |
-| single tensor base | 7.3 ms | **110.5 ms** | 508 ms (whole file) |
-| single tensor instruct | 118.6 ms | **223.0 ms** | 455 ms (whole file) |
+| base read-only | 968.8 ms | **13,776 ms** | 240 ms |
+| base materialize | 6,464 ms | **16,737 ms** | 508 ms |
+| instruct read-only | 14,367 ms | **26,936 ms** | 196 ms |
+| instruct materialize | 23,752 ms | **29,951 ms** | 455 ms |
+| single tensor base | 7.3 ms | **111.4 ms** | 508 ms (whole file) |
+| single tensor instruct | 118.6 ms | **221.9 ms** | 455 ms (whole file) |
 
 Mode 9 decodes are ~19x slower than zstd in this court (15.4 vs 0.81 ms/MiB).
 The byte win is bought with decode time: the base restore is now 14.2x slower
