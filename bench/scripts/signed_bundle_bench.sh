@@ -15,7 +15,7 @@ cd "$ROOT"
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RECEIPT="bench/receipts/signed-bundles-$STAMP.json"
-LOG="bench/receipts/signed-bundles-$STAMP.log"
+LOG_FINAL="bench/receipts/signed-bundles-$STAMP.log"
 CACHE="$ROOT/.docker-cache"
 mkdir -p "$CACHE" bench/bundles bench/receipts
 # Keep the log outside the repository until the end so packaging sees clean
@@ -54,12 +54,12 @@ log "bundle payload files: $(find bench/receipts -maxdepth 1 -type f | wc -l) re
 # ---- signed package -------------------------------------------------------
 T0="$(now_ms)"
 if ! SIGNED_OUT="$(scripts/package-receipts.sh --sign-key "$KEY" 2>&1)"; then
-  printf '%s\n' "$SIGNED_OUT" >> "$LOG"
+  printf '%s\n' "$SIGNED_OUT" >> "$LOG_TMP"
   echo "signed packaging failed" >&2
   exit 1
 fi
 T1="$(now_ms)"
-printf '%s\n' "$SIGNED_OUT" >> "$LOG"
+printf '%s\n' "$SIGNED_OUT" >> "$LOG_TMP"
 SIGNED_MS=$((T1 - T0))
 SIGNED_BUNDLE="$(sed -n 's/^bundle: //p' <<<"$SIGNED_OUT" | sed -n '1p')"
 SIGNED_SHA="$(sed -n 's/^sha256: //p' <<<"$SIGNED_OUT" | sed -n '1p')"
@@ -97,12 +97,12 @@ log "signed: $SIGNED_BUNDLE ($SIGNED_BYTES bytes, ${SIGNED_MS} ms, $FILES files)
 # ---- signed verify --------------------------------------------------------
 T0="$(now_ms)"
 if ! SIGNED_VERIFY="$(scripts/verify-receipts.sh "$SIGNED_BUNDLE" --public-key "$PUBLIC_KEY" --repo-root . 2>&1)"; then
-  printf '%s\n' "$SIGNED_VERIFY" >> "$LOG"
+  printf '%s\n' "$SIGNED_VERIFY" >> "$LOG_TMP"
   echo "signed verification failed" >&2
   exit 1
 fi
 T1="$(now_ms)"
-printf '%s\n' "$SIGNED_VERIFY" >> "$LOG"
+printf '%s\n' "$SIGNED_VERIFY" >> "$LOG_TMP"
 grep -F -q "SIGNATURE OK $FINGERPRINT" <<<"$SIGNED_VERIFY"
 metric verify_signed_ms "$((T1 - T0))"
 case_row pass signature_ok "$FINGERPRINT"
@@ -111,12 +111,12 @@ log "pinned-key verify: $(grep -F 'SIGNATURE OK' <<<"$SIGNED_VERIFY" | sed -n '1
 # ---- unsigned package + extra bytes --------------------------------------
 T0="$(now_ms)"
 if ! UNSIGNED_OUT="$(scripts/package-receipts.sh 2>&1)"; then
-  printf '%s\n' "$UNSIGNED_OUT" >> "$LOG"
+  printf '%s\n' "$UNSIGNED_OUT" >> "$LOG_TMP"
   echo "unsigned packaging failed" >&2
   exit 1
 fi
 T1="$(now_ms)"
-printf '%s\n' "$UNSIGNED_OUT" >> "$LOG"
+printf '%s\n' "$UNSIGNED_OUT" >> "$LOG_TMP"
 UNSIGNED_MS=$((T1 - T0))
 UNSIGNED_BUNDLE="$(sed -n 's/^bundle: //p' <<<"$UNSIGNED_OUT" | sed -n '1p')"
 UNSIGNED_BYTES="$(stat -c %s "$UNSIGNED_BUNDLE")"
@@ -134,12 +134,12 @@ log "unsigned: $UNSIGNED_BUNDLE ($UNSIGNED_BYTES bytes, ${UNSIGNED_MS} ms)"
 
 T0="$(now_ms)"
 if ! UNSIGNED_VERIFY="$(scripts/verify-receipts.sh "$UNSIGNED_BUNDLE" --repo-root . 2>&1)"; then
-  printf '%s\n' "$UNSIGNED_VERIFY" >> "$LOG"
+  printf '%s\n' "$UNSIGNED_VERIFY" >> "$LOG_TMP"
   echo "unsigned verification failed" >&2
   exit 1
 fi
 T1="$(now_ms)"
-printf '%s\n' "$UNSIGNED_VERIFY" >> "$LOG"
+printf '%s\n' "$UNSIGNED_VERIFY" >> "$LOG_TMP"
 grep -F -q "signature: absent (unsigned bundle)" <<<"$UNSIGNED_VERIFY"
 metric verify_unsigned_ms "$((T1 - T0))"
 case_row pass unsigned_detected "signature: absent (unsigned bundle)"
@@ -163,12 +163,12 @@ run_fail_case() {
     echo "case $name failed with wrong reason: $out" >&2
     return 1
   fi
-  printf '%s\n' "--- $name ---" >> "$LOG"
-  printf '%s\n' "$out" >> "$LOG"
+  printf '%s\n' "--- $name ---" >> "$LOG_TMP"
+  printf '%s\n' "$out" >> "$LOG_TMP"
   case_row pass "$name" "$expected"
 }
 
-OTHER_PUB="$(scripts/receipt-bundle-court.sh derive --sign-key ".docker-cache/$(basename "$OTHER_KEY")" 2>>"$LOG" | tail -1 | json_get public_key)"
+OTHER_PUB="$(scripts/receipt-bundle-court.sh derive --sign-key ".docker-cache/$(basename "$OTHER_KEY")" 2>>"$LOG_TMP" | tail -1 | json_get public_key)"
 run_fail_case wrong_key "public_key file does not match the requested key" \
   scripts/verify-receipts.sh "$SIGNED_BUNDLE" --public-key "$OTHER_PUB"
 run_fail_case unsigned_with_key "missing signature file; bundle is unsigned" \
@@ -206,7 +206,7 @@ run_fail_case tampered_file_manifest "sha256" \
 # signature must now fail.
 TAMPER_CREATE="$(scripts/receipt-bundle-court.sh create --root "$TAMPER_REL" \
   --manifest "$TAMPER_REL/receipt-manifest.wcb" \
-  --generated-at 2026-11-06T00:00:00Z --stamp "$STAMP" 2>>"$LOG" | tail -1)"
+  --generated-at 2026-11-06T00:00:00Z --stamp "$STAMP" 2>>"$LOG_TMP" | tail -1)"
 TAMPER_SHA="$(json_get manifest_sha256 <<<"$TAMPER_CREATE")"
 if [ "$TAMPER_SHA" = "$MANIFEST_SHA" ]; then
   echo "tampered manifest digest did not change" >&2
@@ -265,7 +265,7 @@ rm -rf "$EXTRACT"
 mkdir -p "$EXTRACT"
 tar --zstd -xf "$SIGNED_BUNDLE" -C "$EXTRACT"
 EXTRACT_REL="${EXTRACT#"$ROOT/"}"
-DIGEST_JSON="$(scripts/receipt-bundle-court.sh digest --root "$EXTRACT_REL" 2>>"$LOG" | tail -1)"
+DIGEST_JSON="$(scripts/receipt-bundle-court.sh digest --root "$EXTRACT_REL" 2>>"$LOG_TMP" | tail -1)"
 GO_DIGEST="$(json_get manifest_sha256 <<<"$DIGEST_JSON")"
 GO_PUB="$(tr -d '\n' < "$EXTRACT/public_key")"
 GO_SIG="$(tr -d '\n' < "$EXTRACT/signature")"
@@ -274,7 +274,7 @@ if GO_OUT="$(scripts/docker-court.sh go "cd /work/WeftCodec-Go && go run ./cmd/v
   case_row pass go_signature_ok "VERIFY OK"
   metric go_verified true
 else
-  printf '%s\n' "$GO_OUT" >> "$LOG"
+  printf '%s\n' "$GO_OUT" >> "$LOG_TMP"
   case_row FAIL go_signature_ok "$(tail -1 <<<"$GO_OUT")"
   exit 1
 fi
@@ -287,18 +287,18 @@ if [ "$GO_TAMPER_RC" -eq 0 ]; then
   exit 1
 fi
 grep -F -q "VERIFY FAIL" <<<"$GO_TAMPER"
-printf '%s\n' "$GO_TAMPER" >> "$LOG"
+printf '%s\n' "$GO_TAMPER" >> "$LOG_TMP"
 case_row pass go_tamper_reject "VERIFY FAIL"
 
 # ---- store-backed provenance linkage ------------------------------------
 log "provenance linkage demo"
-if ! LINKAGE="$(scripts/demo-signed-bundle.sh "$SIGNED_BUNDLE" 2>>"$LOG" | tail -1)"; then
+if ! LINKAGE="$(scripts/demo-signed-bundle.sh "$SIGNED_BUNDLE" 2>>"$LOG_TMP" | tail -1)"; then
   echo "linkage demo failed" >&2
   exit 1
 fi
 grep -F -q '"provenance_show_resolved": true' <<<"$LINKAGE"
 grep -F -q '"tamper_detected": true' <<<"$LINKAGE"
-printf '%s\n' "$LINKAGE" >> "$LOG"
+printf '%s\n' "$LINKAGE" >> "$LOG_TMP"
 metric provenance_id "$(json_get provenance_id <<<"$LINKAGE")"
 metric snapshot_id "$(json_get snapshot_id <<<"$LINKAGE")"
 metric output_content_id "$(json_get output_content_id <<<"$LINKAGE")"
@@ -381,5 +381,5 @@ print(receipt_path)
 PY
 
 log "receipt: $RECEIPT"
-log "log: $LOG"
-cp "$LOG_TMP" "$LOG"
+log "log: $LOG_FINAL"
+cp "$LOG_TMP" "$LOG_FINAL"
