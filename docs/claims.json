@@ -3454,5 +3454,123 @@
     ],
     "receipt": "bench/receipts/python-bindings-20261106T142616Z.json",
     "kind": "present"
+  },
+  {
+    "id": "r14_gcs_harness_receipt",
+    "claim": "docs/STATUS.md and bench/RESULTS-gcs.md cite the passing GCS harness receipt.",
+    "value": "gcs-20261106T150444Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_court_receipt",
+    "claim": "docs/STATUS.md and bench/RESULTS-gcs.md cite the passing GCS court receipt.",
+    "value": "gcs-court-20261106T150444Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_emulator_sha256",
+    "claim": "The verified fake-gcs-server release tarball checksum is recorded.",
+    "value": "0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_stale_probe",
+    "claim": "The GCS capability probe records that a stale ifGenerationMatch is rejected.",
+    "value": "stale_compare_exchange_rejected",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_content_root",
+    "claim": "Local and GCS reproduce the same content root in the court.",
+    "value": "0a8198f56ed59a11",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_unit_tests",
+    "claim": "The in-process fake GCS unit suite passes 14/14.",
+    "value": "14 passed / 0 failed",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": "bench/receipts/gcs-20261106T150444Z.tests.txt",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_rust_suite",
+    "claim": "docs/STATUS.md records the rust all-targets count at the GCS tree.",
+    "value": "416 passed / 0",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_fuse_suite",
+    "claim": "docs/STATUS.md records the FUSE all-targets count at the GCS tree.",
+    "value": "458 passed / 0",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_readme",
+    "claim": "README.md names the GCS JSON API backend and its generation preconditions.",
+    "value": "GCS JSON API",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/gcs-20261106T150444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r14_gcs_no_real_cloud_claim",
+    "claim": "No document claims a run against Google Cloud Storage itself.",
+    "value": "benchmarked against Google Cloud Storage",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": null,
+    "kind": "absent"
+  },
+  {
+    "id": "r14_gcs_no_service_account_signing",
+    "claim": "Both GCS documents state that GOOGLE_APPLICATION_CREDENTIALS alone is refused because RS256 signing is not implemented.",
+    "value": "GOOGLE_APPLICATION_CREDENTIALS",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-gcs.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

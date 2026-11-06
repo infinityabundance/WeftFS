@@ -70,8 +70,23 @@ that assumes a directory tree.**
 
 `ControlRecord.token` is always `BLAKE3("weft/control/token/v1", bytes)` in hex,
 for **every** backend. An S3 ETag is a transport detail used inside the S3
-implementation; it never leaks into the contract, so a caller cannot mistake a
-stale ETag for the bytes it actually read.
+implementation and a GCS object generation is a transport detail used inside
+the GCS implementation; neither ever leaks into the contract, so a caller
+cannot mistake a stale ETag or generation for the bytes it actually read.
+
+## 1a. Backend implementations
+
+| backend | file | create-once primitive | compare-and-swap primitive |
+|---|---|---|---|
+| `local` | `src/backend.rs` | `link(2)` of a written+fsynced temp file (rename fallback recorded) | writer lock + content-token check |
+| `object` | `src/backend.rs` | `link(2)` in a content-addressed namespace | writer lock + content-token check |
+| `s3` | `src/s3.rs` | `PUT` with `If-None-Match: *` | `GET` + `PUT` with `If-Match: <ETag>` |
+| `gcs` | `src/gcs.rs` | JSON API upload with `ifGenerationMatch=0` | metadata+media read, then upload with `ifGenerationMatch=<observed generation>` |
+
+All four feed the same `StorageBackend` adapter, so the store, FUSE, GC,
+verify, and recovery have one implementation of each physical operation. The
+GCS backend's stale-generation probe and court are described in
+[`bench/RESULTS-gcs.md`](../bench/RESULTS-gcs.md).
 
 ## 2. Key routing
 

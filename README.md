@@ -89,14 +89,20 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
 - **Distributed court (R13):** **9/9 scenarios, 229 checks, 0 failed** against
   real MinIO, including split planes; it found and fixed a real
   `Corrupt`-versus-`Io` defect.
+- **GCS backend (R14):** JSON API with OAuth2 bearer tokens and **generation
+  preconditions** (`ifGenerationMatch`), the same blob/commit plane contract,
+  and a real `fake-gcs-server` court: same content root, generation 21, and
+  commit sequence 1…21 as local, clean `verify --full`, and a stale-generation
+  probe that refuses any endpoint accepting a stale write.
 - **Verification:** `verify-20261106T141623Z.json` is **27/27 courts pass** at
   WeftFS `cef37bc`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
   `007bf11`. The v0.8.0 release receipt `verify-20261106T011444Z.json` (also
   27/27) is retained. The Python court reports **331 tests, 0 failures, 9
   skipped** (`python-bindings-20261106T142616Z.json`).
 - **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD,
-  3FS/GCS/Azure/Ceph, PyPI publication, multi-writer/multi-node/fleet, Go v4
-  writer/compaction, Go packs, Go `--calibration`, Go split parity, and Python
+  3FS/Azure/Ceph, a real Google Cloud Storage deployment, PyPI publication,
+  multi-writer/multi-node/fleet, Go v4 writer/compaction, Go packs, Go
+  `--calibration`, Go split parity, and Python
   selectors/context/capabilities/checkpoints/archives.
 
 ## What's new in v0.8.0
@@ -128,6 +134,32 @@ in the MinIO court; every loss is in
 [`bench/RESULTS-planes.md`](bench/RESULTS-planes.md), and the contract,
 including what an external metadata engine must implement, is in
 [`docs/PLANES.md`](docs/PLANES.md).
+
+### GCS backend (R14, post-0.8.0 work)
+
+A second real object-store backend, `src/gcs.rs`, implements the same
+`BlobPlane` and `CommitPlane` over the **GCS JSON API**. GCS's concurrency model
+is generation preconditions, not ETags: create-once is
+`ifGenerationMatch=0`, compare-and-swap is
+`ifGenerationMatch=<observed generation>`, and a failed precondition (`412`) is
+the same `Busy` class S3's `412` produces. Authentication is an OAuth2 bearer
+token (`--gcs-token`, `WEFT_GCS_ACCESS_TOKEN`, `GOOGLE_OAUTH_ACCESS_TOKEN`) or
+anonymous for an emulator; RS256 service-account signing is not implemented and
+is refused rather than approximated. The capability probe publishes, attempts a
+second create, performs a matching-generation update, and then requires a
+**stale** generation update to be rejected; an endpoint that accepts the stale
+write is refused `UnsupportedVersion` before any commit. A single `--backend
+gcs` store and split layouts (`--blob-backend gcs` or `--commit-backend gcs`)
+both work, and the normative object layout is unchanged.
+
+`bash bench/scripts/gcs_court.sh` runs the pinned `fake-gcs-server` `v1.56.1`
+binary on loopback inside the rust court: local and GCS produce the same
+content root, the same commit sequence, a clean `verify --full`, and a matching
+read-only reopen; the crash proxy is old-or-new in all three phases; the
+superblock's GCS generation is strictly increasing. Unit tests use an
+in-process fake GCS service (no new dependency). Every loss and non-claim — the
+emulator is not GCS, no media or cloud claim, bearer tokens only — is in
+[`bench/RESULTS-gcs.md`](bench/RESULTS-gcs.md).
 
 ### Rebase parity and host calibration (R12, post-0.8.0 work)
 

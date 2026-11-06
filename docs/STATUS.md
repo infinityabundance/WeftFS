@@ -3556,3 +3556,163 @@ non-disclosure without needing MinIO.
   each retry; production waits it out and the lease is never disabled. The
   receipt records this.
 * The court is Rust-only; the split layout's commit plane is local in S9.
+
+## Subphase R14 — GCS backend (2026-11-06)
+
+`src/planes.rs` splits durable storage into an immutable **blob plane** and a
+versioned **commit plane**; `src/s3.rs` implements both for S3-compatible
+services with SigV4, `If-None-Match: *` / `If-Match`, and a probed stale-CAS
+refusal. GCS is the next backend target, but its concurrency model is
+**generation preconditions** (`ifGenerationMatch`), not ETags. R14 adds a GCS
+JSON-API backend against the same two planes. No manifest, commit record,
+superblock slot, logical key name, or conformance vector changed.
+
+### What is implemented
+
+* `src/gcs.rs` — `GcsConfig` and `GcsBackend`.
+  * `BlobPlane`: `get` (`alt=media`), `get_range` (`Range` header, `206`),
+    `put_if_absent` (`ifGenerationMatch=0`), `len`/`exists` (object metadata),
+    `delete`, `list` (object collection with `prefix`/`pageToken`), `head_part`/
+    `probe` (the shared plane probes), `clean_stale`, `init_layout`.
+  * `CommitPlane`: `read_control`, `compare_exchange` (read the bytes and the
+    observed generation, refuse unless the caller's content token matches, then
+    upload with `ifGenerationMatch=<generation>`), `write_control` (generation-
+    conditioned retry), `create_control`, `put_control_if_absent`,
+    `delete_control`, `control_len`, `control_exists`, `list_control`,
+    `sync_dir` (provider acknowledgement), `acquire_lock` (a `LOCK` object with
+    an owner and lease; an expired lease is reclaimed with
+    `ifGenerationMatch=<observed>`), and `probe`.
+  * HTTP `412 Precondition Failed` maps to the same `Busy` class the S3 backend
+    reports for a lost conditional write. `401`/`403` are `Unauthorized`; every
+    transport failure is `Io` and is never reported as `Corruption`; `413` is
+    `LimitExceeded`.
+  * Uploads: payloads up to 5 MiB use the JSON API simple media upload; larger
+    payloads use the documented two-step resumable upload (session initiation
+    carries the precondition, the bytes go to the returned session URI in one
+    bounded request, and `308` is a hard error — a partial upload is never
+    published).
+  * A generation is read *and re-checked after the bytes*, so a concurrent
+    replacement can never be mistaken for the observed state. That read is
+    bounded to four attempts and then fails `Busy`.
+* `StorageBackend for GcsBackend` delegates to those same plane operations, so
+  one implementation of each physical operation carries the CLI, the store,
+  FUSE, GC, verify, and recovery. `BackendKind::Gcs { config }` participates in
+  split layouts (`--blob-backend gcs --commit-backend local` and the reverse).
+* CLI: `--backend gcs` (and `--blob-backend`/`--commit-backend gcs`) with
+  `--gcs-endpoint`, `--gcs-bucket`, `--gcs-token`, `--gcs-project`,
+  `--gcs-anonymous`; environment `WEFT_GCS_ENDPOINT`, `WEFT_GCS_BUCKET`,
+  `WEFT_GCS_ACCESS_TOKEN` / `GOOGLE_OAUTH_ACCESS_TOKEN`, `WEFT_GCS_PROJECT` /
+  `GOOGLE_CLOUD_PROJECT`, `WEFT_GCS_ANONYMOUS`, `WEFT_GCS_LOCK_LEASE_SECS`.
+* Authentication is an OAuth2 **bearer token** supplied by flags or environment,
+  or anonymous mode for an emulator. Service-account JSON key signing needs
+  RS256 and is **not** implemented: setting `GOOGLE_APPLICATION_CREDENTIALS`
+  alone is refused with a message saying so. No RSA dependency was added.
+  `GcsConfig`'s `Debug` redacts the token, and no token reaches diagnostics,
+  error text, receipts, or the court's environment list.
+* The logical listing helpers (`objects/`, `manifests/`, `indexes/`, `refs/`,
+  `tmp/`, `packs/`) moved from `src/s3.rs` to `src/backend.rs` verbatim and are
+  now shared, so the S3 and GCS listing paths cannot drift from the normative
+  layout.
+
+### Generation preconditions and the stale-must-fail probe
+
+The probe runs on every writable open (`init_layout`/`ensure_layout`, before any
+commit is published) and again as `CommitPlane::probe`, both against a private
+`tmp/` key:
+
+1. publish with `ifGenerationMatch=0` — must succeed (create-once);
+2. publish a second time with `ifGenerationMatch=0` — must be refused `412`,
+   otherwise the store is refused `UnsupportedVersion` because create-once
+   cannot be guaranteed;
+3. read the bytes and the observed generation;
+4. publish with `ifGenerationMatch=<observed>` — must succeed;
+5. publish **again** with the same, now stale, generation — must be refused
+   `412`. An endpoint that accepts it is refused `UnsupportedVersion`, because
+   head publication could then lose a race silently.
+
+A probe may only refute a declared capability, never upgrade one. Durability is
+not probed: `durable_fsync` means the provider acknowledged the write, exactly
+as for the S3 backend, and no media or power-loss claim is made.
+
+### Court
+
+`bench/scripts/gcs_court.sh` downloads the pinned
+`fake-gcs-server` `v1.56.1` `linux-amd64` release tarball (sha256
+`0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469`), verifies
+it, and runs the binary **inside** the rust court on loopback with the memory
+backend. If the binary cannot be obtained the script writes an
+`emulator_unavailable` receipt naming the exact command and error; it never
+substitutes another emulator.
+
+Passing receipt `bench/receipts/gcs-20261106T150444Z.json` (harness, at
+WeftFS `ca7004c`) and `bench/receipts/gcs-court-20261106T150444Z.json` (court):
+12 files x 32 KiB, 8 KiB chunks, eight 4 KiB range writes, deterministic ids
+and fixed clock.
+
+* local and GCS produce the **same content root**
+  (`0a8198f56ed59a11…`), the same **generation 21**, the same **commit sequence
+  1…21**, the same 393,216 verified bytes, and the same content digest
+  (`2e3b9902…`).
+* GCS `verify --full` is clean; a read-only reopen recovers generation 21 and
+  the same root with a clean full verify.
+* The `superblock` control object's GCS generation was sampled three times and
+  is strictly increasing (`1793977493537315`, `…551975`, `…563518`): every head
+  publication replaced it under `ifGenerationMatch`.
+* The plane probe recorded `stale_compare_exchange_rejected: true` against the
+  real emulator, not only the in-process fake.
+* Crash proxy (CLI aborted by signal at each phase): `after_objects` → old
+  state, clean verify; `after_commit_file` → old state plus the documented
+  unpublished commit tail (the only problem accepted, and labelled); 
+  `after_superblock_write` → new state, clean verify. 3/3 old-or-new, **0
+  partial**.
+* 14/14 in-process fake-GCS unit tests in the same run.
+
+### Defects found and fixed by running the emulator
+
+1. `buckets.insert` was sent to `/storage/v1/b/<bucket>` with an empty body.
+   GCS takes the bucket resource in the body of `POST /storage/v1/b?project=…`;
+   the emulator returned `400 EOF`. The backend now sends `{"name": …}` to the
+   collection URL. Retained failing receipt `gcs-court-20261106T145714Z.json`.
+2. Object listing used `/storage/v1/b/<bucket>?prefix=…` (bucket metadata)
+   instead of `/storage/v1/b/<bucket>/o?prefix=…`. The emulator's listing was
+   therefore empty and `verify --full` reported a broken parent chain. Fixed.
+   Retained failing receipt `gcs-court-20261106T145838Z.json` (a first run that
+   also over-asserted a clean verify for the documented unpublished tail).
+
+### Tests and gates
+
+* `cargo test --test gcs_backend -- --test-threads=1`: **14 passed / 0 failed**.
+* `cargo test --all-targets` (rust court, WeftFS `ca7004c`): **416 passed / 0
+  failed / 0 ignored**.
+* `cargo test --features fuse --all-targets` (fuse court): **458 passed / 0
+  failed / 2 ignored** (the two pre-existing ignores).
+* `bench/scripts/gcs_court.sh`: unit tests 14/14 and the court above.
+* `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh` pass.
+
+### Residual and non-claims
+
+* The emulator is `fake-gcs-server` with a **memory** backend on loopback. It is
+  not Google Cloud Storage: no IAM, no bucket policies, no requester-pays, no
+  object composition, no signed URLs, no multi-region behaviour, no media
+  durability, and no physical power loss. Nothing here is a cloud, fleet,
+  multi-node, or production claim.
+* Only bearer-token authentication is implemented. No OAuth2 refresh flow, no
+  service-account JWT (RS256), no workload identity, no `GOOGLE_APPLICATION_CREDENTIALS`.
+  Anonymous mode is for emulators and is refused together with a token.
+* Writers are exclusive by design (one `LOCK` object with a lease); no
+  multi-writer protocol is claimed.
+* The generation-precondition read is bounded to four attempts; a store under
+  continuous concurrent replacement fails `Busy` instead of guessing.
+* `modified()` returns `None` (the JSON API reports a timestamp string and this
+  crate has no date parser); the store does not depend on it.
+* No batch/JSON-multipart upload path, no retry on `429`/`5xx`, no client-side
+  rate limiting. A `429` is an `Io` error.
+* Rust only. WeftFS-Go has no GCS backend, so there is no cross-language GCS
+  parity claim; the on-disk format is unchanged by this subphase.
+* The in-process fake service returns one listing page and does not paginate;
+  the real emulator court exercises pagination-free listings of 21 commits plus
+  objects. Pagination is implemented in the backend but only exercised for the
+  single-page case.
+* The crash proxy is a process-fault proxy (the CLI is aborted by signal), not
+  a physical power-loss test; each phase waits out the 2 s lock lease before
+  reopening, which the receipt records.
