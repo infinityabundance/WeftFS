@@ -94,6 +94,21 @@ struct Cli {
         default_value = "local"
     )]
     backend: String,
+    /// Optional blob plane for a split store: immutable chunks, manifests, and
+    /// indexes live here while commit/control state stays on `--commit-backend`.
+    /// Omitted means "same as --backend", i.e. the historical single backend.
+    #[arg(long = "blob-backend", global = true, value_name = "local|object|s3")]
+    blob_backend: Option<String>,
+    /// Optional commit plane for a split store: `FORMAT`, `LOCK`, the
+    /// superblock, commit records, and refs live here. Omitted means "same as
+    /// --backend".
+    #[arg(long = "commit-backend", global = true, value_name = "local|object|s3")]
+    commit_backend: Option<String>,
+    /// Optional local directory for the blob plane of a split store, when both
+    /// planes are POSIX-shaped. Ignored by a remote blob plane, which is
+    /// addressed by its bucket instead.
+    #[arg(long = "blob-root", global = true, value_name = "DIR")]
+    blob_root: Option<PathBuf>,
     /// S3-compatible endpoint, e.g. `http://127.0.0.1:9000`.
     #[arg(long = "s3-endpoint", global = true, value_name = "URL")]
     s3_endpoint: Option<String>,
@@ -1004,6 +1019,12 @@ enum CliBackend {
     Local,
     Object,
     S3(S3Config),
+    /// Blobs on one plane, commit/control state on another.
+    Split {
+        blobs: Box<CliBackend>,
+        commits: Box<CliBackend>,
+        blob_root: Option<PathBuf>,
+    },
 }
 
 impl CliBackend {
@@ -1014,11 +1035,24 @@ impl CliBackend {
             CliBackend::S3(config) => BackendKind::S3 {
                 config: config.clone(),
             },
+            CliBackend::Split {
+                blobs,
+                commits,
+                blob_root,
+            } => BackendKind::Split {
+                blobs: Box::new(blobs.kind()),
+                commits: Box::new(commits.kind()),
+                blob_root: blob_root.clone(),
+            },
         }
     }
 
     fn is_remote(&self) -> bool {
-        matches!(self, CliBackend::S3(_))
+        match self {
+            CliBackend::S3(_) => true,
+            CliBackend::Split { commits, .. } => commits.is_remote(),
+            _ => false,
+        }
     }
 }
 
@@ -1081,6 +1115,68 @@ fn parse_backend(
     }
 }
 
+/// Resolve the physical layout: one backend, or two explicit planes.
+///
+/// Every CLI verb path relies on this, so the split is opt-in and a store is
+/// never silently opened with a different layout than it was written with.
+#[allow(clippy::too_many_arguments)]
+fn parse_planes(
+    backend: &str,
+    blob_backend: Option<&str>,
+    commit_backend: Option<&str>,
+    blob_root: Option<PathBuf>,
+    endpoint: Option<String>,
+    bucket: Option<String>,
+    region: Option<String>,
+    access_key: Option<String>,
+    secret_key: Option<String>,
+    session_token: Option<String>,
+) -> Result<CliBackend> {
+    let base = parse_backend(
+        backend,
+        endpoint.clone(),
+        bucket.clone(),
+        region.clone(),
+        access_key.clone(),
+        secret_key.clone(),
+        session_token.clone(),
+    )?;
+    let blobs = blob_backend
+        .map(|text| {
+            parse_backend(
+                text,
+                endpoint.clone(),
+                bucket.clone(),
+                region.clone(),
+                access_key.clone(),
+                secret_key.clone(),
+                session_token.clone(),
+            )
+        })
+        .transpose()?;
+    let commits = commit_backend
+        .map(|text| {
+            parse_backend(
+                text,
+                endpoint,
+                bucket,
+                region,
+                access_key,
+                secret_key,
+                session_token,
+            )
+        })
+        .transpose()?;
+    match (blobs, commits) {
+        (None, None) => Ok(base),
+        (blobs, commits) => Ok(CliBackend::Split {
+            blobs: Box::new(blobs.unwrap_or_else(|| base.clone())),
+            commits: Box::new(commits.unwrap_or(base)),
+            blob_root,
+        }),
+    }
+}
+
 fn parse_representation(text: &str) -> Result<RepresentationMode> {
     match text {
         "raw" => Ok(RepresentationMode::Raw),
@@ -1114,6 +1210,9 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation,
         backend,
+        blob_backend,
+        commit_backend,
+        blob_root,
         s3_endpoint,
         s3_bucket,
         s3_region,
@@ -1153,8 +1252,11 @@ fn run(cli: Cli) -> Result<()> {
             content_identity.as_deref().unwrap_or("whole-file"),
         )?,
         codec_min_bytes: parse_codec_min_bytes(codec_min_bytes.as_deref())?,
-        backend: parse_backend(
+        backend: parse_planes(
             &backend,
+            blob_backend.as_deref(),
+            commit_backend.as_deref(),
+            blob_root,
             s3_endpoint,
             s3_bucket,
             s3_region,
@@ -1248,6 +1350,8 @@ fn run(cli: Cli) -> Result<()> {
                     "codec_min_bytes": policy.codec_min_bytes,
                     "rejected_generations": store.rejected_generations(),
                     "recovery_notes": store.recovery_notes(),
+                    "backend": store.backend_kind().describe(),
+                    "planes": store.plane_capabilities(),
                 }))
             } else {
                 println!("format=weftfs-store 1");
@@ -1260,6 +1364,7 @@ fn run(cli: Cli) -> Result<()> {
                 println!("representation={}", policy.representation.as_str());
                 println!("content_identity={}", policy.content_identity.as_str());
                 println!("codec_min_bytes={}", policy.codec_min_bytes);
+                println!("backend={}", store.backend_kind().describe());
                 for generation in store.rejected_generations() {
                     println!("rejected_generation={generation}");
                 }
