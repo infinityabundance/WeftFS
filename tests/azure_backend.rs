@@ -1167,9 +1167,20 @@ fn live_store_round_trips_and_reopens() {
     let root = store.resolve_path("/").unwrap();
     let body = payload(8192, 11);
     let id = store
-        .create_file_seeded(root, b"live.txt", &body, 0o644, 0, 0, Default::default(), b"live")
+        .create_file_seeded(
+            root,
+            b"live.txt",
+            &body,
+            0o644,
+            0,
+            0,
+            Default::default(),
+            b"live",
+        )
         .expect("create");
-    store.write_file(id, 32, &payload(64, 0x22)).expect("range write");
+    store
+        .write_file(id, 32, &payload(64, 0x22))
+        .expect("range write");
     let mut expected = body.clone();
     expected[32..96].copy_from_slice(&payload(64, 0x22));
     assert_eq!(store.read_object(id).unwrap(), expected);
@@ -1259,4 +1270,345 @@ fn live_lock_is_released_with_a_conditional_tombstone() {
     assert!(record.released_from.is_some());
     let reopened = Store::open_with_backend(&path, OpenMode::ReadWrite, kind).expect("reopen");
     drop(reopened);
+}
+
+// ---------------------------------------------------------------------------
+// SAS acceptance (subphase R23)
+//
+// R21 shipped the SAS credential form with request-construction tests but no
+// acceptance evidence. These tests mint a real service SAS from the documented
+// string-to-sign and require Azurite to accept it.
+//
+// The string-to-sign is the 15-field form for service version 2018-11-09 and
+// later, taken from Microsoft's "Create a service SAS" reference. Fields are
+// joined with `\n`; the omitted optional fields are present as empty strings.
+// ---------------------------------------------------------------------------
+
+/// Mint a container-scoped service SAS. `permissions` must be in the
+/// documented `racwdl` order.
+fn service_sas(
+    account: &str,
+    key_b64: &str,
+    container: &str,
+    permissions: &str,
+    version: &str,
+) -> String {
+    let start = "2026-11-01T00:00:00Z";
+    let expiry = "2031-01-01T00:00:00Z";
+    let canonical = format!("/blob/{account}/{container}");
+    // sp, st, se, canonicalizedResource, si, sip, spr, sv, sr, sst, rscc, rscd,
+    // rsce, rscl, rsct
+    let fields = [
+        permissions,
+        start,
+        expiry,
+        canonical.as_str(),
+        "",
+        "",
+        "",
+        version,
+        "c",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    ];
+    let string_to_sign = fields.join("\n");
+    let key = weftfs::b64::decode_any(key_b64).expect("account key");
+    let signature = hmac_sha256(&key, string_to_sign.as_bytes());
+    let sig = weftfs::b64::encode_standard(&signature);
+    // Only `+`, `/` and `=` need escaping in a base64 value.
+    let mut encoded = String::with_capacity(sig.len() + 8);
+    for byte in sig.bytes() {
+        match byte {
+            b'+' => encoded.push_str("%2B"),
+            b'/' => encoded.push_str("%2F"),
+            b'=' => encoded.push_str("%3D"),
+            other => encoded.push(other as char),
+        }
+    }
+    format!("sp={permissions}&sr=c&sv={version}&st={start}&se={expiry}&sig={encoded}")
+}
+
+fn sas_config(live: &Live, container: &str, permissions: &str) -> AzureConfig {
+    let key = live
+        .key
+        .clone()
+        .expect("the live court supplies a SharedKey");
+    AzureConfig {
+        endpoint: live.endpoint.clone(),
+        container: container.to_owned(),
+        account: live.account.clone(),
+        sas_token: Some(service_sas(
+            &live.account,
+            &key,
+            container,
+            permissions,
+            "2018-11-09",
+        )),
+        key: None,
+        anonymous: false,
+        lock_lease: Duration::from_secs(2),
+        request_timeout: Duration::from_secs(60),
+    }
+}
+
+#[test]
+fn live_sas_token_authenticates_and_preserves_the_store() {
+    let Some(live) = live() else { return };
+    if live.key.is_none() {
+        eprintln!("SKIP azure SAS court: the court did not supply a SharedKey to mint a SAS");
+        return;
+    }
+    let container = live.container("live-sas");
+
+    // 1. Write the store with SharedKey.
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let mut store =
+        Store::init_with_backend(&path, options(), live.kind_for(&container)).expect("init");
+    let root = store.resolve_path("/").unwrap();
+    let body = payload(4096, 0x5a);
+    let id = store
+        .create_file_seeded(
+            root,
+            b"sas.txt",
+            &body,
+            0o644,
+            0,
+            0,
+            Default::default(),
+            b"sas",
+        )
+        .expect("create");
+    store.snapshot_create("before-sas").unwrap();
+    let generation = store.generation();
+    drop(store);
+
+    // 2. Reopen with a SAS and no account key at all.
+    let read_kind = BackendKind::Azure {
+        config: sas_config(&live, &container, "rcwdl"),
+    };
+    let reopened = Store::open_with_backend(&path, OpenMode::ReadOnly, read_kind.clone())
+        .expect("a SAS must authenticate a read-only open");
+    assert_eq!(reopened.generation(), generation);
+    assert_eq!(reopened.read_object(id).unwrap(), body);
+    assert!(reopened.verify(true).unwrap().ok, "verify over SAS");
+    eprintln!("R23 SAS: accepted read-only open, object read, and verify(true) over a ");
+    eprintln!("R23 SAS: container-scoped service SAS (sp=rcwdl)");
+
+    // 3. A writable open is refused by the service at the container-properties
+    //    check. A container-scoped service SAS authorises blob data operations
+    //    (FORMAT, commits, objects, LOCK) but not `HEAD ?restype=container`
+    //    (Get Container Properties). Azurite 3.35.0 answers HTTP 403 here, so a
+    //    writable open needs SharedKey or an account SAS. This is a documented
+    //    limitation of the credential form, not a retryable condition.
+    let err = match Store::open_with_backend(&path, OpenMode::ReadWrite, read_kind) {
+        Ok(_) => panic!("expected the service to refuse the container-properties check"),
+        Err(err) => err,
+    };
+    assert_eq!(err.class_name(), "Unauthorized", "{err}");
+    assert!(
+        err.to_string().contains("denied reading container"),
+        "the refusal must name the container-properties check: {err}"
+    );
+    eprintln!(
+        "R23 SAS: writable open refused: class={} message={err}",
+        err.class_name()
+    );
+
+    // 4. The credential really is a SAS: blob writes and reads work with no
+    //    `Authorization` header at all. `ensure_layout` is deliberately not
+    //    called because it begins with the container-properties check refused
+    //    above.
+    let mut backend =
+        AzureBackend::new("<azure-sas-court>", sas_config(&live, &container, "rcwdl"));
+    backend
+        .put_if_absent(&Key::tmp("sas-probe"), b"sas")
+        .expect("blob write under SAS");
+    assert_eq!(
+        BlobPlane::get(&backend, &Key::tmp("sas-probe")).unwrap(),
+        b"sas"
+    );
+    eprintln!("R23 SAS: accepted create-once blob write and blob read over the SAS");
+}
+
+#[test]
+fn live_read_only_sas_refuses_a_writable_open() {
+    let Some(live) = live() else { return };
+    if live.key.is_none() {
+        eprintln!("SKIP azure SAS court: the court did not supply a SharedKey to mint a SAS");
+        return;
+    }
+    let container = live.container("live-sas-ro");
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let store =
+        Store::init_with_backend(&path, options(), live.kind_for(&container)).expect("init");
+    drop(store);
+
+    let read_only = BackendKind::Azure {
+        config: sas_config(&live, &container, "r"),
+    };
+    // A read-only open is fine.
+    Store::open_with_backend(&path, OpenMode::ReadOnly, read_only.clone()).expect("read-only open");
+
+    // A writable open must be refused by the service, not by a local guess.
+    let err = match Store::open_with_backend(&path, OpenMode::ReadWrite, read_only) {
+        Ok(_) => panic!("a read-only SAS must not authorise a writable open"),
+        Err(err) => err,
+    };
+    assert_eq!(
+        err.class_name(),
+        "Unauthorized",
+        "the refusal must come from the service: {err}"
+    );
+    eprintln!(
+        "R23 SAS: sp=r writable open refused: class={} message={err}",
+        err.class_name()
+    );
+}
+
+#[test]
+fn live_a_tampered_sas_is_rejected() {
+    let Some(live) = live() else { return };
+    if live.key.is_none() {
+        eprintln!("SKIP azure SAS court: the court did not supply a SharedKey to mint a SAS");
+        return;
+    }
+    let container = live.container("live-sas-bad");
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let store =
+        Store::init_with_backend(&path, options(), live.kind_for(&container)).expect("init");
+    drop(store);
+
+    // The signature is valid for `r`; changing the permission to `rcwdl`
+    // invalidates it. If the service accepted this, the signature would be
+    // decorative.
+    let good = service_sas(
+        &live.account,
+        live.key.as_deref().unwrap(),
+        &container,
+        "r",
+        "2018-11-09",
+    );
+    let tampered = good.replace("sp=r&", "sp=rcwdl&");
+    let config = AzureConfig {
+        endpoint: live.endpoint.clone(),
+        container: container.clone(),
+        account: live.account.clone(),
+        key: None,
+        sas_token: Some(tampered),
+        anonymous: false,
+        lock_lease: Duration::from_secs(2),
+        request_timeout: Duration::from_secs(60),
+    };
+    let err =
+        match Store::open_with_backend(&path, OpenMode::ReadWrite, BackendKind::Azure { config }) {
+            Ok(_) => panic!("a tampered SAS must be rejected"),
+            Err(err) => err,
+        };
+    assert_eq!(err.class_name(), "Unauthorized", "{err}");
+    assert!(
+        err.to_string().contains("cannot read FORMAT"),
+        "the tampered SAS must be refused at the first authenticated read: {err}"
+    );
+    eprintln!(
+        "R23 SAS: tampered signature refused: class={} message={err}",
+        err.class_name()
+    );
+}
+
+/// Prove exactly which Azure Blob operations a container-scoped service SAS
+/// authorizes on Azurite 3.35.0. Blob data operations that need `w` are
+/// accepted with `rcwdl`/`racwdl`; Get Container Properties
+/// (`HEAD ?restype=container`) is refused under every permission set. That is
+/// why a writable store open, which checks container properties, must use
+/// SharedKey or an account SAS, while a read-only open works over a SAS.
+#[test]
+fn live_sas_authorizes_blob_data_but_not_container_properties() {
+    let Some(live) = live() else { return };
+    if live.key.is_none() {
+        eprintln!("SKIP azure SAS matrix: the court did not supply a SharedKey to mint a SAS");
+        return;
+    }
+    let container = live.container("live-sas-matrix");
+    let mut shared = AzureBackend::new("<matrix>", live.config_for(&container));
+    shared.ensure_layout().expect("shared layout");
+    for perms in ["r", "rcwdl", "racwdl"] {
+        let mut backend = AzureBackend::new("<matrix>", sas_config(&live, &container, perms));
+        match backend.ensure_container() {
+            Ok(()) => panic!(
+                "Azurite accepted Get Container Properties under a service SAS \
+                 (sp={perms}); the documented limitation must be revisited"
+            ),
+            Err(err) => {
+                assert_eq!(err.class_name(), "Unauthorized", "sp={perms}: {err}");
+                eprintln!(
+                    "R23 matrix: sp={perms} HEAD container refused: class={}",
+                    err.class_name()
+                );
+            }
+        }
+        let put = backend.put_if_absent(&Key::tmp(&format!("matrix-{perms}")), b"x");
+        if perms.contains('w') {
+            put.expect("a SAS with w must authorize a create-once blob write");
+            eprintln!("R23 matrix: sp={perms} blob PUT accepted");
+        } else {
+            match put {
+                Ok(()) => panic!("a read-only SAS must not authorize a blob create"),
+                Err(err) => {
+                    assert_eq!(err.class_name(), "Unauthorized", "sp={perms}: {err}");
+                    eprintln!(
+                        "R23 matrix: sp={perms} blob PUT refused: class={}",
+                        err.class_name()
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn live_anonymous_is_refused_on_a_private_container() {
+    // Anonymous is a supported credential form, but this court can only prove
+    // that Azurite *refuses* it for a container whose ACL is private (the
+    // default). Public container access is untested here: proving acceptance
+    // needs an account whose container ACL is set to `blob` or `container`,
+    // which this emulator court does not configure.
+    let Some(live) = live() else { return };
+    if live.key.is_none() {
+        eprintln!("SKIP azure anonymous court: the court did not supply a SharedKey");
+        return;
+    }
+    let container = live.container("live-anon");
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let store =
+        Store::init_with_backend(&path, options(), live.kind_for(&container)).expect("init");
+    drop(store);
+
+    let config = AzureConfig {
+        endpoint: live.endpoint.clone(),
+        container: container.clone(),
+        account: live.account.clone(),
+        key: None,
+        sas_token: None,
+        anonymous: true,
+        lock_lease: Duration::from_secs(2),
+        request_timeout: Duration::from_secs(60),
+    };
+    let err =
+        match Store::open_with_backend(&path, OpenMode::ReadOnly, BackendKind::Azure { config }) {
+            Ok(_) => panic!("an anonymous open of a private container must be refused"),
+            Err(err) => err,
+        };
+    assert_eq!(err.class_name(), "Unauthorized", "{err}");
+    eprintln!(
+        "R23 anonymous: private-container open refused: class={} message={err}",
+        err.class_name()
+    );
 }

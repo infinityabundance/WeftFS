@@ -914,14 +914,16 @@ impl Store {
         }
         let mut backend = backend_kind.open(&root)?;
         let format_bytes = backend.read_all(&Key::format()).map_err(|err| {
-            // A transport failure is not corruption. Keep the I/O class so an
-            // operator (and the distributed court) can distinguish an
-            // unreachable endpoint from a damaged store; every other failure
-            // to read FORMAT means this is not a usable store.
-            if err.class() == Class::Io {
-                Error::io(format!("cannot read FORMAT: {err}"))
-            } else {
-                Error::corrupt(format!("cannot read FORMAT: {err}"))
+            // A transport or authorization failure is not corruption. Keep the
+            // I/O class so an operator (and the distributed court) can
+            // distinguish an unreachable endpoint from a damaged store, and
+            // keep an authorization refusal classified as `Unauthorized` so a
+            // bad credential is never reported as damaged data. Every other
+            // failure to read FORMAT means this is not a usable store.
+            match err.class() {
+                Class::Io => Error::io(format!("cannot read FORMAT: {err}")),
+                Class::Unauthorized => Error::unauthorized(format!("cannot read FORMAT: {err}")),
+                _ => Error::corrupt(format!("cannot read FORMAT: {err}")),
             }
         })?;
         let format = std::str::from_utf8(&format_bytes)

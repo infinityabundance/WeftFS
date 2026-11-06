@@ -45,10 +45,10 @@ fi
 status=0
 
 # 1. Backend tests: the in-process fake plus the live-emulator court.
-if ! cargo test --test azure_backend -- --test-threads=1 >"$tests_log" 2>&1; then
+if ! cargo test --test azure_backend -- --test-threads=1 --nocapture >"$tests_log" 2>&1; then
   status=1
 fi
-grep -E '^(test |test result|SKIP )' "$tests_log" >"$tests_summary" || true
+grep -E '^(test |test result|SKIP |R23 )' "$tests_log" >"$tests_summary" || true
 
 # 2. Fenced-writer court over the emulator. These are the same
 #    backend-agnostic invariants the S3 and GCS courts run

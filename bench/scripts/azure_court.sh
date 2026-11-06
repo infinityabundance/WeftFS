@@ -174,7 +174,7 @@ cat > "$court_receipt" <<JSON
   "container_name_prefix": "$court_container",
   "account": "$account",
   "tests": {
-    "command": "cargo test --test azure_backend -- --test-threads=1",
+    "command": "cargo test --test azure_backend -- --test-threads=1 --nocapture",
     "log": "${WEFT_AZURE_TESTS_LOG}",
     "summary": "${WEFT_AZURE_TESTS_LOG%.log}.txt"
   },

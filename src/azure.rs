@@ -38,10 +38,18 @@
 //! * **SAS** — a pre-signed query string, appended verbatim to each request.
 //! * **anonymous** — no credential at all.
 //!
-//! Only the SharedKey path is exercised against a real emulator. SAS and
-//! anonymous are implemented and unit-tested for request construction (no
-//! `Authorization` header, the query string preserved), but no court proves an
-//! Azurite or Azure deployment accepts them, so no such claim is made.
+//! SharedKey and SAS are exercised against a real emulator (the Azure court,
+//! subphase R23). A container-scoped service SAS authenticates blob data
+//! operations — reads, writes, and a full `verify` — but Azurite 3.35.0 refuses
+//! the `HEAD ?restype=container` container-properties check that a **writable**
+//! open performs, so a writable open needs SharedKey (proven here) or an
+//! account SAS (not tested; Azurite accepted no container-scoped service SAS
+//! for that call). That is a documented limitation of this credential form,
+//! not a retryable condition.
+//! Anonymous is implemented and unit-tested for request construction; the court
+//! proves only that a private container refuses it. Acceptance of anonymous
+//! access is unproven — it needs a real account whose container ACL is `blob`
+//! or `container` — so no such claim is made.
 //!
 //! Secrets are never written to diagnostics, receipts, or error messages;
 //! [`AzureConfig`]'s `Debug` redacts them.
@@ -985,6 +993,12 @@ impl AzureBackend {
     }
 
     /// Ensure the configured container exists. Idempotent.
+    ///
+    /// This begins with `HEAD ?restype=container` (Get Container Properties).
+    /// Azurite 3.35.0 refuses that call under a container-scoped service SAS
+    /// with HTTP 403, even when the SAS carries `rcwdl`, so a writable open
+    /// over a SAS fails here with `Unauthorized`. SharedKey is unaffected; an
+    /// account SAS was not tested.
     pub fn ensure_container(&self) -> Result<()> {
         let response = self.request(
             "HEAD",
