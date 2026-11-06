@@ -65,6 +65,10 @@ struct State {
     /// When true, a non-zero `ifGenerationMatch` is ignored: the fake accepts
     /// a stale generation, which a correct backend must refuse.
     stale_accepting: bool,
+    /// When true, a successful media upload returns an empty body instead of
+    /// the object resource, so the backend must confirm the generation by a
+    /// verified read-after-write rather than trusting the reply.
+    omit_upload_generation: bool,
 }
 
 impl State {
@@ -113,6 +117,10 @@ struct FakeGcs {
 
 impl FakeGcs {
     fn start(stale_accepting: bool) -> FakeGcs {
+        FakeGcs::start_with(stale_accepting, false)
+    }
+
+    fn start_with(stale_accepting: bool, omit_upload_generation: bool) -> FakeGcs {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind fake GCS");
         let addr = listener.local_addr().expect("fake GCS address");
         listener
@@ -120,6 +128,7 @@ impl FakeGcs {
             .expect("non-blocking listener");
         let state = Arc::new(Mutex::new(State {
             stale_accepting,
+            omit_upload_generation,
             next_generation: 1,
             ..State::default()
         }));
@@ -467,14 +476,21 @@ fn upload(
         .and_then(|value| value.parse::<u64>().ok());
     match query.get("uploadType").map(String::as_str) {
         Some("media") => match state.write(&bucket, &name, request.body.clone(), precondition) {
-            Ok(generation) => Response::json(
-                200,
-                format!(
-                    "{{\"name\":{},\"generation\":\"{generation}\",\"size\":\"{}\"}}",
-                    json_quote(&name),
-                    request.body.len()
-                ),
-            ),
+            Ok(generation) => {
+                if state.omit_upload_generation {
+                    // A provider that returns no object resource on success.
+                    Response::new(200)
+                } else {
+                    Response::json(
+                        200,
+                        format!(
+                            "{{\"name\":{},\"generation\":\"{generation}\",\"size\":\"{}\"}}",
+                            json_quote(&name),
+                            request.body.len()
+                        ),
+                    )
+                }
+            }
             Err(status) => Response::error(status, "precondition failed"),
         },
         Some("resumable") => {
@@ -1048,6 +1064,51 @@ fn store_round_trip_is_byte_identical_to_local_and_reopens() {
     );
     assert_eq!(err.class_name(), "Busy", "unexpected error: {err}");
     drop(live);
+}
+
+#[test]
+fn generation_is_confirmed_by_read_back_when_the_upload_reply_omits_it() {
+    // A provider may acknowledge an upload without returning the object
+    // resource. The fenced writer must not guess the generation: it re-reads
+    // and requires the exact bytes it just published.
+    let fake = FakeGcs::start_with(false, true);
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let kind = BackendKind::Gcs {
+        config: fake.config("weft-omit"),
+    };
+    let mut store = Store::init_with_backend(&path, opts(), kind.clone()).expect("init");
+    let root = store.resolve_path("/").unwrap();
+    let id = store
+        .create_file_seeded(
+            root,
+            b"f",
+            b"omit-generation",
+            0o644,
+            0,
+            0,
+            Default::default(),
+            b"omit",
+        )
+        .unwrap();
+    store.write_file(id, 0, b"OMIT").unwrap();
+
+    let observer = fake.backend("weft-omit");
+    let lock = observer
+        .read_lock_record()
+        .unwrap()
+        .expect("published lock");
+    assert_eq!(lock.fence, 1);
+    assert!(
+        lock.sequence >= 2,
+        "the fence advanced the sequence: {lock:?}"
+    );
+    assert!(lock.deadline_ns > 0);
+    assert!(store.verify(true).unwrap().ok);
+    drop(store);
+
+    let reopened = Store::open_with_backend(&path, OpenMode::ReadOnly, kind).unwrap();
+    assert!(reopened.verify(true).unwrap().ok);
 }
 
 #[test]
