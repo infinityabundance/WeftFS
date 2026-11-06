@@ -18,6 +18,13 @@ RECEIPT="bench/receipts/signed-bundles-$STAMP.json"
 LOG="bench/receipts/signed-bundles-$STAMP.log"
 CACHE="$ROOT/.docker-cache"
 mkdir -p "$CACHE" bench/bundles bench/receipts
+# Keep the log outside the repository until the end so packaging sees clean
+# worktrees. It is copied into bench/receipts after all measurements.
+LOG_TMP="$CACHE/signed-bench-$STAMP.log"
+: > "$LOG_TMP"
+START_REVISION="$(git rev-parse HEAD)"
+START_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+START_DIRTY="$(git status --porcelain | wc -l | tr -d ' ')"
 METRICS="$CACHE/signed-bench-$STAMP.metrics.tsv"
 CASES="$CACHE/signed-bench-$STAMP.cases.tsv"
 : > "$METRICS"
@@ -35,17 +42,18 @@ chmod 600 "$KEY" "$OTHER_KEY"
 now_ms() { printf '%s' "$(( $(date +%s%N) / 1000000 ))"; }
 metric() { printf '%s\t%s\n' "$1" "$2" >> "$METRICS"; }
 case_row() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> "$CASES"; }
-log() { printf '%s\n' "$*" | tee -a "$LOG" >&2; }
+log() { printf '%s\n' "$*" | tee -a "$LOG_TMP" >&2; }
 first_json_line() { sed -n '/^{/p' | sed -n '1p'; }
 json_get() { python3 -c 'import json,sys; print(json.load(sys.stdin)[sys.argv[1]])' "$1"; }
 
 log "Q6 signed-bundle bench $STAMP"
-log "revision $(git rev-parse HEAD)"
+log "revision $START_REVISION"
+log "worktree changed files at start: $START_DIRTY"
 log "bundle payload files: $(find bench/receipts -maxdepth 1 -type f | wc -l) receipts + corpus"
 
 # ---- signed package -------------------------------------------------------
 T0="$(now_ms)"
-if ! SIGNED_OUT="$(scripts/package-receipts.sh --allow-dirty --sign-key "$KEY" 2>&1)"; then
+if ! SIGNED_OUT="$(scripts/package-receipts.sh --sign-key "$KEY" 2>&1)"; then
   printf '%s\n' "$SIGNED_OUT" >> "$LOG"
   echo "signed packaging failed" >&2
   exit 1
@@ -102,7 +110,7 @@ log "pinned-key verify: $(grep -F 'SIGNATURE OK' <<<"$SIGNED_VERIFY" | sed -n '1
 
 # ---- unsigned package + extra bytes --------------------------------------
 T0="$(now_ms)"
-if ! UNSIGNED_OUT="$(scripts/package-receipts.sh --allow-dirty 2>&1)"; then
+if ! UNSIGNED_OUT="$(scripts/package-receipts.sh 2>&1)"; then
   printf '%s\n' "$UNSIGNED_OUT" >> "$LOG"
   echo "unsigned packaging failed" >&2
   exit 1
@@ -301,15 +309,15 @@ case_row pass provenance_show_resolved "derived_from + snapshot"
 KERNEL="$(uname -r)"
 RUST_IMAGE="$(docker image inspect --format '{{.Id}}' weft/rust-court:1 2>/dev/null || echo unknown)"
 GO_IMAGE="$(docker image inspect --format '{{.Id}}' weft/go-court:1 2>/dev/null || echo unknown)"
-REVISION="$(git rev-parse HEAD)"
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+END_REVISION="$(git rev-parse HEAD)"
 DIRTY_LINES="$(git status --porcelain | wc -l | tr -d ' ')"
 
-python3 - "$RECEIPT" "$METRICS" "$CASES" "$STAMP" "$REVISION" "$BRANCH" \
-  "$DIRTY_LINES" "$KERNEL" "$RUST_IMAGE" "$GO_IMAGE" <<'PY'
+python3 - "$RECEIPT" "$METRICS" "$CASES" "$STAMP" "$START_REVISION" \
+  "$START_BRANCH" "$START_DIRTY" "$END_REVISION" "$DIRTY_LINES" "$KERNEL" \
+  "$RUST_IMAGE" "$GO_IMAGE" <<'PY'
 import json, sys
-(receipt_path, metrics_path, cases_path, stamp, revision, branch, dirty,
- kernel, rust_image, go_image) = sys.argv[1:]
+(receipt_path, metrics_path, cases_path, stamp, revision, branch, start_dirty,
+ end_revision, dirty, kernel, rust_image, go_image) = sys.argv[1:]
 metrics = {}
 with open(metrics_path, encoding="utf-8") as handle:
     for line in handle:
@@ -327,9 +335,12 @@ receipt = {
     "schema": "weftfs.signed-bundles/1",
     "stamp": stamp,
     "revision": revision,
+    "revision_at_end": end_revision,
     "branch": branch,
-    "worktree_dirty": int(dirty) > 0,
-    "worktree_changed_files": int(dirty),
+    "worktree_dirty_at_start": int(start_dirty) > 0,
+    "worktree_changed_files_at_start": int(start_dirty),
+    "worktree_dirty_before_output": int(dirty) > 0,
+    "worktree_changed_files_before_output": int(dirty),
     "court": {
         "rust_image": rust_image,
         "go_image": go_image,
@@ -371,3 +382,4 @@ PY
 
 log "receipt: $RECEIPT"
 log "log: $LOG"
+cp "$LOG_TMP" "$LOG"
