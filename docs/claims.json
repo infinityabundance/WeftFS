@@ -2656,5 +2656,106 @@
     ],
     "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
     "kind": "present"
+  },
+  {
+    "id": "r7_shared_mounts_receipt",
+    "claim": "docs/STATUS.md and bench/RESULTS-shared-mounts.md cite the R7 shared-mount court receipt.",
+    "value": "shared-mounts-20261106T082042Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md"
+    ],
+    "receipt": "bench/receipts/shared-mounts-20261106T082042Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r7_shared_listing_digest",
+    "claim": "Shared and per-daemon runs produce the identical digest over all per-view listing digests.",
+    "value": "1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md"
+    ],
+    "receipt": "bench/receipts/shared-mounts-20261106T082042Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r7_small_limit",
+    "claim": "The same 100 mounts completed in shared mode at a 512 MiB limit.",
+    "value": "512 MiB",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md"
+    ],
+    "receipt": "bench/receipts/shared-mounts-20261106T082042Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r7_shared_cgroup_peak",
+    "claim": "Shared cgroup peak at N=100 is 69,402,624 bytes.",
+    "value": "69,402,624",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md"
+    ],
+    "receipt": "bench/receipts/shared-mounts-20261106T082042Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r7_perdaemon_cgroup_peak",
+    "claim": "Per-daemon cgroup peak at N=100 is 1,351,827,456 bytes.",
+    "value": "1,351,827,456",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md"
+    ],
+    "receipt": "bench/receipts/shared-mounts-20261106T082042Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r7_max_views",
+    "claim": "The shared server refuses more than MAX_SHARED_VIEWS = 256 views with LimitExceeded.",
+    "value": "MAX_SHARED_VIEWS = 256",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/shared-mounts.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r7_read_only_erofs",
+    "claim": "A shared view refuses write-like operations with EROFS.",
+    "value": "EROFS",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/shared-mounts.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r7_court_script",
+    "claim": "The shared-mount court is bench/scripts/shared_mounts_court.sh.",
+    "value": "bench/scripts/shared_mounts_court.sh",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md",
+      "docs/shared-mounts.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r7_tests",
+    "claim": "Shared-mount integration tests live in tests/shared_mounts.rs.",
+    "value": "tests/shared_mounts.rs",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-shared-mounts.md",
+      "docs/shared-mounts.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

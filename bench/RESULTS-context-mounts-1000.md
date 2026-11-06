@@ -205,3 +205,13 @@ scripts/docker-court.sh fuse 'WEFT_CONTEXT_MOUNTS=100 bash scripts/demo-context-
 
 Raw logs and results TSVs for the scale receipts are stored beside each JSON as
 `.log.zst` / `.results.tsv.zst`.
+
+## Follow-up: shared multi-mount daemon (R7)
+
+The per-daemon memory and pids costs recorded above motivated Subphase R7. One
+process now serves N read-only views over one shared store. The measured court
+is `bench/RESULTS-shared-mounts.md` (receipt
+`bench/receipts/shared-mounts-20261106T082042Z.json`); it compares both modes at
+N=100 rather than 1,000, and at 512 MiB per-daemon mounted only 51/100 while
+shared mounted 100/100. This file's historical measurements are unchanged and
+were not re-run.

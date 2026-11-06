@@ -1,0 +1,815 @@
+shared-mounts-court: N=100 small_limit=512m
+=== build phase ===
++ exec docker run --rm --init --name weft-fuse-court-1556336 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=185d008d6cb49e51cff1df463535b44030b9df5b -e WEFT_REPO_WEFTFS_GO=47fd4d2229fc24e5750808a302432c32081064a5 -e WEFT_REPO_WEFTCODEC=72cd11944ab3517d5f639191eb0ad8da9b89e784 -e WEFT_REPO_WEFTCODEC_GO=e47fa03ee8d576106e3bace065d59f930cc741bd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_DEMO_BUILD_ONLY=1 bash scripts/demo-context-mounts.sh'
+===== BUILD =====
+WEFT_DEMO_BUILD_ONLY=1: build phase complete
+build phase exit=0
+=== case per-daemon-3g (memory=3g mode=per-daemon skip_build=1) ===
+court command: WEFT_MEMORY=3g scripts/docker-court.sh fuse "cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=per-daemon WEFT_DEMO_RECEIPT_NAME=shared-mounts-per-daemon-3g-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh"
++ exec docker run --rm --init --name weft-fuse-court-1556816 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=185d008d6cb49e51cff1df463535b44030b9df5b -e WEFT_REPO_WEFTFS_GO=47fd4d2229fc24e5750808a302432c32081064a5 -e WEFT_REPO_WEFTCODEC=72cd11944ab3517d5f639191eb0ad8da9b89e784 -e WEFT_REPO_WEFTCODEC_GO=e47fa03ee8d576106e3bace065d59f930cc741bd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=per-daemon WEFT_DEMO_RECEIPT_NAME=shared-mounts-per-daemon-3g-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh'
+===== BUILD =====
+WEFT_DEMO_SKIP_BUILD=1: reusing the binaries built by the build phase
+receipt: /work/bench/receipts/shared-mounts-per-daemon-3g-20261106T082042Z.json
+
+===== STEP store: 200 corpus objects, 25 models, 10 grounding docs, 599 typed relations, 100 Context Roots =====
+NOTE: per-daemon memory (metrics.daemon_rss_kb and daemon_rss_max_kb) is why fitting many concurrent context mounts under the default 3 GiB court needs a shared multi-mount daemon; this run uses explicit, recorded court limit overrides instead
+CMD[store]: /work/.docker-cache/f3-demos/bin/context-corpus --target 100 --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --out /work/.docker-cache/f3-demos/steps/8-20261106T082057Z/store/corpus
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate derived_from
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate generated_by
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate grounded_in
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context list
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 info
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 verify --full
+----- STEP store: pass objects=239 relations=699 contexts=100 target_mounts=100 build=harness
+
+===== STEP mounts: 100 concurrent Context mounts (per-daemon) =====
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-0 --context by:task=agent-0
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-1 --context by:task=agent-1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-2 --context by:task=agent-2
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-3 --context by:task=agent-3
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-4 --context by:task=agent-4
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-5 --context by:task=agent-5
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-6 --context by:task=agent-6
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-7 --context by:task=agent-7
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-8 --context by:task=agent-8
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-9 --context by:task=agent-9
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-10 --context by:task=agent-10
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-11 --context by:task=agent-11
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-12 --context by:task=agent-12
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-13 --context by:task=agent-13
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-14 --context by:task=agent-14
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-15 --context by:task=agent-15
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-16 --context by:task=agent-16
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-17 --context by:task=agent-17
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-18 --context by:task=agent-18
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-19 --context by:task=agent-19
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-20 --context by:task=agent-20
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-21 --context by:task=agent-21
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-22 --context by:task=agent-22
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-23 --context by:task=agent-23
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-24 --context by:task=agent-24
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-25 --context by:task=agent-25
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-26 --context by:task=agent-26
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-27 --context by:task=agent-27
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-28 --context by:task=agent-28
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-29 --context by:task=agent-29
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-30 --context by:task=agent-30
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-31 --context by:task=agent-31
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-32 --context by:task=agent-32
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-33 --context by:task=agent-33
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-34 --context by:task=agent-34
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-35 --context by:task=agent-35
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-36 --context by:task=agent-36
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-37 --context by:task=agent-37
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-38 --context by:task=agent-38
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-39 --context by:task=agent-39
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-40 --context by:task=agent-40
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-41 --context by:task=agent-41
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-42 --context by:task=agent-42
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-43 --context by:task=agent-43
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-44 --context by:task=agent-44
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-45 --context by:task=agent-45
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-46 --context by:task=agent-46
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-47 --context by:task=agent-47
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-48 --context by:task=agent-48
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-49 --context by:task=agent-49
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-50 --context by:model=llama-4@ver_0
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-51 --context by:model=llama-4@ver_1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-52 --context by:model=llama-4@ver_2
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-53 --context by:model=llama-4@ver_3
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-54 --context by:model=llama-4@ver_4
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-55 --context by:model=llama-4@ver_5
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-56 --context by:model=llama-4@ver_6
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-57 --context by:model=llama-4@ver_7
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-58 --context by:model=llama-4@ver_8
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-59 --context by:model=llama-4@ver_9
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-60 --context by:model=llama-4@ver_10
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-61 --context by:model=llama-4@ver_11
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-62 --context by:model=llama-4@ver_12
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-63 --context by:model=llama-4@ver_13
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-64 --context by:model=llama-4@ver_14
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-65 --context by:model=llama-4@ver_15
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-66 --context by:model=llama-4@ver_16
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-67 --context by:model=llama-4@ver_17
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-68 --context by:model=llama-4@ver_18
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-69 --context by:model=llama-4@ver_19
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-70 --context by:model=llama-4@ver_20
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-71 --context by:model=llama-4@ver_21
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-72 --context by:model=llama-4@ver_22
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-73 --context by:model=llama-4@ver_23
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-74 --context by:model=llama-4@ver_24
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-75 --context by:derived=f-000
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-76 --context by:derived=f-008
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-77 --context by:derived=f-016
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-78 --context by:derived=f-024
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-79 --context by:derived=f-032
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-80 --context by:derived=f-040
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-81 --context by:derived=f-048
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-82 --context by:derived=f-056
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-83 --context by:derived=f-064
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-84 --context by:derived=f-072
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-85 --context by:derived=f-080
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-86 --context by:derived=f-088
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-87 --context by:derived=f-096
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-88 --context by:derived=f-104
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-89 --context by:derived=f-112
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-90 --context by:derived=f-120
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-91 --context by:derived=f-128
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-92 --context by:derived=f-136
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-93 --context by:derived=f-144
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-94 --context by:derived=f-152
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-95 --context by:derived=f-160
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-96 --context by:derived=f-168
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-97 --context by:derived=f-176
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-98 --context by:derived=f-184
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082057Z-99 --context by:derived=f-192
+----- STEP mounts: pass spawned=100 mounted=100 failed=0
+
+===== STEP verify: Per-mount ls digest, every file SHA-256, representative CLI bytes and ContentId =====
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:task=agent-0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-103.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-154.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-006.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-061.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-063.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-165.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-116.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-018.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-170.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-075.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-076.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-027.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-183.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-134.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-035.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-087.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-192.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-044.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-096.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-048.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-099.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:model=llama-4@ver_0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-001.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-009.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-017.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-025.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-033.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-041.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-049.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-065.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-073.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-081.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-113.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-121.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-137.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-145.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-153.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-161.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-169.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-177.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-185.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082057Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+----- STEP verify: pass files=425 verified=100 unique_digests=100 resolved=2
+
+===== STEP read-only: Context mounts reject mutation =====
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082057Z-0/forbidden.txt'
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082057Z-1/forbidden.txt'
+----- STEP read-only: pass write denied on the first two mounts
+
+===== STEP unmount: Unmount every mount and prove no daemon survives =====
+----- STEP unmount: pass unmounted=100 survivors=0
+summary: pass=5 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/shared-mounts-per-daemon-3g-20261106T082042Z.json
+raw log: /work/bench/receipts/shared-mounts-per-daemon-3g-20261106T082042Z.log
+case per-daemon-3g: exit=0 receipt=shared-mounts-per-daemon-3g-20261106T082042Z.json
+=== case shared-3g (memory=3g mode=shared skip_build=1) ===
+court command: WEFT_MEMORY=3g scripts/docker-court.sh fuse "cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=shared WEFT_DEMO_RECEIPT_NAME=shared-mounts-shared-3g-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh"
++ exec docker run --rm --init --name weft-fuse-court-1576145 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=185d008d6cb49e51cff1df463535b44030b9df5b -e WEFT_REPO_WEFTFS_GO=47fd4d2229fc24e5750808a302432c32081064a5 -e WEFT_REPO_WEFTCODEC=72cd11944ab3517d5f639191eb0ad8da9b89e784 -e WEFT_REPO_WEFTCODEC_GO=e47fa03ee8d576106e3bace065d59f930cc741bd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=shared WEFT_DEMO_RECEIPT_NAME=shared-mounts-shared-3g-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh'
+===== BUILD =====
+WEFT_DEMO_SKIP_BUILD=1: reusing the binaries built by the build phase
+receipt: /work/bench/receipts/shared-mounts-shared-3g-20261106T082042Z.json
+
+===== STEP store: 200 corpus objects, 25 models, 10 grounding docs, 599 typed relations, 100 Context Roots =====
+NOTE: per-daemon memory (metrics.daemon_rss_kb and daemon_rss_max_kb) is why fitting many concurrent context mounts under the default 3 GiB court needs a shared multi-mount daemon; this run uses explicit, recorded court limit overrides instead
+CMD[store]: /work/.docker-cache/f3-demos/bin/context-corpus --target 100 --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --out /work/.docker-cache/f3-demos/steps/7-20261106T082127Z/store/corpus
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate derived_from
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate generated_by
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate grounded_in
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context list
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 info
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 verify --full
+----- STEP store: pass objects=239 relations=699 contexts=100 target_mounts=100 build=harness
+
+===== STEP mounts: 100 concurrent Context mounts (shared) =====
+CMD[mounts]: rust mount-many --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --spec /work/.docker-cache/f3-demos/steps/7-20261106T082127Z/mounts/mount-spec.json
+----- STEP mounts: pass spawned=100 mounted=100 failed=0
+
+===== STEP verify: Per-mount ls digest, every file SHA-256, representative CLI bytes and ContentId =====
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:task=agent-0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-103.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-154.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-006.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-061.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-063.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-165.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-116.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-018.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-170.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-075.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-076.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-027.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-183.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-134.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-035.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-087.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-192.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-044.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-096.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-048.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-099.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:model=llama-4@ver_0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-001.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-009.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-017.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-025.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-033.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-041.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-049.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-065.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-073.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-081.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-113.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-121.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-137.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-145.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-153.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-161.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-169.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-177.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-185.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-7-20261106T082127Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+----- STEP verify: pass files=425 verified=100 unique_digests=100 resolved=2
+
+===== STEP read-only: Context mounts reject mutation =====
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-7-20261106T082127Z-0/forbidden.txt'
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-7-20261106T082127Z-1/forbidden.txt'
+----- STEP read-only: pass write denied on the first two mounts
+
+===== STEP unmount: Unmount every mount and prove no daemon survives =====
+----- STEP unmount: pass unmounted=100 survivors=0
+summary: pass=5 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/shared-mounts-shared-3g-20261106T082042Z.json
+raw log: /work/bench/receipts/shared-mounts-shared-3g-20261106T082042Z.log
+case shared-3g: exit=0 receipt=shared-mounts-shared-3g-20261106T082042Z.json
+=== case shared-small (memory=512m mode=shared skip_build=1) ===
+court command: WEFT_MEMORY=512m scripts/docker-court.sh fuse "cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=shared WEFT_DEMO_RECEIPT_NAME=shared-mounts-shared-small-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh"
++ exec docker run --rm --init --name weft-fuse-court-1593909 --memory=512m --memory-swap=512m --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=512m -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=185d008d6cb49e51cff1df463535b44030b9df5b -e WEFT_REPO_WEFTFS_GO=47fd4d2229fc24e5750808a302432c32081064a5 -e WEFT_REPO_WEFTCODEC=72cd11944ab3517d5f639191eb0ad8da9b89e784 -e WEFT_REPO_WEFTCODEC_GO=e47fa03ee8d576106e3bace065d59f930cc741bd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=shared WEFT_DEMO_RECEIPT_NAME=shared-mounts-shared-small-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 bash scripts/demo-context-mounts.sh'
+===== BUILD =====
+WEFT_DEMO_SKIP_BUILD=1: reusing the binaries built by the build phase
+receipt: /work/bench/receipts/shared-mounts-shared-small-20261106T082042Z.json
+
+===== STEP store: 200 corpus objects, 25 models, 10 grounding docs, 599 typed relations, 100 Context Roots =====
+NOTE: per-daemon memory (metrics.daemon_rss_kb and daemon_rss_max_kb) is why fitting many concurrent context mounts under the default 3 GiB court needs a shared multi-mount daemon; this run uses explicit, recorded court limit overrides instead
+CMD[store]: /work/.docker-cache/f3-demos/bin/context-corpus --target 100 --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --out /work/.docker-cache/f3-demos/steps/8-20261106T082156Z/store/corpus
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate derived_from
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate generated_by
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate grounded_in
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context list
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 info
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 verify --full
+----- STEP store: pass objects=239 relations=699 contexts=100 target_mounts=100 build=harness
+
+===== STEP mounts: 100 concurrent Context mounts (shared) =====
+CMD[mounts]: rust mount-many --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --spec /work/.docker-cache/f3-demos/steps/8-20261106T082156Z/mounts/mount-spec.json
+----- STEP mounts: pass spawned=100 mounted=100 failed=0
+
+===== STEP verify: Per-mount ls digest, every file SHA-256, representative CLI bytes and ContentId =====
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:task=agent-0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-103.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-154.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-006.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-061.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-063.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-165.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-116.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-018.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-170.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-075.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-076.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-027.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-183.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-134.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-035.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-087.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-192.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-044.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-096.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-048.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-099.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context resolve by:model=llama-4@ver_0
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --json --fixed-timestamp-ns 1767225600000000000 stat /corpus/f-000.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-052.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-008.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-160.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-012.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-164.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-172.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-124.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-001.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-009.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-017.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-025.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-033.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-041.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-049.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-065.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-073.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-081.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-113.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-121.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-137.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-145.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-153.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-161.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-169.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-177.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-185.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082156Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+----- STEP verify: pass files=425 verified=100 unique_digests=100 resolved=2
+
+===== STEP read-only: Context mounts reject mutation =====
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082156Z-0/forbidden.txt'
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082156Z-1/forbidden.txt'
+----- STEP read-only: pass write denied on the first two mounts
+
+===== STEP unmount: Unmount every mount and prove no daemon survives =====
+----- STEP unmount: pass unmounted=100 survivors=0
+summary: pass=5 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/shared-mounts-shared-small-20261106T082042Z.json
+raw log: /work/bench/receipts/shared-mounts-shared-small-20261106T082042Z.log
+case shared-small: exit=0 receipt=shared-mounts-shared-small-20261106T082042Z.json
+=== case per-daemon-small (memory=512m mode=per-daemon skip_build=1) ===
+court command: WEFT_MEMORY=512m scripts/docker-court.sh fuse "cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=per-daemon WEFT_DEMO_RECEIPT_NAME=shared-mounts-per-daemon-small-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 WEFT_WAIT_MOUNT_TRIES=250 bash scripts/demo-context-mounts.sh"
++ exec docker run --rm --init --name weft-fuse-court-1611741 --memory=512m --memory-swap=512m --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=512m -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=185d008d6cb49e51cff1df463535b44030b9df5b -e WEFT_REPO_WEFTFS_GO=47fd4d2229fc24e5750808a302432c32081064a5 -e WEFT_REPO_WEFTCODEC=72cd11944ab3517d5f639191eb0ad8da9b89e784 -e WEFT_REPO_WEFTCODEC_GO=e47fa03ee8d576106e3bace065d59f930cc741bd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_CONTEXT_MOUNTS=100 WEFT_CONTEXT_CORPUS_BUILD=harness WEFT_CONTEXT_MOUNTS_MODE=per-daemon WEFT_DEMO_RECEIPT_NAME=shared-mounts-per-daemon-small-20261106T082042Z WEFT_DEMO_SKIP_BUILD=1 WEFT_WAIT_MOUNT_TRIES=250 bash scripts/demo-context-mounts.sh'
+===== BUILD =====
+WEFT_DEMO_SKIP_BUILD=1: reusing the binaries built by the build phase
+receipt: /work/bench/receipts/shared-mounts-per-daemon-small-20261106T082042Z.json
+
+===== STEP store: 200 corpus objects, 25 models, 10 grounding docs, 599 typed relations, 100 Context Roots =====
+NOTE: per-daemon memory (metrics.daemon_rss_kb and daemon_rss_max_kb) is why fitting many concurrent context mounts under the default 3 GiB court needs a shared multi-mount daemon; this run uses explicit, recorded court limit overrides instead
+CMD[store]: /work/.docker-cache/f3-demos/bin/context-corpus --target 100 --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --out /work/.docker-cache/f3-demos/steps/8-20261106T082225Z/store/corpus
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate derived_from
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate generated_by
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate grounded_in
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context list
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 info
+CMD[store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 verify --full
+----- STEP store: pass objects=239 relations=699 contexts=100 target_mounts=100 build=harness
+
+===== STEP mounts: 100 concurrent Context mounts (per-daemon) =====
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-0 --context by:task=agent-0
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-1 --context by:task=agent-1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-2 --context by:task=agent-2
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-3 --context by:task=agent-3
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-4 --context by:task=agent-4
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-5 --context by:task=agent-5
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-6 --context by:task=agent-6
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-7 --context by:task=agent-7
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-8 --context by:task=agent-8
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-9 --context by:task=agent-9
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-10 --context by:task=agent-10
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-11 --context by:task=agent-11
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-12 --context by:task=agent-12
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-13 --context by:task=agent-13
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-14 --context by:task=agent-14
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-15 --context by:task=agent-15
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-16 --context by:task=agent-16
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-17 --context by:task=agent-17
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-18 --context by:task=agent-18
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-19 --context by:task=agent-19
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-20 --context by:task=agent-20
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-21 --context by:task=agent-21
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-22 --context by:task=agent-22
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-23 --context by:task=agent-23
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-24 --context by:task=agent-24
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-25 --context by:task=agent-25
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-26 --context by:task=agent-26
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-27 --context by:task=agent-27
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-28 --context by:task=agent-28
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-29 --context by:task=agent-29
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-30 --context by:task=agent-30
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-31 --context by:task=agent-31
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-32 --context by:task=agent-32
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-33 --context by:task=agent-33
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-34 --context by:task=agent-34
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-35 --context by:task=agent-35
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-36 --context by:task=agent-36
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-37 --context by:task=agent-37
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-38 --context by:task=agent-38
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-39 --context by:task=agent-39
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-40 --context by:task=agent-40
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-41 --context by:task=agent-41
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-42 --context by:task=agent-42
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-43 --context by:task=agent-43
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-44 --context by:task=agent-44
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-45 --context by:task=agent-45
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-46 --context by:task=agent-46
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-47 --context by:task=agent-47
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-48 --context by:task=agent-48
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-49 --context by:task=agent-49
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-50 --context by:model=llama-4@ver_0
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-51 --context by:model=llama-4@ver_1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-52 --context by:model=llama-4@ver_2
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-53 --context by:model=llama-4@ver_3
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-54 --context by:model=llama-4@ver_4
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-55 --context by:model=llama-4@ver_5
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-56 --context by:model=llama-4@ver_6
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-57 --context by:model=llama-4@ver_7
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-58 --context by:model=llama-4@ver_8
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-59 --context by:model=llama-4@ver_9
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-60 --context by:model=llama-4@ver_10
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-61 --context by:model=llama-4@ver_11
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-62 --context by:model=llama-4@ver_12
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-63 --context by:model=llama-4@ver_13
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-64 --context by:model=llama-4@ver_14
+scripts/demo-context-mounts.sh: line 301:   494 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-65 --context by:model=llama-4@ver_15
+scripts/demo-lib.sh: line 1:   908 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:  1217 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-66 --context by:model=llama-4@ver_16
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-67 --context by:model=llama-4@ver_17
+scripts/demo-context-mounts.sh: line 312:   605 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:  1293 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-68 --context by:model=llama-4@ver_18
+scripts/demo-context-mounts.sh: line 312:  1017 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-69 --context by:model=llama-4@ver_19
+scripts/demo-context-mounts.sh: line 312:  1120 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:   576 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-70 --context by:model=llama-4@ver_20
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-71 --context by:model=llama-4@ver_21
+scripts/demo-lib.sh: line 179:  1329 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-72 --context by:model=llama-4@ver_22
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-73 --context by:model=llama-4@ver_23
+scripts/demo-context-mounts.sh: line 312:   985 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:  1398 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-74 --context by:model=llama-4@ver_24
+scripts/demo-context-mounts.sh: line 301:   521 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 301:   632 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 312:   659 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 312:  1359 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-75 --context by:derived=f-000
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-76 --context by:derived=f-008
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-77 --context by:derived=f-016
+scripts/demo-context-mounts.sh: line 312:   468 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 312:  1081 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:   757 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:  1181 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-78 --context by:derived=f-024
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-79 --context by:derived=f-032
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-80 --context by:derived=f-040
+scripts/demo-lib.sh: line 179:   848 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:   946 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-81 --context by:derived=f-048
+scripts/demo-context-mounts.sh: line 312:  1254 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-82 --context by:derived=f-056
+scripts/demo-context-mounts.sh: line 301:   880 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:   690 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:  1049 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-83 --context by:derived=f-064
+scripts/demo-context-mounts.sh: line 301:  1549 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-84 --context by:derived=f-072
+scripts/demo-lib.sh: line 1:  1465 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-85 --context by:derived=f-080
+scripts/demo-context-mounts.sh: line 301:  1513 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-86 --context by:derived=f-088
+scripts/demo-context-mounts.sh: line 312:  1633 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 1:  1673 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-87 --context by:derived=f-096
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-88 --context by:derived=f-104
+scripts/demo-context-mounts.sh: line 301:  1430 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-89 --context by:derived=f-112
+scripts/demo-lib.sh: line 179:  1147 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:  1597 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-90 --context by:derived=f-120
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-91 --context by:derived=f-128
+scripts/demo-lib.sh: line 179:   726 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-92 --context by:derived=f-136
+scripts/demo-context-mounts.sh: line 312:  1703 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-93 --context by:derived=f-144
+scripts/demo-context-mounts.sh: line 301:   550 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 301:   799 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 179:  1839 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-94 --context by:derived=f-152
+scripts/demo-context-mounts.sh: line 312:  1739 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-95 --context by:derived=f-160
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-96 --context by:derived=f-168
+scripts/demo-context-mounts.sh: line 301:  1773 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-97 --context by:derived=f-176
+CMD[mounts]: rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-98 --context by:derived=f-184
+scripts/demo-context-mounts.sh: line 301:  1812 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-context-mounts.sh: line 312:  1869 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+CMD[mounts]: go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-99 --context by:derived=f-192
+scripts/demo-lib.sh: line 68:  1961 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 68:  1918 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 167:  2059 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 167:  2091 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 167:  2124 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 167:  2010 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+scripts/demo-lib.sh: line 167:  2159 Killed                  "$RUSTFS" --store "$store" --fixed-timestamp-ns "$TS1" mount --mountpoint "$mount" --foreground "$@" > "$logfile" 2>&1
+ASSERT FAIL [mounts] mount 0 (rust by:task=agent-0) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 2 (rust by:task=agent-2) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 4 (rust by:task=agent-4) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 6 (rust by:task=agent-6) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 8 (rust by:task=agent-8) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 10 (rust by:task=agent-10) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 12 (rust by:task=agent-12) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 14 (rust by:task=agent-14) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 16 (rust by:task=agent-16) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 18 (rust by:task=agent-18) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 20 (rust by:task=agent-20) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 22 (rust by:task=agent-22) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 24 (rust by:task=agent-24) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 26 (rust by:task=agent-26) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 28 (rust by:task=agent-28) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 30 (rust by:task=agent-30) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 32 (rust by:task=agent-32) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 34 (rust by:task=agent-34) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 36 (rust by:task=agent-36) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 38 (rust by:task=agent-38) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 40 (rust by:task=agent-40) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 42 (rust by:task=agent-42) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 44 (rust by:task=agent-44) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 46 (rust by:task=agent-46) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 48 (rust by:task=agent-48) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 50 (rust by:model=llama-4@ver_0) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 52 (rust by:model=llama-4@ver_2) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 54 (rust by:model=llama-4@ver_4) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 56 (rust by:model=llama-4@ver_6) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 58 (rust by:model=llama-4@ver_8) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 60 (rust by:model=llama-4@ver_10) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 62 (rust by:model=llama-4@ver_12) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 64 (rust by:model=llama-4@ver_14) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 66 (rust by:model=llama-4@ver_16) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 68 (rust by:model=llama-4@ver_18) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 70 (rust by:model=llama-4@ver_20) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 72 (rust by:model=llama-4@ver_22) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 74 (rust by:model=llama-4@ver_24) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 76 (rust by:derived=f-008) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 78 (rust by:derived=f-024) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 80 (rust by:derived=f-040) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 82 (rust by:derived=f-056) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 84 (rust by:derived=f-072) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 86 (rust by:derived=f-088) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 88 (rust by:derived=f-104) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 90 (rust by:derived=f-120) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 92 (rust by:derived=f-136) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 94 (rust by:derived=f-152) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] mount 96 (rust by:derived=f-168) started: expected=<mounted> actual=<failed: >
+ASSERT FAIL [mounts] all 100 mounts started: expected=<100> actual=<51>
+NOTE: mount failure: requested 100, spawned 100, mounted 51, failed 49; the exact daemon/resource error is in the assertion above and the per-mount logs under /work/.docker-cache/f3-demos
+----- STEP mounts: fail spawned=100 mounted=51 failed=49
+
+===== STEP verify: Per-mount ls digest, every file SHA-256, representative CLI bytes and ContentId =====
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-103.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-061.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-063.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-165.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-075.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-027.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-183.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-035.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-087.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-099.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-001.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-017.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-033.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-049.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-065.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-081.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-113.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-145.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-161.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-177.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-185.bin
+CMD[verify]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin
+ASSERT FAIL [verify] 200 distinct objects covered by all mounted roots: expected=<200> actual=<148>
+----- STEP verify: fail files=210 verified=51 unique_digests=51 resolved=0
+
+===== STEP read-only: Context mounts reject mutation =====
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082225Z-1/forbidden.txt'
+CMD[read-only]: bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082225Z-3/forbidden.txt'
+----- STEP read-only: pass write denied on the first two mounts
+
+===== STEP unmount: Unmount every mount and prove no daemon survives =====
+----- STEP unmount: pass unmounted=51 survivors=0
+summary: pass=3 fail=2 blocked=0 all_pass=false
+receipt: /work/bench/receipts/shared-mounts-per-daemon-small-20261106T082042Z.json
+raw log: /work/bench/receipts/shared-mounts-per-daemon-small-20261106T082042Z.log
+case per-daemon-small: exit=0 receipt=shared-mounts-per-daemon-small-20261106T082042Z.json
+=== assembling receipt ===
+receipt: /mnt/1tb_kingston/WeftFS/bench/receipts/shared-mounts-20261106T082042Z.json
+raw log: /mnt/1tb_kingston/WeftFS/bench/receipts/shared-mounts-20261106T082042Z.log

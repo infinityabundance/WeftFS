@@ -1,0 +1,323 @@
+{
+  "build": {
+    "command": "cd /work && WEFT_DEMO_BUILD_ONLY=1 bash scripts/demo-context-mounts.sh",
+    "court": "fuse",
+    "exit": 0,
+    "memory": "3g"
+  },
+  "cases": {
+    "per-daemon-3g": {
+      "all_pass": true,
+      "cgroup": {
+        "oom_kills": 0,
+        "peak_bytes": 1351827456,
+        "pids_events_max": 0,
+        "pids_max": 1024
+      },
+      "clean_unmounts": 100,
+      "daemons_surviving": 0,
+      "files_sha256_checked": 425,
+      "limits": {
+        "cpus": "4",
+        "memory": "3g",
+        "memory_swap": "3g",
+        "nproc": "2048",
+        "pids": "1024",
+        "skip_build": "1"
+      },
+      "listing_digests_sha256": "1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e",
+      "mount_failures": 0,
+      "mount_latency_ms": {
+        "all_mounted": 4428,
+        "max": 4159,
+        "min": 523,
+        "p50": 2632,
+        "p95": 4109
+      },
+      "mount_processes": 100,
+      "mounts_verified": 100,
+      "process_rss_kb": {
+        "max": 23524,
+        "missing_at_sample": 0,
+        "sampled": 100,
+        "sum": 1963056
+      },
+      "receipt": ".docker-cache/shared-mounts/per-daemon-3g.json",
+      "status": {
+        "exit": 0,
+        "memory": "3g",
+        "mode": "per-daemon"
+      },
+      "steps": {
+        "fail": 0,
+        "pass": 5
+      },
+      "threads": {
+        "max": 14,
+        "sum": 692
+      },
+      "unique_listing_digests": 100
+    },
+    "per-daemon-small": {
+      "all_pass": false,
+      "cgroup": {
+        "oom_kills": 49,
+        "peak_bytes": 536891392,
+        "pids_events_max": 0,
+        "pids_max": 1024
+      },
+      "clean_unmounts": 51,
+      "daemons_surviving": 0,
+      "files_sha256_checked": 210,
+      "limits": {
+        "cpus": "4",
+        "memory": "512m",
+        "memory_swap": "512m",
+        "nproc": "2048",
+        "pids": "1024",
+        "skip_build": "1"
+      },
+      "listing_digests_sha256": "f1258e865ad70c60f4fde8cc763d9011eba3623145e4b7d2818ff5bd4be55f92",
+      "mount_failures": 49,
+      "mount_latency_ms": {
+        "all_mounted": 262862,
+        "max": 257623,
+        "min": 12297,
+        "p50": 141112,
+        "p95": 256350
+      },
+      "mount_processes": 100,
+      "mounts_verified": 51,
+      "process_rss_kb": {
+        "max": 23340,
+        "missing_at_sample": 49,
+        "sampled": 51,
+        "sum": 624820
+      },
+      "receipt": ".docker-cache/shared-mounts/per-daemon-small.json",
+      "status": {
+        "exit": 0,
+        "memory": "512m",
+        "mode": "per-daemon"
+      },
+      "steps": {
+        "fail": 2,
+        "pass": 3
+      },
+      "threads": {
+        "max": 14,
+        "sum": 546
+      },
+      "unique_listing_digests": 51
+    },
+    "shared-3g": {
+      "all_pass": true,
+      "cgroup": {
+        "oom_kills": 0,
+        "peak_bytes": 69402624,
+        "pids_events_max": 0,
+        "pids_max": 1024
+      },
+      "clean_unmounts": 100,
+      "daemons_surviving": 0,
+      "files_sha256_checked": 425,
+      "limits": {
+        "cpus": "4",
+        "memory": "3g",
+        "memory_swap": "3g",
+        "nproc": "2048",
+        "pids": "1024",
+        "skip_build": "1"
+      },
+      "listing_digests_sha256": "1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e",
+      "mount_failures": 0,
+      "mount_latency_ms": {
+        "all_mounted": 4064,
+        "max": 4062,
+        "min": 3964,
+        "p50": 4014,
+        "p95": 4057
+      },
+      "mount_processes": 1,
+      "mounts_verified": 100,
+      "process_rss_kb": {
+        "max": 27692,
+        "missing_at_sample": 0,
+        "sampled": 1,
+        "sum": 27692
+      },
+      "receipt": ".docker-cache/shared-mounts/shared-3g.json",
+      "status": {
+        "exit": 0,
+        "memory": "3g",
+        "mode": "shared"
+      },
+      "steps": {
+        "fail": 0,
+        "pass": 5
+      },
+      "threads": {
+        "max": 102,
+        "sum": 102
+      },
+      "unique_listing_digests": 100
+    },
+    "shared-small": {
+      "all_pass": true,
+      "cgroup": {
+        "oom_kills": 0,
+        "peak_bytes": 73646080,
+        "pids_events_max": 0,
+        "pids_max": 1024
+      },
+      "clean_unmounts": 100,
+      "daemons_surviving": 0,
+      "files_sha256_checked": 425,
+      "limits": {
+        "cpus": "4",
+        "memory": "512m",
+        "memory_swap": "512m",
+        "nproc": "2048",
+        "pids": "1024",
+        "skip_build": "1"
+      },
+      "listing_digests_sha256": "1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e",
+      "mount_failures": 0,
+      "mount_latency_ms": {
+        "all_mounted": 4040,
+        "max": 4039,
+        "min": 3941,
+        "p50": 3991,
+        "p95": 4034
+      },
+      "mount_processes": 1,
+      "mounts_verified": 100,
+      "process_rss_kb": {
+        "max": 27896,
+        "missing_at_sample": 0,
+        "sampled": 1,
+        "sum": 27896
+      },
+      "receipt": ".docker-cache/shared-mounts/shared-small.json",
+      "status": {
+        "exit": 0,
+        "memory": "512m",
+        "mode": "shared"
+      },
+      "steps": {
+        "fail": 0,
+        "pass": 5
+      },
+      "threads": {
+        "max": 102,
+        "sum": 102
+      },
+      "unique_listing_digests": 100
+    }
+  },
+  "checks": {
+    "build phase succeeded": {
+      "detail": "build={'exit': 0, 'court': 'fuse', 'memory': '3g', 'command': 'cd /work && WEFT_DEMO_BUILD_ONLY=1 bash scripts/demo-context-mounts.sh'}",
+      "pass": true
+    },
+    "per-daemon run at the same small limit did NOT complete the full N": {
+      "detail": "limit=512m all_pass=False mounts_verified=51 oom_kills=49",
+      "pass": true
+    },
+    "per-daemon-3g: demo all_pass": {
+      "detail": "all_pass=True steps={'pass': 5, 'fail': 0}",
+      "pass": true
+    },
+    "per-daemon-3g: every context listing distinct": {
+      "detail": "unique_listing_digests=100",
+      "pass": true
+    },
+    "per-daemon-3g: every mount verified": {
+      "detail": "mounts_verified=100 target=100",
+      "pass": true
+    },
+    "shared and per-daemon listing digests are identical": {
+      "detail": "digests={'per-daemon-3g': '1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e', 'shared-3g': '1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e', 'shared-small': '1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e', 'per-daemon-small': 'f1258e865ad70c60f4fde8cc763d9011eba3623145e4b7d2818ff5bd4be55f92'}",
+      "pass": true
+    },
+    "shared and per-daemon verify the same file SHA-256 set": {
+      "detail": "files_sha256_checked={'per-daemon-3g': 425, 'shared-3g': 425, 'shared-small': 425}",
+      "pass": true
+    },
+    "shared and per-daemon verify the same number of mounts": {
+      "detail": "mounts_verified={'per-daemon-3g': 100, 'shared-3g': 100, 'shared-small': 100}",
+      "pass": true
+    },
+    "shared peak is materially smaller than per-daemon peak": {
+      "detail": "shared_peak=69402624 per-daemon_peak=1351827456",
+      "pass": true
+    },
+    "shared run completed at the small memory limit": {
+      "detail": "limit=512m all_pass=True",
+      "pass": true
+    },
+    "shared small-limit peak is below the limit": {
+      "detail": "peak=73646080 limit=536870912 headroom=463224832",
+      "pass": true
+    },
+    "shared small-limit run has zero cgroup OOM kills": {
+      "detail": "oom_kills=0",
+      "pass": true
+    },
+    "shared small-limit run never hit the cgroup pids limit": {
+      "detail": "pids.events max=0",
+      "pass": true
+    },
+    "shared-3g: demo all_pass": {
+      "detail": "all_pass=True steps={'pass': 5, 'fail': 0}",
+      "pass": true
+    },
+    "shared-3g: every context listing distinct": {
+      "detail": "unique_listing_digests=100",
+      "pass": true
+    },
+    "shared-3g: every mount verified": {
+      "detail": "mounts_verified=100 target=100",
+      "pass": true
+    },
+    "shared-small: demo all_pass": {
+      "detail": "all_pass=True steps={'pass': 5, 'fail': 0}",
+      "pass": true
+    },
+    "shared-small: every context listing distinct": {
+      "detail": "unique_listing_digests=100",
+      "pass": true
+    },
+    "shared-small: every mount verified": {
+      "detail": "mounts_verified=100 target=100",
+      "pass": true
+    }
+  },
+  "generated_at": "2026-11-06T08:27:02Z",
+  "label": "Single-host Docker FUSE court; synthetic deterministic corpus built by examples/context_mount_corpus.rs; local store on the court bind mount; hard memory/swap/pids/cpu/nproc limits unchanged except the explicitly recorded small limit; not a fleet claim.",
+  "losses_and_limits": [
+    "Read-only by construction: a shared view refuses create/write/truncate/xattr/symlink/rename/link with EROFS. Writes remain on the single-mount path.",
+    "One backend mutex per store serialises physical I/O across views; independent daemons overlap that I/O. Under concurrent large reads the shared server can be slower.",
+    "A shared server pins views at open: there is no live re-read of commits made by another process while it runs (the same as any read-only mount).",
+    "One process is a single failure domain: a panic in one view would end every view. The view callbacks are covered by tests and the shared read path uses no panics, but this is a real difference from independent daemons.",
+    "Per-mount latency in shared mode includes sequential resolution and mounting of all views before the last one appears; compare `all_mounted_ms`, not only p50.",
+    "No fleet or multi-host claim; one host, synthetic deterministic corpus, warm page cache."
+  ],
+  "mounts": 100,
+  "raw_log": "bench/receipts/shared-mounts-20261106T082042Z.log",
+  "revisions": {
+    "WeftCodec": "72cd11944ab3517d5f639191eb0ad8da9b89e784",
+    "WeftCodec-Go": "e47fa03ee8d576106e3bace065d59f930cc741bd",
+    "WeftFS": "185d008d6cb49e51cff1df463535b44030b9df5b",
+    "WeftFS-Go": "47fd4d2229fc24e5750808a302432c32081064a5"
+  },
+  "schema": "weftfs.shared-mounts.court/1",
+  "small_limit": "512m",
+  "small_limit_bytes": 536870912,
+  "stamp": "20261106T082042Z",
+  "summary": {
+    "all_pass": true,
+    "fail": 0,
+    "pass": 19
+  }
+}

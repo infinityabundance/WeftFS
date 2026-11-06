@@ -2780,3 +2780,81 @@ vector, descriptor, or manifest changed.
   oracle); overflow and absurd-limit vectors are covered by the curated
   conformance corpus, not by the generator. No Go code, no wire change, and no
   manifest regeneration was performed.
+
+## Subphase R7 — shared multi-mount daemon (2026-11-06)
+
+One process can serve N read-only context mounts over one store, sharing the
+store state, selector index cache, and backend handle instead of paying a
+process, a thread pool, and a replayed snapshot per mount.
+
+- **Architecture.** `src/fuse.rs` now reaches the store through `StoreHandle`:
+  `Exclusive(Arc<Mutex<Store>>)` for a single mount (unchanged behaviour) or
+  `Shared(Arc<Store>)` for shared views. A shared view borrows `&Store`
+  immutably and can never obtain `&mut Store`, so create/write/truncate/
+  setattr/xattr/rename/link/unlink/mkdir/mknod/symlink/fallocate/
+  copy_file_range are refused with `ReadOnly` → `EROFS`, the same class a
+  single `--read-only` mount uses. Pins are skipped for shared views (they need
+  `&mut Store`, and this process runs no writer or GC).
+- **Memory.** `MountOptions.snapshot_state` is `Option<Arc<State>>`, and the
+  CLI replays each snapshot at most once per server start (`cached_state`), so
+  N views pinned to one commit hold one `State`, not N clones.
+- **API.** `SharedViewSpec`, `SharedMount` (`start`, `mountpoints`,
+  `store`, `is_running`, `any_running`, `unmount`) and `run_shared` in
+  `weftfs::fuse`. One `fuser` session thread per view plus the supervisor;
+  `MAX_SHARED_VIEWS = 256`, refused with `LimitExceeded` before mounting.
+  Starting is all-or-nothing and SIGINT/SIGTERM unmounts every view.
+- **CLI.** `weftfs --store DIR mount-many --spec FILE [--allow-other]`. The
+  spec is strict JSON (`version: 1`, `views[]` with `mountpoint` and optional
+  `snapshot` | `context` | `at`, plus `capability`); unknown fields, duplicate
+  mountpoints, and unknown versions are rejected. The single-mount CLI is
+  unchanged. Documented in `docs/shared-mounts.md`.
+- **Demo.** `scripts/demo-context-mounts.sh` accepts
+  `WEFT_CONTEXT_MOUNTS_MODE=shared` and starts one process for all N views;
+  the per-daemon mode and its receipts are unchanged. New knobs:
+  `WEFT_CONTEXT_CORPUS_BUILD=cli|harness`, `WEFT_DEMO_SKIP_BUILD`,
+  `WEFT_DEMO_BUILD_ONLY`, `WEFT_WAIT_MOUNT_TRIES`; new metrics
+  `mount_mode`, `mount_processes`, `all_mounted_ms`,
+  `mount_latency_min_ms`, `verified_files_sha256`, and
+  `listing_digests_sha256` (a digest over every per-view listing digest, so
+  two runs can be compared from receipts alone).
+- **Court.** `bash bench/scripts/shared_mounts_court.sh 100` runs the same
+  oracle-built corpus four times: per-daemon and shared at 3 GiB, then both at
+  a 512 MiB limit. It requires identical listing digests, identical file
+  SHA-256 counts, identical verified mount counts, a clean shared run at
+  512 MiB with zero OOM kills, and a per-daemon run at the same limit that
+  does not complete. Receipt
+  `bench/receipts/shared-mounts-20261106T082042Z.json`, 19/19 checks pass;
+  analysis `bench/RESULTS-shared-mounts.md`.
+- **Measured at N=100** (same corpus, same verification, binaries built once):
+  per-daemon 100 processes / 692 threads / summed RSS 1,963,056 KiB /
+  cgroup peak 1,351,827,456 B / 100 mounts verified / 425 file hashes;
+  shared 1 process / 102 threads / RSS 27,692 KiB / cgroup peak
+  69,402,624 B / 100 mounts verified / 425 file hashes. The digest over all
+  100 per-view listing digests is identical
+  (`1d30af9ccebcab723acfdc0cb9ceee56a6fe93a73c8be0220590593eb714566e`) in
+  per-daemon at 3 GiB, shared at 3 GiB, and shared at 512 MiB. cgroup peak is
+  19.5x smaller, summed RSS 70.9x smaller, threads 6.8x fewer.
+- **Small limit.** The same N completed in shared mode at 512 MiB with peak
+  73,646,080 B (70.2 MiB), i.e. 441.8 MiB of headroom. Per-daemon at the same
+  512 MiB mounted 51/100 and lost 49 daemons to cgroup OOM kills
+  (49 `oom_kill` events, peak pinned at the limit).
+- **Tests.** `tests/shared_mounts.rs` 8/8: eight shared views match eight
+  equivalent single mounts (listing digest and every file byte), write-like
+  operations fail with `EROFS` and change nothing, a root-scoped capability
+  view can read its granted exact id but gets `ENOENT` for an unauthorized one
+  while an unscoped sibling can read it, unmounting one view leaves the others
+  serving and the supervisor exits after the last, one session thread per view
+  with an oversized spec refused `LimitExceeded`, no panic escapes a view
+  under invalid operations, and the spec schema rejects unknown fields,
+  duplicates, and a writable field. Full
+  `cargo test --features fuse --all-targets`: **307 passed / 0 failed /
+  2 ignored** (the two pre-existing ignored tests).
+- **Losses.** Time to the *first* view is 3,964 ms vs 523 ms per-daemon (one
+  process resolves all contexts and creates all mounts sequentially); time to
+  all 100 is 4,064 ms vs 4,428 ms, so completion is not worse. One backend
+  mutex serialises physical I/O across views (not measured under concurrent
+  large reads), and one process is one failure domain. Shared views are
+  read-only by construction; writes stay on the single-mount path.
+- **Not done.** No Go frontend parity, no per-view streaming start (resolve
+  and mount one at a time), no shared-mount run at 1,000, no concurrent
+  large-read comparison against independent daemons, no multi-host claim.

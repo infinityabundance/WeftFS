@@ -1,0 +1,3582 @@
+{
+  "schema": "weftfs.context-mounts.receipt/1",
+  "generated_at": "2026-11-06T08:22:25Z",
+  "label": "single-host Docker FUSE court; synthetic deterministic fixtures; local store on the court bind mount; mode=per-daemon; explicit memory/cpu/pids/nproc overrides for the scale court (exact values in environment); INCOMPLETE 51/100 mounts verified (resource failure recorded); not a fleet claim",
+  "run": {
+    "started_at": "2026-11-06T08:22:25Z",
+    "finished_at": "2026-11-06T08:27:02Z",
+    "duration_ms": 277000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "host_nproc": "16",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157",
+    "kernel": "Linux 7.3.1-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "512m",
+    "limit_memory_swap": "512m",
+    "limit_nproc": "2048",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "skip_build": "1",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "metrics": {
+    "all_mounted_ms": "262862",
+    "cgroup_oom_kills": "49",
+    "cgroup_peak_bytes": "536891392",
+    "cgroup_pids_max": "1024",
+    "cgroup_pids_max_events": "0",
+    "clean_unmounts": "51",
+    "corpus_build": "harness",
+    "corpus_contexts": "100",
+    "corpus_files": "200",
+    "corpus_models": "25",
+    "corpus_relations": "599",
+    "daemon_rss_kb": "624820",
+    "daemon_rss_max_kb": "23340",
+    "daemon_threads": "546",
+    "daemon_threads_max": "14",
+    "daemons_missing_at_sample": "49",
+    "daemons_sampled": "51",
+    "daemons_surviving": "0",
+    "files_checked": "210",
+    "free_mb_after": "40191",
+    "free_mb_before": "39844",
+    "listing_digests_sha256": "f1258e865ad70c60f4fde8cc763d9011eba3623145e4b7d2818ff5bd4be55f92",
+    "mount_deadline_s": "30",
+    "mount_failures": "49",
+    "mount_latency_max_ms": "257623",
+    "mount_latency_min_ms": "12297",
+    "mount_latency_p50_ms": "141112",
+    "mount_latency_p95_ms": "256350",
+    "mount_mode": "per-daemon",
+    "mount_poll_ms": "200",
+    "mount_processes": "100",
+    "mount_wall_ms": "266796",
+    "mounts_verified": "51",
+    "resolve_sample_every": "50",
+    "resolved_contexts": "0",
+    "spawn_ceiling_hit": "0",
+    "spawn_reserve_tasks": "256",
+    "spawned_daemons": "100",
+    "target_mounts": "100",
+    "unique_listing_digests": "51",
+    "verified_files_sha256": "210",
+    "wait_mount_tries": "250"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "185d008d6cb49e51cff1df463535b44030b9df5b"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "47fd4d2229fc24e5750808a302432c32081064a5"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "72cd11944ab3517d5f639191eb0ad8da9b89e784"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "e47fa03ee8d576106e3bace065d59f930cc741bd"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "store",
+      "title": "200 corpus objects, 25 models, 10 grounding docs, 599 typed relations, 100 Context Roots",
+      "status": "pass",
+      "notes": "objects=239 relations=699 contexts=100 target_mounts=100 build=harness",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/context-corpus --target 100 --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --out /work/.docker-cache/f3-demos/steps/8-20261106T082225Z/store/corpus",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate derived_from",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate generated_by",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 relation list --predicate grounded_in",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 context list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --json --fixed-timestamp-ns 1767225600000000000 info",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "corpus-harness exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "harness declared objects",
+          "expected": "235",
+          "actual": "235",
+          "pass": true
+        },
+        {
+          "name": "harness declared Context Roots",
+          "expected": "100",
+          "actual": "100",
+          "pass": true
+        },
+        {
+          "name": "rel-count-derived exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "199 derived_from edges",
+          "expected": "199",
+          "actual": "199",
+          "pass": true
+        },
+        {
+          "name": "rel-count-generated exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "200 generated_by edges",
+          "expected": "200",
+          "actual": "200",
+          "pass": true
+        },
+        {
+          "name": "rel-count-grounded exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "200 grounded_in edges",
+          "expected": "200",
+          "actual": "200",
+          "pass": true
+        },
+        {
+          "name": "ctx-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "100 Context Roots persisted",
+          "expected": "100",
+          "actual": "100",
+          "pass": true
+        },
+        {
+          "name": "100 Context Roots loaded by the demo",
+          "expected": "100",
+          "actual": "100",
+          "pass": true
+        },
+        {
+          "name": "info exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "corpus objects",
+          "expected": "239",
+          "actual": "239",
+          "pass": true
+        },
+        {
+          "name": "corpus relations",
+          "expected": "699",
+          "actual": "699",
+          "pass": true
+        },
+        {
+          "name": "verify-full exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "info",
+          "content": "{\n  \"codec_min_bytes\": 4096,\n  \"content_identity\": \"whole-file\",\n  \"entries\": 238,\n  \"format\": \"weftfs-store 1\",\n  \"generation\": 12,\n  \"objects\": 239,\n  \"recovery_notes\": [],\n  \"rejected_generations\": [],\n  \"relations\": 699,\n  \"representation\": \"raw\",\n  \"snapshot_root\": \"abb24065d3c81c505a1c702b9316dae5f8cbfc83a7eb64c8b2bcebce92dd0c05\",\n  \"snapshots\": 1\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "mounts",
+      "title": "100 concurrent Context mounts (per-daemon)",
+      "status": "fail",
+      "notes": "spawned=100 mounted=51 failed=49",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-0 --context by:task=agent-0",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-1 --context by:task=agent-1",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-2 --context by:task=agent-2",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-3 --context by:task=agent-3",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-4 --context by:task=agent-4",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-5 --context by:task=agent-5",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-6 --context by:task=agent-6",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-7 --context by:task=agent-7",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-8 --context by:task=agent-8",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-9 --context by:task=agent-9",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-10 --context by:task=agent-10",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-11 --context by:task=agent-11",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-12 --context by:task=agent-12",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-13 --context by:task=agent-13",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-14 --context by:task=agent-14",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-15 --context by:task=agent-15",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-16 --context by:task=agent-16",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-17 --context by:task=agent-17",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-18 --context by:task=agent-18",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-19 --context by:task=agent-19",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-20 --context by:task=agent-20",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-21 --context by:task=agent-21",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-22 --context by:task=agent-22",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-23 --context by:task=agent-23",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-24 --context by:task=agent-24",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-25 --context by:task=agent-25",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-26 --context by:task=agent-26",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-27 --context by:task=agent-27",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-28 --context by:task=agent-28",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-29 --context by:task=agent-29",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-30 --context by:task=agent-30",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-31 --context by:task=agent-31",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-32 --context by:task=agent-32",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-33 --context by:task=agent-33",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-34 --context by:task=agent-34",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-35 --context by:task=agent-35",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-36 --context by:task=agent-36",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-37 --context by:task=agent-37",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-38 --context by:task=agent-38",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-39 --context by:task=agent-39",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-40 --context by:task=agent-40",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-41 --context by:task=agent-41",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-42 --context by:task=agent-42",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-43 --context by:task=agent-43",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-44 --context by:task=agent-44",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-45 --context by:task=agent-45",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-46 --context by:task=agent-46",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-47 --context by:task=agent-47",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-48 --context by:task=agent-48",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-49 --context by:task=agent-49",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-50 --context by:model=llama-4@ver_0",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-51 --context by:model=llama-4@ver_1",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-52 --context by:model=llama-4@ver_2",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-53 --context by:model=llama-4@ver_3",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-54 --context by:model=llama-4@ver_4",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-55 --context by:model=llama-4@ver_5",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-56 --context by:model=llama-4@ver_6",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-57 --context by:model=llama-4@ver_7",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-58 --context by:model=llama-4@ver_8",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-59 --context by:model=llama-4@ver_9",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-60 --context by:model=llama-4@ver_10",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-61 --context by:model=llama-4@ver_11",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-62 --context by:model=llama-4@ver_12",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-63 --context by:model=llama-4@ver_13",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-64 --context by:model=llama-4@ver_14",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-65 --context by:model=llama-4@ver_15",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-66 --context by:model=llama-4@ver_16",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-67 --context by:model=llama-4@ver_17",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-68 --context by:model=llama-4@ver_18",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-69 --context by:model=llama-4@ver_19",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-70 --context by:model=llama-4@ver_20",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-71 --context by:model=llama-4@ver_21",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-72 --context by:model=llama-4@ver_22",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-73 --context by:model=llama-4@ver_23",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-74 --context by:model=llama-4@ver_24",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-75 --context by:derived=f-000",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-76 --context by:derived=f-008",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-77 --context by:derived=f-016",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-78 --context by:derived=f-024",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-79 --context by:derived=f-032",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-80 --context by:derived=f-040",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-81 --context by:derived=f-048",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-82 --context by:derived=f-056",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-83 --context by:derived=f-064",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-84 --context by:derived=f-072",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-85 --context by:derived=f-080",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-86 --context by:derived=f-088",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-87 --context by:derived=f-096",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-88 --context by:derived=f-104",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-89 --context by:derived=f-112",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-90 --context by:derived=f-120",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-91 --context by:derived=f-128",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-92 --context by:derived=f-136",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-93 --context by:derived=f-144",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-94 --context by:derived=f-152",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-95 --context by:derived=f-160",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-96 --context by:derived=f-168",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-97 --context by:derived=f-176",
+        "rust mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-98 --context by:derived=f-184",
+        "go mount /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 -> /mnt/weft-fuse/f3m-8-20261106T082225Z-99 --context by:derived=f-192"
+      ],
+      "assertions": [
+        {
+          "name": "mount 0 (rust by:task=agent-0) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 2 (rust by:task=agent-2) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 4 (rust by:task=agent-4) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 6 (rust by:task=agent-6) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 8 (rust by:task=agent-8) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 10 (rust by:task=agent-10) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 12 (rust by:task=agent-12) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 14 (rust by:task=agent-14) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 16 (rust by:task=agent-16) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 18 (rust by:task=agent-18) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 20 (rust by:task=agent-20) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 22 (rust by:task=agent-22) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 24 (rust by:task=agent-24) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 26 (rust by:task=agent-26) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 28 (rust by:task=agent-28) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 30 (rust by:task=agent-30) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 32 (rust by:task=agent-32) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 34 (rust by:task=agent-34) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 36 (rust by:task=agent-36) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 38 (rust by:task=agent-38) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 40 (rust by:task=agent-40) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 42 (rust by:task=agent-42) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 44 (rust by:task=agent-44) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 46 (rust by:task=agent-46) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 48 (rust by:task=agent-48) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 50 (rust by:model=llama-4@ver_0) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 52 (rust by:model=llama-4@ver_2) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 54 (rust by:model=llama-4@ver_4) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 56 (rust by:model=llama-4@ver_6) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 58 (rust by:model=llama-4@ver_8) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 60 (rust by:model=llama-4@ver_10) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 62 (rust by:model=llama-4@ver_12) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 64 (rust by:model=llama-4@ver_14) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 66 (rust by:model=llama-4@ver_16) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 68 (rust by:model=llama-4@ver_18) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 70 (rust by:model=llama-4@ver_20) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 72 (rust by:model=llama-4@ver_22) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 74 (rust by:model=llama-4@ver_24) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 76 (rust by:derived=f-008) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 78 (rust by:derived=f-024) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 80 (rust by:derived=f-040) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 82 (rust by:derived=f-056) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 84 (rust by:derived=f-072) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 86 (rust by:derived=f-088) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 88 (rust by:derived=f-104) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 90 (rust by:derived=f-120) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 92 (rust by:derived=f-136) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 94 (rust by:derived=f-152) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "mount 96 (rust by:derived=f-168) started",
+          "expected": "mounted",
+          "actual": "failed: ",
+          "pass": false
+        },
+        {
+          "name": "all 100 mounts started",
+          "expected": "100",
+          "actual": "51",
+          "pass": false
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "verify",
+      "title": "Per-mount ls digest, every file SHA-256, representative CLI bytes and ContentId",
+      "status": "fail",
+      "notes": "files=210 verified=51 unique_digests=51 resolved=0",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-103.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-105.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-057.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-061.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-063.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-165.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-075.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-027.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-131.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-183.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-035.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-087.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-089.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-141.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-095.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-099.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-151.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-028.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-180.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-132.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-109.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-186.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-088.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-190.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-117.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-019.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-171.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-023.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-001.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-017.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-033.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-049.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-065.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-081.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-097.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-113.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-129.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-145.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-161.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-177.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-185.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/context-mounts-8-20261106T082225Z-n100 --fixed-timestamp-ns 1767225600000000000 cat /corpus/f-193.bin"
+      ],
+      "assertions": [
+        {
+          "name": "construction oracle contexts loaded",
+          "expected": "100",
+          "actual": "100",
+          "pass": true
+        },
+        {
+          "name": "construction oracle objects loaded",
+          "expected": "235",
+          "actual": "235",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-1 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 1 f-151.bin--18128435 sha256",
+          "expected": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "actual": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "pass": true
+        },
+        {
+          "name": "cat-1 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 1 representative CLI bytes",
+          "expected": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "actual": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "pass": true
+        },
+        {
+          "name": "mount 1 f-001.bin--1a974c64 sha256",
+          "expected": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "actual": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "pass": true
+        },
+        {
+          "name": "mount 1 f-101.bin--adca9f38 sha256",
+          "expected": "8c9690015a8f9e4912cc4e4e09e1b38fd7adacb7412cc573dd0c2fcfd7287fe2",
+          "actual": "8c9690015a8f9e4912cc4e4e09e1b38fd7adacb7412cc573dd0c2fcfd7287fe2",
+          "pass": true
+        },
+        {
+          "name": "mount 1 f-051.bin--e070d3d0 sha256",
+          "expected": "d1ab0dcd4eb1c076031b04de22e8d7499ad04a5371ca41306cd87a7b469d2da3",
+          "actual": "d1ab0dcd4eb1c076031b04de22e8d7499ad04a5371ca41306cd87a7b469d2da3",
+          "pass": true
+        },
+        {
+          "name": "mount 1 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 1 listing digest",
+          "expected": "c94f781ceb7c19f28d349d5462bc40b15d40044e5285bad7bb7519ca79d40fb0",
+          "actual": "c94f781ceb7c19f28d349d5462bc40b15d40044e5285bad7bb7519ca79d40fb0",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-3 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 3 f-103.bin--343c7644 sha256",
+          "expected": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "actual": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "pass": true
+        },
+        {
+          "name": "cat-3 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 3 representative CLI bytes",
+          "expected": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "actual": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "pass": true
+        },
+        {
+          "name": "mount 3 f-053.bin--ae053881 sha256",
+          "expected": "8d2d70fc1d25ef15e66945b34cf6171ee22b374dcfedc80185e6bd1c58683643",
+          "actual": "8d2d70fc1d25ef15e66945b34cf6171ee22b374dcfedc80185e6bd1c58683643",
+          "pass": true
+        },
+        {
+          "name": "mount 3 f-153.bin--b34b3b1c sha256",
+          "expected": "5e5063165753ab20a7b78da89712937d13c905004742728f5c7e29be70b3496f",
+          "actual": "5e5063165753ab20a7b78da89712937d13c905004742728f5c7e29be70b3496f",
+          "pass": true
+        },
+        {
+          "name": "mount 3 f-003.bin--ca339911 sha256",
+          "expected": "33ad06cb4b7f346186dd395a55c45c01d37f63480f32e0bc9ebbbd5d497cc9f6",
+          "actual": "33ad06cb4b7f346186dd395a55c45c01d37f63480f32e0bc9ebbbd5d497cc9f6",
+          "pass": true
+        },
+        {
+          "name": "mount 3 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 3 listing digest",
+          "expected": "e79fd886d00051b97b5fd1a55b4b5a2dcc92ac809e810737161d68193096f94c",
+          "actual": "e79fd886d00051b97b5fd1a55b4b5a2dcc92ac809e810737161d68193096f94c",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-5 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 5 f-105.bin--78010e79 sha256",
+          "expected": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "actual": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "pass": true
+        },
+        {
+          "name": "cat-5 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 5 representative CLI bytes",
+          "expected": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "actual": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "pass": true
+        },
+        {
+          "name": "mount 5 f-155.bin--b9578b33 sha256",
+          "expected": "2d686b6152af9db6f2cecc24d00eca7c4fac38a192e7dd0ec4d572770095d7e6",
+          "actual": "2d686b6152af9db6f2cecc24d00eca7c4fac38a192e7dd0ec4d572770095d7e6",
+          "pass": true
+        },
+        {
+          "name": "mount 5 f-005.bin--bd8d118c sha256",
+          "expected": "d057e3afca34663be71065d924d5daf0bca233dd483c1713ed0c4aeba4c0bb49",
+          "actual": "d057e3afca34663be71065d924d5daf0bca233dd483c1713ed0c4aeba4c0bb49",
+          "pass": true
+        },
+        {
+          "name": "mount 5 f-055.bin--e3e67e73 sha256",
+          "expected": "411d3359798f35f1618298030735c4e1d6ed74b180ae6ff41c922bb30dc2aa43",
+          "actual": "411d3359798f35f1618298030735c4e1d6ed74b180ae6ff41c922bb30dc2aa43",
+          "pass": true
+        },
+        {
+          "name": "mount 5 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 5 listing digest",
+          "expected": "d29f67bc9c31b03bb5578065bdea42eb8fbaca73fa29fd28107249c2735602f4",
+          "actual": "d29f67bc9c31b03bb5578065bdea42eb8fbaca73fa29fd28107249c2735602f4",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-7 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 7 f-057.bin--3a3ff1b1 sha256",
+          "expected": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "actual": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "pass": true
+        },
+        {
+          "name": "cat-7 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 7 representative CLI bytes",
+          "expected": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "actual": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "pass": true
+        },
+        {
+          "name": "mount 7 f-157.bin--43e869cc sha256",
+          "expected": "aa495da4d818e2d28d48a6704dc1f6616465666c3916690db79d3c415e165bc4",
+          "actual": "aa495da4d818e2d28d48a6704dc1f6616465666c3916690db79d3c415e165bc4",
+          "pass": true
+        },
+        {
+          "name": "mount 7 f-007.bin--74849365 sha256",
+          "expected": "fff6aa6e0d5ba5ff9a589370ba0e36bf101914feb9f7487d7738db5f26399df8",
+          "actual": "fff6aa6e0d5ba5ff9a589370ba0e36bf101914feb9f7487d7738db5f26399df8",
+          "pass": true
+        },
+        {
+          "name": "mount 7 f-107.bin--ff96209d sha256",
+          "expected": "c1397233da2ab30a3002e0cbe464d751b49ffc2ef9a17daa320477545a76b9b8",
+          "actual": "c1397233da2ab30a3002e0cbe464d751b49ffc2ef9a17daa320477545a76b9b8",
+          "pass": true
+        },
+        {
+          "name": "mount 7 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 7 listing digest",
+          "expected": "42a1d9f81ba19a98b5550ea13be4042a7f2ba84498223a9e3ad1f3a057768ae0",
+          "actual": "42a1d9f81ba19a98b5550ea13be4042a7f2ba84498223a9e3ad1f3a057768ae0",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-9 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 9 f-109.bin--024d220a sha256",
+          "expected": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "actual": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "pass": true
+        },
+        {
+          "name": "cat-9 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 9 representative CLI bytes",
+          "expected": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "actual": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "pass": true
+        },
+        {
+          "name": "mount 9 f-009.bin--82f8b1ac sha256",
+          "expected": "679ddb0b29c3f3179eca119e3a0668305c5e75d9e873156b44ec2651513253b9",
+          "actual": "679ddb0b29c3f3179eca119e3a0668305c5e75d9e873156b44ec2651513253b9",
+          "pass": true
+        },
+        {
+          "name": "mount 9 f-059.bin--853a7485 sha256",
+          "expected": "3a05a524f0a5e33ca4f2bbe1086409e3aa5e62e8276de0f522dceab7f1000caf",
+          "actual": "3a05a524f0a5e33ca4f2bbe1086409e3aa5e62e8276de0f522dceab7f1000caf",
+          "pass": true
+        },
+        {
+          "name": "mount 9 f-159.bin--bfc6adf1 sha256",
+          "expected": "ac921ce267eb33ce259f319e938f195a59a3f13a10be9696ba2e9693beba68c2",
+          "actual": "ac921ce267eb33ce259f319e938f195a59a3f13a10be9696ba2e9693beba68c2",
+          "pass": true
+        },
+        {
+          "name": "mount 9 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 9 listing digest",
+          "expected": "2369c8229275213a8fbcc71ff528eb6ac614dc2710fc98f4807c0305479fc591",
+          "actual": "2369c8229275213a8fbcc71ff528eb6ac614dc2710fc98f4807c0305479fc591",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-11 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 11 f-061.bin--859c32b1 sha256",
+          "expected": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "actual": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "pass": true
+        },
+        {
+          "name": "cat-11 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 11 representative CLI bytes",
+          "expected": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "actual": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "pass": true
+        },
+        {
+          "name": "mount 11 f-011.bin--95e80f4a sha256",
+          "expected": "9abe68e1923d5a5c5918bf9ea7f97f00d733916b0efbf46433b05e6f7e964679",
+          "actual": "9abe68e1923d5a5c5918bf9ea7f97f00d733916b0efbf46433b05e6f7e964679",
+          "pass": true
+        },
+        {
+          "name": "mount 11 f-111.bin--9afbf0f4 sha256",
+          "expected": "68cbf0fc19cff6f8cfe2b05683b18521836c4f393a49a3ae56aa16c05d26f668",
+          "actual": "68cbf0fc19cff6f8cfe2b05683b18521836c4f393a49a3ae56aa16c05d26f668",
+          "pass": true
+        },
+        {
+          "name": "mount 11 f-161.bin--a7d31337 sha256",
+          "expected": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "actual": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "pass": true
+        },
+        {
+          "name": "mount 11 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 11 listing digest",
+          "expected": "58adc8f9cc356b60e29d85baf9d9d374644fb2a29cedba631167f702593f2b2a",
+          "actual": "58adc8f9cc356b60e29d85baf9d9d374644fb2a29cedba631167f702593f2b2a",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-13 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 13 f-063.bin--16905c20 sha256",
+          "expected": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "actual": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "pass": true
+        },
+        {
+          "name": "cat-13 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 13 representative CLI bytes",
+          "expected": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "actual": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "pass": true
+        },
+        {
+          "name": "mount 13 f-113.bin--8596c1e4 sha256",
+          "expected": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "actual": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "pass": true
+        },
+        {
+          "name": "mount 13 f-013.bin--bd9fb236 sha256",
+          "expected": "f840e8471a007506c27f0d9882e52ce91b6b985895a8bfe347067bebfd0953ca",
+          "actual": "f840e8471a007506c27f0d9882e52ce91b6b985895a8bfe347067bebfd0953ca",
+          "pass": true
+        },
+        {
+          "name": "mount 13 f-163.bin--ff0c6ec8 sha256",
+          "expected": "b7f33f016e9b22a096c78369101b0637d955e5a2997d4ceb2182516d98e44c56",
+          "actual": "b7f33f016e9b22a096c78369101b0637d955e5a2997d4ceb2182516d98e44c56",
+          "pass": true
+        },
+        {
+          "name": "mount 13 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 13 listing digest",
+          "expected": "6bdc1cfbda6156f0deda87fbe9d6f5abb9c26a2e3d7656c8e52ee879e060189b",
+          "actual": "6bdc1cfbda6156f0deda87fbe9d6f5abb9c26a2e3d7656c8e52ee879e060189b",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-15 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 15 f-165.bin--054ecbc6 sha256",
+          "expected": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "actual": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "pass": true
+        },
+        {
+          "name": "cat-15 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 15 representative CLI bytes",
+          "expected": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "actual": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "pass": true
+        },
+        {
+          "name": "mount 15 f-115.bin--0d29d45e sha256",
+          "expected": "929917f822bb348d2975156289807dc29b639fb3ba08886a06bba7094c74f333",
+          "actual": "929917f822bb348d2975156289807dc29b639fb3ba08886a06bba7094c74f333",
+          "pass": true
+        },
+        {
+          "name": "mount 15 f-065.bin--1a617192 sha256",
+          "expected": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "actual": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "pass": true
+        },
+        {
+          "name": "mount 15 f-015.bin--7961fee6 sha256",
+          "expected": "c2ccf9884427be8c46ca4b5a4e66dc7d869397c49356895423406d39667880e4",
+          "actual": "c2ccf9884427be8c46ca4b5a4e66dc7d869397c49356895423406d39667880e4",
+          "pass": true
+        },
+        {
+          "name": "mount 15 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 15 listing digest",
+          "expected": "bb97b0e0f5e1a8ef61dc0ee09e96f1c59d0d140a9426ba82402c31cce3e63caf",
+          "actual": "bb97b0e0f5e1a8ef61dc0ee09e96f1c59d0d140a9426ba82402c31cce3e63caf",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-17 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 17 f-117.bin--1a2a0068 sha256",
+          "expected": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "actual": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "pass": true
+        },
+        {
+          "name": "cat-17 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 17 representative CLI bytes",
+          "expected": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "actual": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "pass": true
+        },
+        {
+          "name": "mount 17 f-167.bin--6e22f9b5 sha256",
+          "expected": "2841404cd70483da3af8083ab8046af1a09430e3bbc72a91c47c84f70fb10436",
+          "actual": "2841404cd70483da3af8083ab8046af1a09430e3bbc72a91c47c84f70fb10436",
+          "pass": true
+        },
+        {
+          "name": "mount 17 f-067.bin--828111ee sha256",
+          "expected": "1e938e7690fc3d378993580a755d9f9f883422bc84fb6372bcddb8aa5549f39f",
+          "actual": "1e938e7690fc3d378993580a755d9f9f883422bc84fb6372bcddb8aa5549f39f",
+          "pass": true
+        },
+        {
+          "name": "mount 17 f-017.bin--c4f1223e sha256",
+          "expected": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "actual": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "pass": true
+        },
+        {
+          "name": "mount 17 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 17 listing digest",
+          "expected": "b41300014f24dc00d0d66bfafce60ffaa590e7f553a9156491249be048471bba",
+          "actual": "b41300014f24dc00d0d66bfafce60ffaa590e7f553a9156491249be048471bba",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-19 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 19 f-019.bin--13077eff sha256",
+          "expected": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "actual": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "pass": true
+        },
+        {
+          "name": "cat-19 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 19 representative CLI bytes",
+          "expected": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "actual": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "pass": true
+        },
+        {
+          "name": "mount 19 f-069.bin--20e9ef2a sha256",
+          "expected": "cfcdde819f24e1461dd056412fbef4d5d51298f006d22f0efa94dc784e1360d9",
+          "actual": "cfcdde819f24e1461dd056412fbef4d5d51298f006d22f0efa94dc784e1360d9",
+          "pass": true
+        },
+        {
+          "name": "mount 19 f-169.bin--d6070783 sha256",
+          "expected": "cb921e862d8d6a332c5544c42981984e642751e93059676f883823109a6847c2",
+          "actual": "cb921e862d8d6a332c5544c42981984e642751e93059676f883823109a6847c2",
+          "pass": true
+        },
+        {
+          "name": "mount 19 f-119.bin--dbd518af sha256",
+          "expected": "a97eb07d9efe5f8c7d1a73fac31d8ada81f837406e2a60c2efd61df874d404ec",
+          "actual": "a97eb07d9efe5f8c7d1a73fac31d8ada81f837406e2a60c2efd61df874d404ec",
+          "pass": true
+        },
+        {
+          "name": "mount 19 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 19 listing digest",
+          "expected": "d34b3a341ecd27f1f05d271d61e02de3a815bc0bf93a0f76adeb2404573639f3",
+          "actual": "d34b3a341ecd27f1f05d271d61e02de3a815bc0bf93a0f76adeb2404573639f3",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-21 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 21 f-171.bin--1727eb8a sha256",
+          "expected": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "actual": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "pass": true
+        },
+        {
+          "name": "cat-21 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 21 representative CLI bytes",
+          "expected": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "actual": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "pass": true
+        },
+        {
+          "name": "mount 21 f-021.bin--30dfddb9 sha256",
+          "expected": "2bce5977afc1f85924c551616f6c696ae5c260fabf6bbc7f64419c9d503181a0",
+          "actual": "2bce5977afc1f85924c551616f6c696ae5c260fabf6bbc7f64419c9d503181a0",
+          "pass": true
+        },
+        {
+          "name": "mount 21 f-071.bin--3533822f sha256",
+          "expected": "a44735da7e72ef709c39670e54a45d698a1af31c2a1dc30edf07bb14261e9f4d",
+          "actual": "a44735da7e72ef709c39670e54a45d698a1af31c2a1dc30edf07bb14261e9f4d",
+          "pass": true
+        },
+        {
+          "name": "mount 21 f-121.bin--89080a7c sha256",
+          "expected": "df1fe6d5a91f7a64eabd93e488fb51e2e085742073f42845479a2fe89d5291e9",
+          "actual": "df1fe6d5a91f7a64eabd93e488fb51e2e085742073f42845479a2fe89d5291e9",
+          "pass": true
+        },
+        {
+          "name": "mount 21 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 21 listing digest",
+          "expected": "e0317b304a1f469444cc3a80a1989e7d6c248bd0467e7178460ed12858d53d5c",
+          "actual": "e0317b304a1f469444cc3a80a1989e7d6c248bd0467e7178460ed12858d53d5c",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-23 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 23 f-023.bin--2284e60d sha256",
+          "expected": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "actual": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "pass": true
+        },
+        {
+          "name": "cat-23 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 23 representative CLI bytes",
+          "expected": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "actual": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "pass": true
+        },
+        {
+          "name": "mount 23 f-123.bin--c114beef sha256",
+          "expected": "7ca69d0b37c77e4956d5059a08d265f36320921e11090541e8182decd8b1f3af",
+          "actual": "7ca69d0b37c77e4956d5059a08d265f36320921e11090541e8182decd8b1f3af",
+          "pass": true
+        },
+        {
+          "name": "mount 23 f-173.bin--c73af9be sha256",
+          "expected": "ec31b6e862b1d5b06a453be2be84bd9e442c0ac3924627e5a034a601b9a29d39",
+          "actual": "ec31b6e862b1d5b06a453be2be84bd9e442c0ac3924627e5a034a601b9a29d39",
+          "pass": true
+        },
+        {
+          "name": "mount 23 f-073.bin--ca807dfb sha256",
+          "expected": "c95153c7250ae8989e59d36d7da1fd00520cb5f4678e4b7635cf4ccdcf0209ef",
+          "actual": "c95153c7250ae8989e59d36d7da1fd00520cb5f4678e4b7635cf4ccdcf0209ef",
+          "pass": true
+        },
+        {
+          "name": "mount 23 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 23 listing digest",
+          "expected": "f0c377880204c58eecd486410f17c74f0c087727d77f37b4179bfd50c6bde577",
+          "actual": "f0c377880204c58eecd486410f17c74f0c087727d77f37b4179bfd50c6bde577",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-25 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 25 f-075.bin--34c24f52 sha256",
+          "expected": "6b8ce7592b69ead3332cca38e4e447b087e32c684b0877ce24c8e1a569ab9c83",
+          "actual": "6b8ce7592b69ead3332cca38e4e447b087e32c684b0877ce24c8e1a569ab9c83",
+          "pass": true
+        },
+        {
+          "name": "cat-25 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 25 representative CLI bytes",
+          "expected": "6b8ce7592b69ead3332cca38e4e447b087e32c684b0877ce24c8e1a569ab9c83",
+          "actual": "6b8ce7592b69ead3332cca38e4e447b087e32c684b0877ce24c8e1a569ab9c83",
+          "pass": true
+        },
+        {
+          "name": "mount 25 f-175.bin--5e849123 sha256",
+          "expected": "45b563e5517c1cb11e8b377df73914d6ae47ca2255edecfe415af5d542ef1fbf",
+          "actual": "45b563e5517c1cb11e8b377df73914d6ae47ca2255edecfe415af5d542ef1fbf",
+          "pass": true
+        },
+        {
+          "name": "mount 25 f-125.bin--889d87a7 sha256",
+          "expected": "6c612f34c2925a055e84fe6676d25928240f602e4d3d8adf79789419435537ad",
+          "actual": "6c612f34c2925a055e84fe6676d25928240f602e4d3d8adf79789419435537ad",
+          "pass": true
+        },
+        {
+          "name": "mount 25 f-025.bin--906100cb sha256",
+          "expected": "5c8df286ee0616cb121f70f1989665600064986dfcfd267273c9f1a085256a0e",
+          "actual": "5c8df286ee0616cb121f70f1989665600064986dfcfd267273c9f1a085256a0e",
+          "pass": true
+        },
+        {
+          "name": "mount 25 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 25 listing digest",
+          "expected": "802d1cab4e9c6e36e9fa6614b83f8fb0b388c713be8a88f42a1720d18db47684",
+          "actual": "802d1cab4e9c6e36e9fa6614b83f8fb0b388c713be8a88f42a1720d18db47684",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-27 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 27 f-027.bin--6ff793fc sha256",
+          "expected": "9776eb70bdc51068337a28647179314d629d748615ec553e1868263648c545c4",
+          "actual": "9776eb70bdc51068337a28647179314d629d748615ec553e1868263648c545c4",
+          "pass": true
+        },
+        {
+          "name": "cat-27 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 27 representative CLI bytes",
+          "expected": "9776eb70bdc51068337a28647179314d629d748615ec553e1868263648c545c4",
+          "actual": "9776eb70bdc51068337a28647179314d629d748615ec553e1868263648c545c4",
+          "pass": true
+        },
+        {
+          "name": "mount 27 f-077.bin--77f7c67d sha256",
+          "expected": "c1635ba37220c93c0a9e43eca7daf2fb1404648c4772e2e5d4a878fdedc7c7c1",
+          "actual": "c1635ba37220c93c0a9e43eca7daf2fb1404648c4772e2e5d4a878fdedc7c7c1",
+          "pass": true
+        },
+        {
+          "name": "mount 27 f-127.bin--9fc24b6d sha256",
+          "expected": "1177de62b9db9c52ee64a1ef9d15e63e0e285f6c74c47f7d36c1d34383143e2b",
+          "actual": "1177de62b9db9c52ee64a1ef9d15e63e0e285f6c74c47f7d36c1d34383143e2b",
+          "pass": true
+        },
+        {
+          "name": "mount 27 f-177.bin--f87af815 sha256",
+          "expected": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "actual": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "pass": true
+        },
+        {
+          "name": "mount 27 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 27 listing digest",
+          "expected": "7884a5a287097ccf377312a5de20c169c540894a14e1f46020bef5ad7af67a38",
+          "actual": "7884a5a287097ccf377312a5de20c169c540894a14e1f46020bef5ad7af67a38",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-29 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 29 f-129.bin--1bf39bfd sha256",
+          "expected": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "actual": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "pass": true
+        },
+        {
+          "name": "cat-29 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 29 representative CLI bytes",
+          "expected": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "actual": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "pass": true
+        },
+        {
+          "name": "mount 29 f-179.bin--5d80d2d2 sha256",
+          "expected": "f7709b899c2cf216f82a8d6463376b0773781fb70f2166e496360565d471b036",
+          "actual": "f7709b899c2cf216f82a8d6463376b0773781fb70f2166e496360565d471b036",
+          "pass": true
+        },
+        {
+          "name": "mount 29 f-079.bin--7343a8f7 sha256",
+          "expected": "4adbf27c6e78976adcfe81bfb4b17337f0ae6411e83f1f03a2332df9b89d9d6d",
+          "actual": "4adbf27c6e78976adcfe81bfb4b17337f0ae6411e83f1f03a2332df9b89d9d6d",
+          "pass": true
+        },
+        {
+          "name": "mount 29 f-029.bin--dc49d3e6 sha256",
+          "expected": "3be2b7a8acc0d4457057292b6ed69000d41b8fbd3e7dfd44786572b41b580a57",
+          "actual": "3be2b7a8acc0d4457057292b6ed69000d41b8fbd3e7dfd44786572b41b580a57",
+          "pass": true
+        },
+        {
+          "name": "mount 29 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 29 listing digest",
+          "expected": "62e69b35adb026b30e80b5fc16109e3b609e991fd6d0d6191f3adcd4361082fd",
+          "actual": "62e69b35adb026b30e80b5fc16109e3b609e991fd6d0d6191f3adcd4361082fd",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-31 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 31 f-131.bin--0b3021ef sha256",
+          "expected": "1530b4ee2523634780e20c06beecf0059dccc9a22a525db7be83f4d1d08fccdb",
+          "actual": "1530b4ee2523634780e20c06beecf0059dccc9a22a525db7be83f4d1d08fccdb",
+          "pass": true
+        },
+        {
+          "name": "cat-31 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 31 representative CLI bytes",
+          "expected": "1530b4ee2523634780e20c06beecf0059dccc9a22a525db7be83f4d1d08fccdb",
+          "actual": "1530b4ee2523634780e20c06beecf0059dccc9a22a525db7be83f4d1d08fccdb",
+          "pass": true
+        },
+        {
+          "name": "mount 31 f-031.bin--2227527a sha256",
+          "expected": "7e93e3eee5b0ae775f9ee8f151ff401b41f0281bbae73c047d42521e5f69e714",
+          "actual": "7e93e3eee5b0ae775f9ee8f151ff401b41f0281bbae73c047d42521e5f69e714",
+          "pass": true
+        },
+        {
+          "name": "mount 31 f-081.bin--b24c1256 sha256",
+          "expected": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "actual": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "pass": true
+        },
+        {
+          "name": "mount 31 f-181.bin--c2a46c59 sha256",
+          "expected": "f51e4e4da0c0fe779312684880f7c7c6fffe247a087b26243d0955b9f5e0a66b",
+          "actual": "f51e4e4da0c0fe779312684880f7c7c6fffe247a087b26243d0955b9f5e0a66b",
+          "pass": true
+        },
+        {
+          "name": "mount 31 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 31 listing digest",
+          "expected": "5fd4813175f4a8fb44912844800161f8978bc756ff61ee3d00cd243a8bebbf1a",
+          "actual": "5fd4813175f4a8fb44912844800161f8978bc756ff61ee3d00cd243a8bebbf1a",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-33 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 33 f-183.bin--9281e39c sha256",
+          "expected": "1d46a3a02a92770cac9930b2c600f2123be533c8c72ee583da5fff4ab8099315",
+          "actual": "1d46a3a02a92770cac9930b2c600f2123be533c8c72ee583da5fff4ab8099315",
+          "pass": true
+        },
+        {
+          "name": "cat-33 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 33 representative CLI bytes",
+          "expected": "1d46a3a02a92770cac9930b2c600f2123be533c8c72ee583da5fff4ab8099315",
+          "actual": "1d46a3a02a92770cac9930b2c600f2123be533c8c72ee583da5fff4ab8099315",
+          "pass": true
+        },
+        {
+          "name": "mount 33 f-133.bin--96307f0f sha256",
+          "expected": "38313859a8ff2c377f6400d02f8861bc4163fa40f78e0bb42471c32098d82a17",
+          "actual": "38313859a8ff2c377f6400d02f8861bc4163fa40f78e0bb42471c32098d82a17",
+          "pass": true
+        },
+        {
+          "name": "mount 33 f-083.bin--ad9c7255 sha256",
+          "expected": "f7f7a896cd6cae729992403b2e4f5d44f01a93a606626eab0b189bc599b125b5",
+          "actual": "f7f7a896cd6cae729992403b2e4f5d44f01a93a606626eab0b189bc599b125b5",
+          "pass": true
+        },
+        {
+          "name": "mount 33 f-033.bin--dbe2b709 sha256",
+          "expected": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "actual": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "pass": true
+        },
+        {
+          "name": "mount 33 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 33 listing digest",
+          "expected": "6b0a3831c70d315e9e94dddfc5a76b9262414308f5250b49f672523394492f4d",
+          "actual": "6b0a3831c70d315e9e94dddfc5a76b9262414308f5250b49f672523394492f4d",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-35 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 35 f-035.bin--72d75159 sha256",
+          "expected": "77ed3a7d5d0b42f6c807da5a3b9cdab4443d639898b6762400eca2d8c74cb1e6",
+          "actual": "77ed3a7d5d0b42f6c807da5a3b9cdab4443d639898b6762400eca2d8c74cb1e6",
+          "pass": true
+        },
+        {
+          "name": "cat-35 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 35 representative CLI bytes",
+          "expected": "77ed3a7d5d0b42f6c807da5a3b9cdab4443d639898b6762400eca2d8c74cb1e6",
+          "actual": "77ed3a7d5d0b42f6c807da5a3b9cdab4443d639898b6762400eca2d8c74cb1e6",
+          "pass": true
+        },
+        {
+          "name": "mount 35 f-085.bin--78fe592c sha256",
+          "expected": "a1bdb58a64829ba4f4388a7093e8981df15d55cc852c8bed944eebd545ddaa57",
+          "actual": "a1bdb58a64829ba4f4388a7093e8981df15d55cc852c8bed944eebd545ddaa57",
+          "pass": true
+        },
+        {
+          "name": "mount 35 f-135.bin--8ed826dd sha256",
+          "expected": "ceedda42d912510492d4622059f4933a0956075d9588976ad5662a8b5c577c1a",
+          "actual": "ceedda42d912510492d4622059f4933a0956075d9588976ad5662a8b5c577c1a",
+          "pass": true
+        },
+        {
+          "name": "mount 35 f-185.bin--f7b15dcf sha256",
+          "expected": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "actual": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "pass": true
+        },
+        {
+          "name": "mount 35 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 35 listing digest",
+          "expected": "f1ddfd2a1c22b6fc24af5abc0551c5d25f3ee8967a30fa8d96dec64a9532c7c7",
+          "actual": "f1ddfd2a1c22b6fc24af5abc0551c5d25f3ee8967a30fa8d96dec64a9532c7c7",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-37 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 37 f-087.bin--72d43654 sha256",
+          "expected": "7e25091131aa852a5d4b3b3cb3c674dc552c490264646bc267bb65730a03476e",
+          "actual": "7e25091131aa852a5d4b3b3cb3c674dc552c490264646bc267bb65730a03476e",
+          "pass": true
+        },
+        {
+          "name": "cat-37 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 37 representative CLI bytes",
+          "expected": "7e25091131aa852a5d4b3b3cb3c674dc552c490264646bc267bb65730a03476e",
+          "actual": "7e25091131aa852a5d4b3b3cb3c674dc552c490264646bc267bb65730a03476e",
+          "pass": true
+        },
+        {
+          "name": "mount 37 f-037.bin--83bd6e6e sha256",
+          "expected": "fe789f61a160cc06828a067fea4e5b3d20672c11c5e16ca2c5de89196e52d2c7",
+          "actual": "fe789f61a160cc06828a067fea4e5b3d20672c11c5e16ca2c5de89196e52d2c7",
+          "pass": true
+        },
+        {
+          "name": "mount 37 f-137.bin--c5dcc57b sha256",
+          "expected": "7cb1ff82a2ebf8de8116a5a4833a286fd0da45207acba3c2cd6c5c55a3a793e5",
+          "actual": "7cb1ff82a2ebf8de8116a5a4833a286fd0da45207acba3c2cd6c5c55a3a793e5",
+          "pass": true
+        },
+        {
+          "name": "mount 37 f-187.bin--dcfabde8 sha256",
+          "expected": "8f3bfa94ee096535a63e738f52e837d51cc6b7ea02b7a104ae82a1a7b876604f",
+          "actual": "8f3bfa94ee096535a63e738f52e837d51cc6b7ea02b7a104ae82a1a7b876604f",
+          "pass": true
+        },
+        {
+          "name": "mount 37 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 37 listing digest",
+          "expected": "724c263ecab820bcaadc2d9c028f5ba5e9e364f6112c84986bc8513fcea5ef28",
+          "actual": "724c263ecab820bcaadc2d9c028f5ba5e9e364f6112c84986bc8513fcea5ef28",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-39 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 39 f-089.bin--0cade104 sha256",
+          "expected": "1174a24a71d48ab23d5b88cb9ce9aea0c55845c7fe3bcd7c2e7f1defeb22a140",
+          "actual": "1174a24a71d48ab23d5b88cb9ce9aea0c55845c7fe3bcd7c2e7f1defeb22a140",
+          "pass": true
+        },
+        {
+          "name": "cat-39 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 39 representative CLI bytes",
+          "expected": "1174a24a71d48ab23d5b88cb9ce9aea0c55845c7fe3bcd7c2e7f1defeb22a140",
+          "actual": "1174a24a71d48ab23d5b88cb9ce9aea0c55845c7fe3bcd7c2e7f1defeb22a140",
+          "pass": true
+        },
+        {
+          "name": "mount 39 f-139.bin--53e5baf1 sha256",
+          "expected": "2ba514e868ef9b221e3038a5a094af6c07be59cfcad91f9ae56c2e58d757f014",
+          "actual": "2ba514e868ef9b221e3038a5a094af6c07be59cfcad91f9ae56c2e58d757f014",
+          "pass": true
+        },
+        {
+          "name": "mount 39 f-189.bin--787a9241 sha256",
+          "expected": "214db0f397e9c91182a8b6ae9c2d18aac04de1eb11b1644a83101ce6a841994d",
+          "actual": "214db0f397e9c91182a8b6ae9c2d18aac04de1eb11b1644a83101ce6a841994d",
+          "pass": true
+        },
+        {
+          "name": "mount 39 f-039.bin--aefedb22 sha256",
+          "expected": "b9d6398c3f9693f0cbbd6b3cb2e1c4378d73fd23051bd678775357b0170bc03b",
+          "actual": "b9d6398c3f9693f0cbbd6b3cb2e1c4378d73fd23051bd678775357b0170bc03b",
+          "pass": true
+        },
+        {
+          "name": "mount 39 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 39 listing digest",
+          "expected": "653a1431e1bdfbeecdd49ebf52307fe63906175bd94373a7c94644833531521a",
+          "actual": "653a1431e1bdfbeecdd49ebf52307fe63906175bd94373a7c94644833531521a",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-41 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 41 f-141.bin--364f6442 sha256",
+          "expected": "dff8da85c993109a15c756e90e4ec4829915b17c57a5373ba51e669fb53192ad",
+          "actual": "dff8da85c993109a15c756e90e4ec4829915b17c57a5373ba51e669fb53192ad",
+          "pass": true
+        },
+        {
+          "name": "cat-41 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 41 representative CLI bytes",
+          "expected": "dff8da85c993109a15c756e90e4ec4829915b17c57a5373ba51e669fb53192ad",
+          "actual": "dff8da85c993109a15c756e90e4ec4829915b17c57a5373ba51e669fb53192ad",
+          "pass": true
+        },
+        {
+          "name": "mount 41 f-191.bin--3e1a5e91 sha256",
+          "expected": "19f4703a12c80cad1188133e2c1349ef5aaef0471ecc026ec6ae75a3e0e294bc",
+          "actual": "19f4703a12c80cad1188133e2c1349ef5aaef0471ecc026ec6ae75a3e0e294bc",
+          "pass": true
+        },
+        {
+          "name": "mount 41 f-041.bin--a02de75e sha256",
+          "expected": "1a8b1f812e4b524ab4ca8bb360f07ba67e80246d41e8c6718bee410218495d39",
+          "actual": "1a8b1f812e4b524ab4ca8bb360f07ba67e80246d41e8c6718bee410218495d39",
+          "pass": true
+        },
+        {
+          "name": "mount 41 f-091.bin--aab7e92c sha256",
+          "expected": "71278bd6e3ee26e0c71c0f45e7afccc0a38163361968b1791d7289f4eb4c1e87",
+          "actual": "71278bd6e3ee26e0c71c0f45e7afccc0a38163361968b1791d7289f4eb4c1e87",
+          "pass": true
+        },
+        {
+          "name": "mount 41 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 41 listing digest",
+          "expected": "bf96a2de5a463f1dabd68991d8dced649320aadcb6909ccf6a34b3bb78bfc71f",
+          "actual": "bf96a2de5a463f1dabd68991d8dced649320aadcb6909ccf6a34b3bb78bfc71f",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-43 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 43 f-193.bin--567c88a1 sha256",
+          "expected": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "actual": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "pass": true
+        },
+        {
+          "name": "cat-43 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 43 representative CLI bytes",
+          "expected": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "actual": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "pass": true
+        },
+        {
+          "name": "mount 43 f-043.bin--79111c0b sha256",
+          "expected": "40244399b0cf15cc989302eb6ac21568322c1a2b0f456c4247366cebc9c6b336",
+          "actual": "40244399b0cf15cc989302eb6ac21568322c1a2b0f456c4247366cebc9c6b336",
+          "pass": true
+        },
+        {
+          "name": "mount 43 f-093.bin--7e60e7f0 sha256",
+          "expected": "3516637921095d34ffeff642e6c982593e1425038b54905c29040cda2e5c2579",
+          "actual": "3516637921095d34ffeff642e6c982593e1425038b54905c29040cda2e5c2579",
+          "pass": true
+        },
+        {
+          "name": "mount 43 f-143.bin--807aa1fe sha256",
+          "expected": "2c94e0b88f077b4ecf2be25ebea2fa445d2a9db3231d7e684c1862d36a307b01",
+          "actual": "2c94e0b88f077b4ecf2be25ebea2fa445d2a9db3231d7e684c1862d36a307b01",
+          "pass": true
+        },
+        {
+          "name": "mount 43 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 43 listing digest",
+          "expected": "73306c19860c1e448ff823fca352f8b3457ea7f5e92b3ae658ac85e361d90104",
+          "actual": "73306c19860c1e448ff823fca352f8b3457ea7f5e92b3ae658ac85e361d90104",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-45 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 45 f-095.bin--1aa3619b sha256",
+          "expected": "ae9ac31f5919d711282dae4093682c7c1e8de1a9b8f795f2d73f36dc176fedbb",
+          "actual": "ae9ac31f5919d711282dae4093682c7c1e8de1a9b8f795f2d73f36dc176fedbb",
+          "pass": true
+        },
+        {
+          "name": "cat-45 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 45 representative CLI bytes",
+          "expected": "ae9ac31f5919d711282dae4093682c7c1e8de1a9b8f795f2d73f36dc176fedbb",
+          "actual": "ae9ac31f5919d711282dae4093682c7c1e8de1a9b8f795f2d73f36dc176fedbb",
+          "pass": true
+        },
+        {
+          "name": "mount 45 f-195.bin--546d1ae4 sha256",
+          "expected": "d829cb4d17db35065da19195942541d9b57b154ff8f4e4ba233cb1e5186cbc51",
+          "actual": "d829cb4d17db35065da19195942541d9b57b154ff8f4e4ba233cb1e5186cbc51",
+          "pass": true
+        },
+        {
+          "name": "mount 45 f-145.bin--dde1785d sha256",
+          "expected": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "actual": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "pass": true
+        },
+        {
+          "name": "mount 45 f-045.bin--f71ce977 sha256",
+          "expected": "d89a6aacb08075fec9a16d0c789b6c85fcdeea43e460c50e91f6efda52b0d744",
+          "actual": "d89a6aacb08075fec9a16d0c789b6c85fcdeea43e460c50e91f6efda52b0d744",
+          "pass": true
+        },
+        {
+          "name": "mount 45 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 45 listing digest",
+          "expected": "5f3bf7635e7e80d003691b0e0b533b537522905b327f6b32aae6d67aaefec281",
+          "actual": "5f3bf7635e7e80d003691b0e0b533b537522905b327f6b32aae6d67aaefec281",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-47 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 47 f-097.bin--414b22f7 sha256",
+          "expected": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "actual": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "pass": true
+        },
+        {
+          "name": "cat-47 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 47 representative CLI bytes",
+          "expected": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "actual": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "pass": true
+        },
+        {
+          "name": "mount 47 f-147.bin--5120f7e6 sha256",
+          "expected": "b63bd749f1d9f534d3fcf9221a65831a0adeef583f4eea19f0696d8144ebfde9",
+          "actual": "b63bd749f1d9f534d3fcf9221a65831a0adeef583f4eea19f0696d8144ebfde9",
+          "pass": true
+        },
+        {
+          "name": "mount 47 f-197.bin--c6da436d sha256",
+          "expected": "090755053d60c90af38450e97750a2629f200aea4c0fa2e5349e10805fbbbb86",
+          "actual": "090755053d60c90af38450e97750a2629f200aea4c0fa2e5349e10805fbbbb86",
+          "pass": true
+        },
+        {
+          "name": "mount 47 f-047.bin--cbc654a4 sha256",
+          "expected": "14c7b114a21ca98946516458a173312d3bd8d9268889b8f9faca9ceb59e493c5",
+          "actual": "14c7b114a21ca98946516458a173312d3bd8d9268889b8f9faca9ceb59e493c5",
+          "pass": true
+        },
+        {
+          "name": "mount 47 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 47 listing digest",
+          "expected": "0dd7e69e8387082a93b5295b01724a9fa2ddf6c6fc51cca91cfb9d5c9290eaed",
+          "actual": "0dd7e69e8387082a93b5295b01724a9fa2ddf6c6fc51cca91cfb9d5c9290eaed",
+          "pass": true
+        },
+        {
+          "name": "context by:task=agent-49 oracle members",
+          "expected": "4",
+          "actual": "4",
+          "pass": true
+        },
+        {
+          "name": "mount 49 f-099.bin--0809ffba sha256",
+          "expected": "39a11c090e505d66c782db1b1a8497f6fb26c757030c32a36502302662b94650",
+          "actual": "39a11c090e505d66c782db1b1a8497f6fb26c757030c32a36502302662b94650",
+          "pass": true
+        },
+        {
+          "name": "cat-49 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 49 representative CLI bytes",
+          "expected": "39a11c090e505d66c782db1b1a8497f6fb26c757030c32a36502302662b94650",
+          "actual": "39a11c090e505d66c782db1b1a8497f6fb26c757030c32a36502302662b94650",
+          "pass": true
+        },
+        {
+          "name": "mount 49 f-199.bin--37a27017 sha256",
+          "expected": "c91998be4e6ec2785d1ebbcacfee9d864cdb16b68087e75dff103b16ae504a5f",
+          "actual": "c91998be4e6ec2785d1ebbcacfee9d864cdb16b68087e75dff103b16ae504a5f",
+          "pass": true
+        },
+        {
+          "name": "mount 49 f-049.bin--5b708472 sha256",
+          "expected": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "actual": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "pass": true
+        },
+        {
+          "name": "mount 49 f-149.bin--cb7e1db1 sha256",
+          "expected": "d3fcbaaab24fc7a140ffbd8ca32a4155ff78d6e5e963d33e1c04ec52c0b2b389",
+          "actual": "d3fcbaaab24fc7a140ffbd8ca32a4155ff78d6e5e963d33e1c04ec52c0b2b389",
+          "pass": true
+        },
+        {
+          "name": "mount 49 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 49 listing digest",
+          "expected": "bcd0fbd75d6ea395ff9a8678c9928459add17f31f5fc6c55e45dc8498ecd6c9e",
+          "actual": "bcd0fbd75d6ea395ff9a8678c9928459add17f31f5fc6c55e45dc8498ecd6c9e",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_1 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-151.bin--18128435 sha256",
+          "expected": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "actual": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "pass": true
+        },
+        {
+          "name": "cat-51 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 51 representative CLI bytes",
+          "expected": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "actual": "626b73ff34a56a9f4ed20fc284c45756cf45d3494dcc404eac23fbb9512c554b",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-001.bin--1a974c64 sha256",
+          "expected": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "actual": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-076.bin--60b84eca sha256",
+          "expected": "0740782d4a6daa53d0c3661384aed6c63934ed3885ff0d5b9c2a6e01f9bed49b",
+          "actual": "0740782d4a6daa53d0c3661384aed6c63934ed3885ff0d5b9c2a6e01f9bed49b",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-026.bin--99059f00 sha256",
+          "expected": "b5d7ee78b61ad13314ccc159c0c1c8dbf696635a0a0cf931564eb28e57c5506b",
+          "actual": "b5d7ee78b61ad13314ccc159c0c1c8dbf696635a0a0cf931564eb28e57c5506b",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-176.bin--acb15dc3 sha256",
+          "expected": "7d5ea8c8c6d410eb12ed34a231ba1f627c5f8ce387d085a4ae1d0db15c6fc5db",
+          "actual": "7d5ea8c8c6d410eb12ed34a231ba1f627c5f8ce387d085a4ae1d0db15c6fc5db",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-101.bin--adca9f38 sha256",
+          "expected": "8c9690015a8f9e4912cc4e4e09e1b38fd7adacb7412cc573dd0c2fcfd7287fe2",
+          "actual": "8c9690015a8f9e4912cc4e4e09e1b38fd7adacb7412cc573dd0c2fcfd7287fe2",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-126.bin--c01b1377 sha256",
+          "expected": "5be9e34906c26433aca252d2cd291fba041d66528b169bc0c48c5456f77cf8e6",
+          "actual": "5be9e34906c26433aca252d2cd291fba041d66528b169bc0c48c5456f77cf8e6",
+          "pass": true
+        },
+        {
+          "name": "mount 51 f-051.bin--e070d3d0 sha256",
+          "expected": "d1ab0dcd4eb1c076031b04de22e8d7499ad04a5371ca41306cd87a7b469d2da3",
+          "actual": "d1ab0dcd4eb1c076031b04de22e8d7499ad04a5371ca41306cd87a7b469d2da3",
+          "pass": true
+        },
+        {
+          "name": "mount 51 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 51 listing digest",
+          "expected": "3e075c20733b487b13c66477c40a751da25f6cdad4f6c426a67db35334c59cb2",
+          "actual": "3e075c20733b487b13c66477c40a751da25f6cdad4f6c426a67db35334c59cb2",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_3 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-028.bin--103985a2 sha256",
+          "expected": "f53885074c602d5d8417cdf06933fea04c03515134c3461818d46386b501690f",
+          "actual": "f53885074c602d5d8417cdf06933fea04c03515134c3461818d46386b501690f",
+          "pass": true
+        },
+        {
+          "name": "cat-53 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 53 representative CLI bytes",
+          "expected": "f53885074c602d5d8417cdf06933fea04c03515134c3461818d46386b501690f",
+          "actual": "f53885074c602d5d8417cdf06933fea04c03515134c3461818d46386b501690f",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-078.bin--22c14b32 sha256",
+          "expected": "a68e255717d9379cb8192c4686710419c4bebb0516cf4269303bf413c6822171",
+          "actual": "a68e255717d9379cb8192c4686710419c4bebb0516cf4269303bf413c6822171",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-103.bin--343c7644 sha256",
+          "expected": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "actual": "c3813e94b7e70a5892107237975ef656f9b53c3fc95321db0b4d7d3b81062329",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-178.bin--4ef8d1ec sha256",
+          "expected": "043e2f1b7e5dde1fad33632a67c23b5efe6d98c74b509e15000715a6e9c6ca5c",
+          "actual": "043e2f1b7e5dde1fad33632a67c23b5efe6d98c74b509e15000715a6e9c6ca5c",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-128.bin--5cc2000f sha256",
+          "expected": "59f5c324724ef04d8d9ed2dc09eb09212065d9a122e5586acc2bf63b99458537",
+          "actual": "59f5c324724ef04d8d9ed2dc09eb09212065d9a122e5586acc2bf63b99458537",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-053.bin--ae053881 sha256",
+          "expected": "8d2d70fc1d25ef15e66945b34cf6171ee22b374dcfedc80185e6bd1c58683643",
+          "actual": "8d2d70fc1d25ef15e66945b34cf6171ee22b374dcfedc80185e6bd1c58683643",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-153.bin--b34b3b1c sha256",
+          "expected": "5e5063165753ab20a7b78da89712937d13c905004742728f5c7e29be70b3496f",
+          "actual": "5e5063165753ab20a7b78da89712937d13c905004742728f5c7e29be70b3496f",
+          "pass": true
+        },
+        {
+          "name": "mount 53 f-003.bin--ca339911 sha256",
+          "expected": "33ad06cb4b7f346186dd395a55c45c01d37f63480f32e0bc9ebbbd5d497cc9f6",
+          "actual": "33ad06cb4b7f346186dd395a55c45c01d37f63480f32e0bc9ebbbd5d497cc9f6",
+          "pass": true
+        },
+        {
+          "name": "mount 53 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 53 listing digest",
+          "expected": "d9ad74afc668746ca290bc171f837271184f9ef566c8f7cbb2c3dac707d7f331",
+          "actual": "d9ad74afc668746ca290bc171f837271184f9ef566c8f7cbb2c3dac707d7f331",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_5 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-180.bin--55c657ca sha256",
+          "expected": "be8e8bde44fadadaadb141af1131e3d2dfabdc4f561b0b4ba9ed6ea7eeb1e7ea",
+          "actual": "be8e8bde44fadadaadb141af1131e3d2dfabdc4f561b0b4ba9ed6ea7eeb1e7ea",
+          "pass": true
+        },
+        {
+          "name": "cat-55 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 55 representative CLI bytes",
+          "expected": "be8e8bde44fadadaadb141af1131e3d2dfabdc4f561b0b4ba9ed6ea7eeb1e7ea",
+          "actual": "be8e8bde44fadadaadb141af1131e3d2dfabdc4f561b0b4ba9ed6ea7eeb1e7ea",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-080.bin--56beb379 sha256",
+          "expected": "beef39c0f58c6c60ed9b1fa39d946967eabbb5f479c6682148ded0fca09fcafc",
+          "actual": "beef39c0f58c6c60ed9b1fa39d946967eabbb5f479c6682148ded0fca09fcafc",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-105.bin--78010e79 sha256",
+          "expected": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "actual": "fd9aca7e200d85854f9afd340db3c33c41da566789945dd9ed9ecc69805d8b45",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-030.bin--998b22ec sha256",
+          "expected": "bc146d5c0a99fdb389f62bf602f82550d8a57663973b3bc43648f0f0109f15b0",
+          "actual": "bc146d5c0a99fdb389f62bf602f82550d8a57663973b3bc43648f0f0109f15b0",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-155.bin--b9578b33 sha256",
+          "expected": "2d686b6152af9db6f2cecc24d00eca7c4fac38a192e7dd0ec4d572770095d7e6",
+          "actual": "2d686b6152af9db6f2cecc24d00eca7c4fac38a192e7dd0ec4d572770095d7e6",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-005.bin--bd8d118c sha256",
+          "expected": "d057e3afca34663be71065d924d5daf0bca233dd483c1713ed0c4aeba4c0bb49",
+          "actual": "d057e3afca34663be71065d924d5daf0bca233dd483c1713ed0c4aeba4c0bb49",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-055.bin--e3e67e73 sha256",
+          "expected": "411d3359798f35f1618298030735c4e1d6ed74b180ae6ff41c922bb30dc2aa43",
+          "actual": "411d3359798f35f1618298030735c4e1d6ed74b180ae6ff41c922bb30dc2aa43",
+          "pass": true
+        },
+        {
+          "name": "mount 55 f-130.bin--ed9f247b sha256",
+          "expected": "832140882e943555963f59bac0fe32a1dea26d92306e5faf006d9a03d4e1b3d2",
+          "actual": "832140882e943555963f59bac0fe32a1dea26d92306e5faf006d9a03d4e1b3d2",
+          "pass": true
+        },
+        {
+          "name": "mount 55 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 55 listing digest",
+          "expected": "c5445864c289520ac8a5402645a44e9cdfa5d15bc63c774451ab7f11e71b68bc",
+          "actual": "c5445864c289520ac8a5402645a44e9cdfa5d15bc63c774451ab7f11e71b68bc",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_7 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-132.bin--0194ea0c sha256",
+          "expected": "18ad8d5eacdc473d4fa82edae2c7f9c2e892ac7927d2835b4e6fc59e45422473",
+          "actual": "18ad8d5eacdc473d4fa82edae2c7f9c2e892ac7927d2835b4e6fc59e45422473",
+          "pass": true
+        },
+        {
+          "name": "cat-57 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 57 representative CLI bytes",
+          "expected": "18ad8d5eacdc473d4fa82edae2c7f9c2e892ac7927d2835b4e6fc59e45422473",
+          "actual": "18ad8d5eacdc473d4fa82edae2c7f9c2e892ac7927d2835b4e6fc59e45422473",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-082.bin--0d422551 sha256",
+          "expected": "5e9156623eeda3e84911049a458798ae0e7b3224487b207b81ec4b649d43440e",
+          "actual": "5e9156623eeda3e84911049a458798ae0e7b3224487b207b81ec4b649d43440e",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-182.bin--21b91898 sha256",
+          "expected": "38758f451d725603f6dab57df020a1fad97846cbfceaf22470069ce5cefe7aca",
+          "actual": "38758f451d725603f6dab57df020a1fad97846cbfceaf22470069ce5cefe7aca",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-057.bin--3a3ff1b1 sha256",
+          "expected": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "actual": "8429e67154d88be0b852b13327d96d176924754d45fe61c27441ad24646749d4",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-157.bin--43e869cc sha256",
+          "expected": "aa495da4d818e2d28d48a6704dc1f6616465666c3916690db79d3c415e165bc4",
+          "actual": "aa495da4d818e2d28d48a6704dc1f6616465666c3916690db79d3c415e165bc4",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-007.bin--74849365 sha256",
+          "expected": "fff6aa6e0d5ba5ff9a589370ba0e36bf101914feb9f7487d7738db5f26399df8",
+          "actual": "fff6aa6e0d5ba5ff9a589370ba0e36bf101914feb9f7487d7738db5f26399df8",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-032.bin--8cc8a87c sha256",
+          "expected": "e8ba2d5de2250463541e2b93f49ac3e2a9acd730c5e072ca3b742392e7285b3f",
+          "actual": "e8ba2d5de2250463541e2b93f49ac3e2a9acd730c5e072ca3b742392e7285b3f",
+          "pass": true
+        },
+        {
+          "name": "mount 57 f-107.bin--ff96209d sha256",
+          "expected": "c1397233da2ab30a3002e0cbe464d751b49ffc2ef9a17daa320477545a76b9b8",
+          "actual": "c1397233da2ab30a3002e0cbe464d751b49ffc2ef9a17daa320477545a76b9b8",
+          "pass": true
+        },
+        {
+          "name": "mount 57 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 57 listing digest",
+          "expected": "1d5653872acc645509058afd7e0b27115be8c78519475e62a1c33d7d6725b0c1",
+          "actual": "1d5653872acc645509058afd7e0b27115be8c78519475e62a1c33d7d6725b0c1",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_9 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-109.bin--024d220a sha256",
+          "expected": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "actual": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "pass": true
+        },
+        {
+          "name": "cat-59 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 59 representative CLI bytes",
+          "expected": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "actual": "bdb5c5b0fba896b76a01ed469fe9be83922b52bebabc707e1bb67be9e1eb5f28",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-134.bin--393d7d92 sha256",
+          "expected": "8b7d21e9de11d4c9e7c9e0b4a9d4800ab80a1f5c546fb066a4625a3da010de9b",
+          "actual": "8b7d21e9de11d4c9e7c9e0b4a9d4800ab80a1f5c546fb066a4625a3da010de9b",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-184.bin--3af7cf3b sha256",
+          "expected": "4324aefdbce31dde9604bf1cc6aaa4ee5f077ecc4d33fa66141c248b40b670b9",
+          "actual": "4324aefdbce31dde9604bf1cc6aaa4ee5f077ecc4d33fa66141c248b40b670b9",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-009.bin--82f8b1ac sha256",
+          "expected": "679ddb0b29c3f3179eca119e3a0668305c5e75d9e873156b44ec2651513253b9",
+          "actual": "679ddb0b29c3f3179eca119e3a0668305c5e75d9e873156b44ec2651513253b9",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-059.bin--853a7485 sha256",
+          "expected": "3a05a524f0a5e33ca4f2bbe1086409e3aa5e62e8276de0f522dceab7f1000caf",
+          "actual": "3a05a524f0a5e33ca4f2bbe1086409e3aa5e62e8276de0f522dceab7f1000caf",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-159.bin--bfc6adf1 sha256",
+          "expected": "ac921ce267eb33ce259f319e938f195a59a3f13a10be9696ba2e9693beba68c2",
+          "actual": "ac921ce267eb33ce259f319e938f195a59a3f13a10be9696ba2e9693beba68c2",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-084.bin--dd3738d0 sha256",
+          "expected": "9c0e23af4bae8d0dc5698c01451c8c3227e6afb3d1be711389ea7c3f40f39aeb",
+          "actual": "9c0e23af4bae8d0dc5698c01451c8c3227e6afb3d1be711389ea7c3f40f39aeb",
+          "pass": true
+        },
+        {
+          "name": "mount 59 f-034.bin--e17a6221 sha256",
+          "expected": "311a32f62eb044ed7ec5033ab462173460683d83e2ad9227ec5e57ae01859377",
+          "actual": "311a32f62eb044ed7ec5033ab462173460683d83e2ad9227ec5e57ae01859377",
+          "pass": true
+        },
+        {
+          "name": "mount 59 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 59 listing digest",
+          "expected": "b69bb2f3bdfa1bd49a20936111f48801b4f9fa0d39c9fa6eb1a292b822ffbb98",
+          "actual": "b69bb2f3bdfa1bd49a20936111f48801b4f9fa0d39c9fa6eb1a292b822ffbb98",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_11 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-186.bin--046ecd0c sha256",
+          "expected": "9765c1ec5efd8fd53a8150f638c59207f4ebeaa5811d2b5b2eafe6421384e9ab",
+          "actual": "9765c1ec5efd8fd53a8150f638c59207f4ebeaa5811d2b5b2eafe6421384e9ab",
+          "pass": true
+        },
+        {
+          "name": "cat-61 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 61 representative CLI bytes",
+          "expected": "9765c1ec5efd8fd53a8150f638c59207f4ebeaa5811d2b5b2eafe6421384e9ab",
+          "actual": "9765c1ec5efd8fd53a8150f638c59207f4ebeaa5811d2b5b2eafe6421384e9ab",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-086.bin--1ad23e30 sha256",
+          "expected": "04b42fd7758d5fd5f941f7da09fdb4cc06fd6d9c05fe14011c6d46e306c8da91",
+          "actual": "04b42fd7758d5fd5f941f7da09fdb4cc06fd6d9c05fe14011c6d46e306c8da91",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-136.bin--333e29f7 sha256",
+          "expected": "b46273459c6c50334c2ef1ac00011e9329705cc7b04d73aba8f645e811ad1cd4",
+          "actual": "b46273459c6c50334c2ef1ac00011e9329705cc7b04d73aba8f645e811ad1cd4",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-036.bin--62f653ca sha256",
+          "expected": "fc15e905f1ba7f6a2bd22823b40d26ac9b1ab0516962d1605e9d304b18ee5607",
+          "actual": "fc15e905f1ba7f6a2bd22823b40d26ac9b1ab0516962d1605e9d304b18ee5607",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-061.bin--859c32b1 sha256",
+          "expected": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "actual": "b0488e6cccf672aa212c8b4f8fdfde6d7cbe3a337bb97c9c5181202cdeb1b7ed",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-011.bin--95e80f4a sha256",
+          "expected": "9abe68e1923d5a5c5918bf9ea7f97f00d733916b0efbf46433b05e6f7e964679",
+          "actual": "9abe68e1923d5a5c5918bf9ea7f97f00d733916b0efbf46433b05e6f7e964679",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-111.bin--9afbf0f4 sha256",
+          "expected": "68cbf0fc19cff6f8cfe2b05683b18521836c4f393a49a3ae56aa16c05d26f668",
+          "actual": "68cbf0fc19cff6f8cfe2b05683b18521836c4f393a49a3ae56aa16c05d26f668",
+          "pass": true
+        },
+        {
+          "name": "mount 61 f-161.bin--a7d31337 sha256",
+          "expected": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "actual": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "pass": true
+        },
+        {
+          "name": "mount 61 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 61 listing digest",
+          "expected": "ea8137252aa9428e88db40ef763d593434a21d75e0694beb84cd2fc0d7fbdb20",
+          "actual": "ea8137252aa9428e88db40ef763d593434a21d75e0694beb84cd2fc0d7fbdb20",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_13 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-088.bin--0ac29580 sha256",
+          "expected": "304cac01d28e78d1b9a86b6f15b3ebb51387df9d31646430ef0577db68a9743f",
+          "actual": "304cac01d28e78d1b9a86b6f15b3ebb51387df9d31646430ef0577db68a9743f",
+          "pass": true
+        },
+        {
+          "name": "cat-63 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 63 representative CLI bytes",
+          "expected": "304cac01d28e78d1b9a86b6f15b3ebb51387df9d31646430ef0577db68a9743f",
+          "actual": "304cac01d28e78d1b9a86b6f15b3ebb51387df9d31646430ef0577db68a9743f",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-063.bin--16905c20 sha256",
+          "expected": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "actual": "cdb6b11ae6780020ea43e711c80c4db1fd2c5e8681be779c2fd53b413434587f",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-138.bin--34973484 sha256",
+          "expected": "78679c734572dc9a748a5c6185b5b8dea4dcbd379d658736b726e7fb96f3543e",
+          "actual": "78679c734572dc9a748a5c6185b5b8dea4dcbd379d658736b726e7fb96f3543e",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-113.bin--8596c1e4 sha256",
+          "expected": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "actual": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-013.bin--bd9fb236 sha256",
+          "expected": "f840e8471a007506c27f0d9882e52ce91b6b985895a8bfe347067bebfd0953ca",
+          "actual": "f840e8471a007506c27f0d9882e52ce91b6b985895a8bfe347067bebfd0953ca",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-038.bin--cd458e42 sha256",
+          "expected": "2f8256008c86761eb9eba77b85ec1a00ae817c74148a4a72259c73040b23e3ea",
+          "actual": "2f8256008c86761eb9eba77b85ec1a00ae817c74148a4a72259c73040b23e3ea",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-188.bin--cf90c115 sha256",
+          "expected": "cccd0397fd95b1e664f79d73c0d1f215efd33248820b539fd01008a70a137290",
+          "actual": "cccd0397fd95b1e664f79d73c0d1f215efd33248820b539fd01008a70a137290",
+          "pass": true
+        },
+        {
+          "name": "mount 63 f-163.bin--ff0c6ec8 sha256",
+          "expected": "b7f33f016e9b22a096c78369101b0637d955e5a2997d4ceb2182516d98e44c56",
+          "actual": "b7f33f016e9b22a096c78369101b0637d955e5a2997d4ceb2182516d98e44c56",
+          "pass": true
+        },
+        {
+          "name": "mount 63 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 63 listing digest",
+          "expected": "bbbcc4e924814a9c5eb1da4b0115100ba386395df6e23972b29c6437d5e6ed75",
+          "actual": "bbbcc4e924814a9c5eb1da4b0115100ba386395df6e23972b29c6437d5e6ed75",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_15 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-190.bin--0388960f sha256",
+          "expected": "1821a53ebee1b6db15daecb5f47239c64cde568b61c0eab87621dfbef03d1451",
+          "actual": "1821a53ebee1b6db15daecb5f47239c64cde568b61c0eab87621dfbef03d1451",
+          "pass": true
+        },
+        {
+          "name": "cat-65 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 65 representative CLI bytes",
+          "expected": "1821a53ebee1b6db15daecb5f47239c64cde568b61c0eab87621dfbef03d1451",
+          "actual": "1821a53ebee1b6db15daecb5f47239c64cde568b61c0eab87621dfbef03d1451",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-165.bin--054ecbc6 sha256",
+          "expected": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "actual": "4866dc7c8deed2cdffd707c4361a971922593631f0dcef5468f0c1b6d5b19892",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-115.bin--0d29d45e sha256",
+          "expected": "929917f822bb348d2975156289807dc29b639fb3ba08886a06bba7094c74f333",
+          "actual": "929917f822bb348d2975156289807dc29b639fb3ba08886a06bba7094c74f333",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-065.bin--1a617192 sha256",
+          "expected": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "actual": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-040.bin--3b04c160 sha256",
+          "expected": "dd1222f2e952048dd91c46ecdb0b14bda1c2161380c016de69be9a8b41a6982a",
+          "actual": "dd1222f2e952048dd91c46ecdb0b14bda1c2161380c016de69be9a8b41a6982a",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-015.bin--7961fee6 sha256",
+          "expected": "c2ccf9884427be8c46ca4b5a4e66dc7d869397c49356895423406d39667880e4",
+          "actual": "c2ccf9884427be8c46ca4b5a4e66dc7d869397c49356895423406d39667880e4",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-090.bin--9c3cf334 sha256",
+          "expected": "14d6b11d2e5aa79040a6ce78ac7bf31b5443edf1646767b734bbed3bf2998d2d",
+          "actual": "14d6b11d2e5aa79040a6ce78ac7bf31b5443edf1646767b734bbed3bf2998d2d",
+          "pass": true
+        },
+        {
+          "name": "mount 65 f-140.bin--f8971eaa sha256",
+          "expected": "ec20da0e6386189372975c37eabdd2c5783d34ad4e71140e2f55efd844b3c646",
+          "actual": "ec20da0e6386189372975c37eabdd2c5783d34ad4e71140e2f55efd844b3c646",
+          "pass": true
+        },
+        {
+          "name": "mount 65 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 65 listing digest",
+          "expected": "8f0763f0124e2526ace636889451282e6c7089723c646429bc581ef1232b0cec",
+          "actual": "8f0763f0124e2526ace636889451282e6c7089723c646429bc581ef1232b0cec",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_17 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-117.bin--1a2a0068 sha256",
+          "expected": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "actual": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "pass": true
+        },
+        {
+          "name": "cat-67 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 67 representative CLI bytes",
+          "expected": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "actual": "16a50be3b0d0d95d777d464f5c73a3e208d9935d0078f11e8071c38c6a1085da",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-192.bin--27af4121 sha256",
+          "expected": "ebd0561855c16a85b136f98f264344d361f139be4841ef2d513ec1a5dfb6fc11",
+          "actual": "ebd0561855c16a85b136f98f264344d361f139be4841ef2d513ec1a5dfb6fc11",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-092.bin--37693f94 sha256",
+          "expected": "1b5a5147254714705b2af14a01bfea925ffbfb604d833463de010d7835777793",
+          "actual": "1b5a5147254714705b2af14a01bfea925ffbfb604d833463de010d7835777793",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-142.bin--6665b243 sha256",
+          "expected": "a06ed52a5296c286a99611585f005ce17fe213efb1d5f1f748d8ae86b6d4b4a1",
+          "actual": "a06ed52a5296c286a99611585f005ce17fe213efb1d5f1f748d8ae86b6d4b4a1",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-167.bin--6e22f9b5 sha256",
+          "expected": "2841404cd70483da3af8083ab8046af1a09430e3bbc72a91c47c84f70fb10436",
+          "actual": "2841404cd70483da3af8083ab8046af1a09430e3bbc72a91c47c84f70fb10436",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-067.bin--828111ee sha256",
+          "expected": "1e938e7690fc3d378993580a755d9f9f883422bc84fb6372bcddb8aa5549f39f",
+          "actual": "1e938e7690fc3d378993580a755d9f9f883422bc84fb6372bcddb8aa5549f39f",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-017.bin--c4f1223e sha256",
+          "expected": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "actual": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "pass": true
+        },
+        {
+          "name": "mount 67 f-042.bin--cd2a2f2c sha256",
+          "expected": "a8540423b44a7c6879762d6a7eb2b588e5b689a9e499b6295743ea0314acc464",
+          "actual": "a8540423b44a7c6879762d6a7eb2b588e5b689a9e499b6295743ea0314acc464",
+          "pass": true
+        },
+        {
+          "name": "mount 67 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 67 listing digest",
+          "expected": "4fb647e5f5165a7745203ab6f9c1811acc30cfaeee9cbe4c7df8f3a42980c102",
+          "actual": "4fb647e5f5165a7745203ab6f9c1811acc30cfaeee9cbe4c7df8f3a42980c102",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_19 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-019.bin--13077eff sha256",
+          "expected": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "actual": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "pass": true
+        },
+        {
+          "name": "cat-69 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 69 representative CLI bytes",
+          "expected": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "actual": "4d702787b0d2d8911896df9360c2c7cdc2969b21fe9b4e6630812b3ec141a22b",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-069.bin--20e9ef2a sha256",
+          "expected": "cfcdde819f24e1461dd056412fbef4d5d51298f006d22f0efa94dc784e1360d9",
+          "actual": "cfcdde819f24e1461dd056412fbef4d5d51298f006d22f0efa94dc784e1360d9",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-044.bin--30261d3d sha256",
+          "expected": "52212f2d7d91a8f9656275e49ad97c7aaee7fc935a73599825e590fa45284f88",
+          "actual": "52212f2d7d91a8f9656275e49ad97c7aaee7fc935a73599825e590fa45284f88",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-144.bin--359ce7b0 sha256",
+          "expected": "cbd799204b6fa18788f3f7db3370d4f1121378e6d168188ab02ae48697b58d21",
+          "actual": "cbd799204b6fa18788f3f7db3370d4f1121378e6d168188ab02ae48697b58d21",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-094.bin--3dc15a39 sha256",
+          "expected": "3e142cbbee7de39270fe4ea04dffbe04f9a25e2f9fda3bae7497bf3fdb8b20fe",
+          "actual": "3e142cbbee7de39270fe4ea04dffbe04f9a25e2f9fda3bae7497bf3fdb8b20fe",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-194.bin--668d6a75 sha256",
+          "expected": "cc4fb005304b8cae63a7a5dd18c92dffeb0dd67059d4f2d70b1a03acb48d60b1",
+          "actual": "cc4fb005304b8cae63a7a5dd18c92dffeb0dd67059d4f2d70b1a03acb48d60b1",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-169.bin--d6070783 sha256",
+          "expected": "cb921e862d8d6a332c5544c42981984e642751e93059676f883823109a6847c2",
+          "actual": "cb921e862d8d6a332c5544c42981984e642751e93059676f883823109a6847c2",
+          "pass": true
+        },
+        {
+          "name": "mount 69 f-119.bin--dbd518af sha256",
+          "expected": "a97eb07d9efe5f8c7d1a73fac31d8ada81f837406e2a60c2efd61df874d404ec",
+          "actual": "a97eb07d9efe5f8c7d1a73fac31d8ada81f837406e2a60c2efd61df874d404ec",
+          "pass": true
+        },
+        {
+          "name": "mount 69 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 69 listing digest",
+          "expected": "bdc09c734b5455e3032278af9aadb4e6227d56a40a50fd49e066ffbdc683c481",
+          "actual": "bdc09c734b5455e3032278af9aadb4e6227d56a40a50fd49e066ffbdc683c481",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_21 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-171.bin--1727eb8a sha256",
+          "expected": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "actual": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "pass": true
+        },
+        {
+          "name": "cat-71 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 71 representative CLI bytes",
+          "expected": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "actual": "e4f22f1bea7da36b3c6fbc69fb377c5a53095409c21bcc77361f86a02bf6e5e0",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-096.bin--23d4a11b sha256",
+          "expected": "fb464453164097f9c3cac076d97ae3235563a085a14f645dc1a0364688878d8d",
+          "actual": "fb464453164097f9c3cac076d97ae3235563a085a14f645dc1a0364688878d8d",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-146.bin--26f3afc0 sha256",
+          "expected": "e88c4b4552823430eedde49488612d4cb62598a7643e2fb24c6c36c75db5554f",
+          "actual": "e88c4b4552823430eedde49488612d4cb62598a7643e2fb24c6c36c75db5554f",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-021.bin--30dfddb9 sha256",
+          "expected": "2bce5977afc1f85924c551616f6c696ae5c260fabf6bbc7f64419c9d503181a0",
+          "actual": "2bce5977afc1f85924c551616f6c696ae5c260fabf6bbc7f64419c9d503181a0",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-071.bin--3533822f sha256",
+          "expected": "a44735da7e72ef709c39670e54a45d698a1af31c2a1dc30edf07bb14261e9f4d",
+          "actual": "a44735da7e72ef709c39670e54a45d698a1af31c2a1dc30edf07bb14261e9f4d",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-046.bin--75369564 sha256",
+          "expected": "3f6ac79a782da31bbdb8dfd6cd59d115418a770d7b00e912189aa3cb6d669951",
+          "actual": "3f6ac79a782da31bbdb8dfd6cd59d115418a770d7b00e912189aa3cb6d669951",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-121.bin--89080a7c sha256",
+          "expected": "df1fe6d5a91f7a64eabd93e488fb51e2e085742073f42845479a2fe89d5291e9",
+          "actual": "df1fe6d5a91f7a64eabd93e488fb51e2e085742073f42845479a2fe89d5291e9",
+          "pass": true
+        },
+        {
+          "name": "mount 71 f-196.bin--8a9eea6a sha256",
+          "expected": "ee2987b42dab14d0a0e7eeedc0811a21356103997a1beca9270c40408dc1ab9f",
+          "actual": "ee2987b42dab14d0a0e7eeedc0811a21356103997a1beca9270c40408dc1ab9f",
+          "pass": true
+        },
+        {
+          "name": "mount 71 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 71 listing digest",
+          "expected": "824d1eb85935ccc5144a5167bda9c5d811cd6c608aa636a0d83097155e0889c9",
+          "actual": "824d1eb85935ccc5144a5167bda9c5d811cd6c608aa636a0d83097155e0889c9",
+          "pass": true
+        },
+        {
+          "name": "context by:model=llama-4@ver_23 oracle members",
+          "expected": "8",
+          "actual": "8",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-023.bin--2284e60d sha256",
+          "expected": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "actual": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "pass": true
+        },
+        {
+          "name": "cat-73 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 73 representative CLI bytes",
+          "expected": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "actual": "6334f51253c42ad73381d2744fbb7f584c68b9acae334afa2050c0c78bba41ef",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-048.bin--3aa3f86d sha256",
+          "expected": "d6873f01f5c8691305f5102102ca81133255da1dc55c9f5c62cbeba6f5fba1ca",
+          "actual": "d6873f01f5c8691305f5102102ca81133255da1dc55c9f5c62cbeba6f5fba1ca",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-198.bin--5a7e42cf sha256",
+          "expected": "26f930f45014ec77815fa0f9af0837fd63e393909dacb3620143d57a805e78b8",
+          "actual": "26f930f45014ec77815fa0f9af0837fd63e393909dacb3620143d57a805e78b8",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-098.bin--6a505099 sha256",
+          "expected": "06ad003614a3e0a6a3878936f2f38778c98db7d4c2cab89d36240206af390706",
+          "actual": "06ad003614a3e0a6a3878936f2f38778c98db7d4c2cab89d36240206af390706",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-123.bin--c114beef sha256",
+          "expected": "7ca69d0b37c77e4956d5059a08d265f36320921e11090541e8182decd8b1f3af",
+          "actual": "7ca69d0b37c77e4956d5059a08d265f36320921e11090541e8182decd8b1f3af",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-173.bin--c73af9be sha256",
+          "expected": "ec31b6e862b1d5b06a453be2be84bd9e442c0ac3924627e5a034a601b9a29d39",
+          "actual": "ec31b6e862b1d5b06a453be2be84bd9e442c0ac3924627e5a034a601b9a29d39",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-073.bin--ca807dfb sha256",
+          "expected": "c95153c7250ae8989e59d36d7da1fd00520cb5f4678e4b7635cf4ccdcf0209ef",
+          "actual": "c95153c7250ae8989e59d36d7da1fd00520cb5f4678e4b7635cf4ccdcf0209ef",
+          "pass": true
+        },
+        {
+          "name": "mount 73 f-148.bin--e324913d sha256",
+          "expected": "5d4876bb8aa19f5928e8c74435acd065fc1d8e5b608cc08c03fb122ee0cec08c",
+          "actual": "5d4876bb8aa19f5928e8c74435acd065fc1d8e5b608cc08c03fb122ee0cec08c",
+          "pass": true
+        },
+        {
+          "name": "mount 73 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 73 listing digest",
+          "expected": "b5b14f740afbeac9978690f877377216553344df2d20ee1a398b5376e6ce609d",
+          "actual": "b5b14f740afbeac9978690f877377216553344df2d20ee1a398b5376e6ce609d",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-000 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 75 f-001.bin--1a974c64 sha256",
+          "expected": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "actual": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "pass": true
+        },
+        {
+          "name": "cat-75 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 75 representative CLI bytes",
+          "expected": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "actual": "dd3bb5e12b3f04cd54e76dfb8e3d99ed124ef0b753e25fc195d6c5de6628ca22",
+          "pass": true
+        },
+        {
+          "name": "mount 75 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 75 listing digest",
+          "expected": "3821592ba41f7717c00b44d0f30958d689279f235ab83655288877f7081bd6bb",
+          "actual": "3821592ba41f7717c00b44d0f30958d689279f235ab83655288877f7081bd6bb",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-016 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 77 f-017.bin--c4f1223e sha256",
+          "expected": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "actual": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "pass": true
+        },
+        {
+          "name": "cat-77 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 77 representative CLI bytes",
+          "expected": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "actual": "a2d8d50b78a30e84d9d245b0b89ccbc529f8c85f0b45270187854b3ba524974b",
+          "pass": true
+        },
+        {
+          "name": "mount 77 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 77 listing digest",
+          "expected": "bdd4e7dc2d572892bedfba6f58223dcb49205c4fc101ba7899efa6692d5d8ea8",
+          "actual": "bdd4e7dc2d572892bedfba6f58223dcb49205c4fc101ba7899efa6692d5d8ea8",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-032 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 79 f-033.bin--dbe2b709 sha256",
+          "expected": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "actual": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "pass": true
+        },
+        {
+          "name": "cat-79 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 79 representative CLI bytes",
+          "expected": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "actual": "cd1ce1fd760e246ffe0c322367552a7bd79fca5d393dada3274f3a27ed526742",
+          "pass": true
+        },
+        {
+          "name": "mount 79 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 79 listing digest",
+          "expected": "084c138f36cd238266888f88a33ba503e0ecebde8d9a046fa3d1bcc8f9c556f5",
+          "actual": "084c138f36cd238266888f88a33ba503e0ecebde8d9a046fa3d1bcc8f9c556f5",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-048 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 81 f-049.bin--5b708472 sha256",
+          "expected": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "actual": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "pass": true
+        },
+        {
+          "name": "cat-81 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 81 representative CLI bytes",
+          "expected": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "actual": "656be02648aaf833c7b0a2d2461a854778ae0ab086ba419e75ea52dbdc34b268",
+          "pass": true
+        },
+        {
+          "name": "mount 81 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 81 listing digest",
+          "expected": "306a495fa858b269fa60fcebd07735a52052b53756d7cadbad5734a2a4442492",
+          "actual": "306a495fa858b269fa60fcebd07735a52052b53756d7cadbad5734a2a4442492",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-064 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 83 f-065.bin--1a617192 sha256",
+          "expected": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "actual": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "pass": true
+        },
+        {
+          "name": "cat-83 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 83 representative CLI bytes",
+          "expected": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "actual": "6a06a80ff8069cc09cb393cc870452430fa3e221e81a340e2b8da8918928ea3c",
+          "pass": true
+        },
+        {
+          "name": "mount 83 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 83 listing digest",
+          "expected": "6bab79face58885890613bc2cc9df23eabbb05eb3b58aed71100c107ba78b787",
+          "actual": "6bab79face58885890613bc2cc9df23eabbb05eb3b58aed71100c107ba78b787",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-080 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 85 f-081.bin--b24c1256 sha256",
+          "expected": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "actual": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "pass": true
+        },
+        {
+          "name": "cat-85 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 85 representative CLI bytes",
+          "expected": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "actual": "04a73ac1a2a667998a63d428b00846f16f41ff4dd5e66337df4e93fdbb5e96ee",
+          "pass": true
+        },
+        {
+          "name": "mount 85 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 85 listing digest",
+          "expected": "9b945f8f9f412c17f0fc1b5bc32bd73346fc9005f4c7aeb3a4ec9ac7cd7636f8",
+          "actual": "9b945f8f9f412c17f0fc1b5bc32bd73346fc9005f4c7aeb3a4ec9ac7cd7636f8",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-096 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 87 f-097.bin--414b22f7 sha256",
+          "expected": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "actual": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "pass": true
+        },
+        {
+          "name": "cat-87 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 87 representative CLI bytes",
+          "expected": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "actual": "e4a8431122d01e8141970278a07bc1b4dcbd0b864727fe9f4cf87c62dde1b12c",
+          "pass": true
+        },
+        {
+          "name": "mount 87 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 87 listing digest",
+          "expected": "972759ce8b55d75adf1119f03b7f7513b66fab19d19c1971d74e33f065393c47",
+          "actual": "972759ce8b55d75adf1119f03b7f7513b66fab19d19c1971d74e33f065393c47",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-112 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 89 f-113.bin--8596c1e4 sha256",
+          "expected": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "actual": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "pass": true
+        },
+        {
+          "name": "cat-89 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 89 representative CLI bytes",
+          "expected": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "actual": "7ea29f6475401848086b8a53ed07632df14455d185297be3d4fe3362b5fb6bec",
+          "pass": true
+        },
+        {
+          "name": "mount 89 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 89 listing digest",
+          "expected": "5ee8d241e50abab29f7caa78f12d75de284197aa0355550021b2e8fc5c6a6946",
+          "actual": "5ee8d241e50abab29f7caa78f12d75de284197aa0355550021b2e8fc5c6a6946",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-128 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 91 f-129.bin--1bf39bfd sha256",
+          "expected": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "actual": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "pass": true
+        },
+        {
+          "name": "cat-91 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 91 representative CLI bytes",
+          "expected": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "actual": "bea7c62dd35e9d1fac54191baf014d968c7bf0539e50178967276a9bb940b15c",
+          "pass": true
+        },
+        {
+          "name": "mount 91 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 91 listing digest",
+          "expected": "6eb6be55f45aa507c1deb8677d91fcbc8e4639a954b329c38ca046fb36bab15c",
+          "actual": "6eb6be55f45aa507c1deb8677d91fcbc8e4639a954b329c38ca046fb36bab15c",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-144 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 93 f-145.bin--dde1785d sha256",
+          "expected": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "actual": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "pass": true
+        },
+        {
+          "name": "cat-93 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 93 representative CLI bytes",
+          "expected": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "actual": "475eb106d0f3a6889e6553b836d7692dd9f0b4d709f0fa9e23549a4f2b1f69bc",
+          "pass": true
+        },
+        {
+          "name": "mount 93 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 93 listing digest",
+          "expected": "6363960999820b6461d51d1645e168d3d92f913c3501325d146989a7c0e5ed6b",
+          "actual": "6363960999820b6461d51d1645e168d3d92f913c3501325d146989a7c0e5ed6b",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-160 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 95 f-161.bin--a7d31337 sha256",
+          "expected": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "actual": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "pass": true
+        },
+        {
+          "name": "cat-95 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 95 representative CLI bytes",
+          "expected": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "actual": "bd3b7da6b14368ebccd668199b10d5025c9c52d6862735a8c80318990fb54b29",
+          "pass": true
+        },
+        {
+          "name": "mount 95 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 95 listing digest",
+          "expected": "645f0a5b8ff171bad6a7b1b2cacb551c454ca88ed517dd3922a431bff41d9918",
+          "actual": "645f0a5b8ff171bad6a7b1b2cacb551c454ca88ed517dd3922a431bff41d9918",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-176 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 97 f-177.bin--f87af815 sha256",
+          "expected": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "actual": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "pass": true
+        },
+        {
+          "name": "cat-97 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 97 representative CLI bytes",
+          "expected": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "actual": "6f63d2e4b77f50953dbf57b8f47c2db12684c74bdfbf3755104b9d7aef67f151",
+          "pass": true
+        },
+        {
+          "name": "mount 97 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 97 listing digest",
+          "expected": "ca5b4cf22ca5a6b2e456e5712bd85c6bb2541ea4043dd92d8ac59fcce4a8e909",
+          "actual": "ca5b4cf22ca5a6b2e456e5712bd85c6bb2541ea4043dd92d8ac59fcce4a8e909",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-184 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 98 f-185.bin--f7b15dcf sha256",
+          "expected": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "actual": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "pass": true
+        },
+        {
+          "name": "cat-98 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 98 representative CLI bytes",
+          "expected": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "actual": "4d87fd9ce0d0cc21cdf19bdf853bf91ab9d4bb832945577c23744ea0f33244f4",
+          "pass": true
+        },
+        {
+          "name": "mount 98 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 98 listing digest",
+          "expected": "458cf87e203ebb421de051f4a1c8a09ebb05e82fb1c561c3291099559c19015e",
+          "actual": "458cf87e203ebb421de051f4a1c8a09ebb05e82fb1c561c3291099559c19015e",
+          "pass": true
+        },
+        {
+          "name": "context by:derived=f-192 oracle members",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "mount 99 f-193.bin--567c88a1 sha256",
+          "expected": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "actual": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "pass": true
+        },
+        {
+          "name": "cat-99 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mount 99 representative CLI bytes",
+          "expected": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "actual": "85b87cc7423e8f5b98949beeb0b33691d1a22d9489b9a7197c6998316df1c1e9",
+          "pass": true
+        },
+        {
+          "name": "mount 99 ls names",
+          "expected": "identical",
+          "actual": "identical",
+          "pass": true
+        },
+        {
+          "name": "mount 99 listing digest",
+          "expected": "2c10cc700f681d73aaf8e9f32c618bfa263afd5a866e2822c37fcfc37fe2cdb4",
+          "actual": "2c10cc700f681d73aaf8e9f32c618bfa263afd5a866e2822c37fcfc37fe2cdb4",
+          "pass": true
+        },
+        {
+          "name": "verified mounts",
+          "expected": "51",
+          "actual": "51",
+          "pass": true
+        },
+        {
+          "name": "every context listing is distinct",
+          "expected": "51",
+          "actual": "51",
+          "pass": true
+        },
+        {
+          "name": "200 distinct objects covered by all mounted roots",
+          "expected": "200",
+          "actual": "148",
+          "pass": false
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "read-only",
+      "title": "Context mounts reject mutation",
+      "status": "pass",
+      "notes": "write denied on the first two mounts",
+      "commands": [
+        "bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082225Z-1/forbidden.txt'",
+        "bash -c printf x > '/mnt/weft-fuse/f3m-8-20261106T082225Z-3/forbidden.txt'"
+      ],
+      "assertions": [
+        {
+          "name": "write denied mount 1",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "write denied mount 3",
+          "expected": "denied",
+          "actual": "denied",
+          "pass": true
+        },
+        {
+          "name": "read-only denials exercised",
+          "expected": "2",
+          "actual": "2",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "unmount",
+      "title": "Unmount every mount and prove no daemon survives",
+      "status": "pass",
+      "notes": "unmounted=51 survivors=0",
+      "commands": [],
+      "assertions": [
+        {
+          "name": "clean unmounts",
+          "expected": "51",
+          "actual": "51",
+          "pass": true
+        },
+        {
+          "name": "daemons surviving unmount",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "per-daemon memory (metrics.daemon_rss_kb and daemon_rss_max_kb) is why fitting many concurrent context mounts under the default 3 GiB court needs a shared multi-mount daemon; this run uses explicit, recorded court limit overrides instead",
+    "mount failure: requested 100, spawned 100, mounted 51, failed 49; the exact daemon/resource error is in the assertion above and the per-mount logs under /work/.docker-cache/f3-demos"
+  ],
+  "summary": {
+    "total": 5,
+    "pass": 3,
+    "fail": 2,
+    "blocked": 0,
+    "all_pass": false
+  }
+}
