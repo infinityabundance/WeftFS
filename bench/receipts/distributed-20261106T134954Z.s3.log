@@ -1,12 +1,12 @@
 [S3] PASS reference run published one generation: generation=2 head=32a0ba3d459c590723930e0598fa8a1066c60c42a0de18ecd089b378511d9431
-  process writer pid=216 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
+  process writer pid=165 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
 [S3] PASS 3a writer died at after_objects: exit=signal 6
 [S3] PASS 3a pre-commit crash published nothing: generation=1
 [S3] PASS 3a retry reused the generation number: generation=2 reference=2
 [S3] PASS 3a retried head equals the uninterrupted head: head=32a0ba3d459c590723930e0598fa8a1066c60c42a0de18ecd089b378511d9431 reference=32a0ba3d459c590723930e0598fa8a1066c60c42a0de18ecd089b378511d9431
 [S3] PASS 3a retried object identities equal the uninterrupted run: alpha=ea60588982b9c2f6d8383ba97c824d11527fb9e6a2498e4cd27afb1bc96ac735 beta=2fc45b94d9f3b6379a37c63888fdd3cfe1fb4aa964c6139416800864eae2fa5b
 [S3] PASS 3a reopen verifies: generation=2
-  process writer pid=217 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
+  process writer pid=166 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
 [S3] PASS 3b writer died at after_commit_file: exit=signal 6
 [S3] PASS 3b the unpublished commit file is invisible: generation=1
 [S3] PASS 3b the crashed change did not become visible: resolve_ok=false
@@ -15,7 +15,7 @@
 [S3] PASS 3b the abandoned generation is not on the visible parent chain: lineage=[3, 1]
 [S3] PASS 3b the visible state is the reference state: head=a48b5082a53030f219fb5efcc99780cf53a5b80cb2b3ba1ff5c2cda68cc7aec8 (differs from the reference only by generation)
 [S3] PASS 3b reopen verifies: problems=Array []
-  process writer pid=218 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
+  process writer pid=167 exit=signal 6 argv=/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create
 [S3] PASS 3c writer died after publishing the head: exit=signal 6
 [S3] PASS 3c the published crash is already the uninterrupted commit: generation=2 head=32a0ba3d459c590723930e0598fa8a1066c60c42a0de18ecd089b378511d9431
 [S3] PASS 3c the retry is refused as Exists: error=Some(("Exists", "directory entry already exists"))

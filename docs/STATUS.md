@@ -3503,9 +3503,9 @@ generations, verification result, and raw log path:
   (60/60).
 
 The passing receipt is
-`bench/receipts/distributed-20261106T134839Z.json`: **9/9 scenarios, 229 checks
-passed, 0 failed, 120 processes recorded**, 42 isolated buckets, 6,192 ms of
-harness wall time, 7,404 KiB peak RSS. The first run,
+`bench/receipts/distributed-20261106T134954Z.json`: **9/9 scenarios, 229 checks
+passed, 0 failed, 120 processes recorded**, 42 isolated buckets, 5,968 ms of
+harness wall time, 7,460 KiB peak RSS. The first run,
 `bench/receipts/distributed-20261106T133534Z.json`, is retained as the failing
 receipt (206 passed / 23 failed) that found the defects below. Analysis and
 every limit: `bench/RESULTS-distributed.md`.

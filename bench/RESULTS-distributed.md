@@ -1,8 +1,8 @@
 # Distributed correctness court (R13)
 
-**Receipt:** `bench/receipts/distributed-20261106T134839Z.json`
-**Raw logs:** `bench/receipts/distributed-20261106T134839Z.log` and
-`bench/receipts/distributed-20261106T134839Z.s{1..11}.log`
+**Receipt:** `bench/receipts/distributed-20261106T134954Z.json`
+**Raw logs:** `bench/receipts/distributed-20261106T134954Z.log` and
+`bench/receipts/distributed-20261106T134954Z.s{1..11}.log`
 **Failing receipt retained:** `bench/receipts/distributed-20261106T133534Z.json`
 (206/229 checks; it found the two defects in §5)
 **Court:** `weft/bench-court:1`
@@ -13,6 +13,7 @@ nproc `2048`, `no-new-privileges`, `cap-drop=ALL`.
 `53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c`,
 started by the harness on loopback inside the bench container, data directory
 on the court's `/tmp` tmpfs.
+**Revision:** WeftFS `1e857e249ef9b685ebddc2bb9b08855d55be4d0c` (clean tree).
 **Reproduce:** `bash scripts/s3_court.sh --distributed` (host; the script
 verifies the MinIO binary, then runs everything inside the bench court).
 
@@ -48,9 +49,9 @@ depend only on a shell harness.
 | **total** | | **229 / 229** |
 
 The harness recorded **120 processes** (argv, PID, exit/signal, stdout/stderr
-tail), **42 isolated buckets**, and took **6,192 ms** (harness wall time; the
+tail), **42 isolated buckets**, and took **5,968 ms** (harness wall time; the
 release build and the 12-test court run separately). Harness peak RSS was
-**7,404 KiB**. The server was started **2** times and stopped **1** time.
+**7,460 KiB**. The server was started **2** times and stopped **1** time.
 
 All 9/9 scenarios passed and 229 checks passed with none failed. This is not a
 cloud, multi-node, fleet, device-cache, media, power-loss, or production claim.
@@ -249,23 +250,23 @@ nonzero. That was a court bug, not a product bug.
 The receipt (recomputed on the host after the run):
 
 ```
-9b7f5398aa1f3737fbac6fd92256f341126b5ea86912082efda7c9e435655fca  bench/receipts/distributed-20261106T134839Z.json
+dc84af7c29f679976b72d4308163e3fd49515d19d210c237d8be8077d7677d47  bench/receipts/distributed-20261106T134954Z.json
 ```
 
 Scenario logs (recomputed on the host):
 
 ```
-71fc60db0a10858916e289658078e25cb5aa008969f65b871fbcc150cdec71bc  s1
-5b560bacd569342509786e9ef1716e54d12347f3dd4e0a84709ac65bd1c356ff  s2
-28e7d48f87bbceb82ab4a84c68f0c21b230b3ec51941f0b38961b83c40b8c8f1  s3
-6ea4c6bba45bc8e40e45c993a5983049c0c1f749f8bdb56ca46d6fc1b9111028  s4
-123ae4a882c1febebb41204ca28abc4139257bbdc135dfbe6da5d1d94f14750f  s5
-62ae11b6121287f8dc75009042897175c71ea4f57a311485fae7009957731fa9  s6
-2d5e88f0d7c08bfb0d019bc924cc1cc5c7e20ccf7a7fb84adb6930bbad68ac6d  s7
-d02e51a915727009ff44a36504dc6941e29838ff54cba4ec7499105d05b85423  s8
+e79120849a36418be59a41ba25ac8f66bae7439851c85ff39d72e233ba8aec53  s1
+2e57541b2e0499ba49c5c7390c3e3f623353299764b56bc8362f29b9d8ad593c  s2
+5a719a8d9f01bd85539570fc28b983338d0d925aabfca3a548351d44699e62f2  s3
+3bbbf3aa6f6f4b469056e2bf01c96bc51bdaa83664b466e47845a0564e639d05  s4
+16063fc7083311498990e99390650013a37c8ef8a59847ec85918cc1201f5192  s5
+685e0e8a0fdb70c3f35dbed064c7002cb5b0e058cca354b21f9fad37bddcc514  s6
+dd98366a055c5b5c81be65f7f5cde09ba27b9e2777af41167602ca9f165d1eab  s7
+c194a1194cd33b783c80c6c1d80505bc7b851a4c762c4bc4fa11828bb14c89ee  s8
 69ff662a0f0bc40d6c3e3192aa8d763adf168468765daf3d5404b71def661fab  s9
-9c93954acd8cbead12b1f348b22133da9b289db134acc05d10379733cc104421  s10
-38a6ede656f3317636a49d72ffbce1d94b68c3208d0f0c852d00885acbc98952  s11
+306602c4fcd895ca250b21325b115999055da784e640b020271b4e98b9e762ae  s10
+2a09b4bcd7469dfea1e5903395861cb24cbc71cca9b5f637294a40d9958533c2  s11
 ```
 
 The court log's own hash is appended by the script after the log is written, so

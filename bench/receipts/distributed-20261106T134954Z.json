@@ -4,9 +4,9 @@
     "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
     "cpus": "4",
     "docker_server": "29.9.2",
-    "elapsed_ms": 6192,
+    "elapsed_ms": 5968,
     "harness": "/work/.docker-cache/target-rust/release/examples/distributed_court",
-    "harness_peak_rss_kib": 7404,
+    "harness_peak_rss_kib": 7460,
     "kernel": "7.3.1-1-cachyos",
     "memory": "3g",
     "nproc": "2048",
@@ -14,21 +14,21 @@
     "revisions": {
       "WeftCodec": "54cb4f68899c212ce7a12d5c461b400cfe7b3112",
       "WeftCodec-Go": "8957998a64ef93f77877f89327a0dce7755f5b38",
-      "WeftFS": "13e67707a3e3ec1ed2bdf2195e6a9241f3294c16",
+      "WeftFS": "1e857e249ef9b685ebddc2bb9b08855d55be4d0c",
       "WeftFS-Go": "007bf11bda490b84427a79c872ed1c0b7172e556"
     },
     "weftfs_binary": "/work/.docker-cache/target-rust/release/weftfs",
-    "work_root": "/tmp/weft-distributed-court/run-130"
+    "work_root": "/tmp/weft-distributed-court/run-78"
   },
-  "generated_utc": "20261106T134839Z",
+  "generated_utc": "20261106T134954Z",
   "label": "Single-host distributed correctness court: a real MinIO process on loopback in the OOM-protected bench court, separate writer/reader/GC processes, local tmpfs data. Not a cloud, multi-node, fleet, physical-media, power-loss, or production claim. Writers are exclusive by design.",
   "minio": {
     "binary": "/work/.docker-cache/minio/minio",
     "binary_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
-    "data_dir": "/tmp/weft-distributed-court/run-130/minio-data",
+    "data_dir": "/tmp/weft-distributed-court/run-78/minio-data",
     "data_fs": "container tmpfs (/tmp)",
-    "endpoint": "http://127.0.0.1:37825",
-    "pid": 230,
+    "endpoint": "http://127.0.0.1:45129",
+    "pid": 179,
     "release": "RELEASE.2025-04-22T22-12-26Z",
     "starts": 2,
     "stops": 1,
@@ -46,302 +46,302 @@
     {
       "checks": [
         {
-          "detail": "label=first-b pid=142 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=90 exit=exit 70 class=Busy",
           "name": "iteration 0 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=141 exit=exit 0",
+          "detail": "pid=89 exit=exit 0",
           "name": "iteration 0 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=143 exit=exit 0 generation=2",
+          "detail": "pid=91 exit=exit 0 generation=2",
           "name": "iteration 0 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=145 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=93 exit=exit 70 class=Busy",
           "name": "iteration 1 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=144 exit=exit 0",
+          "detail": "pid=92 exit=exit 0",
           "name": "iteration 1 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=146 exit=exit 0 generation=2",
+          "detail": "pid=94 exit=exit 0 generation=2",
           "name": "iteration 1 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=148 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=96 exit=exit 70 class=Busy",
           "name": "iteration 2 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=147 exit=exit 0",
+          "detail": "pid=95 exit=exit 0",
           "name": "iteration 2 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=149 exit=exit 0 generation=2",
+          "detail": "pid=97 exit=exit 0 generation=2",
           "name": "iteration 2 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=151 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=99 exit=exit 70 class=Busy",
           "name": "iteration 3 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=150 exit=exit 0",
+          "detail": "pid=98 exit=exit 0",
           "name": "iteration 3 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=152 exit=exit 0 generation=2",
+          "detail": "pid=100 exit=exit 0 generation=2",
           "name": "iteration 3 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=154 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=102 exit=exit 70 class=Busy",
           "name": "iteration 4 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=153 exit=exit 0",
+          "detail": "pid=101 exit=exit 0",
           "name": "iteration 4 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=155 exit=exit 0 generation=2",
+          "detail": "pid=103 exit=exit 0 generation=2",
           "name": "iteration 4 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=157 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=105 exit=exit 70 class=Busy",
           "name": "iteration 5 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=156 exit=exit 0",
+          "detail": "pid=104 exit=exit 0",
           "name": "iteration 5 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=158 exit=exit 0 generation=2",
+          "detail": "pid=106 exit=exit 0 generation=2",
           "name": "iteration 5 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=160 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=108 exit=exit 70 class=Busy",
           "name": "iteration 6 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=159 exit=exit 0",
+          "detail": "pid=107 exit=exit 0",
           "name": "iteration 6 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=161 exit=exit 0 generation=2",
+          "detail": "pid=109 exit=exit 0 generation=2",
           "name": "iteration 6 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=163 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=111 exit=exit 70 class=Busy",
           "name": "iteration 7 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=162 exit=exit 0",
+          "detail": "pid=110 exit=exit 0",
           "name": "iteration 7 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=164 exit=exit 0 generation=2",
+          "detail": "pid=112 exit=exit 0 generation=2",
           "name": "iteration 7 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=166 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=114 exit=exit 70 class=Busy",
           "name": "iteration 8 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=165 exit=exit 0",
+          "detail": "pid=113 exit=exit 0",
           "name": "iteration 8 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=167 exit=exit 0 generation=2",
+          "detail": "pid=115 exit=exit 0 generation=2",
           "name": "iteration 8 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=169 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=117 exit=exit 70 class=Busy",
           "name": "iteration 9 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=168 exit=exit 0",
+          "detail": "pid=116 exit=exit 0",
           "name": "iteration 9 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=170 exit=exit 0 generation=2",
+          "detail": "pid=118 exit=exit 0 generation=2",
           "name": "iteration 9 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=172 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=120 exit=exit 70 class=Busy",
           "name": "iteration 10 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=171 exit=exit 0",
+          "detail": "pid=119 exit=exit 0",
           "name": "iteration 10 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=173 exit=exit 0 generation=2",
+          "detail": "pid=121 exit=exit 0 generation=2",
           "name": "iteration 10 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=175 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=123 exit=exit 70 class=Busy",
           "name": "iteration 11 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=174 exit=exit 0",
+          "detail": "pid=122 exit=exit 0",
           "name": "iteration 11 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=176 exit=exit 0 generation=2",
+          "detail": "pid=124 exit=exit 0 generation=2",
           "name": "iteration 11 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=178 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=126 exit=exit 70 class=Busy",
           "name": "iteration 12 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=177 exit=exit 0",
+          "detail": "pid=125 exit=exit 0",
           "name": "iteration 12 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=179 exit=exit 0 generation=2",
+          "detail": "pid=127 exit=exit 0 generation=2",
           "name": "iteration 12 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=181 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=129 exit=exit 70 class=Busy",
           "name": "iteration 13 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=180 exit=exit 0",
+          "detail": "pid=128 exit=exit 0",
           "name": "iteration 13 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=182 exit=exit 0 generation=2",
+          "detail": "pid=130 exit=exit 0 generation=2",
           "name": "iteration 13 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=184 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=132 exit=exit 70 class=Busy",
           "name": "iteration 14 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=183 exit=exit 0",
+          "detail": "pid=131 exit=exit 0",
           "name": "iteration 14 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=185 exit=exit 0 generation=2",
+          "detail": "pid=133 exit=exit 0 generation=2",
           "name": "iteration 14 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=187 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=135 exit=exit 70 class=Busy",
           "name": "iteration 15 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=186 exit=exit 0",
+          "detail": "pid=134 exit=exit 0",
           "name": "iteration 15 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=188 exit=exit 0 generation=2",
+          "detail": "pid=136 exit=exit 0 generation=2",
           "name": "iteration 15 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=190 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=138 exit=exit 70 class=Busy",
           "name": "iteration 16 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=189 exit=exit 0",
+          "detail": "pid=137 exit=exit 0",
           "name": "iteration 16 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=191 exit=exit 0 generation=2",
+          "detail": "pid=139 exit=exit 0 generation=2",
           "name": "iteration 16 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=193 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=141 exit=exit 70 class=Busy",
           "name": "iteration 17 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=192 exit=exit 0",
+          "detail": "pid=140 exit=exit 0",
           "name": "iteration 17 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=194 exit=exit 0 generation=2",
+          "detail": "pid=142 exit=exit 0 generation=2",
           "name": "iteration 17 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-b pid=196 exit=exit 70 class=Busy",
+          "detail": "label=first-b pid=144 exit=exit 70 class=Busy",
           "name": "iteration 18 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=195 exit=exit 0",
+          "detail": "pid=143 exit=exit 0",
           "name": "iteration 18 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=197 exit=exit 0 generation=2",
+          "detail": "pid=145 exit=exit 0 generation=2",
           "name": "iteration 18 store reopens after the writer exits",
           "passed": true
         },
         {
-          "detail": "label=first-a pid=199 exit=exit 70 class=Busy",
+          "detail": "label=first-a pid=147 exit=exit 70 class=Busy",
           "name": "iteration 19 second writer refused Busy",
           "passed": true
         },
         {
-          "detail": "pid=198 exit=exit 0",
+          "detail": "pid=146 exit=exit 0",
           "name": "iteration 19 first writer exited cleanly",
           "passed": true
         },
         {
-          "detail": "pid=200 exit=exit 0 generation=2",
+          "detail": "pid=148 exit=exit 0 generation=2",
           "name": "iteration 19 store reopens after the writer exits",
           "passed": true
         },
@@ -375,8 +375,8 @@
         "busy_count": 20,
         "ready_count": 20,
         "store": {
-          "bucket": "dist-130-1-0",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-1-0",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -404,7 +404,7 @@
         2
       ],
       "id": "S1",
-      "log": "bench/receipts/distributed-20261106T134839Z.s1.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s1.log",
       "name": "single-writer interlock (20 iterations)",
       "passed": true,
       "processes": [
@@ -417,7 +417,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
           "exit": "exit 70",
           "label": "first-b",
-          "pid": 142,
+          "pid": 90,
           "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
           "stdout_tail": "",
           "timed_out": false
@@ -431,7 +431,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
           "exit": "exit 0",
           "label": "first-a",
-          "pid": 141,
+          "pid": 89,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -445,6 +445,748 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
           "exit": "exit 0",
           "label": "after-exit",
+          "pid": 91,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 93,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 92,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 94,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 96,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 95,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 97,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 99,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 98,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 100,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 102,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 101,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 103,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 105,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 104,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 106,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 108,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 107,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 109,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 111,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 110,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 112,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 114,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 113,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 115,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 117,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 116,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 118,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 120,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 119,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 121,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 123,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 122,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 124,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 126,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 125,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 127,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 129,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 128,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 130,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 132,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 131,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 133,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 135,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 134,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 136,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 138,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
+          "pid": 137,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 139,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-a",
+          "pid": 141,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-b",
+          "pid": 140,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 142,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 70",
+          "label": "first-b",
+          "pid": 144,
+          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "first-a",
           "pid": 143,
           "stderr_tail": "",
           "stdout_tail": "",
@@ -457,9 +1199,23 @@
             "hold-writer"
           ],
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
+          "exit": "exit 0",
+          "label": "after-exit",
+          "pid": 145,
+          "stderr_tail": "",
+          "stdout_tail": "",
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "/work/.docker-cache/target-rust/release/examples/distributed_court",
+            "--child",
+            "hold-writer"
+          ],
+          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
           "exit": "exit 70",
           "label": "first-a",
-          "pid": 145,
+          "pid": 147,
           "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
           "stdout_tail": "",
           "timed_out": false
@@ -473,20 +1229,6 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
           "exit": "exit 0",
           "label": "first-b",
-          "pid": 144,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
           "pid": 146,
           "stderr_tail": "",
           "stdout_tail": "",
@@ -499,751 +1241,9 @@
             "hold-writer"
           ],
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
+          "exit": "exit 0",
+          "label": "after-exit",
           "pid": 148,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 147,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 149,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 151,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 150,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 152,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 154,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 153,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 155,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 157,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 156,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 158,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 160,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 159,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 161,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 163,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 162,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 164,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 166,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 165,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 167,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 169,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 168,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 170,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 172,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 171,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 173,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 175,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 174,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 176,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 178,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 177,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 179,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 181,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 180,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 182,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 184,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 183,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 185,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 187,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 186,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 188,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 190,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 189,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 191,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 193,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 192,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 194,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-b",
-          "pid": 196,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-a",
-          "pid": 195,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 197,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 70",
-          "label": "first-a",
-          "pid": 199,
-          "stderr_tail": "child hold-writer: open failed: Busy: store is locked by another S3 writer (live LOCK object)",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "first-b",
-          "pid": 198,
-          "stderr_tail": "",
-          "stdout_tail": "",
-          "timed_out": false
-        },
-        {
-          "argv": [
-            "/work/.docker-cache/target-rust/release/examples/distributed_court",
-            "--child",
-            "hold-writer"
-          ],
-          "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child hold-writer",
-          "exit": "exit 0",
-          "label": "after-exit",
-          "pid": 200,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1455,21 +1455,21 @@
       ],
       "details": {
         "buckets": [
-          "dist-130-2-1",
-          "dist-130-3-2",
-          "dist-130-4-3",
-          "dist-130-5-4",
-          "dist-130-6-5",
-          "dist-130-7-6",
-          "dist-130-8-7",
-          "dist-130-9-8",
-          "dist-130-10-9",
-          "dist-130-11-10",
-          "dist-130-12-11",
-          "dist-130-13-12",
-          "dist-130-14-13",
-          "dist-130-15-14",
-          "dist-130-16-15"
+          "dist-78-2-1",
+          "dist-78-3-2",
+          "dist-78-4-3",
+          "dist-78-5-4",
+          "dist-78-6-5",
+          "dist-78-7-6",
+          "dist-78-8-7",
+          "dist-78-9-8",
+          "dist-78-10-9",
+          "dist-78-11-10",
+          "dist-78-12-11",
+          "dist-78-13-12",
+          "dist-78-14-13",
+          "dist-78-15-14",
+          "dist-78-16-15"
         ],
         "head_before_sequence": [
           "e18c82deab0e4ad34b772a988cd69ad70a256e283e64073b28d62fcc5ce9f0ef",
@@ -1528,7 +1528,7 @@
         4
       ],
       "id": "S2",
-      "log": "bench/receipts/distributed-20261106T134839Z.s2.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s2.log",
       "name": "atomic publication under a process fault (single S3)",
       "passed": true,
       "processes": [
@@ -1541,7 +1541,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 201,
+          "pid": 149,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1555,7 +1555,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 202,
+          "pid": 151,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1569,7 +1569,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 203,
+          "pid": 152,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1583,7 +1583,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 204,
+          "pid": 153,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1597,7 +1597,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 205,
+          "pid": 154,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1611,7 +1611,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 206,
+          "pid": 155,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1625,7 +1625,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 207,
+          "pid": 156,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1639,7 +1639,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 208,
+          "pid": 157,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1653,7 +1653,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 209,
+          "pid": 158,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1667,7 +1667,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 210,
+          "pid": 159,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1681,7 +1681,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 211,
+          "pid": 160,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1695,7 +1695,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 212,
+          "pid": 161,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1709,7 +1709,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 213,
+          "pid": 162,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1723,7 +1723,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 214,
+          "pid": 163,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1737,7 +1737,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 215,
+          "pid": 164,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1889,20 +1889,20 @@
           "head": "32a0ba3d459c590723930e0598fa8a1066c60c42a0de18ecd089b378511d9431"
         },
         "store_after_commit_file": {
-          "bucket": "dist-130-18-17",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-18-17",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         },
         "store_after_objects": {
-          "bucket": "dist-130-17-16",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-17-16",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         },
         "store_after_superblock_write": {
-          "bucket": "dist-130-19-18",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-19-18",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -1918,7 +1918,7 @@
         2
       ],
       "id": "S3",
-      "log": "bench/receipts/distributed-20261106T134839Z.s3.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s3.log",
       "name": "idempotent retry after a crash (single S3)",
       "passed": true,
       "processes": [
@@ -1931,7 +1931,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 216,
+          "pid": 165,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1945,7 +1945,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 217,
+          "pid": 166,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -1959,7 +1959,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-create",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 218,
+          "pid": 167,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2088,8 +2088,8 @@
         ],
         "readers": 8,
         "store": {
-          "bucket": "dist-130-20-19",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-20-19",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         },
@@ -2101,7 +2101,7 @@
         13
       ],
       "id": "S4",
-      "log": "bench/receipts/distributed-20261106T134839Z.s4.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s4.log",
       "name": "concurrent readers during commits (single S3)",
       "passed": true,
       "processes": [
@@ -2114,7 +2114,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-00",
-          "pid": 219,
+          "pid": 168,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2128,7 +2128,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-01",
-          "pid": 220,
+          "pid": 169,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2142,7 +2142,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-02",
-          "pid": 221,
+          "pid": 170,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2156,7 +2156,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-03",
-          "pid": 222,
+          "pid": 171,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2170,7 +2170,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-04",
-          "pid": 223,
+          "pid": 172,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2184,7 +2184,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-05",
-          "pid": 224,
+          "pid": 173,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2198,7 +2198,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-06",
-          "pid": 225,
+          "pid": 174,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2212,7 +2212,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-07",
-          "pid": 226,
+          "pid": 175,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2259,8 +2259,8 @@
         "fresh_reads": 4,
         "stale_reads": 4,
         "store": {
-          "bucket": "dist-130-21-20",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-21-20",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -2270,7 +2270,7 @@
         3
       ],
       "id": "S5",
-      "log": "bench/receipts/distributed-20261106T134839Z.s5.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s5.log",
       "name": "stale reader until reopen (single S3)",
       "passed": true,
       "processes": [
@@ -2283,7 +2283,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader",
-          "pid": 227,
+          "pid": 176,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2303,7 +2303,7 @@
     {
       "checks": [
         {
-          "detail": "exit=exit 70 class=\"Io\" message=\"cannot read FORMAT: Io: S3 GET s3://dist-unroutable-130-22/FORMAT failed: http://127.0.0.1:39839/dist-unroutable-130-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)\"",
+          "detail": "exit=exit 70 class=\"Io\" message=\"cannot read FORMAT: Io: S3 GET s3://dist-unroutable-78-22/FORMAT failed: http://127.0.0.1:33073/dist-unroutable-78-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)\"",
           "name": "6a an endpoint with no listener fails closed with Io",
           "passed": true
         },
@@ -2323,7 +2323,7 @@
           "passed": true
         },
         {
-          "detail": "exit=exit 0 class=\"Io\" message=\"missing blob manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Io: S3 GET s3://dist-130-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206 failed: http://127.0.0.1:37825/dist-130-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Connection Failed: Connect error: Connection refused (os error 111)\"",
+          "detail": "exit=exit 0 class=\"Io\" message=\"missing blob manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Io: S3 GET s3://dist-78-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206 failed: http://127.0.0.1:45129/dist-78-22-21/manifests/28/283f83c6206ffc025cff3ad9c1734229e7f46ffd8fe1e613a5850e36cc252206: Connection Failed: Connect error: Connection refused (os error 111)\"",
           "name": "6b a read against the stopped server fails with a transport error",
           "passed": true
         },
@@ -2351,7 +2351,7 @@
       "checks_failed": 0,
       "checks_passed": 9,
       "commands": [
-        "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader  (endpoint http://127.0.0.1:39839, no listener)"
+        "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader  (endpoint http://127.0.0.1:33073, no listener)"
       ],
       "details": {
         "minio_restarts": {
@@ -2359,8 +2359,8 @@
           "stops": 1
         },
         "store": {
-          "bucket": "dist-130-22-21",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-22-21",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -2369,7 +2369,7 @@
         2
       ],
       "id": "S6",
-      "log": "bench/receipts/distributed-20261106T134839Z.s6.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s6.log",
       "name": "unreachable store fails closed (single S3)",
       "passed": true,
       "processes": [
@@ -2382,8 +2382,8 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 70",
           "label": "unroutable",
-          "pid": 228,
-          "stderr_tail": "child reader: open failed: Io: cannot read FORMAT: Io: S3 GET s3://dist-unroutable-130-22/FORMAT failed: http://127.0.0.1:39839/dist-unroutable-130-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)",
+          "pid": 177,
+          "stderr_tail": "child reader: open failed: Io: cannot read FORMAT: Io: S3 GET s3://dist-unroutable-78-22/FORMAT failed: http://127.0.0.1:33073/dist-unroutable-78-22/FORMAT: Connection Failed: Connect error: Connection refused (os error 111)",
           "stdout_tail": "",
           "timed_out": false
         },
@@ -2396,7 +2396,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader-fail",
           "exit": "exit 0",
           "label": "stopped",
-          "pid": 229,
+          "pid": 178,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2410,7 +2410,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child verify",
           "exit": "exit 0",
           "label": "after-restart-verify",
-          "pid": 239,
+          "pid": 188,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2424,7 +2424,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "after-restart-reader",
-          "pid": 240,
+          "pid": 189,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2487,8 +2487,8 @@
           "snapshot": "c675421379747f9b577a729b920b2cfaa9d3e200dabda67f23e46f9e90bce7b1"
         },
         "store": {
-          "bucket": "dist-130-24-23",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-24-23",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -2497,7 +2497,7 @@
         56
       ],
       "id": "S7",
-      "log": "bench/receipts/distributed-20261106T134839Z.s7.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s7.log",
       "name": "gc --apply racing a snapshot reader (single S3)",
       "passed": true,
       "processes": [
@@ -2510,7 +2510,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child gc",
           "exit": "exit 0",
           "label": "gc",
-          "pid": 243,
+          "pid": 191,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2524,7 +2524,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader",
-          "pid": 241,
+          "pid": 190,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2604,8 +2604,8 @@
           "visible_object": "d497e7774bfb77520940f7420878473361d34226a89f336cba4c72b1f1c1b1ab"
         },
         "store": {
-          "bucket": "dist-130-25-24",
-          "endpoint": "http://127.0.0.1:37825",
+          "bucket": "dist-78-25-24",
+          "endpoint": "http://127.0.0.1:45129",
           "layout": "s3",
           "local_commit_root": null
         }
@@ -2614,7 +2614,7 @@
         6
       ],
       "id": "S8",
-      "log": "bench/receipts/distributed-20261106T134839Z.s8.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s8.log",
       "name": "a known content hash is not authority (single S3)",
       "passed": true,
       "processes": [
@@ -2627,7 +2627,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child capability",
           "exit": "exit 0",
           "label": "capability",
-          "pid": 244,
+          "pid": 193,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -2638,9 +2638,9 @@
             "--backend",
             "s3",
             "--s3-endpoint",
-            "http://127.0.0.1:37825",
+            "http://127.0.0.1:45129",
             "--s3-bucket",
-            "dist-130-25-24",
+            "dist-78-25-24",
             "--s3-region",
             "us-east-1",
             "--s3-access-key",
@@ -2649,13 +2649,13 @@
             "weftdist-secret",
             "cat",
             "--envelope",
-            "/tmp/weft-distributed-court/run-130/s8/envelope.bin",
+            "/tmp/weft-distributed-court/run-78/s8/envelope.bin",
             "/visible"
           ],
-          "command": "/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:37825 --s3-bucket dist-130-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-130/s8/envelope.bin /visible",
+          "command": "/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:45129 --s3-bucket dist-78-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-78/s8/envelope.bin /visible",
           "exit": "exit 0",
           "label": "cat-visible",
-          "pid": 245,
+          "pid": 194,
           "stderr_tail": "",
           "stdout_tail": "visible-payload-0000",
           "timed_out": false
@@ -2666,9 +2666,9 @@
             "--backend",
             "s3",
             "--s3-endpoint",
-            "http://127.0.0.1:37825",
+            "http://127.0.0.1:45129",
             "--s3-bucket",
-            "dist-130-25-24",
+            "dist-78-25-24",
             "--s3-region",
             "us-east-1",
             "--s3-access-key",
@@ -2677,13 +2677,13 @@
             "weftdist-secret",
             "cat",
             "--envelope",
-            "/tmp/weft-distributed-court/run-130/s8/envelope.bin",
+            "/tmp/weft-distributed-court/run-78/s8/envelope.bin",
             "/secret"
           ],
-          "command": "/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:37825 --s3-bucket dist-130-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-130/s8/envelope.bin /secret",
+          "command": "/work/.docker-cache/target-rust/release/weftfs --backend s3 --s3-endpoint http://127.0.0.1:45129 --s3-bucket dist-78-25-24 --s3-region us-east-1 --s3-access-key weftdist --s3-secret-key weftdist-secret cat --envelope /tmp/weft-distributed-court/run-78/s8/envelope.bin /secret",
           "exit": "exit 1",
           "label": "cat-secret",
-          "pid": 246,
+          "pid": 195,
           "stderr_tail": "NotFound: no such object",
           "stdout_tail": "",
           "timed_out": false
@@ -3013,21 +3013,21 @@
             "checks_passed": 34,
             "details": {
               "buckets": [
-                "dist-130-26-25",
-                "dist-130-27-26",
-                "dist-130-28-27",
-                "dist-130-29-28",
-                "dist-130-30-29",
-                "dist-130-31-30",
-                "dist-130-32-31",
-                "dist-130-33-32",
-                "dist-130-34-33",
-                "dist-130-35-34",
-                "dist-130-36-35",
-                "dist-130-37-36",
-                "dist-130-38-37",
-                "dist-130-39-38",
-                "dist-130-40-39"
+                "dist-78-26-25",
+                "dist-78-27-26",
+                "dist-78-28-27",
+                "dist-78-29-28",
+                "dist-78-30-29",
+                "dist-78-31-30",
+                "dist-78-32-31",
+                "dist-78-33-32",
+                "dist-78-34-33",
+                "dist-78-35-34",
+                "dist-78-36-35",
+                "dist-78-37-36",
+                "dist-78-38-37",
+                "dist-78-39-38",
+                "dist-78-40-39"
               ],
               "head_before_sequence": [
                 "e18c82deab0e4ad34b772a988cd69ad70a256e283e64073b28d62fcc5ce9f0ef",
@@ -3053,7 +3053,7 @@
               "stale_lease_note": "a crashed S3 writer's LOCK object was cleared explicitly before each retry; production waits out its 30 s lease, which is never disabled",
               "unpublished_tail_reported": 5
             },
-            "log": "bench/receipts/distributed-20261106T134839Z.s9.log",
+            "log": "bench/receipts/distributed-20261106T134954Z.s9.log",
             "passed": true
           },
           "S9b": {
@@ -3079,15 +3079,15 @@
               ],
               "readers": 8,
               "store": {
-                "bucket": "dist-130-41-40",
-                "endpoint": "http://127.0.0.1:37825",
+                "bucket": "dist-78-41-40",
+                "endpoint": "http://127.0.0.1:45129",
                 "layout": "s3-blobs-local-commits",
-                "local_commit_root": "/tmp/weft-distributed-court/run-130/stores/s10-readers/commit"
+                "local_commit_root": "/tmp/weft-distributed-court/run-78/stores/s10-readers/commit"
               },
               "total_reads": 64,
               "versions": 10
             },
-            "log": "bench/receipts/distributed-20261106T134839Z.s10.log",
+            "log": "bench/receipts/distributed-20261106T134954Z.s10.log",
             "passed": true
           },
           "S9c": {
@@ -3097,13 +3097,13 @@
               "fresh_reads": 4,
               "stale_reads": 4,
               "store": {
-                "bucket": "dist-130-42-41",
-                "endpoint": "http://127.0.0.1:37825",
+                "bucket": "dist-78-42-41",
+                "endpoint": "http://127.0.0.1:45129",
                 "layout": "s3-blobs-local-commits",
-                "local_commit_root": "/tmp/weft-distributed-court/run-130/stores/s11-stale/commit"
+                "local_commit_root": "/tmp/weft-distributed-court/run-78/stores/s11-stale/commit"
               }
             },
-            "log": "bench/receipts/distributed-20261106T134839Z.s11.log",
+            "log": "bench/receipts/distributed-20261106T134954Z.s11.log",
             "passed": true
           }
         }
@@ -3145,7 +3145,7 @@
         3
       ],
       "id": "S9",
-      "log": "bench/receipts/distributed-20261106T134839Z.s9.log",
+      "log": "bench/receipts/distributed-20261106T134954Z.s9.log",
       "name": "split layout: publication, concurrent readers, stale reader",
       "passed": true,
       "processes": [
@@ -3158,7 +3158,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 247,
+          "pid": 196,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3172,7 +3172,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 248,
+          "pid": 197,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3186,7 +3186,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 249,
+          "pid": 198,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3200,7 +3200,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 250,
+          "pid": 199,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3214,7 +3214,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 251,
+          "pid": 200,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3228,7 +3228,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 252,
+          "pid": 201,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3242,7 +3242,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 253,
+          "pid": 202,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3256,7 +3256,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 254,
+          "pid": 203,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3270,7 +3270,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 255,
+          "pid": 204,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3284,7 +3284,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 256,
+          "pid": 205,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3298,7 +3298,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 257,
+          "pid": 206,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3312,7 +3312,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 258,
+          "pid": 207,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3326,7 +3326,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 259,
+          "pid": 208,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3340,7 +3340,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 260,
+          "pid": 209,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3354,7 +3354,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child group-overwrite",
           "exit": "signal 6",
           "label": "writer",
-          "pid": 261,
+          "pid": 210,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3368,7 +3368,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-00",
-          "pid": 262,
+          "pid": 211,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3382,7 +3382,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-01",
-          "pid": 263,
+          "pid": 212,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3396,7 +3396,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-02",
-          "pid": 264,
+          "pid": 213,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3410,7 +3410,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-03",
-          "pid": 265,
+          "pid": 214,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3424,7 +3424,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-04",
-          "pid": 266,
+          "pid": 215,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3438,7 +3438,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-05",
-          "pid": 267,
+          "pid": 216,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3452,7 +3452,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-06",
-          "pid": 268,
+          "pid": 217,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3466,7 +3466,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader-07",
-          "pid": 269,
+          "pid": 218,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3480,7 +3480,7 @@
           "command": "/work/.docker-cache/target-rust/release/examples/distributed_court --child reader",
           "exit": "exit 0",
           "label": "reader",
-          "pid": 270,
+          "pid": 219,
           "stderr_tail": "",
           "stdout_tail": "",
           "timed_out": false
@@ -3509,8 +3509,8 @@
     "scenarios_total": 9
   },
   "tests": {
-    "summary": "test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok\ntest content_hash_knowledge_does_not_authorize_retrieval ... ok\ntest crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok\ntest distributed_group_crash_child ... ok\ntest gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok\ntest retry_after_commit_file_crash_has_one_visible_state ... ok\ntest retry_after_objects_crash_reaches_the_uninterrupted_head ... ok\ntest retry_after_published_crash_does_not_create_a_second_state ... ok\ntest single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok\ntest stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok\ntest stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok\ntest unreachable_endpoint_fails_closed_without_partial_bytes ... ok\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.49s\n",
-    "summary_file": "bench/receipts/distributed-20261106T134839Z.tests.txt"
+    "summary": "test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok\ntest content_hash_knowledge_does_not_authorize_retrieval ... ok\ntest crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok\ntest distributed_group_crash_child ... ok\ntest gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok\ntest retry_after_commit_file_crash_has_one_visible_state ... ok\ntest retry_after_objects_crash_reaches_the_uninterrupted_head ... ok\ntest retry_after_published_crash_does_not_create_a_second_state ... ok\ntest single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok\ntest stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok\ntest stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok\ntest unreachable_endpoint_fails_closed_without_partial_bytes ... ok\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s\n",
+    "summary_file": "bench/receipts/distributed-20261106T134954Z.tests.txt"
   },
   "workload": {
     "buckets_created": 42,
