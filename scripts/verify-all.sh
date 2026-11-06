@@ -108,32 +108,46 @@ run_court fuse "buck2_cas_store" \
 run_court fuse "agent_memory" \
   "bash scripts/demo-agent-memory.sh"
 
+# Courts that orchestrate their own sidecar containers are invoked directly
+# instead of through run_court. Exit 78 is an explicit environment skip (for
+# example no Docker daemon or an unobtainable pinned image) and is recorded as
+# `skip`, never as a pass. A skip without a printed reason is a failure.
+run_orchestrated_court() {
+  local label="$1" prefix="$2"
+  shift 2
+  echo "=== $label ===" | tee -a "$log"
+  local rc=0
+  "$@" >>"$log" 2>&1 || rc=$?
+  if [[ "$rc" -eq 0 ]]; then
+    echo "$label=pass" >> "$results"
+    echo "PASS $label"
+    return 0
+  fi
+  if [[ "$rc" -eq 78 ]]; then
+    local reason
+    reason="$(grep -h "^${prefix}: skip " "$log" | tail -1 | sed "s/^${prefix}: skip //" || true)"
+    [[ -z "$reason" ]] && reason="${prefix} exited 78 without a printed reason"
+    # Reasons may quote Docker errors; keep the receipt valid JSON.
+    reason="$(printf '%s' "$reason" | tr -d '"\\' | tr '\n\t' ' ')"
+    echo "$label=skip" >> "$results"
+    printf '%s\t%s\n' "$label" "$reason" >> "$skips"
+    echo "SKIP $label: $reason"
+    return 0
+  fi
+  echo "$label=fail" >> "$results"
+  echo "FAIL $label (exit $rc)"
+  status=1
+}
+
 # R16 independent S3 implementation: a Ceph RGW sidecar, the existing S3 backend
 # suite against it, the eight-behaviour compatibility matrix against RGW and
-# MinIO, and a side-by-side comparison. This court orchestrates its own
-# containers, so it is invoked directly instead of through run_court. Exit 78 is
-# an explicit environment skip (non-x86_64, no Docker daemon, pinned image
-# unavailable, private subnet taken) and is recorded as `skip`, never as a pass.
-echo "=== ceph_rgw ===" | tee -a "$log"
-if WEFT_COMPAT_STAMP="$stamp" bash scripts/ceph_court.sh >>"$log" 2>&1; then
-  echo "ceph_rgw=pass" >> "$results"
-  echo "PASS ceph_rgw"
-else
-  ceph_rc=$?
-  if [[ "$ceph_rc" -eq 78 ]]; then
-    ceph_reason="$(grep -h '^ceph_court: skip ' "$log" | tail -1 | sed 's/^ceph_court: skip //' || true)"
-    [[ -z "$ceph_reason" ]] && ceph_reason="ceph_court.sh exited 78 without a printed reason"
-    # Reasons may quote Docker errors; keep the receipt valid JSON.
-    ceph_reason="$(printf '%s' "$ceph_reason" | tr -d '"\\' | tr '\n\t' ' ')"
-    echo "ceph_rgw=skip" >> "$results"
-    printf '%s\t%s\n' ceph_rgw "$ceph_reason" >> "$skips"
-    echo "SKIP ceph_rgw: $ceph_reason"
-  else
-    echo "ceph_rgw=fail" >> "$results"
-    echo "FAIL ceph_rgw (exit $ceph_rc)"
-    status=1
-  fi
-fi
+# MinIO, and a side-by-side comparison.
+run_orchestrated_court ceph_rgw ceph_court env WEFT_COMPAT_STAMP="$stamp" bash scripts/ceph_court.sh
+
+# Q4/MinIO: the native S3 backend and fenced-writer suites against a real
+# MinIO server in its own container. The same environment-only skip semantics
+# as ceph_rgw apply.
+run_orchestrated_court s3_court s3_court env WEFT_COMPAT_STAMP="$stamp" bash scripts/s3_court.sh
 
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
@@ -223,7 +237,8 @@ skipped="$(grep -c '=skip$' "$results" || true)"
     echo "  \"result_note\": \"$skipped court(s) skipped explicitly; a skip is not a pass\","
   fi
   echo "  \"receipts\": {"
-  echo "    \"ceph_rgw\": \"bench/receipts/ceph-rgw-${stamp}.json\""
+  echo "    \"ceph_rgw\": \"bench/receipts/ceph-rgw-${stamp}.json\","
+  echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\""
   echo "  },"
   echo "  \"result\": \"$([ "$status" -eq 0 ] && echo pass || echo fail)\","
   echo "  \"raw_log\": \"$log\""

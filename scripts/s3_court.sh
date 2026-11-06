@@ -35,6 +35,13 @@
 # protocol and conditional-write behaviour, not media or power-loss durability.
 set -Eeuo pipefail
 
+# Environment-only skips print exactly one reason line and exit 78. The
+# aggregate verification court records that as `skip`, never as a pass.
+skip() {
+  echo "s3_court: skip $1" >&2
+  exit 78
+}
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
@@ -66,9 +73,11 @@ WEFT_PIDS="${WEFT_PIDS:-1024}"
 WEFT_NPROC="${WEFT_NPROC:-2048}"
 
 if [[ "$(uname -m)" != "x86_64" ]]; then
-  echo "s3_court: only the verified linux-amd64 MinIO release is supported (host is $(uname -m))" >&2
-  exit 78
+  skip "only the verified linux-amd64 MinIO release is supported (host is $(uname -m))"
 fi
+command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
+docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
+command -v curl >/dev/null 2>&1 || skip "curl is required to fetch the pinned MinIO release"
 
 minio_release="${WEFT_S3_SERVER_RELEASE:-RELEASE.2025-04-22T22-12-26Z}"
 minio_sha256="${WEFT_S3_SERVER_SHA256:-53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c}"
@@ -78,7 +87,10 @@ minio_url="https://github.com/minio/minio/releases/download/${minio_release}/min
 mkdir -p "$minio_dir"
 if [[ ! -f "$minio_bin" ]]; then
   echo "s3_court: downloading official MinIO binary $minio_release" >&2
-  curl -fL --retry 3 -o "$minio_bin.part" "$minio_url"
+  if ! curl -fL --retry 3 -o "$minio_bin.part" "$minio_url"; then
+    rm -f "$minio_bin.part"
+    skip "cannot obtain the pinned MinIO release $minio_release"
+  fi
   mv "$minio_bin.part" "$minio_bin"
 fi
 chmod +x "$minio_bin"
@@ -147,7 +159,9 @@ fi
 
 container_image="debian:bookworm-slim"
 if ! docker image inspect "$container_image" >/dev/null 2>&1; then
-  docker pull "$container_image" >/dev/null
+  if ! docker pull "$container_image" >/dev/null; then
+    skip "cannot obtain the pinned $container_image court image"
+  fi
 fi
 container_image_digest="$(docker image inspect "$container_image" --format '{{index .RepoDigests 0}}')"
 container_image_id="$(docker image inspect "$container_image" --format '{{.Id}}')"
@@ -171,7 +185,9 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-docker network create "$network" >/dev/null
+if ! docker network create "$network" >/dev/null 2>&1; then
+  skip "cannot create the court Docker network $network"
+fi
 docker run -d --name "$minio_name" \
   --memory="$WEFT_MEMORY" --memory-swap="$WEFT_MEMORY" \
   --pids-limit="$WEFT_PIDS" --cpus="$WEFT_CPUS" \
