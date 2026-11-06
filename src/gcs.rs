@@ -462,6 +462,26 @@ impl GcsBackend {
         Ok(url)
     }
 
+    /// The bucket *collection*: bucket creation is a `POST` here, with the new
+    /// bucket's name in the query string, not in the path.
+    fn bucket_collection_url(&self, query: &[(&str, String)]) -> Result<String> {
+        Ok(format!(
+            "{}/storage/v1/b?{}",
+            self.origin()?,
+            query_string(query)
+        ))
+    }
+
+    /// The object collection of one bucket: listing lives at `.../b/<bucket>/o`.
+    fn object_collection_url(&self, query: &[(&str, String)]) -> Result<String> {
+        Ok(format!(
+            "{}/storage/v1/b/{}/o?{}",
+            self.origin()?,
+            pct(&self.config.bucket),
+            query_string(query)
+        ))
+    }
+
     fn request(
         &self,
         method: &str,
@@ -774,7 +794,7 @@ impl GcsBackend {
             if let Some(token) = &token {
                 params.push(("pageToken", token.clone()));
             }
-            let url = self.bucket_url(&params)?;
+            let url = self.object_collection_url(&params)?;
             let response = self.request("GET", &url, &[], None, MAX_JSON_BYTES)?;
             match response.status {
                 200 => {}
@@ -850,15 +870,15 @@ impl GcsBackend {
                 self.config.bucket
             )));
         };
-        let url = self.bucket_url(&[
-            ("project", project.clone()),
-            ("name", self.config.bucket.clone()),
-        ])?;
+        // `buckets.insert` takes the bucket resource in the request body; the
+        // project is the only query parameter.
+        let body = format!("{{\"name\":\"{}\"}}", self.config.bucket);
+        let url = self.bucket_collection_url(&[("project", project.clone())])?;
         let response = self.request(
             "POST",
             &url,
             &[("content-type", "application/json".to_owned())],
-            Some(&[]),
+            Some(body.as_bytes()),
             MAX_JSON_BYTES,
         )?;
         match response.status {
@@ -1117,13 +1137,11 @@ impl BlobPlane for GcsBackend {
     }
 
     fn init_layout(&mut self) -> Result<()> {
-        self.ensure_bucket()?;
-        self.probe_generation_preconditions()
+        GcsBackend::init_layout(self)
     }
 
     fn ensure_layout(&mut self) -> Result<()> {
-        self.ensure_bucket()?;
-        self.probe_generation_preconditions()
+        GcsBackend::ensure_layout(self)
     }
 
     fn stats(&self) -> BackendStats {
@@ -1262,13 +1280,11 @@ impl CommitPlane for GcsBackend {
     }
 
     fn init_layout(&mut self) -> Result<()> {
-        self.ensure_bucket()?;
-        self.probe_generation_preconditions()
+        GcsBackend::init_layout(self)
     }
 
     fn ensure_layout(&mut self) -> Result<()> {
-        self.ensure_bucket()?;
-        self.probe_generation_preconditions()
+        GcsBackend::ensure_layout(self)
     }
 
     fn acquire_lock(&mut self) -> Result<()> {
@@ -1293,6 +1309,21 @@ impl CommitPlane for GcsBackend {
 }
 
 impl GcsBackend {
+    /// Ensure the bucket exists and prove the generation preconditions.
+    ///
+    /// Inherent so a caller holding a concrete [`GcsBackend`] does not have to
+    /// disambiguate between the two plane traits.
+    pub fn init_layout(&mut self) -> Result<()> {
+        self.ensure_bucket()?;
+        self.probe_generation_preconditions()
+    }
+
+    /// Ensure the bucket exists and prove the generation preconditions.
+    pub fn ensure_layout(&mut self) -> Result<()> {
+        self.ensure_bucket()?;
+        self.probe_generation_preconditions()
+    }
+
     fn backend_stats(&self) -> BackendStats {
         BackendStats {
             reads: self.stats.reads.load(Ordering::Relaxed),
