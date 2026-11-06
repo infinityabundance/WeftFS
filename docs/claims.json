@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (27/27 courts pass).",
-    "value": "verify-20261106T083428Z.json",
+    "value": "verify-20261106T141623Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261106T083428Z.json",
+    "receipt": "bench/receipts/verify-20261106T141623Z.json",
     "kind": "present"
   },
   {
@@ -355,9 +355,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v080_crates",
-    "claim": "README.md and docs/containers.md advertise the v0.8.0 crate versions.",
-    "value": "weftcodec = \"0.8.0\"",
+    "id": "release_v090_crates",
+    "claim": "README.md and docs/containers.md advertise the v0.9.0 crate versions.",
+    "value": "weftcodec = \"0.9.0\"",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -366,9 +366,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v080_docker_tag",
-    "claim": "README.md and docs/containers.md advertise the v0.8.0 WeftFS image tag.",
-    "value": "weftfs:v0.8.0",
+    "id": "release_v090_docker_tag",
+    "claim": "README.md and docs/containers.md advertise the v0.9.0 WeftFS image tag.",
+    "value": "weftfs:v0.9.0",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -1599,12 +1599,11 @@
   },
   {
     "id": "release_v080_python_wheel",
-    "claim": "the v0.8.0 Python wheel filename is recorded.",
+    "claim": "the v0.8.0 Python wheel filename is recorded in the v0.8.0 history.",
     "value": "weftcodec-0.8.0-py3-none-any.whl",
     "locations": [
       "docs/RELEASE-v0.8.0.md",
-      "docs/STATUS.md",
-      "python/README.md"
+      "docs/STATUS.md"
     ],
     "receipt": "bench/receipts/python-bindings-20261106T012031Z.json",
     "kind": "present"
@@ -3400,5 +3399,60 @@
     ],
     "receipt": null,
     "kind": "absent"
+  },
+  {
+    "id": "release_v090_note",
+    "claim": "README, status, and container docs point at the v0.9.0 release note.",
+    "value": "RELEASE-v0.9.0.md",
+    "locations": [
+      "README.md",
+      "docs/STATUS.md",
+      "docs/containers.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T141623Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v090_verify_receipt",
+    "claim": "the v0.9.0 release note, README, and status cite the clean release verification receipt.",
+    "value": "verify-20261106T141623Z.json",
+    "locations": [
+      "docs/RELEASE-v0.9.0.md",
+      "README.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T141623Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v090_python_wheel",
+    "claim": "the v0.9.0 Python wheel filename is recorded.",
+    "value": "weftcodec-0.9.0-py3-none-any.whl",
+    "locations": [
+      "docs/RELEASE-v0.9.0.md",
+      "python/README.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T142616Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v090_python_sha",
+    "claim": "the v0.9.0 Python wheel sha256 is recorded.",
+    "value": "b671a8636cbca0c06097ec39c225f48558f323975a4ff8114ee6ed7f026652b4",
+    "locations": [
+      "docs/RELEASE-v0.9.0.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "release_v090_python_tests",
+    "claim": "the v0.9.0 Python wheel court count is recorded.",
+    "value": "331 tests,\n  0 failures, 0 errors, 9 skipped",
+    "locations": [
+      "docs/RELEASE-v0.9.0.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T142616Z.json",
+    "kind": "present"
   }
 ]

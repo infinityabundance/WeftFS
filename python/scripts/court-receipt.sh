@@ -86,6 +86,12 @@ def junit_counts(path):
 
 
 env = os.environ
+wheel_name = env.get("WEFT_WHEEL_NAME") or ""
+# Derive the distribution version from the built wheel filename so this receipt
+# cannot drift when the project version changes (the historical hard-coded
+# literal silently reported 0.8.0 after the 0.9.0 bump).
+wheel_parts = wheel_name[: -len(".whl")].split("-") if wheel_name.endswith(".whl") else []
+wheel_version = wheel_parts[1] if len(wheel_parts) >= 2 else "unknown"
 receipt = {
     "receipt": "weftfs-python-bindings/1",
     "generated_at_utc": __import__("datetime").datetime.now(
@@ -122,8 +128,8 @@ receipt = {
         "sha256": env.get("WEFT_WHEEL_SHA256"),
         "size_bytes": int(env.get("WEFT_WHEEL_SIZE", "0")),
         "path": "python/dist/" + (env.get("WEFT_WHEEL_NAME") or ""),
-        "name": "weftcodec",
-        "version": "0.8.0",
+        "name": wheel_parts[0] if wheel_parts else "weftcodec",
+        "version": wheel_version,
         "license": "Apache-2.0",
         "pypi_published": False,
         "pypi_note": "No PyPI token is available; the wheel is attached to the release.",

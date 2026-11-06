@@ -2,15 +2,18 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T083428Z.json` (27/27 courts `pass`, including the
+`bench/receipts/verify-20261106T141623Z.json` (27/27 courts `pass`, including the
 host-only `claims` documentation gate, spec drift, generated-type drift,
 `conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
 and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `a4e2c3d`, WeftCodec `72cd119`, WeftCodec-Go `e47fa03`,
-WeftFS-Go `47fd4d2` (the R7 shared-mount tree; the only later change is this
-citation and the receipts committed with it). The earlier 
-`verify-20261106T052933Z.json` (27/27 at `e4cdc55`) and
-`verify-20261106T044258Z.json` (27/27 at the R2 tree) are retained. The previous release receipt,
+`fuzz_diff`), at WeftFS `cef37bc`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
+WeftFS-Go `007bf11` (the v0.9.0 version-bump tree; the only later change is this
+citation and the documentation committed with it). The Python court at the same
+tree reports 331 tests, 0 failures, 0 errors, 9 skips
+(`bench/receipts/python-bindings-20261106T142616Z.json`), and the release note is
+`docs/RELEASE-v0.9.0.md`. The earlier
+`verify-20261106T083428Z.json` (27/27 at the R7 shared-mount tree) is retained.
+The previous release receipt,
 `verify-20261106T011444Z.json` (also 27/27), is retained for the v0.8.0 release
 and is cited in `docs/RELEASE-v0.8.0.md`; its own first run at that tree,
 `verify-20261106T010756Z.json`, is retained because `rust_store` hit the
