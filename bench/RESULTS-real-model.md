@@ -105,7 +105,7 @@ writes:
 
 | object | reads | current decode | independent decode | new bytes |
 |---|---:|---:|---:|---:|
-| `/model.embed_tokens.weight` | 10 | 5,375,030,143 ns | 3,999,528,062 ns | 287,764,224 |
+| `/model.embed_tokens.weight` | 10 | 5,375,030,143 ns | 3,999,528,062 ns | 180,547,519 |
 | `/model.layers.7.mlp.gate_proj.weight` | 10 | 172,103,424 ns | 128,038,809 ns | 5,799,745 |
 | `/model.layers.21.mlp.gate_proj.weight` | 10 | 172,103,424 ns | 128,038,809 ns | 5,790,520 |
 
