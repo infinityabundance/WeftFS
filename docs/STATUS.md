@@ -2,14 +2,16 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T011444Z.json` (27/27 courts `pass`, including the
+`bench/receipts/verify-20261106T044258Z.json` (27/27 courts `pass`, including the
 host-only `claims` documentation gate, spec drift, generated-type drift,
 `conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
 and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `d6ba189`, WeftCodec `3f3eae0`, WeftCodec-Go `65bc14d`,
-WeftFS-Go `f920ae0`. A first run at the same tree,
-`verify-20261106T010756Z.json`, is retained: `rust_store` hit the pre-existing
-`tests/quota.rs` writer-lock flake (`usage_survives_reopen_and_still_denies`,
+`fuzz_diff`), at WeftFS `a8f8a3e`, WeftCodec `1ee5d90`, WeftCodec-Go `d1aab12`,
+WeftFS-Go `bb15514`. The previous release receipt,
+`verify-20261106T011444Z.json` (also 27/27), is retained for the v0.8.0 release
+and is cited in `docs/RELEASE-v0.8.0.md`; its own first run at that tree,
+`verify-20261106T010756Z.json`, is retained because `rust_store` hit the
+pre-existing `tests/quota.rs` writer-lock flake (`usage_survives_reopen_and_still_denies`,
 `Busy` on reopen); that test passed standalone five times and in three full
 `cargo test --all-targets` runs. The earlier
 `verify-20261105T175154Z.json`, `verify-20261105T174254Z.json`, and
