@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (29/29 courts pass, incl. ceph_rgw and s3_court).",
-    "value": "verify-20261106T214749Z.json",
+    "value": "verify-20261106T225457Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "receipt": "bench/receipts/verify-20261106T225457Z.json",
     "kind": "present"
   },
   {
@@ -4280,6 +4280,129 @@
       "docs/STATUS.md"
     ],
     "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_court_receipt",
+    "claim": "docs/STATUS.md cites the R21 Azure Blob court receipt.",
+    "value": "azure-court-20261106T221838Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-court-20261106T221838Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_content_root_match",
+    "claim": "docs/STATUS.md records the content root that the local and Azure runs both produced.",
+    "value": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-20261106T221838Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_image_digest",
+    "claim": "docs/STATUS.md names the exact Azurite image digest the court ran.",
+    "value": "647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-court-20261106T221838Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_backend_suite",
+    "claim": "docs/STATUS.md records the Azure backend suite result.",
+    "value": "14 passed, 0 failed",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-20261106T221838Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_fencing_suite",
+    "claim": "docs/STATUS.md records the shared fenced-writer suite result over Azurite.",
+    "value": "7 passed, 0 failed",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-20261106T221838Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_azure_retained_failure",
+    "claim": "docs/STATUS.md retains the first failing Azure court receipt (SharedKey resource canonicalisation).",
+    "value": "azure-court-20261106T221522Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/azure-court-20261106T221522Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_gcs_auth_court_receipt",
+    "claim": "docs/STATUS.md cites the R21 GCS court receipt with its auth object.",
+    "value": "gcs-court-20261106T225115Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261106T225115Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_gcs_auth_no_credentials",
+    "claim": "docs/STATUS.md and README.md state that the GCS auth court recorded no_credentials.",
+    "value": "no_credentials",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261106T225115Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r21_rfc7515_vector",
+    "claim": "docs/STATUS.md, README.md, and the auth test cite the published RFC 7515 Appendix A.2 RS256 vector.",
+    "value": "RFC 7515 Appendix A.2",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md",
+      "tests/service_account.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r21_no_live_cloud_run",
+    "claim": "docs/STATUS.md states that neither Azure nor a live Google token exchange was performed.",
+    "value": "No live cloud run",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r21_rs256_not_constant_time",
+    "claim": "docs/STATUS.md discloses that the RS256 implementation is not constant-time.",
+    "value": "RS256 is not constant-time",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r21_spec_unchanged",
+    "claim": "docs/STATUS.md records that no normative spec changed in R21.",
+    "value": "No spec changed",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
     "kind": "present"
   }
 ]

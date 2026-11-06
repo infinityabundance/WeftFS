@@ -2,17 +2,18 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T214749Z.json` (29/29 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261106T225457Z.json` (29/29 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
 memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation, now
 running both the S3 backend suite and the R17 fenced-writer suite — the MinIO
 `s3_court` (native S3 backend and fenced-writer suites), and `fuzz_diff`), at
-WeftFS `9a6156c`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
-`8670d77`. The previous 28/28 receipt (`verify-20261106T174703Z.json` at
-`37a3a39`), its 28/28 predecessor (`verify-20261106T162208Z.json` at
-`0e3670a`), and the failing first R20 aggregate
+WeftFS `132e713`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
+`8670d77`. The previous 29/29 receipt (`verify-20261106T214749Z.json` at
+`9a6156c`), its 28/28 predecessor (`verify-20261106T174703Z.json` at
+`37a3a39`), the 28/28 receipt before that
+(`verify-20261106T162208Z.json` at `0e3670a`), and the failing first R20 aggregate
 (`verify-20261106T212741Z.json`, 28/29) are retained; that failure was the
 pre-existing `tests/quota.rs` writer-lock flake,
 `usage_survives_reopen_and_still_denies`, which passed standalone immediately
@@ -4552,3 +4553,152 @@ the test passed standalone immediately after and in the rerun.
   dedicated FUSE court exercises a packed or split store.
 * No performance claim, no physical power loss, no multi-writer, no fleet or
   cloud claim. Crash evidence is the process-fault proxy used elsewhere.
+
+## Subphase R21 — Azure Blob and GCS service-account auth (2026-11-06)
+
+Two backend gaps are closed: there is a real Azure Blob REST backend, and the
+GCS backend can authenticate with a service-account key instead of a bearer
+token supplied out of band.
+
+### What is implemented
+
+**Azure Blob** (`src/azure.rs`, 2,679 lines with tests)
+
+* Blob REST over the existing blocking `ureq` client: `Put Blob` with
+  `x-ms-blob-type: BlockBlob` (`If-None-Match: *` for create-once, `409
+  BlobAlreadyExists`; `If-Match: <ETag>` for compare-and-swap, `412`),
+  `Get Blob` (whole and `Range`), `Get Blob Properties`, `Delete Blob`,
+  `List Blobs` (`restype=container&comp=list`), and container create/properties.
+* `BlobPlane`, `CommitPlane`, and `StorageBackend` implementations. The public
+  `ControlRecord.token` remains the **content token** of the record's bytes; the
+  service ETag is the private transport token, so a caller can never confuse the
+  two. `--backend azure` also works for `--blob-backend`/`--commit-backend`.
+* Credentials: **SharedKey** (HMAC-SHA256 over the documented canonicalised
+  headers and resource, implemented with `sha2` only), a **SAS** query string,
+  or **anonymous** for an emulator. The three forms are mutually exclusive and
+  refused when mixed.
+* The R17/R18 fenced writer is ported verbatim: monotonic fencing token in the
+  `LOCK` blob, one conditional write before each publication naming the pending
+  head, renewal when one publication budget remains, refusal after the writer's
+  own deadline, and a content-addressed conditional tombstone for release.
+* Endpoint behaviour is **measured**, not assumed: the writable-open probe
+  requires create-once, a matching `If-Match`, and a **refused stale**
+  `If-Match` with the winner's bytes surviving. It also measures whether the
+  endpoint compares the quoted ETag or a dequoted value (the Ceph RGW lesson
+  from R16). An endpoint that accepts a stale value is refused
+  `UnsupportedVersion`.
+* Resource canonicalisation is `/{account}{request path}`. On a path-style
+  endpoint (Azurite) the account appears twice; that is what both Azurite and
+  Azure recompute. The first court run used `/{account}/{container}/{blob}` and
+  every request failed authentication (`azure-court-20261106T221522Z.json` is
+  retained for that defect).
+
+**GCS service-account auth** (`src/service_account.rs`)
+
+* RS256 JWT-bearer flow with no RSA dependency: strict DER for PKCS#8
+  (`BEGIN PRIVATE KEY`) and PKCS#1 (`BEGIN RSA PRIVATE KEY`), fixed-width
+  big-integer Montgomery arithmetic, EMSA-PKCS1-v1_5 with the SHA-256
+  `DigestInfo` prefix, and CRT signing. `#![forbid(unsafe_code)]` still holds.
+* The key is proved at load time: `p·q == n`, the CRT result equals
+  `m^d mod n`, and the public exponent inverts the private operation. A key that
+  fails any check is refused `InvalidArgument` before it can sign.
+* Assertion: `{"alg":"RS256","typ":"JWT"}` plus `kid` when `private_key_id` is
+  present, and `iss`/`scope`/`aud`/`exp`/`iat` with a one-hour lifetime.
+* Token exchange with a single-slot cache and a refresh window of
+  `min(300 s, lifetime/2)`. One exchange under concurrency. Provider refusals
+  are typed (`Unauthorized` for 400/401/403, `Corrupt` for an unreadable or
+  lifetime-less reply, `UnsupportedVersion` for a non-Bearer token type, `Io`
+  for an unreachable endpoint).
+* Explicit refusals, with what would be required: a non-`service_account`
+  credential (`authorized_user` needs a refresh-token flow), an encrypted
+  private key (PBES2/PBKDF2), a non-RSA key, a modulus outside 2048..=8192 bits,
+  and an inconsistent key.
+* Key material, the assertion, and the access token are redacted from `Debug`
+  and never appear in an error message. Diagnostics name only the key's
+  SHA-256 fingerprint and modulus width.
+
+### Evidence
+
+* **RFC 7515 Appendix A.2.** `tests/service_account.rs` signs the published
+  RS256 signing input with the published 2048-bit key and asserts the exact
+  published signature octets, in both PKCS#1 and PKCS#8 encodings. This is the
+  external cross-check of the RSA and JWS code; it needs no network.
+* **Azure emulator.** `bench/scripts/azure_court.sh` runs pinned Azurite
+  `3.35.0`, image
+  `mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`,
+  as a sibling container with the same hard limits (3g/3g, 1024 pids, 4 cpus,
+  bounded tmpfs, `cap-drop=ALL`, `no-new-privileges`). Court receipt
+  `azure-court-20261106T221838Z.json`:
+  * local and Azure runs have the **same content root**
+    `0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f`, the
+    same generation sequence 1..21, the same verified bytes (393,216) and the
+    same content digest.
+  * the `superblock` ETag differs at every sampled publication (three samples:
+    `"0x264D03DEA657800"`, `"0x22C7D77C905AD60"`, `"0x26D43CACE360340"`), which
+    is direct evidence that each head went through `If-Match`.
+  * process-fault crash proxy: 3/3 phases old-or-new, 0 partial states.
+  * backend suite **14 passed, 0 failed**; shared fenced-writer invariants
+    **7 passed, 0 failed** (`tests/support/fencing.rs`: expired-lease stop,
+    SIGSTOP reclaim then `Busy`, replaced-lock release, renewal, monotonic
+    token).
+  * four of the backend tests run against the live emulator; ten run against an
+    in-process Azure service that independently recomputes the SharedKey
+    signature, so a wrong canonicalisation or an unsigned header fails.
+* **GCS auth court.** `bench/scripts/gcs_court.sh` now runs
+  `cargo test --test service_account` every time and records an `auth` object in
+  `gcs-court-20261106T225115Z.json`: **14 passed, 0 failed**, status
+  `no_credentials`, `live_probe: null`. The emulator court itself is unchanged
+  (same content root, commit sequence, fencing 7/7). A retained failing receipt
+  `gcs-court-20261106T225005Z.json` records one auth test asserting a project
+  from the key file while the court environment set `WEFT_GCS_PROJECT`; explicit
+  project precedence is what is asserted now.
+* **Aggregate.** `bench/receipts/verify-20261106T225457Z.json` is **29/29
+  courts pass**, 0 failed, 0 skipped, at WeftFS `132e713`. The new Azure and GCS
+  auth courts are standalone like `gcs_court`, so they are not counted in that
+  29; their own receipts above are the evidence.
+* Repository suites, counted from the aggregate's logs: `rust_store`
+  (`cargo test --all-targets`) **101 suites / 513 passed / 0 failed**;
+  `rust_fuse` (`cargo test --features fuse --all-targets`) **101 suites / 555
+  passed / 0 failed / 2 pre-existing ignored**. New tests: 8 Azure unit, 14
+  Azure backend (10 in-process fake + 4 live Azurite), 7 Azure fencing, 6
+  service-account arithmetic/DER, 14 service-account integration.
+* Gates: `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass in the
+  same aggregate. No spec changed: both additions are transport/auth surfaces,
+  not wire formats, so the subproject spec mirrors are untouched.
+
+### Losses and non-claims
+
+* **No live cloud run.** Azure has never been contacted; GCS has never received
+  a token exchange. The precise gap is a credential and an account:
+  * GCS needs a service-account JSON key with Storage permissions. Provide it
+    with `WEFT_GCS_SA_KEY=/path/key.json bench/scripts/gcs_court.sh`; the script
+    copies it to the gitignored court cache and runs
+    `examples/gcs_auth_probe.rs`, which performs one real exchange and prints
+    only the fingerprint, modulus width, and remaining lifetime. Until that is
+    run, `no_credentials` is the whole claim.
+  * Azure needs a storage account and a SharedKey or SAS credential. The same
+    `--azure-endpoint`/`--azure-account`/`--azure-key` path applies; Azurite is
+    not Azure, and untested differences include service-version acceptance,
+    large-block-blob limits, `x-ms-*` header edge cases, and listing paging.
+* **RS256 is not constant-time.** The modular exponentiation is a simple
+  square-and-multiply with conditional multiplies. Signing runs locally with the
+  operator's own key, but a co-located attacker could in principle learn
+  information from timing. A production hardening step is a constant-time
+  bignum implementation (or a vetted dependency); neither is in this tree.
+* **Azurite data is a tmpfs.** The court proves protocol behaviour, signature
+  acceptance, conditional-write safety, and fencing — not media durability,
+  replication, zone failure, or physical power loss. `durable_fsync` for both
+  backends means "the provider acknowledged the write".
+* **Fencing is still two conditional writes on two objects.** The fence and the
+  head compare-and-swap are not one atomic operation (not expressible on plain
+  S3/Azure/GCS semantics); a lost network reply retains the usual at-least-once
+  ambiguity. No multi-writer, clock-skew, or fleet claim.
+* **Service-account assertions are re-signed per token**, not cached; a token is
+  cached for its lifetime and refreshed in the bounded window. A clock skewed by
+  more than the one-hour assertion lifetime will be refused by the provider.
+* **No Go parity** for either addition: WeftFS-Go has no Azure or S3/GCS
+  backend and no service-account flow. `src/azure.rs` and
+  `src/service_account.rs` are Rust-only.
+* The Azure backend has **no performance claim** and was not added to
+  `scripts/verify-all.sh`. The GCS auth suite likewise runs inside the existing
+  standalone `gcs_court`, not the aggregate.
