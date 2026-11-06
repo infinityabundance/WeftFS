@@ -48,7 +48,7 @@ for arg in "$@"; do
     --packs) packs=1 ;;
     --distributed) distributed=1 ;;
     -h|--help)
-      sed -n '2,34p' "$0"
+      sed -n '2,32p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
