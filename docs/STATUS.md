@@ -2,17 +2,23 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T174703Z.json` (28/28 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261106T214749Z.json` (29/29 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
 memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation, now
-running both the S3 backend suite and the R17 fenced-writer suite — and
-`fuzz_diff`), at WeftFS `37a3a39`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
-WeftFS-Go `007bf11`. The previous 28/28 receipt
-(`verify-20261106T162208Z.json` at `0e3670a`) is retained. A court that cannot run in the aggregate's environment
-(non-x86_64, no Docker daemon, the pinned Ceph image unobtainable, or the
-court's private subnet already taken) is recorded as `skip` with its exact
+running both the S3 backend suite and the R17 fenced-writer suite — the MinIO
+`s3_court` (native S3 backend and fenced-writer suites), and `fuzz_diff`), at
+WeftFS `9a6156c`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
+`8670d77`. The previous 28/28 receipt (`verify-20261106T174703Z.json` at
+`37a3a39`), its 28/28 predecessor (`verify-20261106T162208Z.json` at
+`0e3670a`), and the failing first R20 aggregate
+(`verify-20261106T212741Z.json`, 28/29) are retained; that failure was the
+pre-existing `tests/quota.rs` writer-lock flake,
+`usage_survives_reopen_and_still_denies`, which passed standalone immediately
+after and in the rerun. A court that cannot run in the aggregate's environment
+(non-x86_64, no Docker daemon, a pinned image or binary unobtainable, or a
+court's private network already taken) is recorded as `skip` with its exact
 reason under `skips` in the receipt, and a skip is not a pass; this run had
 none. The v0.9.0 release receipt
 `bench/receipts/verify-20261106T141623Z.json` (27/27 at WeftFS `cef37bc`,
@@ -4396,3 +4402,153 @@ measured that as a 0.43x 4-thread regression on the host bind mount.
   CLI restore semantics beyond the opt-in import, FUSE path, or selectors.
 * Single host, warm cache, one store, three repetitions; no cold-cache, fleet,
   GPU, or multi-node claim.
+
+## Subphase R20 — Go parity for the R9–R12 storage surfaces (2026-11-06)
+
+The two-implementation guarantee covered the codec, store, contexts, GC, quota,
+and FUSE, but the Rust storage work from R9–R12 had no Go counterpart. R20
+closes four of those gaps in dependency order on `staging`.
+
+### What is implemented
+
+* **`weft.manifest.v4` overlay writer and compaction (Go).** The previous
+  version is the immutable base plus one merged extent; a misaligned edit is
+  widened to the enclosing chunk grid with untouched bytes read from the
+  previous version; adjacent or overlapping extents fold into the current layer
+  while it stays at or below `model.MaxOverlayExtentsPerManifest` (64) and a new
+  layer is published only when folding would exceed that bound or the writer's
+  configured `MaxOverlayDepth` / `MaxOverlayBytes`. The writer derives the
+  canonical table twice — previous table + edit, and the manifest the reader
+  will resolve — and refuses `Corrupt` unless both are identical. `Store.Compact`
+  re-reads and re-hashes every chunk (one chunk of memory), requires the
+  pre-compaction Merkle root, then publishes a canonical v3 table through the
+  normal commit protocol. `Truncate` (grow), `ZeroRange`, and range writes publish
+  layers; shrinking truncate, `collapse_range`, and `insert_range` are refused
+  with the same wording as Rust. CLI: `compact`, `--representation overlay`
+  (which requires `--content-identity merkle`).
+* **Blob/commit plane split (Go).** `BlobAccess` routes `objects/`,
+  `manifests/`, `indexes/`, `packs/`, and `pack-catalog/`; the commit plane owns
+  `FORMAT`, `LOCK`, the superblock, `commits/`, `refs/`, quota, and access
+  counters. The default local/local layout writes the historical bytes. `local`
+  publishes with `rename(2)` over a fsynced temporary file; `object` uses
+  `link(2)`. Capabilities are **measured** on every writable open: the blob probe
+  publishes a private 192-byte object, HEADs its length, reads a 17-byte
+  mid-range slice, and deletes it; the commit probe performs a create-once CAS, a
+  matching CAS, and a stale CAS that must be refused with `Busy`. A
+  declared-absent `posix` plane is refused for writing (and `Init` leaves no
+  `FORMAT` marker), while read-only opens never probe or write. CLI:
+  `--blob-backend`, `--commit-backend`, `--blob-root`; `info` reports both
+  planes, their roots, and the probe evidence.
+* **Physical pack plane (Go).** Identical wire format to Rust: `WPS1` catalog
+  segments (magic, version, index, count, 113-byte entries, domain digest),
+  `WPR1` root (magic, version, segment count, total, ids, digest), the same four
+  domains, segment index masking, and member digests. Packs are published
+  before any catalog record names them; the open pack is flushed before every
+  commit record; the catalog is bounded and falls back to flat publication
+  without failing. CLI: `--pack`, `--pack-target-bytes`,
+  `--pack-member-threshold`, `--pack-catalog-bytes`, `--pack-segments`; `info`
+  reports catalog truth. GC reclaims unreferenced packs and orphaned segments;
+  `verify --full` reports catalog problems and reads through the packed plane.
+* **Host calibration (Go).** `weft.calibration.v1` documents are loaded with
+  exact schema, key-set, row-set, sample, bound, monotonicity, and digest
+  validation and no fallback. The digest is computed over the compact key-sorted
+  document with the digest key removed, matching `serde_json`'s BTreeMap form.
+  `--planner-cost-model declared|measured` and `--calibration FILE` are accepted
+  (`--calibration` requires `measured`); the validated table overrides the baked
+  coefficients in tensor planning and rebase pricing.
+
+### Evidence: cross-language byte equality
+
+All values below are asserted by the named tests; they are not estimates.
+
+* **Overlay writer, fixed clock `1700000000000000000` and seed
+  `overlay-same-seed`, six 64 KiB chunks + 77 bytes, writes at 100, 150000, and
+  400000:** Go and Rust produce the **same overlay manifest id**
+  `f04879ebaf27059d16f8f1ef09543c89bf43e5cd30d4479252e0ecf20beca5f9`, the
+  **same 605 manifest bytes**, and the **same published head**
+  `64103f3b7d1961f415b694c954271e9f363c3e60b7582cb9d1a3051c1b2c3f48`
+  (`TestOverlayWriterMatchesRustByteForByte`). Rust `verify --full` accepts the
+  Go store.
+* **Continuation and compaction both ways:** Rust extends and compacts a
+  Go-written overlay; Go extends and compacts a Rust-written overlay; every
+  result is read byte-exactly by the other language with `verify --full` clean
+  (`TestOverlayGoExtendsRustStore`, `TestOverlayGoCompactsRustStore`,
+  `TestOverlayRustCompactsGoStore`).
+* **Four split layouts** — local/local, object/object, object-blobs/local-commits,
+  local-blobs/object-commits — publish the **same head**
+  `6ce4fb88479aa685bcb749f7fba061bf1bb86b0a31de008b1b30d093b9754a9f`,
+  **generation 3**, and **manifest**
+  `fe6b7cff0e29a36c6a11b7a3797969c84b622da054f6780d041cb22753105e73`
+  (`TestSplitPlanesMatchTheSingleBackendStore`). Rust reads and verifies a
+  Go-split store; Go reads and verifies a Rust-split store, with matching head
+  and manifest id (`TestGoSplitStoreRustReadsAndVerifies`,
+  `TestRustSplitStoreGoReadsAndVerifies`).
+* **Packs:** Go's 300,000-byte file seals **2 packs / 8 members / 366,270 packed
+  bytes with 0 flat members** under the default policy (head
+  `6ba667e1…e76a`, manifest `8635b945…af33`). Rust `verify --full` and `cat`
+  agree; Go reads and verifies Rust-written packs; Go GC reclamation is then
+  re-verified by Rust (`TestGoPacksRustReadsAndVerifies`,
+  `TestRustPacksGoReadsAndVerifies`, `TestGoGCReclaimsPacksThenRustVerifies`).
+* **Calibration:** a document produced by the Rust `calibrate` command loads in
+  Go with the **identical 64-hex digest** and seven measured rows
+  (e.g. `12bc635c1620b5d4ed4c47f39c6817fe386dd5263bfe8f7d1676aef367a38cd5`);
+  loading re-computes the digest, so acceptance is evidence that Go's JSON
+  canonicalisation matches Rust's (`TestRustCalibrationDocumentIsAccepted`).
+* **Commits:** WeftFS-Go `fa186a3` (stage 1), `9d78940` (stage 2), `cc988fb`
+  (stage 3), `f577cb7` (stage 4), `8670d77` (evidence logging, the measured
+  tree of the aggregate above), and `447b702` (NOTES.md only). Parent pins:
+  `ae11484`, `d0e0da9`/`9a6156c`, then the final pin. The final pin adds only
+  NOTES.md to the measured submodule tree.
+
+### Repository suites at this change
+
+* Go: **168** top-level tests in `store`, **15** in `cmd/weftfs`, and **24** in
+  `fusefs`, run as `go test -race ./... -count=1` in the FUSE court: **0
+  failures**. **51 new top-level tests** were added (46 store + 5 CLI), plus the
+  32-case calibration rejection matrix as subtests. Cross-language tests invoke
+  the Rust binary only as an oracle.
+* Honest note on skips: the Go court image has no `libfuse3`, so when the shared
+  Rust release binary was built with `--features fuse`, oracle tests skip there
+  with the loader error. The aggregate runs the same tests in the FUSE court,
+  where they execute and pass. A skip is never counted as a pass.
+* Rust: `cargo test --all-targets` **460 passed / 0 failed** (96 binaries);
+  `cargo test --features fuse --all-targets -- --test-threads=1` **502 passed /
+  0 failed / 2 ignored**; WeftCodec **226 passed / 0 failed**.
+* Gates: `scripts/check-spec-drift.sh` **42/42**; `scripts/check-claims.sh`
+  **399/399**; conformance manifest and coverage unchanged.
+
+### Aggregate coverage
+
+`scripts/verify-all.sh` now runs the MinIO court as its own **29th** court
+(`s3_court`) with the same environment-only skip semantics as `ceph_rgw`:
+exactly one `s3_court: skip <reason>` line and exit 78 for a non-x86_64 host, no
+Docker CLI or daemon, no `curl`, an unobtainable pinned MinIO release or
+`debian:bookworm-slim` image, or a Docker network that cannot be created.
+Everything after preflight is a hard failure. One helper now handles both
+orchestrated courts (pass / explicit skip / fail) and the receipt gains an
+`s3_court` receipt pointer. The R20 aggregate
+`bench/receipts/verify-20261106T214749Z.json` is **29/29 pass, 0 failed, 0
+skipped** at WeftFS `9a6156c` / WeftFS-Go `8670d77`. The failing first R20 run
+`verify-20261106T212741Z.json` (28/29) is retained: `rust_store` hit the
+pre-existing `tests/quota.rs` writer-lock flake disclosed in R9, R18, and R19;
+the test passed standalone immediately after and in the rerun.
+
+### Losses, non-claims, and what Go still lacks
+
+* Go has **no S3 or GCS backend**, so its plane split is filesystem-only
+  (local/object, with an explicit `posix` refusal plane). No MinIO/S3-backed Go
+  store, no cross-vendor Go claim.
+* Go has **no `calibrate` measurement command**. It accepts, validates, and
+  applies a document; host measurement remains Rust-only. The `--calibration`
+  table is used exactly as written.
+* Packs are **never rewritten**: a dead member's bytes stay until the whole pack
+  is unreferenced. A sub-member read cannot verify the member digest by design;
+  only whole-member reads do. Pack data lives on one local filesystem.
+* Overlay: Go refuses shrinking truncate, `collapse_range`, and `insert_range`
+  (matching Rust); there is no streaming overlay writer. Range writes publish a
+  new manifest per write, subject to the same bounds.
+* No on-disk advisory selector index persistence in Go (pre-existing gap,
+  unchanged here). The plane/packing flags are accepted by `mount`, but no
+  dedicated FUSE court exercises a packed or split store.
+* No performance claim, no physical power loss, no multi-writer, no fleet or
+  cloud claim. Crash evidence is the process-fault proxy used elsewhere.

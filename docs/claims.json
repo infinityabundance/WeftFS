@@ -1,13 +1,13 @@
 [
   {
     "id": "verify_receipt_current",
-    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (28/28 courts pass, incl. ceph_rgw).",
-    "value": "verify-20261106T174703Z.json",
+    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (29/29 courts pass, incl. ceph_rgw and s3_court).",
+    "value": "verify-20261106T214749Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261106T174703Z.json",
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
     "kind": "present"
   },
   {
@@ -4219,6 +4219,67 @@
       "bench/RESULTS-restore-pipeline.md"
     ],
     "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r20_overlay_writer",
+    "claim": "docs/STATUS.md records that Go's v4 overlay writer and Rust's produce the same manifest bytes and head.",
+    "value": "same overlay manifest id",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r20_plane_split",
+    "claim": "docs/STATUS.md records that all four Go split layouts publish the same head, generation, and manifest id.",
+    "value": "Four split layouts",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r20_pack_plane",
+    "claim": "docs/STATUS.md records cross-language pack reads and reclamation in both directions.",
+    "value": "Go reads and verifies Rust-written packs",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r20_calibration",
+    "claim": "docs/STATUS.md records that Go accepts weft.calibration.v1 with the same strict validation and digest.",
+    "value": "weft.calibration.v1",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r20_aggregate_s3_court",
+    "claim": "docs/STATUS.md and README.md name the MinIO court that is now its own aggregate court.",
+    "value": "s3_court",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r20_go_tests",
+    "claim": "docs/STATUS.md reports the number of new top-level Go tests added by R20.",
+    "value": "51 new top-level tests",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T214749Z.json",
     "kind": "present"
   }
 ]
