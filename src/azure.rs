@@ -36,9 +36,12 @@
 //!   resource; the signature is computed in this crate (`sha2` only, no new
 //!   dependency).
 //! * **SAS** — a pre-signed query string, appended verbatim to each request.
-//! * **anonymous** — an emulator court only (Azurite can be started to accept
-//!   it, but the default dev account requires SharedKey, which is what the
-//!   court uses).
+//! * **anonymous** — no credential at all.
+//!
+//! Only the SharedKey path is exercised against a real emulator. SAS and
+//! anonymous are implemented and unit-tested for request construction (no
+//! `Authorization` header, the query string preserved), but no court proves an
+//! Azurite or Azure deployment accepts them, so no such claim is made.
 //!
 //! Secrets are never written to diagnostics, receipts, or error messages;
 //! [`AzureConfig`]'s `Debug` redacts them.

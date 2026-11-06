@@ -4628,15 +4628,17 @@ token supplied out of band.
   `mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`,
   as a sibling container with the same hard limits (3g/3g, 1024 pids, 4 cpus,
   bounded tmpfs, `cap-drop=ALL`, `no-new-privileges`). Court receipts
-  `azure-court-20261106T230714Z.json` (current) and
-  `azure-court-20261106T221838Z.json` (earlier run, same root and counts):
+  `azure-court-20261106T231026Z.json` (current) with
+  `azure-court-20261106T230714Z.json` and
+  `azure-court-20261106T221838Z.json` as earlier runs of the same workload
+  (same root and counts):
   * local and Azure runs have the **same content root**
     `0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f`, the
     same generation sequence 1..21, the same verified bytes (393,216) and the
     same content digest.
   * the `superblock` ETag differs at every sampled publication (three samples in
-    the current run: `"0x2143D5029C72E20"`, `"0x2758364DCC64440"`,
-    `"0x1C85139701E9A20"`), which is direct evidence that each head went
+    the current run: `"0x20B1B3025C57900"`, `"0x211D4915F03EF60"`,
+    `"0x276CB5EE4E027E0"`), which is direct evidence that each head went
     through `If-Match`.
   * process-fault crash proxy: 3/3 phases old-or-new, 0 partial states.
   * backend suite **14 passed, 0 failed**; shared fenced-writer invariants
@@ -4656,10 +4658,11 @@ token supplied out of band.
   from the key file while the court environment set `WEFT_GCS_PROJECT`; explicit
   project precedence is what is asserted now.
 * **Aggregate.** `bench/receipts/verify-20261106T225457Z.json` is **29/29
-  courts pass**, 0 failed, 0 skipped, at WeftFS `132e713`. The two standalone
-  court receipts above were re-generated after the stage-4 docs commit, so they
-  record WeftFS `c283131`; the backend and auth code is unchanged from
-  `132e713`. The new Azure and GCS
+  courts pass**, 0 failed, 0 skipped, at WeftFS `132e713`. The standalone court
+  receipts above were re-generated from committed trees after the aggregate:
+  the GCS one records WeftFS `c283131` and the Azure one `d67855c`; the backend
+  and auth code is unchanged from `132e713`, and the Azure workload root is
+  identical across all three runs. The new Azure and GCS
   auth courts are standalone like `gcs_court`, so they are not counted in that
   29; their own receipts above are the evidence.
 * Repository suites, counted from the aggregate's logs: `rust_store`
@@ -4674,6 +4677,10 @@ token supplied out of band.
 
 ### Losses and non-claims
 
+* **Azure SAS and anonymous are not court-proven.** Only SharedKey is exercised
+  against Azurite. SAS is appended verbatim and anonymous sends no
+  `Authorization`; both are unit-tested for request construction only, so
+  neither is claimed as an accepted credential form on a real deployment.
 * **No live cloud run.** Azure has never been contacted; GCS has never received
   a token exchange. The precise gap is a credential and an account:
   * GCS needs a service-account JSON key with Storage permissions. Provide it

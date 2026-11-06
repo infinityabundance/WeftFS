@@ -1145,9 +1145,13 @@ impl Live {
 fn live_store_round_trips_and_reopens() {
     let Some(live) = live() else { return };
     let container = live.container("live-rt");
-    let backend = live.backend_for(&container);
+    // Measure the endpoint's If-Match form on this container and keep the
+    // result, so the assertion below is about what the probe observed rather
+    // than about the default value.
+    let mut probe_backend = live.backend_for(&container);
+    probe_backend.ensure_layout().expect("layout and probe");
     assert_eq!(
-        backend.if_match_form(),
+        probe_backend.if_match_form(),
         IfMatchForm::AsReturned,
         "Azurite returns quoted ETags and accepts them quoted"
     );
