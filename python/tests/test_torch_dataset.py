@@ -65,14 +65,21 @@ def test_dataset_tensor_shape(tmp_path):
 
 
 def test_torch_is_not_imported_by_the_package_itself(tmp_path):
+    # Use an explicit small root: walking the repository root can cross large
+    # build/cache trees and is not what this test is about.
+    root = _make_tree(tmp_path / "mount")
     script = (
         "import sys; import weftcodec.torch; "
         "print('torch' in sys.modules); "
-        "d = weftcodec.torch.WeftMapDataset('.'); print(len(d))"
+        "d = weftcodec.torch.WeftMapDataset(sys.argv[1]); print(len(d))"
     )
     proc = subprocess.run(
-        [sys.executable, "-c", script], capture_output=True, text=True, check=True
+        [sys.executable, "-c", script, str(root)],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     first = proc.stdout.strip().splitlines()[0]
     # `import weftcodec.torch` must not import the optional dependency.
     assert first == "False", proc.stdout
+    assert proc.stdout.strip().splitlines()[1] == "3", proc.stdout
