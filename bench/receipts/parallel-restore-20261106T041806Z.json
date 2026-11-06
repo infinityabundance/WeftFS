@@ -1,0 +1,459 @@
+{
+  "all_checks_pass": true,
+  "checks": {
+    "all_file_sha256_match_source": true,
+    "all_hash_exact": true,
+    "all_logical_roots_exact": true,
+    "all_materialize_exact": true,
+    "effective_threads_1_2_4": true,
+    "every_run_has_290_tensors": true,
+    "file_sha256_identical_across_repeats": true,
+    "file_sha256_identical_across_thread_counts": true,
+    "reassembled_bytes_988097824": true,
+    "restored_bytes_identical_across_thread_counts": true,
+    "source_sha256_rehashed_in_court": true,
+    "staging_bound_constant": true
+  },
+  "configuration": {
+    "max_inflight_mib": 64,
+    "order": "interleaved by repetition: (t1,t2,t4) x reps",
+    "repetitions_per_thread_count": 3,
+    "single_tensor_runs_per_checkpoint": 1,
+    "thread_counts": [
+      1,
+      2,
+      4
+    ]
+  },
+  "corpus": {
+    "base_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "file_bytes": 988097824,
+    "instruct_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "logical_bytes_per_checkpoint": 988065536,
+    "tensors_per_checkpoint": 290
+  },
+  "court": {
+    "cpus": "4",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024"
+  },
+  "generated_utc": "2026-11-06T04:18:06Z",
+  "label": "single-host bench court, 4 vCPUs, warm cache, no fleet or multi-node claim",
+  "results": {
+    "1": {
+      "base": {
+        "backend_bytes_read": [
+          658230303,
+          658230303,
+          658230303
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 7407.751,
+        "materialize_ms": [
+          7407.751,
+          4802.302,
+          7520.492
+        ],
+        "read_median_ms": 4626.709,
+        "read_ms": [
+          4626.709,
+          4637.1,
+          4602.231
+        ]
+      },
+      "instruct": {
+        "backend_bytes_read": [
+          1199520594,
+          1199520594,
+          1199520594
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 11509.272,
+        "materialize_ms": [
+          11006.468,
+          11509.272,
+          12625.635
+        ],
+        "read_median_ms": 11026.95,
+        "read_ms": [
+          11026.95,
+          10943.67,
+          11199.204
+        ]
+      },
+      "max_inflight_bytes": 67108864,
+      "parallel_materialize_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        }
+      ],
+      "parallel_read_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 1,
+          "threads_requested": 1
+        }
+      ],
+      "peak_rss_kib": [
+        2034584,
+        2035708,
+        2036332
+      ],
+      "peak_rss_median_kib": 2035708,
+      "threads_effective": 1,
+      "threads_requested": 1
+    },
+    "2": {
+      "base": {
+        "backend_bytes_read": [
+          658230303,
+          658230303,
+          658230303
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 3167.936,
+        "materialize_ms": [
+          3133.05,
+          3167.936,
+          3391.816
+        ],
+        "read_median_ms": 2992.449,
+        "read_ms": [
+          2988.851,
+          2992.449,
+          3016.602
+        ]
+      },
+      "instruct": {
+        "backend_bytes_read": [
+          1199520594,
+          1199520594,
+          1199520594
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 7136.472,
+        "materialize_ms": [
+          7899.347,
+          7042.675,
+          7136.472
+        ],
+        "read_median_ms": 7163.226,
+        "read_ms": [
+          7163.226,
+          7140.574,
+          7188.394
+        ]
+      },
+      "max_inflight_bytes": 67108864,
+      "parallel_materialize_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        }
+      ],
+      "parallel_read_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 3,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 2,
+          "threads_requested": 2
+        }
+      ],
+      "peak_rss_kib": [
+        2231816,
+        2290688,
+        2344500
+      ],
+      "peak_rss_median_kib": 2290688,
+      "threads_effective": 2,
+      "threads_requested": 2
+    },
+    "4": {
+      "base": {
+        "backend_bytes_read": [
+          658230303,
+          658230303,
+          658230303
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 2916.86,
+        "materialize_ms": [
+          2894.748,
+          4651.147,
+          2916.86
+        ],
+        "read_median_ms": 2210.063,
+        "read_ms": [
+          2203.354,
+          2247.681,
+          2210.063
+        ]
+      },
+      "instruct": {
+        "backend_bytes_read": [
+          1199520594,
+          1199520594,
+          1199520594
+        ],
+        "materialize_bytes": [
+          988097824,
+          988097824,
+          988097824
+        ],
+        "materialize_median_ms": 5256.826,
+        "materialize_ms": [
+          5256.826,
+          14914.563,
+          5209.086
+        ],
+        "read_median_ms": 5283.321,
+        "read_ms": [
+          5282.831,
+          5327.128,
+          5283.321
+        ]
+      },
+      "max_inflight_bytes": 67108864,
+      "parallel_materialize_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        }
+      ],
+      "parallel_read_stats": [
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        },
+        {
+          "batch_bytes": 272269312,
+          "batches": 4,
+          "max_inflight_bytes": 67108864,
+          "observed_max_inflight_bytes": 272269312,
+          "observed_max_inflight_tasks": 5,
+          "oversized_tasks": 1,
+          "tasks": 290,
+          "threads_effective": 4,
+          "threads_requested": 4
+        }
+      ],
+      "peak_rss_kib": [
+        2260248,
+        2261748,
+        2295512
+      ],
+      "peak_rss_median_kib": 2261748,
+      "threads_effective": 4,
+      "threads_requested": 4
+    }
+  },
+  "revisions": {
+    "weftcodec": "1ee5d907a679841c237846b8760307e081de8792",
+    "weftcodec_go": "d1aab12c4de830cf13bb6d08c685716c9344a65a",
+    "weftfs": "c12ffd267c736f76736c2787a595fa0b027ae0bc",
+    "weftfs_go": "bb15514da460ee32d5de0a82fa1b1e33bd27df4e"
+  },
+  "schema": "weft.parallel-restore.v1",
+  "speedup": {
+    "base_materialize_2_vs_1": 2.3384,
+    "base_materialize_4_vs_1": 2.5396,
+    "base_read_2_vs_1": 1.5461,
+    "base_read_4_vs_1": 2.0935,
+    "instruct_materialize_2_vs_1": 1.6127,
+    "instruct_materialize_4_vs_1": 2.1894,
+    "instruct_read_2_vs_1": 1.5394,
+    "instruct_read_4_vs_1": 2.0871
+  },
+  "store": {
+    "ingest_source": "reused-cached-planner-float",
+    "note": "Reuses the R2 planner store and ingest receipt when present; the ingest step is skipped in that case and this field says so.",
+    "path": "/work/.docker-cache/planner-float/store"
+  }
+}

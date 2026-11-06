@@ -107,6 +107,76 @@ passed / 2 ignored; WeftFS-Go `-race` all packages. One transient
 fully loaded parallel FUSE run; 10/10 standalone repeats and the rerun pass,
 and it is recorded here rather than hidden.
 
+### Parallel reconstruction (R2 addition)
+
+`Store::read_tensors_bounded` (`src/parallel.rs`) and
+`real_model_bench restore --threads N` decode independent tensor objects
+concurrently with `std::thread::scope`. The contract is enforced by
+`tests/parallel_read.rs` (9/9):
+
+* results come back in exact input order for every thread count;
+* decoding is read-only, so bytes and error are functions of the input list
+  alone; on failure the call returns the error for the **lowest failing input
+  index**, every worker is joined, and a decode panic is caught and reported as
+  `Corrupt`;
+* a worker reserves its object's declared size before decoding, so the staged
+  bytes never exceed `max_inflight_bytes`; a task that is larger than the bound
+  on its own waits for the queue to drain and runs alone. This is asserted from
+  the public `ParallelReadStats`, not by inspection;
+* `threads = 0` means 1, the count is capped at `available_parallelism()`, and
+  one effective worker runs the shipped sequential loop unchanged.
+
+Receipt
+[`bench/receipts/parallel-restore-20261106T043524Z.json`](receipts/parallel-restore-20261106T043524Z.json),
+WeftFS `b309999`, bench court (4 vCPUs, 3 GiB, warm cache), 3 repetitions per
+thread count, 64 MiB staging bound:
+
+| operation | 1 thread | 2 threads | 4 threads | 4 vs 1 |
+|---|---:|---:|---:|---:|
+| base read | 4,606.4 ms | 2,981.9 ms | **2,206.4 ms** | **2.09x** |
+| instruct read | 10,966.8 ms | 7,127.8 ms | **5,275.7 ms** | **2.08x** |
+| base materialize | 4,756.1 ms | 3,802.1 ms | 10,987.9 ms | **0.43x** |
+| instruct materialize | 13,943.9 ms | 7,077.3 ms | 5,188.0 ms | 2.69x |
+
+Read is the claim and it reproduces. Across three independent court passes the
+read medians moved by at most 1.3 %: base 4,606-4,627 / 2,982-3,019 /
+2,206-2,210 ms and instruct 10,967-11,027 / 7,128-7,163 / 5,268-5,283 ms for
+1 / 2 / 4 threads. The other two passes are
+[`bench/receipts/parallel-restore-20261106T042730Z.json`](receipts/parallel-restore-20261106T042730Z.json)
+and, from the first pass before the court script inserted a `sync` between
+repetitions,
+[`bench/receipts/parallel-restore-20261106T041806Z.json`](receipts/parallel-restore-20261106T041806Z.json);
+the `sync` only changes how much writeback from one repetition lands inside the
+next one's materialize timer. Backend bytes read are identical for every thread
+count
+(658,230,303 B base, 1,199,520,594 B instruct): the pool adds no I/O, and every
+restored tensor, logical root, and reassembled file SHA-256 is identical
+(`88c14255...0ed342` base, `fdf756fa...88fb7fe` instruct, 290/290 tensors,
+988,097,824 B per file).
+
+Materialize is **not** a claim and is reported because it does not help at 4
+threads in this pass. It decodes through the same pool but writes
+988,097,824 B per checkpoint sequentially, so host writeback dominates the
+timer. The 4-thread medians over the three passes were 2,917 / 2,321 /
+10,988 ms for base (0.43x to 2.59x against one thread) and 5,257 / 10,041 /
+5,188 ms for instruct. In the committed-revision pass the base per-repetition
+values were 12,124.5 / 2,325.5 / 10,987.9 ms, i.e. two of three repetitions hit
+a writeback stall and one did not. Parallel reconstruction currently makes
+materialize **unreliable**, not faster, and that is the honest reading.
+
+Why read stops at 2.09x and not 4x: the 272,269,312 B embedding is 27.6 % of
+the checkpoint and alone exceeds the 64 MiB staging bound, so it decodes while
+the other workers idle. Two-part Amdahl on that split caps 4 threads at
+1 / (0.276 + 0.724 / 4) = 2.19x and 2 threads at 1.57x; the measured 2.09x and
+1.54x are 95 % and 99 % of those caps. The next lever is a frame split into
+block-independent streams so several workers can decode one tensor - not a
+larger pool bound.
+
+Peak RSS is 2,036,324 KiB at one thread, 2,290,452 KiB at two and
+2,261,776 KiB at four (court limit 3 GiB): the pool adds at most ~0.25 GiB on
+this corpus. This subsection is single-host, 4-vCPU, warm-cache; it is not a
+fleet or multi-node claim.
+
 ## R1 update: mode-9 planner, measured decode table, rebasing
 
 Measured on the same corpus (SHA-256 re-verified in court), same court limits.

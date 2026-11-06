@@ -1811,8 +1811,25 @@ cost, not more format coverage.
   `extent_cow::chunk_size_comes_from_the_manifest` failure appeared in the
   first fully loaded parallel FUSE run; 10/10 standalone repeats and the rerun
   passed. It is recorded, not deleted.
-- **Residual:** single host, warm cache; the table is court-bound; no parallel
-  reconstruction; no block-independent coded streams; no Go writer for the
+- **Parallel reconstruction (R2 addition):** `Store::read_tensors_bounded`
+  (`src/parallel.rs`) decodes independent tensors on a bounded
+  `std::thread::scope` pool and returns exact input order for every thread
+  count; the harness gained `--threads` and `--max-inflight-mib`. Read at
+  4 threads is **2,206.4 ms** base and 5,275.7 ms instruct (**2.09x** / 2.08x
+  against one thread, 95-99 % of the Amdahl cap set by the 272 MB embedding,
+  which alone exceeds the staging bound and runs alone). Backend bytes read and
+  every restored byte are identical for all thread counts. Materialize does
+  **not** improve reliably (4-thread base median 10,987.9 ms, 0.43x, in the
+  committed pass; host writeback dominates a sequential 988 MB write). Peak RSS
+  1.94-2.18 GiB (2,036,324-2,290,452 KiB) of the 3 GiB court. Receipt
+  `bench/receipts/parallel-restore-20261106T043524Z.json`, two further passes
+  in the same court, analysis in `bench/RESULTS-real-model.md`. Tests:
+  `tests/parallel_read.rs` 9/9, parent 253 passed / 0 failed, FUSE 287 passed /
+  0 failed / 2 ignored (pre-existing). Single-host, 4-vCPU, warm-cache; no
+  fleet claim.
+- **Residual:** single host, warm cache; the table is court-bound; parallel
+  reconstruction is per-object only (no block-independent streams inside one
+  frame) and does not make materialize reliable; no Go writer for the
   checkpoint/mode-15 paths; no fleet claim.
 
 ## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
