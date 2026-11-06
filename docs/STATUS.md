@@ -1747,7 +1747,7 @@ old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
 - **Rebase dry run (hot instruct):** after 10 reads per tensor (9.88 GB
   logical), threshold 1e9 ns selected 73 of 241 weight-delta objects, all
   `float-tensor`, no writes; e.g. the 272 MB embedding current decode
-  5.375 s/read -> 4.000 s/read, 287,764,224 B independent.
+  5.375 s/read -> 4.000 s/read, 180,547,519 B independent.
 - **Tests:** Rust `cargo test --all-targets` 244 passed / 0 failed / 0 ignored;
   FUSE `cargo test --features fuse --all-targets` 278 passed / 0 failed /
   2 ignored (one earlier FUSE invocation reported a transient failure; two
