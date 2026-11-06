@@ -72,6 +72,11 @@ on-disk footprint is **19.2% larger**: the catalog costs 2,272,401 bytes for
 20,001 members (113 bytes/entry), and both the pack and its catalog segments
 are rewritten when the pack is sealed.
 
+Footprint counts objects, manifests, packs, and catalog segments; advisory
+`indexes/` files are excluded (they are rebuildable and, on the packed path, the
+last commit's index is still buffered in the open pack when the measurement is
+taken).
+
 The 260 packed writes are one 11.8 MiB pack, 256 catalog segments, one catalog
 root compare-and-swap, plus commit/superblock/format publications. A catalog
 segment is republished when any member of it is added, so every seal rewrites
