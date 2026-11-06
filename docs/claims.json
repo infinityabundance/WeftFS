@@ -1,13 +1,13 @@
 [
   {
     "id": "verify_receipt_current",
-    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (27/27 courts pass).",
-    "value": "verify-20261106T141623Z.json",
+    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (28/28 courts pass, incl. ceph_rgw).",
+    "value": "verify-20261106T162208Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261106T141623Z.json",
+    "receipt": "bench/receipts/verify-20261106T162208Z.json",
     "kind": "present"
   },
   {
@@ -3879,5 +3879,61 @@
     ],
     "receipt": null,
     "kind": "absent"
+  },
+  {
+    "id": "r16_verify_includes_ceph",
+    "claim": "The aggregate verification includes the Ceph RGW court.",
+    "value": "ceph_rgw",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T162208Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_verify_skip_semantics",
+    "claim": "A skip is documented as not a pass, in STATUS and the R16 results.",
+    "value": "a skip is not a pass",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r16_verify_aggregate_receipt",
+    "claim": "STATUS, README and the R16 results cite the 28-court aggregate receipt.",
+    "value": "verify-20261106T162208Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T162208Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_verify_ceph_receipt",
+    "claim": "The aggregate run's Ceph court receipt is cited.",
+    "value": "ceph-rgw-20261106T162208Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/ceph-rgw-20261106T162208Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r16_verify_28_courts",
+    "claim": "The aggregate result is recorded as 28/28 with zero skips.",
+    "value": "28/28",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-ceph.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T162208Z.json",
+    "kind": "present"
   }
 ]

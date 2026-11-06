@@ -199,7 +199,25 @@ The same suite still passes against MinIO with the modified client:
   `radosgw-admin` user in the demo image is created with fixed access/secret
   keys on a private bridge with no TLS.
 
-## 7. Reproduce
+## 7. Aggregate coverage (`scripts/verify-all.sh`)
+
+The Ceph court is the **28th court** in the aggregate, so every verification run
+proves the S3 backend against an independent implementation. Its exit status is
+mapped explicitly: `0` = pass, a real failure = fail (the aggregate fails), and
+`78` = skip. Skip is reserved for environment refusals detected before the
+server starts — non-x86_64, no Docker daemon, the pinned image cannot be
+obtained, or the court's private subnet is already in use — and it is recorded
+as `skip` with the court's own reason under `skips` in the verify receipt. The
+rule is explicit: a skip is not a pass. The receipt's `summary` block reports
+`courts`/`passed`/`failed`/`skipped`, and its `receipts` block names this
+court's receipt for the same stamp.
+
+First aggregate run including the court:
+`bench/receipts/verify-20261106T162208Z.json` — **28/28 courts pass, 0 skipped**
+at WeftFS `0e3670a`; Ceph court receipt
+`bench/receipts/ceph-rgw-20261106T162208Z.json`.
+
+## 8. Reproduce
 
 ```sh
 # full: MinIO matrix, RGW court + matrix, side-by-side comparison

@@ -2,16 +2,22 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T141623Z.json` (27/27 courts `pass`, including the
-host-only `claims` documentation gate, spec drift, generated-type drift,
-`conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
-and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `cef37bc`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
-WeftFS-Go `007bf11` (the v0.9.0 version-bump tree; the only later change is this
-citation and the documentation committed with it). The Python court at the same
-tree reports 331 tests, 0 failures, 0 errors, 9 skips
-(`bench/receipts/python-bindings-20261106T142616Z.json`), and the release note is
-`docs/RELEASE-v0.9.0.md`. The earlier
+`bench/receipts/verify-20261106T162208Z.json` (28/28 courts `pass`, 0 skipped,
+including the host-only `claims` documentation gate, spec drift, generated-type
+drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
+context and authenticated-capability cross-language gates, Buck2 CAS, agent
+memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation — and
+`fuzz_diff`), at WeftFS `0e3670a`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
+WeftFS-Go `007bf11`. A court that cannot run in the aggregate's environment
+(non-x86_64, no Docker daemon, the pinned Ceph image unobtainable, or the
+court's private subnet already taken) is recorded as `skip` with its exact
+reason under `skips` in the receipt, and a skip is not a pass; this run had
+none. The v0.9.0 release receipt
+`bench/receipts/verify-20261106T141623Z.json` (27/27 at WeftFS `cef37bc`,
+before `ceph_rgw` joined the aggregate) remains the release evidence, with
+`docs/RELEASE-v0.9.0.md` and the Python court at that tree: 331 tests,
+0 failures, 0 errors, 9 skips
+(`bench/receipts/python-bindings-20261106T142616Z.json`). The earlier
 `verify-20261106T083428Z.json` (27/27 at the R7 shared-mount tree) is retained.
 The previous release receipt,
 `verify-20261106T011444Z.json` (also 27/27), is retained for the v0.8.0 release
@@ -3945,6 +3951,26 @@ lifecycle, SSE); listing pagination exercised at `max-keys=2`, not at the
 RGW; no AWS or third-vendor measurement; no concurrency court beyond two
 writers; no performance claim. The analysis, exact commands, and the raw
 `If-Match` evidence are in `bench/RESULTS-ceph.md`.
+
+### Aggregate coverage
+
+`scripts/verify-all.sh` runs this court as its 28th entry (`ceph_rgw`), so the
+aggregate now proves the S3 backend against an independent implementation on
+every verification run, not only on the dedicated R16 receipts. The court
+exit status is mapped explicitly: `0` is `pass`, a real failure is `fail` and
+fails the aggregate, and exit `78` is `skip` — recorded as `skip` together with
+the court's own reason string under a `skips` object in the verify receipt.
+Skip is reserved for environment refusals detected *before* the server starts
+(non-x86_64, no Docker daemon, the pinned Ceph image cannot be obtained, or the
+court's private subnet is already in use); the rule is that **a skip is not a
+pass**, and the receipt's `summary` block carries `courts`/`passed`/`failed`/
+`skipped` so a skip cannot hide inside a percentage.
+
+The first aggregate run containing this court is
+`bench/receipts/verify-20261106T162208Z.json`: **28/28 courts pass, 0 skipped**
+at WeftFS `0e3670a`, with the Ceph court's own receipt at
+`bench/receipts/ceph-rgw-20261106T162208Z.json` (named in the verify receipt's
+`receipts` block).
 
 Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
 pass (the frozen formats and spec files are untouched by this subphase).
