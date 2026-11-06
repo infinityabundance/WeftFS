@@ -900,9 +900,17 @@ impl Store {
             capabilities.require_conditional_head("a read-write store")?;
         }
         let mut backend = backend_kind.open(&root)?;
-        let format_bytes = backend
-            .read_all(&Key::format())
-            .map_err(|err| Error::corrupt(format!("cannot read FORMAT: {err}")))?;
+        let format_bytes = backend.read_all(&Key::format()).map_err(|err| {
+            // A transport failure is not corruption. Keep the I/O class so an
+            // operator (and the distributed court) can distinguish an
+            // unreachable endpoint from a damaged store; every other failure
+            // to read FORMAT means this is not a usable store.
+            if err.class() == Class::Io {
+                Error::io(format!("cannot read FORMAT: {err}"))
+            } else {
+                Error::corrupt(format!("cannot read FORMAT: {err}"))
+            }
+        })?;
         let format = std::str::from_utf8(&format_bytes)
             .map_err(|_| Error::unsupported_version("FORMAT is not valid UTF-8".to_owned()))?;
         if format != FORMAT_CONTENTS {
