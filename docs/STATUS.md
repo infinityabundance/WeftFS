@@ -21,6 +21,9 @@ recorded in `bench/receipts/buck2-cas-store-correctness-20261105T163919Z.json`,
 with the benchmark in
 `bench/receipts/buck2-cas-store-20261105T163930Z.json` and analysis in
 `bench/RESULTS-buck2-cas-store.md`.
+The Q5 PyTorch Distributed Checkpoint adapter receipt is
+`bench/receipts/pytorch-dcp-20261106T000734Z.json` (real torch 2.15.0+cpu,
+topology matrix, 8 x 4 MiB bench); analysis in `docs/PYTORCH-DCP.md`.
 The
 twelve-step showcase receipt is
 `bench/receipts/showcase-20261103T171440Z.json` (twelve of twelve `pass`).
@@ -2201,3 +2204,54 @@ Implemented in Rust on `staging` at `8683ecc` (code commit); not pushed.
   power loss. The writer lock is a lease (default 900 s; court 2 s); a paused
   writer longer than the lease can lose it. No AWS, GCS, 3FS, cloud,
   multi-node, or fleet claim.
+
+## Q5 — PyTorch Distributed Checkpoint adapter (2026-11-06)
+
+Implemented on `staging` at `d732a9631d0fae395ddacf36d99e816a214dc289`
+(code `464b38f`; one test-only follow-up). The Python court now carries
+**torch 2.15.0+cpu** (official CPU wheel, 209.5 MB as downloaded). Real
+`torch.distributed.checkpoint.save`/`load` ran; this is not a contract-only
+fixture and no stock DCP storage plugin was used.
+
+- **Adapter.** `python/weftcodec/dcp.py` implements
+  `WeftStorageWriter`/`WeftStorageReader` with `reset`,
+  `write_metadata`/`write_data`/`finish`, `storage_meta`, `read_metadata`,
+  `read_data`, `set_up_storage_*`, the plan hooks, and
+  `validate_checkpoint_id`. Tensor bytes become one canonical
+  `weft.checkpoint.v1` checkpoint through `weftfs checkpoint write`; DCP
+  protocol metadata is canonical WCB (`weft.dcp.metadata.v1`) at
+  `/checkpoints/<name>/dcp.metadata`. Every content root, dtype and shape is
+  cross-checked against the Rust manifest on write and after every restore.
+  A Rust-written plain-safetensors checkpoint is read back through synthesised
+  metadata (`metadata_source == "manifest"`).
+- **Topology.** `topology=n` stores n-way axis splits; a non-divisible extent is
+  rejected by the Rust CLI ("no silent padding"). The test writes `16x8`,
+  `16` and `8x4` tensors 8-way, loads into a fresh module, and restores each
+  entry through `--topology 8|4|1`; 3 tensors x 3 topologies were byte-identical
+  with the same content root (`10 passed`, `python/tests/test_dcp.py`).
+- **Async.** `save_checkpoint_async` runs `dcp.save` on a ThreadPoolExecutor
+  worker with an explicit `staging_bytes` bound. Bench: submit 0.72 ms
+  (median), completion 1,329.0 ms vs synchronous 1,316.5 ms. Tensors are copied
+  through host memory; it is **not a GPU-direct path**.
+- **Court.** Built wheel
+  `bench/receipts/python-bindings-20261106T000719Z.json`: 191 tests, 0 failures,
+  62 skipped. A superseded failing receipt
+  `python-bindings-20261106T000301Z.json` is retained: the newly-enabled
+  dataset import test walked the repository root across build caches and was
+  OOM-killed; the test now uses a bounded fixture root.
+- **Bench.** `bench/receipts/pytorch-dcp-20261106T000734Z.json` (revision
+  `d732a96`, `weft/python-court:1`, kernel `7.3.1-1-cachyos`, 3 GiB / 4 CPUs /
+  1024 pids, single host, CPU, synthetic 8 x 4 MiB f32, no GPU claim). Full save
+  1,223.6 ms; full load 152.2 ms; single-tensor load 67.2 ms; staging peak
+  4,194,304 B; peak RSS 381,424 KiB; WeftFS physical 31,187,325 B vs
+  `torch.save` 33,557,979 B (0.9294); mode-10 tensor-sharded save 913.3 ms /
+  32,826,050 B. Rust `checkpoint verify` 8 tensors and `verify --full` ok, no
+  problems. The superseded `pytorch-dcp-20261106T000232Z.json` is retained.
+- **Docs.** `docs/PYTORCH-DCP.md` (API, metadata schema, exactness table,
+  topology evidence, bench, non-claims) and the DCP section in
+  `python/README.md`.
+- **Not done / residual.** No GPU-direct path, no multi-rank cluster run, no
+  media power-loss claim. `BYTE_IO` objects under a split topology need
+  divisible lengths (reject, never pad). Reads import restored containers into
+  the store. Save/load are ~141x/~30x slower than one `torch.save`/`torch.load`
+  file on this fixture, while writing 7.1 % fewer physical bytes.

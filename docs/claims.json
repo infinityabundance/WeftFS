@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87×",
+    "value": "7.87\u00d7",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -528,7 +528,7 @@
   {
     "id": "p2_delta_restore_loss",
     "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-    "value": "44.0×",
+    "value": "44.0\u00d7",
     "locations": [
       "bench/RESULTS-float-tensor-real.md",
       "docs/STATUS.md"
@@ -1121,7 +1121,7 @@
   {
     "id": "writeback_p50_gain",
     "claim": "README.md and docs/STATUS.md record the measured Rust merkle write-back p50 gain.",
-    "value": "27.3 ms to 8.8 µs",
+    "value": "27.3 ms to 8.8 \u00b5s",
     "locations": [
       "README.md",
       "docs/STATUS.md"
@@ -1143,7 +1143,7 @@
   {
     "id": "tensor_tiles_100row_speedup",
     "claim": "STATUS and the Q2 results record the measured 100-row slice speedup.",
-    "value": "10.8×",
+    "value": "10.8\u00d7",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1154,7 +1154,7 @@
   {
     "id": "tensor_tiles_1row_speedup",
     "claim": "STATUS and the Q2 results record the measured 1-row slice speedup.",
-    "value": "40.4×",
+    "value": "40.4\u00d7",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1196,7 +1196,7 @@
   {
     "id": "mode15_reserved16",
     "claim": "The decoder guide records that modes 16-127 are reserved after mode 15 was allocated.",
-    "value": "Mode values 16–127",
+    "value": "Mode values 16\u2013127",
     "locations": [
       "docs/WRITE-YOUR-OWN-DECODER.md"
     ],
@@ -1388,6 +1388,93 @@
       "docs/store-status.md"
     ],
     "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q5_dcp_receipt",
+    "claim": "docs cite the Q5 PyTorch DCP adapter bench receipt.",
+    "value": "pytorch-dcp-20261106T000734Z.json",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_real_torch",
+    "claim": "docs record that real PyTorch 2.15.0+cpu ran the adapter in the python court.",
+    "value": "torch 2.15.0+cpu",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_dcp_tests",
+    "claim": "docs record the DCP test module result.",
+    "value": "10 passed",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q5_python_court",
+    "claim": "docs record the wheel-built python court test count.",
+    "value": "191 tests",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T000719Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_no_gpu_direct",
+    "claim": "docs state that the adapter is not a GPU-direct path.",
+    "value": "not a GPU-direct path",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q5_topology_matrix",
+    "claim": "docs record the 8/4/1 topology re-layout check.",
+    "value": "--topology 8|4|1",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q5_failing_receipt_retained",
+    "claim": "docs record the retained failing python receipt from the unbounded dataset walk.",
+    "value": "python-bindings-20261106T000301Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T000301Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_physical_ratio",
+    "claim": "docs record the WeftFS/torch.save physical-byte ratio.",
+    "value": "0.9294",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
     "kind": "present"
   }
 ]
