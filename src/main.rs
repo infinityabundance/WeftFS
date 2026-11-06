@@ -2564,7 +2564,20 @@ fn run(cli: Cli) -> Result<()> {
                 calibration: calibration_table.clone(),
                 strategy_hint: match strategy.as_deref() {
                     None => None,
-                    Some(text) => parse_tensor_strategy(text)?,
+                    Some(text) => match parse_tensor_strategy(text)? {
+                        None => None,
+                        Some(hint) => {
+                            if !hint.is_independent() {
+                                return Err(Error::invalid_argument(format!(
+                                    "rebase requires a standalone strategy (raw, zstd, \
+                                     float-tensor, tensor-sharded, tensor-tiled); `{}` carries a \
+                                     dependency and cannot be the rebase target",
+                                    hint.as_str()
+                                )));
+                            }
+                            Some(hint)
+                        }
+                    },
                 },
                 max_objects,
                 dry_run,

@@ -316,7 +316,9 @@ impl AccessCounts {
         // A consumed counter must not be replayed from the journal, so a flush
         // writes the authoritative map as a new snapshot epoch.
         if previous > 0 {
-            self.pending.remove(&id);
+            // Keep a zero-delta pending entry so `flush` cannot early-return:
+            // a pure consumption must still publish the compacted snapshot.
+            self.pending.insert(id, 0);
             self.pending_reads = self.pending_reads.saturating_add(1);
             // The published journal still contains this object's old deltas;
             // only a fresh snapshot can express a consumed counter.
@@ -407,5 +409,40 @@ mod tests {
         assert_eq!(counts.consume(id), 2);
         assert_eq!(counts.reads(id), 0);
         assert!(counts.entries().is_empty());
+        // A pure consumption must keep the flush guard open.
+        assert!(counts.has_pending());
+    }
+
+    #[test]
+    fn pure_consumption_is_persisted_across_reopen() {
+        let dir = std::env::temp_dir().join(format!(
+            "weft-access-consume-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::create_dir_all(dir.join("tmp")).unwrap();
+        std::fs::create_dir_all(dir.join("access")).unwrap();
+        let mut backend = crate::backend::LocalBackend::new(&dir);
+        let id = Hash32::from_bytes([7u8; 32]);
+        let mut counts = AccessCounts::default();
+        counts.note_read(id);
+        counts.note_read(id);
+        assert!(counts.flush(&mut backend).unwrap());
+        assert_eq!(AccessCounts::load(&backend).reads(id), 2);
+
+        let mut loaded = AccessCounts::load(&backend);
+        assert_eq!(loaded.consume(id), 2);
+        assert!(
+            loaded.flush(&mut backend).unwrap(),
+            "a pure consumption must write the compacted snapshot"
+        );
+        let reloaded = AccessCounts::load(&backend);
+        assert_eq!(reloaded.reads(id), 0);
+        assert!(reloaded.entries().is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

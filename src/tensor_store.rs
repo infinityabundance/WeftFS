@@ -151,7 +151,8 @@ impl TensorStrategy {
         )
     }
 
-    /// True when a representation stands alone (no base frame).
+    /// True when a representation stands alone (no base frame). Rebase
+    /// requires one of these; a delta is the thing being rebased away.
     pub fn is_independent(self) -> bool {
         !self.uses_dependency()
     }
