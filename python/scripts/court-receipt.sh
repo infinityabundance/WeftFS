@@ -7,6 +7,14 @@ set -Eeuo pipefail
 
 cd /work
 
+# Optional Orbax court target. The wheel install stays --no-deps, so JAX/Orbax
+# are supplied from the court cache only when the Orbax court installed them.
+orbax_target="/work/.docker-cache/py-orbax"
+if [[ -d "$orbax_target" ]]; then
+  export PYTHONPATH="$orbax_target${PYTHONPATH:+:$PYTHONPATH}"
+fi
+export WEFT_ORBAX_TARGET="$orbax_target"
+
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 receipt="bench/receipts/python-bindings-${stamp}.json"
 log="bench/receipts/python-bindings-${stamp}.log"
@@ -85,6 +93,42 @@ def junit_counts(path):
     }
 
 
+def optional_dependencies():
+    result = {
+        "orbax_target": os.environ.get("WEFT_ORBAX_TARGET"),
+        "jax": None,
+        "jaxlib": None,
+        "orbax_checkpoint": None,
+        "tensorstore": None,
+        "numpy": None,
+    }
+    try:
+        import jax
+        result["jax"] = getattr(jax, "__version__", None)
+        result["jaxlib"] = getattr(getattr(jax, "lib", None), "__version__", None)
+    except Exception as exc:
+        result["jax_error"] = "%s: %s" % (type(exc).__name__, exc)
+    try:
+        import orbax.checkpoint
+        result["orbax_checkpoint"] = getattr(
+            orbax.checkpoint, "__version__", None
+        )
+    except Exception as exc:
+        result["orbax_error"] = "%s: %s" % (type(exc).__name__, exc)
+    for name in ("tensorstore", "numpy"):
+        try:
+            module = __import__(name)
+            value = getattr(module, "__version__", None)
+            if not value:
+                from importlib.metadata import version as _dist_version
+
+                value = _dist_version(name)
+            result[name] = value
+        except Exception:
+            pass
+    return result
+
+
 env = os.environ
 wheel_name = env.get("WEFT_WHEEL_NAME") or ""
 # Derive the distribution version from the built wheel filename so this receipt
@@ -144,6 +188,7 @@ receipt = {
         "junit": junit_counts(env.get("WEFT_JUNIT_PATH", "/nonexistent")),
         "log": env.get("WEFT_LOG_PATH"),
     },
+    "optional_dependencies": optional_dependencies(),
     "commands": [
         "cp -r /work/python /tmp/weft-python-build",
         "python -m build --wheel --no-isolation --outdir /tmp/weft-dist /tmp/weft-python-build",

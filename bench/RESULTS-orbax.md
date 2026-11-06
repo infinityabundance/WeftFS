@@ -29,7 +29,9 @@ from PyPI on 2026-11-06:
 
 The install log is `bench/receipts/orbax-20261106T152612Z.install.log`. The court
 unit tests are `bench/receipts/orbax-20261106T152612Z.tests.log`: **18 passed**.
-The harness checked **13/13** conditions and wrote `status: ok`.
+The installed versions are `jax 0.12.0.1` and `orbax-checkpoint 0.12.9`. The
+harness checked **13/13** conditions and wrote
+`status: ok`.
 
 ## Workload
 
@@ -88,7 +90,8 @@ The fair comparison is the store directory **immediately after publish**:
 superblock/index/lock, and the canonical `orbax.metadata` object) versus Orbax's
 **50,644,895 B** (13 files). That is **+0.44 %** for WeftFS on this workload.
 Both are close to the 58,765,352 logical bytes because random floats are barely
-compressible.
+compressible. All **11/11 leaves exact** on both sides (dtype, shape, and exact
+bytes); the receipt records each leaf's SHA-256.
 
 `weftfs checkpoint restore` always imports the restored container into the store
 under `/dcp-reads/<uuid>` (the same CLI verb the DCP adapter uses). After the
@@ -153,8 +156,8 @@ part of the checkpoint-byte comparison above.
 ## What is not covered
 
 * **CPU only.** Eight forced CPU devices in one process; **no TPU and no GPU**.
-* **Single process, single host.** No `jax.distributed.initialize`, no
-  multi-host run, and no real distributed JAX.
+* **Single process, single host.** No `jax.distributed.initialize`, no multi-host run,
+  and no real distributed JAX.
 * Orbax's checkpoint is OCDBT/TensorStore on the local filesystem; WeftFS is a
   separate on-disk format. This compares two implementations, not one
   interchangeable checkpoint directory.

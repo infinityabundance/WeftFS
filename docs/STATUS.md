@@ -3716,3 +3716,131 @@ and fixed clock.
 * The crash proxy is a process-fault proxy (the CLI is aborted by signal), not
   a physical power-loss test; each phase waits out the 2 s lock lease before
   reopening, which the receipt records.
+
+## Subphase R15 — Orbax/TensorStore adapter (2026-11-06)
+
+`python/weftcodec/orbax.py` adds an Orbax-compatible `AsyncCheckpointHandler`
+over the same canonical `weft.checkpoint.v1` checkpoint and Rust CLI path as the
+DCP adapter. The importable module is `weftcodec.orbax`. It flattens a JAX
+PyTree with
+`jax.tree_util.tree_flatten_with_path`, writes the leaves into one safetensors
+staging container, ingests it with `weftfs checkpoint write`, and records a
+canonical WCB `weft.orbax.v1` record binding each leaf's path, path-key types,
+dtype, shape, total element bytes, content root, and logical root. The store
+record lives at `/checkpoints/<name>/orbax.metadata`; the Orbax directory
+carries a small canonical `weft.orbax.wcb` locator naming the store, checkpoint,
+storage generation, and the metadata record's BLAKE3 root. No new wire format
+was introduced: both records are ordinary canonical WCB application records and
+the checkpoint is unchanged.
+
+Restore flattens the target PyTree, requires exact path/dtype/shape agreement,
+re-reads the Rust manifest, restores the requested entries through
+`weftfs checkpoint restore`, re-verifies every leaf's content root, and rejects
+missing, extra, or mismatched leaves (`MissingLeaf`, `UnexpectedLeaf`,
+`MismatchedLeaf`). `partial_restore=True`, a direct `restore_leaf(path)`, and a
+requested JAX target sharding are supported; a Rust-side
+`restore_topology` proof (`--topology N`) is independent of the JAX placement.
+The asynchronous path returns immediately and starts the save on Orbax's
+background commit thread only after Orbax has created its temporary directory;
+`staging_bytes` bounds the staging container and the restored bytes. Real
+`orbax.checkpoint.Checkpointer`, `AsyncCheckpointer`, and `CheckpointManager`
+all drive the handler in tests.
+
+### Installation evidence
+
+JAX and Orbax were installed **inside the python court** with `pip --target`
+into `/work/.docker-cache/py-orbax`; the image was not modified. The install
+succeeded from PyPI on 2026-11-06: `jax 0.12.0.1`, `jaxlib 0.12.0.1`,
+`orbax-checkpoint 0.12.9`, `tensorstore 0.1.86`, `numpy 2.5.4`. The exact install
+command, status, and tail are in
+`bench/receipts/orbax-20261106T152612Z.install.log` and the receipt's `install`
+object. The adapter tests in that court were **18 passed**
+(`orbax-20261106T152612Z.tests.log`). The measured harness checked **13/13**
+conditions and wrote `bench/receipts/orbax-20261106T152612Z.json` with
+`status: ok`. The Python court receipt
+`bench/receipts/python-bindings-20261106T153054Z.json` records **349 tests / 9
+skipped** (340 passed, 0 failures, 0 errors) and the four optional dependency
+versions.
+
+### Workload and measured comparison
+
+One deterministic 8-way sharded PyTree on a forced 8-device CPU mesh
+(`XLA_FLAGS=--xla_force_host_platform_device_count=8`): 11 leaves,
+58,765,352 logical bytes, dtypes bf16/f16/f32/i8/u8/i32, random values from a
+fixed PRNG seed. Orbax's own side is
+`PyTreeCheckpointHandler(use_ocdbt=True, use_compression=True)` under real
+`AsyncCheckpointer`; the WeftFS side is `WeftOrbaxHandler` under the same
+orchestrator.
+
+| metric | Orbax OCDBT | WeftFS Orbax adapter | delta |
+|---|---:|---:|---:|
+| save pause (ms) | 10.273 | 1.017 | -9.256 (deferred work) |
+| total save (ms) | 79.631 | 1,770.713 | +1,691.082 (**22.2x**) |
+| full restore (ms) | 21.243 | 2,690.338 | +2,669.095 (**126.7x**) |
+| single-leaf restore (ms) | 5.248 | 380.432 | +375.184 (**72.5x**) |
+| checkpoint physical bytes | 50,644,895 | 50,866,816 | +221,921 (**+0.44 %**) |
+| physical / logical | 0.861816 | 0.865592 | +0.003776 |
+| physical files | 13 | 189 | +176 |
+| exact leaves | 11/11 | 11/11 | 0 |
+| peak process RSS (KiB) | — | 1,693,668 | includes JAX + both stores |
+
+The physical comparison is the store immediately after publish, excluding the
+restored-container imports. The CLI's `checkpoint restore` imports each
+restored container under `/dcp-reads/<uuid>`; repeated restores grew the store
+by **67,615,378 B** in this run (50,866,816 -> 118,482,194 B). That overhead is
+reported separately and is not part of the checkpoint-byte comparison.
+
+### Exactness, topology, and Rust verification
+
+All **11/11 leaves exact** on both sides: dtype, shape, and SHA-256 of the exact
+bytes. The Rust manifest, the canonical metadata record, and every leaf content
+root and logical root agree. `checkpoint verify` verified 11 tensors;
+`verify --full` was **ok** immediately after save (generation 3) and **ok**
+after all restores (generation 14, 95 objects, 3,719 chunks, 95 manifests).
+
+A requested 2-device `NamedSharding` restore target is honoured by the WeftFS
+adapter (`requested_sharding_honored: true`) with 11/11 exact leaves. Orbax
+0.12.9 restored with the saved 8-device sharding and emitted its own warning
+(`requested_sharding_honored: false`) but was still 11/11 exact; that is an
+Orbax limitation on this path, not a WeftFS loss. The Rust-side topology proofs
+`--topology 8` and `--topology 2` were both exact (242.785 ms and 253.270 ms).
+
+### Every measured loss
+
+* Total save **22.2x slower** (1,770.7 vs 79.6 ms); the Rust
+  `checkpoint write` command alone was 1,701.4 ms because the default `zstd`
+  shard strategy is slow on incompressible random weights.
+* Full restore **126.7x slower** (2,690.3 vs 21.2 ms); the CLI process reopens
+  the store, decodes shards, and imports a restored container.
+* Single-leaf restore **72.5x slower** (380.4 vs 5.2 ms) for the same reasons.
+* Physical bytes **+0.44 %** (+221,921 B) and 189 files vs 13; the store also
+  carries manifests, commits, indexes, and the metadata object.
+* Restored-container imports add **67,615,378 B** (`/dcp-reads/...`) across the
+  restores in this run.
+* The adapter writes an extra full-size safetensors staging container before
+  the Rust CLI ingests it, then removes it.
+* The smaller **save pause** is a scheduling effect (work deferred to Orbax's
+  background commit thread), not a throughput win; total save is 22.2x slower.
+* Peak process RSS 1,693,668 KiB (~1.62 GiB) includes JAX, Orbax, TensorStore,
+  the source tree, both restored trees, and the store; it is not an isolated
+  adapter number.
+
+### Non-claims and gates
+
+**CPU only** (eight forced CPU devices in one process); **no TPU and no GPU**.
+**Single process**, single host; **no multi-host** and no true distributed JAX.
+The Orbax checkpoint is OCDBT/TensorStore and the WeftFS checkpoint is a
+separate on-disk format; this is not file-level interoperability. Unexercised
+Orbax features include Zarr3, per-leaf `save_args`/`restore_args`, transforms,
+custom metadata, step-metadata contents, retention/deletion internals,
+emergency checkpointing, and multi-axis meshes. Supported leaf dtypes are only
+the exact WEFT-TENSOR v1 set; bool, float8, complex, and unsigned 16/32/64-bit
+arrays are rejected, never coerced. There is no process-crash, power-loss, or
+media-failure court for this adapter, no Go-side Orbax adapter, and no fleet or
+production claim. The workload is synthetic random weights, one run, warm
+caches; the results in `bench/RESULTS-orbax.md` are the measured record and
+include every loss above.
+
+Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
+pass, and the Python court receipt is
+`bench/receipts/python-bindings-20261106T153054Z.json`.

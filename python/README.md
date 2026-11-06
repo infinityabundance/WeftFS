@@ -14,10 +14,12 @@ conformance vectors.
 pip install dist/weftcodec-0.9.0-py3-none-any.whl
 # with the optional dataset extra
 pip install "dist/weftcodec-0.9.0-py3-none-any.whl[torch]"
+# with the optional JAX/Orbax adapter extra
+pip install "dist/weftcodec-0.9.0-py3-none-any.whl[orbax]"
 ```
 
-Dependencies: `blake3`, `zstandard`. `torch` is optional and is only imported
-when a tensor is requested.
+Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
+are optional and are only imported by their adapter modules.
 
 > **PyPI publication requires an API token we do not have.** The wheel is built
 > in the Docker court and attached to the GitHub release; it is not published to
