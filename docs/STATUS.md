@@ -2311,15 +2311,15 @@ real ~1,061-file bundle.
   (same `crypto/ed25519` path) and `cmd/verify-ed25519` verified the Rust
   signature over the real manifest digest: `VERIFY OK`; a changed digest
   produced `VERIFY FAIL`. This was run in the Go court.
-- **Bench** (`bench/receipts/signed-bundles-20261106T003902Z.json`, raw log
-  beside it; single host, deterministic benchmark-only keys, revision
-  `9fc1862`, kernel `7.3.1-1-cachyos`, 3 GiB / 4 CPUs / 1024 pids):
-  1,061 payload files, 1,136 tar entries. Signed package 19,600 ms; unsigned
-  12,000 ms. Pinned-key verify 9,015 ms; unsigned verify 9,059 ms. Signature
-  64 raw bytes (129-byte hex file), public key 65 bytes, manifest 128,412 bytes;
+- **Bench** (`bench/receipts/signed-bundles-20261106T004952Z.json`, raw log
+  beside it; single host, clean worktree at revision `facfb4a`, deterministic
+  benchmark-only keys, kernel `7.3.1-1-cachyos`, 3 GiB / 4 CPUs / 1024 pids):
+  1,062 payload files, 1,137 tar entries. Signed package 19,659 ms; unsigned
+  12,164 ms. Pinned-key verify 9,044 ms; unsigned verify 9,070 ms. Signature
+  64 raw bytes (129-byte hex file), public key 65 bytes, manifest 128,519 bytes;
   raw metadata added (manifest + signature + public key − `UNSIGNED.txt`)
-  128,314 bytes. The observed compressed bundle delta was −2,534 bytes because
-  the two runs have different timestamps and one has `UNSIGNED.txt`; it is not
+  128,421 bytes. The observed compressed bundle delta was −85 bytes because the
+  two runs have different timestamps and one has `UNSIGNED.txt`; it is not
   attributable to signing. All 13 rejection/acceptance cases passed, including
   the Go checks and the provenance demo.
 - **Non-claims.** No certificate authority, no transparency log, no key

@@ -104,7 +104,7 @@ allows forged bundles under that key.
 
 Evidence: `tests/signed_bundle.rs` (11 tests), the Go cross-check
 `WeftCodec-Go/cmd/verify-ed25519`, and
-`bench/receipts/signed-bundles-20261106T003902Z.json`.
+`bench/receipts/signed-bundles-20261106T004952Z.json`.
 
 ---
 
