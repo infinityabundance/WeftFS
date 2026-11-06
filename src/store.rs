@@ -6471,7 +6471,7 @@ impl Store {
     /// only. It does not include commit files, checkpoints, superblock slots,
     /// advisory index segments, or blobs retained solely by a snapshot. This is
     /// a diagnostic for benchmarks and operators, not a format feature.
-    pub fn retained_blob_bytes(&mut self) -> Result<u64> {
+    pub fn retained_blob_bytes(&self) -> Result<u64> {
         let mut index: BTreeMap<Hash32, u64> = BTreeMap::new();
         let mut seen: BTreeSet<Hash32> = BTreeSet::new();
         let manifests: Vec<Hash32> = self
