@@ -1,0 +1,88 @@
+== blob/commit plane court ==
+utc=20261106T110154Z
+court_image=weft/bench-court:1
+court_image_id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+memory=3g cpus=4 pids=1024
+revision_weftfs=753e9f518745ca91b04fd1eca8de8999a6062813
+s3_endpoint=http://weft-s3-minio-1927702:9000
+s3_server=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:3820:8
+     |
+3820 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:3827:8
+     |
+3827 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:3844:7
+     |
+3844 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:3846:4
+     |
+3846 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:3879:4
+     |
+3879 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+   Compiling weftfs v0.8.0 (/work)
+    Finished `release` profile [optimized] target(s) in 0.82s
+     Running tests/planes.rs (.docker-cache/target-rust/release/deps/planes-34e524f025218040)
+
+running 14 tests
+test commit_plane_without_conditional_update_is_refused ... ok
+test local_blobs_s3_commits_match_the_single_backend_store ... ok
+test local_planes_are_probed_on_a_writable_open ... ok
+test nested_splits_are_refused ... ok
+test object_planes_are_probed_and_declare_conditional_head ... ok
+test plane_keys_route_to_the_named_plane ... ok
+test s3_blobs_local_commits_match_the_single_backend_store ... ok
+test s3_split_crash_proxy_yields_old_or_new ... ok
+test split_crash_proxy_yields_old_or_new ... ok
+test split_local_planes_match_the_single_backend_store ... ok
+test split_publication_uses_one_head_compare_and_swap ... ok
+test split_refuses_a_blob_plane_without_atomic_publish ... ok
+test split_refuses_a_commit_plane_without_conditional_update ... ok
+test split_report_lists_planes_in_store_info ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s
+
+---- planes test summary ----
+test commit_plane_without_conditional_update_is_refused ... ok
+test local_blobs_s3_commits_match_the_single_backend_store ... ok
+test local_planes_are_probed_on_a_writable_open ... ok
+test nested_splits_are_refused ... ok
+test object_planes_are_probed_and_declare_conditional_head ... ok
+test plane_keys_route_to_the_named_plane ... ok
+test s3_blobs_local_commits_match_the_single_backend_store ... ok
+test s3_split_crash_proxy_yields_old_or_new ... ok
+test split_crash_proxy_yields_old_or_new ... ok
+test split_local_planes_match_the_single_backend_store ... ok
+test split_publication_uses_one_head_compare_and_swap ... ok
+test split_refuses_a_blob_plane_without_atomic_publish ... ok
+test split_refuses_a_commit_plane_without_conditional_update ... ok
+test split_report_lists_planes_in_store_info ... ok
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s
+    Finished `release` profile [optimized] target(s) in 0.02s
+planes_bench: receipt bench/receipts/planes-20261106T110154Z.json
+planes_bench: exactness match=true
+planes receipt: bench/receipts/planes-20261106T110154Z.json
+raw log: bench/receipts/planes-20261106T110154Z.log
+65181a5cd013872c9ea6fb7deb9d3dc77764d0f354ec54aac2139767ca0e5147  bench/receipts/planes-20261106T110154Z.json
+658be1d430c354f0ae722b3381e4f2f758714befed7b03ccce2558d6302e9d18  bench/receipts/planes-20261106T110154Z.log
+9d7bb4e89842d7af6e67c496d05726e54135b758999cc0cbd7c4efbe9457cf2c  bench/receipts/planes-20261106T110154Z.tests.txt

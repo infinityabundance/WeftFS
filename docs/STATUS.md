@@ -3104,3 +3104,114 @@ insert, and collapse paths refuse rather than rewrite; the writer bounds are
 library options, not CLI flags; coalescing can inflate `overlay_bytes`; a
 fresh-process read pays chain resolution; the court is one host with a warm
 page cache and one synthetic workload; no physical power loss or fleet claim.
+
+## Subphase R10 — blob and commit planes (2026-11-06)
+
+`StorageBackend` used to mix immutable content bytes with POSIX-shaped control
+state (`write_at` into the superblock, `sync_dir`, an exclusive lock, in-place
+zero-fill). It worked for one local filesystem while blocking the next two
+programme items: physical object packs need a non-directory metadata plane, and
+distributed backends need a conditional-head publication contract rather than
+an in-place 4 KiB write.
+
+R10 splits the contract into `BlobPlane` (immutable bytes: `get`, `get_range`,
+`put_if_absent`, `delete`, `head_part` probe, `list`) and `CommitPlane`
+(versioned control state: `read_control`, `compare_exchange`,
+`compare_exchange_head`, `load_head`, `probe`), keeps `StorageBackend` as the
+store's one I/O adapter, and routes each `Key` to a plane through
+`CompositeBackend`. `BlobPlane` and `CommitPlane` are implemented for
+`LocalBackend`, `ObjectBackend`, and `S3Backend` by delegating to the existing
+primitives, so the plane contract and the legacy contract cannot drift.
+
+**No on-disk format change.** The key layout, commit-file bytes, two-slot 8 KiB
+superblock, publication order, and every content identity are unchanged, and
+all pre-existing tests pass unmodified.
+
+Capabilities are **probed**, not declared. A writable open runs a blob probe
+(create-once publication, exact length, a 17-byte ranged read, delete) and a
+commit probe (create-once CAS, matching CAS, and a **stale** CAS that must be
+rejected with `Busy`). A probe may only refute a declared capability, never
+upgrade one; a declared-absent capability is skipped and refused where the
+store needs it. Durability stays an attested property of the publication
+primitive — no probe can prove media durability without power loss, and none is
+claimed. Read-only opens never probe and never write.
+
+The probe result is kept on the handle (`Store::plane_probes`) and is recorded
+in the court receipt. A writable open now also refuses a backend without
+conditional head publication (`conditional_head`), which is the contract a
+distributed metadata engine must satisfy.
+
+### Split configuration (opt-in; the default is unchanged)
+
+```
+weftfs --blob-backend s3    --commit-backend local --store DIR ...
+weftfs --blob-backend local --commit-backend s3    --blob-root DIR --store DIR ...
+weftfs --blob-backend local --commit-backend local --blob-root DIR --store DIR ...
+```
+
+Omitted flags mean "same as `--backend`", so the historical layout is the
+default and is never silently changed. `BackendKind::split` refuses nesting.
+`weftfs info --json` reports `"backend"` and a `"planes"` object with both
+planes' capabilities. A split is refused before touching disk when the blob
+plane lacks `atomic_publish`/`durable_fsync` (a half-written manifest or chunk
+would break exactness) or the commit plane lacks
+`atomic_publish`/`conditional_head`/`durable_fsync` (a torn or overwritten head
+would make a commit ambiguous). The S3 commit plane is expressible because S3
+already has `If-None-Match`/`If-Match`; the court runs it.
+
+### Evidence
+
+* `cargo test --release --all-targets` -> **350 passed / 0 failed** (83 test
+  binaries `ok`), including `tests/planes.rs` 14/14.
+* `cargo test --release --features fuse --all-targets` -> **392 passed / 0 failed / 2 ignored** (the two pre-existing `#[ignore]`s), 83 binaries `ok`.
+* `bash scripts/docker-court.sh bench "cd /work && bash bench/scripts/planes_court.sh"`
+  -> 14/14 plane tests, receipt `bench/receipts/planes-20261106T110054Z.json`
+  (local layout only; the S3 layouts are recorded as skipped with the reason).
+* `bash scripts/s3_court.sh --planes` -> 14/14 plane tests and **4/4 layouts**
+  with `exactness.match = true`, receipts
+  `bench/receipts/planes-20261106T110154Z.json` and
+  `bench/receipts/planes-20261106T110216Z.json` (independent repeat), court
+  receipts `bench/receipts/s3-court-20261106T110154Z.json` /
+  `...T110216Z.json`.
+* `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass (see the
+  claim entries; no spec text changed, because no wire format changed).
+
+All four layouts produced the identical content root
+`7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470`, generation
+`145`, 6,291,456 verified bytes, and digest
+`74d54de57fd438a492b7966810ca4a631cb7eb9cc23b7e20da8f4f54d1bf5b59`:
+single local, single S3, S3-blobs/local-commits, and local-blobs/S3-commits.
+
+Create / 96-write / full-read medians, run 1 (run 2 in parentheses):
+local/local 5.90 (5.84) / 14.06 (14.21) / 3.24 (3.30) ms;
+s3/s3 129.90 (131.52) / 286.44 (287.32) / 30.03 (29.99) ms;
+s3-blobs/local-commits 98.38 (97.75) / 220.68 (221.37) / 31.31 (36.96) ms;
+local-blobs/s3-commits 55.68 (57.30) / 117.49 (119.32) / 3.37 (3.44) ms.
+Per-plane request counts and bytes, recoveries, peak RSS, and every loss are in
+[`bench/RESULTS-planes.md`](../bench/RESULTS-planes.md); the contract and the
+precise list of what an external metadata engine must implement are in
+[`docs/PLANES.md`](PLANES.md).
+
+### Crash proxy
+
+`tests/planes.rs` kills the writer at `after_objects`, `after_commit_file`, and
+`after_superblock_write` for a local split and for an S3-blobs/local-commits
+split. Every iteration reopened to the old whole state (phases 1-2) or the new
+whole state (phase 3), never partial; an unpublished newer commit file in the
+early phases is the documented state, exactly as in the pre-existing
+single-backend proxies. The split publishes the head with
+`compare_exchange_head`, and a second live writer is refused with `Busy`
+(`split_publication_uses_one_head_compare_and_swap`).
+
+### Residual (unchanged by this subphase)
+
+* Split parity is Rust-only; WeftFS-Go keeps the single backend and there is no
+  cross-language split handoff.
+* The commit plane is single-writer; there is no distributed coordination or
+  fleet claim. An external metadata engine is specified but not implemented.
+* Process-fault crash proxy only; no physical power loss, host cache loss, or
+  media error injection.
+* One host, warm caches, synthetic 6 MiB fixture; MinIO is a single node with a
+  tmpfs data directory. Absolute times are court-bound.
+* `weftfs mount` accepts the split flags but the court exercises the store and
+  CLI paths, not a mounted split filesystem.

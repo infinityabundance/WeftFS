@@ -62,6 +62,22 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.8.0.md`](docs/RELEA
 - **Verification:** `verify-20261106T083428Z.json` is **27/27 courts pass** at WeftFS `a4e2c3d` (the R7 shared-mount tree); `verify-20261106T053501Z.json` (27/27 at `36bbbef`, the mode-16 tree), `verify-20261106T052933Z.json` (27/27 at `e4cdc55`), `verify-20261106T044258Z.json` (27/27 at `a8f8a3e`), and the v0.8.0 release receipt `verify-20261106T011444Z.json` (also 27/27) are retained. Retained failures and flakes are listed in the release note.
 - **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, multi-writer/distributed store, Go parity for checkpoint/training-ready/mode-15 writing, lineage-aware rebasing, calibrated planner costs, and any fleet claim.
 
+### Blob and commit planes (R10, post-0.8.0 work)
+
+`StorageBackend` is now an adapter over two explicit contracts: `BlobPlane`
+(immutable chunks, manifests, and indexes) and `CommitPlane` (versioned control
+state with compare-and-swap head publication). Capabilities are probed on every
+writable open — including a stale compare-and-swap that must be rejected — and
+the local, object, and S3 backends implement both planes. An opt-in split puts
+blobs and commits on different physical systems (`--blob-backend`,
+`--commit-backend`, `--blob-root`); the default is the unchanged single
+backend. All four layouts (local/local, s3/s3, s3-blobs/local-commits,
+local-blobs/s3-commits) reproduce the same content root, generation, and digest
+in the MinIO court; every loss is in
+[`bench/RESULTS-planes.md`](bench/RESULTS-planes.md), and the contract,
+including what an external metadata engine must implement, is in
+[`docs/PLANES.md`](docs/PLANES.md).
+
 Prior release: [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).
 
 Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](docs/STATUS.md).

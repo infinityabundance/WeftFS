@@ -16,6 +16,9 @@
 #   scripts/s3_court.sh --bench    # tests plus the local-vs-S3 benchmark
 #   scripts/s3_court.sh --overlay  # the R9 overlay court on the S3 backend
 #                                  # (instead of the rust S3 unit tests)
+#   scripts/s3_court.sh --planes   # the R10 blob/commit plane court: four
+#                                  # layouts (local/local, s3/s3, s3-blobs/
+#                                  # local-commits, local-blobs/s3-commits)
 #
 # Every container has the same hard limits as `scripts/docker-court.sh`:
 # memory 3g, swap 3g, pids 1024, cpus 4, bounded tmpfs, no-new-privileges,
@@ -28,12 +31,14 @@ cd "$repo_root"
 
 bench=0
 overlay=0
+planes=0
 for arg in "$@"; do
   case "$arg" in
     --bench) bench=1 ;;
     --overlay) overlay=1 ;;
+    --planes) planes=1 ;;
     -h|--help)
-      sed -n '2,24p' "$0"
+      sed -n '2,26p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
@@ -143,7 +148,16 @@ export WEFT_S3_CONTAINER_IMAGE_ID="$container_image_id"
 echo "s3_court: MinIO $minio_release sha256=$actual_sha256 endpoint=$endpoint bucket=$court_bucket" >&2
 
 overlay_receipt=""
-if [[ "$overlay" == 1 ]]; then
+planes_receipt=""
+if [[ "$planes" == 1 ]]; then
+  # Same bench court, same hard limits, same MinIO container. The plane court
+  # derives one bucket per S3 layout so the four layouts never share control
+  # state, and stamps every artifact with the same UTC second.
+  export WEFT_PLANES_STAMP="$stamp"
+  planes_receipt="bench/receipts/planes-${stamp}.json"
+  scripts/docker-court.sh bench \
+    "cd /work && cargo run --release --quiet --example s3_court_bucket && bash bench/scripts/planes_court.sh"
+elif [[ "$overlay" == 1 ]]; then
   # Same benchmark court, same hard limits, same MinIO container. The bucket is
   # created first, then the overlay harness derives one bucket per
   # configuration so the two runs never share a store.
@@ -191,10 +205,10 @@ cat > "$court_receipt" <<JSON
     "host_port": $host_port
   },
   "tests": {
-    "command": "$(if [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend -- --test-threads=1 --nocapture"; fi)",
+    "command": "$(if [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend -- --test-threads=1 --nocapture"; fi)",
     "bucket_prefix": "$WEFT_S3_TEST_PREFIX"
   },
-  "benchmark": $(if [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
+  "benchmark": $(if [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
   "label": "Single-node MinIO on localhost in the OOM-protected Docker court with a tmpfs data directory. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }
 JSON

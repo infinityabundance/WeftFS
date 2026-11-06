@@ -1,0 +1,65 @@
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:3820:8
+     |
+3820 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:3827:8
+     |
+3827 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:3844:7
+     |
+3844 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:3846:4
+     |
+3846 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:3879:4
+     |
+3879 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+warning: variable does not need to be mutable
+   --> tests/planes.rs:219:9
+    |
+219 |     let mut single = build_fixture(&single_path, BackendKind::Local);
+    |         ----^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "planes") generated 1 warning (run `cargo fix --test "planes" -p weftfs` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running tests/planes.rs (.docker-cache/target-rust/release/deps/planes-34e524f025218040)
+
+running 14 tests
+test commit_plane_without_conditional_update_is_refused ... ok
+test local_blobs_s3_commits_match_the_single_backend_store ... ok
+test local_planes_are_probed_on_a_writable_open ... ok
+test nested_splits_are_refused ... ok
+test object_planes_are_probed_and_declare_conditional_head ... ok
+test plane_keys_route_to_the_named_plane ... ok
+test s3_blobs_local_commits_match_the_single_backend_store ... ok
+test s3_split_crash_proxy_yields_old_or_new ... ok
+test split_crash_proxy_yields_old_or_new ... ok
+test split_local_planes_match_the_single_backend_store ... ok
+test split_publication_uses_one_head_compare_and_swap ... ok
+test split_refuses_a_blob_plane_without_atomic_publish ... ok
+test split_refuses_a_commit_plane_without_conditional_update ... ok
+test split_report_lists_planes_in_store_info ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+

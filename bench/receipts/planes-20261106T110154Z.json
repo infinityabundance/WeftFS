@@ -1,0 +1,461 @@
+{
+  "configs": [
+    {
+      "blob_root": "/tmp/weft-planes-court/local-local/blobs",
+      "config": "local-local",
+      "content_digest": "74d54de57fd438a492b7966810ca4a631cb7eb9cc23b7e20da8f4f54d1bf5b59",
+      "description": "local/local (single backend)",
+      "diagnostics": [],
+      "generation": 145,
+      "peak_rss_kib": 12036,
+      "phases": [
+        {
+          "ms": 5.903523,
+          "phase": "create"
+        },
+        {
+          "count": 96,
+          "ms": 14.062692,
+          "p50_ms": 0.133809,
+          "p99_ms": 0.232533,
+          "phase": "range_write"
+        },
+        {
+          "ms": 3.240729,
+          "phase": "read"
+        }
+      ],
+      "planes": {
+        "capabilities": null,
+        "merged_stats": {
+          "bytes_read": 32460138,
+          "bytes_written": 13636860,
+          "link_publications": 0,
+          "range_reads": 1,
+          "reads": 1347,
+          "rename_fallbacks": 0,
+          "rename_publications": 649,
+          "writes": 794
+        },
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "local",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "local",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        },
+        "stats": null
+      },
+      "reopen": {
+        "generation": 145,
+        "match": true,
+        "ms": 0.530547,
+        "problems": 0,
+        "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470"
+      },
+      "s3_bucket": "weft-s3-court-20261106t110154z",
+      "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "status": "ok",
+      "store": "/tmp/weft-planes-court/local-local/store",
+      "verified_bytes": 6291456,
+      "verify": {
+        "ms": 11.12703,
+        "problems": 0
+      },
+      "wall_ms": 53.97306
+    },
+    {
+      "blob_root": "/tmp/weft-planes-court/s3-s3/blobs",
+      "config": "s3-s3",
+      "content_digest": "74d54de57fd438a492b7966810ca4a631cb7eb9cc23b7e20da8f4f54d1bf5b59",
+      "description": "s3/s3 (single backend)",
+      "diagnostics": [],
+      "generation": 145,
+      "peak_rss_kib": 13124,
+      "phases": [
+        {
+          "ms": 129.899382,
+          "phase": "create"
+        },
+        {
+          "count": 96,
+          "ms": 286.441091,
+          "p50_ms": 2.8767620000000003,
+          "p99_ms": 3.619072,
+          "phase": "range_write"
+        },
+        {
+          "ms": 30.026992,
+          "phase": "read"
+        }
+      ],
+      "planes": {
+        "capabilities": null,
+        "merged_stats": {
+          "bytes_read": 32460112,
+          "bytes_written": 14230881,
+          "link_publications": 0,
+          "range_reads": 1,
+          "reads": 1345,
+          "rename_fallbacks": 0,
+          "rename_publications": 0,
+          "writes": 797
+        },
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "s3",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "s3",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        },
+        "stats": null
+      },
+      "reopen": {
+        "generation": 145,
+        "match": true,
+        "ms": 45.497082,
+        "problems": 0,
+        "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470"
+      },
+      "s3_bucket": "weft-s3-court-20261106t110154z-s3-s3",
+      "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "status": "ok",
+      "store": "/tmp/weft-planes-court/s3-s3/store",
+      "verified_bytes": 6291456,
+      "verify": {
+        "ms": 208.497416,
+        "problems": 0
+      },
+      "wall_ms": 920.645145
+    },
+    {
+      "blob_root": "/tmp/weft-planes-court/s3-blobs-local-commits/blobs",
+      "config": "s3-blobs-local-commits",
+      "content_digest": "74d54de57fd438a492b7966810ca4a631cb7eb9cc23b7e20da8f4f54d1bf5b59",
+      "description": "s3 blobs / local commits",
+      "diagnostics": [],
+      "generation": 145,
+      "peak_rss_kib": 13136,
+      "phases": [
+        {
+          "ms": 98.383031,
+          "phase": "create"
+        },
+        {
+          "count": 96,
+          "ms": 220.681263,
+          "p50_ms": 2.2544739999999996,
+          "p99_ms": 2.91364,
+          "phase": "range_write"
+        },
+        {
+          "ms": 31.309236999999996,
+          "phase": "read"
+        }
+      ],
+      "planes": {
+        "capabilities": {
+          "blobs": {
+            "atomic_publish": true,
+            "backend": "s3",
+            "consistency": "single-node S3-compatible endpoint; read-after-write and list-after-write for published keys; conditional writes (If-None-Match/If-Match) are required and probed by the court",
+            "durable_fsync": true,
+            "max_object_bytes": 1073741824,
+            "publication": "S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused",
+            "true_range_reads": true
+          },
+          "commits": {
+            "atomic_publish": true,
+            "backend": "local",
+            "conditional_update": true,
+            "consistency": "single-host POSIX namespace; read-after-write; rename(2) is atomic; parent directory fsync orders the new name",
+            "durable_fsync": true,
+            "max_control_bytes": 1073741824,
+            "publication": "tmp file + fsync + rename(2) + directory fsync"
+          }
+        },
+        "merged_stats": {
+          "bytes_read": 34835792,
+          "bytes_written": 14230800,
+          "link_publications": 0,
+          "range_reads": 1,
+          "reads": 1635,
+          "rename_fallbacks": 0,
+          "rename_publications": 294,
+          "writes": 796
+        },
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "s3",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "local",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        },
+        "stats": {
+          "blobs": {
+            "bytes_read": 32218714,
+            "bytes_written": 12960203,
+            "link_publications": 0,
+            "range_reads": 1,
+            "reads": 903,
+            "rename_fallbacks": 0,
+            "rename_publications": 0,
+            "writes": 502
+          },
+          "commits": {
+            "bytes_read": 2617078,
+            "bytes_written": 1270597,
+            "link_publications": 0,
+            "range_reads": 0,
+            "reads": 732,
+            "rename_fallbacks": 0,
+            "rename_publications": 294,
+            "writes": 294
+          }
+        }
+      },
+      "reopen": {
+        "generation": 145,
+        "match": true,
+        "ms": 44.259049000000005,
+        "problems": 0,
+        "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470"
+      },
+      "s3_bucket": "weft-s3-court-20261106t110154z-s3-blobs-local-commits",
+      "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "status": "ok",
+      "store": "/tmp/weft-planes-court/s3-blobs-local-commits/store",
+      "verified_bytes": 6291456,
+      "verify": {
+        "ms": 143.098249,
+        "problems": 0
+      },
+      "wall_ms": 684.047536
+    },
+    {
+      "blob_root": "/tmp/weft-planes-court/local-blobs-s3-commits/blobs",
+      "config": "local-blobs-s3-commits",
+      "content_digest": "74d54de57fd438a492b7966810ca4a631cb7eb9cc23b7e20da8f4f54d1bf5b59",
+      "description": "local blobs / s3 commits",
+      "diagnostics": [],
+      "generation": 145,
+      "peak_rss_kib": 13092,
+      "phases": [
+        {
+          "ms": 55.678955,
+          "phase": "create"
+        },
+        {
+          "count": 96,
+          "ms": 117.485379,
+          "p50_ms": 1.148636,
+          "p99_ms": 1.997927,
+          "phase": "range_write"
+        },
+        {
+          "ms": 3.371833,
+          "phase": "read"
+        }
+      ],
+      "planes": {
+        "capabilities": {
+          "blobs": {
+            "atomic_publish": true,
+            "backend": "local",
+            "consistency": "single-host POSIX namespace; read-after-write; rename(2) is atomic; parent directory fsync orders the new name",
+            "durable_fsync": true,
+            "max_object_bytes": 1073741824,
+            "publication": "tmp file + fsync + rename(2) + directory fsync",
+            "true_range_reads": true
+          },
+          "commits": {
+            "atomic_publish": true,
+            "backend": "s3",
+            "conditional_update": true,
+            "consistency": "single-node S3-compatible endpoint; read-after-write and list-after-write for published keys; conditional writes (If-None-Match/If-Match) are required and probed by the court",
+            "durable_fsync": true,
+            "max_control_bytes": 1073741824,
+            "publication": "S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused"
+          }
+        },
+        "merged_stats": {
+          "bytes_read": 33647926,
+          "bytes_written": 14230881,
+          "link_publications": 0,
+          "range_reads": 1,
+          "reads": 1488,
+          "rename_fallbacks": 0,
+          "rename_publications": 500,
+          "writes": 797
+        },
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "local",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "s3",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        },
+        "stats": {
+          "blobs": {
+            "bytes_read": 32218714,
+            "bytes_written": 12960183,
+            "link_publications": 0,
+            "range_reads": 1,
+            "reads": 903,
+            "rename_fallbacks": 0,
+            "rename_publications": 500,
+            "writes": 500
+          },
+          "commits": {
+            "bytes_read": 1429212,
+            "bytes_written": 1270698,
+            "link_publications": 0,
+            "range_reads": 0,
+            "reads": 585,
+            "rename_fallbacks": 0,
+            "rename_publications": 0,
+            "writes": 297
+          }
+        }
+      },
+      "reopen": {
+        "generation": 145,
+        "match": true,
+        "ms": 2.979844,
+        "problems": 0,
+        "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470"
+      },
+      "s3_bucket": "weft-s3-court-20261106t110154z-local-blobs-s3-commits",
+      "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "status": "ok",
+      "store": "/tmp/weft-planes-court/local-blobs-s3-commits/store",
+      "verified_bytes": 6291456,
+      "verify": {
+        "ms": 91.513321,
+        "problems": 0
+      },
+      "wall_ms": 376.431651
+    }
+  ],
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "court_kernel": "7.3.1-1-cachyos",
+    "cpus": "4",
+    "memory": "3g",
+    "pids": "1024",
+    "revision_weftfs": "753e9f518745ca91b04fd1eca8de8999a6062813",
+    "s3_endpoint": "http://weft-s3-minio-1927702:9000",
+    "s3_server": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+    "s3_server_release": "RELEASE.2025-04-22T22-12-26Z",
+    "s3_server_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c"
+  },
+  "exactness": {
+    "configs_compared": 4,
+    "generation": 145,
+    "generations": [
+      145,
+      145,
+      145,
+      145
+    ],
+    "match": true,
+    "snapshot_root": "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+    "snapshot_roots": [
+      "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470",
+      "7ebb1bdb425b86b04dfe7aa7018136b52648da0f00a148f9356eabdddb80a470"
+    ],
+    "verified_bytes": 6291456
+  },
+  "generated_utc": "20261106T110206Z",
+  "label": "Single-host benchmark with a synthetic deterministic fixture in the OOM-protected Docker court. Not a fleet, cloud, media, power-loss, or production claim.",
+  "schema": "weft-planes-court-v1",
+  "tests": {
+    "summary": [
+      "test commit_plane_without_conditional_update_is_refused ... ok",
+      "test local_blobs_s3_commits_match_the_single_backend_store ... ok",
+      "test local_planes_are_probed_on_a_writable_open ... ok",
+      "test nested_splits_are_refused ... ok",
+      "test object_planes_are_probed_and_declare_conditional_head ... ok",
+      "test plane_keys_route_to_the_named_plane ... ok",
+      "test s3_blobs_local_commits_match_the_single_backend_store ... ok",
+      "test s3_split_crash_proxy_yields_old_or_new ... ok",
+      "test split_crash_proxy_yields_old_or_new ... ok",
+      "test split_local_planes_match_the_single_backend_store ... ok",
+      "test split_publication_uses_one_head_compare_and_swap ... ok",
+      "test split_refuses_a_blob_plane_without_atomic_publish ... ok",
+      "test split_refuses_a_commit_plane_without_conditional_update ... ok",
+      "test split_report_lists_planes_in_store_info ... ok",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s"
+    ],
+    "summary_file": "bench/receipts/planes-20261106T110154Z.tests.txt"
+  },
+  "workload": {
+    "chunk_size": 65536,
+    "file_bytes": 131072,
+    "files": 48,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "note": "deterministic bytes, seeded ObjectIds, fixed clock; every layout must reproduce the same root",
+    "range_write_bytes": 4096,
+    "range_writes": 96,
+    "visible_bytes": 6291456
+  }
+}
