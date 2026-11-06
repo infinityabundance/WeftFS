@@ -704,3 +704,35 @@ reading. They are part of the Go handoff contract.
 9. **Digest identity vs. authorization.** BLAKE3 digests are integrity
    identifiers, never capabilities. v1 deduplication is store-local and reveals
    equality to a local observer; no cross-tenant privacy is claimed.
+
+## R8 addendum — read-side single-flight and decoded-object cache (2026-11-06)
+
+The read path gained two optional layers. Neither is part of any on-disk
+format: the frozen manifests, commits, superblock, checkpoints, indexes, and
+access counters are unchanged, and `verify`/GC/commits never consult them.
+
+* **`Class::Cancelled`** is a new store-level error class, emitted when a
+  caller cancels while waiting for an identical in-flight reconstruction. It is
+  not a codec class and no wire encoding uses it.
+* **`Options`** gains `single_flight` (default `false`),
+  `single_flight_max_entries` (64), `single_flight_max_bytes` (256 MiB),
+  `cache_bytes` (0 = disabled) and `cache_entries` (65,536).
+* **Authorization first.** The layers are reachable only through an
+  `AuthorizedRead` token from `Store::authorize_read` / `authorize_read_at` /
+  `authorize_read_in`, which evaluate POSIX mode, `weft.acl.read`, and any
+  capability envelope. `read_object_authorized`, `read_range_authorized` and
+  `read_content_authorized` take the token; the cache is never consulted before
+  authorization and a denial never reveals an entry.
+* **Cache identity and bounds.** Key `(object id, content version)`; value is
+  the verified decoded bytes. Eviction is lowest
+  `decode_cost * dependent_count * observed_read_frequency` per byte, ties by
+  lower score, larger bytes, then lower ids; pinned entries are never evicted.
+* **Uncached internal reads.** `read_object`, `read_object_at`, `read_range`,
+  `read_content`, `read_object_uncounted`, and every verification/planning path
+  keep the shipped behaviour and never populate the cache.
+* **FUSE.** Range reads use single-flight only when a layer is enabled; a
+  whole-object `read_content` can be cached. `mode 15` tiled whole-object reads
+  bypass both layers.
+
+Measured behaviour and losses: `bench/RESULTS-cache.md` and receipt
+`bench/receipts/cache-20261106T091322Z.json`.

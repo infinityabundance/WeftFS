@@ -2869,3 +2869,99 @@ process, a thread pool, and a replayed snapshot per mount.
   parallel; it passes with `--test-threads=1` and in the full rerun. The
   failing receipt is retained. `check-claims.sh` 258/258 OK;
   `check-spec-drift.sh` 42/42 OK (no spec change).
+
+## Subphase R8 — reconstruction single-flight and dependency-aware cache (2026-11-06)
+
+Code in `src/singleflight.rs`, `src/object_cache.rs`, the read path in
+`src/store.rs`, and the CLI/FUSE wiring; court harness
+`examples/cache_bench.rs` + `bench/scripts/cache_court.sh`; analysis
+`bench/RESULTS-cache.md`.
+
+### Flake fix (committed first, `tests: make the codec chunk-decode counter
+per-thread`)
+
+`codec_chunk_decode_count` was one process-global atomic. libtest runs the
+tests of one binary on a thread pool, so an unrelated test that decoded chunks
+on another thread inflated
+`representation::codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks`
+(the retained `verify-20261106T082853Z.json` observed 5 chunks instead of 1).
+The observation is now **thread-local** — exactly the work the calling test
+performed, because representation reads decode on the calling thread — and the
+process-wide aggregate remains available as `codec_chunk_decode_total`. The
+assertion is unchanged. New regression test
+`chunk_decode_counter_observes_only_the_calling_thread` decodes four chunks on
+another thread, waits for it to finish, and proves this thread still observes
+0 and then exactly 1. Verified with **20 consecutive parallel runs** of
+`cargo test --release --test representation -- --test-threads=8`: 9/9 pass each.
+
+### Single-flight (implemented)
+
+`SingleFlight<K, V>` is a bounded `Mutex` + `Condvar` registry (no `unsafe`).
+Identity is `(object id, content/representation version, region, verified)`;
+a whole read and a range read covering the whole object coalesce. One leader
+runs the read+decode; identical concurrent callers wait and receive a clone of
+the leader's result or its exact error. A panicking operation is converted to
+`Corrupt` so waiters can never hang. Cancellation is a waiter's decision only
+(`CancelToken`, polled every 20 ms, new `Class::Cancelled`): the leader always
+finishes for the others, and a token already cancelled before leadership
+declines to start. `max_entries` (default 64) and `max_bytes` (default 256 MiB)
+are hard admission bounds; a request that does not fit runs independently and
+increments `degraded` — it never queues and never deadlocks. Off by default.
+
+### Decoded-object cache (implemented)
+
+`ObjectCache` holds the **verified decoded bytes**, keyed by
+`(object id, content version)`: a new version has a new content root and can
+never hit an old entry (an admission also removes the old version's entry).
+Admission/eviction score is
+`decode_cost_ns(class, decoded_bytes) * dependent_count * observed_read_frequency`
+from the existing measured cost table, the `derived_from` relation graph, and
+the existing advisory access counters; ordering is exact integer
+cross-multiplication of cost per byte, then lower score, then larger bytes, then
+lower content/object id. Shared bases with many dependents outrank one-off
+large tensors. `pin_cache_object` makes an entry unevictable; if pins fill the
+bound, unpinned admission is refused (the bound is never exceeded). Sized by
+`--cache-bytes` (default 0 = disabled) plus a `--cache-entries` bookkeeping
+bound. Counters: hits, misses, admissions, evictions, stale removals,
+rejections, bytes served, pinned skips. In process memory only; absent from
+every frozen format and from commits/verify/GC.
+
+### Authorization
+
+The cache and single-flight are only reachable through an `AuthorizedRead`
+token produced by `Store::authorize_read` / `authorize_read_at` /
+`authorize_read_in` (POSIX mode + `weft.acl.read` + capability-envelope
+validity). `read_object_authorized`, `read_range_authorized`,
+`read_content_authorized` (plus `*_cancellable`) take the token, and dependency
+reconstructions inherit it. A denial is `Unauthorized` and never consults the
+cache; `read_content_authorized` refuses a token for a different content root.
+Internal reads (`verify`, planning, rebase, GC, recovery) keep the shipped
+uncached path. FUSE gates the layers with the request's uid/gid, and only when
+a layer is enabled (default off = unchanged behaviour).
+
+### Evidence
+
+Receipt `bench/receipts/cache-20261106T091322Z.json` (**26/26 checks**, at
+WeftFS `dbeaf0a`) in the bench court on the real Qwen2.5-0.5B/Instruct pair
+(both files re-hashed), 26 objects / 226,623,488 logical bytes per round, 4
+rounds, 256 MiB cache: `none` 1 thread 160 decodes / 754,432,204 B read /
+p50 61.17 ms / 6,440.7 ms; `singleflight` 4 threads 160 decodes /
+754,570,204 B / 6,384.4 ms (vs `none` 4 threads 640 decodes / 3,017,728,816 B
+/ 6,645.9 ms); `cache` 1 thread 26 decodes / 107,411,220 B / p50 0.224 ms /
+1,121.9 ms; `both` 4 threads 26 decodes / 107,549,220 B / 1,140.6 ms. Every run: all bytes hash-equal and
+`verify --full` ok. Adversarial 5/5: waiter-only cancellation, error fan-out,
+disabled cache, pinned base retained, unpinned base evicted. Losses recorded in
+`bench/RESULTS-cache.md`: single-flight is not a wall-time win on 4 otherwise
+idle vCPUs (work −75 %, wall −3 %), single-flight at 1 thread is neutral,
+cache-only still races on the first round (104 vs 26 decodes), the cache costs
++233 MiB RSS at 1 thread for a 226 MB working set, a bound below the working set
+re-decodes, p99 stays bimodal, and the cache is per process.
+
+Tests: `tests/singleflight.rs` 9/9, `tests/object_cache.rs` 10/10, unit tests
+in both modules, `tests/representation.rs` 9/9. `cargo test --release
+--all-targets`: **299 passed / 0 failed** (75 binaries). `cargo test --release
+--features fuse --all-targets`: **341 passed / 0 failed / 2 ignored** (the two
+pre-existing ignored tests). `check-claims.sh` and `check-spec-drift.sh` pass;
+no normative spec changed (R8 is read-path only, no wire/format change).
+Not done: no Go parity, no mode-15 whole-object caching, no FUSE range caching,
+no persistence across processes, no multi-host claim.

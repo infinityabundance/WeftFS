@@ -1,0 +1,31 @@
+base sha256 88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 size 988097824 verified
+instruct sha256 fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe size 988097824 verified
+== build ==
+   Compiling weftfs v0.8.0 (/work)
+    Finished `release` profile [optimized] target(s) in 1.21s
+== prepare ==
+prepared 26 objects, generation 45
+== run config=none threads=1 ==
+config=none threads=1 reads=104 decode_calls=160 cache_hits=0 p50=61172us p99=93848us wall=6440ms exact=true
+== run config=none threads=4 ==
+config=none threads=4 reads=416 decode_calls=640 cache_hits=0 p50=63246us p99=98201us wall=6645ms exact=true
+== run config=singleflight threads=1 ==
+config=singleflight threads=1 reads=104 decode_calls=160 cache_hits=0 p50=61642us p99=94331us wall=6413ms exact=true
+== run config=singleflight threads=4 ==
+config=singleflight threads=4 reads=416 decode_calls=160 cache_hits=0 p50=60675us p99=93942us wall=6384ms exact=true
+== run config=cache threads=1 ==
+config=cache threads=1 reads=104 decode_calls=26 cache_hits=92 p50=223us p99=53868us wall=1121ms exact=true
+== run config=cache threads=4 ==
+config=cache threads=4 reads=416 decode_calls=104 cache_hits=368 p50=236us p99=57300us wall=1193ms exact=true
+== run config=both threads=1 ==
+config=both threads=1 reads=104 decode_calls=26 cache_hits=92 p50=240us p99=53657us wall=1124ms exact=true
+== run config=both threads=4 ==
+config=both threads=4 reads=416 decode_calls=26 cache_hits=326 p50=239us p99=54619us wall=1140ms exact=true
+== adversarial ==
+adversarial 5/5
+== assemble receipt ==
+checks 26/26
+receipt: /work/bench/receipts/cache-20261106T091322Z.json
+raw log: /work/bench/receipts/cache-20261106T091322Z.log
+bd17be9ecf61b8b00505dd76e21065dad133a97a840933a780ea3c5ce1f1301f  /work/bench/receipts/cache-20261106T091322Z.json
+ab017c0820fc6331015ae91ef79629e8f52fd40519dad9282fc7127e0efe960e  /work/bench/receipts/cache-20261106T091322Z.log
