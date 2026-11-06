@@ -118,9 +118,10 @@ Tiled costs **2.22 % more bytes** and estimates **28 % less decode time**, and
 each tile carries its own root and is independently decodable. At the default
 bytes-only objective the planner still picks mode 9, which is what the fresh
 base ingest did (169 float-tensor objects, this embedding among them), so
-defaults do not move. Exploiting the trade needs either intra-tensor parallel
-tile decode (not implemented) or a latency weight above the byte/decode
-break-even point.
+defaults do not move. The additive subsection below implements intra-tensor
+parallel tile decode; the trade still needs an explicit forced tiled write or a
+latency weight above the byte/decode break-even point, because the bytes-only
+price keeps mode 9.
 
 Honesty note: that read-only plan also reported a 1,038-byte semantic-delta
 candidate because the store already contains this exact tensor; the candidate
@@ -208,6 +209,52 @@ Peak RSS is 2,036,324 KiB at one thread, 2,290,452 KiB at two and
 2,261,776 KiB at four (court limit 3 GiB): the pool adds at most ~0.25 GiB on
 this corpus. This subsection is single-host, 4-vCPU, warm-cache; it is not a
 fleet or multi-node claim.
+
+### Intra-tensor tile decode and auto-tiling (additive)
+
+R2's lever was one level up: split a frame into independently decodable units
+and let several workers share one tensor. Mode 15 (`TENSOR_TILED`) already has
+the units - full tiles, per-tile Huffman planes, per-tile roots, contiguous
+offsets. This adds the scheduler and the planner path; the wire layout does not
+change.
+
+- `Store::read_tensor_with_options` / `read_tensor_region_with_options` decode
+  intersecting tiles on the same bounded runner as `read_tensors_bounded`
+  (`TileDecodeOptions`, default `threads = 1`; deterministic order; lowest-index
+  error; panics caught; staging bound). Every decoded tile root is verified; the
+  full-object path also verifies the logical root and content hash; a region
+  read verifies each tile it touches and does not re-read the whole-frame
+  trailer.
+- `TensorPlanOptions::auto_tile_bytes` derives a dividing rank-2 tile shape
+  (largest element count within the budget, then balance, then lexicographic)
+  and offers mode 15 to the unchanged price.
+
+On the Qwen2.5-0.5B base checkpoint the bytes-only price selected mode 15 for
+**0 of 290** tensors, so auto-tiling at 65,536 B changed nothing: float-tensor
+stays 2.17 % smaller than the best tiled encoding. To measure the decoder at
+all, the court also runs a clearly labelled **forced-tiled control** (169 rank-2
+tensors, derived shapes `[128,224]`, `[128,256]`, `[256,128]`, +14,310,892 B =
++2.174 % tensor data):
+
+| operation (base, forced control) | 1 thread | 4 threads | 4 vs 1 |
+|---|---:|---:|---:|
+| full restore read | 3,038.3 ms | **1,062.1 ms** | **2.86x** |
+| full restore materialize | 4,215.6 ms | **2,871.4 ms** | **1.47x** |
+| embedding whole-region read | 738.7 ms | **203.0 ms** | **3.64x** |
+| embedding 100-row read | 4.11 ms | 3.96 ms | 1.04x |
+| embedding 1-row read | 3.54 ms | 3.67 ms | 0.97x |
+
+The 1-row region touches four tiles and fetches 730,133 B instead of
+180,625,100 B (**247x fewer backend bytes**). The logical-root recheck is a
+separate sequential pass and does not speed up (0.99x). Materialize is still
+writeback bound. The required auto-tile configuration stores zero tiled objects,
+so its thread-count ratios are noise; the `0 / 290` result is the planner
+finding, not a failed run. Receipt
+[`bench/receipts/tiled-parallel-20261106T061820Z.json`](receipts/tiled-parallel-20261106T061820Z.json),
+full tables and every loss in
+[`bench/RESULTS-tiled-parallel.md`](RESULTS-tiled-parallel.md). Tests:
+`tests/tiled_parallel.rs` 8/8; parent 265 passed; FUSE 299 passed / 2 ignored /
+0 failed. Single host, 4 vCPU, warm cache.
 
 ## R1 update: mode-9 planner, measured decode table, rebasing
 

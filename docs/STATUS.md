@@ -1805,10 +1805,11 @@ cost, not more format coverage.
   instruct checkpoint selects **1 of 241** objects (R1: 73 of 241); the check
   remains non-zero and the dry run still writes nothing.
 - **Still a loss:** base read is 4.8x the F10 zstd-strategy read (968.8 ms) and
-  ~19x ZipNN's 240 ms; mode 9 is 6.0x zstd per MiB (4.68 vs 0.78). Decode is
-  sequential across tensors and frames are not yet block-independent streams
-  with an offset table, so there is no parallelism yet. `tensor-sharded` is now
-  the slowest class (9.12 ms/MiB).
+  ~19x ZipNN's 240 ms; mode 9 is 6.0x zstd per MiB (4.68 vs 0.78). At this
+  measurement decode is sequential across tensors and frames are not yet
+  block-independent streams with an offset table; the parallel additions below
+  are later in this section. `tensor-sharded` is now the slowest class
+  (9.12 ms/MiB).
 - **Tests at that tree:** WeftCodec `cargo test --all-targets` 204 passed / 0
   failed; WeftCodec-Go `go test ./...` + `go vet` all packages; parent 244
   passed; FUSE `--all-targets` 278 passed / 0 failed / 2 ignored; WeftFS-Go
@@ -1842,7 +1843,36 @@ cost, not more format coverage.
   vs 180,623,816 B for mode 9 (+2.22 %)** and estimates **874,217,523 ns vs
   1,216,176,993 ns (-28 %)**; mode 9 still wins at the bytes-only default. Test
   `planner_offers_mode15_only_when_a_tile_shape_is_supplied`. Intra-tensor
-  parallel tile decode is not implemented.
+  parallel tile decode is covered by the next bullet.
+- **Bounded parallel tile decode + auto-tiling (additive, wire unchanged):**
+  `TileDecodeOptions { threads, max_inflight_bytes }` (default `threads = 1`)
+  and `Store::read_tensor_with_options` /
+  `read_tensor_region_with_options` decode mode-15 tiles on the same bounded
+  runner as `read_tensors_bounded`: deterministic order, lowest-index error,
+  panics caught, exact staging bound; every touched tile root is verified, the
+  full-object path also verifies the logical root and content hash, and the
+  region path is documented as not re-reading the whole-frame trailer.
+  `TensorPlanOptions.auto_tile_bytes` derives a dividing rank-2 tile shape
+  (largest element count in budget, then balance, then lexicographic), offers
+  mode 15 to the **unchanged** price, and records the shape in the candidate
+  detail and in `weft.tensor.tile_shape`. `weft cat --threads N`,
+  `weft plan --auto-tile-bytes N`, `weft write --auto-tile-bytes N` expose it.
+  On Qwen2.5-0.5B base the bytes-only price selected mode 15 for **0/290**
+  tensors (float-tensor is 2.17 % smaller), so auto-tiling at 65,536 B changed
+  no representation. A labelled forced-tiled control (169 rank-2 tensors, shapes
+  `[128,224]`/`[128,256]`/`[256,128]`) costs **+14,310,892 B (+2.174 %)** of
+  tensor data and measures full-restore read **3,038.3 -> 1,062.1 ms (2.86x)**
+  at 4 workers, materialize 4,215.6 -> 2,871.4 ms (1.47x, still writeback
+  bound), embedding whole-region **738.7 -> 203.0 ms (3.64x)**, and 1-row region
+  3.5 ms with 4 tiles and **730,133 B fetched vs 180,625,100 B** (247x).
+  Logical-root recheck stays sequential (0.99x); 100-row/1-row regions touch 4
+  tiles and do not parallelise. Receipt
+  `bench/receipts/tiled-parallel-20261106T061820Z.json`, analysis
+  `bench/RESULTS-tiled-parallel.md`, `tests/tiled_parallel.rs` 8/8, parent 265
+  passed, FUSE 299 passed / 2 ignored / 0 failed (one transient
+  `representation` failure in a loaded first run passed standalone and on
+  rerun). Single host, 4 vCPU, warm cache; no fleet claim; no Go parity; no
+  partial boundary tiles.
 
 ## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
 

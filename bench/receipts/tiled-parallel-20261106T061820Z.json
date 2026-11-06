@@ -1,0 +1,607 @@
+{
+  "all_checks_pass": true,
+  "checks": {
+    "all_file_sha256_match_source": true,
+    "all_hash_exact": true,
+    "all_logical_roots_exact": true,
+    "all_materialize_exact": true,
+    "all_region_reads_exact": true,
+    "default_config_has_no_tiled_tensors": true,
+    "effective_threads_1_and_4": true,
+    "forced_control_has_tiled_tensors": true,
+    "forced_control_region_spans_multiple_tiles": true,
+    "materialized_bytes_identical": true,
+    "restored_bytes_identical": true,
+    "source_sha256_rehashed_in_court": true
+  },
+  "configs": {
+    "auto_tile": {
+      "description": "Planner with --auto-tile-bytes; mode 15 is offered and the bytes-only price decides.",
+      "ingest": {
+        "auto_tile_bytes": 65536,
+        "force_tiled_rank2": false,
+        "generation": 294,
+        "peak_rss_kib": 1465248,
+        "physical": {
+          "commits_bytes": 260130,
+          "indexes_bytes": 16217078,
+          "manifests_bytes": 658199311,
+          "objects_bytes": 44576,
+          "other_bytes": 8207,
+          "store_total_bytes": 674729302,
+          "tensor_data_bytes": 658243887
+        },
+        "strategy_distribution": {
+          "logical_bytes_by_strategy": {
+            "float-tensor": 987922432,
+            "raw": 12288,
+            "zstd": 130816
+          },
+          "tensors_by_strategy": {
+            "float-tensor": 169,
+            "raw": 48,
+            "zstd": 73
+          }
+        },
+        "tensor_write_ms": 70558.737,
+        "tile_shapes": [],
+        "tiled_logical_bytes": 0,
+        "tiled_tensors": 0,
+        "wall_ms": 70745.038
+      },
+      "regions": {
+        "1": [
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 1353.496,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 1295.127,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 1287.242,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          }
+        ],
+        "4": [
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 1340.075,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 1296.176,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 1298.856,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          }
+        ]
+      },
+      "required_configuration": true,
+      "restore": {
+        "1": {
+          "effective_threads": 1,
+          "logical_root_check_ms": 4706.279,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 6304.256,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1257272,
+          "read_backend_bytes": 658230303,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 1160,
+          "read_ms": 4873.026,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 0
+        },
+        "4": {
+          "effective_threads": 4,
+          "logical_root_check_ms": 4678.352,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 8386.762,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1255832,
+          "read_backend_bytes": 658230303,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 1160,
+          "read_ms": 4880.494,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 0
+        },
+        "speedup": {
+          "logical_root_check_4_vs_1": 1.006,
+          "materialize_4_vs_1": 0.7517,
+          "read_4_vs_1": 0.9985
+        }
+      },
+      "storage_delta_vs_default": {
+        "store_total_bytes": 0,
+        "store_total_percent": 0.0,
+        "tensor_data_bytes": 0,
+        "tensor_data_percent": 0.0
+      }
+    },
+    "default": {
+      "description": "Shipped planner, no auto-tile.",
+      "ingest": {
+        "auto_tile_bytes": null,
+        "force_tiled_rank2": false,
+        "generation": 294,
+        "peak_rss_kib": 1452052,
+        "physical": {
+          "commits_bytes": 260130,
+          "indexes_bytes": 16217078,
+          "manifests_bytes": 658199311,
+          "objects_bytes": 44576,
+          "other_bytes": 8207,
+          "store_total_bytes": 674729302,
+          "tensor_data_bytes": 658243887
+        },
+        "strategy_distribution": {
+          "logical_bytes_by_strategy": {
+            "float-tensor": 987922432,
+            "raw": 12288,
+            "zstd": 130816
+          },
+          "tensors_by_strategy": {
+            "float-tensor": 169,
+            "raw": 48,
+            "zstd": 73
+          }
+        },
+        "tensor_write_ms": 65409.659,
+        "tile_shapes": [],
+        "tiled_logical_bytes": 0,
+        "tiled_tensors": 0,
+        "wall_ms": 65597.713
+      },
+      "regions": {
+        "1": [
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 1340.125,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 1277.306,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 1286.618,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 1
+          }
+        ],
+        "4": [
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 1333.897,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 1290.05,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          },
+          {
+            "backend_bytes_read": 180625100,
+            "backend_range_reads": 0,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 1285.945,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 1
+          }
+        ]
+      },
+      "required_configuration": true,
+      "restore": {
+        "1": {
+          "effective_threads": 1,
+          "logical_root_check_ms": 4735.594,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 7047.881,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1258108,
+          "read_backend_bytes": 658230303,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 1160,
+          "read_ms": 4730.315,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 0
+        },
+        "4": {
+          "effective_threads": 4,
+          "logical_root_check_ms": 4708.779,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 7171.181,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1258492,
+          "read_backend_bytes": 658230303,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 1160,
+          "read_ms": 4762.333,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 0
+        },
+        "speedup": {
+          "logical_root_check_4_vs_1": 1.0057,
+          "materialize_4_vs_1": 0.9828,
+          "read_4_vs_1": 0.9933
+        }
+      }
+    },
+    "forced_tiled_control": {
+      "description": "Labelled control only: mode 15 forced for rank-2 tensors with the same auto-derived tile shape. Present because the bytes-only price does not select mode 15 on BF16 Qwen, so the required auto_tile configuration contains no tiled object to exercise the bounded tile decoder.",
+      "ingest": {
+        "auto_tile_bytes": 65536,
+        "force_tiled_rank2": true,
+        "generation": 294,
+        "peak_rss_kib": 1466272,
+        "physical": {
+          "commits_bytes": 265538,
+          "indexes_bytes": 17016882,
+          "manifests_bytes": 672510203,
+          "objects_bytes": 44576,
+          "other_bytes": 8207,
+          "store_total_bytes": 689845406,
+          "tensor_data_bytes": 672554779
+        },
+        "strategy_distribution": {
+          "logical_bytes_by_strategy": {
+            "raw": 12288,
+            "tensor-tiled": 987922432,
+            "zstd": 130816
+          },
+          "tensors_by_strategy": {
+            "raw": 48,
+            "tensor-tiled": 169,
+            "zstd": 73
+          }
+        },
+        "tensor_write_ms": 54734.465,
+        "tile_shapes": [
+          "[128, 224]",
+          "[128, 256]",
+          "[256, 128]"
+        ],
+        "tiled_logical_bytes": 987922432,
+        "tiled_tensors": 169,
+        "wall_ms": 54928.128
+      },
+      "regions": {
+        "1": [
+          {
+            "backend_bytes_read": 184634026,
+            "backend_range_reads": 4750,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 738.667,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 4748
+          },
+          {
+            "backend_bytes_read": 730133,
+            "backend_range_reads": 6,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 4.108,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 4
+          },
+          {
+            "backend_bytes_read": 730133,
+            "backend_range_reads": 6,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 3.54,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 1,
+            "tiles_touched": 4
+          }
+        ],
+        "4": [
+          {
+            "backend_bytes_read": 184634026,
+            "backend_range_reads": 4750,
+            "bytes": 272269312,
+            "exact": true,
+            "label": "whole",
+            "ms": 202.95,
+            "shape": [
+              151936,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 4748
+          },
+          {
+            "backend_bytes_read": 730133,
+            "backend_range_reads": 6,
+            "bytes": 179200,
+            "exact": true,
+            "label": "rows_100",
+            "ms": 3.96,
+            "shape": [
+              100,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 4
+          },
+          {
+            "backend_bytes_read": 730133,
+            "backend_range_reads": 6,
+            "bytes": 1792,
+            "exact": true,
+            "label": "row_1",
+            "ms": 3.665,
+            "shape": [
+              1,
+              896
+            ],
+            "threads_effective": 4,
+            "tiles_touched": 4
+          }
+        ]
+      },
+      "required_configuration": false,
+      "restore": {
+        "1": {
+          "effective_threads": 1,
+          "logical_root_check_ms": 2915.467,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 4215.646,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 0,
+          "observed_max_inflight_tasks": 0,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1073448,
+          "read_backend_bytes": 672393555,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 822,
+          "read_ms": 3038.262,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 15860
+        },
+        "4": {
+          "effective_threads": 4,
+          "logical_root_check_ms": 2921.156,
+          "materialize_bytes": 988097824,
+          "materialize_exact": true,
+          "materialize_ms": 2871.356,
+          "materialize_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+          "observed_max_inflight_bytes": 2523136,
+          "observed_max_inflight_tasks": 44,
+          "oversized_tiles": 0,
+          "peak_rss_kib": 1089020,
+          "read_backend_bytes": 672393555,
+          "read_backend_range_reads": 0,
+          "read_backend_reads": 822,
+          "read_ms": 1062.092,
+          "restored_bytes": 988065536,
+          "tensors": 290,
+          "tiles": 15860
+        },
+        "speedup": {
+          "logical_root_check_4_vs_1": 0.9981,
+          "materialize_4_vs_1": 1.4682,
+          "read_4_vs_1": 2.8606
+        }
+      },
+      "storage_delta_vs_default": {
+        "store_total_bytes": 15116104,
+        "store_total_percent": 2.24,
+        "tensor_data_bytes": 14310892,
+        "tensor_data_percent": 2.174
+      }
+    }
+  },
+  "configuration": {
+    "auto_tile_bytes": 65536,
+    "control_configurations": [
+      "forced_tiled_control"
+    ],
+    "max_inflight_mib": 64,
+    "note": "The two required configurations are default and auto_tile. The forced_tiled_control exists because auto_tile selected zero mode-15 objects on this BF16 corpus; it is labelled as a control and is not presented as planner output.",
+    "repetitions": 1,
+    "required_configurations": [
+      "default",
+      "auto_tile"
+    ],
+    "store_per_configuration": true,
+    "thread_counts": [
+      1,
+      4
+    ]
+  },
+  "corpus": {
+    "base_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "file_bytes": 988097824,
+    "instruct_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "logical_bytes_per_checkpoint": 988065536,
+    "name": "Qwen/Qwen2.5-0.5B",
+    "source_sha256_rehashed_in_court": true,
+    "tensors_per_checkpoint": 290
+  },
+  "court": {
+    "cpus": "4",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024"
+  },
+  "findings": [
+    "auto-tile at 65536 B selected mode 15 for 0 of 290 tensors; the bytes-only price kept float-tensor for the BF16 Qwen weights, so this configuration has the same storage as default.",
+    "default and auto_tile store zero mode-15 objects, so --threads has no tile decode work to parallelise there; their 4-thread read and materialize differences are host scheduling and writeback noise, not speedups (the default materialize ratio in particular is below 1.0).",
+    "forced control one-row embedding region reads 730133 B vs 180625100 B for the non-tiled path (247.4x fewer backend bytes).",
+    "forced control whole-embedding region: 738.667 ms at 1 thread -> 202.95 ms at 4 (3.64x). The 100-row and 1-row regions touch only 4 tiles, so 4 workers do not help: 4.108 vs 3.96 ms.",
+    "forced control materialize is parallel but still writeback bound; the logical-root recheck is a separate sequential pass (tensor_logical_root has no tile options), so it shows no speedup.",
+    "auto_tile storage delta: 0 tensor bytes (0.0%).",
+    "forced_tiled_control storage delta: 14310892 tensor bytes (2.174%).",
+    "default: full-restore read 4-thread vs 1-thread = 0.9933x, materialize = 0.9828x, logical-root recheck = 1.0057x.",
+    "auto_tile: full-restore read 4-thread vs 1-thread = 0.9985x, materialize = 0.7517x, logical-root recheck = 1.006x.",
+    "forced_tiled_control: full-restore read 4-thread vs 1-thread = 2.8606x, materialize = 1.4682x, logical-root recheck = 0.9981x."
+  ],
+  "generated_utc": "2026-11-06T06:18:20Z",
+  "label": "single-host bench court, 4 vCPUs, warm cache, synthetic-control tiling for BF16 Qwen; no fleet or multi-node claim",
+  "revisions": {
+    "weftcodec": "4b4c1318800ad28de2d3b7fa67f7703a178305e6",
+    "weftcodec_go": "e47fa03ee8d576106e3bace065d59f930cc741bd",
+    "weftfs": "44295e5a5b9b493493dd72197db8de33e95771c5",
+    "weftfs_go": "47fd4d2229fc24e5750808a302432c32081064a5"
+  },
+  "schema": "weft.tiled-parallel.v1"
+}

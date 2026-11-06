@@ -259,6 +259,48 @@ def main():
         "290 tensors; the bytes-only price kept float-tensor for the BF16 Qwen "
         "weights, so this configuration has the same storage as default."
     )
+    if configs["default"]["ingest"]["tiled_tensors"] == 0 and auto_tiled == 0:
+        findings.append(
+            "default and auto_tile store zero mode-15 objects, so --threads has "
+            "no tile decode work to parallelise there; their 4-thread read and "
+            "materialize differences are host scheduling and writeback noise, "
+            "not speedups (the default materialize ratio in particular is below "
+            "1.0)."
+        )
+
+    def region_row(display, threads, label):
+        for row in configs[display]["regions"][str(threads)]:
+            if row["label"] == label:
+                return row
+        raise SystemExit(f"missing {display} region {label} at {threads} threads")
+
+    forced = "forced_tiled_control"
+    one_row = region_row(forced, 4, "row_1")
+    default_one_row = region_row("default", 4, "row_1")
+    if one_row["backend_bytes_read"]:
+        findings.append(
+            "forced control one-row embedding region reads "
+            f"{one_row['backend_bytes_read']} B vs "
+            f"{default_one_row['backend_bytes_read']} B for the non-tiled path "
+            f"({default_one_row['backend_bytes_read'] / one_row['backend_bytes_read']:.1f}x "
+            "fewer backend bytes)."
+        )
+    whole_one = region_row(forced, 1, "whole")
+    whole_four = region_row(forced, 4, "whole")
+    rows100_one = region_row(forced, 1, "rows_100")
+    rows100_four = region_row(forced, 4, "rows_100")
+    findings.append(
+        "forced control whole-embedding region: "
+        f"{whole_one['ms']} ms at 1 thread -> {whole_four['ms']} ms at 4 "
+        f"({whole_one['ms'] / whole_four['ms']:.2f}x). The 100-row and 1-row "
+        "regions touch only 4 tiles, so 4 workers do not help: "
+        f"{rows100_one['ms']} vs {rows100_four['ms']} ms."
+    )
+    findings.append(
+        "forced control materialize is parallel but still writeback bound; the "
+        "logical-root recheck is a separate sequential pass "
+        "(tensor_logical_root has no tile options), so it shows no speedup."
+    )
     for display in ("auto_tile", "forced_tiled_control"):
         delta = configs[display]["storage_delta_vs_default"]
         findings.append(
