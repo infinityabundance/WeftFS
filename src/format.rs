@@ -295,7 +295,7 @@ impl RepresentationKind {
 /// without re-defining the descriptor.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TensorRepresentation {
-    /// 10 `TENSOR_SHARDED`, 11 `WEIGHT_DELTA`, 12 `KV_CACHE`,
+    /// 9 `FLOAT_TENSOR`, 10 `TENSOR_SHARDED`, 11 `WEIGHT_DELTA`, 12 `KV_CACHE`,
     /// 13 `ACTIVATION_STREAM`, 14 `SEMANTIC_DELTA`.
     pub tensor_mode: u32,
     pub dtype: TensorElementDtype,
@@ -308,6 +308,7 @@ impl TensorRepresentation {
     /// Canonical number of the frame mode a strategy requires.
     pub fn expected_mode(strategy: &str) -> Option<u32> {
         match strategy {
+            "float-tensor" => Some(9),
             "tensor-sharded" => Some(10),
             "weight-delta" => Some(11),
             "kv-cache" => Some(12),
@@ -321,6 +322,7 @@ impl TensorRepresentation {
     /// Canonical strategy name for a frame mode.
     pub fn strategy_for_mode(mode: u32) -> Option<&'static str> {
         match mode {
+            9 => Some("float-tensor"),
             10 => Some("tensor-sharded"),
             11 => Some("weight-delta"),
             12 => Some("kv-cache"),

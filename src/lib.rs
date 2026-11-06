@@ -17,11 +17,13 @@
 
 #![forbid(unsafe_code)]
 
+pub mod access;
 pub mod auth;
 pub mod backend;
 pub mod checkpoint;
 pub mod conformance;
 pub mod context;
+pub mod cost_model;
 pub mod error;
 pub mod evaluate;
 pub mod format;
@@ -31,6 +33,7 @@ pub mod identity;
 pub(crate) mod index;
 pub mod provenance;
 pub mod quota;
+pub mod rebase;
 pub mod receipt_bundle;
 pub mod recovery;
 pub mod representation;
@@ -51,6 +54,7 @@ pub use checkpoint::{
     ShardStrategy, WrittenTensor,
 };
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
+pub use cost_model::{CostClass, CostModelKind};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
@@ -59,6 +63,9 @@ pub use provenance::{
     ProvenanceInput, ProvenanceNode, ProvenancePrincipal, ProvenanceRecord, RecoveryCandidate,
     RecoveryChoice, RecoveryCosts, RecoveryRejection, RecoveryStrategy,
 };
+pub use rebase::{
+    RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
+};
 pub use s3::{S3Backend, S3Config};
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
@@ -66,8 +73,8 @@ pub use store::{
     Store, VerifyReport,
 };
 pub use tensor_store::{
-    StoredTensorMetadata, TensorLayoutSpec, TensorPlan, TensorPlanCandidate, TensorPlanOptions,
-    TensorStrategy, TensorWriteSpec,
+    StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec, TensorPlan, TensorPlanCandidate,
+    TensorPlanOptions, TensorRebase, TensorStrategy, TensorWriteSpec,
 };
 pub use training_ready::{
     verify_training_ready_output, PreconditionReport, TrainingReadyCheckpoint, TrainingReadyCost,

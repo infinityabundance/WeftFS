@@ -126,6 +126,16 @@ struct Cli {
     /// Read write budgets from a file (one `--quota` directive per line).
     #[arg(long = "quota-file", global = true, value_name = "FILE")]
     quota_file: Option<PathBuf>,
+    /// Decode-cost table used by the tensor planner and `rebase`:
+    /// `measured` (host-calibrated in the bench court) or `declared` (the
+    /// historical hand-written linear estimate).
+    #[arg(
+        long = "planner-cost-model",
+        global = true,
+        value_name = "measured|declared",
+        default_value = "measured"
+    )]
+    planner_cost_model: String,
     #[command(subcommand)]
     command: Command,
 }
@@ -499,6 +509,27 @@ enum Command {
         /// Declared recompute cost.
         #[arg(long = "recompute-cost", default_value_t = 0)]
         recompute_cost: u64,
+    },
+    /// Plan or apply lineage-aware rebasing of hot tensor objects.
+    Rebase {
+        /// Store path or 64-hex ObjectId to scan (inclusive).
+        #[arg(long)]
+        root: String,
+        /// Rebase when `reads * estimated_decode_ns` exceeds this value.
+        #[arg(long = "threshold", default_value_t = 1_000_000_000)]
+        threshold_ns: u64,
+        /// Show the decision without writing anything.
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+        /// Force a standalone representation: raw, zstd, float-tensor, ...
+        #[arg(long)]
+        strategy: Option<String>,
+        /// Bytes charged per estimated nanosecond of decode time.
+        #[arg(long = "lambda-ns", default_value_t = 0)]
+        lambda_ns: u64,
+        /// Bound on the number of objects examined.
+        #[arg(long = "max-objects", default_value_t = 100_000)]
+        max_objects: usize,
     },
     /// Mount the store over FUSE (requires the `fuse` feature).
     #[cfg(feature = "fuse")]
@@ -1012,8 +1043,10 @@ fn run(cli: Cli) -> Result<()> {
         quotas,
         quota_file,
         content_identity,
+        planner_cost_model,
         command,
     } = cli;
+    let planner_cost_model = weftfs::CostModelKind::parse(&planner_cost_model)?;
     let mut budgets: Vec<weftfs::quota::QuotaBudget> = quotas
         .iter()
         .map(|text| weftfs::quota::parse_budget(text))
@@ -1258,6 +1291,7 @@ fn run(cli: Cli) -> Result<()> {
                     causal,
                     plan: TensorPlanOptions {
                         lambda_ns,
+                        cost_model: planner_cost_model,
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                         candidates: parse_object_ids(candidates.as_deref())?,
                         ..TensorPlanOptions::default()
@@ -1331,6 +1365,7 @@ fn run(cli: Cli) -> Result<()> {
             let causal = parse_causal_entries(causal.as_deref())?;
             let options = TensorPlanOptions {
                 lambda_ns,
+                cost_model: planner_cost_model,
                 semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                 candidates: parse_object_ids(candidates.as_deref())?,
                 ..TensorPlanOptions::default()
@@ -1363,6 +1398,7 @@ fn run(cli: Cli) -> Result<()> {
                     "runner_up_estimated_decode_ns": plan.runner_up_estimated_decode_ns,
                     "runner_up_cost": plan.runner_up_cost.map(|cost| cost.to_string()),
                     "lambda_ns": lambda_ns,
+                    "cost_model": planner_cost_model.as_str(),
                     "candidates": candidates,
                 }))
             } else {
@@ -2081,6 +2117,135 @@ fn run(cli: Cli) -> Result<()> {
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
+        Command::Rebase {
+            root,
+            threshold_ns,
+            dry_run,
+            strategy,
+            lambda_ns,
+            max_objects,
+        } => {
+            let mode = if dry_run {
+                OpenMode::ReadOnly
+            } else {
+                OpenMode::ReadWrite
+            };
+            let mut store = open_store(&store, mode, policy)?;
+            let root_id = if root.len() == 64 && root.bytes().all(|b| b.is_ascii_hexdigit()) {
+                weftfs::Hash32::from_hex(&root)
+                    .map_err(|err| Error::invalid_argument(format!("bad --root id: {err}")))?
+            } else {
+                store.resolve_path(&root)?
+            };
+            let options = weftfs::RebaseOptions {
+                threshold_ns,
+                lambda_ns,
+                cost_model: planner_cost_model,
+                strategy_hint: match strategy.as_deref() {
+                    None => None,
+                    Some(text) => parse_tensor_strategy(text)?,
+                },
+                max_objects,
+                dry_run,
+            };
+            let report = store.rebase(root_id, &options)?;
+            if json {
+                let candidates: Vec<serde_json::Value> = report
+                    .plan
+                    .candidates
+                    .iter()
+                    .map(|item| {
+                        json!({
+                            "object": item.object.to_hex(),
+                            "path": item.path,
+                            "reads": item.reads,
+                            "from_strategy": item.from_strategy,
+                            "from_cost_class": item.from_cost_class,
+                            "logical_bytes": item.logical_bytes,
+                            "estimated_decode_ns": item.estimated_decode_ns,
+                            "read_cost_ns": item.read_cost_ns,
+                            "to_strategy": item.to_strategy.as_str(),
+                            "new_physical_bytes": item.new_physical_bytes,
+                            "new_estimated_decode_ns": item.new_estimated_decode_ns,
+                            "candidates": item.candidates.iter().map(|(name, bytes, ns)| {
+                                json!({"strategy": name, "physical_bytes": bytes, "estimated_decode_ns": ns})
+                            }).collect::<Vec<_>>(),
+                        })
+                    })
+                    .collect();
+                let skipped: Vec<serde_json::Value> = report
+                    .plan
+                    .skipped
+                    .iter()
+                    .map(|item| {
+                        json!({
+                            "object": item.object.to_hex(),
+                            "path": item.path,
+                            "reason": item.reason,
+                        })
+                    })
+                    .collect();
+                let applied: Vec<serde_json::Value> = report
+                    .applied
+                    .iter()
+                    .map(|item| {
+                        json!({
+                            "object": item.object.to_hex(),
+                            "path": item.path,
+                            "old_version": item.old_version.to_hex(),
+                            "new_version": item.new_version.to_hex(),
+                            "content": item.content.to_hex(),
+                            "from_strategy": item.from_strategy,
+                            "to_strategy": item.to_strategy.as_str(),
+                            "reads_consumed": item.reads_consumed,
+                            "provenance_id": item.provenance_id.to_hex(),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({
+                    "root": report.plan.root.to_hex(),
+                    "threshold_ns": report.plan.threshold_ns,
+                    "cost_model": report.plan.cost_model.as_str(),
+                    "dry_run": dry_run,
+                    "scanned": report.plan.scanned,
+                    "truncated": report.plan.truncated,
+                    "candidates": candidates,
+                    "skipped": skipped,
+                    "applied": applied,
+                }))
+            } else {
+                println!(
+                    "scanned={} candidates={} applied={} threshold_ns={} cost_model={}",
+                    report.plan.scanned,
+                    report.plan.candidates.len(),
+                    report.applied.len(),
+                    report.plan.threshold_ns,
+                    report.plan.cost_model.as_str(),
+                );
+                for item in &report.plan.candidates {
+                    println!(
+                        "rebase {} {} reads={} {}->{} read_cost_ns={} new_bytes={}",
+                        item.object,
+                        item.path,
+                        item.reads,
+                        item.from_strategy,
+                        item.to_strategy.as_str(),
+                        item.read_cost_ns,
+                        item.new_physical_bytes,
+                    );
+                }
+                for item in &report.plan.skipped {
+                    println!("skip {} {} reason={}", item.object, item.path, item.reason);
+                }
+                for item in &report.applied {
+                    println!(
+                        "applied {} {} version={} provenance={}",
+                        item.object, item.path, item.new_version, item.provenance_id,
+                    );
+                }
+                Ok(())
+            }
+        }
         Command::Recover {
             target,
             plan,

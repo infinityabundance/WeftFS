@@ -1,17 +1,124 @@
 # Real public model checkpoint family — storage and restore
 
-**Status: implemented, measured once, single host.** This is the subphase F
+**Status: implemented, measured twice, single host.** This is the subphase F
 headline experiment: two real public checkpoints are ingested into WeftFS as
 tensors, every restored byte is checked against the Hugging Face LFS SHA-256, and
 the complete storage and restore cost is compared with independent `zstd -19`,
 `zstd --patch-from`, and ZipNN.
 
-Receipt: [`bench/receipts/real-model-20261105T012000Z.json`](receipts/real-model-20261105T012000Z.json)
-(442 KB, includes per-tensor strategy, root, and hash records).
+* **F10 (2026-11-05):** bytes-only planner, no float-tensor candidate.
+  Receipt [`bench/receipts/real-model-20261105T012000Z.json`](receipts/real-model-20261105T012000Z.json).
+* **R1 (2026-11-06):** measured decode-cost table, mode-9 `FLOAT_TENSOR`
+  candidate, and lineage-aware rebasing. Receipt
+  [`bench/receipts/planner-float-20261106T023519Z.json`](receipts/planner-float-20261106T023519Z.json).
+  The storage headline **flips** (WeftFS now beats ZipNN); the restore table
+  gets worse. Both measurements are kept below.
 
 Label: single-host bench court, synthetic-free public corpus, no fleet or
 production claim. **The comparison is at matched exactness: every method is
 lossless, and every restored checkpoint matched the upstream LFS SHA-256.**
+
+## R1 update: mode-9 planner, measured decode table, rebasing
+
+Measured on the same corpus (SHA-256 re-verified in court), same court limits.
+The only storage change is the planner: the candidate set now includes mode-9
+`FLOAT_TENSOR` for BF16/FP16, and decode costs come from a court-calibrated
+table instead of hand-written linear constants.
+
+### Decode cost table used by the planner
+
+| class | fixed ns | ns per MiB | this run / baked |
+|---|---:|---:|---:|
+| raw | 10,000 | 318,321 | 1.198 |
+| zstd | 17,000 | 814,267 | 1.051 |
+| float-tensor (9) | 0 | 15,403,165 | **1.000** |
+| tensor-sharded (10) | 32,000 | 13,788,933 | 1.010 |
+| tensor-tiled (15) | 14,000 | 10,056,794 | 1.000 |
+| weight-delta (11, incremental) | 31,000 | 5,297,277 | 1.040 |
+| semantic-delta (14, incremental) | 18,000 | 7,228,350 | 1.044 |
+
+Baked values are the median of three independent 7-repetition calibration runs
+(128 KiB + 16 MiB, warm cache, synthetic weight-like BF16). The last column is
+this run's calibration divided by the baked value: mode 9 is reproducible to
+0.003 %, zstd to 5 %, raw to 20 % (raw is cheap and dominated by host noise).
+Modes 12/13 are never produced by the store and keep the declared rows. `--planner-cost-model=declared`
+reproduces the old linear model; the default is `measured`.
+
+### Complete storage (family)
+
+| measure | F10 (bytes-only) | **R1 (measured + mode 9)** | R1 vs ZipNN |
+|---|---:|---:|---:|
+| ZipNN 0.5.4 (recorded) | 1,316,518,229 | 1,316,518,229 | — |
+| WeftFS store total | 1,389,785,926 | **1,276,128,956** | **−3.07 %** |
+| WeftFS data only | 1,313,652,215 | **1,199,958,505** | −8.87 % |
+| indexes | 75,549,540 | 75,584,928 | 5.92 % of total |
+| base checkpoint total | 788,405,375 | **674,729,302** | — |
+| instruct marginal | 601,380,551 | 601,399,654 | — |
+
+**The storage headline flips.** F10 lost complete storage to ZipNN by 5.27 %;
+R1 wins by **3.07 %** (40,389,273 bytes smaller) and is 8.18 % smaller than the
+previous WeftFS run (113,656,970 bytes). The reviewer's arithmetic predicted
+about 1.20 GB before index overhead and roughly 3 % under ZipNN with indexes;
+the measurement is 1,199,958,505 data-only (within 0.003 % of 1.20 GB) and
+1,276,128,956 total (−3.07 %), so **the prediction is confirmed**, with the
+index share being 5.92 % of this total rather than 3 %.
+
+Strategy distribution:
+
+| checkpoint | raw | zstd | float-tensor (9) | weight-delta (11) |
+|---|---:|---:|---:|---:|
+| base (290) | 48 (12,288 B) | 73 (130,816 B) | **169 (987,922,432 B)** | 0 |
+| instruct (290) | 48 (12,288 B) | 1 (1,792 B) | 0 | **241 (988,051,456 B)** |
+
+The base instruction stream moved from 242 zstd tensors to 169 mode-9 + 73 zstd
++ 48 raw: mode 9 is priced only when it saves at least 1/64 of the zstd frame,
+so small/incompressible tensors stay on zstd/raw. The instruct checkpoint was
+already represented by weight deltas; mode 9 does not displace them.
+
+### Restore (this is where R1 loses)
+
+| operation | F10 WeftFS | **R1 WeftFS** | ZipNN (recorded) |
+|---|---:|---:|---:|
+| base read-only | 968.8 ms | **13,770 ms** | 240 ms |
+| base materialize | 6,464 ms | **16,492 ms** | 508 ms |
+| instruct read-only | 14,367 ms | **26,925 ms** | 196 ms |
+| instruct materialize | 23,752 ms | **29,789 ms** | 455 ms |
+| single tensor base | 7.3 ms | **110.5 ms** | 508 ms (whole file) |
+| single tensor instruct | 118.6 ms | **223.0 ms** | 455 ms (whole file) |
+
+Mode 9 decodes are ~19x slower than zstd in this court (15.4 vs 0.81 ms/MiB).
+The byte win is bought with decode time: the base restore is now 14.2x slower
+than F10 and 57x slower than ZipNN's in-memory decompressor, and the instruct
+restore is 1.9x slower than F10 (its delta base is now mode 9). Single-tensor
+reads still move 6.8 MB / 11.6 MB instead of the whole 658–765 MB file, but the
+instruct single-tensor time (223 ms) is now slightly slower than ZipNN's
+whole-file in-memory decompression (196 ms). This is an honest trade, not a
+claim that R1 is uniformly better.
+
+### Hot instruct checkpoint and rebase dry run
+
+After the restore pass, the harness read every instruct tensor 10 times
+(9,880,655,360 logical bytes read). `weft rebase --root /instruct --threshold 1000000000 --dry-run`
+selected **73 of the 241 weight-delta objects**, all to `float-tensor`, with no
+writes:
+
+| object | reads | current decode | independent decode | new bytes |
+|---|---:|---:|---:|---:|
+| `/model.embed_tokens.weight` | 10 | 5,375,030,143 ns | 3,999,528,062 ns | 287,764,224 |
+| `/model.layers.7.mlp.gate_proj.weight` | 10 | 172,103,424 ns | 128,038,809 ns | 5,799,745 |
+| `/model.layers.21.mlp.gate_proj.weight` | 10 | 172,103,424 ns | 128,038,809 ns | 5,790,520 |
+
+The rebase decision is `reads x decode cost > threshold` (here 10 x the chain
+cost, including the mode-9 base) and requires a standalone representation that
+decodes strictly faster and is not larger than the logical bytes. Full rows are
+in the receipt under `rebase.objects`.
+
+### Ingest cost and peak RSS
+
+The new planner encodes both zstd and mode-9 candidates for every tensor.
+Base ingest 147.6 s, instruct phase 248.4 s (F10: 30.7 s / 105.3 s). Peak RSS
+2,720,500 KiB of the 3 GiB court limit during family ingest (F10: 2,540,908 KiB).
+This is an encode-time cost of adding a candidate, not a storage cost.
 
 ## Corpus
 

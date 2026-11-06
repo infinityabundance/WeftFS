@@ -1,0 +1,1025 @@
+{
+  "schema": "weft.planner-float-rebase.v1",
+  "label": "host-calibrated decode table and mode-9 planner candidate; single-host bench court, cached public Qwen2.5-0.5B weights, warm process cache, synthetic calibration payloads; not a fleet or portable-constant claim",
+  "generated_utc": "2026-11-06T02:35:19Z",
+  "environment": {
+    "kernel": "unknown",
+    "image": "unknown",
+    "image_id": "unknown",
+    "memory": "unknown",
+    "cpus": "unknown",
+    "pids": "unknown",
+    "weftfs_revision": "unknown",
+    "weftfs_go_revision": "unknown",
+    "weftcodec_revision": "unknown",
+    "weftcodec_go_revision": "unknown"
+  },
+  "corpus": {
+    "base": {
+      "blake3": "8cf89b829a9f723eb6350895d81afbaf887a0e9464a06a2607b65650c3df38a7",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "causal_parent_offered": true,
+    "dtype_mismatches": [],
+    "instruct": {
+      "blake3": "59dce3937a1047d8dbd6fdffb67a6f0ce20e056fd657c2c38cb7d76fc35cf7c2",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "order": "safetensors data_offsets order",
+    "same_tensor_names": true,
+    "shape_mismatches": []
+  },
+  "decode_calibration": {
+    "id": "weftfs-r1/decode-calibration/v1",
+    "method": {
+      "fit": "fixed_ns + ns_per_mib * decoded_bytes / 1048576; fit from the small and large medians; delta rows subtract the measured base read",
+      "includes": "manifest read, frame/chunk verification, full logical decode",
+      "large_bytes": 16777216,
+      "reps": 7,
+      "small_bytes": 131072,
+      "warmup_reads": 1
+    },
+    "table_in_code": {
+      "raw": {
+        "fixed_ns": 10000,
+        "ns_per_mib": 318321
+      },
+      "zstd": {
+        "fixed_ns": 17000,
+        "ns_per_mib": 814267
+      },
+      "float-tensor": {
+        "fixed_ns": 0,
+        "ns_per_mib": 15403165
+      },
+      "tensor-sharded": {
+        "fixed_ns": 32000,
+        "ns_per_mib": 13788933
+      },
+      "tensor-tiled": {
+        "fixed_ns": 14000,
+        "ns_per_mib": 10056794
+      },
+      "weight-delta": {
+        "fixed_ns": 31000,
+        "ns_per_mib": 5297277
+      },
+      "semantic-delta": {
+        "fixed_ns": 18000,
+        "ns_per_mib": 7228350
+      },
+      "kv-cache": {
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576
+      },
+      "activation": {
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576
+      }
+    },
+    "this_run_vs_baked_ns_per_mib_ratio": {
+      "raw": 1.19782,
+      "zstd": 1.05109,
+      "float-tensor": 0.99997,
+      "tensor-sharded": 1.0097,
+      "tensor-tiled": 0.99952,
+      "weight-delta": 1.04027,
+      "semantic-delta": 1.04386
+    },
+    "rows": [
+      {
+        "class": "raw",
+        "fixed_ns": 2111,
+        "ns_per_mib": 381292,
+        "median_ns_large": 6102786,
+        "median_ns_small": 49773
+      },
+      {
+        "class": "zstd",
+        "fixed_ns": 12600,
+        "ns_per_mib": 855870,
+        "median_ns_large": 13706515,
+        "median_ns_small": 119584
+      },
+      {
+        "class": "float-tensor",
+        "fixed_ns": 0,
+        "ns_per_mib": 15402689,
+        "median_ns_large": 246426704,
+        "median_ns_small": 1909015
+      },
+      {
+        "class": "tensor-sharded",
+        "fixed_ns": 36626,
+        "ns_per_mib": 13922740,
+        "median_ns_large": 222800473,
+        "median_ns_small": 1776969
+      },
+      {
+        "class": "tensor-tiled",
+        "fixed_ns": 25815,
+        "ns_per_mib": 10051991,
+        "median_ns_large": 160857669,
+        "median_ns_small": 1282314
+      },
+      {
+        "class": "weight-delta",
+        "fixed_ns": 6512,
+        "ns_per_mib": 5510619,
+        "median_ns_large": 93428620,
+        "median_ns_small": 744741
+      },
+      {
+        "class": "semantic-delta",
+        "fixed_ns": 0,
+        "ns_per_mib": 7545359,
+        "median_ns_large": 126079132,
+        "median_ns_small": 967207
+      }
+    ],
+    "errors": []
+  },
+  "planner": {
+    "candidates": [
+      "raw",
+      "zstd",
+      "float-tensor (mode 9)",
+      "tensor-sharded (q8_0)",
+      "tensor-tiled (opt-in)",
+      "weight-delta",
+      "semantic-delta"
+    ],
+    "default_cost_model": "measured",
+    "lambda_ns": 0,
+    "mode9_margin": "only priced when it saves >= 1/64 of the zstd frame"
+  },
+  "storage": {
+    "base": {
+      "store_total_bytes": 674729302,
+      "tensor_data_bytes": 658243887,
+      "indexes_bytes": 16217078,
+      "strategy_distribution": {
+        "logical_bytes_by_strategy": {
+          "float-tensor": 987922432,
+          "raw": 12288,
+          "zstd": 130816
+        },
+        "tensors_by_strategy": {
+          "float-tensor": 169,
+          "raw": 48,
+          "zstd": 73
+        }
+      },
+      "ingest_wall_ms": 147578.669
+    },
+    "instruct_marginal_bytes": 601399654,
+    "family": {
+      "store_total_bytes": 1276128956,
+      "data_only_bytes": 1199958505,
+      "indexes_bytes": 75584928,
+      "strategy_distribution": {
+        "logical_bytes_by_strategy": {
+          "raw": 12288,
+          "weight-delta": 988051456,
+          "zstd": 1792
+        },
+        "tensors_by_strategy": {
+          "raw": 48,
+          "weight-delta": 241,
+          "zstd": 1
+        }
+      },
+      "ingest_wall_ms": 248361.308
+    },
+    "comparison": {
+      "zipnn_0_5_4_total_bytes": 1316518229,
+      "previous_weftfs_total_bytes": 1389785926,
+      "new_total_vs_zipnn_ratio": 0.96932,
+      "data_only_vs_zipnn_ratio": 0.91146,
+      "new_total_vs_previous_weftfs_ratio": 0.91822,
+      "family_delta_vs_previous_bytes": -113656970,
+      "index_share_of_total": 0.05923
+    }
+  },
+  "restore": {
+    "open_ms": 26.591,
+    "full": {
+      "base": {
+        "read_ms": 13770.042,
+        "logical_root_check_ms": 13977.776,
+        "materialize_ms": 16491.633,
+        "hash_exact": true,
+        "logical_roots_exact": true,
+        "backend_bytes_read": 658130091
+      },
+      "instruct": {
+        "read_ms": 26925.422,
+        "logical_root_check_ms": 26659.249,
+        "materialize_ms": 29789.045,
+        "hash_exact": true,
+        "logical_roots_exact": true,
+        "backend_bytes_read": 1199399084
+      }
+    },
+    "single_tensor": {
+      "base": {
+        "tensor": "model.layers.10.mlp.down_proj.weight",
+        "logical_bytes": 8716288,
+        "median_ms": 110.486
+      },
+      "instruct": {
+        "tensor": "model.layers.10.mlp.down_proj.weight",
+        "logical_bytes": 8716288,
+        "median_ms": 223.035
+      }
+    },
+    "previous_full_restore_ms": {
+      "base_read": 968.789,
+      "base_materialize": 6464.085,
+      "instruct_read": 14367.419,
+      "instruct_materialize": 23752.104
+    },
+    "previous_single_tensor_ms": {
+      "base": 7.307,
+      "instruct": 118.552
+    }
+  },
+  "rebase": {
+    "threshold_ns": 1000000000,
+    "cost_model": "measured",
+    "dry_run": true,
+    "scanned": 291,
+    "candidate_count": 73,
+    "skipped_count": 0,
+    "truncated": false,
+    "hot_reads_per_tensor": 10,
+    "hot_logical_bytes_read": 9880655360,
+    "objects": [
+      {
+        "path": "/model.embed_tokens.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 53750301430,
+        "estimated_decode_ns": 5375030143,
+        "new_estimated_decode_ns": 3999528062,
+        "new_physical_bytes": 180547519
+      },
+      {
+        "path": "/model.layers.7.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5799745
+      },
+      {
+        "path": "/model.layers.21.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5790520
+      },
+      {
+        "path": "/model.layers.21.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5797428
+      },
+      {
+        "path": "/model.layers.19.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5811463
+      },
+      {
+        "path": "/model.layers.22.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5785901
+      },
+      {
+        "path": "/model.layers.11.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5831858
+      },
+      {
+        "path": "/model.layers.0.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5781631
+      },
+      {
+        "path": "/model.layers.11.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5811899
+      },
+      {
+        "path": "/model.layers.16.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5810085
+      },
+      {
+        "path": "/model.layers.9.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5803533
+      },
+      {
+        "path": "/model.layers.12.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5827520
+      },
+      {
+        "path": "/model.layers.16.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5822198
+      },
+      {
+        "path": "/model.layers.14.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5798878
+      },
+      {
+        "path": "/model.layers.23.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5801039
+      },
+      {
+        "path": "/model.layers.4.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5806237
+      },
+      {
+        "path": "/model.layers.19.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793441
+      },
+      {
+        "path": "/model.layers.4.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793923
+      },
+      {
+        "path": "/model.layers.11.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5803482
+      },
+      {
+        "path": "/model.layers.3.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5797405
+      },
+      {
+        "path": "/model.layers.18.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5794033
+      },
+      {
+        "path": "/model.layers.8.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5817470
+      },
+      {
+        "path": "/model.layers.13.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5827409
+      },
+      {
+        "path": "/model.layers.20.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5794694
+      },
+      {
+        "path": "/model.layers.5.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5806482
+      },
+      {
+        "path": "/model.layers.18.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5797929
+      },
+      {
+        "path": "/model.layers.14.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5826744
+      },
+      {
+        "path": "/model.layers.20.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5811625
+      },
+      {
+        "path": "/model.layers.5.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5787890
+      },
+      {
+        "path": "/model.layers.9.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5796781
+      },
+      {
+        "path": "/model.layers.22.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5787619
+      },
+      {
+        "path": "/model.layers.2.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5784696
+      },
+      {
+        "path": "/model.layers.9.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5827051
+      },
+      {
+        "path": "/model.layers.17.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5799486
+      },
+      {
+        "path": "/model.layers.6.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5806360
+      },
+      {
+        "path": "/model.layers.13.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5817948
+      },
+      {
+        "path": "/model.layers.17.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5807302
+      },
+      {
+        "path": "/model.layers.7.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5813865
+      },
+      {
+        "path": "/model.layers.10.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5819053
+      },
+      {
+        "path": "/model.layers.23.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5785464
+      },
+      {
+        "path": "/model.layers.0.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5798340
+      },
+      {
+        "path": "/model.layers.23.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5791234
+      },
+      {
+        "path": "/model.layers.17.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5790270
+      },
+      {
+        "path": "/model.layers.18.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5782715
+      },
+      {
+        "path": "/model.layers.15.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5819480
+      },
+      {
+        "path": "/model.layers.1.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5787655
+      },
+      {
+        "path": "/model.layers.19.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5808159
+      },
+      {
+        "path": "/model.layers.1.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5779383
+      },
+      {
+        "path": "/model.layers.6.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5797354
+      },
+      {
+        "path": "/model.layers.6.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5790967
+      },
+      {
+        "path": "/model.layers.21.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5786291
+      },
+      {
+        "path": "/model.layers.8.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5825564
+      },
+      {
+        "path": "/model.layers.3.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793726
+      },
+      {
+        "path": "/model.layers.12.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5799772
+      },
+      {
+        "path": "/model.layers.5.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5808297
+      },
+      {
+        "path": "/model.layers.16.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5804337
+      },
+      {
+        "path": "/model.layers.10.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5832466
+      },
+      {
+        "path": "/model.layers.14.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5815539
+      },
+      {
+        "path": "/model.layers.22.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5785680
+      },
+      {
+        "path": "/model.layers.2.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5787414
+      },
+      {
+        "path": "/model.layers.7.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793861
+      },
+      {
+        "path": "/model.layers.10.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5802438
+      },
+      {
+        "path": "/model.layers.1.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793457
+      },
+      {
+        "path": "/model.layers.2.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5793075
+      },
+      {
+        "path": "/model.layers.4.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5805856
+      },
+      {
+        "path": "/model.layers.0.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5802340
+      },
+      {
+        "path": "/model.layers.20.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5806723
+      },
+      {
+        "path": "/model.layers.13.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5800177
+      },
+      {
+        "path": "/model.layers.15.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5805202
+      },
+      {
+        "path": "/model.layers.3.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5787886
+      },
+      {
+        "path": "/model.layers.12.mlp.gate_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5815799
+      },
+      {
+        "path": "/model.layers.15.mlp.down_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5835315
+      },
+      {
+        "path": "/model.layers.8.mlp.up_proj.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 1721034240,
+        "estimated_decode_ns": 172103424,
+        "new_estimated_decode_ns": 128038809,
+        "new_physical_bytes": 5803469
+      }
+    ],
+    "skipped_sample": []
+  },
+  "verify": {
+    "ingest_verify_full": {
+      "full": true,
+      "ok": true
+    },
+    "hot_rows": 290
+  },
+  "checks": {
+    "corpus_sha256_verified": true,
+    "restore_exact": true,
+    "logical_roots_exact": true,
+    "rebase_dry_run_only": true,
+    "rebase_candidates_nonzero": true,
+    "float_tensor_calibration_within_5pct": true
+  },
+  "residual_risks": [
+    "Single host and warm process cache; absolute times move with host state.",
+    "The measured decode table is court-calibrated, not a portable constant.",
+    "ZipNN is a recorded whole-file baseline from the F10 court, not re-run here."
+  ]
+}

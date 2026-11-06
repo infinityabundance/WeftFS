@@ -1688,6 +1688,77 @@ reproduce commands: `bench/RESULTS-real-model.md`.
   timings are single observations for the full-file rows; no Go parity for this
   court.
 
+## Subphase R1 — measured decode cost, mode-9 planner candidate, rebasing
+
+**Implemented, measured once, single host; Go parity in the store API.**
+Receipt `bench/receipts/planner-float-20261106T023519Z.json`; analysis and
+old-vs-new tables in `bench/RESULTS-real-model.md` (R1 section).
+
+- **Candidate set:** mode 9 `FLOAT_TENSOR` is now priced by the planner for
+  BF16/FP16/FP32 tensors written through `write_tensor_file*`, alongside raw,
+  zstd, mode 10, mode 15 (opt-in), weight-delta, and semantic-delta. Mode 9 is
+  only offered when it saves at least 1/64 (1.56 %) of the zstd frame, because
+  it decodes ~19x slower; this prevents a noise-sized win on incompressible
+  data from selecting the slow decoder. FP32 remains offered but loses on the
+  measured corpora (P2: +62 % physical), so the planner does not select it.
+- **Cost model:** one affine table per language (`src/cost_model.rs`,
+  `WeftFS-Go/store/cost_model.go`) with `fixed_ns + decoded_bytes * ns_per_mib
+  / 1048576`, integer-only. Default `measured` (median of three 7-repetition
+  court runs at 128 KiB and 16 MiB: raw 10,000 + 318,321/MiB; zstd 17,000 +
+  814,267; mode 9 0 + 15,403,165; mode 10 32,000 + 13,788,933; mode 15 14,000
+  + 10,056,794; weight-delta 31,000 + 5,297,277 incremental; semantic-delta
+  18,000 + 7,228,350 incremental). `--planner-cost-model=declared` reproduces
+  the old hand-written linear model. Delta rows are incremental and the rebase
+  planner sums the dependency chain. Modes 12/13 are never produced and keep
+  declared rows. Calibration is host/court-bound, not a portable constant; this
+  run reproduced mode 9 to 0.003 %, zstd 5 %, raw 20 % (host noise).
+- **Access counters:** advisory, per-object, bounded (1,000,000 counters;
+  8,192 journal records), persisted as `access/counts.v1` (epoch + digest) and
+  `access/journal.v1`, rebuildable from the journal, and never consulted by
+  commits, recovery, verification, GC, or any frozen format. Read-only opens
+  never write; the read path flushes every 256 observations and on close.
+  Go writes the same files and reads the same epoch/digest rules.
+- **Rebase:** `weft rebase --root <path|id> --threshold <ns> [--dry-run]
+  [--strategy ...]`. A candidate needs `reads > 0`,
+  `reads x current_decode_cost > threshold`, and a standalone representation
+  that decodes strictly faster and is no larger than the logical bytes. Apply
+  publishes a **new version** (causal parent = previous version), records a
+  canonical `weft.provenance.v1` receipt (`operation: "rebase"`, input = old
+  content root, output = new content root, params include reads/threshold/
+  strategies), consumes the counter, and leaves every previous version and
+  snapshot intact. A second run with no intervening reads is a no-op. Go
+  implements the same decision and writes a receipt the Rust verifier reads
+  (`store/rebase.go`; cross-language test).
+- **Qwen2.5-0.5B family with the new candidate set:** family store total
+  **1,276,128,956 B** (F10 1,389,785,926), data-only **1,199,958,505 B**
+  (1.20 GB, matching the reviewer's arithmetic), indexes 75,584,928 B (5.92 %).
+  **WeftFS now beats the recorded ZipNN total 1,316,518,229 B by 3.07 %**
+  (F10 lost by 5.27 %); per checkpoint base 674,729,302 B and instruct marginal
+  601,399,654 B. Base strategy mix: 169 mode 9 + 73 zstd + 48 raw; instruct:
+  241 weight-delta + 1 zstd + 48 raw. Exactness unchanged (both files match the
+  LFS SHA-256, every logical root matches, `verify --full` clean).
+- **Restore cost (the honest loss):** base read 13,770 ms / materialize
+  16,492 ms (F10 968.8 / 6,464); instruct read 26,925 ms / materialize
+  29,789 ms (F10 14,367 / 23,752). Single tensor base 110.5 ms, instruct
+  223.0 ms (F10 7.3 / 118.6). Mode 9 is 14.2x slower than the F10 base path and
+  ~57x slower than ZipNN's in-memory decompressor; the storage win is bought
+  with decode time. Ingest also costs more (147.6 s base + 248.4 s instruct;
+  peak RSS 2,720,500 KiB of 3 GiB) because both candidates are encoded.
+- **Rebase dry run (hot instruct):** after 10 reads per tensor (9.88 GB
+  logical), threshold 1e9 ns selected 73 of 241 weight-delta objects, all
+  `float-tensor`, no writes; e.g. the 272 MB embedding current decode
+  5.375 s/read -> 4.000 s/read, 287,764,224 B independent.
+- **Tests:** Rust `cargo test --all-targets` 244 passed / 0 failed / 0 ignored;
+  FUSE `cargo test --features fuse --all-targets` 278 passed / 0 failed /
+  2 ignored (one earlier FUSE invocation reported a transient failure; two
+  subsequent clean runs passed all 278); Go `go test -race -count=1 ./...` all
+  packages pass, including the cross-language rebase/provenance test. New tests:
+  `tests/planner_float.rs` 4/4 and `WeftFS-Go/store/planner_float_test.go` 3/3.
+- **Residual:** one host, warm cache; the measured table is court-bound; mode 9
+  restore is slower than zstd/ZipNN; the rebase dry run only plans (no apply in
+  the real-model court); the Go store has no CLI `rebase` verb yet (API + tests
+  only); index segments are 5.92 % of the total.
+
 ## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
 
 **Implemented, measured once, single host.** This court settles two empirical

@@ -1304,6 +1304,7 @@ fn prefix_for_kind(kind: KeyKind) -> Option<&'static str> {
         KeyKind::SnapshotRef => Some("refs/snapshots/"),
         KeyKind::Tag => Some("refs/tags/"),
         KeyKind::Tmp => Some("tmp/"),
+        KeyKind::Access => Some("access/"),
         _ => None,
     }
 }
@@ -1341,6 +1342,11 @@ fn classify_relative(kind: KeyKind, relative: &str) -> Option<Key> {
         KeyKind::SnapshotRef => Some(Key::snapshot_ref(relative)),
         KeyKind::Tag => Some(Key::tag(relative)),
         KeyKind::Tmp => Some(Key::tmp(relative)),
+        KeyKind::Access => match relative {
+            "counts.v1" => Some(Key::access_counts()),
+            "journal.v1" => Some(Key::access_journal()),
+            _ => None,
+        },
         _ => None,
     }
 }

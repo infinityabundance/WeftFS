@@ -51,8 +51,9 @@ fn run() -> Result<(), String> {
     match phase.as_str() {
         "ingest" => ingest(&args[1..]),
         "restore" => restore(&args[1..]),
+        "hot" => hot(&args[1..]),
         other => Err(format!(
-            "unknown phase `{other}` (expected `ingest` or `restore`)"
+            "unknown phase `{other}` (expected `ingest`, `restore`, or `hot`)"
         )),
     }
 }
@@ -498,7 +499,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 "chunk_size": chunk_size,
                 "checkpoint_interval": checkpoint_interval,
                 "representation": "Raw (frozen v1 manifest)",
-                "planner": "TensorPlanOptions::default() (lambda_ns = 0, bytes only)",
+                "planner": "TensorPlanOptions::default() (lambda_ns = 0, measured decode table, mode-9 candidate)",
                 "max_semantic_candidates": weftfs::tensor_store::DEFAULT_TENSOR_MAX_CANDIDATES,
             },
             "generation": generation,
@@ -859,6 +860,83 @@ fn restore_checkpoint(
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// hot: read every tensor of one checkpoint N times so the advisory access
+// counters make the rebase dry run meaningful.
+// ---------------------------------------------------------------------------
+
+fn hot(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let ingest_json = PathBuf::from(required(args, "--ingest-json")?);
+    let out = PathBuf::from(required(args, "--out")?);
+    let checkpoint = value_of(args, "--checkpoint").unwrap_or_else(|| "instruct".to_owned());
+    let reads: u64 = value_of(args, "--reads")
+        .map(|text| {
+            text.parse()
+                .map_err(|_| "--reads must be an integer".to_owned())
+        })
+        .transpose()?
+        .unwrap_or(10);
+    let ingest_text = fs::read_to_string(&ingest_json)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let ingest: Json = serde_json::from_str(&ingest_text)
+        .map_err(|err| format!("{}: {err}", ingest_json.display()))?;
+    let records = ingest
+        .get("ingest")
+        .and_then(|value| value.get(checkpoint.as_str()))
+        .and_then(|value| value.get("tensors"))
+        .and_then(Json::as_array)
+        .ok_or_else(|| format!("ingest receipt has no {checkpoint} tensors"))?;
+    let store = Store::open(&store_path, OpenMode::ReadWrite)
+        .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let started = Instant::now();
+    let mut rows = Vec::new();
+    let mut total_bytes = 0u64;
+    for record in records {
+        let name = record
+            .get("name")
+            .and_then(Json::as_str)
+            .ok_or_else(|| "ingest tensor record is missing name".to_owned())?;
+        let id = store
+            .resolve_components(&[checkpoint.as_bytes(), name.as_bytes()])
+            .map_err(|err| format!("resolve {checkpoint}/{name}: {err}"))?;
+        for _ in 0..reads {
+            let data = store
+                .read_tensor(id)
+                .map_err(|err| format!("read {checkpoint}/{name}: {err}"))?;
+            total_bytes += data.len() as u64;
+        }
+        rows.push(json!({
+            "name": name,
+            "object_id": id.to_hex(),
+            "access_reads": store.access_reads(id),
+            "strategy": store.tensor_metadata(id).map(|m| m.strategy).unwrap_or_else(|_| "unknown".to_owned()),
+        }));
+    }
+    store
+        .flush_access_counts()
+        .map_err(|err| format!("flush access counters: {err}"))?;
+    let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
+    drop(store);
+    let receipt = json!({
+        "schema": "weft.real-model.hot.v1",
+        "phase": "hot",
+        "checkpoint": checkpoint,
+        "reads_per_tensor": reads,
+        "tensors": rows,
+        "logical_bytes_read": total_bytes,
+        "wall_ms": round(wall_ms),
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    fs::write(
+        &out,
+        serde_json::to_vec_pretty(&receipt).map_err(|err| err.to_string())?,
+    )
+    .map_err(|err| format!("{}: {err}", out.display()))?;
+    println!("{}", out.display());
+    Ok(())
+}
 
 fn round(value: f64) -> f64 {
     (value * 1000.0).round() / 1000.0

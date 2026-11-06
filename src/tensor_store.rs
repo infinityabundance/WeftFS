@@ -64,6 +64,8 @@ pub enum TensorStrategy {
     Raw,
     /// One WeftCodec ZSTD frame (v2 `kind:"codec"`).
     Zstd,
+    /// One mode-9 `FLOAT_TENSOR` frame (v2 `kind:"tensor"`).
+    FloatTensor,
     /// One mode-10 `TENSOR_SHARDED` frame.
     TensorSharded,
     /// One mode-15 `TENSOR_TILED` frame.
@@ -84,6 +86,7 @@ impl TensorStrategy {
         match self {
             TensorStrategy::Raw => "raw",
             TensorStrategy::Zstd => "zstd",
+            TensorStrategy::FloatTensor => "float-tensor",
             TensorStrategy::TensorSharded => "tensor-sharded",
             TensorStrategy::TensorTiled => "tensor-tiled",
             TensorStrategy::WeightDelta => "weight-delta",
@@ -98,6 +101,7 @@ impl TensorStrategy {
         match text {
             "raw" => Ok(TensorStrategy::Raw),
             "zstd" => Ok(TensorStrategy::Zstd),
+            "float-tensor" => Ok(TensorStrategy::FloatTensor),
             "tensor-sharded" => Ok(TensorStrategy::TensorSharded),
             "tensor-tiled" => Ok(TensorStrategy::TensorTiled),
             "weight-delta" => Ok(TensorStrategy::WeightDelta),
@@ -114,6 +118,7 @@ impl TensorStrategy {
     pub fn frame_mode(self) -> Option<u32> {
         match self {
             TensorStrategy::Raw | TensorStrategy::Zstd => None,
+            TensorStrategy::FloatTensor => Some(9),
             TensorStrategy::TensorSharded => Some(10),
             TensorStrategy::TensorTiled => Some(15),
             TensorStrategy::WeightDelta => Some(11),
@@ -129,6 +134,27 @@ impl TensorStrategy {
             self,
             TensorStrategy::WeightDelta | TensorStrategy::SemanticDelta
         )
+    }
+
+    /// True when a representation stands alone (no base frame).
+    pub fn is_independent(self) -> bool {
+        !self.uses_dependency()
+    }
+
+    /// Cost-model class for this strategy.
+    pub fn cost_class(self) -> crate::cost_model::CostClass {
+        use crate::cost_model::CostClass;
+        match self {
+            TensorStrategy::Raw => CostClass::Raw,
+            TensorStrategy::Zstd => CostClass::Zstd,
+            TensorStrategy::FloatTensor => CostClass::FloatTensor,
+            TensorStrategy::TensorSharded => CostClass::TensorSharded,
+            TensorStrategy::TensorTiled => CostClass::TensorTiled,
+            TensorStrategy::WeightDelta => CostClass::WeightDelta,
+            TensorStrategy::SemanticDelta => CostClass::SemanticDelta,
+            TensorStrategy::KvCache => CostClass::KvCache,
+            TensorStrategy::Activation => CostClass::Activation,
+        }
     }
 }
 
@@ -404,12 +430,15 @@ impl TensorLayoutSpec {
     }
 }
 
-/// Planner options. The default is bytes-only (`lambda_ns = 0`).
+/// Planner options. The default is bytes-only (`lambda_ns = 0`) with the
+/// host-calibrated decode cost table.
 #[derive(Clone, Debug)]
 pub struct TensorPlanOptions {
     /// Bytes charged per estimated nanosecond of decode time. `0` is
     /// bytes-only.
     pub lambda_ns: u64,
+    /// Which decode-cost table prices candidates.
+    pub cost_model: crate::cost_model::CostModelKind,
     /// Semantic grouping policy for the semantic-delta candidate. `None` uses
     /// `mantissa_truncate:3` for the floating dtypes.
     pub semantic_policy: Option<SemanticPolicy>,
@@ -424,6 +453,7 @@ impl Default for TensorPlanOptions {
     fn default() -> Self {
         TensorPlanOptions {
             lambda_ns: 0,
+            cost_model: crate::cost_model::CostModelKind::default(),
             semantic_policy: None,
             max_candidates: DEFAULT_TENSOR_MAX_CANDIDATES,
             candidates: Vec::new(),
@@ -472,6 +502,29 @@ pub struct TensorPlan {
     pub candidates: Vec<TensorPlanCandidate>,
 }
 
+/// The priced decision among standalone representations (rebase input).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TensorIndependentPlan {
+    pub chosen: TensorStrategy,
+    pub physical_bytes: u64,
+    pub estimated_decode_ns: u64,
+    pub cost: u128,
+    pub candidates: Vec<TensorPlanCandidate>,
+}
+
+/// Result of re-publishing one object with a standalone representation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TensorRebase {
+    pub old_version: Hash32,
+    pub new_version: Hash32,
+    /// Manifest id of the previous version (the old content root).
+    pub old_content: Hash32,
+    /// Manifest id of the new version (the new content root).
+    pub new_content: Hash32,
+    pub old_strategy: String,
+    pub plan: TensorIndependentPlan,
+}
+
 /// Tensor identity recovered from an object record.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StoredTensorMetadata {
@@ -497,20 +550,15 @@ struct PreparedCandidate {
     artifact: Option<PreparedArtifact>,
 }
 
-/// Integer estimate of decode time in nanoseconds. These are a documented
-/// linear cost model, not measurements: raw is a memory pass, zstd inflates,
-/// and the tensor modes entropy-decode planes and (for deltas) decode a base.
-fn estimated_decode_ns(strategy: TensorStrategy, size: u64) -> u64 {
-    match strategy {
-        TensorStrategy::Raw => size / 200 + 20_000,
-        TensorStrategy::Zstd => size + 50_000,
-        TensorStrategy::TensorSharded | TensorStrategy::TensorTiled => {
-            size.saturating_mul(4) + 100_000
-        }
-        TensorStrategy::WeightDelta => size.saturating_mul(3) + 100_000,
-        TensorStrategy::SemanticDelta => size.saturating_mul(3) + 150_000,
-        TensorStrategy::KvCache | TensorStrategy::Activation => size + 100_000,
-    }
+/// Integer estimate of decode time in nanoseconds from the shared cost model.
+/// `measured` is the host-calibrated table; `declared` is the historical
+/// hand-written linear model. Both languages use identical integer arithmetic.
+fn estimated_decode_ns(
+    strategy: TensorStrategy,
+    size: u64,
+    model: crate::cost_model::CostModelKind,
+) -> u64 {
+    crate::cost_model::estimate_ns(strategy.cost_class(), size, model)
 }
 
 fn price(physical_bytes: u64, estimated_ns: u64, lambda_ns: u64) -> u128 {
@@ -571,6 +619,16 @@ fn words_from_bytes(bytes: &[u8]) -> Vec<i8> {
     bytes.iter().map(|byte| *byte as i8).collect()
 }
 
+/// Mode-9 float layout for a manifest dtype, when the mode implements it.
+fn float_tensor_dtype(dtype: TensorElementDtype) -> Option<weftcodec::modes::FloatDtype> {
+    match dtype {
+        TensorElementDtype::F16 => Some(weftcodec::modes::FloatDtype::F16),
+        TensorElementDtype::Bf16 => Some(weftcodec::modes::FloatDtype::Bf16),
+        TensorElementDtype::F32 => Some(weftcodec::modes::FloatDtype::F32),
+        _ => None,
+    }
+}
+
 impl Store {
     /// Write one logical tensor as a new file object.
     ///
@@ -622,6 +680,7 @@ impl Store {
             &spec.causal,
             &spec.plan,
             spec.tile_shape.as_deref(),
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -674,7 +733,7 @@ impl Store {
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize(dtype, shape, bytes)?;
         let prepared =
-            self.prepare_candidates(dtype, shape, &logical, layout, causal, options, None)?;
+            self.prepare_candidates(dtype, shape, &logical, layout, causal, options, None, false)?;
         let chosen = self.choose_candidate(&prepared, None)?;
         let mut runner_up: Option<&PreparedCandidate> = None;
         let mut applicable: Vec<&PreparedCandidate> = prepared
@@ -704,6 +763,117 @@ impl Store {
                 .and_then(|item| item.candidate.estimated_decode_ns),
             runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
             candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+        })
+    }
+
+    /// Price only the standalone representations of an existing tensor object.
+    ///
+    /// Used by the rebase planner: deltas are excluded, so the result is a
+    /// representation that a read can decode without touching another object.
+    pub fn plan_tensor_independent(
+        &self,
+        id: Hash32,
+        options: &TensorPlanOptions,
+        hint: Option<TensorStrategy>,
+    ) -> Result<TensorIndependentPlan> {
+        let meta = self.tensor_metadata(id)?;
+        let logical = self.read_object_uncounted(id)?;
+        let prepared = self.prepare_candidates(
+            meta.dtype,
+            &meta.shape,
+            &logical,
+            &meta.layout,
+            &[],
+            options,
+            None,
+            true,
+        )?;
+        let chosen = self.choose_candidate(&prepared, hint)?;
+        Ok(TensorIndependentPlan {
+            chosen: chosen.candidate.strategy,
+            physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+            estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+            cost: chosen.candidate.cost.unwrap_or(0),
+            candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+        })
+    }
+
+    /// Re-publish an existing tensor object with an independent representation.
+    ///
+    /// The logical bytes are unchanged, so the object's content root and
+    /// `LogicalTensorRoot` are unchanged; a **new version** is published and
+    /// the previous version and every snapshot stay intact. The caller records
+    /// provenance and consumes the read counter.
+    pub fn rebase_tensor_object(
+        &mut self,
+        id: Hash32,
+        options: &TensorPlanOptions,
+        hint: Option<TensorStrategy>,
+    ) -> Result<TensorRebase> {
+        self.require_writable()?;
+        let meta = self.tensor_metadata(id)?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument(
+                "rebase requires a regular file object",
+            ));
+        }
+        let logical = self.read_object_uncounted(id)?;
+        let prepared = self.prepare_candidates(
+            meta.dtype,
+            &meta.shape,
+            &logical,
+            &meta.layout,
+            &[],
+            options,
+            None,
+            true,
+        )?;
+        let chosen = self.choose_candidate(&prepared, hint)?;
+        let artifact = chosen
+            .artifact
+            .clone()
+            .ok_or_else(|| Error::invalid_argument("chosen tensor strategy has no artifact"))?;
+        let root = match &artifact.tensor {
+            Some(tensor) => tensor.logical_root,
+            None => self.logical_root_for_bytes(meta.dtype, &meta.shape, &logical, None)?,
+        };
+        let (manifest_id, content_hash, size) =
+            self.store_tensor_artifact(meta.dtype, &meta.shape, &logical, &meta.layout, &artifact)?;
+        let mut attrs = old.attrs.clone();
+        apply_tensor_attrs(
+            &mut attrs,
+            meta.dtype,
+            &meta.shape,
+            root,
+            &meta.layout,
+            artifact.strategy_name.as_str(),
+        )?;
+        let causal = vec![old.version];
+        let old_content = old.content;
+        let new_version = self.publish_file_version_with_attrs(
+            id,
+            old.clone(),
+            manifest_id,
+            content_hash,
+            size,
+            &causal,
+            attrs,
+        )?;
+        let new_content = self.object_meta(id)?.content;
+        Ok(TensorRebase {
+            old_version: old.version,
+            new_version,
+            old_content,
+            new_content,
+            old_strategy: meta.strategy,
+            plan: TensorIndependentPlan {
+                chosen: chosen.candidate.strategy,
+                physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+                estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+                cost: chosen.candidate.cost.unwrap_or(0),
+                candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+            },
         })
     }
 
@@ -1091,6 +1261,7 @@ impl Store {
             &causal,
             &spec.plan,
             None,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -1134,6 +1305,7 @@ impl Store {
         causal: &[Hash32],
         options: &TensorPlanOptions,
         tile_shape: Option<&[u64]>,
+        independent_only: bool,
     ) -> Result<Vec<PreparedCandidate>> {
         let limits = Limits::default();
         let size = logical.len() as u64;
@@ -1162,10 +1334,14 @@ impl Store {
                     applicable: true,
                     detail: "canonical row-major chunks".to_owned(),
                     physical_bytes: Some(size),
-                    estimated_decode_ns: Some(estimated_decode_ns(TensorStrategy::Raw, size)),
+                    estimated_decode_ns: Some(estimated_decode_ns(
+                        TensorStrategy::Raw,
+                        size,
+                        options.cost_model,
+                    )),
                     cost: Some(price(
                         size,
-                        estimated_decode_ns(TensorStrategy::Raw, size),
+                        estimated_decode_ns(TensorStrategy::Raw, size, options.cost_model),
                         options.lambda_ns,
                     )),
                     dependency: None,
@@ -1197,7 +1373,8 @@ impl Store {
             ) {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
-                    let estimate = estimated_decode_ns(TensorStrategy::Zstd, size);
+                    let estimate =
+                        estimated_decode_ns(TensorStrategy::Zstd, size, options.cost_model);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::Zstd,
@@ -1221,6 +1398,83 @@ impl Store {
             }
         }
 
+        // Mode 9 float-tensor. Offered for the byte-aligned float dtypes the
+        // mode implements. fp32 is offered but loses to zstd on measured
+        // corpora (P2: +62 % physical), so the planner only selects it when it
+        // actually wins; an explicit `float-tensor` hint still forces it.
+        //
+        // Mode 9 decodes about 19x slower than zstd, so it is only *priced*
+        // when it saves at least 1/64 (1.56 %) of the zstd frame. On
+        // incompressible data the two are within noise of each other; without
+        // this margin an accidental 0.06 % win would select the slow decoder.
+        let zstd_physical = out
+            .iter()
+            .find(|item| {
+                item.candidate.strategy == TensorStrategy::Zstd && item.candidate.applicable
+            })
+            .and_then(|item| item.candidate.physical_bytes);
+        match float_tensor_dtype(dtype) {
+            Some(float_dtype) => {
+                match weftcodec::modes::encode_float_tensor(logical, float_dtype, shape, &limits) {
+                    Ok(frame) => {
+                        let physical = frame.len() as u64;
+                        let worthwhile = match zstd_physical {
+                            Some(zstd) => physical.saturating_mul(64) <= zstd.saturating_mul(63),
+                            None => true,
+                        };
+                        if !worthwhile {
+                            out.push(skipped(
+                                TensorStrategy::FloatTensor,
+                                format!(
+                                    "mode 9 saves less than 1/64 of the zstd frame                                      ({physical} vs {} bytes); not worth the decode cost",
+                                    zstd_physical.unwrap_or(0)
+                                ),
+                            ));
+                        } else {
+                            let estimate = estimated_decode_ns(
+                                TensorStrategy::FloatTensor,
+                                size,
+                                options.cost_model,
+                            );
+                            let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
+                            out.push(PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::FloatTensor,
+                                    applicable: true,
+                                    detail: format!(
+                                        "one mode-9 FLOAT_TENSOR frame ({})",
+                                        float_dtype.as_str()
+                                    ),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    cost: Some(price(physical, estimate, options.lambda_ns)),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Tensor,
+                                    strategy_name: "float-tensor".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: Some(TensorRepresentation {
+                                        tensor_mode: 9,
+                                        dtype,
+                                        shape: shape.to_vec(),
+                                        logical_root: root,
+                                        layout: layout.to_value(dtype, shape)?,
+                                    }),
+                                }),
+                            });
+                        }
+                    }
+                    Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
+                }
+            }
+            None => out.push(skipped(
+                TensorStrategy::FloatTensor,
+                format!("dtype {} has no mode-9 float layout", dtype.as_str()),
+            )),
+        }
+
         // Mode 10 tensor-sharded. Restricted to q8_0: the additive quantized
         // logical root needs the codec's scale plane, which only mode 10
         // carries, and the store writes one whole-tensor shard.
@@ -1228,7 +1482,11 @@ impl Store {
             match self.prepare_mode10(dtype, shape, logical, &limits) {
                 Ok((frame, root)) => {
                     let physical = frame.len() as u64;
-                    let estimate = estimated_decode_ns(TensorStrategy::TensorSharded, size);
+                    let estimate = estimated_decode_ns(
+                        TensorStrategy::TensorSharded,
+                        size,
+                        options.cost_model,
+                    );
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::TensorSharded,
@@ -1274,7 +1532,11 @@ impl Store {
                 match self.prepare_mode15(dtype, shape, logical, tile_shape, &limits) {
                     Ok((frame, root)) => {
                         let physical = frame.len() as u64;
-                        let estimate = estimated_decode_ns(TensorStrategy::TensorTiled, size);
+                        let estimate = estimated_decode_ns(
+                            TensorStrategy::TensorTiled,
+                            size,
+                            options.cost_model,
+                        );
                         out.push(PreparedCandidate {
                             candidate: TensorPlanCandidate {
                                 strategy: TensorStrategy::TensorTiled,
@@ -1310,88 +1572,107 @@ impl Store {
         }
 
         // Mode 11 weight-delta against the causal parent.
-        match self.prepare_delta(
-            dtype,
-            shape,
-            logical,
-            causal,
-            &limits,
-            TensorStrategy::WeightDelta,
-        ) {
-            Ok(Some((frame, dependency))) => {
-                let physical = frame.len() as u64;
-                let estimate = estimated_decode_ns(TensorStrategy::WeightDelta, size);
-                out.push(PreparedCandidate {
-                    candidate: TensorPlanCandidate {
-                        strategy: TensorStrategy::WeightDelta,
-                        applicable: true,
-                        detail: "mode 11 against the causal parent".to_owned(),
-                        physical_bytes: Some(physical),
-                        estimated_decode_ns: Some(estimate),
-                        cost: Some(price(physical, estimate, options.lambda_ns)),
-                        dependency: Some(dependency),
-                    },
-                    artifact: Some(PreparedArtifact {
-                        kind: RepresentationKind::Tensor,
-                        strategy_name: "weight-delta".to_owned(),
-                        frame: Some(frame),
-                        dependencies: vec![dependency],
-                        tensor: Some(TensorRepresentation {
-                            tensor_mode: 11,
-                            dtype,
-                            shape: shape.to_vec(),
-                            logical_root: self
-                                .logical_root_for_bytes(dtype, shape, logical, None)?,
-                            layout: layout.to_value(dtype, shape)?,
-                        }),
-                    }),
-                });
-            }
-            Ok(None) => out.push(skipped(
+        if independent_only {
+            out.push(skipped(
                 TensorStrategy::WeightDelta,
-                "no usable causal parent with the same dtype/shape".to_owned(),
-            )),
-            Err(err) => out.push(skipped(TensorStrategy::WeightDelta, err.to_string())),
+                "rebase requires an independent representation".to_owned(),
+            ));
+        } else {
+            match self.prepare_delta(
+                dtype,
+                shape,
+                logical,
+                causal,
+                &limits,
+                TensorStrategy::WeightDelta,
+            ) {
+                Ok(Some((frame, dependency))) => {
+                    let physical = frame.len() as u64;
+                    let estimate =
+                        estimated_decode_ns(TensorStrategy::WeightDelta, size, options.cost_model);
+                    out.push(PreparedCandidate {
+                        candidate: TensorPlanCandidate {
+                            strategy: TensorStrategy::WeightDelta,
+                            applicable: true,
+                            detail: "mode 11 against the causal parent".to_owned(),
+                            physical_bytes: Some(physical),
+                            estimated_decode_ns: Some(estimate),
+                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            dependency: Some(dependency),
+                        },
+                        artifact: Some(PreparedArtifact {
+                            kind: RepresentationKind::Tensor,
+                            strategy_name: "weight-delta".to_owned(),
+                            frame: Some(frame),
+                            dependencies: vec![dependency],
+                            tensor: Some(TensorRepresentation {
+                                tensor_mode: 11,
+                                dtype,
+                                shape: shape.to_vec(),
+                                logical_root: self
+                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                layout: layout.to_value(dtype, shape)?,
+                            }),
+                        }),
+                    });
+                }
+                Ok(None) => out.push(skipped(
+                    TensorStrategy::WeightDelta,
+                    "no usable causal parent with the same dtype/shape".to_owned(),
+                )),
+                Err(err) => out.push(skipped(TensorStrategy::WeightDelta, err.to_string())),
+            }
         }
 
         // Mode 14 semantic-delta against a same-semantic-root candidate.
-        match self.prepare_semantic(dtype, shape, logical, options, &limits) {
-            Ok(Some((frame, dependency, policy))) => {
-                let physical = frame.len() as u64;
-                let estimate = estimated_decode_ns(TensorStrategy::SemanticDelta, size);
-                out.push(PreparedCandidate {
-                    candidate: TensorPlanCandidate {
-                        strategy: TensorStrategy::SemanticDelta,
-                        applicable: true,
-                        detail: format!(
-                            "mode 14 against a same-semantic-root base (policy {policy})"
-                        ),
-                        physical_bytes: Some(physical),
-                        estimated_decode_ns: Some(estimate),
-                        cost: Some(price(physical, estimate, options.lambda_ns)),
-                        dependency: Some(dependency),
-                    },
-                    artifact: Some(PreparedArtifact {
-                        kind: RepresentationKind::Tensor,
-                        strategy_name: "semantic-delta".to_owned(),
-                        frame: Some(frame),
-                        dependencies: vec![dependency],
-                        tensor: Some(TensorRepresentation {
-                            tensor_mode: 14,
-                            dtype,
-                            shape: shape.to_vec(),
-                            logical_root: self
-                                .logical_root_for_bytes(dtype, shape, logical, None)?,
-                            layout: layout.to_value(dtype, shape)?,
-                        }),
-                    }),
-                });
-            }
-            Ok(None) => out.push(skipped(
+        if independent_only {
+            out.push(skipped(
                 TensorStrategy::SemanticDelta,
-                "no same-semantic-root candidate with the same dtype/shape".to_owned(),
-            )),
-            Err(err) => out.push(skipped(TensorStrategy::SemanticDelta, err.to_string())),
+                "rebase requires an independent representation".to_owned(),
+            ));
+        } else {
+            match self.prepare_semantic(dtype, shape, logical, options, &limits) {
+                Ok(Some((frame, dependency, policy))) => {
+                    let physical = frame.len() as u64;
+                    let estimate = estimated_decode_ns(
+                        TensorStrategy::SemanticDelta,
+                        size,
+                        options.cost_model,
+                    );
+                    out.push(PreparedCandidate {
+                        candidate: TensorPlanCandidate {
+                            strategy: TensorStrategy::SemanticDelta,
+                            applicable: true,
+                            detail: format!(
+                                "mode 14 against a same-semantic-root base (policy {policy})"
+                            ),
+                            physical_bytes: Some(physical),
+                            estimated_decode_ns: Some(estimate),
+                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            dependency: Some(dependency),
+                        },
+                        artifact: Some(PreparedArtifact {
+                            kind: RepresentationKind::Tensor,
+                            strategy_name: "semantic-delta".to_owned(),
+                            frame: Some(frame),
+                            dependencies: vec![dependency],
+                            tensor: Some(TensorRepresentation {
+                                tensor_mode: 14,
+                                dtype,
+                                shape: shape.to_vec(),
+                                logical_root: self
+                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                layout: layout.to_value(dtype, shape)?,
+                            }),
+                        }),
+                    });
+                }
+                Ok(None) => out.push(skipped(
+                    TensorStrategy::SemanticDelta,
+                    "no same-semantic-root candidate with the same dtype/shape".to_owned(),
+                )),
+                Err(err) => out.push(skipped(TensorStrategy::SemanticDelta, err.to_string())),
+            }
         }
 
         Ok(out)
@@ -1864,6 +2145,7 @@ impl Store {
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match tensor.tensor_mode {
+            9 => Mode::FloatTensor,
             10 => Mode::TensorSharded,
             11 => Mode::WeightDelta,
             12 => Mode::KvCache,
@@ -1884,6 +2166,7 @@ impl Store {
             )));
         }
         let logical = match tensor.tensor_mode {
+            9 => self.decode_mode9(&frame, tensor, manifest, &limits)?,
             10 => self.decode_mode10(&frame, tensor, manifest, &limits)?,
             11 => self.decode_delta(&frame, tensor, rep, &limits, depth, seen, false)?,
             14 => self.decode_delta(&frame, tensor, rep, &limits, depth, seen, true)?,
@@ -1915,6 +2198,54 @@ impl Store {
             }
         }
         Ok(out)
+    }
+
+    fn decode_mode9(
+        &self,
+        frame: &Frame<'_>,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        limits: &Limits,
+    ) -> Result<Vec<u8>> {
+        let meta = weftcodec::modes::float_tensor_metadata(frame, limits)?;
+        let expected = float_tensor_dtype(tensor.dtype).ok_or_else(|| {
+            Error::corrupt(format!(
+                "mode-9 dtype `{}` has no float layout",
+                tensor.dtype.as_str()
+            ))
+        })?;
+        if meta.dtype != expected {
+            return Err(Error::corrupt(format!(
+                "mode-9 dtype `{}` disagrees with manifest dtype `{}`",
+                meta.dtype.as_str(),
+                tensor.dtype.as_str()
+            )));
+        }
+        if meta.shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-9 shape disagrees with the representation manifest",
+            ));
+        }
+        if meta.element_count * expected.element_size() != manifest.size {
+            return Err(Error::corrupt(
+                "mode-9 element count disagrees with the manifest size",
+            ));
+        }
+        let logical = weftcodec::modes::decode_float_tensor(frame, limits)?;
+        if logical.len() as u64 != manifest.size {
+            return Err(Error::corrupt(
+                "mode-9 decoded length disagrees with the manifest",
+            ));
+        }
+        let physical = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("mode-9 dtype has no logical root"))?;
+        let root = weftcodec::tensor::logical_root(physical, &tensor.shape, &logical, limits)?;
+        if root != tensor.logical_root {
+            return Err(Error::corrupt("mode-9 logical root recomputation mismatch"));
+        }
+        Ok(logical)
     }
 
     fn decode_mode10(

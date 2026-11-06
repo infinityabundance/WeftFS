@@ -70,6 +70,8 @@ pub enum KeyKind {
     /// `quota.migrated` store-root record: the legacy combined
     /// policy+usage file, preserved when it is imported into committed state.
     QuotaMigrated,
+    /// `access/counts.v1`: advisory per-object read counters.
+    Access,
 }
 
 impl KeyKind {
@@ -90,6 +92,7 @@ impl KeyKind {
             KeyKind::Other => "other",
             KeyKind::Quota => "quota",
             KeyKind::QuotaMigrated => "quota-migrated",
+            KeyKind::Access => "access",
         }
     }
 }
@@ -127,6 +130,10 @@ pub enum Key {
     Quota,
     /// The preserved legacy `quota` record (`quota.migrated`).
     QuotaMigrated,
+    /// Advisory read-counter snapshot (`access/counts.v1`).
+    AccessCounts,
+    /// Advisory read-counter journal (`access/journal.v1`).
+    AccessJournal,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -190,6 +197,14 @@ impl Key {
         Key::QuotaMigrated
     }
 
+    pub fn access_counts() -> Key {
+        Key::AccessCounts
+    }
+
+    pub fn access_journal() -> Key {
+        Key::AccessJournal
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -209,6 +224,7 @@ impl Key {
             Key::Tmp { .. } => KeyKind::Tmp,
             Key::Quota => KeyKind::Quota,
             Key::QuotaMigrated => KeyKind::QuotaMigrated,
+            Key::AccessCounts | Key::AccessJournal => KeyKind::Access,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -264,6 +280,8 @@ impl Key {
             Key::Tmp { name } => format!("tmp/{name}"),
             Key::Quota => "quota".to_owned(),
             Key::QuotaMigrated => "quota.migrated".to_owned(),
+            Key::AccessCounts => "access/counts.v1".to_owned(),
+            Key::AccessJournal => "access/journal.v1".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -576,6 +594,8 @@ impl LocalBackend {
             Key::Tmp { name } => self.root.join("tmp").join(name),
             Key::Quota => self.root.join("quota"),
             Key::QuotaMigrated => self.root.join("quota.migrated"),
+            Key::AccessCounts => self.root.join("access").join("counts.v1"),
+            Key::AccessJournal => self.root.join("access").join("journal.v1"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -592,6 +612,7 @@ impl LocalBackend {
             KeyKind::Tmp => Some(self.root.join("tmp")),
             KeyKind::Quota => Some(self.root.clone()),
             KeyKind::QuotaMigrated => Some(self.root.clone()),
+            KeyKind::Access => Some(self.root.join("access")),
             _ => None,
         }
     }
@@ -1048,6 +1069,11 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
                 None
             }
         }
+        KeyKind::Access => match name {
+            "counts.v1" => Some(Key::access_counts()),
+            "journal.v1" => Some(Key::access_journal()),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -1108,6 +1134,8 @@ impl ObjectBackend {
             Key::Tag { name } => format!("t-{name}"),
             Key::Quota => "q-quota".to_owned(),
             Key::QuotaMigrated => "q-quota.migrated".to_owned(),
+            Key::AccessCounts => "a-counts.v1".to_owned(),
+            Key::AccessJournal => "a-journal.v1".to_owned(),
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
             Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
@@ -1684,6 +1712,13 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
                 return Some(Key::quota_migrated());
             }
             return None;
+        }
+        KeyKind::Access => {
+            return match name {
+                "a-counts.v1" => Some(Key::access_counts()),
+                "a-journal.v1" => Some(Key::access_journal()),
+                _ => None,
+            };
         }
         _ => return None,
     };

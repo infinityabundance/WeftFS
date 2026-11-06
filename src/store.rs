@@ -529,6 +529,9 @@ pub struct Store {
     /// Number of chunk blobs read by the most recent range write, for tests
     /// and receipts that prove Merkle identity does not stream the whole file.
     range_write_chunk_reads: AtomicU64,
+    /// Advisory per-object read counters (`src/access.rs`). Never consulted by
+    /// commits, recovery, verification, or GC.
+    access: Mutex<crate::access::AccessCounts>,
 }
 
 /// Accepted quota outcome for one commit. `usage_after` is the cumulative
@@ -619,6 +622,7 @@ impl Store {
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
+            access: Mutex::new(crate::access::AccessCounts::default()),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -690,6 +694,7 @@ impl Store {
         } else {
             recovery::recover_via(&*backend)?
         };
+        let access = crate::access::AccessCounts::load(&*backend);
         let next_generation = recovery
             .generation
             .max(recovery.highest_file_generation)
@@ -720,6 +725,7 @@ impl Store {
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
+            access: Mutex::new(access),
         };
         store.load_quota_record();
         Ok(store)
@@ -829,6 +835,69 @@ impl Store {
 
     fn note_range_write_chunk_read(&self) {
         self.range_write_chunk_reads.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record one successful object read in the advisory counter table and
+    /// flush periodically. Never fails and never affects the read result.
+    fn note_object_read(&self, id: Hash32) {
+        let mut guard = self
+            .access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        guard.note_read(id);
+        if guard.should_flush() && self.mode == OpenMode::ReadWrite {
+            let _ = self.with_backend_mut(|backend| guard.flush(backend));
+        }
+    }
+
+    /// Persist any pending read counters. Read-only opens never write, so this
+    /// is a no-op for them; callers that want counters to survive a read-only
+    /// process must reopen read-write (the bench harness does).
+    pub fn flush_access_counts(&self) -> Result<()> {
+        if self.mode != OpenMode::ReadWrite {
+            return Ok(());
+        }
+        let mut guard = self
+            .access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        self.with_backend_mut(|backend| guard.flush(backend))?;
+        Ok(())
+    }
+
+    /// Number of observed reads retained for one object.
+    pub fn access_reads(&self, id: Hash32) -> u64 {
+        self.access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .reads(id)
+    }
+
+    /// Every retained counter, ascending by object id.
+    pub fn access_entries(&self) -> std::collections::BTreeMap<Hash32, u64> {
+        self.access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .entries()
+            .clone()
+    }
+
+    /// Consume (reset) one object's counter. Used by rebase, which must be
+    /// idempotent: a second run sees zero reads and does nothing.
+    pub fn consume_access_reads(&self, id: Hash32) -> u64 {
+        self.access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .consume(id)
+    }
+
+    /// Diagnostics from the access-counter load path.
+    pub fn access_notes(&self) -> Vec<String> {
+        self.access
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .notes()
+            .to_vec()
     }
 
     pub fn mode(&self) -> OpenMode {
@@ -1226,22 +1295,35 @@ impl Store {
     /// whole-content hash; symlinks return their target bytes; directories are
     /// `IsDir`.
     pub fn read_object(&self, id: Hash32) -> Result<Vec<u8>> {
+        let bytes = self.read_object_inner(id)?;
+        self.note_object_read(id);
+        Ok(bytes)
+    }
+
+    /// Read without touching the advisory access counters. Internal store
+    /// work (planning, rebase dry runs, verification) must not inflate them.
+    pub(crate) fn read_object_uncounted(&self, id: Hash32) -> Result<Vec<u8>> {
+        self.read_object_inner(id)
+    }
+
+    fn read_object_inner(&self, id: Hash32) -> Result<Vec<u8>> {
         let record = self.object_meta(id)?;
-        match record.kind {
-            ObjectKind::Dir => Err(Error::is_dir("object is a directory")),
+        let bytes = match record.kind {
+            ObjectKind::Dir => return Err(Error::is_dir("object is a directory")),
             ObjectKind::Symlink => record
                 .symlink_target()
                 .map(|bytes| bytes.to_vec())
-                .ok_or_else(|| Error::corrupt("symlink object has no target attribute")),
+                .ok_or_else(|| Error::corrupt("symlink object has no target attribute"))?,
             ObjectKind::File => {
                 let manifest = self
                     .with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
                 if manifest.size != record.size {
                     return Err(Error::corrupt("object size disagrees with manifest"));
                 }
-                self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)
+                self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)?
             }
-        }
+        };
+        Ok(bytes)
     }
 
     /// Read an object in a pinned snapshot state.
@@ -1254,12 +1336,12 @@ impl Store {
                     .objects
                     .get(&id)
                     .ok_or_else(|| Error::not_found("no such object at this snapshot"))?;
-                match record.kind {
-                    ObjectKind::Dir => Err(Error::is_dir("object is a directory")),
+                let bytes = match record.kind {
+                    ObjectKind::Dir => return Err(Error::is_dir("object is a directory")),
                     ObjectKind::Symlink => record
                         .symlink_target()
                         .map(|bytes| bytes.to_vec())
-                        .ok_or_else(|| Error::corrupt("symlink object has no target attribute")),
+                        .ok_or_else(|| Error::corrupt("symlink object has no target attribute"))?,
                     ObjectKind::File => {
                         let manifest = self.with_backend(|backend| {
                             recovery::read_manifest_via(backend, record.content)
@@ -1267,9 +1349,11 @@ impl Store {
                         if manifest.size != record.size {
                             return Err(Error::corrupt("object size disagrees with manifest"));
                         }
-                        self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)
+                        self.read_manifest_bytes(&manifest, record.content, 0, manifest.size, true)?
                     }
-                }
+                };
+                self.note_object_read(id);
+                Ok(bytes)
             }
         }
     }
@@ -1285,7 +1369,9 @@ impl Store {
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
-        self.read_manifest_bytes(&manifest, record.content, offset, length, false)
+        let bytes = self.read_manifest_bytes(&manifest, record.content, offset, length, false)?;
+        self.note_object_read(id);
+        Ok(bytes)
     }
 
     /// Read a byte range directly from a content root (manifest id). Safe for
@@ -7245,3 +7331,13 @@ fn collect_unmarked(
 // Keep the format constants referenced in this module's documentation visible
 // to downstream users through the store crate.
 pub use crate::format::{FORMAT_MAJOR as STORE_FORMAT_MAJOR, FORMAT_MINOR as STORE_FORMAT_MINOR};
+
+impl Drop for Store {
+    fn drop(&mut self) {
+        // Advisory counters only; a failure here (for example a remote backend
+        // that became unavailable) must never turn into a panic.
+        if self.mode == OpenMode::ReadWrite {
+            let _ = self.flush_access_counts();
+        }
+    }
+}
