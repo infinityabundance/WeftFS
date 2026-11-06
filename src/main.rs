@@ -31,6 +31,7 @@ use weftfs::context::{parse_capability_text, CapabilityContext};
 use weftfs::error::{Error, Result};
 use weftfs::evaluate::lookup_snapshot;
 use weftfs::format::ContentIdentity;
+use weftfs::gcs::GcsConfig;
 use weftfs::identity::Hash32;
 use weftfs::provenance::{
     choose_recovery, Determinism, ProvenanceEnvironment, ProvenanceInput, ProvenancePrincipal,
@@ -85,24 +86,33 @@ struct Cli {
     )]
     content_identity: Option<String>,
     /// Physical storage backend: `local` (normative POSIX layout), `object`
-    /// (immutable object namespace published with link(2)), or `s3`
-    /// (SigV4 S3-compatible endpoint; see `--s3-*`).
+    /// (immutable object namespace published with link(2)), `s3` (SigV4
+    /// S3-compatible endpoint; see `--s3-*`), or `gcs` (GCS JSON API with
+    /// generation preconditions; see `--gcs-*`).
     #[arg(
         long,
         global = true,
-        value_name = "local|object|s3",
+        value_name = "local|object|s3|gcs",
         default_value = "local"
     )]
     backend: String,
     /// Optional blob plane for a split store: immutable chunks, manifests, and
     /// indexes live here while commit/control state stays on `--commit-backend`.
     /// Omitted means "same as --backend", i.e. the historical single backend.
-    #[arg(long = "blob-backend", global = true, value_name = "local|object|s3")]
+    #[arg(
+        long = "blob-backend",
+        global = true,
+        value_name = "local|object|s3|gcs"
+    )]
     blob_backend: Option<String>,
     /// Optional commit plane for a split store: `FORMAT`, `LOCK`, the
     /// superblock, commit records, and refs live here. Omitted means "same as
     /// --backend".
-    #[arg(long = "commit-backend", global = true, value_name = "local|object|s3")]
+    #[arg(
+        long = "commit-backend",
+        global = true,
+        value_name = "local|object|s3|gcs"
+    )]
     commit_backend: Option<String>,
     /// Optional local directory for the blob plane of a split store, when both
     /// planes are POSIX-shaped. Ignored by a remote blob plane, which is
@@ -127,6 +137,23 @@ struct Cli {
     /// Optional S3 session token (fallback: AWS_SESSION_TOKEN).
     #[arg(long = "s3-session-token", global = true, value_name = "TOKEN")]
     s3_session_token: Option<String>,
+    /// GCS JSON API endpoint (default `https://storage.googleapis.com`).
+    #[arg(long = "gcs-endpoint", global = true, value_name = "URL")]
+    gcs_endpoint: Option<String>,
+    /// GCS bucket that holds the store.
+    #[arg(long = "gcs-bucket", global = true, value_name = "BUCKET")]
+    gcs_bucket: Option<String>,
+    /// GCS OAuth2 bearer token (fallback: WEFT_GCS_ACCESS_TOKEN or
+    /// GOOGLE_OAUTH_ACCESS_TOKEN). Never logged or written to receipts.
+    #[arg(long = "gcs-token", global = true, value_name = "TOKEN")]
+    gcs_token: Option<String>,
+    /// GCS project used to create the bucket when it does not exist.
+    #[arg(long = "gcs-project", global = true, value_name = "PROJECT")]
+    gcs_project: Option<String>,
+    /// Send no Authorization header (an emulator court). Refused when a token
+    /// was also supplied.
+    #[arg(long = "gcs-anonymous", global = true)]
+    gcs_anonymous: bool,
     /// Group small immutable blobs into physical pack objects (subphase R11).
     /// Members are recorded in a compare-and-swap catalog and read with one
     /// ranged request per member. Refused when the blob plane cannot read a
@@ -1067,6 +1094,7 @@ enum CliBackend {
     Local,
     Object,
     S3(S3Config),
+    Gcs(GcsConfig),
     /// Blobs on one plane, commit/control state on another.
     Split {
         blobs: Box<CliBackend>,
@@ -1083,6 +1111,9 @@ impl CliBackend {
             CliBackend::S3(config) => BackendKind::S3 {
                 config: config.clone(),
             },
+            CliBackend::Gcs(config) => BackendKind::Gcs {
+                config: config.clone(),
+            },
             CliBackend::Split {
                 blobs,
                 commits,
@@ -1097,7 +1128,7 @@ impl CliBackend {
 
     fn is_remote(&self) -> bool {
         match self {
-            CliBackend::S3(_) => true,
+            CliBackend::S3(_) | CliBackend::Gcs(_) => true,
             CliBackend::Split { commits, .. } => commits.is_remote(),
             _ => false,
         }
@@ -1148,6 +1179,7 @@ impl OpenPolicy {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn parse_backend(
     text: &str,
     endpoint: Option<String>,
@@ -1156,6 +1188,11 @@ fn parse_backend(
     access_key: Option<String>,
     secret_key: Option<String>,
     session_token: Option<String>,
+    gcs_endpoint: Option<String>,
+    gcs_bucket: Option<String>,
+    gcs_token: Option<String>,
+    gcs_project: Option<String>,
+    gcs_anonymous: Option<bool>,
 ) -> Result<CliBackend> {
     match text {
         "local" => Ok(CliBackend::Local),
@@ -1168,8 +1205,15 @@ fn parse_backend(
             secret_key,
             session_token,
         )?)),
+        "gcs" => Ok(CliBackend::Gcs(GcsConfig::resolve(
+            gcs_endpoint,
+            gcs_bucket,
+            gcs_token,
+            gcs_project,
+            gcs_anonymous,
+        )?)),
         other => Err(Error::invalid_argument(format!(
-            "--backend must be `local`, `object`, or `s3` (got `{other}`)"
+            "--backend must be `local`, `object`, `s3`, or `gcs` (got `{other}`)"
         ))),
     }
 }
@@ -1190,7 +1234,13 @@ fn parse_planes(
     access_key: Option<String>,
     secret_key: Option<String>,
     session_token: Option<String>,
+    gcs_endpoint: Option<String>,
+    gcs_bucket: Option<String>,
+    gcs_token: Option<String>,
+    gcs_project: Option<String>,
+    gcs_anonymous: bool,
 ) -> Result<CliBackend> {
+    let anonymous = Some(gcs_anonymous).filter(|value| *value);
     let base = parse_backend(
         backend,
         endpoint.clone(),
@@ -1199,6 +1249,11 @@ fn parse_planes(
         access_key.clone(),
         secret_key.clone(),
         session_token.clone(),
+        gcs_endpoint.clone(),
+        gcs_bucket.clone(),
+        gcs_token.clone(),
+        gcs_project.clone(),
+        anonymous,
     )?;
     let blobs = blob_backend
         .map(|text| {
@@ -1210,6 +1265,11 @@ fn parse_planes(
                 access_key.clone(),
                 secret_key.clone(),
                 session_token.clone(),
+                gcs_endpoint.clone(),
+                gcs_bucket.clone(),
+                gcs_token.clone(),
+                gcs_project.clone(),
+                anonymous,
             )
         })
         .transpose()?;
@@ -1223,6 +1283,11 @@ fn parse_planes(
                 access_key,
                 secret_key,
                 session_token,
+                gcs_endpoint,
+                gcs_bucket,
+                gcs_token,
+                gcs_project,
+                anonymous,
             )
         })
         .transpose()?;
@@ -1302,6 +1367,11 @@ fn run(cli: Cli) -> Result<()> {
         s3_access_key,
         s3_secret_key,
         s3_session_token,
+        gcs_endpoint,
+        gcs_bucket,
+        gcs_token,
+        gcs_project,
+        gcs_anonymous,
         pack,
         pack_target_bytes,
         pack_member_threshold,
@@ -1372,6 +1442,11 @@ fn run(cli: Cli) -> Result<()> {
             s3_access_key,
             s3_secret_key,
             s3_session_token,
+            gcs_endpoint,
+            gcs_bucket,
+            gcs_token,
+            gcs_project,
+            gcs_anonymous,
         )?,
         pack: if pack {
             let mut options = weftfs::packs::PackOptions::default();

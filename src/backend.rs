@@ -42,6 +42,7 @@ use serde::Serialize;
 
 use crate::error::{Error, Result};
 use crate::format::MAX_CHUNK_SIZE;
+use crate::gcs::{GcsBackend, GcsConfig};
 use crate::identity::Hash32;
 use crate::s3::{S3Backend, S3Config};
 
@@ -351,6 +352,84 @@ impl Key {
     }
 }
 
+/// Logical prefix of one listed kind, in the normative on-disk layout.
+///
+/// Shared by every backend that lists object names, so a remote listing cannot
+/// drift from the layout a local store writes.
+pub(crate) fn list_prefix_path(kind: KeyKind) -> Option<&'static str> {
+    match kind {
+        KeyKind::Commit => Some("commits/"),
+        KeyKind::Object => Some("objects/"),
+        KeyKind::Manifest => Some("manifests/"),
+        KeyKind::Index => Some("indexes/"),
+        KeyKind::SnapshotRef => Some("refs/snapshots/"),
+        KeyKind::Tag => Some("refs/tags/"),
+        KeyKind::Tmp => Some("tmp/"),
+        KeyKind::Access => Some("access/"),
+        KeyKind::Pack => Some("packs/"),
+        KeyKind::PackCatalog => Some("pack-catalog/"),
+        _ => None,
+    }
+}
+
+/// Classify one listed object name (prefix already stripped) as a [`Key`].
+///
+/// `None` means the name does not follow the kind's naming rule; the caller
+/// reports it as [`Key::Other`] so GC can see the stranger.
+pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> {
+    match kind {
+        KeyKind::Object | KeyKind::Manifest => {
+            let (shard, name) = relative.split_once('/')?;
+            let hash = Hash32::from_lower_hex(name).ok()?;
+            if hash.to_hex()[0..2] != *shard {
+                return None;
+            }
+            Some(if kind == KeyKind::Object {
+                Key::object(hash)
+            } else {
+                Key::manifest(hash)
+            })
+        }
+        KeyKind::Index => {
+            let (shard, name) = relative.split_once('/')?;
+            let stem = name.strip_suffix(".idx")?;
+            let commit = Hash32::from_lower_hex(stem).ok()?;
+            if commit.to_hex()[0..2] != *shard {
+                return None;
+            }
+            Some(Key::index(commit))
+        }
+        KeyKind::Commit => {
+            let stem = relative.strip_suffix(".commit")?;
+            if stem.is_empty() || !stem.bytes().all(|byte| byte.is_ascii_digit()) {
+                return None;
+            }
+            Some(Key::commit(stem.parse::<u64>().ok()?))
+        }
+        KeyKind::SnapshotRef => Some(Key::snapshot_ref(relative)),
+        KeyKind::Tag => Some(Key::tag(relative)),
+        KeyKind::Tmp => Some(Key::tmp(relative)),
+        KeyKind::Access => match relative {
+            "counts.v1" => Some(Key::access_counts()),
+            "journal.v1" => Some(Key::access_journal()),
+            _ => None,
+        },
+        KeyKind::Pack | KeyKind::PackCatalog => {
+            let (shard, name) = relative.split_once('/')?;
+            let hash = Hash32::from_lower_hex(name).ok()?;
+            if hash.to_hex()[0..2] != *shard {
+                return None;
+            }
+            Some(if kind == KeyKind::Pack {
+                Key::pack(hash)
+            } else {
+                Key::pack_catalog(hash)
+            })
+        }
+        _ => None,
+    }
+}
+
 /// Declared guarantees of a backend.
 ///
 /// The store treats these as mandatory contracts, not hints. Missing
@@ -458,6 +537,9 @@ pub enum BackendKind {
     Object,
     /// A real S3-compatible object store (SigV4 over HTTPS/HTTP).
     S3 { config: S3Config },
+    /// A real GCS-compatible object store (JSON API with generation
+    /// preconditions over HTTPS/HTTP).
+    Gcs { config: GcsConfig },
     /// A POSIX-named backend whose guarantees are declared by the caller.
     /// Used to represent storage such as 3FS before its consistency and
     /// durability claims have been measured. The declared capabilities are
@@ -542,6 +624,7 @@ impl BackendKind {
             BackendKind::Local => "local",
             BackendKind::Object => "object",
             BackendKind::S3 { .. } => "s3",
+            BackendKind::Gcs { .. } => "gcs",
             BackendKind::Posix { .. } => "posix",
             BackendKind::Split { .. } => "split",
             BackendKind::Packed { .. } => "packed",
@@ -584,6 +667,7 @@ impl BackendKind {
             BackendKind::Local => Capabilities::local_posix(),
             BackendKind::Object => Capabilities::immutable_object(),
             BackendKind::S3 { .. } => S3Backend::capabilities(),
+            BackendKind::Gcs { .. } => GcsBackend::capabilities(),
             BackendKind::Posix { capabilities } => capabilities.clone(),
             BackendKind::Split { blobs, commits, .. } => combine_capabilities(
                 &blobs.capabilities(),
@@ -651,6 +735,7 @@ impl BackendKind {
     pub fn is_remote(&self) -> bool {
         match self {
             BackendKind::S3 { .. } => true,
+            BackendKind::Gcs { .. } => true,
             BackendKind::Split { commits, .. } => commits.is_remote(),
             BackendKind::Packed { inner, .. } => inner.is_remote(),
             _ => false,
@@ -664,6 +749,7 @@ impl BackendKind {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
+            BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
@@ -697,6 +783,7 @@ impl BackendKind {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
+            BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
@@ -725,6 +812,7 @@ impl BackendKind {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
+            BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }

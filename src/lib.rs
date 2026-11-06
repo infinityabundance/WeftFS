@@ -30,6 +30,7 @@ pub mod evaluate;
 pub mod format;
 #[cfg(feature = "fuse")]
 pub mod fuse;
+pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
 pub mod object_cache;

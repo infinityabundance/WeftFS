@@ -42,10 +42,12 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use sha2::{Digest, Sha256};
 
+use crate::backend::{
+    classify_listed_key as classify_relative, list_prefix_path as prefix_for_kind,
+};
 use crate::backend::{BackendStats, Capabilities, Key, KeyKind, StorageBackend};
 use crate::error::{Error, Result};
 use crate::format::{MAX_CHUNK_SIZE, SUPERBLOCK_BYTES};
-use crate::identity::Hash32;
 
 /// S3 max single-PUT object size. The backend advertises the smaller store
 /// bound so a single allocation stays bounded.
@@ -1345,76 +1347,6 @@ impl S3Backend {
                 key.display_path()
             ))),
         }
-    }
-}
-
-fn prefix_for_kind(kind: KeyKind) -> Option<&'static str> {
-    match kind {
-        KeyKind::Commit => Some("commits/"),
-        KeyKind::Object => Some("objects/"),
-        KeyKind::Manifest => Some("manifests/"),
-        KeyKind::Index => Some("indexes/"),
-        KeyKind::SnapshotRef => Some("refs/snapshots/"),
-        KeyKind::Tag => Some("refs/tags/"),
-        KeyKind::Tmp => Some("tmp/"),
-        KeyKind::Access => Some("access/"),
-        KeyKind::Pack => Some("packs/"),
-        KeyKind::PackCatalog => Some("pack-catalog/"),
-        _ => None,
-    }
-}
-
-fn classify_relative(kind: KeyKind, relative: &str) -> Option<Key> {
-    match kind {
-        KeyKind::Object | KeyKind::Manifest => {
-            let (shard, name) = relative.split_once('/')?;
-            let hash = Hash32::from_lower_hex(name).ok()?;
-            if hash.to_hex()[0..2] != *shard {
-                return None;
-            }
-            Some(if kind == KeyKind::Object {
-                Key::object(hash)
-            } else {
-                Key::manifest(hash)
-            })
-        }
-        KeyKind::Index => {
-            let (shard, name) = relative.split_once('/')?;
-            let stem = name.strip_suffix(".idx")?;
-            let commit = Hash32::from_lower_hex(stem).ok()?;
-            if commit.to_hex()[0..2] != *shard {
-                return None;
-            }
-            Some(Key::index(commit))
-        }
-        KeyKind::Commit => {
-            let stem = relative.strip_suffix(".commit")?;
-            if stem.is_empty() || !stem.bytes().all(|byte| byte.is_ascii_digit()) {
-                return None;
-            }
-            Some(Key::commit(stem.parse::<u64>().ok()?))
-        }
-        KeyKind::SnapshotRef => Some(Key::snapshot_ref(relative)),
-        KeyKind::Tag => Some(Key::tag(relative)),
-        KeyKind::Tmp => Some(Key::tmp(relative)),
-        KeyKind::Access => match relative {
-            "counts.v1" => Some(Key::access_counts()),
-            "journal.v1" => Some(Key::access_journal()),
-            _ => None,
-        },
-        KeyKind::Pack | KeyKind::PackCatalog => {
-            let (shard, name) = relative.split_once('/')?;
-            let hash = Hash32::from_lower_hex(name).ok()?;
-            if hash.to_hex()[0..2] != *shard {
-                return None;
-            }
-            Some(if kind == KeyKind::Pack {
-                Key::pack(hash)
-            } else {
-                Key::pack_catalog(hash)
-            })
-        }
-        _ => None,
     }
 }
 
