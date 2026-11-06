@@ -1831,6 +1831,13 @@ cost, not more format coverage.
   reconstruction is per-object only (no block-independent streams inside one
   frame) and does not make materialize reliable; no Go writer for the
   checkpoint/mode-15 paths; no fleet claim.
+- **Planner tiled candidate (additive):** `TensorPlanOptions.tile_shape` and
+  `weft plan --tile-shape A,B` price mode 15 without changing defaults. On the
+  real BF16 base embedding (272,269,312 B), tiled `[128,224]` is **184,633,502 B
+  vs 180,623,816 B for mode 9 (+2.22 %)** and estimates **874,217,523 ns vs
+  1,216,176,993 ns (-28 %)**; mode 9 still wins at the bytes-only default. Test
+  `planner_offers_mode15_only_when_a_tile_shape_is_supplied`. Intra-tensor
+  parallel tile decode is not implemented.
 
 ## Subphase P2 — real-weight FLOAT_TENSOR and WEIGHT_DELTA court
 

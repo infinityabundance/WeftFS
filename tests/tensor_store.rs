@@ -684,3 +684,64 @@ fn tensor_layout_encoding_is_canonical_and_attributes_are_recorded() {
     let encoded = manifest.encode().unwrap();
     assert_eq!(identity::manifest_id(&encoded), record.content);
 }
+
+#[test]
+fn planner_offers_mode15_only_when_a_tile_shape_is_supplied() {
+    let shape = [64u64, 32];
+    let bytes = smooth_tensor(64 * 32 * 2, 0x33);
+    let base = smooth_tensor(64 * 32 * 2, 0x44);
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    store
+        .write_tensor_file(
+            root,
+            b"base",
+            "bf16",
+            &shape,
+            &base,
+            &TensorLayoutSpec::row_major(),
+            None,
+        )
+        .unwrap();
+
+    let plan_with = |options: TensorPlanOptions| {
+        store
+            .plan_tensor(
+                "bf16",
+                &shape,
+                &bytes,
+                &TensorLayoutSpec::row_major(),
+                &[],
+                &options,
+            )
+            .unwrap()
+    };
+
+    let without = plan_with(TensorPlanOptions::default());
+    let tiled = without
+        .candidates
+        .iter()
+        .find(|item| item.strategy == TensorStrategy::TensorTiled)
+        .expect("tiled candidate is always listed");
+    assert!(!tiled.applicable);
+    assert!(tiled.detail.contains("no tile shape"), "{}", tiled.detail);
+
+    let options = TensorPlanOptions {
+        tile_shape: Some(vec![16, 16]),
+        ..TensorPlanOptions::default()
+    };
+    let with = plan_with(options.clone());
+    let tiled = with
+        .candidates
+        .iter()
+        .find(|item| item.strategy == TensorStrategy::TensorTiled)
+        .expect("tiled candidate is always listed");
+    assert!(tiled.applicable, "{tiled:?}");
+    assert!(tiled.physical_bytes.unwrap_or(0) > 0);
+    assert!(tiled.estimated_decode_ns.unwrap_or(0) > 0);
+
+    // The option is deterministic and does not change without it.
+    assert_eq!(with, plan_with(options));
+    assert_eq!(without, plan_with(TensorPlanOptions::default()));
+}

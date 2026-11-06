@@ -99,6 +99,38 @@ baked table was re-measured rather than reusing the R1 constants.
   checkpoint shards, not by this store planner.
 * Single host, warm cache; the table is court-bound. No fleet claim.
 
+### Planner: tiled candidate on the largest tensor (R2 addition)
+
+`TensorPlanOptions.tile_shape` (and `weft plan --tile-shape A,B`) now lets the
+planner price mode 15 without changing any default: with no tile shape the
+candidate is listed as inapplicable, so existing objects keep their
+representations. Measured read-only on the real base embedding
+(`/base/model.embed_tokens.weight`, BF16 `[151936, 896]`, 272,269,312 B) at
+`lambda_ns = 0`:
+
+| candidate | physical bytes | estimated decode ns |
+|---|---:|---:|
+| float-tensor (9) | 180,623,816 | 1,216,176,993 |
+| tensor-tiled (15), tiles `[128,224]` | 184,633,502 | 874,217,523 |
+| zstd | 210,809,061 | measured table |
+
+Tiled costs **2.22 % more bytes** and estimates **28 % less decode time**, and
+each tile carries its own root and is independently decodable. At the default
+bytes-only objective the planner still picks mode 9, which is what the fresh
+base ingest did (169 float-tensor objects, this embedding among them), so
+defaults do not move. Exploiting the trade needs either intra-tensor parallel
+tile decode (not implemented) or a latency weight above the byte/decode
+break-even point.
+
+Honesty note: that read-only plan also reported a 1,038-byte semantic-delta
+candidate because the store already contains this exact tensor; the candidate
+is degenerate (it is the tensor itself) and is not used above. A fresh ingest
+has no such candidate.
+
+```
+weft plan --file embed.bin --dtype bf16 --shape 151936,896 --tile-shape 128,224 --json
+```
+
 Revisions: WeftFS `ba5a0e6`, WeftCodec `1ee5d90`, WeftCodec-Go `d1aab12`,
 WeftFS-Go `bb15514`. Tests at that tree: WeftCodec 204 passed; WeftCodec-Go
 `go test ./...` all packages; parent 244 passed; FUSE `--all-targets` 278

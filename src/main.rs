@@ -287,6 +287,9 @@ enum Command {
         semantic_policy: Option<String>,
         #[arg(long)]
         candidates: Option<String>,
+        /// Tile extents for the mode-15 `TENSOR_TILED` candidate (comma-separated).
+        #[arg(long = "tile-shape")]
+        tile_shape: Option<String>,
     },
     /// List a directory.
     Ls { path: String },
@@ -1351,6 +1354,7 @@ fn run(cli: Cli) -> Result<()> {
             causal,
             semantic_policy,
             candidates,
+            tile_shape,
         } => {
             let bytes = fs::read(&input_file)
                 .map_err(|err| Error::io(format!("cannot read {}: {err}", input_file.display())))?;
@@ -1368,6 +1372,10 @@ fn run(cli: Cli) -> Result<()> {
                 cost_model: planner_cost_model,
                 semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                 candidates: parse_object_ids(candidates.as_deref())?,
+                tile_shape: match tile_shape.as_deref() {
+                    Some(text) => Some(parse_u64_list(text, "--tile-shape")?),
+                    None => None,
+                },
                 ..TensorPlanOptions::default()
             };
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;

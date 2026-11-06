@@ -447,6 +447,10 @@ pub struct TensorPlanOptions {
     /// Explicit candidate tensor ObjectIds. When non-empty, the search uses
     /// exactly this list instead of scanning live tensor objects.
     pub candidates: Vec<Hash32>,
+    /// Tile extents for the mode-15 `TENSOR_TILED` candidate. `None` skips
+    /// mode 15 entirely, which keeps existing objects on their current
+    /// representations.
+    pub tile_shape: Option<Vec<u64>>,
 }
 
 impl Default for TensorPlanOptions {
@@ -457,6 +461,7 @@ impl Default for TensorPlanOptions {
             semantic_policy: None,
             max_candidates: DEFAULT_TENSOR_MAX_CANDIDATES,
             candidates: Vec::new(),
+            tile_shape: None,
         }
     }
 }
@@ -679,7 +684,9 @@ impl Store {
             layout,
             &spec.causal,
             &spec.plan,
-            spec.tile_shape.as_deref(),
+            spec.tile_shape
+                .as_deref()
+                .or(spec.plan.tile_shape.as_deref()),
             false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
@@ -732,8 +739,16 @@ impl Store {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize(dtype, shape, bytes)?;
-        let prepared =
-            self.prepare_candidates(dtype, shape, &logical, layout, causal, options, None, false)?;
+        let prepared = self.prepare_candidates(
+            dtype,
+            shape,
+            &logical,
+            layout,
+            causal,
+            options,
+            options.tile_shape.as_deref(),
+            false,
+        )?;
         let chosen = self.choose_candidate(&prepared, None)?;
         let mut runner_up: Option<&PreparedCandidate> = None;
         let mut applicable: Vec<&PreparedCandidate> = prepared
