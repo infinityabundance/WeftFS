@@ -4627,15 +4627,17 @@ token supplied out of band.
   `3.35.0`, image
   `mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`,
   as a sibling container with the same hard limits (3g/3g, 1024 pids, 4 cpus,
-  bounded tmpfs, `cap-drop=ALL`, `no-new-privileges`). Court receipt
-  `azure-court-20261106T221838Z.json`:
+  bounded tmpfs, `cap-drop=ALL`, `no-new-privileges`). Court receipts
+  `azure-court-20261106T230714Z.json` (current) and
+  `azure-court-20261106T221838Z.json` (earlier run, same root and counts):
   * local and Azure runs have the **same content root**
     `0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f`, the
     same generation sequence 1..21, the same verified bytes (393,216) and the
     same content digest.
-  * the `superblock` ETag differs at every sampled publication (three samples:
-    `"0x264D03DEA657800"`, `"0x22C7D77C905AD60"`, `"0x26D43CACE360340"`), which
-    is direct evidence that each head went through `If-Match`.
+  * the `superblock` ETag differs at every sampled publication (three samples in
+    the current run: `"0x2143D5029C72E20"`, `"0x2758364DCC64440"`,
+    `"0x1C85139701E9A20"`), which is direct evidence that each head went
+    through `If-Match`.
   * process-fault crash proxy: 3/3 phases old-or-new, 0 partial states.
   * backend suite **14 passed, 0 failed**; shared fenced-writer invariants
     **7 passed, 0 failed** (`tests/support/fencing.rs`: expired-lease stop,
@@ -4646,14 +4648,18 @@ token supplied out of band.
     signature, so a wrong canonicalisation or an unsigned header fails.
 * **GCS auth court.** `bench/scripts/gcs_court.sh` now runs
   `cargo test --test service_account` every time and records an `auth` object in
-  `gcs-court-20261106T225115Z.json`: **14 passed, 0 failed**, status
+  `gcs-court-20261106T230852Z.json` (current; `gcs-court-20261106T225115Z.json`
+  is the earlier run with the same result): **14 passed, 0 failed**, status
   `no_credentials`, `live_probe: null`. The emulator court itself is unchanged
   (same content root, commit sequence, fencing 7/7). A retained failing receipt
   `gcs-court-20261106T225005Z.json` records one auth test asserting a project
   from the key file while the court environment set `WEFT_GCS_PROJECT`; explicit
   project precedence is what is asserted now.
 * **Aggregate.** `bench/receipts/verify-20261106T225457Z.json` is **29/29
-  courts pass**, 0 failed, 0 skipped, at WeftFS `132e713`. The new Azure and GCS
+  courts pass**, 0 failed, 0 skipped, at WeftFS `132e713`. The two standalone
+  court receipts above were re-generated after the stage-4 docs commit, so they
+  record WeftFS `c283131`; the backend and auth code is unchanged from
+  `132e713`. The new Azure and GCS
   auth courts are standalone like `gcs_court`, so they are not counted in that
   29; their own receipts above are the evidence.
 * Repository suites, counted from the aggregate's logs: `rust_store`

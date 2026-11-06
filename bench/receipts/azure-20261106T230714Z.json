@@ -1,0 +1,287 @@
+{
+  "configs": [
+    {
+      "config": "local",
+      "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+      "diagnostics": [],
+      "generation": 21,
+      "generation_sequence": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "phases_ms": {
+        "create": 1.509277,
+        "range_write": 0.9873930000000001,
+        "read": 0.46257299999999996,
+        "reopen": 0.21842699999999998,
+        "verify": 1.841817
+      },
+      "planes": {
+        "capabilities": null,
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "local",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "local",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `tmp file + fsync + rename(2) + directory fsync` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        }
+      },
+      "reopen": {
+        "generation": 21,
+        "match": true,
+        "problems": [],
+        "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f"
+      },
+      "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+      "status": "ok",
+      "store": "/tmp/weft-azure-court/local",
+      "superblock_etag_observed": [],
+      "verified_bytes": 393216,
+      "verify": {
+        "problems": []
+      },
+      "wall_ms": 6.937465
+    },
+    {
+      "config": "azure",
+      "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+      "diagnostics": [
+        "Azure If-Match form measured at open: quoted-as-returned",
+        "Azure fence CAS proved the lease 42 time(s), 0 with a renewal"
+      ],
+      "generation": 21,
+      "generation_sequence": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "phases_ms": {
+        "create": 126.26658299999998,
+        "range_write": 80.926632,
+        "read": 29.726697,
+        "reopen": 41.123461999999996,
+        "verify": 148.19581000000002
+      },
+      "planes": {
+        "capabilities": null,
+        "probes": {
+          "blobs": {
+            "attempted": true,
+            "backend": "azure",
+            "bytes_probed": 192,
+            "create_once_visible": true,
+            "delete_observed": true,
+            "detail": "published 192 bytes under a private key, HEAD reported that length, a ranged read of 17 bytes matched, and delete was observed; durability is attested by `Azure Put Blob (x-ms-blob-type: BlockBlob) with If-None-Match: * (create-once) or If-Match: <observed ETag> (compare-and-swap); both forms and a stale-ETag refusal are measured at writable open; every head publication is preceded by one conditional write on LOCK that carries the fencing token and names the head, and release is a conditional content-addressed tombstone` and is not proved here",
+            "length_match": true,
+            "range_read_match": true
+          },
+          "commits": {
+            "attempted": true,
+            "backend": "azure",
+            "create_ok": true,
+            "detail": "create-once CAS, matching CAS, and stale-token rejection all observed on a private control record; durability is attested by `Azure Put Blob (x-ms-blob-type: BlockBlob) with If-None-Match: * (create-once) or If-Match: <observed ETag> (compare-and-swap); both forms and a stale-ETag refusal are measured at writable open; every head publication is preceded by one conditional write on LOCK that carries the fencing token and names the head, and release is a conditional content-addressed tombstone` and is not proved here",
+            "matching_compare_exchange_ok": true,
+            "stale_compare_exchange_rejected": true,
+            "token_kind": "content-token"
+          }
+        }
+      },
+      "reopen": {
+        "generation": 21,
+        "match": true,
+        "problems": [],
+        "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f"
+      },
+      "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+      "status": "ok",
+      "store": "/tmp/weft-azure-court/azure",
+      "superblock_etag_observed": [
+        "\"0x2143D5029C72E20\"",
+        "\"0x2758364DCC64440\"",
+        "\"0x1C85139701E9A20\""
+      ],
+      "verified_bytes": 393216,
+      "verify": {
+        "problems": []
+      },
+      "wall_ms": 593.178208
+    }
+  ],
+  "crash_proxy": {
+    "aborted_by_signal": true,
+    "note": "process-fault proxy: the writer is aborted at each publication phase; this is not a physical power-loss test",
+    "old_or_new_only": true,
+    "partial_states": 0,
+    "phases": [
+      {
+        "aborted_by_signal": true,
+        "bytes": "old",
+        "generation_after": 2,
+        "generation_before": 2,
+        "phase": "after_objects",
+        "state": "old",
+        "superblock_etag": "\"0x27CF86983319D00\"",
+        "verify_problems": [],
+        "verify_state": "clean"
+      },
+      {
+        "aborted_by_signal": true,
+        "bytes": "old",
+        "generation_after": 2,
+        "generation_before": 2,
+        "phase": "after_commit_file",
+        "state": "old",
+        "superblock_etag": "\"0x20359780CBC6080\"",
+        "verify_problems": [
+          "Corrupt: commit file for generation 3 exists above the highest published superblock generation 2"
+        ],
+        "verify_state": "unpublished-tail"
+      },
+      {
+        "aborted_by_signal": true,
+        "bytes": "new content, longer than old",
+        "generation_after": 3,
+        "generation_before": 2,
+        "phase": "after_superblock_write",
+        "state": "new",
+        "superblock_etag": "\"0x1F9FFDAA8AAC010\"",
+        "verify_problems": [],
+        "verify_state": "clean"
+      }
+    ]
+  },
+  "environment": {
+    "azure_account": "devstoreaccount1",
+    "azure_container": "weft-az-20261106t230714z",
+    "azure_emulator": "Azurite Blob",
+    "azure_emulator_digest": "mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+    "azure_emulator_release": "3.35.0",
+    "azure_endpoint": "http://weft-azure-azurite-3193126:10000/devstoreaccount1",
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "court_kernel": "7.3.1-1-cachyos",
+    "cpus": "4",
+    "memory": "3g",
+    "pids": "1024",
+    "revision_weftfs": "c28313138e43520c2c21bd4622674ce4b83e5f6a"
+  },
+  "exactness": {
+    "content_digest": "2e3b9902206d1f571315de0f48e17f9137fa7652e8c443531c0b6796bfddd03e",
+    "content_digest_match": true,
+    "content_root_match": true,
+    "generation": 21,
+    "generation_match": true,
+    "generation_sequence": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "generation_sequence_match": true,
+    "snapshot_root": "0a8198f56ed59a11d3a704b05814232359e4fb6544d4dc241d41d2fd59756c5f",
+    "verified_bytes": 393216,
+    "verified_bytes_match": true
+  },
+  "generated_utc": "20261106T230714Z",
+  "label": "Single-host Azure Blob emulator on loopback in the OOM-protected Docker court with a memory-backed data directory. Not an Azure, cloud, multi-node, fleet, device-cache, media, power-loss, or production claim.",
+  "peak_rss_kib": 7176,
+  "schema": "weft-azure-court-v1",
+  "tests": {
+    "summary": [
+      "test a_hash32_key_path_is_addressed_verbatim ... ok",
+      "test a_literal_dequoted_endpoint_is_negotiated ... ok",
+      "test a_missing_blob_is_not_found_and_transport_errors_are_io ... ok",
+      "test a_stale_etag_accepted_by_the_service_is_refused ... ok",
+      "test a_wrong_account_key_is_unauthorized ... ok",
+      "test create_once_and_compare_and_swap_are_exact ... ok",
+      "test listing_returns_only_the_requested_prefix ... ok",
+      "test live_conditional_create_and_cas_are_exact ... ok",
+      "test live_listing_and_ranges_are_exact ... ok",
+      "test live_lock_is_released_with_a_conditional_tombstone ... ok",
+      "test live_store_round_trips_and_reopens ... ok",
+      "test sas_and_anonymous_credentials_are_exclusive_forms ... ok",
+      "test store_round_trips_on_azure_with_independent_signature_checks ... ok",
+      "test the_writer_lock_is_released_with_a_conditional_tombstone ... ok",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.25s"
+    ],
+    "summary_file": "bench/receipts/azure-20261106T230714Z.tests.txt"
+  },
+  "workload": {
+    "chunk_size": 8192,
+    "file_bytes": 32768,
+    "files": 12,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "note": "deterministic bytes, seeded ObjectIds, fixed clock; local and Azure must reproduce the same root and the same commit sequence",
+    "range_write_bytes": 4096,
+    "range_writes": 8,
+    "visible_bytes": 393216
+  }
+}
