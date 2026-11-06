@@ -1,0 +1,935 @@
+{
+  "commands": [
+    "cp -r /work/python /tmp/weft-python-build",
+    "python -m build --wheel --no-isolation --outdir /tmp/weft-dist /tmp/weft-python-build",
+    "python -m venv --system-site-packages /tmp/weft-venv",
+    "/tmp/weft-venv/bin/python -m pip install --no-index --no-deps <wheel>",
+    "/tmp/weft-venv/bin/python -m pytest -p no:cacheprovider -q --junitxml=/tmp/weft-junit.xml python/tests"
+  ],
+  "cross_cli": {
+    "cases": 11,
+    "failed": 0,
+    "passed": 11,
+    "results": [
+      {
+        "case": "raw",
+        "decoded_len": 300000,
+        "detail": "",
+        "frame_bytes": 300100,
+        "frame_sha256": "0f083fc997009cddf4b8357423e610a6d2122656102011671c35b7460a61bdeb",
+        "mode": "raw",
+        "outcome": "passed"
+      },
+      {
+        "case": "zstd",
+        "decoded_len": 300000,
+        "detail": "",
+        "frame_bytes": 2195,
+        "frame_sha256": "72be01ea558a9ddf9eea3477a0e56e6b2a432ed45e1d4dd5b17b79d2d85ef17d",
+        "mode": "zstd",
+        "outcome": "passed"
+      },
+      {
+        "case": "raw_chunked",
+        "decoded_len": 300000,
+        "detail": "",
+        "frame_bytes": 300340,
+        "frame_sha256": "f333585ff5fe60019f838c5d00b764c0a3a27a205bcb129ffc4c54b3d968ca23",
+        "mode": "raw",
+        "outcome": "passed"
+      },
+      {
+        "case": "zstd_chunked",
+        "decoded_len": 300000,
+        "detail": "",
+        "frame_bytes": 10685,
+        "frame_sha256": "c109b1dbe0fa145079c92bfbf9a3fd9210787967cfc9a39dc1dac5181c03f22d",
+        "mode": "zstd",
+        "outcome": "passed"
+      },
+      {
+        "case": "reference",
+        "decoded_len": 200000,
+        "detail": "",
+        "frame_bytes": 148,
+        "frame_sha256": "a0fe7ac6d1b1c0ec81bd9e8d6d62521d0b128247ccf4658fbbb7497e247a6b24",
+        "mode": "reference",
+        "outcome": "passed"
+      },
+      {
+        "case": "delta",
+        "decoded_len": 200000,
+        "detail": "",
+        "frame_bytes": 235,
+        "frame_sha256": "1cceb569c8010d53c798b714683c3127d1fba9ab73901142dc0db7f2c2f9ec99",
+        "mode": "delta",
+        "outcome": "passed"
+      },
+      {
+        "case": "dictionary",
+        "decoded_len": 300000,
+        "detail": "",
+        "frame_bytes": 201,
+        "frame_sha256": "3fcfe2b4c4057f189ff8304b4b90bb938d8cfbb0d621db70d03ec3d838b4d34d",
+        "mode": "dictionary",
+        "outcome": "passed"
+      },
+      {
+        "case": "tensor",
+        "decoded_len": 24,
+        "detail": "",
+        "frame_bytes": 300,
+        "frame_sha256": "fe975a24c770681976587f7d53172f8ce4399b7bb81d89f06fb910adb11d7a8e",
+        "mode": "tensor",
+        "outcome": "passed"
+      },
+      {
+        "case": "tokens",
+        "decoded_len": 20,
+        "detail": "",
+        "frame_bytes": 299,
+        "frame_sha256": "3a47017aeafb500380045037b470c530e6a76dbf57ed09a8f4ea635439f2f422",
+        "mode": "tokens",
+        "outcome": "passed"
+      },
+      {
+        "case": "quantized",
+        "decoded_len": 6,
+        "detail": "",
+        "frame_bytes": 354,
+        "frame_sha256": "557892c1ddeed8f1b8485f17fe2aec2b3093e6e8593997a77b4a8b00833a3e67",
+        "mode": "quantized_tensor",
+        "outcome": "passed"
+      },
+      {
+        "case": "structured",
+        "decoded_len": 47,
+        "detail": "",
+        "frame_bytes": 147,
+        "frame_sha256": "3f31a7db17c30807cb904f26af2fc15505ab6e6d2301f7a05a7f5608ddcad239",
+        "mode": "structured",
+        "outcome": "passed"
+      }
+    ],
+    "rust_cli": "/work/.docker-cache/target-rust/release/weftcodec",
+    "rust_cli_sha256": "236c9cd249881fb27165ef20ff5e47387fb583b8e904cc109d0e248a5aa9a593",
+    "skipped": 0,
+    "total": 11
+  },
+  "environment": {
+    "court_cap_drop": "ALL",
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:8996e213113936057af18265efaa93bdf57ce749b694554961f7e82d5843587a",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_memory": "3g",
+    "court_no_new_privileges": true,
+    "court_pids": "1024",
+    "court_tmpfs": "/tmp:rw,size=1g,nosuid,nodev",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "pytest_status": 0,
+    "python_executable": "/usr/local/bin/python",
+    "python_version": "3.12.16",
+    "revision_weftcodec": "ed36bf94df36663b99ce9fe87df6b24a4ba6a3e6",
+    "revision_weftcodec_go": "65bc14d516287cdc85710c79ec4e99eb027710cc",
+    "revision_weftfs": "d6ba18966eef62900089da18dbadc0f8236bb9dd",
+    "revision_weftfs_go": "f920ae0808b3b81ea955e95856c4064f88ef31ca"
+  },
+  "generated_at_utc": "2026-11-06T01:20:35Z",
+  "label": "Independent Python implementation of the WeftCodec v1 reader, tested in the Docker python court against Rust-generated conformance vectors and the Rust CLI. Not a PyPI publication; the wheel is a release artifact. Synthetic fixtures, single host.",
+  "receipt": "weftfs-python-bindings/1",
+  "tests": {
+    "junit": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 62,
+      "tests": 191
+    },
+    "log": "bench/receipts/python-bindings-20261106T012031Z.log"
+  },
+  "vectors": {
+    "asserted": 61,
+    "failed": 0,
+    "implemented_modes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "passed": 61,
+    "skip_reasons": {
+      "superseded": 8,
+      "unimplemented_mode": 16,
+      "unimplemented_mode_error": 38
+    },
+    "skipped": 62,
+    "total_frame_vectors": 123,
+    "unimplemented_modes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "vector_root": "/work/WeftCodec/conformance/v1",
+    "vectors": [
+      {
+        "detail": "unimplemented_mode: mode 13 is not implemented by the Python reader",
+        "mode_value": 13,
+        "name": "activation-stream/001_activation_bf16_two_chunks#chunks0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 13 is not implemented by the Python reader",
+        "mode_value": 13,
+        "name": "activation-stream/001_activation_bf16_two_chunks#chunks1",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 13 is not implemented by the Python reader",
+        "mode_value": 13,
+        "name": "activation-stream/002_gradient_fp32_two_chunks#chunks0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 13 is not implemented by the Python reader",
+        "mode_value": 13,
+        "name": "activation-stream/002_gradient_fp32_two_chunks#chunks1",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 13 is not implemented by the Python reader",
+        "mode_value": 13,
+        "name": "activation-stream/003_activation_fp16_single_chunk#chunks0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/101_unknown_dtype",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/102_unknown_stream",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/103_rank_not_below_world",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/104_chunk_index_out_of_range",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/105_element_count_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 13,
+        "name": "activation-stream/106_digest_root_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 13,
+        "name": "activation-stream/107_payload_len_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 13,
+        "name": "activation-stream/108_decoded_len_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/001_raw_empty",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/002_raw_one_byte",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/003_raw_4k",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/004_raw_1m",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/005_raw_64k_repetitive",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 0,
+        "name": "codec/006_raw_chunked_1024",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 1,
+        "name": "codec/007_zstd_chunked_1024",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 1,
+        "name": "codec/008_zstd_4k",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 2,
+        "name": "codec/009_reference_equal",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 3,
+        "name": "codec/010_delta_edits",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 4,
+        "name": "codec/011_dictionary_raw",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 5,
+        "name": "codec/012_structured_map",
+        "outcome": "passed"
+      },
+      {
+        "detail": "bad frame magic (expected WFT1)",
+        "mode_value": null,
+        "name": "codec/013_bad_magic",
+        "outcome": "passed"
+      },
+      {
+        "detail": "header CRC32C mismatch",
+        "mode_value": 0,
+        "name": "codec/014_bad_header_crc",
+        "outcome": "passed"
+      },
+      {
+        "detail": "frame trailer CRC32C mismatch",
+        "mode_value": 0,
+        "name": "codec/015_bad_trailer_crc",
+        "outcome": "passed"
+      },
+      {
+        "detail": "frame length 4195 does not match header-derived length 4196",
+        "mode_value": 0,
+        "name": "codec/016_truncated",
+        "outcome": "passed"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved8",
+        "mode_value": 6,
+        "name": "codec/017_unknown_mode",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved11",
+        "mode_value": 10,
+        "name": "codec/017_unknown_mode_reserved10",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved12",
+        "mode_value": 11,
+        "name": "codec/017_unknown_mode_reserved11",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved14",
+        "mode_value": 12,
+        "name": "codec/017_unknown_mode_reserved12",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: unknown_mode_reserved15",
+        "mode_value": 14,
+        "name": "codec/017_unknown_mode_reserved14",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved16",
+        "mode_value": 15,
+        "name": "codec/017_unknown_mode_reserved15",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "reserved mode 16 is not defined in v1",
+        "mode_value": 16,
+        "name": "codec/017_unknown_mode_reserved16",
+        "outcome": "passed"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved9",
+        "mode_value": 8,
+        "name": "codec/017_unknown_mode_reserved8",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "superseded: 017_unknown_mode_reserved10",
+        "mode_value": 9,
+        "name": "codec/017_unknown_mode_reserved9",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unknown critical feature bits 0x0004",
+        "mode_value": 0,
+        "name": "codec/018_unknown_feature",
+        "outcome": "passed"
+      },
+      {
+        "detail": "SELF_CONTAINED is reserved and not produced in v1",
+        "mode_value": 0,
+        "name": "codec/019_self_contained_reserved",
+        "outcome": "passed"
+      },
+      {
+        "detail": "unsupported format major 2",
+        "mode_value": 0,
+        "name": "codec/020_unsupported_version",
+        "outcome": "passed"
+      },
+      {
+        "detail": "table_len 1 does not match 0 dependencies and 0 chunks",
+        "mode_value": 0,
+        "name": "codec/021_bad_table_len",
+        "outcome": "passed"
+      },
+      {
+        "detail": "chunk 1 starts at 1025 but expected 1024 (gap or overlap)",
+        "mode_value": 0,
+        "name": "codec/022_chunk_gap",
+        "outcome": "passed"
+      },
+      {
+        "detail": "chunk 1 starts at 96 but expected 1024 (gap or overlap)",
+        "mode_value": 0,
+        "name": "codec/023_chunk_overlap",
+        "outcome": "passed"
+      },
+      {
+        "detail": "dependency length 4096 differs from declared 4095",
+        "mode_value": 3,
+        "name": "codec/024_bad_dependency_length",
+        "outcome": "passed"
+      },
+      {
+        "detail": "dependency content hash mismatch",
+        "mode_value": 3,
+        "name": "codec/025_bad_dependency_hash",
+        "outcome": "passed"
+      },
+      {
+        "detail": "delta COPY range 1099511627776..1099511627777 exceeds base length 4096",
+        "mode_value": 3,
+        "name": "codec/026_delta_offset_out_of_range",
+        "outcome": "passed"
+      },
+      {
+        "detail": "delta produced 1 bytes but decoded_len is 2",
+        "mode_value": 3,
+        "name": "codec/027_delta_length_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "unknown WCB tag 0x0a",
+        "mode_value": 5,
+        "name": "codec/028_structured_non_canonical",
+        "outcome": "passed"
+      },
+      {
+        "detail": "decoded data length 4096 exceeds limit 1024",
+        "mode_value": 0,
+        "name": "codec/029_limits_exceeded",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor dtype `f32` is specified but not implemented in v1 (only i8, u8)",
+        "mode_value": 8,
+        "name": "codec/030_quantized_dtype_f32",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor scale must be finite (no NaN or infinity)",
+        "mode_value": 8,
+        "name": "codec/031_quantized_scale_nan",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor zero_point 200 is outside i8 range -128..=127",
+        "mode_value": 8,
+        "name": "codec/032_quantized_zero_point_out_of_range",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor payload_bytes 7 does not match element_count 6 for one-byte elements",
+        "mode_value": 8,
+        "name": "codec/033_quantized_payload_bytes_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor payload_hash mismatch",
+        "mode_value": 8,
+        "name": "codec/034_quantized_payload_hash_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor scale_bits_le must be 8 bytes, got 4",
+        "mode_value": 8,
+        "name": "codec/035_quantized_scale_bytes_len",
+        "outcome": "passed"
+      },
+      {
+        "detail": "quantized tensor layout `column_major` is specified but not implemented in v1 (only row_major)",
+        "mode_value": 8,
+        "name": "codec/036_quantized_layout_not_implemented",
+        "outcome": "passed"
+      },
+      {
+        "detail": "metadata `zero_point` must be i64",
+        "mode_value": 8,
+        "name": "codec/037_quantized_zero_point_not_i64",
+        "outcome": "passed"
+      },
+      {
+        "detail": "zstd payload is empty; a zstd frame is never zero bytes",
+        "mode_value": 1,
+        "name": "codec/038_zstd_empty_body",
+        "outcome": "passed"
+      },
+      {
+        "detail": "zstd frame declares content size 2, Weft header declares 0",
+        "mode_value": 1,
+        "name": "codec/039_zstd_content_size_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 6,
+        "name": "codec/100_tensor_f32_2x3",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 6,
+        "name": "codec/101_tensor_f16_scalar",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 6,
+        "name": "codec/102_tensor_u8_zero_element",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 7,
+        "name": "codec/103_tokens_delta_boundaries",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 7,
+        "name": "codec/104_tokens_empty",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 8,
+        "name": "codec/105_quantized_i8_2x3",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 8,
+        "name": "codec/106_quantized_u8_zero_element",
+        "outcome": "passed"
+      },
+      {
+        "detail": "",
+        "mode_value": 8,
+        "name": "codec/107_quantized_i8_scalar",
+        "outcome": "passed"
+      },
+      {
+        "detail": "unimplemented_mode: mode 9 is not implemented by the Python reader",
+        "mode_value": 9,
+        "name": "codec/108_float_bf16_2x2",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 9 is not implemented by the Python reader",
+        "mode_value": 9,
+        "name": "codec/109_float_fp16_3d",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 9 is not implemented by the Python reader",
+        "mode_value": 9,
+        "name": "codec/110_float_fp32_4d",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "tensor element_count 5 does not match shape product 6",
+        "mode_value": 6,
+        "name": "codec/120_tensor_shape_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor payload_bytes 7 does not match element_count x element_size 6",
+        "mode_value": 6,
+        "name": "codec/121_tensor_payload_bytes_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor payload_hash mismatch",
+        "mode_value": 6,
+        "name": "codec/122_tensor_payload_hash_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor layout `column_major` is specified but not implemented in v1 (only row_major)",
+        "mode_value": 6,
+        "name": "codec/123_tensor_layout_not_implemented",
+        "outcome": "passed"
+      },
+      {
+        "detail": "unknown tensor dtype `q4` (v1 allows f16, bf16, f32, f64, i8, u8, i16, i32, i64)",
+        "mode_value": 6,
+        "name": "codec/124_tensor_unknown_dtype",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor shape product overflows u64",
+        "mode_value": 6,
+        "name": "codec/125_tensor_shape_overflow",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor element count 6 exceeds limit 5",
+        "mode_value": 6,
+        "name": "codec/126_tensor_element_limit",
+        "outcome": "passed"
+      },
+      {
+        "detail": "tensor rank 9 exceeds limit 8",
+        "mode_value": 6,
+        "name": "codec/127_tensor_rank_limit",
+        "outcome": "passed"
+      },
+      {
+        "detail": "token payload has 1 trailing bytes",
+        "mode_value": 7,
+        "name": "codec/130_tokens_count_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "token encoding `u32-fixed-little` is specified but not implemented in v1 (only u64-zigzag-delta-leb128)",
+        "mode_value": 7,
+        "name": "codec/131_tokens_encoding_not_implemented",
+        "outcome": "passed"
+      },
+      {
+        "detail": "non-minimal varint",
+        "mode_value": 7,
+        "name": "codec/132_tokens_non_minimal_varint",
+        "outcome": "passed"
+      },
+      {
+        "detail": "token payload has 1 trailing bytes",
+        "mode_value": 7,
+        "name": "codec/133_tokens_trailing_bytes",
+        "outcome": "passed"
+      },
+      {
+        "detail": "token payload_hash mismatch",
+        "mode_value": 7,
+        "name": "codec/134_tokens_payload_hash_mismatch",
+        "outcome": "passed"
+      },
+      {
+        "detail": "token count 3 exceeds limit 2",
+        "mode_value": 7,
+        "name": "codec/135_tokens_count_limit",
+        "outcome": "passed"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/140_float_tensor_unknown_dtype",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/141_float_tensor_element_count_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/142_float_tensor_rank_zero",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/143_float_tensor_zero_dimension",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/144_float_tensor_field_widths_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=LimitExceeded",
+        "mode_value": 9,
+        "name": "codec/145_float_tensor_plane_length_overflow",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 9,
+        "name": "codec/146_float_tensor_unknown_exponent_coder",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 9,
+        "name": "codec/147_float_tensor_decoded_len_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=NonCanonical",
+        "mode_value": 9,
+        "name": "codec/148_float_tensor_exponent_over_subscribed",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=NonCanonical",
+        "mode_value": 9,
+        "name": "codec/149_float_tensor_exponent_incomplete",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=NonCanonical",
+        "mode_value": 9,
+        "name": "codec/150_float_tensor_exponent_code_length_too_long",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 9,
+        "name": "codec/151_float_tensor_exponent_nonzero_padding",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 9,
+        "name": "codec/152_float_tensor_exponent_table_truncated",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 9,
+        "name": "codec/153_float_tensor_exponent_stream_truncated",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 12 is not implemented by the Python reader",
+        "mode_value": 12,
+        "name": "kv-cache/001_bf16_two_pages#pages0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 12 is not implemented by the Python reader",
+        "mode_value": 12,
+        "name": "kv-cache/001_bf16_two_pages#pages1",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 12 is not implemented by the Python reader",
+        "mode_value": 12,
+        "name": "kv-cache/002_fp32_two_pages#pages0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 12 is not implemented by the Python reader",
+        "mode_value": 12,
+        "name": "kv-cache/002_fp32_two_pages#pages1",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 12 is not implemented by the Python reader",
+        "mode_value": 12,
+        "name": "kv-cache/003_bf16_seq_boundary#pages0",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/101_unknown_dtype",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/102_zero_dimension",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/103_page_index_out_of_range",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/104_seq_range_invalid",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/105_shape_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/106_page_bytes_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=LimitExceeded",
+        "mode_value": 12,
+        "name": "kv-cache/107_seq_overflow",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 12,
+        "name": "kv-cache/108_payload_len_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 15 is not implemented by the Python reader",
+        "mode_value": 15,
+        "name": "tensor-tiled/001_tiled_bf16_4x4",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 15 is not implemented by the Python reader",
+        "mode_value": 15,
+        "name": "tensor-tiled/002_tiled_fp32_2x2x2",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode: mode 15 is not implemented by the Python reader",
+        "mode_value": 15,
+        "name": "tensor-tiled/003_tiled_f16_single_tile",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/101_non_dividing_tile_shape",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/102_tile_count_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/103_overlapping_tile_offsets",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 15,
+        "name": "tensor-tiled/104_tile_root_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/105_payload_length_mismatch",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/106_unknown_tile_codec",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Malformed",
+        "mode_value": 15,
+        "name": "tensor-tiled/107_zero_dimension",
+        "outcome": "skipped"
+      },
+      {
+        "detail": "unimplemented_mode_error: Python=UnsupportedMode vector=Corrupt",
+        "mode_value": 15,
+        "name": "tensor-tiled/108_logical_root_mismatch",
+        "outcome": "skipped"
+      }
+    ]
+  },
+  "wheel": {
+    "filename": "weftcodec-0.8.0-py3-none-any.whl",
+    "license": "Apache-2.0",
+    "name": "weftcodec",
+    "path": "python/dist/weftcodec-0.8.0-py3-none-any.whl",
+    "pypi_note": "No PyPI token is available; the wheel is attached to the release.",
+    "pypi_published": false,
+    "sha256": "5a41c419a43e9d7ba16dd14c2d170ecd34d102f16c69d51652af5245e0fe91ab",
+    "size_bytes": 45400,
+    "version": "0.8.0"
+  }
+}

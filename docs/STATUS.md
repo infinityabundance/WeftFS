@@ -1,17 +1,22 @@
-# Implementation status — 2026-11-05
+# Implementation status — 2026-11-06
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261105T175154Z.json` (27/27 courts `pass`, including the
+`bench/receipts/verify-20261106T011444Z.json` (27/27 courts `pass`, including the
 host-only `claims` documentation gate, spec drift, generated-type drift,
 `conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
 and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `067bb88`, WeftCodec `b15353a`, WeftCodec-Go `9d275c0`,
-WeftFS-Go `4278445`. The earlier
-`verify-20261105T174254Z.json` and `verify-20261105T034941Z.json` are retained
-as history; the latter had one pre-existing `tests/representation.rs` shared
-atomic decode counter race (`expected exactly one decoded chunk, got 2`) that
-passed standalone and in the 035513Z rerun. Earlier
+`fuzz_diff`), at WeftFS `d6ba189`, WeftCodec `3f3eae0`, WeftCodec-Go `65bc14d`,
+WeftFS-Go `f920ae0`. A first run at the same tree,
+`verify-20261106T010756Z.json`, is retained: `rust_store` hit the pre-existing
+`tests/quota.rs` writer-lock flake (`usage_survives_reopen_and_still_denies`,
+`Busy` on reopen); that test passed standalone five times and in three full
+`cargo test --all-targets` runs. The earlier
+`verify-20261105T175154Z.json`, `verify-20261105T174254Z.json`, and
+`verify-20261105T034941Z.json` are retained
+as history; the last of those had one pre-existing `tests/representation.rs`
+shared atomic decode counter race (`expected exactly one decoded chunk, got 2`)
+that passed standalone and in the 035513Z rerun. Earlier
 `verify-20261104T022254Z`,
 `verify-20261103T220311Z`,
 `verify-20261103T172416Z`, and `verify-20261103T165944Z` receipts are retained
@@ -181,14 +186,14 @@ Docker court).
 
 | Repo | Verified revision | Role |
 |---|---|---|
-| `WeftFS` | `067bb88` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `b15353a` | Rust codec v1 + AI modes, checkpoint and capability support |
-| `WeftCodec-Go` | `9d275c0` | independent Go codec, capability parity |
-| `WeftFS-Go` | `4278445` | independent Go store + FUSE, spec mirror |
+| `WeftFS` | `d6ba189` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `3f3eae0` | Rust codec v1 + AI modes, checkpoint and capability support |
+| `WeftCodec-Go` | `65bc14d` | independent Go codec, capability parity |
+| `WeftFS-Go` | `f920ae0` | independent Go store + FUSE, spec mirror |
 
 These are the revisions pinned by the latest full verification receipt
-(`bench/receipts/verify-20261105T175154Z.json`, 27/27 courts pass).
-The current release is **v0.7.0** (`docs/RELEASE-v0.7.0.md`); the tag, the
+(`bench/receipts/verify-20261106T011444Z.json`, 27/27 courts pass).
+The current release is **v0.8.0** (`docs/RELEASE-v0.8.0.md`); the tag, the
 per-repo GitHub releases, the four GHCR images, the two crates, and the Python
 wheel are cut from the `staging` and `main` commits after the version bump and
 release documentation, with this receipt's code revisions unchanged apart from
@@ -2333,3 +2338,33 @@ real ~1,061-file bundle.
   The canonical manifest is an advisory artifact for this bundle format, not a
   new frozen WeftCodec wire mode; the frozen v1/v2 store and codec formats are
   unchanged.
+
+## Q7 — v0.8.0 release (2026-11-06)
+
+v0.8.0 is cut from `staging` after the Q1–Q6 subphases. Versions:
+`weftfs` 0.8.0 and `weftcodec` 0.8.0 in `Cargo.toml` and `Cargo.lock`; the
+parent pins `weftcodec = "0.8.0"`. Python wheel
+`python/dist/weftcodec-0.8.0-py3-none-any.whl`, 45,400 bytes, sha256
+`5a41c419a43e9d7ba16dd14c2d170ecd34d102f16c69d51652af5245e0fe91ab`, built and
+tested from the installed wheel in the Python court (191 tests, 0 failures,
+0 errors, 62 skipped; receipt
+`bench/receipts/python-bindings-20261106T012031Z.json`). **Not published to
+PyPI** (no token); the wheel is a release asset.
+
+Release verification: `bench/receipts/verify-20261106T011444Z.json`, **27/27
+courts pass**, at WeftFS `d6ba189`, WeftCodec `3f3eae0`, WeftCodec-Go
+`65bc14d`, WeftFS-Go `f920ae0` (before the version-literal bump). The retained
+first run `bench/receipts/verify-20261106T010756Z.json` failed on the
+pre-existing quota writer-lock flake; the retained Python receipt
+`bench/receipts/python-bindings-20261106T011946Z.json` failed because the shared
+release binary was fuse-linked and the Python court image has no
+`libfuse3.so.3`. Both clean reruns are the published receipts. Full note with
+every loss: `docs/RELEASE-v0.8.0.md`.
+
+Subphase evidence: Q1 `bench/receipts/fuse-writeback-20261105T202300Z.json`,
+Q2 `bench/receipts/tensor-tiles-20261105T222531Z.json`, Q3
+`bench/receipts/quota-branch-20261105T224337Z.json`, Q4
+`bench/receipts/s3-backend-20261105T233154Z.json` and
+`bench/receipts/s3-court-20261105T233154Z.json`, Q5
+`bench/receipts/pytorch-dcp-20261106T000734Z.json`, Q6
+`bench/receipts/signed-bundles-20261106T010118Z.json`.

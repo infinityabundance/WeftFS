@@ -272,5 +272,5 @@ the next tensor copy.
   independently seekable); region/tile-level savings are not claimed here.
 * `BYTE_IO` objects under `topology > 1` require divisible lengths; the adapter
   rejects rather than pads.
-* Version 0.7.0 of the Python package; the wheel is a court artifact, not a
+* Version 0.8.0 of the Python package; the wheel is a court artifact, not a
   PyPI publication.

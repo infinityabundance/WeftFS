@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (27/27 courts pass).",
-    "value": "verify-20261105T175154Z.json",
+    "value": "verify-20261106T011444Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261105T175154Z.json",
+    "receipt": "bench/receipts/verify-20261106T011444Z.json",
     "kind": "present"
   },
   {
@@ -147,7 +147,7 @@
   {
     "id": "release_v050_mode11_ratio",
     "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-    "value": "7.87\u00d7",
+    "value": "7.87×",
     "locations": [
       "docs/RELEASE-v0.5.0.md"
     ],
@@ -355,9 +355,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v070_crates",
-    "claim": "README.md and docs/containers.md advertise the v0.7.0 crate versions.",
-    "value": "weftcodec = \"0.7.0\"",
+    "id": "release_v080_crates",
+    "claim": "README.md and docs/containers.md advertise the v0.8.0 crate versions.",
+    "value": "weftcodec = \"0.8.0\"",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -366,9 +366,9 @@
     "kind": "present"
   },
   {
-    "id": "release_v070_docker_tag",
-    "claim": "README.md and docs/containers.md advertise the v0.7.0 WeftFS image tag.",
-    "value": "weftfs:v0.7.0",
+    "id": "release_v080_docker_tag",
+    "claim": "README.md and docs/containers.md advertise the v0.8.0 WeftFS image tag.",
+    "value": "weftfs:v0.8.0",
     "locations": [
       "README.md",
       "docs/containers.md"
@@ -528,7 +528,7 @@
   {
     "id": "p2_delta_restore_loss",
     "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-    "value": "44.0\u00d7",
+    "value": "44.0×",
     "locations": [
       "bench/RESULTS-float-tensor-real.md",
       "docs/STATUS.md"
@@ -925,9 +925,9 @@
     "kind": "present"
   },
   {
-    "id": "v070_release_note",
-    "claim": "README, status, and container docs point at the v0.7.0 release note.",
-    "value": "RELEASE-v0.7.0.md",
+    "id": "v080_release_note",
+    "claim": "README, status, and container docs point at the v0.8.0 release note.",
+    "value": "RELEASE-v0.8.0.md",
     "locations": [
       "README.md",
       "docs/STATUS.md",
@@ -1121,7 +1121,7 @@
   {
     "id": "writeback_p50_gain",
     "claim": "README.md and docs/STATUS.md record the measured Rust merkle write-back p50 gain.",
-    "value": "27.3 ms to 8.8 \u00b5s",
+    "value": "27.3 ms to 8.8 µs",
     "locations": [
       "README.md",
       "docs/STATUS.md"
@@ -1143,7 +1143,7 @@
   {
     "id": "tensor_tiles_100row_speedup",
     "claim": "STATUS and the Q2 results record the measured 100-row slice speedup.",
-    "value": "10.8\u00d7",
+    "value": "10.8×",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1154,7 +1154,7 @@
   {
     "id": "tensor_tiles_1row_speedup",
     "claim": "STATUS and the Q2 results record the measured 1-row slice speedup.",
-    "value": "40.4\u00d7",
+    "value": "40.4×",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-tensor-tiles.md"
@@ -1196,7 +1196,7 @@
   {
     "id": "mode15_reserved16",
     "claim": "The decoder guide records that modes 16-127 are reserved after mode 15 was allocated.",
-    "value": "Mode values 16\u2013127",
+    "value": "Mode values 16–127",
     "locations": [
       "docs/WRITE-YOUR-OWN-DECODER.md"
     ],
@@ -1569,6 +1569,397 @@
     "claim": "the signed-bundle test suite passes.",
     "value": "11/11",
     "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "release_v080_verify_receipt",
+    "claim": "the v0.8.0 release note and status cite the clean release verification receipt.",
+    "value": "verify-20261106T011444Z.json",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T011444Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v080_retained_failure",
+    "claim": "the retained first verification run is named.",
+    "value": "verify-20261106T010756Z.json",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261106T010756Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v080_python_wheel",
+    "claim": "the v0.8.0 Python wheel filename is recorded.",
+    "value": "weftcodec-0.8.0-py3-none-any.whl",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md",
+      "python/README.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T012031Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "release_v080_python_sha",
+    "claim": "the v0.8.0 Python wheel sha256 is recorded.",
+    "value": "5a41c419a43e9d7ba16dd14c2d170ecd34d102f16c69d51652af5245e0fe91ab",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "release_v080_python_tests",
+    "claim": "the clean Python wheel court count is recorded.",
+    "value": "191 tests,\n  0 failures, 0 errors, 62 skipped",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T012031Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_writeback_rust",
+    "claim": "the Rust 4 KiB overwrite p50 with write-back is recorded.",
+    "value": "7.46 µs",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_writeback_go",
+    "claim": "the Go 4 KiB overwrite p50 with write-back is recorded.",
+    "value": "10.61 µs",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_create_rust",
+    "claim": "the Rust group-commit create rate is recorded.",
+    "value": "26,548",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_create_go",
+    "claim": "the Go group-commit create rate is recorded.",
+    "value": "6,264",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_crash_proxy",
+    "claim": "the mount write-path crash proxy is recorded.",
+    "value": "8/8",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q1_group_commit_p99",
+    "claim": "the group-commit tail loss is recorded.",
+    "value": "611–804 ms",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": "bench/receipts/fuse-writeback-20261105T202300Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q2_tile_100_rows",
+    "claim": "the 100-row tiled slice p50 is recorded.",
+    "value": "12.05 ms",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q2_tile_1_row",
+    "claim": "the 1-row tiled slice p50 is recorded.",
+    "value": "3.22 ms",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q2_tile_100_bytes",
+    "claim": "the 100-row tiled slice bytes are recorded.",
+    "value": "934,413",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q2_tile_sha",
+    "claim": "the tiled mount loader tensor sha256 is recorded.",
+    "value": "db708f9a857fe3b09bdd61078acbcb6d5d4b58987364cdcfe8339d7eefd572c6",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": "bench/receipts/tensor-tiles-20261105T222531Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q2_no_go_writer",
+    "claim": "the missing Go mode-15 checkpoint writer is stated.",
+    "value": "no Go mode-15",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q3_quota_p50",
+    "claim": "the quota commit p50 is recorded.",
+    "value": "11.344 ms",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q3_quota_overhead",
+    "claim": "the quota commit overhead is recorded.",
+    "value": "+0.59%",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/quota-branch-20261105T224337Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q3_legacy_migration",
+    "claim": "the legacy quota migration is stated.",
+    "value": "WFQ1",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q4_local_creates",
+    "claim": "the local create rate is recorded.",
+    "value": "9,442",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T233154Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_creates",
+    "claim": "the S3 create rate is recorded.",
+    "value": "552.6",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T233154Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_local_mib",
+    "claim": "the local 100 MiB write rate is recorded.",
+    "value": "520.9",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T233154Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_s3_mib",
+    "claim": "the S3 100 MiB write rate is recorded.",
+    "value": "85.6",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/s3-backend-20261105T233154Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_byte_identical",
+    "claim": "the byte-identical local/S3 artifacts are stated.",
+    "value": "byte-identical",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q4_minio_binary",
+    "claim": "the official MinIO release binary is named.",
+    "value": "RELEASE.2025-04-22T22-12-26Z",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261105T233154Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q4_scope",
+    "claim": "the S3 scope non-claim is stated.",
+    "value": "Rust only",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q5_topology_restores",
+    "claim": "the topology-identical restore count is recorded.",
+    "value": "9/9",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_bytes_ratio",
+    "claim": "the physical-byte ratio against torch.save is recorded.",
+    "value": "0.9294",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_save_slowdown",
+    "claim": "the save slowdown is recorded.",
+    "value": "141×",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_torch_version",
+    "claim": "the real torch version is recorded.",
+    "value": "torch 2.15.0+cpu",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261106T000734Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q5_no_gpu",
+    "claim": "no GPU path is claimed.",
+    "value": "GPU path",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_cases",
+    "claim": "the signed-bundle acceptance/rejection count is recorded.",
+    "value": "15/15",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/signed-bundles-20261106T010118Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q6_signature_ok",
+    "claim": "the signed-bundle success line is recorded.",
+    "value": "SIGNATURE OK ed25519:",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_manifest_bytes",
+    "claim": "the canonical manifest size is recorded.",
+    "value": "128,731",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": "bench/receipts/signed-bundles-20261106T010118Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "q6_no_ca",
+    "claim": "the CA/transparency-log non-claim is stated.",
+    "value": "certificate authority",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "q6_seed_stdin",
+    "claim": "the signing seed transport is stated.",
+    "value": "stdin",
+    "locations": [
+      "docs/RELEASE-v0.8.0.md",
       "docs/STATUS.md"
     ],
     "receipt": null,
