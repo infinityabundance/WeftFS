@@ -163,19 +163,28 @@ const DECLARED: [(CostClass, Coefficients); 9] = [
 /// Modes 12 and 13 are never produced by the store; their rows retain the
 /// declared values and are labelled as such in `docs/STATUS.md`.
 /// `MEASURED_CALIBRATION` names the exact measurement. See
-/// `bench/RESULTS-real-model.md` (R1 section) and
-/// `bench/receipts/planner-float-*.json` for the raw rows.
-pub const MEASURED_CALIBRATION: &str = "weftfs-r1/decode-calibration/v1";
+/// `bench/RESULTS-real-model.md` and `bench/receipts/planner-float-*.json` for
+/// the raw rows.
+pub const MEASURED_CALIBRATION: &str = "weftfs-r2/decode-calibration/v1";
 
-/// Measured rows (median of decode-measurement runs 3/4/5).
+/// Measured rows (median of three independent 7-repetition runs).
+/// Re-measured after the R2 Huffman and plane-join work; the previous table
+/// was `float-tensor 15_403_165`, `tensor-sharded 13_788_933`,
+/// `tensor-tiled 10_056_794`, `semantic-delta 7_228_350`.
 const MEASURED: [(CostClass, Coefficients); 9] = [
-    (CostClass::Raw, Coefficients::new(10_000, 318_321)),
-    (CostClass::Zstd, Coefficients::new(17_000, 814_267)),
-    (CostClass::FloatTensor, Coefficients::new(0, 15_403_165)),
-    (CostClass::TensorSharded, Coefficients::new(32_000, 13_788_933)),
-    (CostClass::TensorTiled, Coefficients::new(14_000, 10_056_794)),
-    (CostClass::WeightDelta, Coefficients::new(31_000, 5_297_277)),
-    (CostClass::SemanticDelta, Coefficients::new(18_000, 7_228_350)),
+    (CostClass::Raw, Coefficients::new(11_757, 307_019)),
+    (CostClass::Zstd, Coefficients::new(21_285, 779_888)),
+    (CostClass::FloatTensor, Coefficients::new(18_264, 4_683_726)),
+    (
+        CostClass::TensorSharded,
+        Coefficients::new(16_172, 9_123_307),
+    ),
+    (CostClass::TensorTiled, Coefficients::new(14_131, 3_366_772)),
+    (CostClass::WeightDelta, Coefficients::new(30_725, 5_293_987)),
+    (
+        CostClass::SemanticDelta,
+        Coefficients::new(31_891, 6_458_523),
+    ),
     (CostClass::KvCache, Coefficients::new(100_000, 1_048_576)),
     (CostClass::Activation, Coefficients::new(100_000, 1_048_576)),
 ];
