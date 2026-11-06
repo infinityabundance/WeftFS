@@ -8,7 +8,7 @@ Read alongside:
 
 - [`../spec/WEFTCODEC-FORMAT.md`](../spec/WEFTCODEC-FORMAT.md) — frame layout,
   modes, WCB, limits, error taxonomy.
-- [`../spec/WEFT-AI-CODEC.md`](../spec/WEFT-AI-CODEC.md) — modes 6–14.
+- [`../spec/WEFT-AI-CODEC.md`](../spec/WEFT-AI-CODEC.md) — modes 6–16.
 - [`../spec/WEFT-SELECTORS.md`](../spec/WEFT-SELECTORS.md) — selector identity.
 - [`../spec/WEFT-CONTEXT-ROOT.md`](../spec/WEFT-CONTEXT-ROOT.md) — Context Roots.
 - [`../spec/WEFT-CAPABILITIES.md`](../spec/WEFT-CAPABILITIES.md) — envelopes.
@@ -215,7 +215,7 @@ allocating:
 1,048,576, `max_dictionary_bytes` 64 MiB, `max_structured_depth` 64,
 `max_structured_items` 1,000,000, `max_string_bytes` 256 MiB, `max_delta_ops`
 16,777,216, `max_tensor_elements` 2^32, `max_tensor_rank` 8, `max_tokens`
-2^24.
+2^24, `max_sparse_runs` 16,777,216.
 
 A configured bound may only be lowered, never raised to bypass a vector.
 
@@ -321,4 +321,8 @@ scripts/run-conformance.sh ./your-adapter
 6. Commit your adapter and the receipt; do not edit the vectors.
 
 Skips are not passes. A decoder that implements only modes 0–5 should report
-explicit skips for modes 6–14, not fabricated successes.
+explicit skips for modes 6–16, not fabricated successes. The independent
+Python reader in `python/weftcodec/` is a worked reference: it implements
+every mode 0–16 with `huffman-canonical-v1`, the six AI descriptor schemas,
+both delta reconstruction paths, shard-set roots, tile roots, and semantic
+roots, and its conformance adapter executes all mode vectors.

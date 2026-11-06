@@ -917,11 +917,11 @@
   {
     "id": "conformance_runner_python_receipt",
     "claim": "docs/CONFORMANCE.md cites the committed Python adapter receipt.",
-    "value": "conformance-python-20261106T052855Z.json",
+    "value": "conformance-python-20261106T072745Z.json",
     "locations": [
       "docs/CONFORMANCE.md"
     ],
-    "receipt": "bench/receipts/conformance-python-20261106T052855Z.json",
+    "receipt": "bench/receipts/conformance-python-20261106T072745Z.json",
     "kind": "present"
   },
   {
@@ -2578,6 +2578,83 @@
       "bench/RESULTS-entropy-coders.md"
     ],
     "receipt": "bench/receipts/conformance-rust-20261106T065613Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_reader_all_modes",
+    "claim": "The Python reader implements every allocated mode 0-16.",
+    "value": "mode 0–16",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md",
+      "python/README.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_conformance_counts",
+    "claim": "The Python conformance replay result and its receipt agree.",
+    "value": "218 pass, 0 fail, 108 skip",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md"
+    ],
+    "receipt": "bench/receipts/conformance-python-20261106T072745Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_ai_vector_counts",
+    "claim": "The Python AI-vector suite asserts 40 valid and 88 reject AI vectors with no skips.",
+    "value": "128 AI vectors (40 valid, 88 rejects)",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_random_differential_frames",
+    "claim": "The randomized differential compares at least 2,000 frames per AI mode against the Rust CLI.",
+    "value": "16,003 frames",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_random_differential_mutants",
+    "claim": "The randomized differential also compares 200 body mutants per AI mode.",
+    "value": "1,600 body mutants",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_test_receipt_counts",
+    "claim": "The committed Python test receipt records 331 tests with no failures or errors.",
+    "value": "331 tests, 0 failures, 0 errors, 9 skips",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CONFORMANCE.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "python_wheel_sha",
+    "claim": "STATUS records the exact Python wheel digest.",
+    "value": "39898a4a0d206d12528f32f6d0282f7e261f4bc8a5105eb127d701854f12c6ba",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
     "kind": "present"
   }
 ]

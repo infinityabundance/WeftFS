@@ -159,16 +159,24 @@ contract and non-claims.
 | `TENSOR` | 6 | implemented (descriptor validation) |
 | `TOKEN_SEQUENCE` | 7 | implemented (descriptor + varint payload) |
 | `QUANTIZED_TENSOR` | 8 | implemented (descriptor validation) |
-| `FLOAT_TENSOR` | 9 | `UnsupportedMode` |
-| `TENSOR_SHARDED` | 10 | `UnsupportedMode` |
-| `WEIGHT_DELTA` | 11 | `UnsupportedMode` |
-| `KV_CACHE` | 12 | `UnsupportedMode` |
-| `ACTIVATION_STREAM` | 13 | `UnsupportedMode` |
-| `SEMANTIC_DELTA` | 14 | `UnsupportedMode` |
-| `TENSOR_TILED` | 15 | `UnsupportedMode` |
+| `FLOAT_TENSOR` | 9 | implemented (all five dtypes, `huffman-canonical-v1` exponent plane) |
+| `TENSOR_SHARDED` | 10 | implemented (q4_0/q8_0 shards, plane verification, shard-set root) |
+| `WEIGHT_DELTA` | 11 | implemented (base resolution, modular word subtraction, `delta_root`) |
+| `KV_CACHE` | 12 | implemented (one page per frame, byte-plane decode) |
+| `ACTIVATION_STREAM` | 13 | implemented (one chunk per frame, `digest_root`, stream root) |
+| `SEMANTIC_DELTA` | 14 | implemented (policy verification against the resolved base) |
+| `TENSOR_TILED` | 15 | implemented (per-tile roots and whole-tensor logical root) |
+| `SPARSE_DELTA` | 16 | implemented (`zero-run-v1`, `delta_root`) |
 
-An unimplemented mode raises `weftcodec.errors.UnsupportedMode`. It is never
-decoded approximately and never treated as opaque bytes.
+Every allocated mode 0–16 is implemented. There is no approximate or lossy
+decode path. Reserved mode values 17–127 and experimental values 128–255 are
+rejected by `weftcodec.frame` with `UnsupportedMode`.
+
+The reader is deliberately a decoder, not a WEFT-TENSOR container reader: it
+does not claim WeftQL selectors, Context Roots, capability envelopes,
+`weft.checkpoint.v1` manifests, WFA1 archives, or `weft.tensor.layout.v1` /
+`weft.tensor.shard.v1` records. `TENSOR_TILED` supports full decode; the
+region reader is not implemented in Python.
 
 ## Tests
 
@@ -180,3 +188,8 @@ The suite consumes `../WeftCodec/conformance/v1/**` (Rust-generated vectors) and
 runs the Rust CLI for cross-language encode/decode checks when
 `/work/.docker-cache/target-rust/release/weftcodec` is available. The PyTorch test
 uses `pytest.importorskip("torch")`.
+
+`test_ai_modes.py` decodes every valid AI-mode vector to its recorded bytes and
+recomputes every recorded root; `test_random_differential.py` generates at least
+2,000 frames per mode 9–16 from a deterministic PRNG and compares the Python
+reader against the Rust CLI on every frame, plus 1,600 body mutants.

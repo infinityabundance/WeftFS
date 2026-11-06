@@ -2697,3 +2697,86 @@ frozen format changed.
 - **Residual.** One host/warm cache; one tensor per class; codec-level plane
   streams, not a shipped frame or store planner; no zstd dictionary/long-window;
   rANS not micro-optimised; no substring-frequency Tunstall dictionary.
+
+## Subphase R6 — Python reader: all AI modes 0–16 (2026-11-06)
+
+The independent Python reader (`python/weftcodec/`) now implements every
+allocated WFT1 payload mode: 0–8 as before, plus 9 `FLOAT_TENSOR`, 10
+`TENSOR_SHARDED`, 11 `WEIGHT_DELTA`, 12 `KV_CACHE`, 13 `ACTIVATION_STREAM`, 14
+`SEMANTIC_DELTA`, 15 `TENSOR_TILED`, and 16 `SPARSE_DELTA`. No wire format,
+vector, descriptor, or manifest changed.
+
+- **New code.** `python/weftcodec/huffman.py` (212 lines) is a standalone
+  `huffman-canonical-v1` decoder with the §5.3.1 validation order and classes
+  (length > 24 and Kraft over/incomplete → `NonCanonical`; truncated stream,
+  trailing bytes, non-zero padding → `Corrupt`). `python/weftcodec/ai_modes.py`
+  (2,570 lines) implements descriptor parsing through the existing canonical
+  WCB reader, FLOAT_TENSOR plane join for bf16/fp16/fp32/fp8-e4m3/fp8-e5m2
+  (bit-exact, including NaN payloads, denormals, signed zeros), q4_0/q8_0
+  shard dequantised-byte reconstruction and shard-set roots, WEIGHT_DELTA and
+  SEMANTIC_DELTA modular word reconstruction with `delta_root` and semantic-root
+  verification, KV_CACHE and ACTIVATION_STREAM byte planes (plus `stream_root`),
+  TENSOR_TILED per-tile roots and the whole-tensor logical root, and
+  SPARSE_DELTA `zero-run-v1`. `modes.py` dispatches all sixteen modes;
+  `dependency.py` gains frame-source resolution (`resolve_frame`,
+  `FrameSourceResolver`, cycle/depth/fetch/decoded bounds); `cli.py` gains
+  `--base`, `--resolve`, and `--frame-source`. Total reader core (excluding the
+  optional `dcp.py`/`torch.py`) is 5,288 lines; the new AI code is
+  2,782 lines (`huffman.py` + `ai_modes.py`).
+- **No new dependency.** The reader keeps its existing `blake3` and
+  `zstandard` dependencies and adds none (Huffman and all AI payload work are
+  pure standard-library Python).
+- **Conformance adapter.** `scripts/conformance/adapters/python.py` now imports
+  the package directly and executes codec frames, adversarial decode vectors,
+  shard sets, delta bases (including frame-source cycle vectors), KV pages,
+  activation chunks, tiled frames, semantic roots, and canonical WCB values.
+  Skips are explicit and only for surfaces the reader does not claim.
+- **Court command and result.**
+  `bash scripts/docker-court.sh python "cd /work && PYTHONPATH=/work/python WEFT_PYTHONPATH=/work/python scripts/run-conformance.sh scripts/conformance-adapter-python.sh --quiet --json bench/receipts/conformance-python-20261106T072745Z.json"`
+  → **326 total, 218 pass, 0 fail, 108 skip** (manifest
+  `1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0`). The
+  previous Python result was 56/0/270. No mode 0–16 vector is skipped.
+  Remaining skips: 29 WEFT-TENSOR layout/shard containers, 22 selector, 17
+  Context Root (including `causal_versions`), 10 causal closure, 7 capability,
+  5 checkpoint, 7 WFA1 archive verbs, 2 `selector-id` adversarial verbs,
+  2 composite store/fuzz fixtures, and 9 superseded vectors.
+- **AI vector suite.** `python/tests/test_ai_modes.py` asserts **128 AI vectors
+  (40 valid, 88 rejects)**, 0 skipped. The suite reports 128 AI vectors (40 valid, 88 rejects). Valid vectors decode to their recorded
+  bytes and recompute every recorded root (`content_hash`, `layout_root`,
+  `delta_root`, `logical_root`, per-tile roots, `stream_root`, semantic root);
+  every reject raises the declared class. The same test decodes each valid
+  frame with the Rust CLI and requires identical bytes (and, for mode 10, the
+  same `tensor root --frames` value).
+- **Randomized differential.** `python/tests/test_random_differential.py`
+  generates **16,003 frames** (at least 2,000 per mode 9–16) from a
+  deterministic xorshift64* PRNG via `python/tests/ai_frames.py`, decodes each
+  with the Python reader and
+  `/work/.docker-cache/target-rust/release/weftcodec decode`, and asserts
+  identical accept/reject and identical bytes. The court reports 1,600 body mutants. Counts: mode 9 2,000; mode 10
+  2,002 (627 shard-set roots, 627/627 matching); mode 11 2,000; mode 12 2,000;
+  mode 13 2,001; mode 14 2,000; mode 15 2,000; mode 16 2,000. All 16,003
+  frames were accepted by both and byte-identical. A further **1,600 body
+  mutants** (CRC repaired so they reach semantic checks) agree on
+  accept/reject in 1,600/1,600 cases and on error class in 1,581/1,581
+  meaningful reject pairs; 19 mutants remain valid and decode identically.
+- **Python test receipt.** `bench/receipts/python-bindings-20261106T072822Z.json`
+  records **331 tests, 0 failures, 0 errors, 9 skips** (the skips are the
+  superseded historical `017_unknown_mode_reserved*` vectors). The receipt records 331 tests, 0 failures, 0 errors, 9 skips. Wheel
+  `weftcodec-0.8.0-py3-none-any.whl`, 66,163 bytes, sha256
+  `39898a4a0d206d12528f32f6d0282f7e261f4bc8a5105eb127d701854f12c6ba`.
+  Court image `weft/python-court:1` id
+  `sha256:af751fc866908fb6e6abb190c6e139739b62246ea019447a6a754e5c3b2a849e`
+  (3 GiB / 4 CPUs / 1,024 pids).
+- **Court image detail.** `docker/python-court.Dockerfile` is now pinned to
+  `python:3.12-slim-bookworm` (the floating `python:3.12-slim` moved to
+  trixie, where `libfuse3-3` no longer exists) and installs `libfuse3-3` so the
+  fuse-linked `weftfs` CLI used by the existing DCP tests runs in this court.
+  No `/dev/fuse` is passed to the Python court.
+- **Honest residual.** The Python reader still does not claim WeftQL selectors,
+  Context Roots, capability envelopes, `weft.checkpoint.v1` manifests, WFA1
+  archives, or `weft.tensor.layout.v1` / `weft.tensor.shard.v1` records;
+  TENSOR_TILED supports full decode but not the Python region reader. The
+  randomized differential is one host with synthetic frames (Rust CLI is the
+  oracle); overflow and absurd-limit vectors are covered by the curated
+  conformance corpus, not by the generator. No Go code, no wire change, and no
+  manifest regeneration was performed.
