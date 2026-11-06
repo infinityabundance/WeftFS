@@ -105,6 +105,8 @@ fn gcs_config(bucket: String) -> GcsConfig {
         endpoint: endpoint(),
         bucket,
         token: None,
+        service_account: None,
+        scope: weftfs::service_account::DEFAULT_SCOPE.to_owned(),
         project: Some(project()),
         anonymous: true,
         lock_lease: Duration::from_secs(LOCK_LEASE_SECS),

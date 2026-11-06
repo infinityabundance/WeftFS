@@ -149,6 +149,16 @@ struct Cli {
     /// GOOGLE_OAUTH_ACCESS_TOKEN). Never logged or written to receipts.
     #[arg(long = "gcs-token", global = true, value_name = "TOKEN")]
     gcs_token: Option<String>,
+    /// GCS service-account JSON key used with the RS256 JWT-bearer flow
+    /// (fallback: WEFT_GCS_CREDENTIALS or GOOGLE_APPLICATION_CREDENTIALS). The
+    /// key is never logged. Use --gcs-token instead only when a short-lived
+    /// bearer token is already available.
+    #[arg(long = "gcs-credentials", global = true, value_name = "FILE")]
+    gcs_credentials: Option<String>,
+    /// OAuth2 scope requested by the service-account assertion (default
+    /// `https://www.googleapis.com/auth/devstorage.read_write`).
+    #[arg(long = "gcs-scope", global = true, value_name = "SCOPE")]
+    gcs_scope: Option<String>,
     /// GCS project used to create the bucket when it does not exist.
     #[arg(long = "gcs-project", global = true, value_name = "PROJECT")]
     gcs_project: Option<String>,
@@ -1228,6 +1238,8 @@ struct RemoteOptions {
     gcs_token: Option<String>,
     gcs_project: Option<String>,
     gcs_anonymous: bool,
+    gcs_credentials: Option<String>,
+    gcs_scope: Option<String>,
     azure_endpoint: Option<String>,
     azure_container: Option<String>,
     azure_account: Option<String>,
@@ -1254,6 +1266,8 @@ fn parse_backend(text: &str, remote: &RemoteOptions) -> Result<CliBackend> {
             remote.gcs_token.clone(),
             remote.gcs_project.clone(),
             Some(remote.gcs_anonymous).filter(|value| *value),
+            remote.gcs_credentials.clone(),
+            remote.gcs_scope.clone(),
         )?)),
         "azure" => Ok(CliBackend::Azure(AzureConfig::resolve(
             remote.azure_endpoint.clone(),
@@ -1369,6 +1383,8 @@ fn run(cli: Cli) -> Result<()> {
         gcs_token,
         gcs_project,
         gcs_anonymous,
+        gcs_credentials,
+        gcs_scope,
         azure_endpoint,
         azure_container,
         azure_account,
@@ -1451,6 +1467,8 @@ fn run(cli: Cli) -> Result<()> {
                 gcs_token,
                 gcs_project,
                 gcs_anonymous,
+                gcs_credentials,
+                gcs_scope,
                 azure_endpoint,
                 azure_container,
                 azure_account,

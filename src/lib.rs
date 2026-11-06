@@ -47,6 +47,7 @@ pub mod recovery;
 pub mod representation;
 pub mod restore_pipeline;
 pub mod s3;
+pub mod service_account;
 pub mod safetensors;
 pub mod singleflight;
 pub mod state;

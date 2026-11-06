@@ -77,7 +77,7 @@ use std::fmt;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::backend::{
@@ -89,6 +89,7 @@ use crate::format::{MAX_CHUNK_SIZE, SUPERBLOCK_BYTES};
 use crate::planes::{
     control_token, BlobCapabilities, BlobPlane, CommitCapabilities, CommitPlane, ControlRecord,
 };
+use crate::service_account::{ServiceAccountAuth, ServiceAccountKey, DEFAULT_SCOPE};
 
 /// Largest single object the backend accepts. Matches the S3 backend's bound so
 /// a store built on either has the same object-size limit.
@@ -119,6 +120,11 @@ pub struct GcsConfig {
     pub bucket: String,
     /// OAuth2 bearer token. Never logged.
     pub token: Option<String>,
+    /// Service-account key used to mint bearer tokens with the RS256
+    /// JWT-bearer flow. Never logged, never rendered.
+    pub service_account: Option<Arc<ServiceAccountKey>>,
+    /// OAuth2 scope requested by the assertion.
+    pub scope: String,
     /// Project used to create the bucket when it does not exist.
     pub project: Option<String>,
     /// Emulator mode: send no `Authorization` header. Never combined with a
@@ -139,6 +145,18 @@ impl fmt::Debug for GcsConfig {
             .field("endpoint", &self.endpoint)
             .field("bucket", &self.bucket)
             .field("token", &self.token.as_ref().map(|_| "<redacted>"))
+            .field(
+                "service_account",
+                &self.service_account.as_ref().map(|key| key.client_email()),
+            )
+            .field(
+                "service_account_key",
+                &self
+                    .service_account
+                    .as_ref()
+                    .map(|_| "<redacted>"),
+            )
+            .field("scope", &self.scope)
             .field("project", &self.project)
             .field("anonymous", &self.anonymous)
             .field("lock_lease", &self.lock_lease)
@@ -150,22 +168,37 @@ impl fmt::Debug for GcsConfig {
 impl GcsConfig {
     /// Build from the environment only.
     pub fn from_env() -> Result<GcsConfig> {
-        GcsConfig::resolve(None, None, None, None, None)
+        GcsConfig::resolve(None, None, None, None, None, None, None)
     }
 
     /// Resolve with explicit values taking precedence over the environment.
+    ///
+    /// Exactly one of three credential forms must resolve:
+    ///
+    /// * a bearer token (`--gcs-token`, `WEFT_GCS_ACCESS_TOKEN`,
+    ///   `GOOGLE_OAUTH_ACCESS_TOKEN`);
+    /// * a service-account key (`--gcs-credentials`, `WEFT_GCS_CREDENTIALS`,
+    ///   or `GOOGLE_APPLICATION_CREDENTIALS`), signed with RS256;
+    /// * `--gcs-anonymous` for an emulator.
+    ///
+    /// Supplying two forms is refused rather than guessed at.
+    #[allow(clippy::too_many_arguments)]
     pub fn resolve(
         endpoint: Option<String>,
         bucket: Option<String>,
         token: Option<String>,
         project: Option<String>,
         anonymous: Option<bool>,
+        credentials: Option<String>,
+        scope: Option<String>,
     ) -> Result<GcsConfig> {
         let mut config = GcsConfig {
             endpoint: first_env(&["WEFT_GCS_ENDPOINT"])
                 .unwrap_or_else(|| DEFAULT_ENDPOINT.to_owned()),
             bucket: first_env(&["WEFT_GCS_BUCKET"]).unwrap_or_default(),
             token: first_env(&["WEFT_GCS_ACCESS_TOKEN", "GOOGLE_OAUTH_ACCESS_TOKEN"]),
+            service_account: None,
+            scope: first_env(&["WEFT_GCS_SCOPE"]).unwrap_or_else(|| DEFAULT_SCOPE.to_owned()),
             project: first_env(&["WEFT_GCS_PROJECT", "GOOGLE_CLOUD_PROJECT"]),
             anonymous: env_flag("WEFT_GCS_ANONYMOUS"),
             lock_lease: Duration::from_secs(
@@ -191,22 +224,53 @@ impl GcsConfig {
         if let Some(value) = anonymous {
             config.anonymous = value;
         }
+        if let Some(value) = scope {
+            if !value.is_empty() {
+                config.scope = value;
+            }
+        }
+        let credentials_path = credentials.or_else(|| {
+            first_env(&["WEFT_GCS_CREDENTIALS", "GOOGLE_APPLICATION_CREDENTIALS"])
+        });
+        if let Some(path) = credentials_path {
+            let key = ServiceAccountKey::from_path(std::path::Path::new(&path))
+                .map_err(|err| {
+                    Error::new(
+                        err.class(),
+                        format!("service-account key from `{path}`: {}", err.message()),
+                    )
+                })?;
+            if config.project.is_none() {
+                config.project = key.project_id().map(str::to_owned);
+            }
+            config.service_account = Some(Arc::new(key));
+        }
         if config.bucket.is_empty() {
             return Err(Error::invalid_argument(
                 "GCS backend needs a bucket (`--gcs-bucket` or WEFT_GCS_BUCKET)",
             ));
         }
-        if config.anonymous && config.token.is_some() {
+        let forms = [
+            config.token.is_some(),
+            config.service_account.is_some(),
+            config.anonymous,
+        ]
+        .into_iter()
+        .filter(|present| *present)
+        .count();
+        if forms > 1 {
             return Err(Error::invalid_argument(
-                "GCS backend was given both a bearer token and --gcs-anonymous; refusing to guess \
-                 which credential the endpoint should see",
+                "GCS backend was given more than one credential form (bearer token, \
+                 service-account key, anonymous); refusing to guess which one the endpoint should \
+                 see",
             ));
         }
-        if !config.anonymous && config.token.is_none() {
+        if forms == 0 {
             return Err(Error::invalid_argument(
-                "GCS backend needs a bearer token (`--gcs-token`, WEFT_GCS_ACCESS_TOKEN, or \
-                 GOOGLE_OAUTH_ACCESS_TOKEN); service-account JSON key signing needs RS256 and is \
-                 not implemented, so GOOGLE_APPLICATION_CREDENTIALS alone is refused",
+                "GCS backend needs one credential form: a bearer token (`--gcs-token`, \
+                 WEFT_GCS_ACCESS_TOKEN, GOOGLE_OAUTH_ACCESS_TOKEN), a service-account key \
+                 (`--gcs-credentials`, WEFT_GCS_CREDENTIALS, GOOGLE_APPLICATION_CREDENTIALS), or \
+                 `--gcs-anonymous` for an emulator",
             ));
         }
         config.validate()?;
@@ -375,6 +439,9 @@ pub struct GcsBackend {
     config: GcsConfig,
     endpoint: Mutex<Option<Endpoint>>,
     agent: Mutex<Option<ureq::Agent>>,
+    /// Lazily built service-account token source. `None` for a bearer token or
+    /// an anonymous emulator court.
+    auth: Mutex<Option<ServiceAccountAuth>>,
     lock: Mutex<Option<LockLease>>,
     stats: GcsStats,
     diagnostics: Mutex<Vec<String>>,
@@ -389,6 +456,7 @@ impl GcsBackend {
             config,
             endpoint: Mutex::new(None),
             agent: Mutex::new(None),
+            auth: Mutex::new(None),
             lock: Mutex::new(None),
             stats: GcsStats::default(),
             diagnostics: Mutex::new(Vec::new()),
@@ -415,7 +483,9 @@ impl GcsBackend {
                           forms and a stale-generation refusal are probed before any commit \
                           is published. The writer lease is a fenced record whose takeover, \
                           renewal, and release are all generation-conditioned; the fence is \
-                          the last upload before the head compare-and-swap"
+                          the last upload before the head compare-and-swap. Credentials are a \
+                          bearer token or a service-account RS256 JWT-bearer assertion \
+                          exchanged at the key's token_uri"
                 .to_owned(),
         }
     }
@@ -530,6 +600,33 @@ impl GcsBackend {
         ))
     }
 
+    /// The `Authorization` value for this request, minting a service-account
+    /// token when that is the configured credential form.
+    ///
+    /// A token exchange is a network call, so this can fail with `Io` or
+    /// `Unauthorized`; the caller propagates it rather than sending an
+    /// unauthenticated request that would be refused anyway.
+    fn authorization(&self) -> Result<Option<String>> {
+        if let Some(token) = &self.config.token {
+            return Ok(Some(format!("Bearer {token}")));
+        }
+        let Some(key) = &self.config.service_account else {
+            return Ok(None);
+        };
+        let mut guard = self
+            .auth
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if guard.is_none() {
+            *guard = Some(ServiceAccountAuth::new(key.clone(), self.config.scope.clone()));
+        }
+        let token = guard
+            .as_ref()
+            .expect("just installed")
+            .token()?;
+        Ok(Some(format!("Bearer {}", token.access_token())))
+    }
+
     fn request(
         &self,
         method: &str,
@@ -540,8 +637,8 @@ impl GcsBackend {
     ) -> Result<HttpResponse> {
         let agent = self.agent();
         let mut request = agent.request(method, url);
-        if let Some(token) = &self.config.token {
-            request = request.set("authorization", &format!("Bearer {token}"));
+        if let Some(authorization) = self.authorization()? {
+            request = request.set("authorization", &authorization);
         }
         request = request.set("user-agent", "weftfs-gcs/1");
         for (name, value) in headers {
@@ -1693,6 +1790,23 @@ impl GcsBackend {
                 "GCS fence CAS proved the lease {fences} time(s), {renewals} with a renewal"
             ));
         }
+        if let Some(auth) = self
+            .auth
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .as_ref()
+        {
+            let stats = auth.stats();
+            out.push(format!(
+                "GCS service-account auth: {} token exchange(s), {} cache hit(s), {} refusal(s); \
+                 key {} ({} bits)",
+                stats.exchanges,
+                stats.cache_hits,
+                stats.refusals,
+                auth.key().fingerprint_hex(),
+                auth.key().modulus_bits()
+            ));
+        }
         let refusals = self.stats.fence_refusals.load(Ordering::Relaxed);
         let expired = self
             .stats
@@ -2540,6 +2654,8 @@ mod tests {
             endpoint: "http://127.0.0.1:4443".to_owned(),
             bucket: "weft-court".to_owned(),
             token: Some("super-secret-token".to_owned()),
+            service_account: None,
+            scope: crate::service_account::DEFAULT_SCOPE.to_owned(),
             project: Some("weft".to_owned()),
             anonymous: false,
             lock_lease: Duration::from_secs(2),
@@ -2556,6 +2672,8 @@ mod tests {
             endpoint: "http://127.0.0.1:4443".to_owned(),
             bucket: "weft-court".to_owned(),
             token: None,
+            service_account: None,
+            scope: crate::service_account::DEFAULT_SCOPE.to_owned(),
             project: None,
             anonymous: true,
             lock_lease: Duration::from_secs(2),

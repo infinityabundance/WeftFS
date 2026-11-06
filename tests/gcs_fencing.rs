@@ -83,6 +83,8 @@ impl Court {
             endpoint: self.endpoint.clone(),
             bucket: format!("{}-{tag}-{n}", self.bucket_base),
             token: self.token.clone(),
+            service_account: None,
+            scope: weftfs::service_account::DEFAULT_SCOPE.to_owned(),
             project: Some(self.project.clone()),
             anonymous: self.anonymous,
             lock_lease: self.lease,
@@ -190,6 +192,8 @@ fn child_fenced_writer() {
             endpoint: env("WEFT_FENCE_GCS_ENDPOINT").expect("endpoint"),
             bucket: env("WEFT_FENCE_GCS_BUCKET").expect("bucket"),
             token: env("WEFT_FENCE_GCS_TOKEN"),
+            service_account: None,
+            scope: weftfs::service_account::DEFAULT_SCOPE.to_owned(),
             project: env("WEFT_FENCE_GCS_PROJECT"),
             anonymous: env("WEFT_FENCE_GCS_ANONYMOUS")
                 .map(|value| value == "1")

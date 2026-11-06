@@ -129,6 +129,25 @@ export WEFT_GCS_LOCK_LEASE_SECS="${WEFT_GCS_LOCK_LEASE_SECS:-2}"
 # The fencing suite needs a lease a court can expire; the general court uses a
 # short but longer-lived one for the crash proxy. Same split as the S3 court.
 export WEFT_GCS_FENCE_LEASE_SECS="${WEFT_GCS_FENCE_LEASE_SECS:-3}"
+# Optional real service-account key. The host path is copied into the gitignored
+# court cache and passed to the container as a /work path; the key never enters
+# the repository, a receipt, or a log.
+auth_status="no_credentials"
+auth_probe=""
+if [[ -n "${WEFT_GCS_SA_KEY:-}" ]]; then
+  if [[ ! -f "$WEFT_GCS_SA_KEY" ]]; then
+    echo "gcs_court: WEFT_GCS_SA_KEY=$WEFT_GCS_SA_KEY does not exist" >&2
+    exit 64
+  fi
+  mkdir -p "$repo_root/.docker-cache/gcs-sa"
+  cp "$WEFT_GCS_SA_KEY" "$repo_root/.docker-cache/gcs-sa/key.json"
+  chmod 600 "$repo_root/.docker-cache/gcs-sa/key.json"
+  export WEFT_GCS_CREDENTIALS="/work/.docker-cache/gcs-sa/key.json"
+  export WEFT_GCS_LIVE_PROBE=1
+  auth_status="key_file_present"
+else
+  unset WEFT_GCS_CREDENTIALS WEFT_GCS_LIVE_PROBE
+fi
 export WEFT_GCS_RECEIPT="bench/receipts/gcs-${stamp}.json"
 export WEFT_GCS_TESTS_LOG="bench/receipts/gcs-${stamp}.tests.log"
 export WEFT_GCS_FENCING_LOG="bench/receipts/gcs-${stamp}.fencing.log"
@@ -142,6 +161,20 @@ echo "gcs_court: fake-gcs-server $gcs_release_tag sha256=$gcs_tarball_sha256 end
 inner_status=0
 if ! scripts/docker-court.sh rust "cd /work && bash bench/scripts/gcs_inner_court.sh"; then
   inner_status=1
+fi
+
+auth_log="bench/receipts/gcs-${stamp}.tests.auth.log"
+auth_summary="${auth_log%.log}.txt"
+auth_probe_log="bench/receipts/gcs-${stamp}.tests.auth-probe.log"
+if [[ -f "$auth_probe_log" ]]; then
+  auth_probe="$(head -c 2000 "$auth_probe_log" | tr '\n' ' ')"
+  auth_status="live_probe_ran"
+fi
+if [[ -n "$auth_probe" ]]; then
+  auth_probe_escaped="$(printf '%s' "$auth_probe" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+  auth_probe_json="\"$auth_probe_escaped\""
+else
+  auth_probe_json="null"
 fi
 
 cat > "$court_receipt" <<JSON
@@ -175,6 +208,15 @@ cat > "$court_receipt" <<JSON
     "command": "cargo test --test gcs_backend -- --test-threads=1",
     "log": "${WEFT_GCS_TESTS_LOG}",
     "summary": "${WEFT_GCS_TESTS_LOG%.log}.txt"
+  },
+  "auth": {
+    "status": "$auth_status",
+    "offline_command": "cargo test --test service_account -- --test-threads=1",
+    "offline_log": "${auth_log}",
+    "offline_summary": "${auth_summary}",
+    "live_probe_log": "${auth_probe_log}",
+    "live_probe": $auth_probe_json,
+    "note": "Service-account RS256 signing is verified offline against the published RFC 7515 A.2 vector and the OAuth2 exchange/cache against an in-process endpoint. A status of no_credentials means no live exchange was attempted: no service-account key exists in this environment, so this receipt makes no live-GCS authentication claim. Set WEFT_GCS_SA_KEY to a key file to run the live probe."
   },
   "fencing": {
     "command": "cargo test --test gcs_fencing -- --test-threads=1 --nocapture",

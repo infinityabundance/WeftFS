@@ -1,0 +1,86 @@
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4221:8
+     |
+4221 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4228:8
+     |
+4228 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4245:7
+     |
+4245 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4247:4
+     |
+4247 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4280:4
+     |
+4280 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.04s
+     Running tests/service_account.rs (.docker-cache/target-rust/debug/deps/service_account-dbbfb5d35e452057)
+
+running 14 tests
+test a_short_lived_token_uses_half_its_lifetime_as_the_window ... ok
+test an_inconsistent_key_is_refused ... ok
+test assertion_for_an_empty_scope_is_refused ... ok
+test assertion_has_the_standard_header_and_claim_shape ... ok
+test debug_output_redacts_the_key_assertion_and_token ... ok
+test encrypted_and_non_rsa_keys_are_refused_by_name ... ok
+test gcs_backend_sends_the_service_account_bearer_token ... ok
+test gcs_config_refuses_two_credential_forms_and_loads_one_key_file ... FAILED
+test malformed_input_never_echoes_key_material ... ok
+test non_service_account_credentials_are_refused_by_name ... ok
+test pkcs8_and_pkcs1_encodings_are_the_same_key ... ok
+test provider_refusals_are_typed_and_do_not_echo_the_assertion ... ok
+test rfc7515_rs256_vector_signs_to_the_published_bytes ... ok
+test token_is_cached_and_refreshed_inside_a_bounded_window ... ok
+
+failures:
+
+---- gcs_config_refuses_two_credential_forms_and_loads_one_key_file stdout ----
+
+thread 'gcs_config_refuses_two_credential_forms_and_loads_one_key_file' (119) panicked at tests/service_account.rs:672:5:
+assertion `left == right` failed
+  left: Some("weft-court")
+ right: Some("weft-test")
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/panicking.rs:679:5
+   1: core::panicking::panic_fmt
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/panicking.rs:80:14
+   2: core::panicking::assert_failed_inner
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/panicking.rs:452:17
+   3: core::panicking::assert_failed::<core::option::Option<&str>, core::option::Option<&str>>
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/panicking.rs:407:5
+   4: service_account::gcs_config_refuses_two_credential_forms_and_loads_one_key_file
+             at ./tests/service_account.rs:672:5
+   5: service_account::gcs_config_refuses_two_credential_forms_and_loads_one_key_file::{closure#0}
+             at ./tests/service_account.rs:634:68
+   6: <service_account::gcs_config_refuses_two_credential_forms_and_loads_one_key_file::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ops/function.rs:250:5
+   7: <fn() -> core::result::Result<(), alloc::string::String> as core::ops::function::FnOnce<()>>::call_once
+             at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    gcs_config_refuses_two_credential_forms_and_loads_one_key_file
+
+test result: FAILED. 13 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+error: test failed, to rerun pass `--test service_account`

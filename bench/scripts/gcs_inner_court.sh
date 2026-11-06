@@ -22,6 +22,10 @@ set -Eeuo pipefail
 
 cd /work
 
+status=0
+auth_log="${WEFT_GCS_TESTS_LOG%.log}.auth.log"
+auth_summary="${auth_log%.log}.txt"
+auth_probe_log="${WEFT_GCS_TESTS_LOG%.log}.auth-probe.log"
 bin="${WEFT_GCS_BIN:?WEFT_GCS_BIN is required}"
 receipt="${WEFT_GCS_RECEIPT:?WEFT_GCS_RECEIPT is required}"
 tests_log="${WEFT_GCS_TESTS_LOG:?WEFT_GCS_TESTS_LOG is required}"
@@ -75,23 +79,51 @@ echo "gcs_inner_court: emulator ready at ${endpoint} (pid ${server_pid})"
 
 # 1. In-process fake service unit tests. These do not need the emulator, but
 #    they run here so one invocation records both.
-cargo test --test gcs_backend -- --test-threads=1 >"$tests_log" 2>&1
+if ! cargo test --test gcs_backend -- --test-threads=1 >"$tests_log" 2>&1; then
+  status=1
+fi
 grep -E '^(test |test result)' "$tests_log" >"$tests_summary" || true
+
+# 1b. Service-account authentication court. Offline by design: the RS256
+#     implementation is checked against the published RFC 7515 A.2 vector and
+#     the OAuth2 exchange/cache against an in-process endpoint. A real key is
+#     needed only for the optional live probe below.
+if ! cargo test --test service_account -- --test-threads=1 >"$auth_log" 2>&1; then
+  status=1
+fi
+grep -E '^(test |test result)' "$auth_log" >"$auth_summary" || true
+
+# 1c. Optional live token exchange. Only when the court was given a real key.
+rm -f "$auth_probe_log"
+if [[ -n "${WEFT_GCS_CREDENTIALS:-}" && "${WEFT_GCS_LIVE_PROBE:-0}" == "1" ]]; then
+  if ! cargo run --release --quiet --example gcs_auth_probe >"$auth_probe_log" 2>&1; then
+    status=1
+  fi
+fi
 
 # 2. Fenced-writer court over the emulator. These are the same backend-agnostic
 #    invariants the S3 and Ceph RGW courts run (tests/support/fencing.rs); the
 #    lease is short so a test can let it expire.
-cargo test --test gcs_fencing -- --test-threads=1 --nocapture >"$fencing_log" 2>&1
+if ! cargo test --test gcs_fencing -- --test-threads=1 --nocapture >"$fencing_log" 2>&1; then
+  status=1
+fi
 grep -E '^(test |test result)' "$fencing_log" >"$fencing_summary" || true
 
 # 3. End-to-end court over the emulator. The CLI is built first because the
 #    crash proxy re-executes it with WEFT_CRASH_PHASE set.
-cargo build --release --bins >>"$tests_log" 2>&1
-cargo run --release --quiet --example gcs_court -- \
+if ! cargo build --release --bins >>"$tests_log" 2>&1; then
+  echo "gcs_inner_court: the release CLI did not build" >&2
+  exit 1
+fi
+if ! cargo run --release --quiet --example gcs_court -- \
   --out "$receipt" \
   --root /tmp/weft-gcs-court \
-  --tests-summary "$tests_summary"
+  --tests-summary "$tests_summary"; then
+  status=1
+fi
 
+echo "gcs_inner_court: auth log $auth_log"
 echo "gcs_inner_court: receipt $receipt"
 echo "gcs_inner_court: emulator log (last 20 lines)"
 tail -20 /tmp/fake-gcs.log || true
+exit "$status"

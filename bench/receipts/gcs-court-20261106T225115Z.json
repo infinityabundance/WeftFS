@@ -1,0 +1,54 @@
+{
+  "schema": "weft-gcs-court-v1",
+  "status": "ok",
+  "generated_utc": "20261106T225115Z",
+  "emulator": {
+    "product": "fake-gcs-server (fsouza/fake-gcs-server)",
+    "release": "v1.56.1",
+    "tarball": "fake-gcs-server_1.56.1_Linux_amd64.tar.gz",
+    "tarball_sha256": "0f2f9f6884417acd5cc27126a9aa237ccc627372a4aa5008b399641de6db9469",
+    "url": "https://github.com/fsouza/fake-gcs-server/releases/download/v1.56.1/fake-gcs-server_1.56.1_Linux_amd64.tar.gz",
+    "backend": "memory",
+    "started_by": "bench/scripts/gcs_inner_court.sh inside the rust court",
+    "note": "The emulator runs on loopback in the same container as the test client. Its data backend is memory, so this proves protocol behaviour, not media durability."
+  },
+  "container": {
+    "kind": "rust",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "pids": "1024",
+    "cpus": "4",
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "tmpfs": "/tmp 1g"
+  },
+  "endpoint": "http://127.0.0.1:4443",
+  "bucket": "weft-gcs-court-20261106t225115z",
+  "tests": {
+    "command": "cargo test --test gcs_backend -- --test-threads=1",
+    "log": "bench/receipts/gcs-20261106T225115Z.tests.log",
+    "summary": "bench/receipts/gcs-20261106T225115Z.tests.txt"
+  },
+  "auth": {
+    "status": "no_credentials",
+    "offline_command": "cargo test --test service_account -- --test-threads=1",
+    "offline_log": "bench/receipts/gcs-20261106T225115Z.tests.auth.log",
+    "offline_summary": "bench/receipts/gcs-20261106T225115Z.tests.auth.txt",
+    "live_probe_log": "bench/receipts/gcs-20261106T225115Z.tests.auth-probe.log",
+    "live_probe": null,
+    "note": "Service-account RS256 signing is verified offline against the published RFC 7515 A.2 vector and the OAuth2 exchange/cache against an in-process endpoint. A status of no_credentials means no live exchange was attempted: no service-account key exists in this environment, so this receipt makes no live-GCS authentication claim. Set WEFT_GCS_SA_KEY to a key file to run the live probe."
+  },
+  "fencing": {
+    "command": "cargo test --test gcs_fencing -- --test-threads=1 --nocapture",
+    "log": "bench/receipts/gcs-20261106T225115Z.fencing.log",
+    "summary": "bench/receipts/gcs-20261106T225115Z.fencing.txt",
+    "lease_secs": "3",
+    "shared_bodies": "tests/support/fencing.rs (also run by scripts/s3_court.sh on MinIO and scripts/ceph_court.sh on Ceph RGW)",
+    "note": "Generation-precondition fencing: takeover, fence-before-head, renewal, own-deadline stop, and a conditional tombstone release."
+  },
+  "court": {
+    "command": "cargo run --release --quiet --example gcs_court -- --out bench/receipts/gcs-20261106T225115Z.json",
+    "receipt": "bench/receipts/gcs-20261106T225115Z.json"
+  },
+  "label": "Single-host GCS-compatible emulator on loopback in the OOM-protected Docker court with a memory backend. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
+}
