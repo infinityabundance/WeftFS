@@ -183,7 +183,7 @@ def summarise(pair_doc):
     losses = totals.get("mode16_worst10_losses") or []
     wins = []
     for row in pair_doc["per_tensor"]:
-        if row["mode16_bytes"] < row["mode11_bytes"]:
+        if row["mode16_bytes"] is not None and row["mode16_bytes"] < row["mode11_bytes"]:
             wins.append(
                 {
                     "name": row["name"],
@@ -302,7 +302,12 @@ def main(argv=None):
         return {
             "pairs": len(records),
             "mode11_bytes_sum_over_pairs": sum(r["totals"]["mode11_bytes"] for r in records),
-            "mode16_bytes_sum_over_pairs": sum(r["totals"]["mode16_bytes"] for r in records),
+            "mode16_bytes_sum_over_pairs": sum(
+                r["totals"]["mode16_bytes"] for r in records
+            ),
+            "mode16_tensors_refused": sum(
+                r["totals"]["mode16_refused"] for r in records
+            ),
             "zstd19_bytes_sum_over_pairs": sum(r["totals"]["zstd19_bytes"] for r in records),
             "tensors_mode16_smaller": sum(
                 r["totals"]["tensors_mode16_smaller"] for r in records
@@ -317,16 +322,19 @@ def main(argv=None):
     for record in consecutive + fine_tune:
         totals = record["totals"]
         findings.append(
-            "{}: mode 11 {} B, mode 16 {} B ({}x mode 11, {}x per-tensor zstd-19); "
-            "{} tensors smaller with mode 16, {} with mode 11, {} equal".format(
+            "{}: mode 11 {} B, mode 16 {} B over {} encodable tensor(s) "
+            "({}x mode 11, {}x per-tensor zstd-19); {} tensors smaller with "
+            "mode 16, {} with mode 11, {} equal, {} refused by max_sparse_runs".format(
                 record["id"],
                 totals["mode11_bytes"],
                 totals["mode16_bytes"],
+                totals["mode16_frames"],
                 round(totals["mode16_over_mode11"], 4),
                 round(totals["mode16_over_zstd19"], 4),
                 totals["tensors_mode16_smaller"],
                 totals["tensors_mode11_smaller"],
                 totals["tensors_equal"],
+                totals["mode16_refused"],
             )
         )
 
