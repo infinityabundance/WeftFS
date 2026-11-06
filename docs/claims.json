@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (28/28 courts pass, incl. ceph_rgw).",
-    "value": "verify-20261106T162208Z.json",
+    "value": "verify-20261106T174703Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261106T162208Z.json",
+    "receipt": "bench/receipts/verify-20261106T174703Z.json",
     "kind": "present"
   },
   {
@@ -3908,7 +3908,6 @@
     "value": "verify-20261106T162208Z.json",
     "locations": [
       "docs/STATUS.md",
-      "README.md",
       "bench/RESULTS-ceph.md"
     ],
     "receipt": "bench/receipts/verify-20261106T162208Z.json",
@@ -3945,6 +3944,105 @@
       "bench/RESULTS-ceph.md"
     ],
     "receipt": "bench/receipts/verify-20261106T162933Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r17_lock_record_schema",
+    "claim": "The fenced writer-lock record is an explicitly versioned object.",
+    "value": "weftfs-s3-lock v2",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_release_tombstone",
+    "claim": "Lock release is a conditional tombstone, never an unconditional delete.",
+    "value": "weftfs-s3-lock-released v1",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_fencing_token",
+    "claim": "The S3 writer lease carries a monotonic fencing token bumped by every takeover.",
+    "value": "fencing token",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_fence_before_head",
+    "claim": "A publication is fenced by one conditional write on LOCK immediately before the head write.",
+    "value": "pending_generation",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_no_unconditional_delete",
+    "claim": "No code path deletes a lock unconditionally after a read.",
+    "value": "unconditional `DELETE`",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_distributed_receipt",
+    "claim": "The fencing scenarios are recorded in the multi-process court receipt.",
+    "value": "bench/receipts/distributed-20261106T174634Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": "bench/receipts/distributed-20261106T174634Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r17_s3_court_receipt",
+    "claim": "The S3 backend and fencing tests were run against a real MinIO endpoint.",
+    "value": "bench/receipts/s3-court-20261106T174609Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261106T174609Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r17_not_multi_writer",
+    "claim": "R17 does not claim a multi-writer protocol.",
+    "value": "multi-writer protocol",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r17_gcs_gap",
+    "claim": "The GCS backend is recorded as lacking the fence.",
+    "value": "GCS backend",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-fencing.md"
+    ],
+    "receipt": null,
     "kind": "present"
   }
 ]

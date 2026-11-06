@@ -2,13 +2,15 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T162208Z.json` (28/28 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261106T174703Z.json` (28/28 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
-memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation — and
-`fuzz_diff`), at WeftFS `0e3670a`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
-WeftFS-Go `007bf11`. A court that cannot run in the aggregate's environment
+memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation, now
+running both the S3 backend suite and the R17 fenced-writer suite — and
+`fuzz_diff`), at WeftFS `37a3a39`, WeftCodec `a888d79`, WeftCodec-Go `8957998`,
+WeftFS-Go `007bf11`. The previous 28/28 receipt
+(`verify-20261106T162208Z.json` at `0e3670a`) is retained. A court that cannot run in the aggregate's environment
 (non-x86_64, no Docker daemon, the pinned Ceph image unobtainable, or the
 court's private subnet already taken) is recorded as `skip` with its exact
 reason under `skips` in the receipt, and a skip is not a pass; this run had
@@ -3981,3 +3983,128 @@ not the current pass receipt; the all-pass run above is.
 
 Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
 pass (the frozen formats and spec files are untouched by this subphase).
+
+---
+
+## Subphase R17 — fenced writer protocol (2026-11-06)
+
+Closes the reviewer-reported defect in `src/s3.rs`: `release_lock()` read
+`LOCK`, checked the owner, then issued an **unconditional `DELETE`**, so a
+writer whose lease a successor had just reclaimed could delete that successor's
+lock; and nothing consulted the lease at publication time, so an expired writer
+could keep publishing. A conditional head compare-and-swap alone is not
+ownership proof, because it says nothing about who holds the lease.
+
+### What is implemented
+
+* `LOCK` is now `weftfs-s3-lock v2`: `owner`, a **monotonic fencing token**
+  (`fence`), `sequence`, an absolute `lease_deadline_ns`, `renewed_ns`, and the
+  head being published (`pending_generation`, `pending_commit`). The first
+  lease takes fence 1; every takeover takes `previous + 1` (checked); a legacy
+  v1 record is read as fence 0 so the chain stays monotonic across the change.
+* **The fence is one conditional write.** Before every publication the store
+  writes `LOCK` with `If-Match: <ETag of the bytes this handle last
+  published>`. That succeeds only while the object still carries this writer's
+  token, so a successor's takeover (which rewrote the object) makes a stale
+  writer fail `412` → `Busy`, *before* the head is written. The store calls the
+  proof before the commit record and again — this time naming the head — as the
+  last write before the superblock compare-and-swap.
+* **Lease renewal** happens inside that same conditional write, once per
+  publication, when at most one publication budget remains (`deadline - now <=
+  lease/2`), extending the deadline to `now + lease`. The interval is bounded
+  by the lease.
+* **Own-deadline stop.** A writer refuses to publish when its own deadline has
+  passed, without consulting anyone and even with no successor. The refusal
+  names the expired token and, read-only, who holds the lock now.
+* **Release is a conditional tombstone**, never an unconditional delete:
+  `weftfs-s3-lock-released v1` with `If-Match` on the observed ETag, carrying
+  the released token and `released_from` (sha256 of the exact bytes replaced).
+  A record that names another writer is never touched. A tombstone is preferred
+  over a conditional `DELETE` because deleting the object would reset the
+  fencing token. The writable-open probe already refuses an endpoint whose
+  conditional writes cannot be proven, which is the primitive this needs.
+* **The same question for POSIX backends.** `LocalBackend` and `ObjectBackend`
+  refuse to publish when the `LOCK` name no longer resolves to the exact
+  `(dev, ino)` this handle flocked, i.e. when the namespace was handed to
+  someone else.
+* `CompositeBackend` delegates the proof to its commit plane (the plane that
+  owns `LOCK` and the head), so a split store with S3 blobs and local commits
+  is fenced by its local lock and an S3 commit plane is fenced by its lease.
+
+### Exact atomicity statement
+
+S3 allows one conditional write per object and no multi-object transaction, so
+the fence and the head write are two operations on two objects and cannot be
+fused. Safety does not depend on fusing them: a publication may only start
+while `now + budget <= deadline` (`budget = lease/2`), and a takeover is only
+allowed at `now > deadline`, so the publication window closes before any
+successor may touch the lock; the gate is the last write before the head CAS.
+A lost network reply remains the standard at-least-once ambiguity of any
+conditional `PUT` and is recorded as a residual, not as a pass.
+
+### Evidence
+
+* `tests/s3_fencing.rs` (MinIO court): **8/8** in 10.72 s. Real `SIGSTOP` child
+  (the test binary re-executes itself), reclaimed lease, `SIGCONT`; paused
+  writer fence 2 → successor fence 3, `Busy`, paused generation and head
+  unchanged, published head the successor's, `/fenced` absent, `verify --full`
+  ok. Stale release leaves the successor's `LOCK` bytes and ETag identical.
+  20 release/acquire races each advance the token by exactly one and never
+  delete the object. Two renewal windows extend the deadline with a constant
+  token. Five leases produce fences 1–5.
+* `examples/distributed_court.rs` scenario **S10**: 26 checks, **10/10
+  scenarios, 255 checks, 0 failed, 126 processes**
+  (`bench/receipts/distributed-20261106T174634Z.json`). Token map
+  `{paused 2, successor 3, release_holder 2, release_racer 3, renew 2, expired
+  2}`, generation sequence `[2, 2, 2]`.
+* `tests/writer_fencing.rs` (local + object): 4/4.
+* Rust `cargo test --all-targets`: 94 targets, **431 passed, 0 failed**.
+  FUSE `--features fuse --all-targets -- --test-threads=1`: 94 targets,
+  **473 passed, 0 failed, 2 ignored** (both pre-existing).
+* S3 court receipt `bench/receipts/s3-court-20261106T174609Z.json` (6 backend +
+  8 fencing tests, MinIO): s3_backend 6/6 in 0.53 s, s3_fencing 8/8 in 15.23 s.
+* Independent implementation: `scripts/ceph_court.sh` now runs the fencing
+  suite too. Against Ceph RGW 19.2.0 (literal `If-Match`, dequoted ETag, and
+  roughly an order of magnitude slower per round trip) `s3_backend` is 6/6 in
+  41.96 s and `s3_fencing` 8/8 in 80.85 s. Receipts
+  `bench/receipts/ceph-rgw-20261106T174703Z.json` and the aggregate
+  `bench/receipts/verify-20261106T174703Z.json` (**28/28 courts pass** at
+  `37a3a39`).
+* Analysis and exact commands: `bench/RESULTS-fencing.md`.
+
+### Lease configuration (and one behaviour change)
+
+The fencing suite needs a lease a court can expire (`WEFT_S3_FENCE_LEASE_SECS`,
+3 s); the general suites use 60 s (`WEFT_S3_LOCK_LEASE_SECS`). The split exists
+because a writer that stays **idle past its deadline must reopen**: the deadline
+check fires before the lock is read, so a long-idle handle gets `Busy` instead
+of silently re-acquiring. That is deliberate (the reviewer's requirement is
+that a writer stops once its deadline has passed), but it is a real behaviour
+change for a rarely-writing long-lived handle. The first aggregate run used a
+2 s lease for every S3 court and `store_round_trip_over_s3` failed on RGW with
+`S3 writer lease deadline passed 216 ms ago`; that receipt
+(`verify-20261106T171925Z.json`) is retained as the evidence.
+
+Two more defects the RGW run found were in the harness, and are fixed: the
+crash-proxy child's 1 s lease expired *mid-publication* on the slower endpoint
+(the child now gets a realistic lease and the reset is the fenced tombstone),
+and `release_stale_lease` did not negotiate the endpoint's `If-Match` form on a
+fresh handle, so every court reset was a `412`. The release/acquire race test
+also genuinely races now: the acquirer retries until it has observed the live
+lock, records at least one `Busy`, and then wins with the next token.
+
+### Not claimed
+
+Not a multi-writer protocol: exactly one writer is admitted, and there is no
+merge, queue, or consensus point for the head. No single atomic fence+head
+operation (not expressible on plain S3). No defence against a badly skewed
+writer clock beyond the budget assumption. The **GCS backend keeps its older
+lease code and no fence** (`verify_write_lease` defaults to a no-op there). No
+Go parity (WeftFS-Go has no S3 backend). No physical-media or power-loss claim.
+`scripts/verify-all.sh` passes 28/28 after this subphase
+(`bench/receipts/verify-20261106T174703Z.json`); the aggregate includes the
+MinIO and Ceph-RGW courts with the fencing suite, but not the separate
+multi-process `s3_court.sh --distributed` run.
+
+Gates: `bash scripts/check-claims.sh` and `bash scripts/check-spec-drift.sh`
+pass; no frozen format changed, so no spec edition was needed.
