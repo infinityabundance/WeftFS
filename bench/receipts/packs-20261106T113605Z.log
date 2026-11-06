@@ -1,0 +1,86 @@
+== physical object pack court ==
+utc=20261106T113605Z
+court_image=weft/bench-court:1
+court_image_id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+memory=3g cpus=4 pids=1024
+revision_weftfs=8b42103c6ebb36a3fd98b226080655d4c27145a5
+s3_endpoint=http://weft-s3-minio-1994457:9000
+s3_server=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)
+work_root=/tmp/weft-packs-court
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:3875:8
+     |
+3875 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:3882:8
+     |
+3882 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:3899:7
+     |
+3899 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:3901:4
+     |
+3901 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:3934:4
+     |
+3934 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running tests/packs.rs (.docker-cache/target-rust/release/deps/packs-906d923255759c78)
+
+running 13 tests
+test backend_kind_refuses_packing_a_weak_plane ... ok
+test catalog_bound_falls_back_to_flat ... ok
+test deterministic_layout_for_a_fixed_pack_size ... ok
+test digest_mismatch_fails_closed ... ok
+test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok
+test large_blobs_bypass_packing_and_remain_flat ... ok
+test missing_catalog_fails_closed ... ok
+test missing_segment_fails_closed ... ok
+test pack_crash_proxy_yields_old_or_new ... ok
+test packed_plane_refuses_a_plane_without_range_reads ... ok
+test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok
+test store_round_trip_verify_and_gc_on_a_packed_plane ... ok
+test truncated_pack_fails_closed ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+---- packs test summary ----
+test backend_kind_refuses_packing_a_weak_plane ... ok
+test catalog_bound_falls_back_to_flat ... ok
+test deterministic_layout_for_a_fixed_pack_size ... ok
+test digest_mismatch_fails_closed ... ok
+test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok
+test large_blobs_bypass_packing_and_remain_flat ... ok
+test missing_catalog_fails_closed ... ok
+test missing_segment_fails_closed ... ok
+test pack_crash_proxy_yields_old_or_new ... ok
+test packed_plane_refuses_a_plane_without_range_reads ... ok
+test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok
+test store_round_trip_verify_and_gc_on_a_packed_plane ... ok
+test truncated_pack_fails_closed ... ok
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+    Finished `release` profile [optimized] target(s) in 0.02s
+packs_bench: receipt bench/receipts/packs-20261106T113605Z.json
+packs_bench: exactness match=true
+packs receipt: bench/receipts/packs-20261106T113605Z.json
+raw log: bench/receipts/packs-20261106T113605Z.log
+ce7cf8e6a50a31013ba69410b24a826738e7392dca2093b57a4c626d4ca89bf5  bench/receipts/packs-20261106T113605Z.json
+25218f1b248f88089f059f953382b6d3c8634ce99049cbc6d56f2b2917d259f3  bench/receipts/packs-20261106T113605Z.log
+6c1aebecc3a9cac4e3ec3b23dbc541e382180b03258a10f7f7e9f4b17e5acba4  bench/receipts/packs-20261106T113605Z.tests.txt

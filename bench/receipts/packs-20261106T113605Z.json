@@ -1,0 +1,752 @@
+{
+  "configs": [
+    {
+      "config": "local-flat",
+      "description": "local, flat blobs",
+      "diagnostics": [],
+      "footprint": {
+        "namespaces": {
+          "manifest": {
+            "bytes": 1600000,
+            "objects": 10000
+          },
+          "object": {
+            "bytes": 10240000,
+            "objects": 10000
+          },
+          "pack": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "pack-catalog": {
+            "bytes": 0,
+            "objects": 0
+          }
+        },
+        "pack_stats": null,
+        "total_physical_bytes": 11840000
+      },
+      "generation": 2,
+      "peak_rss_kib": 74008,
+      "planes": {
+        "capabilities": null,
+        "pack_stats": null
+      },
+      "range_pack": {
+        "config": "local-flat",
+        "member_bytes": 8192,
+        "members": 2048,
+        "only_the_range": true,
+        "pack_bytes": 16777216,
+        "pack_target_bytes": 16777216,
+        "packs": 1,
+        "publish_ms": 30.364961,
+        "range_bytes": 4096,
+        "range_offset": 2048,
+        "read_ms": 0.001924,
+        "requests": {
+          "bytes_read": 4096,
+          "bytes_written": 0,
+          "object_requests": 1,
+          "range_reads": 1,
+          "reads": 1,
+          "writes": 0
+        }
+      },
+      "read_digest": "a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99",
+      "reads": [
+        {
+          "p50_ms": 0.001593,
+          "p99_ms": 0.002044,
+          "pass": "sequential_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 5.361409
+        },
+        {
+          "p50_ms": 0.001223,
+          "p99_ms": 0.001443,
+          "pass": "sequential_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 4.955741
+        },
+        {
+          "p50_ms": 0.001182,
+          "p99_ms": 0.0045379999999999995,
+          "pass": "random_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 4.960559
+        },
+        {
+          "p50_ms": 0.001162,
+          "p99_ms": 0.001342,
+          "pass": "random_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 4.888415
+        }
+      ],
+      "reopen": {
+        "generation": 2,
+        "match": true,
+        "ms": 223.405438,
+        "problems": 0,
+        "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975"
+      },
+      "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975",
+      "status": "ok",
+      "verify": {
+        "checked_chunks": 10000,
+        "checked_commits": 2,
+        "checked_manifests": 10000,
+        "checked_objects": 10000,
+        "ms": 479.6709330000001,
+        "problems": 0
+      },
+      "wall_ms": 1561.557987,
+      "write": {
+        "ms": 298.319306,
+        "pack_stats": null,
+        "requests": {
+          "bytes_read": 0,
+          "bytes_written": 16524362,
+          "object_requests": 20003,
+          "range_reads": 0,
+          "reads": 0,
+          "writes": 20003
+        }
+      }
+    },
+    {
+      "config": "local-packed",
+      "description": "local, packed blobs",
+      "diagnostics": [
+        "blob plane: packed blobs: 1 packs, 20002 packed members (11840240 bytes), 0 flat members (0 bytes), catalog 20002 entries over 256 segments, open pack 120 bytes / 1 members"
+      ],
+      "footprint": {
+        "namespaces": {
+          "manifest": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "object": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "pack": {
+            "bytes": 11840120,
+            "objects": 1
+          },
+          "pack-catalog": {
+            "bytes": 2272401,
+            "objects": 256
+          }
+        },
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "sealed_packs": 1
+        },
+        "total_physical_bytes": 14112521
+      },
+      "generation": 2,
+      "peak_rss_kib": 80044,
+      "planes": {
+        "capabilities": {
+          "blobs": {
+            "atomic_publish": true,
+            "backend": "packed-local",
+            "consistency": "single-host POSIX namespace; read-after-write; rename(2) is atomic; parent directory fsync orders the new name",
+            "durable_fsync": true,
+            "max_object_bytes": 1073741824,
+            "publication": "small blobs grouped into content-addressed packs published with `tmp file + fsync + rename(2) + directory fsync`; the catalog root is replaced with compare-and-swap",
+            "true_range_reads": true
+          },
+          "commits": {
+            "atomic_publish": true,
+            "backend": "local",
+            "conditional_update": true,
+            "consistency": "single-host POSIX namespace; read-after-write; rename(2) is atomic; parent directory fsync orders the new name",
+            "durable_fsync": true,
+            "max_control_bytes": 1073741824,
+            "publication": "tmp file + fsync + rename(2) + directory fsync"
+          }
+        },
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "catalog_root_publishes": 0,
+          "catalog_segment_publishes": 0,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "open_pack_bytes": 0,
+          "open_pack_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "packing_disabled": false,
+          "sealed_packs": 1
+        }
+      },
+      "range_pack": {
+        "config": "local-packed",
+        "member_bytes": 8192,
+        "members": 2048,
+        "only_the_range": true,
+        "pack_bytes": 16777216,
+        "pack_target_bytes": 16777216,
+        "packs": 1,
+        "publish_ms": 29.948213000000003,
+        "range_bytes": 4096,
+        "range_offset": 2048,
+        "read_ms": 0.002063,
+        "requests": {
+          "bytes_read": 4096,
+          "bytes_written": 0,
+          "object_requests": 1,
+          "range_reads": 1,
+          "reads": 1,
+          "writes": 0
+        }
+      },
+      "read_digest": "a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99",
+      "reads": [
+        {
+          "p50_ms": 0.002595,
+          "p99_ms": 0.012934,
+          "pass": "sequential_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 3263612,
+            "bytes_written": 0,
+            "object_requests": 1252,
+            "range_reads": 1000,
+            "reads": 1252,
+            "writes": 0
+          },
+          "wall_ms": 8.610974
+        },
+        {
+          "p50_ms": 0.002434,
+          "p99_ms": 0.002705,
+          "pass": "sequential_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 1000,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 6.0764119999999995
+        },
+        {
+          "p50_ms": 0.002475,
+          "p99_ms": 0.012783,
+          "pass": "random_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 3263612,
+            "bytes_written": 0,
+            "object_requests": 1252,
+            "range_reads": 1000,
+            "reads": 1252,
+            "writes": 0
+          },
+          "wall_ms": 8.382776999999999
+        },
+        {
+          "p50_ms": 0.002435,
+          "p99_ms": 0.002564,
+          "pass": "random_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 1000,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 6.065883
+        }
+      ],
+      "reopen": {
+        "generation": 2,
+        "match": true,
+        "ms": 215.402678,
+        "problems": 0,
+        "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975"
+      },
+      "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975",
+      "status": "ok",
+      "verify": {
+        "checked_chunks": 10000,
+        "checked_commits": 2,
+        "checked_manifests": 10000,
+        "checked_objects": 10000,
+        "ms": 465.82715,
+        "problems": 0
+      },
+      "wall_ms": 1399.8985209999998,
+      "write": {
+        "ms": 185.368867,
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "catalog_root_publishes": 0,
+          "catalog_segment_publishes": 0,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "open_pack_bytes": 0,
+          "open_pack_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "packing_disabled": false,
+          "sealed_packs": 1
+        },
+        "requests": {
+          "bytes_read": 16384,
+          "bytes_written": 18809103,
+          "object_requests": 262,
+          "range_reads": 0,
+          "reads": 2,
+          "writes": 260
+        }
+      }
+    },
+    {
+      "config": "s3-flat",
+      "description": "s3, flat blobs",
+      "diagnostics": [],
+      "footprint": {
+        "namespaces": {
+          "manifest": {
+            "bytes": 1600000,
+            "objects": 10000
+          },
+          "object": {
+            "bytes": 10240000,
+            "objects": 10000
+          },
+          "pack": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "pack-catalog": {
+            "bytes": 0,
+            "objects": 0
+          }
+        },
+        "pack_stats": null,
+        "total_physical_bytes": 11840000
+      },
+      "generation": 2,
+      "peak_rss_kib": 78504,
+      "planes": {
+        "capabilities": null,
+        "pack_stats": null
+      },
+      "range_pack": {
+        "config": "s3-flat",
+        "member_bytes": 8192,
+        "members": 2048,
+        "only_the_range": true,
+        "pack_bytes": 16777216,
+        "pack_target_bytes": 16777216,
+        "packs": 1,
+        "publish_ms": 336.584341,
+        "range_bytes": 4096,
+        "range_offset": 2048,
+        "read_ms": 0.41776,
+        "requests": {
+          "bytes_read": 4096,
+          "bytes_written": 0,
+          "object_requests": 1,
+          "range_reads": 1,
+          "reads": 1,
+          "writes": 0
+        }
+      },
+      "read_digest": "a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99",
+      "reads": [
+        {
+          "p50_ms": 0.172342,
+          "p99_ms": 0.25877300000000003,
+          "pass": "sequential_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 181.656221
+        },
+        {
+          "p50_ms": 0.172943,
+          "p99_ms": 0.319466,
+          "pass": "sequential_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 186.068136
+        },
+        {
+          "p50_ms": 0.169316,
+          "p99_ms": 0.244787,
+          "pass": "random_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 178.694613
+        },
+        {
+          "p50_ms": 0.168515,
+          "p99_ms": 0.238385,
+          "pass": "random_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 0,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 177.027431
+        }
+      ],
+      "reopen": {
+        "generation": 2,
+        "match": true,
+        "ms": 6318.127682,
+        "problems": 0,
+        "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975"
+      },
+      "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975",
+      "status": "ok",
+      "verify": {
+        "checked_chunks": 10000,
+        "checked_commits": 2,
+        "checked_manifests": 10000,
+        "checked_objects": 10000,
+        "ms": 16202.272495,
+        "problems": 0
+      },
+      "wall_ms": 49901.497906,
+      "write": {
+        "ms": 7321.523413999999,
+        "pack_stats": null,
+        "requests": {
+          "bytes_read": 0,
+          "bytes_written": 16528458,
+          "object_requests": 20003,
+          "range_reads": 0,
+          "reads": 0,
+          "writes": 20003
+        }
+      }
+    },
+    {
+      "config": "s3-packed",
+      "description": "s3, packed blobs",
+      "diagnostics": [
+        "blob plane: packed blobs: 1 packs, 20002 packed members (11840240 bytes), 0 flat members (0 bytes), catalog 20002 entries over 256 segments, open pack 120 bytes / 1 members"
+      ],
+      "footprint": {
+        "namespaces": {
+          "manifest": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "object": {
+            "bytes": 0,
+            "objects": 0
+          },
+          "pack": {
+            "bytes": 11840120,
+            "objects": 1
+          },
+          "pack-catalog": {
+            "bytes": 2272401,
+            "objects": 256
+          }
+        },
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "sealed_packs": 1
+        },
+        "total_physical_bytes": 14112521
+      },
+      "generation": 2,
+      "peak_rss_kib": 80732,
+      "planes": {
+        "capabilities": {
+          "blobs": {
+            "atomic_publish": true,
+            "backend": "packed-s3",
+            "consistency": "single-node S3-compatible endpoint; read-after-write and list-after-write for published keys; conditional writes (If-None-Match/If-Match) are required and probed by the court",
+            "durable_fsync": true,
+            "max_object_bytes": 1073741824,
+            "publication": "small blobs grouped into content-addressed packs published with `S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused`; the catalog root is replaced with compare-and-swap",
+            "true_range_reads": true
+          },
+          "commits": {
+            "atomic_publish": true,
+            "backend": "s3",
+            "conditional_update": true,
+            "consistency": "single-node S3-compatible endpoint; read-after-write and list-after-write for published keys; conditional writes (If-None-Match/If-Match) are required and probed by the court",
+            "durable_fsync": true,
+            "max_control_bytes": 1073741824,
+            "publication": "S3 PUT with If-None-Match: * (create-once); superblock slot via GET+If-Match PUT; both conditional forms are probed at writable open and a backend that ignores them is refused"
+          }
+        },
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "catalog_root_publishes": 0,
+          "catalog_segment_publishes": 0,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "open_pack_bytes": 0,
+          "open_pack_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "packing_disabled": false,
+          "sealed_packs": 1
+        }
+      },
+      "range_pack": {
+        "config": "s3-packed",
+        "member_bytes": 8192,
+        "members": 2048,
+        "only_the_range": true,
+        "pack_bytes": 16777216,
+        "pack_target_bytes": 16777216,
+        "packs": 1,
+        "publish_ms": 341.29134799999997,
+        "range_bytes": 4096,
+        "range_offset": 2048,
+        "read_ms": 0.38066,
+        "requests": {
+          "bytes_read": 4096,
+          "bytes_written": 0,
+          "object_requests": 1,
+          "range_reads": 1,
+          "reads": 1,
+          "writes": 0
+        }
+      },
+      "read_digest": "a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99",
+      "reads": [
+        {
+          "p50_ms": 0.35891999999999996,
+          "p99_ms": 1.852418,
+          "pass": "sequential_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 3263612,
+            "bytes_written": 0,
+            "object_requests": 1252,
+            "range_reads": 1000,
+            "reads": 1252,
+            "writes": 0
+          },
+          "wall_ms": 444.2789939999999
+        },
+        {
+          "p50_ms": 0.343722,
+          "p99_ms": 1.582043,
+          "pass": "sequential_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 1000,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 385.131707
+        },
+        {
+          "p50_ms": 0.35079499999999997,
+          "p99_ms": 1.849903,
+          "pass": "random_cold",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 3263612,
+            "bytes_written": 0,
+            "object_requests": 1252,
+            "range_reads": 1000,
+            "reads": 1252,
+            "writes": 0
+          },
+          "wall_ms": 433.064422
+        },
+        {
+          "p50_ms": 0.343882,
+          "p99_ms": 1.600217,
+          "pass": "random_warm",
+          "reads": 1000,
+          "requests": {
+            "bytes_read": 1024000,
+            "bytes_written": 0,
+            "object_requests": 1000,
+            "range_reads": 1000,
+            "reads": 1000,
+            "writes": 0
+          },
+          "wall_ms": 384.663953
+        }
+      ],
+      "reopen": {
+        "generation": 2,
+        "match": true,
+        "ms": 7792.586334,
+        "problems": 0,
+        "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975"
+      },
+      "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975",
+      "status": "ok",
+      "verify": {
+        "checked_chunks": 10000,
+        "checked_commits": 2,
+        "checked_manifests": 10000,
+        "checked_objects": 10000,
+        "ms": 23103.216833,
+        "problems": 0
+      },
+      "wall_ms": 58820.974854,
+      "write": {
+        "ms": 2791.746637,
+        "pack_stats": {
+          "catalog_entries": 20001,
+          "catalog_root_publishes": 0,
+          "catalog_segment_publishes": 0,
+          "flat_bytes": 0,
+          "flat_members": 0,
+          "open_pack_bytes": 0,
+          "open_pack_members": 0,
+          "packed_bytes": 11840120,
+          "packed_members": 20001,
+          "packing_disabled": false,
+          "sealed_packs": 1
+        },
+        "requests": {
+          "bytes_read": 8192,
+          "bytes_written": 18809103,
+          "object_requests": 261,
+          "range_reads": 0,
+          "reads": 1,
+          "writes": 260
+        }
+      }
+    }
+  ],
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "court_kernel": "7.3.1-1-cachyos",
+    "cpus": "4",
+    "memory": "3g",
+    "pids": "1024",
+    "revision_weftfs": "8b42103c6ebb36a3fd98b226080655d4c27145a5",
+    "s3_endpoint": "http://weft-s3-minio-1994457:9000",
+    "s3_server": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+    "s3_server_release": "RELEASE.2025-04-22T22-12-26Z",
+    "s3_server_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c"
+  },
+  "exactness": {
+    "configs_compared": 4,
+    "generation": 2,
+    "match": true,
+    "read_digest": "a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99",
+    "snapshot_root": "57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975",
+    "verify_problems_total": 0
+  },
+  "generated_utc": "20261106T113805Z",
+  "label": "Single-host benchmark with a deterministic synthetic fixture in the OOM-protected Docker court. MinIO is a single node with a tmpfs data directory when the S3 configurations run. Not a cloud, fleet, device-cache, media, power-loss, or production claim.",
+  "schema": "weft-packs-court-v1",
+  "tests": {
+    "summary": [
+      "test backend_kind_refuses_packing_a_weak_plane ... ok",
+      "test catalog_bound_falls_back_to_flat ... ok",
+      "test deterministic_layout_for_a_fixed_pack_size ... ok",
+      "test digest_mismatch_fails_closed ... ok",
+      "test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok",
+      "test large_blobs_bypass_packing_and_remain_flat ... ok",
+      "test missing_catalog_fails_closed ... ok",
+      "test missing_segment_fails_closed ... ok",
+      "test pack_crash_proxy_yields_old_or_new ... ok",
+      "test packed_plane_refuses_a_plane_without_range_reads ... ok",
+      "test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok",
+      "test store_round_trip_verify_and_gc_on_a_packed_plane ... ok",
+      "test truncated_pack_fails_closed ... ok",
+      "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s"
+    ],
+    "summary_file": "bench/receipts/packs-20261106T113605Z.tests.txt"
+  },
+  "workload": {
+    "chunk_size": 1024,
+    "fixed_timestamp_ns": 1700000000000000000,
+    "logical_small_bytes": 10240000,
+    "note": "deterministic payloads and seeds; pack options are fixed; every configuration must reproduce the same snapshot root and the same read digest",
+    "range_pack_bytes": 16777216,
+    "range_pack_member_bytes": 8192,
+    "range_pack_members": 2048,
+    "range_read_bytes": 4096,
+    "reads_per_pass": 1000,
+    "small_file_bytes": 1024,
+    "small_files": 10000
+  }
+}

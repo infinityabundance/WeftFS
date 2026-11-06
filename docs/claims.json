@@ -3063,5 +3063,69 @@
     ],
     "receipt": null,
     "kind": "present"
+  },
+  {
+    "id": "packs_court_receipt",
+    "claim": "docs/STATUS.md and bench/RESULTS-packs.md cite the R11 pack court receipt (four configurations, exactness match).",
+    "value": "packs-20261106T113605Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-packs.md"
+    ],
+    "receipt": "bench/receipts/packs-20261106T113605Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "packs_write_requests",
+    "claim": "The R11 statement reports the packed write request count against flat.",
+    "value": "20,003 -> 262",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "packs_range_read_only",
+    "claim": "The R11 results state that a 4 KiB range read inside a 16 MiB pack fetches only that range.",
+    "value": "get_range",
+    "locations": [
+      "docs/STATUS.md",
+      "src/packs.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "packs_refuses_weak_plane",
+    "claim": "A blob plane without true range reads is refused for packing.",
+    "value": "true_range_reads",
+    "locations": [
+      "docs/STATUS.md",
+      "src/packs.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "packs_no_wire_change",
+    "claim": "R11 changes no wire format; manifests, commits, and the superblock are unchanged.",
+    "value": "no wire format changed",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "packs_catalog_bound",
+    "claim": "The pack catalog is bounded and falls back to flat publication at the bound.",
+    "value": "max_catalog_bytes",
+    "locations": [
+      "docs/STATUS.md",
+      "src/packs.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

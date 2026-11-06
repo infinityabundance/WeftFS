@@ -1,0 +1,53 @@
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:3875:8
+     |
+3875 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:3882:8
+     |
+3882 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:3899:7
+     |
+3899 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:3901:4
+     |
+3901 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:3934:4
+     |
+3934 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running tests/packs.rs (.docker-cache/target-rust/release/deps/packs-906d923255759c78)
+
+running 13 tests
+test backend_kind_refuses_packing_a_weak_plane ... ok
+test catalog_bound_falls_back_to_flat ... ok
+test deterministic_layout_for_a_fixed_pack_size ... ok
+test digest_mismatch_fails_closed ... ok
+test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok
+test large_blobs_bypass_packing_and_remain_flat ... ok
+test missing_catalog_fails_closed ... ok
+test missing_segment_fails_closed ... ok
+test pack_crash_proxy_yields_old_or_new ... ok
+test packed_plane_refuses_a_plane_without_range_reads ... ok
+test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok
+test store_round_trip_verify_and_gc_on_a_packed_plane ... ok
+test truncated_pack_fails_closed ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+

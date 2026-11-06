@@ -3215,3 +3215,91 @@ single-backend proxies. The split publishes the head with
   tmpfs data directory. Absolute times are court-bound.
 * `weftfs mount` accepts the split flags but the court exercises the store and
   CLI paths, not a mounted split filesystem.
+
+## Subphase R11 — physical object packs (2026-11-06)
+
+A content-addressed namespace costs one physical request per small blob:
+10,000 one-kilobyte chunks were 10,000 `PUT`s and 10,000 `GET`s. The R10 commit
+plane makes a real pack catalog possible.
+
+`src/packs.rs` adds `PackedBlobPlane`, a `BlobPlane` over an inner blob plane and
+a `CommitPlane`-backed catalog:
+
+* members at or below `member_threshold_bytes` are buffered and sealed into a
+  content-addressed pack (`packs/<ab>/<hex>`) when `pack_target_bytes` or
+  `max_members_per_pack` is reached; larger blobs stay flat;
+* membership is `key -> (pack, offset, length, digest)` in
+  `catalog_segments` immutable catalog blobs (`pack-catalog/<ab>/<hex>`), named
+  by one mutable `pack-catalog.root` control record replaced with a
+  compare-and-swap, so a reader sees the old or the new whole catalog;
+* the pack is published **before** the catalog names it: a crash between them
+  leaves an unreferenced pack (reclaimed by GC), never a dangling entry;
+* a read is one catalog lookup then one `get_range` for exactly the member's
+  bytes; whole-member reads verify the catalog digest and fail closed
+  (`Corrupt`) on a mismatch, a short read, or a truncated pack;
+* `Store::publish_commit` calls the new `flush_buffered_blobs` before writing the
+  commit record, so a commit never names a non-durable blob;
+* `gc --apply` deletes candidates in one batch (`delete_many`) and then reclaims
+  packs no catalog entry names; a pack with one live member survives;
+* when the catalog bound (`max_catalog_bytes`) is reached, packing stops and new
+  blobs are published flat;
+* a plane without `true_range_reads` is refused at construction
+  (`UnsupportedVersion`).
+
+New key namespaces are `packs/`, `pack-catalog/`, and `pack-catalog.root`; the
+existing logical keys, manifest bytes, commit bytes, and superblock are
+unchanged. `--pack`, `--pack-target-bytes`, `--pack-member-threshold`,
+`--pack-catalog-bytes`, and `--pack-segments` select the policy.
+
+### Bounds chosen
+
+Pack target 16 MiB, member threshold 64 KiB, 65,536 members per pack, 8 MiB
+catalog bound, 256 catalog segments (each catalog entry is 113 bytes; the bound
+admits 74,288 entries). `PackOptions::validate` refuses a threshold above the
+pack target, a non-power-of-two segment count, and a catalog smaller than one
+entry per segment.
+
+### Evidence
+
+* `cargo test --all-targets` -> **369 passed / 0 failed**; the new
+  `tests/packs.rs` is 13/13: byte-identical whole and ranged reads, a narrow
+  range asserted with the backend byte counter, digest mismatch, truncated
+  pack, missing catalog and missing segment, the two-phase pack crash proxy,
+  GC reclamation (one live member keeps the pack; all-unreferenced collects it),
+  the catalog-bound flat fallback, deterministic layout, and a store-level
+  round trip/verify/GC on a packed plane.
+* `cargo test --features fuse --all-targets` -> **411 passed / 0 failed / 2
+  ignored** (the two pre-existing ignores).
+* `bash scripts/s3_court.sh --packs` -> four configurations, exactness
+  `match = true`: same generation `2`, snapshot root
+  `57c24012a9483db06f5c6fb3ca9b8860430492276e48e64cdbb21df034c37975`, read
+  digest `a8812b26c57dc49c2371b6d52fb2b6063e21e84023eef360fb9b772695871b99`,
+  zero verify problems. Receipt `bench/receipts/packs-20261106T113605Z.json`,
+  MinIO provenance `bench/receipts/s3-court-20261106T113605Z.json`, log and test
+  summary beside them. Revision `8b42103`.
+* `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass (no spec text
+  changed; no wire format changed).
+
+### Measured result (see `bench/RESULTS-packs.md`)
+
+10,000 x 1 KiB files in one group commit: object requests **20,003 -> 262**
+(local) and **20,003 -> 261** (S3), wall **298.3 -> 185.4 ms** (local) and
+**7,321.5 -> 2,791.7 ms** (S3). Losses: written bytes **+13.8%**
+(18,809,103 vs 16,524,362/16,528,458), physical footprint **+19.2%**
+(14,112,521 vs 11,840,000), cold 1,000-read pass **1.25x requests / 3.19x
+bytes**, S3 warm read p50 **0.3437 vs 0.1685-0.1729 ms**, S3 `verify --full`
+**23,103.2 vs 16,202.3 ms (+42.6%)**, peak RSS **+6,036 KiB (local) / +2,228
+KiB (S3)**. A 4 KiB range read inside a 16,777,216-byte pack costs exactly **1
+request and 4,096 bytes**.
+
+### Residual
+
+* Rust only: WeftFS-Go has no pack plane and cannot read a packed store.
+* Packs are immutable and never rewritten; dead members occupy pack space until
+  the whole pack is unreferenced (no pack compaction).
+* One catalogue root per store, 256 segments; reclamation scans the catalog.
+* Process-fault crash proxy only; no physical power loss or media errors.
+* Single host, synthetic fixture, MinIO single node with a tmpfs data
+  directory; absolute times are court-bound.
+* A range read cannot verify the member digest (it is a partial read); only
+  whole-object reads are digest-checked, matching the flat plane.
