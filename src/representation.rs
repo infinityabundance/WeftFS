@@ -85,6 +85,30 @@ pub(crate) fn note_codec_chunk_decode() {
     CODEC_CHUNK_DECODES_TOTAL.fetch_add(1, Ordering::Relaxed);
 }
 
+thread_local! {
+    /// Overlay content-chunk reads observed by this thread (manifest reads are
+    /// not counted). A range read must touch only the chunks it needs.
+    static OVERLAY_CHUNK_READS: Cell<u64> = const { Cell::new(0) };
+}
+
+/// Number of content chunks an overlay read fetched on the calling thread.
+///
+/// `#[doc(hidden)]` test/bench hook only; it is not a format feature.
+#[doc(hidden)]
+pub fn overlay_chunk_read_count() -> u64 {
+    OVERLAY_CHUNK_READS.with(|count| count.get())
+}
+
+/// Reset this thread's [`overlay_chunk_read_count`].
+#[doc(hidden)]
+pub fn reset_overlay_chunk_read_count() {
+    OVERLAY_CHUNK_READS.with(|count| count.set(0));
+}
+
+pub(crate) fn note_overlay_chunk_read() {
+    OVERLAY_CHUNK_READS.with(|count| count.set(count.get().saturating_add(1)));
+}
+
 /// The codec frame chunk size for a store chunk size.
 pub fn codec_chunk_size(store_chunk_size: u64) -> u64 {
     store_chunk_size.clamp(CODEC_CHUNK_SIZE_MIN, CODEC_CHUNK_SIZE_MAX)

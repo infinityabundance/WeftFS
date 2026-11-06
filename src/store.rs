@@ -598,6 +598,54 @@ pub struct Store {
     /// Test-only leader dwell. `0` in production; see
     /// [`Store::set_single_flight_test_dwell`].
     single_flight_test_dwell_nanos: AtomicU64,
+    /// Derived, bounded cache of canonical chunk tables for overlay manifests.
+    /// A cold resolution costs one manifest read per chained overlay; caching
+    /// the table makes a writer's next append O(1) in manifest reads. The
+    /// cache is advisory: every hit is a table that was fully validated (root,
+    /// lengths, base cross-checks) before insertion.
+    overlay_tables: Mutex<OverlayTableCache>,
+}
+
+/// Bounded most-recently-used cache of validated overlay chunk tables.
+#[derive(Default)]
+struct OverlayTableCache {
+    entries: BTreeMap<Hash32, Arc<Vec<ChunkRef>>>,
+    order: Vec<Hash32>,
+    bytes: u64,
+}
+
+/// Maximum bytes of cached chunk-table entries retained by one store handle.
+const MAX_OVERLAY_TABLE_CACHE_BYTES: u64 = 8 * 1024 * 1024;
+
+impl OverlayTableCache {
+    fn get(&mut self, id: &Hash32) -> Option<Arc<Vec<ChunkRef>>> {
+        let hit = self.entries.get(id).cloned();
+        if hit.is_some() {
+            self.order.retain(|entry| entry != id);
+            self.order.push(*id);
+        }
+        hit
+    }
+
+    fn insert(&mut self, id: Hash32, table: Arc<Vec<ChunkRef>>) {
+        let bytes = (table.len() as u64).saturating_mul(40);
+        if let Some(previous) = self.entries.insert(id, table) {
+            self.bytes = self
+                .bytes
+                .saturating_sub((previous.len() as u64).saturating_mul(40));
+            self.order.retain(|entry| *entry != id);
+        }
+        self.order.push(id);
+        self.bytes = self.bytes.saturating_add(bytes);
+        while self.bytes > MAX_OVERLAY_TABLE_CACHE_BYTES && self.order.len() > 1 {
+            let victim = self.order.remove(0);
+            if let Some(table) = self.entries.remove(&victim) {
+                self.bytes = self
+                    .bytes
+                    .saturating_sub((table.len() as u64).saturating_mul(40));
+            }
+        }
+    }
 }
 
 /// Reverse index used by cache admission scoring (derived data only).
@@ -751,6 +799,7 @@ impl Store {
             decode_bytes: AtomicU64::new(0),
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
+            overlay_tables: Mutex::new(OverlayTableCache::default()),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -861,6 +910,7 @@ impl Store {
             decode_bytes: AtomicU64::new(0),
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
+            overlay_tables: Mutex::new(OverlayTableCache::default()),
         };
         store.load_quota_record();
         Ok(store)
@@ -2070,6 +2120,20 @@ impl Store {
             Some(rep) if rep.kind == RepresentationKind::Raw => {
                 self.read_raw_manifest_bytes(manifest, offset, length, verify_whole)
             }
+            Some(rep) if rep.kind == RepresentationKind::Overlay => {
+                let manifest_id = seen
+                    .last()
+                    .copied()
+                    .ok_or_else(|| Error::corrupt("overlay read has no manifest identity"))?;
+                self.read_overlay_manifest_bytes(
+                    manifest_id,
+                    manifest,
+                    rep,
+                    offset,
+                    length,
+                    verify_whole,
+                )
+            }
             Some(rep) if rep.kind == RepresentationKind::Tensor => self.read_tensor_manifest_bytes(
                 manifest,
                 rep,
@@ -2177,14 +2241,42 @@ impl Store {
         length: u64,
         verify_whole: bool,
     ) -> Result<Vec<u8>> {
-        if offset >= manifest.size {
+        self.read_chunk_table_range(
+            &manifest.chunks,
+            manifest.size,
+            manifest.content_hash,
+            manifest.identity,
+            offset,
+            length,
+            verify_whole,
+            false,
+        )
+    }
+
+    /// Assemble a range from an explicit canonical chunk table. Used by the raw
+    /// path and by the resolved overlay path; `count_overlay_reads` makes the
+    /// test-only overlay chunk counter observe exactly the chunks this read
+    /// fetched.
+    #[allow(clippy::too_many_arguments)]
+    fn read_chunk_table_range(
+        &self,
+        chunks: &[ChunkRef],
+        size: u64,
+        content_hash: Hash32,
+        identity: ContentIdentity,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+        count_overlay_reads: bool,
+    ) -> Result<Vec<u8>> {
+        if offset >= size {
             return Ok(Vec::new());
         }
-        let end = offset.saturating_add(length).min(manifest.size);
+        let end = offset.saturating_add(length).min(size);
         let capacity = checked_usize(end - offset, "range length")?;
         let mut out = Vec::with_capacity(capacity);
         let mut cursor: u64 = 0;
-        for (index, chunk) in manifest.chunks.iter().enumerate() {
+        for (index, chunk) in chunks.iter().enumerate() {
             let chunk_start = cursor;
             let chunk_end = cursor
                 .checked_add(chunk.len)
@@ -2203,6 +2295,9 @@ impl Store {
                     )
                 })
                 .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+            if count_overlay_reads {
+                representation::note_overlay_chunk_read();
+            }
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
                     "chunk {index} length disagrees with manifest"
@@ -2217,24 +2312,287 @@ impl Store {
         if out.len() as u64 != end - offset {
             return Err(Error::corrupt("assembled range length mismatch"));
         }
-        if verify_whole && offset == 0 && end == manifest.size {
-            if manifest.identity == ContentIdentity::MerkleV3 {
+        if verify_whole && offset == 0 && end == size {
+            if identity == ContentIdentity::MerkleV3 {
                 let root = identity::merkle_root_from_chunks(
-                    manifest.chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
+                    chunks.iter().map(|chunk| (chunk.len, chunk.hash)),
                 );
-                if root != manifest.content_hash {
+                if root != content_hash {
                     return Err(Error::corrupt(
                         "merkle content root mismatch for a fully read file",
                     ));
                 }
             } else {
                 let digest = identity::content_hash(&out);
-                if digest != manifest.content_hash {
+                if digest != content_hash {
                     return Err(Error::corrupt("whole-content hash mismatch"));
                 }
             }
         }
         Ok(out)
+    }
+
+    /// Decode a `weft.manifest.v4` `kind:"overlay"` representation.
+    ///
+    /// The canonical table is resolved from the immutable base chain (see
+    /// [`Store::overlay_chunk_table`]) without fetching any content chunk, and
+    /// then only the chunks intersecting the requested range are read. The
+    /// resolved table is fully validated against the manifest's Merkle
+    /// `content_root` before any content chunk is touched.
+    fn read_overlay_manifest_bytes(
+        &self,
+        manifest_id: Hash32,
+        manifest: &Manifest,
+        rep: &Representation,
+        offset: u64,
+        length: u64,
+        verify_whole: bool,
+    ) -> Result<Vec<u8>> {
+        if rep.decoded_size != manifest.size {
+            return Err(Error::corrupt(
+                "overlay representation decoded_size disagrees with manifest size",
+            ));
+        }
+        let table = self.overlay_chunk_table(manifest_id, manifest)?;
+        self.read_chunk_table_range(
+            &table,
+            manifest.size,
+            manifest.content_hash,
+            ContentIdentity::MerkleV3,
+            offset,
+            length,
+            verify_whole,
+            true,
+        )
+    }
+
+    /// Resolve and validate the canonical chunk table of an overlay manifest.
+    ///
+    /// A cache hit is returned only for a table that was fully validated (base
+    /// cross-checks, extent grid, total length, and Merkle root) before it was
+    /// inserted. A miss walks the immutable base chain, reading manifest blobs
+    /// only; no content chunk is read here.
+    fn overlay_chunk_table(
+        &self,
+        manifest_id: Hash32,
+        manifest: &Manifest,
+    ) -> Result<Arc<Vec<ChunkRef>>> {
+        if let Some(table) = self
+            .overlay_tables
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .get(&manifest_id)
+        {
+            return Ok(table);
+        }
+        let mut seen = Vec::new();
+        let table = self.build_overlay_table(manifest_id, manifest, 0, &mut seen)?;
+        let table = Arc::new(table);
+        self.overlay_tables
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(manifest_id, Arc::clone(&table));
+        Ok(table)
+    }
+
+    /// Recursively merge one overlay manifest over its base chain.
+    fn build_overlay_table(
+        &self,
+        manifest_id: Hash32,
+        manifest: &Manifest,
+        depth: u64,
+        seen: &mut Vec<Hash32>,
+    ) -> Result<Vec<ChunkRef>> {
+        if depth > representation::MAX_OVERLAY_CHAIN_DEPTH {
+            return Err(Error::limit_exceeded(format!(
+                "overlay chain exceeds the hard bound {}",
+                representation::MAX_OVERLAY_CHAIN_DEPTH
+            )));
+        }
+        if seen.contains(&manifest_id) {
+            return Err(Error::corrupt("overlay base chain participates in a cycle"));
+        }
+        let rep = manifest.representation.as_ref().ok_or_else(|| {
+            Error::corrupt("overlay chunk table requested for a manifest without a representation")
+        })?;
+        let overlay = rep
+            .overlay
+            .as_ref()
+            .ok_or_else(|| Error::corrupt("overlay representation is missing its overlay map"))?;
+        if rep.kind != RepresentationKind::Overlay {
+            return Err(Error::corrupt(
+                "overlay chunk table requested for a non-overlay representation",
+            ));
+        }
+        if overlay.depth > representation::MAX_OVERLAY_CHAIN_DEPTH {
+            return Err(Error::limit_exceeded(format!(
+                "overlay depth {} exceeds the hard bound {}",
+                overlay.depth,
+                representation::MAX_OVERLAY_CHAIN_DEPTH
+            )));
+        }
+        overlay.validate_shape(manifest.chunk_size, manifest.size)?;
+        if manifest.size > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "overlay file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
+        }
+        seen.push(manifest_id);
+        // Resolve the base table first. A base must itself be a Merkle chunk
+        // table (v3 raw or a v4 overlay); frame-backed and whole-file bases are
+        // not composable and fail closed.
+        let base_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, overlay.base))?;
+        if base_manifest.content_hash != overlay.base_content_root {
+            return Err(Error::corrupt(format!(
+                "overlay base {} content root {} disagrees with the declared {}",
+                overlay.base, base_manifest.content_hash, overlay.base_content_root
+            )));
+        }
+        if base_manifest.size != overlay.base_size {
+            return Err(Error::corrupt(format!(
+                "overlay base {} size {} disagrees with the declared {}",
+                overlay.base, base_manifest.size, overlay.base_size
+            )));
+        }
+        if base_manifest.chunk_size != manifest.chunk_size {
+            return Err(Error::corrupt(
+                "overlay base chunk_size differs from the new manifest",
+            ));
+        }
+        if manifest.size < base_manifest.size {
+            return Err(Error::corrupt(
+                "an overlay extent cannot make the file smaller than its base",
+            ));
+        }
+        if base_manifest.identity != ContentIdentity::MerkleV3 {
+            return Err(Error::corrupt(
+                "overlay base must use the Merkle content identity",
+            ));
+        }
+        let base_is_overlay = base_manifest
+            .representation
+            .as_ref()
+            .map(|rep| rep.kind == RepresentationKind::Overlay)
+            .unwrap_or(false);
+        let base_overlay_bytes: u64;
+        let base_table: Vec<ChunkRef> = if base_is_overlay {
+            let base_rep = base_manifest
+                .representation
+                .as_ref()
+                .and_then(|rep| rep.overlay.as_ref())
+                .ok_or_else(|| Error::corrupt("overlay base is missing its overlay map"))?;
+            if base_rep.depth + 1 != overlay.depth {
+                return Err(Error::corrupt(format!(
+                    "overlay depth {} does not follow the base depth {}",
+                    overlay.depth, base_rep.depth
+                )));
+            }
+            base_overlay_bytes = base_rep.overlay_bytes;
+            let table = self.build_overlay_table(overlay.base, &base_manifest, depth + 1, seen)?;
+            let table = Arc::new(table);
+            self.overlay_tables
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .insert(overlay.base, Arc::clone(&table));
+            table.as_ref().clone()
+        } else {
+            match base_manifest.representation.as_ref() {
+                None => {}
+                Some(rep) if rep.kind == RepresentationKind::Raw => {}
+                Some(_) => {
+                    return Err(Error::corrupt(
+                        "overlay base must be a chunk table, not a frame-backed representation",
+                    ))
+                }
+            }
+            if overlay.depth != 1 {
+                return Err(Error::corrupt(format!(
+                    "overlay depth {} does not follow a non-overlay base",
+                    overlay.depth
+                )));
+            }
+            base_overlay_bytes = 0;
+            base_manifest.chunks.clone()
+        };
+        seen.pop();
+
+        let base_total: u64 = base_table.iter().map(|chunk| chunk.len).sum();
+        if base_total != base_manifest.size {
+            return Err(Error::corrupt(
+                "overlay base chunk table length disagrees with its size",
+            ));
+        }
+        let mut table = base_table;
+        let mut extent_total: u64 = 0;
+        let mut previous_end: Option<u64> = None;
+        for extent in &overlay.extents {
+            if let Some(previous) = previous_end {
+                if extent.offset < previous {
+                    return Err(Error::corrupt(
+                        "overlay extents are not canonically ordered or overlap",
+                    ));
+                }
+            }
+            previous_end = Some(extent.offset + extent.length);
+            extent_total = extent_total
+                .checked_add(extent.length)
+                .ok_or_else(|| Error::corrupt("overlay byte total overflows"))?;
+            let start = usize::try_from(extent.offset / manifest.chunk_size)
+                .map_err(|_| Error::limit_exceeded("overlay extent index does not fit usize"))?;
+            if start > table.len() {
+                return Err(Error::corrupt(format!(
+                    "overlay extent at {} leaves a gap after the base table",
+                    extent.offset
+                )));
+            }
+            let end = start
+                .checked_add(extent.chunks.len())
+                .ok_or_else(|| Error::corrupt("overlay extent chunk count overflows"))?;
+            let old_len = table.len();
+            if end > old_len {
+                table.splice(start..old_len, extent.chunks.iter().cloned());
+            } else {
+                table.splice(start..end, extent.chunks.iter().cloned());
+            }
+        }
+        let expected_overlay_bytes = base_overlay_bytes
+            .checked_add(extent_total)
+            .ok_or_else(|| Error::corrupt("overlay byte accounting overflows"))?;
+        if overlay.overlay_bytes != expected_overlay_bytes {
+            return Err(Error::corrupt(format!(
+                "overlay_bytes is {}, expected {expected_overlay_bytes}",
+                overlay.overlay_bytes
+            )));
+        }
+        if table.len() as u64 > MAX_CHUNKS_PER_FILE {
+            return Err(Error::limit_exceeded(format!(
+                "resolved overlay table exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+            )));
+        }
+        let total: u64 = table.iter().map(|chunk| chunk.len).sum();
+        if total != manifest.size {
+            return Err(Error::corrupt(format!(
+                "resolved overlay table sums to {total}, manifest size is {}",
+                manifest.size
+            )));
+        }
+        let root =
+            identity::merkle_root_from_chunks(table.iter().map(|chunk| (chunk.len, chunk.hash)));
+        if root != manifest.content_hash {
+            return Err(Error::corrupt(
+                "resolved overlay table does not reproduce the manifest content root",
+            ));
+        }
+        // The grid invariant: every chunk is full except the final one.
+        for (index, chunk) in table.iter().enumerate() {
+            if index + 1 < table.len() && chunk.len != manifest.chunk_size {
+                return Err(Error::corrupt(
+                    "resolved overlay table has a short interior chunk",
+                ));
+            }
+        }
+        Ok(table)
     }
 
     /// Decode a v2 `kind:"codec"` representation.
@@ -3227,6 +3585,34 @@ impl Store {
         ];
         self.commit_ops(ops, false)?;
         Ok(version)
+    }
+
+    /// Publish an already-stored manifest id as the current version of a file
+    /// object. `#[doc(hidden)]` test-only hook: the write path for
+    /// `weft.manifest.v4` does not exist yet, so read/GC tests construct the
+    /// manifest and its chunks by hand and then make an object reference it.
+    #[doc(hidden)]
+    pub fn publish_manifest_for_test(
+        &mut self,
+        id: Hash32,
+        manifest_id: Hash32,
+        size: u64,
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument(
+                "test manifest publication requires a file object",
+            ));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id))?;
+        if manifest.size != size {
+            return Err(Error::invalid_argument(
+                "test manifest publication size disagrees with the manifest",
+            ));
+        }
+        self.publish_file_version(id, old, manifest_id, size, &[])
     }
 
     /// Publish a new file version with explicit attributes (the tensor range
@@ -5371,15 +5757,28 @@ impl Store {
                             detail: format!("object {} size disagrees with manifest", record.id),
                         });
                     }
-                    if manifest
-                        .representation
-                        .as_ref()
-                        .map(|rep| {
-                            rep.kind == RepresentationKind::Codec
-                                || rep.kind == RepresentationKind::Tensor
-                        })
-                        .unwrap_or(false)
-                    {
+                    let representation_kind = manifest.representation.as_ref().map(|rep| rep.kind);
+                    if matches!(
+                        representation_kind,
+                        Some(RepresentationKind::Codec)
+                            | Some(RepresentationKind::Tensor)
+                            | Some(RepresentationKind::Overlay)
+                    ) {
+                        if representation_kind == Some(RepresentationKind::Overlay) {
+                            // Even a shallow verify resolves the immutable base
+                            // chain and the extent grid; a full verify also
+                            // re-reads every logical chunk and checks the root.
+                            if let Err(err) = self.overlay_chunk_table(record.content, &manifest) {
+                                report.problems.push(VerifyProblem {
+                                    class: err.class_name().to_owned(),
+                                    detail: format!(
+                                        "overlay representation for object {} manifest {}: {err}",
+                                        record.id, record.content
+                                    ),
+                                });
+                                continue;
+                            }
+                        }
                         if full {
                             let frame = match manifest.representation.as_ref().and_then(|r| r.frame)
                             {
@@ -5400,7 +5799,17 @@ impl Store {
                                 0,
                                 &mut seen,
                             ) {
-                                Ok(_) => report.checked_representations += 1,
+                                Ok(_) => {
+                                    report.checked_representations += 1;
+                                    if representation_kind == Some(RepresentationKind::Overlay) {
+                                        if let Ok(table) =
+                                            self.overlay_chunk_table(record.content, &manifest)
+                                        {
+                                            report.checked_chunks +=
+                                                table.len() as u64;
+                                        }
+                                    }
+                                }
                                 Err(err) => report.problems.push(VerifyProblem {
                                     class: err.class_name().to_owned(),
                                     detail: format!(
@@ -6277,9 +6686,9 @@ impl Store {
         seen: &mut BTreeSet<Hash32>,
         depth: usize,
     ) -> Result<u64> {
-        if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+        if depth as u64 > representation::MAX_OVERLAY_CHAIN_DEPTH {
             return Err(Error::corrupt(
-                "manifest tree exceeds the codec dependency depth bound",
+                "manifest tree exceeds the manifest-chain depth bound",
             ));
         }
         if !seen.insert(manifest_id) {
@@ -6305,6 +6714,11 @@ impl Store {
             if representation.kind == RepresentationKind::Codec
                 || representation.kind == RepresentationKind::Tensor
             {
+                if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+                    return Err(Error::corrupt(
+                        "manifest tree exceeds the codec dependency depth bound",
+                    ));
+                }
                 if let Some(frame) = representation.frame {
                     if !index.contains_key(&frame) && !additions.contains_key(&frame) {
                         let frame_len =
@@ -6322,6 +6736,23 @@ impl Store {
                         depth + 1,
                     )?;
                 }
+                return Ok(total);
+            }
+            if representation.kind == RepresentationKind::Overlay {
+                let overlay = representation.overlay.as_ref().ok_or_else(|| {
+                    Error::corrupt("overlay representation is missing its overlay map")
+                })?;
+                for extent in &overlay.extents {
+                    for chunk in &extent.chunks {
+                        if index.contains_key(&chunk.hash) || additions.contains_key(&chunk.hash) {
+                            continue;
+                        }
+                        additions.insert(chunk.hash, chunk.len);
+                        total += chunk.len;
+                    }
+                }
+                total +=
+                    self.collect_manifest_blobs(overlay.base, index, additions, seen, depth + 1)?;
                 return Ok(total);
             }
         }
@@ -7883,9 +8314,9 @@ fn mark_manifest_tree(
     depth: usize,
     seen: &mut BTreeSet<Hash32>,
 ) {
-    if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+    if depth as u64 > representation::MAX_OVERLAY_CHAIN_DEPTH {
         problems.push(format!(
-            "manifest {manifest_id} exceeds the codec dependency depth bound"
+            "manifest {manifest_id} exceeds the manifest-chain depth bound"
         ));
         return;
     }
@@ -7898,6 +8329,12 @@ fn mark_manifest_tree(
         Ok(manifest) => {
             if let Some(rep) = &manifest.representation {
                 if rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor {
+                    if depth > MAX_CODEC_DEPENDENCY_DEPTH {
+                        problems.push(format!(
+                            "manifest {manifest_id} exceeds the codec dependency depth bound"
+                        ));
+                        return;
+                    }
                     if let Some(frame) = rep.frame {
                         manifests.insert(frame);
                     }
@@ -7912,6 +8349,29 @@ fn mark_manifest_tree(
                             seen,
                         );
                     }
+                    return;
+                }
+                if rep.kind == RepresentationKind::Overlay {
+                    let Some(overlay) = rep.overlay.as_ref() else {
+                        problems.push(format!(
+                            "overlay manifest {manifest_id} is missing its overlay map"
+                        ));
+                        return;
+                    };
+                    for extent in &overlay.extents {
+                        for chunk in &extent.chunks {
+                            chunks.insert(chunk.hash);
+                        }
+                    }
+                    mark_manifest_tree(
+                        store,
+                        overlay.base,
+                        manifests,
+                        chunks,
+                        problems,
+                        depth + 1,
+                        seen,
+                    );
                     return;
                 }
             }
