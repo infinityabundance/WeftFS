@@ -2,12 +2,12 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T053501Z.json` (27/27 courts `pass`, including the
+`bench/receipts/verify-20261106T083428Z.json` (27/27 courts `pass`, including the
 host-only `claims` documentation gate, spec drift, generated-type drift,
 `conformance_manifest`, `conformance_coverage`, quantized cross-decode, context
 and authenticated-capability cross-language gates, Buck2 CAS, agent memory, and
-`fuzz_diff`), at WeftFS `36bbbef`, WeftCodec `45a319b`, WeftCodec-Go `e47fa03`,
-WeftFS-Go `47fd4d2` (the mode-16 tree; the only later change is this
+`fuzz_diff`), at WeftFS `a4e2c3d`, WeftCodec `72cd119`, WeftCodec-Go `e47fa03`,
+WeftFS-Go `47fd4d2` (the R7 shared-mount tree; the only later change is this
 citation and the receipts committed with it). The earlier 
 `verify-20261106T052933Z.json` (27/27 at `e4cdc55`) and
 `verify-20261106T044258Z.json` (27/27 at the R2 tree) are retained. The previous release receipt,
@@ -2858,3 +2858,14 @@ process, a thread pool, and a replayed snapshot per mount.
 - **Not done.** No Go frontend parity, no per-view streaming start (resolve
   and mount one at a time), no shared-mount run at 1,000, no concurrent
   large-read comparison against independent daemons, no multi-host claim.
+- **Verification.** Full `scripts/verify-all.sh` at the R7 docs tree
+  (`a4e2c3d`): **27/27 pass**, receipt
+  `bench/receipts/verify-20261106T083428Z.json` (WeftFS `a4e2c3d`, WeftCodec
+  `72cd119`, WeftCodec-Go `e47fa03`, WeftFS-Go `47fd4d2`). The first run at
+  the same tree, `verify-20261106T082853Z.json`, failed only `rust_store`:
+  `tests/representation.rs::codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks`
+  observed 5 decoded chunks instead of 1 because that test reads a
+  process-global codec decode counter while other test binaries' tests run in
+  parallel; it passes with `--test-threads=1` and in the full rerun. The
+  failing receipt is retained. `check-claims.sh` 258/258 OK;
+  `check-spec-drift.sh` 42/42 OK (no spec change).
