@@ -240,7 +240,11 @@ pub struct CostTable {
 
 impl CostTable {
     /// Build a table from exactly ten rows in [`CostClass::ALL`] order.
-    pub fn from_rows(rows: [Coefficients; 10]) -> Self {
+    ///
+    /// Crate-private: callers outside WeftFS obtain a table only from a
+    /// validated [`crate::calibration::Calibration`] or [`CostTable::baked`], so
+    /// an unvalidated row set cannot reach the planner through the public API.
+    pub(crate) fn from_rows(rows: [Coefficients; 10]) -> Self {
         CostTable { rows }
     }
 
