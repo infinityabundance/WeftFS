@@ -62,12 +62,14 @@ struct Cli {
     #[arg(long, global = true, value_name = "NS")]
     fixed_timestamp_ns: Option<i64>,
     /// Physical representation for newly written file content: `raw` (frozen
-    /// v1 manifests) or `codec-auto` (experimental, Rust-only). Also accepted
-    /// by `mount`; read-only commands accept and ignore it.
+    /// v1 manifests), `codec-auto` (experimental, Rust-only), or `overlay`
+    /// (immutable `weft.manifest.v4` write layers; requires the Merkle content
+    /// identity). Also accepted by `mount`; read-only commands accept and
+    /// ignore it.
     #[arg(
         long,
         global = true,
-        value_name = "raw|codec-auto",
+        value_name = "raw|codec-auto|overlay",
         default_value = "raw"
     )]
     representation: String,
@@ -283,6 +285,9 @@ enum Command {
         #[arg(long = "auto-tile-bytes")]
         auto_tile_bytes: Option<u64>,
     },
+    /// Canonicalise an overlay-represented file into one chunk table. The
+    /// logical content root must be unchanged.
+    Compact { path: String },
     /// Write file bytes to stdout.
     Cat {
         path: String,
@@ -1080,8 +1085,9 @@ fn parse_representation(text: &str) -> Result<RepresentationMode> {
     match text {
         "raw" => Ok(RepresentationMode::Raw),
         "codec-auto" => Ok(RepresentationMode::CodecAuto),
+        "overlay" => Ok(RepresentationMode::Overlay),
         other => Err(Error::invalid_argument(format!(
-            "--representation must be `raw` or `codec-auto` (got `{other}`)"
+            "--representation must be `raw`, `codec-auto`, or `overlay` (got `{other}`)"
         ))),
     }
 }
@@ -1163,6 +1169,14 @@ fn run(cli: Cli) -> Result<()> {
         cache_bytes,
         cache_entries,
     };
+    // An overlay layer is only composable over a Merkle chunk table, so
+    // selecting the overlay representation without naming an identity selects
+    // the only identity it can use. An explicit `--content-identity whole-file`
+    // still wins and is refused by the writer rather than silently upgraded.
+    let mut policy = policy;
+    if policy.representation == RepresentationMode::Overlay && content_identity.is_none() {
+        policy.content_identity = ContentIdentity::MerkleV3;
+    }
     let needs_store = !matches!(
         command,
         Command::ConformanceStore { .. } | Command::Capability { .. }
@@ -1521,6 +1535,35 @@ fn run(cli: Cli) -> Result<()> {
                         item.detail
                     );
                 }
+                Ok(())
+            }
+        }
+        Command::Compact { path } => {
+            let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+            let id = store.resolve_path(&path)?;
+            let report = store.compact(id)?;
+            if json {
+                print_json(&json!({
+                    "object_id": report.object.to_hex(),
+                    "previous_content": report.previous_content.to_hex(),
+                    "content": report.content.to_hex(),
+                    "version_id": report.version.to_hex(),
+                    "size": report.size,
+                    "content_root": report.content_root.to_hex(),
+                    "chunks": report.chunks,
+                    "overlay_depth": report.overlay_depth,
+                    "overlay_bytes": report.overlay_bytes,
+                    "verified_bytes": report.verified_bytes,
+                    "generation": store.generation(),
+                }))
+            } else {
+                println!("{}", report.content.to_hex());
+                println!("version={}", report.version.to_hex());
+                println!("content_root={}", report.content_root.to_hex());
+                println!("chunks={}", report.chunks);
+                println!("overlay_depth={}", report.overlay_depth);
+                println!("overlay_bytes={}", report.overlay_bytes);
+                println!("verified_bytes={}", report.verified_bytes);
                 Ok(())
             }
         }

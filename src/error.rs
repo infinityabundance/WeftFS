@@ -45,6 +45,9 @@ pub enum Class {
     NonCanonical,
     /// Format major/minor not supported.
     UnsupportedVersion,
+    /// The operation is not expressible for the object's physical
+    /// representation (for example a shrink over an immutable overlay).
+    UnsupportedRepresentation,
     /// Selector grammar error.
     Parse,
     /// Selector schema string is not `weft.selector.v1`.
@@ -82,6 +85,7 @@ impl Class {
             Class::LimitExceeded => "LimitExceeded",
             Class::NonCanonical => "NonCanonical",
             Class::UnsupportedVersion => "UnsupportedVersion",
+            Class::UnsupportedRepresentation => "UnsupportedRepresentation",
             Class::Parse => "Parse",
             Class::UnknownSchema => "UnknownSchema",
             Class::BudgetExceeded => "BudgetExceeded",
@@ -177,6 +181,9 @@ impl Error {
     }
     pub fn unsupported_version(message: impl Into<String>) -> Self {
         Self::new(Class::UnsupportedVersion, message)
+    }
+    pub fn unsupported_representation(message: impl Into<String>) -> Self {
+        Self::new(Class::UnsupportedRepresentation, message)
     }
     pub fn parse(message: impl Into<String>) -> Self {
         Self::new(Class::Parse, message)

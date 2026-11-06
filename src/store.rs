@@ -24,8 +24,9 @@ use crate::backend::{BackendKind, BackendStats, Capabilities, Key, KeyKind, Stor
 use crate::cost_model::CostClass;
 use crate::error::{Class, Error, Result};
 use crate::format::{
-    encode_commit_file, encode_state, ChunkRef, Commit, ContentIdentity, Manifest, Representation,
-    RepresentationKind, SuperblockSlot, FORMAT_CONTENTS, SLOT_BYTES, SUPERBLOCK_BYTES,
+    encode_commit_file, encode_state, ChunkRef, Commit, ContentIdentity, Manifest, OverlayExtent,
+    OverlayRepresentation, Representation, RepresentationKind, SuperblockSlot, FORMAT_CONTENTS,
+    SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
 use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
@@ -106,6 +107,12 @@ pub enum RepresentationMode {
     /// causal base exists), falling back to a v2 raw manifest when the frame
     /// would not be smaller. Rust-only for now.
     CodecAuto,
+    /// Immutable write overlays (`weft.manifest.v4`, `WEFT-MODEL.md` §2.3.3).
+    /// A range write publishes a new manifest naming the previous version as an
+    /// immutable base plus one extent, instead of rewriting the chunk table.
+    /// Requires a Merkle (`weft.manifest.v3`) base; bounded by
+    /// [`Options::max_overlay_depth`] and [`Options::max_overlay_bytes`].
+    Overlay,
 }
 
 impl Default for RepresentationMode {
@@ -115,11 +122,12 @@ impl Default for RepresentationMode {
 }
 
 impl RepresentationMode {
-    /// Canonical CLI spelling (`raw` or `codec-auto`).
+    /// Canonical CLI spelling (`raw`, `codec-auto`, or `overlay`).
     pub fn as_str(self) -> &'static str {
         match self {
             RepresentationMode::Raw => "raw",
             RepresentationMode::CodecAuto => "codec-auto",
+            RepresentationMode::Overlay => "overlay",
         }
     }
 }
@@ -141,6 +149,11 @@ pub struct Options {
     /// the frozen default; `MerkleV3` writes `weft.manifest.v3` so range writes
     /// cost O(changed chunks + tree hashing) instead of O(file size).
     pub content_identity: ContentIdentity,
+    /// Writer bound on chained overlay manifests. A write that would exceed it
+    /// fails with `LimitExceeded` and asks the caller to compact.
+    pub max_overlay_depth: u64,
+    /// Writer bound on the total logical bytes carried by an overlay chain.
+    pub max_overlay_bytes: u64,
     /// `CodecAuto` leaves files smaller than this on the raw path.
     pub codec_min_bytes: u64,
     /// A DELTA frame must be at least this percent smaller than the ZSTD frame
@@ -177,6 +190,8 @@ impl Default for Options {
             fixed_timestamp_ns: None,
             representation: RepresentationMode::Raw,
             content_identity: ContentIdentity::WholeFileV1,
+            max_overlay_depth: crate::representation::DEFAULT_MAX_OVERLAY_DEPTH,
+            max_overlay_bytes: crate::representation::DEFAULT_MAX_OVERLAY_BYTES,
             codec_min_bytes: DEFAULT_CODEC_MIN_BYTES,
             codec_delta_margin_percent: DEFAULT_CODEC_DELTA_MARGIN_PERCENT,
             quotas: Vec::new(),
@@ -236,6 +251,27 @@ pub struct WriteOutcome {
     pub version: Hash32,
     pub content: Hash32,
     pub size: u64,
+}
+
+/// Result of [`Store::compact`]: an overlay-represented object rewritten as one
+/// canonical `weft.manifest.v3` chunk table with the same content root.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CompactReport {
+    pub object: Hash32,
+    /// The overlay manifest that was compacted.
+    pub previous_content: Hash32,
+    /// The canonical single-table manifest published in its place.
+    pub content: Hash32,
+    pub version: Hash32,
+    pub size: u64,
+    /// The logical content root, which compaction must not change.
+    pub content_root: Hash32,
+    pub chunks: u64,
+    /// Chained overlay manifests before compaction (always >= 1).
+    pub overlay_depth: u64,
+    pub overlay_bytes: u64,
+    /// Logical bytes re-read and re-hashed while proving the rebuild exact.
+    pub verified_bytes: u64,
 }
 
 /// A manifest a caller already holds for one object version. Passing it to
@@ -1068,6 +1104,13 @@ impl Store {
 
     fn note_range_write_chunk_read(&self) {
         self.range_write_chunk_reads.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// True when this handle was opened with the opt-in overlay representation,
+    /// so a write that creates a new version may publish a `weft.manifest.v4`
+    /// layer.
+    fn overlay_mode(&self) -> bool {
+        self.options.representation == RepresentationMode::Overlay
     }
 
     /// Record one successful object read in the advisory counter table and
@@ -2595,6 +2638,35 @@ impl Store {
         Ok(table)
     }
 
+    /// The canonical chunk table of any chunk-table-backed manifest.
+    ///
+    /// A v3 raw table is returned directly; an overlay is resolved through its
+    /// base chain. Frame-backed representations and whole-file bases are
+    /// rejected because their chunk layout is not composable. An overlay table
+    /// is fully validated (grid, lengths, root) by
+    /// [`Store::build_overlay_table`]; a raw table is validated by
+    /// [`crate::format::Manifest::from_wcb`].
+    pub(crate) fn canonical_chunk_table(
+        &self,
+        manifest_id: Hash32,
+        manifest: &Manifest,
+    ) -> Result<Arc<Vec<ChunkRef>>> {
+        match manifest.representation.as_ref().map(|rep| rep.kind) {
+            None | Some(RepresentationKind::Raw) => {
+                if manifest.identity != ContentIdentity::MerkleV3 {
+                    return Err(Error::unsupported_representation(
+                        "overlay writes require a Merkle (`weft.manifest.v3`) base",
+                    ));
+                }
+                Ok(Arc::new(manifest.chunks.clone()))
+            }
+            Some(RepresentationKind::Overlay) => self.overlay_chunk_table(manifest_id, manifest),
+            Some(_) => Err(Error::unsupported_representation(
+                "overlay writes require a chunk-table base, not a frame-backed representation",
+            )),
+        }
+    }
+
     /// Decode a v2 `kind:"codec"` representation.
     ///
     /// The frame blob is fetched and parsed with default codec limits. Its
@@ -2830,6 +2902,14 @@ impl Store {
                 "file exceeds the {MAX_FILE_BYTES}-byte bound"
             )));
         }
+        if self.options.representation == RepresentationMode::Overlay
+            && self.options.content_identity != ContentIdentity::MerkleV3
+        {
+            return Err(Error::unsupported_representation(
+                "`--representation overlay` requires the Merkle content identity; \
+                 pass `--content-identity merkle`",
+            ));
+        }
         let base = self.delta_base(causal)?;
         let (manifest_id, content_hash, size) = self.store_file_content_with_base(
             bytes,
@@ -2932,9 +3012,17 @@ impl Store {
         check_mode(mode)?;
         let chunk_size = self.options.chunk_size;
         validate_chunk_size(chunk_size)?;
+        if self.options.representation == RepresentationMode::Overlay
+            && self.options.content_identity != ContentIdentity::MerkleV3
+        {
+            return Err(Error::unsupported_representation(
+                "`--representation overlay` requires the Merkle content identity; \
+                 pass `--content-identity merkle`",
+            ));
+        }
 
         let (manifest_id, content_hash, size) = match self.options.representation {
-            RepresentationMode::Raw => {
+            RepresentationMode::Raw | RepresentationMode::Overlay => {
                 let identity_mode = self.options.content_identity;
                 let (chunks, size, content_hash) =
                     self.stream_raw_chunks(&mut reader, chunk_size, Vec::new(), identity_mode)?;
@@ -3202,15 +3290,24 @@ impl Store {
                 rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
             })
             .unwrap_or(false);
-        if old_manifest
-            .representation
-            .as_ref()
-            .map(|rep| rep.kind == RepresentationKind::Overlay)
-            .unwrap_or(false)
-        {
-            return Err(Error::invalid_argument(
-                "range write to a weft.manifest.v4 overlay is not implemented",
-            ));
+        if manifest_is_overlay(&old_manifest) || self.overlay_mode() {
+            if old_is_frame_backed {
+                let kind = old_manifest
+                    .representation
+                    .as_ref()
+                    .map(|rep| rep.kind.as_str())
+                    .unwrap_or("none");
+                return Err(Error::unsupported_representation(format!(
+                    "range write to a {kind} representation cannot become an overlay layer; \
+                     re-create the file with `--content-identity merkle --representation overlay` \
+                     or write with `--representation raw`"
+                )));
+            }
+            let edits: Vec<OverlayEdit<'_>> = ranges
+                .iter()
+                .map(|(offset, bytes)| OverlayEdit::bytes(*offset, bytes))
+                .collect();
+            return self.write_file_overlay(id, &old, &old_manifest, &edits, new_size, causal);
         }
         // CodecAuto, or writing back to a store whose current version is a
         // frame-backed (codec or tensor) representation, materialises the whole
@@ -3689,6 +3786,10 @@ impl Store {
     /// file grows to cover the range; otherwise bytes past EOF are ignored.
     /// v1 files are dense, so this defines content but does not reclaim
     /// physical chunks.
+    ///
+    /// On an overlay-represented object this publishes one new overlay extent
+    /// covering the chunk-aligned span of the zeroed range (full zero chunks
+    /// are content-addressed once, so memory stays bounded by one chunk).
     pub fn zero_range(
         &mut self,
         id: Hash32,
@@ -3717,6 +3818,17 @@ impl Store {
         if zero_end <= offset {
             return Ok(old.version);
         }
+        let old_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        if old_manifest.size != old.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        if manifest_is_overlay(&old_manifest) || self.overlay_mode() {
+            let edit = OverlayEdit::zeros(offset, zero_end - offset);
+            let outcome =
+                self.write_file_overlay(id, &old, &old_manifest, &[edit], new_size, &[])?;
+            return Ok(outcome.version);
+        }
         let current = self.read_object(id)?;
         if current.len() as u64 != old.size {
             return Err(Error::corrupt("file size changed while zeroing"));
@@ -3730,6 +3842,13 @@ impl Store {
     }
 
     /// Remove `[offset, offset + length)` and shift later bytes left.
+    ///
+    /// Refused with `UnsupportedRepresentation` for an overlay-represented
+    /// object: shortening the file is not expressible as an immutable overlay
+    /// extent (an extent can replace or extend chunks but never remove the
+    /// tail), and silently materialising the object would defeat the point of
+    /// the representation. Compact the object first, or use the raw
+    /// representation.
     pub fn collapse_range(&mut self, id: Hash32, offset: u64, length: u64) -> Result<Hash32> {
         self.require_writable()?;
         if length == 0 {
@@ -3741,6 +3860,14 @@ impl Store {
         }
         if offset > old.size || length > old.size - offset {
             return Err(Error::invalid_argument("collapse range lies past EOF"));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        if manifest_is_overlay(&manifest) || self.overlay_mode() {
+            return Err(Error::unsupported_representation(
+                "collapse_range on an overlay object would shorten the file and shift every \
+                 following byte; run `weftfs compact <path>` first or use `--representation raw`",
+            ));
         }
         let current = self.read_object(id)?;
         if current.len() as u64 != old.size {
@@ -3755,6 +3882,12 @@ impl Store {
     }
 
     /// Insert `length` zero bytes at `offset`, shifting later bytes right.
+    ///
+    /// Refused with `UnsupportedRepresentation` for an overlay-represented
+    /// object: an insert rewrites every byte after `offset`, which would be a
+    /// whole-tail overlay extent rather than a bounded layer, so the caller
+    /// must compact (or use the raw representation) rather than have the store
+    /// silently materialise the file.
     pub fn insert_range(&mut self, id: Hash32, offset: u64, length: u64) -> Result<Hash32> {
         self.require_writable()?;
         if length == 0 {
@@ -3766,6 +3899,14 @@ impl Store {
         }
         if offset > old.size {
             return Err(Error::invalid_argument("insert offset lies past EOF"));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        if manifest_is_overlay(&manifest) || self.overlay_mode() {
+            return Err(Error::unsupported_representation(
+                "insert_range on an overlay object rewrites every byte after the insert point; \
+                 run `weftfs compact <path>` first or use `--representation raw`",
+            ));
         }
         let new_size = old
             .size
@@ -3835,6 +3976,13 @@ impl Store {
     }
 
     /// Resize a file to `size`, zero-filling when growing.
+    ///
+    /// On an overlay-represented object: growing publishes one overlay extent
+    /// of zeros for `[old_size, size)`; truncating to the same size is a no-op;
+    /// truncating to a smaller size is refused with
+    /// `UnsupportedRepresentation` because an immutable overlay extent can
+    /// replace or extend chunks but never drop the tail. Compact first, or use
+    /// the raw representation.
     pub fn truncate(&mut self, id: Hash32, size: u64) -> Result<Hash32> {
         self.require_writable()?;
         if size > MAX_FILE_BYTES {
@@ -3845,6 +3993,25 @@ impl Store {
         let old = self.object_meta(id)?;
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("truncate requires a file object"));
+        }
+        let old_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        if old_manifest.size != old.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        if manifest_is_overlay(&old_manifest) || self.overlay_mode() {
+            if size < old.size {
+                return Err(Error::unsupported_representation(
+                    "truncate to a smaller size cannot be expressed as an immutable overlay \
+                     extent; run `weftfs compact <path>` first or use `--representation raw`",
+                ));
+            }
+            if size == old.size {
+                return Ok(old.version);
+            }
+            let edit = OverlayEdit::zeros(old.size, size - old.size);
+            let outcome = self.write_file_overlay(id, &old, &old_manifest, &[edit], size, &[])?;
+            return Ok(outcome.version);
         }
         let current = self.read_object(id)?;
         let mut buffer = vec![0u8; checked_usize(size, "file size")?];
@@ -3880,6 +4047,123 @@ impl Store {
         ];
         self.commit_ops(ops, false)?;
         Ok(version)
+    }
+
+    /// Canonicalise an overlay-represented file into one
+    /// `weft.manifest.v3` chunk table.
+    ///
+    /// Every logical chunk is re-read and re-hashed in order (bounded to one
+    /// chunk of memory), the Merkle root is recomputed, and it MUST equal the
+    /// pre-compaction `content_root`. Any mismatch fails closed with `Corrupt`
+    /// before a manifest or commit is published. The canonical single-table
+    /// manifest is then published through the normal commit protocol, so old
+    /// overlay layers and their chunks stay valid for snapshots and are
+    /// reclaimed only when unreferenced.
+    ///
+    /// A non-overlay object is refused with `UnsupportedRepresentation`; there
+    /// is nothing to compact and rewriting it would be a representation change
+    /// the caller did not ask for.
+    pub fn compact(&mut self, id: Hash32) -> Result<CompactReport> {
+        self.require_writable()?;
+        let old = self.object_meta(id)?;
+        if old.kind != ObjectKind::File {
+            return Err(Error::invalid_argument("compact requires a file object"));
+        }
+        let old_manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        if old_manifest.size != old.size {
+            return Err(Error::corrupt("object size disagrees with manifest"));
+        }
+        let (overlay_depth, overlay_bytes) = match old_manifest
+            .representation
+            .as_ref()
+            .filter(|rep| rep.kind == RepresentationKind::Overlay)
+            .and_then(|rep| rep.overlay.as_ref())
+        {
+            Some(overlay) => (overlay.depth, overlay.overlay_bytes),
+            None => {
+                return Err(Error::unsupported_representation(
+                    "compact requires an overlay-represented object",
+                ))
+            }
+        };
+        let table = self.canonical_chunk_table(old.content, &old_manifest)?;
+        if table.len() as u64 > MAX_CHUNKS_PER_FILE {
+            return Err(Error::limit_exceeded(format!(
+                "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+            )));
+        }
+        let mut verified_bytes: u64 = 0;
+        let mut leaves: Vec<(u64, Hash32)> = Vec::with_capacity(table.len());
+        for (index, chunk) in table.iter().enumerate() {
+            let bytes = self
+                .with_backend(|backend| {
+                    recovery::read_blob_verified_via(
+                        backend,
+                        BlobKind::Object,
+                        chunk.hash,
+                        identity::CHUNK_DOMAIN,
+                    )
+                })
+                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+            if bytes.len() as u64 != chunk.len {
+                return Err(Error::corrupt(format!(
+                    "chunk {index} length disagrees with the overlay table"
+                )));
+            }
+            verified_bytes = verified_bytes
+                .checked_add(chunk.len)
+                .ok_or_else(|| Error::corrupt("verified byte total overflows"))?;
+            leaves.push((chunk.len, chunk.hash));
+        }
+        if verified_bytes != old_manifest.size {
+            return Err(Error::corrupt(format!(
+                "verified {verified_bytes} bytes, manifest size is {}",
+                old_manifest.size
+            )));
+        }
+        let content_root = identity::merkle_root_from_chunks(leaves);
+        if content_root != old_manifest.content_hash {
+            return Err(Error::corrupt(
+                "compaction would change the content root; refusing to publish",
+            ));
+        }
+        // No content blob is written: every chunk is content-addressed and was
+        // just re-verified. Only the manifest shape changes.
+        let compacted = Manifest {
+            size: old_manifest.size,
+            chunk_size: old_manifest.chunk_size,
+            chunks: table.as_ref().clone(),
+            content_hash: content_root,
+            representation: None,
+            identity: ContentIdentity::MerkleV3,
+        };
+        let encoded = compacted.encode()?;
+        let round_trip = Manifest::from_wcb(&crate::wcb_util::decode(&encoded)?)?;
+        if round_trip.content_hash != old_manifest.content_hash
+            || round_trip.chunks != *table
+            || round_trip.size != old_manifest.size
+        {
+            return Err(Error::corrupt(
+                "compacted manifest does not reproduce the pre-compaction table",
+            ));
+        }
+        let manifest_id =
+            self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &encoded)?;
+        let previous_content = old.content;
+        let version = self.publish_file_version(id, old, manifest_id, old_manifest.size, &[])?;
+        Ok(CompactReport {
+            object: id,
+            previous_content,
+            content: manifest_id,
+            version,
+            size: old_manifest.size,
+            content_root,
+            chunks: round_trip.chunks.len() as u64,
+            overlay_depth,
+            overlay_bytes,
+            verified_bytes,
+        })
     }
 
     /// Remove a directory entry. When the last entry for an object disappears,
@@ -6178,6 +6462,33 @@ impl Store {
         self.quota.reason.as_deref()
     }
 
+    /// Total bytes of every content and manifest blob reachable from the
+    /// current committed state through file objects (raw chunk tables, codec
+    /// frames and their dependencies, tensor frames, and overlay extent
+    /// chains).
+    ///
+    /// It uses the same walk quota accounting uses and performs manifest reads
+    /// only. It does not include commit files, checkpoints, superblock slots,
+    /// advisory index segments, or blobs retained solely by a snapshot. This is
+    /// a diagnostic for benchmarks and operators, not a format feature.
+    pub fn retained_blob_bytes(&mut self) -> Result<u64> {
+        let mut index: BTreeMap<Hash32, u64> = BTreeMap::new();
+        let mut seen: BTreeSet<Hash32> = BTreeSet::new();
+        let manifests: Vec<Hash32> = self
+            .state
+            .objects
+            .values()
+            .filter(|record| record.kind == ObjectKind::File)
+            .map(|record| record.content)
+            .collect();
+        for manifest in manifests {
+            let mut additions = BTreeMap::new();
+            self.collect_manifest_blobs(manifest, &index, &mut additions, &mut seen, 0)?;
+            index.extend(additions);
+        }
+        Ok(index.values().copied().sum())
+    }
+
     /// Install or replace the budget policy (admin operation). The policy is
     /// written once to the policy-only `quota` file; it is never rewritten per
     /// commit. Usage is committed state: when it is not already carried by the
@@ -7925,6 +8236,377 @@ impl Store {
         Ok((manifest_id, content_hash, new_size))
     }
 
+    /// Apply byte edits as one immutable overlay layer over the previous
+    /// version (`weft.manifest.v4`).
+    ///
+    /// The new manifest names the previous version (or, when the previous
+    /// version is itself an overlay layer, that layer's base) as an immutable
+    /// base plus one merged extent. Only chunks the edits touch are read and,
+    /// when their bytes change, stored; every other chunk inside the extent
+    /// keeps its old reference verbatim and its blob is not read. The canonical
+    /// chunk table and the Merkle root are derived without reading any
+    /// unchanged chunk, and the result is exactly the root a canonical
+    /// single-table `weft.manifest.v3` over the same logical bytes at the same
+    /// `chunk_size` would produce.
+    ///
+    /// A misaligned edit is widened to the enclosing chunk grid automatically:
+    /// the untouched bytes of the widened chunks are read from the previous
+    /// version, so the logical content is exact.
+    ///
+    /// When the previous manifest is an overlay layer whose extent list stays
+    /// within [`crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST`] after
+    /// merging, the new extent is folded into that layer and the chain depth
+    /// does not grow. Otherwise a new layer is published.
+    #[allow(clippy::too_many_arguments)]
+    fn write_file_overlay(
+        &mut self,
+        id: Hash32,
+        old: &ObjectRecord,
+        old_manifest: &Manifest,
+        edits: &[OverlayEdit<'_>],
+        new_size: u64,
+        causal: &[Hash32],
+    ) -> Result<WriteOutcome> {
+        if old_manifest.identity != ContentIdentity::MerkleV3 {
+            return Err(Error::unsupported_representation(
+                "overlay writes require a Merkle (`weft.manifest.v3`) base; \
+                 re-create the file with `--content-identity merkle`",
+            ));
+        }
+        let chunk_size = old_manifest.chunk_size;
+        validate_chunk_size(chunk_size)?;
+        if new_size < old_manifest.size {
+            return Err(Error::invalid_argument(
+                "range write exceeds the target file size",
+            ));
+        }
+        if new_size > MAX_FILE_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "file exceeds the {MAX_FILE_BYTES}-byte bound"
+            )));
+        }
+        let old_table = self.canonical_chunk_table(old.content, old_manifest)?;
+        let old_total = old_table
+            .iter()
+            .try_fold(0u64, |acc, chunk| acc.checked_add(chunk.len))
+            .ok_or_else(|| Error::corrupt("base chunk table size overflows"))?;
+        if old_total != old.size {
+            return Err(Error::corrupt(
+                "base chunk table length disagrees with the object size",
+            ));
+        }
+
+        // Which chunks the edits touch. Only those are read or rewritten.
+        let mut touched: BTreeMap<u64, Vec<usize>> = BTreeMap::new();
+        let mut first = u64::MAX;
+        let mut last = 0u64;
+        for (index, edit) in edits.iter().enumerate() {
+            if edit.len == 0 {
+                continue;
+            }
+            let end = edit.end()?;
+            if end > new_size {
+                return Err(Error::invalid_argument(
+                    "range write exceeds the target file size",
+                ));
+            }
+            let start_chunk = edit.offset / chunk_size;
+            let end_chunk = (end - 1) / chunk_size;
+            first = first.min(start_chunk);
+            last = last.max(end_chunk);
+            for chunk in start_chunk..=end_chunk {
+                touched.entry(chunk).or_default().push(index);
+            }
+        }
+        if first == u64::MAX {
+            return Ok(WriteOutcome {
+                version: old.version,
+                content: old.content,
+                size: old.size,
+            });
+        }
+        let total_chunks = new_size / chunk_size + u64::from(new_size % chunk_size != 0);
+        if total_chunks > MAX_CHUNKS_PER_FILE {
+            return Err(Error::limit_exceeded(format!(
+                "manifest exceeds the {MAX_CHUNKS_PER_FILE}-chunk bound"
+            )));
+        }
+        let old_chunks = old.size / chunk_size + u64::from(old.size % chunk_size != 0);
+        let mut span_first = first;
+        let mut span_last = last;
+        if new_size > old.size {
+            // Growing the file must re-encode the old final chunk (it may be
+            // short) and any chunk skipped by a write that starts past EOF, so
+            // the extent cannot begin after them.
+            span_first = span_first.min(old_chunks.saturating_sub(1));
+        }
+
+        // Publication shape: fold into the current overlay layer when its
+        // extent list survives the merge, otherwise publish a new layer.
+        let old_overlay = old_manifest
+            .representation
+            .as_ref()
+            .filter(|rep| rep.kind == RepresentationKind::Overlay)
+            .and_then(|rep| rep.overlay.as_ref());
+        let mut kept_extents: Vec<OverlayExtent> = Vec::new();
+        let (base_id, base_root, base_size, base_depth, base_chain_bytes) = match old_overlay {
+            Some(overlay) => {
+                let old_extent_total = overlay
+                    .extents
+                    .iter()
+                    .try_fold(0u64, |acc, extent| acc.checked_add(extent.length))
+                    .ok_or_else(|| Error::corrupt("overlay byte total overflows"))?;
+                let chain_bytes = overlay
+                    .overlay_bytes
+                    .checked_sub(old_extent_total)
+                    .ok_or_else(|| {
+                        Error::corrupt("overlay_bytes is smaller than the base layer's extents")
+                    })?;
+                // Merge every extent that overlaps or touches the new span.
+                for extent in &overlay.extents {
+                    let extent_first = extent.offset / chunk_size;
+                    let extent_last_exclusive = extent_first + extent.chunks.len() as u64;
+                    let touches = extent_first <= span_last.saturating_add(1)
+                        && span_first <= extent_last_exclusive;
+                    if touches {
+                        span_first = span_first.min(extent_first);
+                        span_last = span_last.max(extent_last_exclusive - 1);
+                    } else {
+                        kept_extents.push(extent.clone());
+                    }
+                }
+                if kept_extents.len() + 1 <= crate::representation::MAX_OVERLAY_EXTENTS_PER_MANIFEST
+                {
+                    (
+                        overlay.base,
+                        overlay.base_content_root,
+                        overlay.base_size,
+                        overlay.depth - 1,
+                        chain_bytes,
+                    )
+                } else {
+                    kept_extents.clear();
+                    (
+                        old.content,
+                        old_manifest.content_hash,
+                        old_manifest.size,
+                        overlay.depth,
+                        overlay.overlay_bytes,
+                    )
+                }
+            }
+            None => (
+                old.content,
+                old_manifest.content_hash,
+                old_manifest.size,
+                0,
+                0,
+            ),
+        };
+        let new_depth = base_depth
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("overlay depth overflows"))?;
+        if new_depth > self.options.max_overlay_depth {
+            return Err(Error::limit_exceeded(format!(
+                "overlay depth {new_depth} exceeds the configured writer bound {}; \
+                 run `weftfs compact <path>` to canonicalise the file",
+                self.options.max_overlay_depth
+            )));
+        }
+
+        // Re-encode exactly the chunks the merged extent covers.
+        let mut extent_chunks: Vec<ChunkRef> = Vec::with_capacity(checked_usize(
+            span_last - span_first + 1,
+            "extent chunk count",
+        )?);
+        let mut changed = false;
+        for index in span_first..=span_last {
+            let chunk_start = index * chunk_size;
+            let chunk_end = (chunk_start + chunk_size).min(new_size);
+            if chunk_end <= chunk_start {
+                return Err(Error::corrupt("overlay span lies past the new file size"));
+            }
+            let chunk_len = chunk_end - chunk_start;
+            let old_ref = old_table.get(checked_usize(index, "chunk index")?);
+            let overlapping = touched.get(&index);
+            if let Some(old_ref) = old_ref {
+                if old_ref.len == chunk_len && overlapping.is_none() {
+                    // An untouched chunk inside the extent keeps its old
+                    // reference verbatim; its blob is not read.
+                    extent_chunks.push(old_ref.clone());
+                    continue;
+                }
+            }
+            let mut assembled = vec![0u8; checked_usize(chunk_len, "chunk length")?];
+            let mut old_bytes: Option<Vec<u8>> = None;
+            if let Some(old_ref) = old_ref {
+                let keep = checked_usize(old_ref.len.min(chunk_len), "chunk keep length")?;
+                if keep > 0 {
+                    let stored = self.with_backend(|backend| {
+                        recovery::read_blob_verified_via(
+                            backend,
+                            BlobKind::Object,
+                            old_ref.hash,
+                            identity::CHUNK_DOMAIN,
+                        )
+                    })?;
+                    self.note_range_write_chunk_read();
+                    if stored.len() as u64 != old_ref.len {
+                        return Err(Error::corrupt("chunk length disagrees with manifest"));
+                    }
+                    assembled[..keep].copy_from_slice(&stored[..keep]);
+                    old_bytes = Some(stored);
+                }
+            }
+            if let Some(overlapping) = overlapping {
+                for &edit_index in overlapping {
+                    edits[edit_index].apply(chunk_start, chunk_end, &mut assembled)?;
+                }
+            }
+            if let (Some(old_ref), Some(old_bytes)) = (old_ref, old_bytes.as_deref()) {
+                // An edit that reproduces the old bytes must not add a blob.
+                if old_ref.len == chunk_len && assembled == old_bytes {
+                    extent_chunks.push(old_ref.clone());
+                    continue;
+                }
+            }
+            changed = true;
+            let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &assembled)?;
+            extent_chunks.push(ChunkRef {
+                hash,
+                len: chunk_len,
+            });
+        }
+        if !changed && new_size == old.size {
+            return Ok(WriteOutcome {
+                version: old.version,
+                content: old.content,
+                size: old.size,
+            });
+        }
+
+        let extent_offset = span_first * chunk_size;
+        let extent_length = (span_last * chunk_size
+            + (new_size - span_last * chunk_size).min(chunk_size))
+        .checked_sub(extent_offset)
+        .ok_or_else(|| Error::corrupt("overlay extent length underflows"))?;
+        let extent = OverlayExtent {
+            offset: extent_offset,
+            length: extent_length,
+            chunks: extent_chunks,
+        };
+        extent.validate_shape(chunk_size, new_size)?;
+
+        // The expected canonical table: the previous table with the extent's
+        // span replaced.
+        let span_first_usize = checked_usize(span_first, "extent start chunk")?;
+        if span_first_usize > old_table.len() {
+            return Err(Error::corrupt(
+                "overlay extent leaves a gap after the base table",
+            ));
+        }
+        let mut expected: Vec<ChunkRef> =
+            Vec::with_capacity(old_table.len().max(span_first_usize + extent.chunks.len()));
+        expected.extend_from_slice(&old_table[..span_first_usize]);
+        expected.extend(extent.chunks.iter().cloned());
+        let resume = checked_usize(span_last, "extent end chunk")? + 1;
+        if resume < old_table.len() {
+            expected.extend_from_slice(&old_table[resume..]);
+        }
+        let expected_total = expected
+            .iter()
+            .try_fold(0u64, |acc, chunk| acc.checked_add(chunk.len))
+            .ok_or_else(|| Error::corrupt("derived chunk table size overflows"))?;
+        if expected_total != new_size {
+            return Err(Error::corrupt(format!(
+                "derived overlay table sums to {expected_total}, new size is {new_size}"
+            )));
+        }
+        for (index, chunk) in expected.iter().enumerate() {
+            if index + 1 < expected.len() && chunk.len != chunk_size {
+                return Err(Error::corrupt(
+                    "derived overlay table has a short interior chunk",
+                ));
+            }
+        }
+
+        let mut extents = kept_extents;
+        extents.push(extent);
+        extents.sort_by_key(|item| item.offset);
+        let extent_total = extents
+            .iter()
+            .try_fold(0u64, |acc, item| acc.checked_add(item.length))
+            .ok_or_else(|| Error::corrupt("overlay byte total overflows"))?;
+        let overlay_bytes = base_chain_bytes
+            .checked_add(extent_total)
+            .ok_or_else(|| Error::limit_exceeded("overlay byte accounting overflows"))?;
+        if overlay_bytes > self.options.max_overlay_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "overlay chain would carry {overlay_bytes} bytes, above the configured writer \
+                 bound {}; run `weftfs compact <path>` to canonicalise the file",
+                self.options.max_overlay_bytes
+            )));
+        }
+
+        // Fail closed unless the manifest the reader will resolve is exactly the
+        // table this writer derived.
+        let base_manifest = if base_id == old.content {
+            old_manifest.clone()
+        } else {
+            self.with_backend(|backend| recovery::read_manifest_via(backend, base_id))?
+        };
+        if base_manifest.content_hash != base_root || base_manifest.size != base_size {
+            return Err(Error::corrupt(
+                "overlay base disagrees with the previous version's declared base",
+            ));
+        }
+        let base_table = self.canonical_chunk_table(base_id, &base_manifest)?;
+        let derived = apply_overlay_extents(&base_table, chunk_size, &extents, new_size)?;
+        if derived != expected {
+            return Err(Error::corrupt(
+                "overlay writer derived a different table than the reader will build",
+            ));
+        }
+        let content_root =
+            identity::merkle_root_from_chunks(expected.iter().map(|chunk| (chunk.len, chunk.hash)));
+
+        let representation = Representation {
+            kind: RepresentationKind::Overlay,
+            frame: None,
+            dependencies: Vec::new(),
+            strategy: "overlay".to_owned(),
+            decoded_size: new_size,
+            tensor: None,
+            overlay: Some(OverlayRepresentation {
+                base: base_id,
+                base_content_root: base_root,
+                base_size,
+                depth: new_depth,
+                overlay_bytes,
+                extents,
+            }),
+        };
+        let manifest = Manifest {
+            size: new_size,
+            chunk_size,
+            chunks: Vec::new(),
+            content_hash: content_root,
+            representation: Some(representation),
+            identity: ContentIdentity::MerkleV3,
+        };
+        let (manifest_id, _content, _size) = self.store_manifest(manifest)?;
+        self.overlay_tables
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(manifest_id, Arc::new(expected));
+        let version = self.publish_file_version(id, old.clone(), manifest_id, new_size, causal)?;
+        Ok(WriteOutcome {
+            version,
+            content: manifest_id,
+            size: new_size,
+        })
+    }
+
     /// Content-addressed, crash-safe blob write. The backend publishes the
     /// fully written and fsynced temporary object all-or-nothing under its
     /// content key. An existing blob is verified, never overwritten.
@@ -8087,6 +8769,109 @@ fn validate_xattr_name(name: &str) -> Result<()> {
 /// plain zstd object with the zstd row. An unknown strategy falls back to the
 /// conservative row for its representation kind instead of guessing a cheaper
 /// one.
+fn manifest_is_overlay(manifest: &Manifest) -> bool {
+    manifest
+        .representation
+        .as_ref()
+        .map(|rep| rep.kind == RepresentationKind::Overlay)
+        .unwrap_or(false)
+}
+
+/// One byte edit applied to an overlay extent. `bytes == None` means `len`
+/// zero bytes, so a large zero fill never materialises a large buffer.
+struct OverlayEdit<'a> {
+    offset: u64,
+    len: u64,
+    bytes: Option<&'a [u8]>,
+}
+
+impl<'a> OverlayEdit<'a> {
+    fn bytes(offset: u64, bytes: &'a [u8]) -> Self {
+        OverlayEdit {
+            offset,
+            len: bytes.len() as u64,
+            bytes: Some(bytes),
+        }
+    }
+
+    fn zeros(offset: u64, len: u64) -> Self {
+        OverlayEdit {
+            offset,
+            len,
+            bytes: None,
+        }
+    }
+
+    fn end(&self) -> Result<u64> {
+        self.offset
+            .checked_add(self.len)
+            .ok_or_else(|| Error::limit_exceeded("write offset overflows"))
+    }
+
+    /// Apply the part of this edit that falls inside `[chunk_start, chunk_end)`
+    /// to `dst`, which is the chunk's buffer starting at `chunk_start`.
+    fn apply(&self, chunk_start: u64, chunk_end: u64, dst: &mut [u8]) -> Result<()> {
+        let start = self.offset.max(chunk_start);
+        let end = self.end()?.min(chunk_end);
+        if start >= end {
+            return Ok(());
+        }
+        let dst_start = checked_usize(start - chunk_start, "chunk edit start")?;
+        let dst_end = checked_usize(end - chunk_start, "chunk edit end")?;
+        match self.bytes {
+            Some(bytes) => {
+                let src_start = checked_usize(start - self.offset, "edit source start")?;
+                let src_end = checked_usize(end - self.offset, "edit source end")?;
+                dst[dst_start..dst_end].copy_from_slice(&bytes[src_start..src_end]);
+            }
+            None => dst[dst_start..dst_end].fill(0),
+        }
+        Ok(())
+    }
+}
+
+/// Apply overlay extents to a base chunk table exactly as the reader does:
+/// each extent replaces the chunk references at its grid positions and may
+/// append past the base end.
+fn apply_overlay_extents(
+    base: &[ChunkRef],
+    chunk_size: u64,
+    extents: &[OverlayExtent],
+    size: u64,
+) -> Result<Vec<ChunkRef>> {
+    if chunk_size == 0 {
+        return Err(Error::malformed("overlay chunk_size is out of range"));
+    }
+    let mut table = base.to_vec();
+    for extent in extents {
+        let start = checked_usize(extent.offset / chunk_size, "overlay extent index")?;
+        if start > table.len() {
+            return Err(Error::corrupt(
+                "overlay extent leaves a gap after the base table",
+            ));
+        }
+        let end = start
+            .checked_add(extent.chunks.len())
+            .ok_or_else(|| Error::corrupt("overlay extent chunk count overflows"))?;
+        let old_len = table.len();
+        if end > old_len {
+            table.splice(start..old_len, extent.chunks.iter().cloned());
+        } else {
+            table.splice(start..end, extent.chunks.iter().cloned());
+        }
+    }
+    let total = table
+        .iter()
+        .try_fold(0u64, |acc, chunk| acc.checked_add(chunk.len))
+        .ok_or_else(|| Error::corrupt("overlay table size overflows"))?;
+    if total != size {
+        return Err(Error::corrupt(format!(
+            "overlay table sums to {total}, declared size is {size}"
+        )));
+    }
+    Ok(table)
+}
+
 fn manifest_cost_class(manifest: &Manifest) -> CostClass {
     let Some(rep) = manifest.representation.as_ref() else {
         return CostClass::Raw;
@@ -8126,6 +8911,19 @@ fn validate_options(options: &Options) -> Result<()> {
     if options.codec_delta_margin_percent > 90 {
         return Err(Error::invalid_argument(
             "codec_delta_margin_percent must be at most 90",
+        ));
+    }
+    if options.max_overlay_depth == 0
+        || options.max_overlay_depth > crate::representation::MAX_OVERLAY_CHAIN_DEPTH
+    {
+        return Err(Error::invalid_argument(format!(
+            "max_overlay_depth must be 1..={} (the normative reader bound)",
+            crate::representation::MAX_OVERLAY_CHAIN_DEPTH
+        )));
+    }
+    if options.max_overlay_bytes == 0 {
+        return Err(Error::invalid_argument(
+            "max_overlay_bytes must be positive",
         ));
     }
     // Merkle identity is chunk-based; a codec/tensor frame has no chunk table

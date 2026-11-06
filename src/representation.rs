@@ -30,6 +30,21 @@ pub const MAX_OVERLAY_CHAIN_DEPTH: u64 = 256;
 /// they MUST be sorted by offset and may touch but not overlap.
 pub const MAX_OVERLAY_EXTENTS_PER_MANIFEST: usize = 64;
 
+/// Default writer bound on the number of chained overlay manifests
+/// (`Options::max_overlay_depth`). Each range write that cannot be folded into
+/// the previous layer adds one layer, so a writer MUST compact before reaching
+/// it. It is deliberately below [`MAX_OVERLAY_CHAIN_DEPTH`] so an old reader
+/// that accepts the normative hard bound never sees a chain the writer thought
+/// was fine.
+pub const DEFAULT_MAX_OVERLAY_DEPTH: u64 = 64;
+
+/// Default writer bound on the total logical bytes carried by every extent of
+/// an overlay chain (`Options::max_overlay_bytes`). It bounds metadata size and
+/// full-read amplification (a full read fetches every distinct chunk named by
+/// the chain); a writer that would exceed it refuses with `LimitExceeded` and
+/// asks for compaction.
+pub const DEFAULT_MAX_OVERLAY_BYTES: u64 = 1024 * 1024 * 1024;
+
 /// Largest codec frame chunk size the writer will choose.
 pub const CODEC_CHUNK_SIZE_MAX: u64 = 64 * 1024;
 
