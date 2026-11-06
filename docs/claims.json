@@ -3127,5 +3127,157 @@
     ],
     "receipt": null,
     "kind": "present"
+  },
+  {
+    "id": "r12_calibration_schema",
+    "claim": "The host calibration record uses the weft.calibration.v1 schema.",
+    "value": "weft.calibration.v1",
+    "locations": [
+      "docs/STATUS.md",
+      "src/calibration.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_calibration_requires_measured",
+    "claim": "A calibration file is refused unless the planner cost model is measured.",
+    "value": "--calibration requires --planner-cost-model measured",
+    "locations": [
+      "docs/STATUS.md",
+      "src/main.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_calibration_no_silent_fallback",
+    "claim": "The calibration loader has no silent fallback to the baked table.",
+    "value": "silent fallback",
+    "locations": [
+      "docs/STATUS.md",
+      "src/calibration.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_go_rebase_cli",
+    "claim": "WeftFS-Go exposes the weftfs rebase CLI verb.",
+    "value": "weftfs rebase",
+    "locations": [
+      "docs/STATUS.md",
+      "WeftFS-Go/cmd/weftfs/rebase.go"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_go_rebase_cross_direction",
+    "claim": "A Go test proves a Rust-applied rebase is readable and verifiable by Go.",
+    "value": "TestRustRebaseReadableByGo",
+    "locations": [
+      "docs/STATUS.md",
+      "WeftFS-Go/cmd/weftfs/rebase_test.go"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_consumed_counter_persistence",
+    "claim": "A pure consumption persists a compacted access snapshot in both languages.",
+    "value": "pure consumption",
+    "locations": [
+      "docs/STATUS.md",
+      "src/access.rs",
+      "WeftFS-Go/store/access.go"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_scale_receipt",
+    "claim": "README.md and docs/STATUS.md cite the R12 rebase scale court receipt.",
+    "value": "rebase-scale-20261106T130054Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "README.md"
+    ],
+    "receipt": "bench/receipts/rebase-scale-20261106T130054Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r12_scale_selected_decode",
+    "claim": "The rebase scale court measured the selected per-tensor decode time before and after.",
+    "value": "4501.537 ms -> 1900.812 ms",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-rebase-scale.md"
+    ],
+    "receipt": "bench/receipts/rebase-scale-20261106T130054Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r12_scale_representation_growth",
+    "claim": "Rebasing the 16 selected tensors grew their stored representation by 43575360 bytes.",
+    "value": "43575360",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-rebase-scale.md"
+    ],
+    "receipt": "bench/receipts/rebase-scale-20261106T130054Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r12_scale_source_exact",
+    "claim": "The scale court reassembles the exact source container after rebasing.",
+    "value": "source_reassembly_exact",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-rebase-scale.md"
+    ],
+    "receipt": "bench/receipts/rebase-scale-20261106T130054Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r12_scale_source_sha",
+    "claim": "The scale court's reassembled instruct container matches the corpus SHA-256.",
+    "value": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-rebase-scale.md"
+    ],
+    "receipt": "bench/receipts/rebase-scale-20261106T130054Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "r12_no_wire_change",
+    "claim": "R12 changes no wire format.",
+    "value": "no wire format changed",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_go_suite_counts",
+    "claim": "docs/STATUS.md records the R12 Go race-suite counts.",
+    "value": "125 passed / 0 failed / 7 skipped",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "r12_stale_nonclaim_absent",
+    "claim": "README.md no longer lists calibrated planner costs as an unimplemented item.",
+    "value": "calibrated planner costs",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "absent"
   }
 ]

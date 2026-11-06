@@ -3303,3 +3303,149 @@ request and 4,096 bytes**.
   directory; absolute times are court-bound.
 * A range read cannot verify the member digest (it is a partial read); only
   whole-object reads are digest-checked, matching the flat plane.
+
+## Subphase R12 — rebase parity and host calibration (2026-11-06)
+
+`weftfs rebase` existed in Rust with provenance receipts and in WeftFS-Go only as
+a store API. At the same time the planner's `measured` decode table was a
+constant baked into the crate: it was calibrated in this bench court, so a host
+with different decode throughput had no supported way to use its own numbers.
+R12 closes both gaps. No wire format changed; manifests, commits, vectors, and
+the superblock are unchanged.
+
+### Host-local calibration
+
+The measurement code that lived in `examples/calibrate_decode.rs` now lives in
+`src/calibration.rs`; the example is a thin wrapper over the library, so the CLI
+verb and the bench harness cannot drift. A calibration document uses the
+schema `weft.calibration.v1` and carries the created time, the host/kernel/image
+identity, the measurement method, exactly ten class rows (`fixed_ns`,
+`ns_per_mib`, `samples`, `origin`), and a digest
+`H("weft/decode-calibration/v1", compact JSON without the digest field)`.
+
+The loader is strict and fails before the planner sees a row:
+
+* wrong schema, unknown or missing keys, a non-object, or a file above 1 MiB;
+* missing, duplicated, or unknown cost classes (completeness is ten rows);
+* an unknown `origin`, or a `measured` row with fewer than 5 samples;
+* `fixed_ns > 60 s`, `ns_per_mib == 0`, or `ns_per_mib > 100 s/MiB`;
+* any row that is not strictly monotonic between 1 MiB and 64 MiB;
+* a digest mismatch.
+
+There is no partial parse, no silent fallback to the baked table, and no merge of host
+and baked rows. `weftfs calibrate --out FILE` measures, writes the record, and
+prints the per-class divergence against the baked `measured` table;
+`weftfs calibrate --from FILE --json` reports divergence for an existing file;
+`weftfs calibrate --from FILE --install --store DIR` copies it to the advisory
+`<store>/calibrations/<id>.json` (ignored by replay, verify, and GC, like
+`indexes/`). `--planner-cost-model measured --calibration FILE` uses the file's
+rows for the tensor planner and `rebase`; with `declared` it is refused with the
+exact error `--calibration requires --planner-cost-model measured`. Without the
+flag, behaviour is byte-identical to R11.
+
+In the final scale court the host table differed from the baked table by
++1.256% (float-tensor) to +9.199% (semantic-delta), and -1.401% for
+tensor-sharded, measured at 1 MiB. The table is host-bound by construction; the
+record names the exact image, kernel, CPU count, and WeftFS revision.
+
+`tests/calibration.rs` is 8/8: round trip through a file, digest over the
+canonical document (whitespace-insensitive), 18 malformed/incomplete/out-of-
+range rejection cases, oversized-file refusal, planner equality with the file's
+rows, default behaviour unchanged, rebase chain pricing with the file, and an
+advisory install that replay/verify ignore. Unit tests in `src/cost_model.rs`
+pin the baked tables.
+
+### Go rebase CLI parity
+
+`weftfs rebase` now exists in WeftFS-Go with the same flags and decision rule as
+Rust: `--root`, `--threshold`, `--dry-run`, `--strategy`, `--lambda-ns`, and
+`--max-objects`. It opens read-only for a dry run, writes a
+`weft.provenance.v1` receipt on apply, and emits the same JSON field names. A
+dependency strategy (`weight-delta`, `sparse-delta`, `semantic-delta`) is
+refused with an explicit message in both languages; `--strategy` is for the
+standalone target.
+
+Cross-language tests run in both directions:
+
+* Go applies a rebase; Rust `verify --full` reports ok, `provenance show`
+  returns the Go receipt, and the Go read equals the original bytes with the
+  same logical root.
+* Rust applies a rebase; Go `Verify(true)` reports ok, `ReadTensor` equals the
+  original bytes, the logical root is unchanged, the `before-rebase` snapshot is
+  byte-identical, and the provenance relation is present in Go state.
+
+`cmd/weftfs/rebase_test.go` also proves a dry run writes nothing (generation,
+head, version, and counters unchanged), a high threshold selects nothing, the
+second apply after a reopen is a no-op, and an unsupported strategy is refused.
+`TestRustRebaseReadableByGo` is the Rust-to-Go direction.
+
+The new reopen test exposed a real bug in both implementations: `flush`
+early-returned when the pending map was empty, so a **pure consumption** (the
+rebase counter reset, which writes nothing else) was never persisted. A reopened
+store then resurrected the count and a second rebase re-selected an object that
+was already rebased. Both languages now keep a zero-delta pending entry so the
+consumption publishes a compacted snapshot; `src/access.rs` and
+`WeftFS-Go/store/access_consume_test.go` pin the behaviour across a reopen.
+
+### Scale court (`bench/scripts/rebase_scale_court.sh`)
+
+The court runs the cached Qwen2.5-0.5B / Instruct pair in the bench court: both
+files are re-hashed against the LFS SHA-256, a release calibration is measured
+and used for every planner call, the family is ingested (241 instruct tensors
+are weight deltas), the pre-rebase state is snapshotted, 16 tensors are read 32
+times and a different 16 are read twice, and per-tensor reads plus a full
+checkpoint restore are timed before and after. A second dry run at threshold=1
+provides the counterfactual economics for every read tensor without writing.
+
+With a 200 ms threshold, the policy selected 16 of 32 read tensors, exactly the
+predicted set (0 mismatches, 291 objects scanned). Selected per-tensor decode
+went from `4501.537 ms -> 1900.812 ms` (-57.8%) and the full instruct restore
+from 10,938.771 ms to 8,430.865 ms (-22.9%). The warm 16 (two reads, ~174 ms of
+decode each) stayed deltas. Representation bytes for the 16 selected tensors
+grew by 43575360 bytes (~19.4%) and the current-state representation total by
+43575360 bytes; the store tree grew 277,231,717 bytes because the snapshot and
+commit history retain the old delta frames and the advisory indexes grew
+9,555,328 bytes. All 13 hard checks pass: `verify --full`, every BLAKE3 hash,
+every recomputed logical root, the unchanged `before-rebase` snapshot, the
+second apply writing nothing, the provenance read-back, and exact source
+reassembly (`source_reassembly_exact`, SHA-256
+`fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe`).
+
+The economics are reported, not flattened: the measured chain cost is ~87.2
+ms/read for an 8.7 MB BF16 MLP tensor, so the policy break-even is 3 reads; the
+embedding costs ~2.724 s/read, so its break-even is 1. The bytes/ns trade would
+have paid back after one read for the two-read tensors, but the fixed 200 ms
+policy threshold is the binding constraint. That is recorded as
+`policy_more_conservative_than_storage`, alongside the physical growth per
+selected tensor. Receipt
+`bench/receipts/rebase-scale-20261106T130054Z.json`; every table, method, and
+loss is in `bench/RESULTS-rebase-scale.md`.
+
+### Evidence (this subphase; same court limits)
+
+* `cargo test --all-targets` (rust court): **380 passed / 0 failed / 0 ignored**.
+* `cargo test --features fuse --all-targets` (fuse court): **422 passed / 0
+  failed / 2 ignored** (the two pre-existing ignores).
+* `go test -race -count=1 ./store/... ./cmd/weftfs/...`: **125 passed / 0 failed / 7 skipped**;
+  the skips are the FUSE-mount handoff tests that need a `--features fuse` Rust oracle
+  and `/dev/fuse`, which this court does not have. `go vet ./...` is clean and
+  `CGO_ENABLED=0 go build ./...` succeeds.
+* `scripts/check-claims.sh` and `scripts/check-spec-drift.sh` pass.
+
+### Residual and non-claims
+
+* The calibration is a host artifact. It is not portable, not distributed by the
+  store, and not signed; an operator copies it. Go's planner and rebase CLI still
+  use the baked table (there is no Go `--calibration` in R12).
+* The scale court is one host, one process at a time, warm page cache, cached
+  public weights, and a synthetic calibration workload. Absolute times are
+  court-bound. No physical power loss, host cache loss, fleet, or concurrent
+  reader claim.
+* A rebase is a new version. The before-rebase snapshot and the commit history
+  retain the old frames, so the on-disk tree grows more than the current-state
+  representation and no GC was run in the court.
+* Only 32 of 290 instruct tensors were read in the scale court; the 41 unread
+  rebaseable deltas are untouched. The court does not claim the full family was
+  rebased.
+* Go rebase parity is tested at the store and CLI levels; the scale court itself
+  is Rust-only.

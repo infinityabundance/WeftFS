@@ -60,7 +60,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.8.0.md`](docs/RELEA
 - **PyTorch DCP (Q5):** real torch 2.15.0+cpu `save`/`load`, **9/9 topology-identical restores**, save **1,223.6 ms**, load **152.2 ms**, single-tensor **67.2 ms**, async submit **0.72 ms**, **0.9294×** `torch.save` bytes. Losses: **141× slower save, 30× slower load**; no GPU path, one process.
 - **Signed bundles (Q6):** Ed25519 over a canonical manifest, `SIGNATURE OK ed25519:…`, **15/15** acceptance/rejection cases, Go verifier agrees. Signing adds a ~128 KB manifest to a 1,064-file bundle. Non-claims: no CA, transparency log, or rotation; integrity is relative to a key only.
 - **Verification:** `verify-20261106T083428Z.json` is **27/27 courts pass** at WeftFS `a4e2c3d` (the R7 shared-mount tree); `verify-20261106T053501Z.json` (27/27 at `36bbbef`, the mode-16 tree), `verify-20261106T052933Z.json` (27/27 at `e4cdc55`), `verify-20261106T044258Z.json` (27/27 at `a8f8a3e`), and the v0.8.0 release receipt `verify-20261106T011444Z.json` (also 27/27) are retained. Retained failures and flakes are listed in the release note.
-- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, multi-writer/distributed store, Go parity for checkpoint/training-ready/mode-15 writing, lineage-aware rebasing, calibrated planner costs, and any fleet claim.
+- **Still not claimed:** physical power loss, host cache loss, RAPL, GPU/SIMD paths, 3FS/GCS/Azure/Ceph runs, PyPI publication, multi-writer/distributed store, Go parity for checkpoint/training-ready/mode-15 writing, Go host calibration, a multi-host rebase policy, and any fleet claim.
 
 ### Blob and commit planes (R10, post-0.8.0 work)
 
@@ -77,6 +77,23 @@ in the MinIO court; every loss is in
 [`bench/RESULTS-planes.md`](bench/RESULTS-planes.md), and the contract,
 including what an external metadata engine must implement, is in
 [`docs/PLANES.md`](docs/PLANES.md).
+
+### Rebase parity and host calibration (R12, post-0.8.0 work)
+
+`weftfs rebase` now exists in Go with the same selection rule and a
+`weft.provenance.v1` receipt, and the planner can use a host-local calibration
+file instead of the baked table. `weftfs calibrate` measures this host, writes a
+strict `weft.calibration.v1` record, reports its divergence from the baked
+table, and can install it under `<store>/calibrations/`; `--calibration FILE`
+requires `--planner-cost-model measured` and fails closed on malformed,
+incomplete, out-of-range, or non-monotonic rows. The scale court on the cached
+Qwen2.5-0.5B family rebased 16 of 32 read tensors with zero prediction
+mismatches: selected per-tensor decode **4501.537 ms -> 1900.812 ms**, full
+instruct restore **10938.8 -> 8430.9 ms**, representation **+43,575,360 bytes**
+for those 16. Every loss, the break-even analysis, and the method are in
+[`bench/RESULTS-rebase-scale.md`](bench/RESULTS-rebase-scale.md); receipt
+`rebase-scale-20261106T130054Z.json`. The new reopen test also found and fixed a
+real consumed-counter persistence bug in both languages.
 
 Prior release: [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).
 
