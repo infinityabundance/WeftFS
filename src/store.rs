@@ -534,6 +534,19 @@ fn crash_point(phase: &str) {
     }
 }
 
+/// Wrap a failed chunk read without erasing its class.
+///
+/// A transport failure while fetching a chunk is `Io`, not `Corrupt`: an
+/// unreachable store must fail closed with a transport error, and an operator
+/// must not be told that a damaged store is the cause.
+fn chunk_read_failure(index: usize, hash: Hash32, err: Error) -> Error {
+    if err.class() == Class::Io {
+        Error::io(format!("chunk {index} ({hash}): {err}"))
+    } else {
+        Error::corrupt(format!("chunk {index} ({hash}): {err}"))
+    }
+}
+
 /// Restore one journalled state key: re-insert the previous value, or remove
 /// the key when it did not exist before the staged op.
 fn restore<K: Ord, V>(map: &mut BTreeMap<K, V>, key: K, previous: Option<V>) {
@@ -2035,7 +2048,7 @@ impl Store {
                         identity::CHUNK_DOMAIN,
                     )
                 })
-                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+                .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
                     "chunk {index} length disagrees with manifest"
@@ -2395,7 +2408,7 @@ impl Store {
                         identity::CHUNK_DOMAIN,
                     )
                 })
-                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+                .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if count_overlay_reads {
                 representation::note_overlay_chunk_read();
             }
@@ -4163,7 +4176,7 @@ impl Store {
                         identity::CHUNK_DOMAIN,
                     )
                 })
-                .map_err(|err| Error::corrupt(format!("chunk {index} ({}): {err}", chunk.hash)))?;
+                .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
                     "chunk {index} length disagrees with the overlay table"

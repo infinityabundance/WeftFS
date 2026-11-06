@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::backend::{Key, LocalBackend, StorageBackend};
-use crate::error::{Error, Result};
+use crate::error::{Class, Error, Result};
 use crate::format::{
     decode_commit_file, decode_state, decode_superblock, Manifest, SuperblockSlot, SUPERBLOCK_BYTES,
 };
@@ -87,11 +87,25 @@ pub fn read_superblock(root: &Path) -> Result<SuperblockView> {
     read_superblock_via(&LocalBackend::new(root))
 }
 
+/// Classify a failed read of a store record.
+///
+/// A transport failure is not corruption: an unreachable store must surface as
+/// `Io` so an operator (and the distributed court) can tell it apart from a
+/// damaged one. Every other failure to read a record means the record is
+/// missing or unreadable, which is `Corrupt` for a committed reader.
+fn read_failure(what: impl FnOnce() -> String, err: Error) -> Error {
+    if err.class() == Class::Io {
+        Error::io(format!("{}: {err}", what()))
+    } else {
+        Error::corrupt(format!("{}: {err}", what()))
+    }
+}
+
 /// Backend-generic superblock read.
 pub fn read_superblock_via(backend: &dyn StorageBackend) -> Result<SuperblockView> {
     let bytes = backend
         .read_all(&Key::superblock())
-        .map_err(|err| Error::corrupt(format!("cannot read superblock: {err}")))?;
+        .map_err(|err| read_failure(|| "cannot read superblock".to_owned(), err))?;
     if bytes.len() != SUPERBLOCK_BYTES {
         return Err(Error::corrupt(format!(
             "superblock is {} bytes, expected {SUPERBLOCK_BYTES}",
@@ -192,7 +206,7 @@ pub fn load_commit_file(path: &Path, expected_generation: Option<u64>) -> Result
         &Key::commit(generation),
         expected_generation,
     )
-    .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", path.display())))
+    .map_err(|err| read_failure(|| format!("cannot read {}", path.display()), err))
 }
 
 /// Backend-generic commit decode.
@@ -204,7 +218,7 @@ pub fn load_commit_key_via(
     COMMIT_FILE_READS.fetch_add(1, Ordering::Relaxed);
     let bytes = backend
         .read_all(key)
-        .map_err(|err| Error::corrupt(format!("cannot read {}: {err}", key.display_path())))?;
+        .map_err(|err| read_failure(|| format!("cannot read {}", key.display_path()), err))?;
     let (wcb, commit) = decode_commit_file(&bytes)?;
     if let Some(expected) = expected_generation {
         if commit.generation != expected {
@@ -273,7 +287,7 @@ pub fn read_blob_verified_via(
     };
     let bytes = backend
         .read_all(&key)
-        .map_err(|err| Error::corrupt(format!("missing blob {}: {err}", key.display_path())))?;
+        .map_err(|err| read_failure(|| format!("missing blob {}", key.display_path()), err))?;
     let actual = identity::h(domain, &bytes);
     if actual != hash {
         return Err(Error::corrupt(format!(
@@ -314,10 +328,7 @@ pub fn read_state_manifest(root: &Path, manifest_id: Hash32) -> Result<State> {
 }
 
 /// Backend-generic checkpoint read.
-pub fn read_state_manifest_via(
-    backend: &dyn StorageBackend,
-    manifest_id: Hash32,
-) -> Result<State> {
+pub fn read_state_manifest_via(backend: &dyn StorageBackend, manifest_id: Hash32) -> Result<State> {
     let bytes = read_blob_verified_via(
         backend,
         BlobKind::Manifest,
