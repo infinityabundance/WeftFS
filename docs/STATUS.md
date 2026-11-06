@@ -2275,8 +2275,9 @@ real ~1,061-file bundle.
   `verify_bytes`, the same code path as capability envelopes. Output is
   `receipts-<stamp>.signed.tar.zst`. Without a key the bundle is
   `receipts-<stamp>.tar.zst`, carries `UNSIGNED.txt`, and says it is unsigned.
-  The key is copied only into the gitignored `.docker-cache` with mode 0600 and
-  removed on exit; it never enters the archive. The manifest, signature, public
+  The seed is streamed to the court on stdin (`--sign-key -`) and is never
+  copied into the repository or `.docker-cache`; it never enters the archive.
+  The manifest, signature, public
   key, and `CHECKSUMS.sha256` are metadata and are deliberately not listed in
   the manifest.
 - **Verification.** `scripts/verify-receipts.sh BUNDLE --public-key <64-hex>`

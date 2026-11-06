@@ -11,6 +11,20 @@ set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# A seed streamed on stdin (--sign-key -) needs an attached container stdin.
+stream_stdin=0
+previous=""
+for arg in "$@"; do
+  case "$arg" in
+    --sign-key=-|--sign-key=/dev/stdin) stream_stdin=1 ;;
+    -|/dev/stdin) [ "$previous" = "--sign-key" ] && stream_stdin=1 ;;
+  esac
+  previous="$arg"
+done
+if [ "$stream_stdin" -eq 1 ]; then
+  export WEFT_COURT_STDIN=1
+fi
+
 quoted=""
 for arg in "$@"; do
   quoted+=" $(printf '%q' "$arg")"

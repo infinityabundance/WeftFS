@@ -761,9 +761,19 @@ pub fn parse_public_key(text: &str) -> Result<Hash32> {
 }
 
 /// Read a 32-byte Ed25519 seed from a raw or hex file.
+///
+/// The path `-` reads standard input, so a caller can stream a seed into the
+/// court without ever writing it to the repository or its cache directories.
 pub fn read_seed(path: &Path) -> Result<[u8; 32]> {
-    let bytes = fs::read(path)
-        .map_err(|err| Error::io(format!("cannot read {}: {err}", path.display())))?;
+    let bytes = if path == Path::new("-") {
+        let mut bytes = Vec::new();
+        std::io::stdin()
+            .read_to_end(&mut bytes)
+            .map_err(|err| Error::io(format!("cannot read standard input: {err}")))?;
+        bytes
+    } else {
+        fs::read(path).map_err(|err| Error::io(format!("cannot read {}: {err}", path.display())))?
+    };
     let decoded = decode_key_blob(&bytes, 32)?;
     let mut seed = [0u8; 32];
     seed.copy_from_slice(&decoded);

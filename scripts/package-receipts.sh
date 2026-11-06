@@ -45,9 +45,7 @@ mkdir -p "$CACHE"
 STAGE="$(mktemp -d "$CACHE/weft-receipts-$STAMP.XXXXXX")"
 STAGE_REL="${STAGE#"$ROOT/"}"
 TSV="$STAGE/.manifest.tsv"
-KEY_COPY=""
 cleanup() {
-  [ -n "$KEY_COPY" ] && rm -f "$KEY_COPY"
   rm -rf "$STAGE"
 }
 trap cleanup EXIT
@@ -284,19 +282,17 @@ rm -f "$TSV"
 # ---- canonical manifest and optional signature ---------------------------
 SIGNED=0
 if [ -n "$SIGN_KEY" ]; then
-  KEY_COPY="$CACHE/weft-receipts-key-$STAMP"
-  # The key is copied only into the gitignored cache so the court can read it;
-  # it is removed by the EXIT trap and is never in the staging directory.
-  install -m 0600 "$SIGN_KEY" "$KEY_COPY"
-  KEY_REL="${KEY_COPY#"$ROOT/"}"
+  # The seed is streamed on stdin; it is never copied into the repository or
+  # the Docker cache (whose directories are intentionally world-writable for
+  # the court). The helper reads `--sign-key -` from /dev/stdin.
   scripts/receipt-bundle-court.sh create \
     --root "$STAGE_REL" \
     --manifest "$STAGE_REL/receipt-manifest.wcb" \
-    --sign-key "$KEY_REL" \
+    --sign-key - \
     --signature "$STAGE_REL/signature" \
     --public-key "$STAGE_REL/public_key" \
     --generated-at "$GENERATED_AT" \
-    --stamp "$STAMP"
+    --stamp "$STAMP" < "$SIGN_KEY"
   SIGNED=1
 else
   cat > "$STAGE/UNSIGNED.txt" <<'EOF'

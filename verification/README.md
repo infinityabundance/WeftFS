@@ -61,9 +61,9 @@ scripts/receipt-bundle-court.sh digest --root <extracted-bundle>
 scripts/receipt-bundle-court.sh derive --sign-key <seed-file>
 ```
 
-A seed file is 32 raw bytes or 64 hex characters. The key is copied into the
-gitignored `.docker-cache` only for the court, with mode 0600, and removed on
-exit; it never enters the bundle.
+A seed file is 32 raw bytes or 64 hex characters. The seed is streamed to
+the court on stdin (`--sign-key -`); it is never copied into the repository or
+`.docker-cache`, and it never enters the bundle.
 
 ### 0.3 What verification rejects
 

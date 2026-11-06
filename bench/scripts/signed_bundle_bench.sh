@@ -93,6 +93,12 @@ metric signature_file_bytes "$SIGNATURE_FILE_BYTES"
 metric public_key_file_bytes "$PUBLIC_KEY_FILE_BYTES"
 metric manifest_file_bytes "$MANIFEST_FILE_BYTES"
 log "signed: $SIGNED_BUNDLE ($SIGNED_BYTES bytes, ${SIGNED_MS} ms, $FILES files)"
+KEY_COPIES="$(find "$CACHE" -maxdepth 1 -name 'weft-receipts-key-*' -print | wc -l | tr -d ' ')"
+if [ "$KEY_COPIES" -ne 0 ]; then
+  echo "signing key was copied into the Docker cache" >&2
+  exit 1
+fi
+case_row pass seed_not_cached "stdin transport; no key file in .docker-cache"
 
 # ---- signed verify --------------------------------------------------------
 T0="$(now_ms)"
@@ -265,6 +271,12 @@ rm -rf "$EXTRACT"
 mkdir -p "$EXTRACT"
 tar --zstd -xf "$SIGNED_BUNDLE" -C "$EXTRACT"
 EXTRACT_REL="${EXTRACT#"$ROOT/"}"
+SEED_TEXT="$(tr -d '\n' < "$KEY")"
+if grep -RIl -F -- "$SEED_TEXT" "$EXTRACT" >/dev/null 2>&1; then
+  echo "signing seed material found in the bundle" >&2
+  exit 1
+fi
+case_row pass seed_absent_from_bundle "seed hex not present in payload"
 DIGEST_JSON="$(scripts/receipt-bundle-court.sh digest --root "$EXTRACT_REL" 2>>"$LOG_TMP" | tail -1)"
 GO_DIGEST="$(json_get manifest_sha256 <<<"$DIGEST_JSON")"
 GO_PUB="$(tr -d '\n' < "$EXTRACT/public_key")"

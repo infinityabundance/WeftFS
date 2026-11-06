@@ -36,6 +36,9 @@ WEFT_PIDS="${WEFT_PIDS:-1024}"
 # it is the smaller of the two. A scale court may raise both together but never
 # disable either.
 WEFT_NPROC="${WEFT_NPROC:-2048}"
+# Attach stdin only when a caller explicitly streams a secret (for example a
+# signing seed) into the court. The default is detached stdin.
+WEFT_COURT_STDIN="${WEFT_COURT_STDIN:-0}"
 
 validate_limit() {
   local name="$1" value="$2" re="$3"
@@ -49,6 +52,7 @@ validate_limit WEFT_MEMORY "$WEFT_MEMORY" '^[0-9]+(\.[0-9]+)?[mg]$'
 validate_limit WEFT_CPUS "$WEFT_CPUS" '^[1-9][0-9]*(\.[0-9]+)?$'
 validate_limit WEFT_PIDS "$WEFT_PIDS" '^[1-9][0-9]*$'
 validate_limit WEFT_NPROC "$WEFT_NPROC" '^[1-9][0-9]*$'
+validate_limit WEFT_COURT_STDIN "$WEFT_COURT_STDIN" '^(0|1)$'
 # Optional user-defined Docker network (the S3 court uses one so the test
 # container can resolve the MinIO container by name). Never required; when set
 # it must be a valid network name.
@@ -146,6 +150,10 @@ common=(
   -v "$cache_root/cargo-git:/cargo/git"
   -w /work
 )
+
+if [[ "$WEFT_COURT_STDIN" == "1" ]]; then
+  common+=(-i)
+fi
 
 # Forward only the S3 court's explicitly named environment. Nothing else from
 # the host environment reaches the container.
