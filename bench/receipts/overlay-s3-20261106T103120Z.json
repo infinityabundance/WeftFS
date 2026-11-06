@@ -1,0 +1,351 @@
+{
+  "backend": "s3",
+  "checks": [
+    {
+      "name": "content_root_matches_between_representations",
+      "ok": true
+    },
+    {
+      "name": "full_read_bytes_identical",
+      "ok": true
+    },
+    {
+      "name": "overlay_compaction_preserves_content_root",
+      "ok": true
+    },
+    {
+      "name": "snapshot_read_unchanged_by_compaction",
+      "ok": true
+    },
+    {
+      "name": "cow_compaction_is_refused",
+      "ok": true
+    },
+    {
+      "name": "verify_full_ok_everywhere",
+      "ok": true
+    }
+  ],
+  "configurations": {
+    "cow": {
+      "compaction": {
+        "applicable": false,
+        "class": "UnsupportedRepresentation",
+        "message": "compact requires an overlay-represented object",
+        "ok": false,
+        "refused": true,
+        "wall_ms": 1.14588
+      },
+      "compaction_backend_bytes_read": 104591,
+      "compaction_backend_requests": 1,
+      "configuration": "cow",
+      "content_identity": "merkle",
+      "content_root_after_compaction": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_after_writes": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_before_writes": "1dc5cb04bec9dddf05e08bd09cb82665fb7e1779b3c7c500e7d6fd77fe2b3502",
+      "create": {
+        "bytes": 134217728,
+        "wall_ms": 1125.745226
+      },
+      "disk_bytes": null,
+      "full_read_after_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "after",
+        "wall_ms": 445.7351359999999
+      },
+      "full_read_before_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "before",
+        "wall_ms": 439.25697
+      },
+      "gc_after_compaction": {
+        "apply": true,
+        "deleted": 775,
+        "deleted_bytes": 70338845,
+        "marked_chunks": 2272,
+        "marked_manifests": 3,
+        "problems": [],
+        "removed_orphans": 0,
+        "wall_ms": 1012.069554
+      },
+      "peak_rss_kib": 403964,
+      "range_read": {
+        "backend_bytes_per_read": 170127,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "latency": {
+          "max_ms": 1.822114,
+          "p50_ms": 1.421846,
+          "p99_ms": 1.822114,
+          "samples": 20,
+          "total_ms": 28.692192
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 20
+      },
+      "range_read_cold_handle": {
+        "backend_bytes_per_read": 170127,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "first_read_backend_bytes": 170127,
+        "first_read_backend_requests": 2,
+        "first_read_ms": 1.502236,
+        "latency": {
+          "max_ms": 1.4828,
+          "p50_ms": 1.382842,
+          "p99_ms": 1.4828,
+          "samples": 20,
+          "total_ms": 27.832487
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 21
+      },
+      "representation": "raw",
+      "retained_blob_bytes_after_compaction": 134322319,
+      "retained_blob_bytes_after_gc": 134322319,
+      "retained_blob_bytes_before_compaction": 134322319,
+      "root_unchanged_by_compaction": true,
+      "shape_after_compaction": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "shape_after_writes": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "snapshot": {
+        "commit": "dbdb57c5f8b0f249a835cfccff823912ceedbb02e08115272fd5114ef3cea7c1",
+        "content": "6dba7a1b6059546e56c3669d402628b923e02fae253907943bd22d1cf5a82180",
+        "digest_after_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_after_gc": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_before_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "size": 134217728,
+        "unchanged": true
+      },
+      "verify_after_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 1759.47386
+      },
+      "verify_before_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 1772.969317
+      },
+      "writes": {
+        "backend_bytes_read": 85063500,
+        "backend_bytes_written": 89451237,
+        "backend_requests": 3501,
+        "bytes_per_op": 4096,
+        "latency": {
+          "max_ms": 9.617003,
+          "p50_ms": 4.542886,
+          "p99_ms": 5.630487,
+          "samples": 500,
+          "total_ms": 2308.2257439999985
+        },
+        "ops": 500,
+        "wall_ms": 2308.264355
+      }
+    },
+    "overlay": {
+      "compaction": {
+        "applicable": true,
+        "ok": true,
+        "report": {
+          "backend_bytes_read": 134220016,
+          "backend_requests": 2049,
+          "chunks": 2048,
+          "content": "6dba7a1b6059546e56c3669d402628b923e02fae253907943bd22d1cf5a82180",
+          "content_root": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+          "overlay_bytes": 32112640,
+          "overlay_depth": 8,
+          "previous_content": "6fdf6862d84ae2fc54bb31e6488e1e85f852e42af41449f5f677a56b5bbf4ff8",
+          "size": 134217728,
+          "verified_bytes": 134217728,
+          "wall_ms": 444.118771
+        }
+      },
+      "compaction_backend_bytes_read": 134220016,
+      "compaction_backend_requests": 2049,
+      "configuration": "overlay",
+      "content_identity": "merkle",
+      "content_root_after_compaction": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_after_writes": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_before_writes": "1dc5cb04bec9dddf05e08bd09cb82665fb7e1779b3c7c500e7d6fd77fe2b3502",
+      "create": {
+        "bytes": 134217728,
+        "wall_ms": 1126.998277
+      },
+      "disk_bytes": null,
+      "full_read_after_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "after",
+        "wall_ms": 451.779039
+      },
+      "full_read_before_compaction": {
+        "backend_bytes_read": 134220016,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "before",
+        "wall_ms": 437.819819
+      },
+      "gc_after_compaction": {
+        "apply": true,
+        "deleted": 501,
+        "deleted_bytes": 2289555,
+        "marked_chunks": 2538,
+        "marked_manifests": 12,
+        "problems": [],
+        "removed_orphans": 0,
+        "wall_ms": 890.199684
+      },
+      "peak_rss_kib": 412348,
+      "range_read": {
+        "backend_bytes_per_read": 67824,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "latency": {
+          "max_ms": 0.449099,
+          "p50_ms": 0.413683,
+          "p99_ms": 0.449099,
+          "samples": 20,
+          "total_ms": 8.161381
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 20
+      },
+      "range_read_cold_handle": {
+        "backend_bytes_per_read": 74847,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "first_read_backend_bytes": 215317,
+        "first_read_backend_requests": 10,
+        "first_read_ms": 7.557135000000001,
+        "latency": {
+          "max_ms": 0.472723,
+          "p50_ms": 0.380962,
+          "p99_ms": 0.472723,
+          "samples": 20,
+          "total_ms": 7.846797
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 21
+      },
+      "representation": "overlay",
+      "retained_blob_bytes_after_compaction": 134322319,
+      "retained_blob_bytes_after_gc": 134322319,
+      "retained_blob_bytes_before_compaction": 166480149,
+      "root_unchanged_by_compaction": true,
+      "shape_after_compaction": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "shape_after_writes": {
+        "chunks": 22,
+        "depth": 8,
+        "extents": 22,
+        "kind": "overlay",
+        "overlay_bytes": 32112640
+      },
+      "snapshot": {
+        "commit": "afce7b93dc39f1d057900e595e91dbab8388598da6031cd7ceaa1c970a80d3d4",
+        "content": "6fdf6862d84ae2fc54bb31e6488e1e85f852e42af41449f5f677a56b5bbf4ff8",
+        "digest_after_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_after_gc": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_before_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "size": 134217728,
+        "unchanged": true
+      },
+      "verify_after_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 1879.758925
+      },
+      "verify_before_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 1,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 782.5136689999999
+      },
+      "writes": {
+        "backend_bytes_read": 43808669,
+        "backend_bytes_written": 38779767,
+        "backend_requests": 3993,
+        "bytes_per_op": 4096,
+        "latency": {
+          "max_ms": 7.774181,
+          "p50_ms": 3.257795,
+          "p99_ms": 4.611814,
+          "samples": 500,
+          "total_ms": 1702.86254
+        },
+        "ops": 500,
+        "wall_ms": 1702.89614
+      }
+    }
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "2e675230bd4b72f506213600014e70250cd587d6",
+    "revision_weftfs": "e9b9baefc01ab7aaa23cd3d2920b062a202a7a6e",
+    "revision_weftfs_go": "70cf37d7b6f4673d9992314d4edb2fbda3081f8b",
+    "s3_bucket_base": "weft-s3-court-20261106t103120z",
+    "s3_container_image": "debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+    "s3_endpoint": "http://weft-s3-minio-1854288:9000",
+    "s3_server": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+    "s3_server_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
+    "s3_server_version": "RELEASE.2025-04-22T22-12-26Z"
+  },
+  "generated_utc": "20261106T103149Z",
+  "kind": "chunk-cow-vs-immutable-write-overlay",
+  "label": "Single-host synthetic court inside the OOM-protected bench container. Local means the normative POSIX layout on the container filesystem; s3 means single-node MinIO on a localhost bridge network with a tmpfs data directory. Not a cloud, multi-node, fleet, media, device-cache, power-loss, RPO/RTO, or production claim.",
+  "schema": "weft-overlay-court-v1",
+  "summary": {
+    "checks_passed": 6,
+    "checks_total": 6
+  },
+  "workload": {
+    "chunk_size": 65536,
+    "content_identity": "merkle",
+    "file_size": 134217728,
+    "max_overlay_bytes": 1073741824,
+    "max_overlay_depth": 64,
+    "range_read_reps": 20,
+    "seed": "0x9e3779b97f4a7c15",
+    "write_alignment": 4096,
+    "write_bytes": 4096,
+    "writes": 500
+  }
+}

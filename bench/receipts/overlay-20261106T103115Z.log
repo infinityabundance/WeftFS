@@ -1,0 +1,28 @@
+== overlay court ==
+backend=local
+utc=20261106T103115Z
+court_image=weft/bench-court:1
+court_image_id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+memory=3g cpus=4 pids=1024
+revision_weftfs=e9b9baefc01ab7aaa23cd3d2920b062a202a7a6e
+revision_weftfs_go=70cf37d7b6f4673d9992314d4edb2fbda3081f8b
+revision_weftcodec=2e675230bd4b72f506213600014e70250cd587d6
+
+warning: unused variable: `retained_after_gc`
+   --> examples/overlay_bench.rs:447:9
+    |
+447 |     let retained_after_gc = store
+    |         ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_retained_after_gc`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "overlay_bench") generated 1 warning (run `cargo fix --example "overlay_bench" -p weftfs` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.02s
+overlay_bench: cow -> /tmp/weft-overlay-court-23/cow.json
+overlay_bench: overlay -> /tmp/weft-overlay-court-23/overlay.json
+overlay_bench: wrote bench/receipts/overlay-20261106T103115Z.json
+overlay court [local]: 6/6 checks; cow writes p50 1.82 ms p99 1.91 ms; overlay writes p50 0.72 ms p99 1.70 ms; cow bytes 128.1 MiB overlay bytes 128.1 MiB
+overlay receipt: bench/receipts/overlay-20261106T103115Z.json
+raw log: bench/receipts/overlay-20261106T103115Z.log
+35e50bb5c13c36db7f2e018243248afed455e01ea3c461c7e27c0cc250b3f665  bench/receipts/overlay-20261106T103115Z.json
+6f6c56e2b6d775e3822e2fcc2e4bdddb85dd548194ef2b9921d11fd99b5f7996  bench/receipts/overlay-20261106T103115Z.log

@@ -1,0 +1,351 @@
+{
+  "backend": "local",
+  "checks": [
+    {
+      "name": "content_root_matches_between_representations",
+      "ok": true
+    },
+    {
+      "name": "full_read_bytes_identical",
+      "ok": true
+    },
+    {
+      "name": "overlay_compaction_preserves_content_root",
+      "ok": true
+    },
+    {
+      "name": "snapshot_read_unchanged_by_compaction",
+      "ok": true
+    },
+    {
+      "name": "cow_compaction_is_refused",
+      "ok": true
+    },
+    {
+      "name": "verify_full_ok_everywhere",
+      "ok": true
+    }
+  ],
+  "configurations": {
+    "cow": {
+      "compaction": {
+        "applicable": false,
+        "class": "UnsupportedRepresentation",
+        "message": "compact requires an overlay-represented object",
+        "ok": false,
+        "refused": true,
+        "wall_ms": 1.009015
+      },
+      "compaction_backend_bytes_read": 104591,
+      "compaction_backend_requests": 1,
+      "configuration": "cow",
+      "content_identity": "merkle",
+      "content_root_after_compaction": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_after_writes": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_before_writes": "1dc5cb04bec9dddf05e08bd09cb82665fb7e1779b3c7c500e7d6fd77fe2b3502",
+      "create": {
+        "bytes": 134217728,
+        "wall_ms": 58.219371
+      },
+      "disk_bytes": 149348604,
+      "full_read_after_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "after",
+        "wall_ms": 40.567448
+      },
+      "full_read_before_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "before",
+        "wall_ms": 40.577918
+      },
+      "gc_after_compaction": {
+        "apply": true,
+        "deleted": 775,
+        "deleted_bytes": 70338845,
+        "marked_chunks": 2272,
+        "marked_manifests": 3,
+        "problems": [],
+        "removed_orphans": 0,
+        "wall_ms": 26.223394
+      },
+      "peak_rss_kib": 402348,
+      "range_read": {
+        "backend_bytes_per_read": 170127,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "latency": {
+          "max_ms": 1.008794,
+          "p50_ms": 0.919357,
+          "p99_ms": 1.008794,
+          "samples": 20,
+          "total_ms": 18.72152999999999
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 20
+      },
+      "range_read_cold_handle": {
+        "backend_bytes_per_read": 170127,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "first_read_backend_bytes": 170127,
+        "first_read_backend_requests": 2,
+        "first_read_ms": 0.919728,
+        "latency": {
+          "max_ms": 0.999678,
+          "p50_ms": 0.911683,
+          "p99_ms": 0.999678,
+          "samples": 20,
+          "total_ms": 18.524621999999997
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 21
+      },
+      "representation": "raw",
+      "retained_blob_bytes_after_compaction": 134322319,
+      "retained_blob_bytes_after_gc": 134322319,
+      "retained_blob_bytes_before_compaction": 134322319,
+      "root_unchanged_by_compaction": true,
+      "shape_after_compaction": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "shape_after_writes": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "snapshot": {
+        "commit": "dbdb57c5f8b0f249a835cfccff823912ceedbb02e08115272fd5114ef3cea7c1",
+        "content": "6dba7a1b6059546e56c3669d402628b923e02fae253907943bd22d1cf5a82180",
+        "digest_after_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_after_gc": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_before_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "size": 134217728,
+        "unchanged": true
+      },
+      "verify_after_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 53.207609000000005
+      },
+      "verify_before_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 53.49153
+      },
+      "writes": {
+        "backend_bytes_read": 85063500,
+        "backend_bytes_written": 87403237,
+        "backend_requests": 3501,
+        "bytes_per_op": 4096,
+        "latency": {
+          "max_ms": 1.956034,
+          "p50_ms": 1.819178,
+          "p99_ms": 1.912312,
+          "samples": 500,
+          "total_ms": 917.2838820000007
+        },
+        "ops": 500,
+        "wall_ms": 917.29834
+      }
+    },
+    "overlay": {
+      "compaction": {
+        "applicable": true,
+        "ok": true,
+        "report": {
+          "backend_bytes_read": 134220016,
+          "backend_requests": 2049,
+          "chunks": 2048,
+          "content": "6dba7a1b6059546e56c3669d402628b923e02fae253907943bd22d1cf5a82180",
+          "content_root": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+          "overlay_bytes": 32112640,
+          "overlay_depth": 8,
+          "previous_content": "6fdf6862d84ae2fc54bb31e6488e1e85f852e42af41449f5f677a56b5bbf4ff8",
+          "size": 134217728,
+          "verified_bytes": 134217728,
+          "wall_ms": 34.044474
+        }
+      },
+      "compaction_backend_bytes_read": 134220016,
+      "compaction_backend_requests": 2049,
+      "configuration": "overlay",
+      "content_identity": "merkle",
+      "content_root_after_compaction": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_after_writes": "c00367f0fd99b612a7800b863c66c5c959fcdbe42bafaa36b747d1f8ff164c22",
+      "content_root_before_writes": "1dc5cb04bec9dddf05e08bd09cb82665fb7e1779b3c7c500e7d6fd77fe2b3502",
+      "create": {
+        "bytes": 134217728,
+        "wall_ms": 58.378999
+      },
+      "disk_bytes": 166831597,
+      "full_read_after_compaction": {
+        "backend_bytes_read": 134322319,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "after",
+        "wall_ms": 40.798348999999995
+      },
+      "full_read_before_compaction": {
+        "backend_bytes_read": 134220016,
+        "backend_requests": 2049,
+        "bytes": 134217728,
+        "digest": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "label": "before",
+        "wall_ms": 39.864424
+      },
+      "gc_after_compaction": {
+        "apply": true,
+        "deleted": 501,
+        "deleted_bytes": 2289555,
+        "marked_chunks": 2538,
+        "marked_manifests": 12,
+        "problems": [],
+        "removed_orphans": 0,
+        "wall_ms": 23.622897
+      },
+      "peak_rss_kib": 411248,
+      "range_read": {
+        "backend_bytes_per_read": 67824,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "latency": {
+          "max_ms": 0.040645999999999995,
+          "p50_ms": 0.030246,
+          "p99_ms": 0.040645999999999995,
+          "samples": 20,
+          "total_ms": 0.616181
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 20
+      },
+      "range_read_cold_handle": {
+        "backend_bytes_per_read": 74847,
+        "backend_requests_per_read": 2,
+        "bytes_per_read": 4096,
+        "first_read_backend_bytes": 215317,
+        "first_read_backend_requests": 10,
+        "first_read_ms": 5.593688,
+        "latency": {
+          "max_ms": 0.033773,
+          "p50_ms": 0.029826,
+          "p99_ms": 0.033773,
+          "samples": 20,
+          "total_ms": 0.6025860000000001
+        },
+        "length": 4096,
+        "offset": 110796800,
+        "reps": 21
+      },
+      "representation": "overlay",
+      "retained_blob_bytes_after_compaction": 134322319,
+      "retained_blob_bytes_after_gc": 134322319,
+      "retained_blob_bytes_before_compaction": 166480149,
+      "root_unchanged_by_compaction": true,
+      "shape_after_compaction": {
+        "chunks": 2048,
+        "kind": "raw",
+        "representation": "none (canonical chunk table)"
+      },
+      "shape_after_writes": {
+        "chunks": 22,
+        "depth": 8,
+        "extents": 22,
+        "kind": "overlay",
+        "overlay_bytes": 32112640
+      },
+      "snapshot": {
+        "commit": "afce7b93dc39f1d057900e595e91dbab8388598da6031cd7ceaa1c970a80d3d4",
+        "content": "6fdf6862d84ae2fc54bb31e6488e1e85f852e42af41449f5f677a56b5bbf4ff8",
+        "digest_after_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_after_gc": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "digest_before_compaction": "6db387cc5675adddae8f17ff9a8a1ba00b25499feffbc9b0d88423fd1253a3a1",
+        "size": 134217728,
+        "unchanged": true
+      },
+      "verify_after_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 0,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 52.946701999999995
+      },
+      "verify_before_compaction": {
+        "checked_chunks": 2048,
+        "checked_representations": 1,
+        "ok": true,
+        "problems": [],
+        "wall_ms": 51.982971000000006
+      },
+      "writes": {
+        "backend_bytes_read": 43808669,
+        "backend_bytes_written": 36731767,
+        "backend_requests": 3993,
+        "bytes_per_op": 4096,
+        "latency": {
+          "max_ms": 1.754738,
+          "p50_ms": 0.716608,
+          "p99_ms": 1.698232,
+          "samples": 500,
+          "total_ms": 415.4502839999998
+        },
+        "ops": 500,
+        "wall_ms": 415.464406
+      }
+    }
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "kernel": "7.3.1-1-cachyos",
+    "revision_weftcodec": "2e675230bd4b72f506213600014e70250cd587d6",
+    "revision_weftfs": "e9b9baefc01ab7aaa23cd3d2920b062a202a7a6e",
+    "revision_weftfs_go": "70cf37d7b6f4673d9992314d4edb2fbda3081f8b",
+    "s3_bucket_base": null,
+    "s3_container_image": null,
+    "s3_endpoint": null,
+    "s3_server": null,
+    "s3_server_sha256": null,
+    "s3_server_version": null
+  },
+  "generated_utc": "20261106T103117Z",
+  "kind": "chunk-cow-vs-immutable-write-overlay",
+  "label": "Single-host synthetic court inside the OOM-protected bench container. Local means the normative POSIX layout on the container filesystem; s3 means single-node MinIO on a localhost bridge network with a tmpfs data directory. Not a cloud, multi-node, fleet, media, device-cache, power-loss, RPO/RTO, or production claim.",
+  "schema": "weft-overlay-court-v1",
+  "summary": {
+    "checks_passed": 6,
+    "checks_total": 6
+  },
+  "workload": {
+    "chunk_size": 65536,
+    "content_identity": "merkle",
+    "file_size": 134217728,
+    "max_overlay_bytes": 1073741824,
+    "max_overlay_depth": 64,
+    "range_read_reps": 20,
+    "seed": "0x9e3779b97f4a7c15",
+    "write_alignment": 4096,
+    "write_bytes": 4096,
+    "writes": 500
+  }
+}
