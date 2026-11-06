@@ -4277,3 +4277,122 @@ claim from the single-run phase comparison above.
 `scripts/verify-all.sh` was **not** rerun for R18 (the GCS court is not part of
 the 28-court aggregate); the suites, both gates, and the three fencing courts
 were run directly and are cited above.
+
+## Subphase R19 — pipelined restore (2026-11-06)
+
+Closes the reviewer's top remaining item: parallel tensor decode existed, but
+`materialize` still decoded, returned one `Vec<Vec<u8>>`, and only then wrote the
+988 MB container, so the write was serial after the decode. The R4 court
+measured that as a 0.43x 4-thread regression on the host bind mount.
+
+### What is implemented
+
+* `src/restore_pipeline.rs`:
+  * `run_ordered_pipeline(inputs, sizes, options, work, measure, consume)` — an
+    ordered producer/consumer runner. Workers decode with a bounded count and a
+    bounded declared-byte reservation; **one writer (the calling thread) calls
+    `consume` for indices 0, 1, 2, ... in exact source order**, outside the
+    queue lock. There is no whole-file buffer.
+  * `RestorePipelineOptions { threads, max_inflight_bytes }` and
+    `RestorePipelineStats`: tasks, tensors/bytes written and dropped, observed
+    in-flight bytes/tasks, oversized tasks, `decode_wall_ms`, `decode_sum_ms`,
+    `transfer_ms`, `write_ms`, `total_ms`.
+  * `Store::restore_tensors_pipelined` and
+    `Store::restore_tensors_pipelined_authorized`, bound to the shipped
+    `read_tensor` / `read_tensor_authorized` path (R8 cache/single-flight still
+    apply where they applied before).
+* Bounds and policy:
+  * workers: `0 -> 1`, capped at `available_parallelism()`;
+  * **reservations are granted in input order**, which is what makes the
+    in-order writer deadlock-free against the staging bound;
+  * non-oversized reservations (decoding + published-but-unwritten + the tensor
+    being written) are bounded by `max_inflight_bytes` (default 64 MiB); an
+    oversized tensor is tracked separately, at most one outstanding, so the peak
+    is at most `max_inflight_bytes + largest tensor`;
+  * the writer consumes strictly in order, so the first failure it sees **is**
+    the lowest failing input index; it then stops claiming work, drains every
+    in-flight decode, frees every reservation, joins every worker, and returns
+    that error. The sink holds exactly the prefix before the failure.
+  * the store is only read; the sink is the caller's `Write`, never a store
+    namespace.
+* Harness: `real_model_bench restore --materialize-pipeline --threads N` writes
+  the exact safetensors header and then streams tensors through the pipeline.
+  `--checkpoint base|instruct` scopes a bench run (library/CLI unchanged).
+* **Read-induced store mutation removed**: `weftfs checkpoint restore` is now
+  read-only in the store by default. It no longer reopens read-write and imports
+  the container under `--out` unless `--import` is passed (`--out`/`--out-name`
+  are rejected without it). The Python DCP/Orbax readers gained
+  `import_restored` (default `False`) and pass `--import` only when asked, so
+  the `/dcp-reads/<uuid>` copies seen in the Q5/R15 receipts are no longer an
+  implicit cost. Both docs were updated.
+
+### Evidence
+
+* Court `bench/scripts/restore_pipeline_court.sh` +
+  `bench/scripts/assemble_restore_pipeline.py`, receipt
+  `bench/receipts/restore-pipeline-20261106T204445Z.json` (20/20 checks),
+  analysis `bench/RESULTS-restore-pipeline.md`, at WeftFS `eb72c72`. Cached
+  Qwen2.5-0.5B pair, source SHA-256 re-hashed in court, one cached store, three
+  interleaved repetitions, output removed and `sync` between runs.
+* **tmpfs (controlled, base checkpoint; the write is effectively free):**
+
+  | threads | batch ms | pipeline total ms | decode wall ms | transfer ms | write ms | pipeline vs batch |
+  | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+  | 1 | 4,913.0 | 4,760.1 | 4,661.0 | 0.0 | 96.7 | 1.032x |
+  | 2 | 3,140.9 | 2,844.0 | 2,842.6 | 2,713.1 | 134.3 | 1.104x |
+  | 4 | 2,354.2 | 2,157.3 | 2,155.9 | 2,005.9 | 151.0 | 1.091x |
+
+  Pipeline scaling is 1.674x at 2 workers and 2.207x at 4; at 2/4 workers
+  `total ≈ decode`, i.e. the write is overlapped. Peak RSS 727,488/857,100/
+  853,040 KiB (batch) and 726,936/864,040/897,776 KiB (pipeline).
+* **Host bind mount (real path, both checkpoints):** the same work ranged
+  **2,526.4–15,325.7 ms** for batch materialize and **2,976.0–17,519.3 ms** for
+  the pipeline total across three repetitions; the pipeline's own write ranged
+  237.2–11,967.0 ms. That host writeback spread is larger than every mode
+  difference, in both directions. **No performance claim is made from the disk
+  rows**; they are kept in the receipt precisely to show the variance. On the
+  disk the pipeline wins 1.177x at 4 threads (instruct) and loses 1.35x at 4
+  threads (base) within the same court.
+* Exactness in every mode/thread/destination: 290/290 per-tensor BLAKE3, every
+  logical root, restored bytes identical, and the final SHA-256 equal to
+  `88c14255...0ed342` (base) / `fdf756fa...88fb7fe` (instruct). Pipeline wrote
+  290 tensors and 988,065,536 B per checkpoint, and observed in-flight bytes
+  never exceeded 64 MiB + 272,269,312 B (the one oversized embedding).
+* Tests `tests/restore_pipeline.rs` **14/14**: byte identity at 1/2/4 threads,
+  ordering under skewed decode times, the observed staging bound, one oversized
+  task at a time plus an oversized-between-normal case, lowest-index error with
+  a deterministic written prefix (synthetic and corrupted-manifest forms), sink
+  failure, declared-size errors not stalling later reservations, empty input,
+  **no store mutation on a read-only restore** (head, generation, full tree
+  digest, `verify --full`), and a real `SIGABRT` child killed mid-write that
+  leaves exactly a truncated source prefix and an unchanged store.
+* Suites: Rust `cargo test --all-targets` **96 test binaries, 460 passed, 0
+  failed, 0 ignored**; FUSE `cargo test --features fuse --all-targets --
+  --test-threads=1` **96 test binaries, 502 passed, 0 failed, 2 ignored** (the
+  same two pre-existing ignores). That is 15 new tests (`tests/
+  restore_pipeline.rs` 14, plus
+  `cli_checkpoint_restore_is_read_only_unless_imported`). Python in the python
+  court with the rebuilt CLI: `tests/test_dcp.py` **10 passed**,
+  `tests/test_orbax.py` **18 passed**. `scripts/check-claims.sh` **393/393**,
+  `scripts/check-spec-drift.sh` **42/42**. `verify-all` was not rerun (no frozen
+  format, court list, or aggregate input changed).
+* Flake disclosure: the first full Rust run failed
+  `backend::capabilities_fail_closed` at its read-write
+  `Store::open_with_backend(...).unwrap()` on a fixture it had just built. It
+  passed **5/5** standalone immediately after, and the full suite rerun was
+  **460 passed / 0 failed**. R19 touches no store-open code; this is the same
+  intermittent fresh-reopen shape already disclosed in R9 and R18.
+
+### Losses and not claimed
+
+* The pipeline does not make the write faster and cannot control disk
+  bandwidth. On this host the disk end-to-end claim is not measurable.
+* One worker is only 3.0 % faster on tmpfs; overlap needs at least two workers.
+* The 272 MB embedding remains the serial oversized task; the pipeline does not
+  split one tensor.
+* Full-pair restore still peaks at ~2.0–2.2 GB RSS on the host mount because the
+  harness restores both checkpoints in one process.
+* No Go parity for the ordered pipeline; no change to the on-disk format, codec,
+  CLI restore semantics beyond the opt-in import, FUSE path, or selectors.
+* Single host, warm cache, one store, three repetitions; no cold-cache, fleet,
+  GPU, or multi-node claim.

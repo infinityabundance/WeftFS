@@ -1,0 +1,794 @@
+{
+  "all_checks_pass": true,
+  "checks": {
+    "all_file_sha256_match_source": true,
+    "all_hash_exact": true,
+    "all_logical_roots_exact": true,
+    "all_materialize_exact": true,
+    "all_materialize_modes_match": true,
+    "disk_effective_threads_1_2_4": true,
+    "disk_every_run_has_290_tensors": true,
+    "disk_reassembled_bytes_988097824": true,
+    "disk_runs_present": true,
+    "disk_staging_bound_constant": true,
+    "file_sha256_identical_across_modes_threads_and_destinations": true,
+    "pipeline_inflight_within_bound_plus_embedding": true,
+    "pipeline_wrote_290_tensors_and_988065536_bytes": true,
+    "restored_bytes_identical_across_modes_and_threads": true,
+    "source_sha256_rehashed_in_court": true,
+    "tmpfs_effective_threads_1_2_4": true,
+    "tmpfs_every_run_has_290_tensors": true,
+    "tmpfs_reassembled_bytes_988097824": true,
+    "tmpfs_runs_present": true,
+    "tmpfs_staging_bound_constant": true
+  },
+  "configuration": {
+    "max_inflight_mib": 64,
+    "modes": [
+      "batch",
+      "pipeline"
+    ],
+    "order": "per destination: (t1,t2,t4) x (batch,pipeline) x reps",
+    "output_removed_after_hashing": true,
+    "read_pass": "Both modes first read and hash every tensor (read_ms); that pass is unchanged and is not part of materialize_ms/pipeline_total_ms.",
+    "repetitions_per_configuration": 3,
+    "single_tensor_runs_per_checkpoint": 1,
+    "sync_between_runs": true,
+    "thread_counts": [
+      1,
+      2,
+      4
+    ]
+  },
+  "corpus": {
+    "base_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "file_bytes": 988097824,
+    "instruct_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "largest_tensor_bytes": 272269312,
+    "logical_bytes_per_checkpoint": 988065536,
+    "tensors_per_checkpoint": 290
+  },
+  "court": {
+    "cpus": "4",
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024"
+  },
+  "destinations": {
+    "disk": {
+      "checkpoints": [
+        "base",
+        "instruct"
+      ],
+      "note": "Host bind mount under .docker-cache. This is the real end-to-end write path; its absolute write times are host state dependent, so all repetitions are kept.",
+      "path": "/work/.docker-cache/restore-pipeline/out-disk"
+    },
+    "tmpfs": {
+      "checkpoints": [
+        "base"
+      ],
+      "note": "Court tmpfs (1 GiB). Base checkpoint only because the 988,097,824 B file leaves ~80 MiB under the mount. With the write effectively free, this isolates decode/transfer overlap.",
+      "path": "/mnt/weft-bench/restore-pipeline"
+    }
+  },
+  "generated_utc": "2026-11-06T20:44:45Z",
+  "label": "single-host bench court, 4 vCPUs, warm cache, one store reused by both modes, no fleet or multi-node claim",
+  "notes": [
+    "Materialize writes 988,097,824 B per checkpoint. The pipeline overlaps decode with that write; it cannot make the write itself faster.",
+    "pipeline.decode_wall_ms is the wall time until the last decode finished; decode_sum_ms (in the run JSONs) is the sum of worker busy time and can exceed it. transfer_ms is the writer waiting for the next in-order result; write_ms is time inside write_all.",
+    "The 272 MB embedding exceeds the 64 MiB staging bound and runs as the single oversized task; the memory bound is max_inflight + 272,269,312 B.",
+    "The disk (host bind mount) rows are NOT a performance claim: across 3 repetitions the same batched 988 MB materialize ranged 2526.441 to 15325.731 ms and the pipeline total ranged 2975.987 to 17519.341 ms, a host writeback spread larger than any mode difference. The tmpfs rows are the controlled comparison.",
+    "On tmpfs the write is effectively free, so total_ms is decode-bound: the pipeline is 3.2% (1 worker), 10.4% (2), and 9.1% (4) faster at the medians, and its write time is almost entirely overlapped with decode.",
+    "At one worker the pipeline still uses one decode thread plus the calling writer thread, so it is not bit-for-bit the old sequential cost; see the one-thread rows."
+  ],
+  "results": {
+    "disk": {
+      "1": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 4872.175,
+          "materialize_ms": [
+            4872.175,
+            9490.067,
+            4843.449
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 4592.689,
+          "pipeline_decode_wall_ms": [
+            4584.971,
+            4592.689,
+            4595.31
+          ],
+          "pipeline_total_median_ms": 5684.902,
+          "pipeline_total_ms": [
+            5684.902,
+            5158.305,
+            5756.375
+          ],
+          "pipeline_transfer_median_ms": 0.0,
+          "pipeline_transfer_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "pipeline_write_median_ms": 1099.315,
+          "pipeline_write_ms": [
+            1099.315,
+            564.982,
+            1160.22
+          ],
+          "read_median_ms": 4771.563,
+          "read_ms": [
+            4771.563,
+            4816.337,
+            4753.579
+          ]
+        },
+        "instruct": {
+          "backend_bytes_read": [
+            1199520594,
+            1199520594,
+            1199520594
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 11045.008,
+          "materialize_ms": [
+            11632.023,
+            11045.008,
+            10870.956
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 10770.864,
+          "pipeline_decode_wall_ms": [
+            10753.247,
+            10770.864,
+            10801.509
+          ],
+          "pipeline_total_median_ms": 13070.716,
+          "pipeline_total_ms": [
+            15320.498,
+            13070.716,
+            12457.628
+          ],
+          "pipeline_transfer_median_ms": 0.0,
+          "pipeline_transfer_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "pipeline_write_median_ms": 2277.887,
+          "pipeline_write_ms": [
+            4546.097,
+            2277.887,
+            1634.732
+          ],
+          "read_median_ms": 10970.123,
+          "read_ms": [
+            11035.684,
+            10958.119,
+            10970.123
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            2033432,
+            2033432,
+            2033976,
+            2033976,
+            2035128,
+            2035128
+          ],
+          "pipeline": [
+            2036000,
+            2036000,
+            2037764,
+            2037764,
+            2038116,
+            2038116
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 2033976,
+          "pipeline": 2037764
+        },
+        "threads_effective": 1,
+        "threads_requested": 1
+      },
+      "2": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 3174.518,
+          "materialize_ms": [
+            12760.038,
+            3174.518,
+            3149.312
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 3471.921,
+          "pipeline_decode_wall_ms": [
+            3471.921,
+            2974.661,
+            12327.535
+          ],
+          "pipeline_total_median_ms": 3802.493,
+          "pipeline_total_ms": [
+            3802.493,
+            2975.987,
+            12755.202
+          ],
+          "pipeline_transfer_median_ms": 2253.041,
+          "pipeline_transfer_ms": [
+            2253.041,
+            2540.602,
+            1869.811
+          ],
+          "pipeline_write_median_ms": 1548.354,
+          "pipeline_write_ms": [
+            1548.354,
+            433.863,
+            10884.288
+          ],
+          "read_median_ms": 3089.722,
+          "read_ms": [
+            3093.345,
+            3087.821,
+            3089.722
+          ]
+        },
+        "instruct": {
+          "backend_bytes_read": [
+            1199520594,
+            1199520594,
+            1199520594
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 7475.927,
+          "materialize_ms": [
+            7475.927,
+            7134.744,
+            7660.785
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 6836.506,
+          "pipeline_decode_wall_ms": [
+            6762.946,
+            6836.506,
+            17290.862
+          ],
+          "pipeline_total_median_ms": 7014.481,
+          "pipeline_total_ms": [
+            6972.617,
+            7014.481,
+            17519.341
+          ],
+          "pipeline_transfer_median_ms": 4692.389,
+          "pipeline_transfer_ms": [
+            4692.389,
+            4345.815,
+            5551.479
+          ],
+          "pipeline_write_median_ms": 2667.77,
+          "pipeline_write_ms": [
+            2279.184,
+            2667.77,
+            11966.969
+          ],
+          "read_median_ms": 7081.581,
+          "read_ms": [
+            7081.581,
+            7072.159,
+            7100.216
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            2117004,
+            2117004,
+            2132300,
+            2132300,
+            2166692,
+            2166692
+          ],
+          "pipeline": [
+            2162572,
+            2162572,
+            2171208,
+            2171208,
+            2177412,
+            2177412
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 2132300,
+          "pipeline": 2171208
+        },
+        "threads_effective": 2,
+        "threads_requested": 2
+      },
+      "4": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 3336.937,
+          "materialize_ms": [
+            3336.937,
+            7886.669,
+            2526.441
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 3711.428,
+          "pipeline_decode_wall_ms": [
+            2200.353,
+            7358.979,
+            3711.428
+          ],
+          "pipeline_total_median_ms": 4495.688,
+          "pipeline_total_ms": [
+            4495.688,
+            7981.832,
+            3821.262
+          ],
+          "pipeline_transfer_median_ms": 1707.42,
+          "pipeline_transfer_ms": [
+            1997.486,
+            1605.672,
+            1707.42
+          ],
+          "pipeline_write_median_ms": 2497.547,
+          "pipeline_write_ms": [
+            2497.547,
+            6375.055,
+            2112.699
+          ],
+          "read_median_ms": 2303.776,
+          "read_ms": [
+            2303.776,
+            2297.743,
+            2381.612
+          ]
+        },
+        "instruct": {
+          "backend_bytes_read": [
+            1199520594,
+            1199520594,
+            1199520594
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 6013.256,
+          "materialize_ms": [
+            6013.256,
+            15325.731,
+            5408.605
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 5107.074,
+          "pipeline_decode_wall_ms": [
+            12820.133,
+            5107.074,
+            4995.124
+          ],
+          "pipeline_total_median_ms": 5108.448,
+          "pipeline_total_ms": [
+            14620.756,
+            5108.448,
+            4997.497
+          ],
+          "pipeline_transfer_median_ms": 4618.375,
+          "pipeline_transfer_ms": [
+            3917.174,
+            4618.375,
+            4759.495
+          ],
+          "pipeline_write_median_ms": 489.207,
+          "pipeline_write_ms": [
+            10702.019,
+            489.207,
+            237.155
+          ],
+          "read_median_ms": 5281.028,
+          "read_ms": [
+            5281.028,
+            5266.175,
+            5302.796
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            2239824,
+            2239824,
+            2243036,
+            2243036,
+            2246380,
+            2246380
+          ],
+          "pipeline": [
+            2222988,
+            2222988,
+            2244636,
+            2244636,
+            2272616,
+            2272616
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 2243036,
+          "pipeline": 2244636
+        },
+        "threads_effective": 4,
+        "threads_requested": 4
+      }
+    },
+    "tmpfs": {
+      "1": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 4912.984,
+          "materialize_ms": [
+            4912.984,
+            4815.13,
+            4926.627
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 4660.96,
+          "pipeline_decode_wall_ms": [
+            4660.96,
+            4680.441,
+            4583.431
+          ],
+          "pipeline_total_median_ms": 4760.141,
+          "pipeline_total_ms": [
+            4760.141,
+            4775.373,
+            4680.637
+          ],
+          "pipeline_transfer_median_ms": 0.0,
+          "pipeline_transfer_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "pipeline_write_median_ms": 96.65,
+          "pipeline_write_ms": [
+            98.674,
+            94.409,
+            96.65
+          ],
+          "read_median_ms": 4835.12,
+          "read_ms": [
+            4878.291,
+            4817.473,
+            4835.12
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            727288,
+            727488,
+            728096
+          ],
+          "pipeline": [
+            726348,
+            726936,
+            727992
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 727488,
+          "pipeline": 726936
+        },
+        "threads_effective": 1,
+        "threads_requested": 1
+      },
+      "2": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 3140.93,
+          "materialize_ms": [
+            3139.968,
+            3160.212,
+            3140.93
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 2842.603,
+          "pipeline_decode_wall_ms": [
+            2839.358,
+            2898.945,
+            2842.603
+          ],
+          "pipeline_total_median_ms": 2844.049,
+          "pipeline_total_ms": [
+            2840.833,
+            2900.274,
+            2844.049
+          ],
+          "pipeline_transfer_median_ms": 2713.076,
+          "pipeline_transfer_ms": [
+            2705.045,
+            2765.116,
+            2713.076
+          ],
+          "pipeline_write_median_ms": 134.252,
+          "pipeline_write_ms": [
+            134.918,
+            134.252,
+            130.123
+          ],
+          "read_median_ms": 3102.496,
+          "read_ms": [
+            3101.995,
+            3117.203,
+            3102.496
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            856968,
+            857100,
+            919556
+          ],
+          "pipeline": [
+            814984,
+            864040,
+            867396
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 857100,
+          "pipeline": 864040
+        },
+        "threads_effective": 2,
+        "threads_requested": 2
+      },
+      "4": {
+        "base": {
+          "backend_bytes_read": [
+            658230303,
+            658230303,
+            658230303
+          ],
+          "materialize_bytes": [
+            988097824,
+            988097824,
+            988097824
+          ],
+          "materialize_median_ms": 2354.223,
+          "materialize_ms": [
+            2359.66,
+            2354.223,
+            2341.41
+          ],
+          "pipeline_bytes_written": [
+            988065536,
+            988065536,
+            988065536
+          ],
+          "pipeline_decode_wall_median_ms": 2155.932,
+          "pipeline_decode_wall_ms": [
+            2155.749,
+            2156.669,
+            2155.932
+          ],
+          "pipeline_total_median_ms": 2157.32,
+          "pipeline_total_ms": [
+            2157.247,
+            2159.05,
+            2157.32
+          ],
+          "pipeline_transfer_median_ms": 2005.86,
+          "pipeline_transfer_ms": [
+            2003.645,
+            2007.463,
+            2005.86
+          ],
+          "pipeline_write_median_ms": 150.962,
+          "pipeline_write_ms": [
+            152.967,
+            150.962,
+            150.865
+          ],
+          "read_median_ms": 2316.568,
+          "read_ms": [
+            2316.568,
+            2323.866,
+            2307.538
+          ]
+        },
+        "max_inflight_bytes": 67108864,
+        "peak_rss_kib": {
+          "batch": [
+            851168,
+            853040,
+            875260
+          ],
+          "pipeline": [
+            888368,
+            897776,
+            900516
+          ]
+        },
+        "peak_rss_median_kib": {
+          "batch": 853040,
+          "pipeline": 897776
+        },
+        "threads_effective": 4,
+        "threads_requested": 4
+      }
+    }
+  },
+  "revisions": {
+    "weftcodec": "a888d791cac39fea5ab78539392496c4e0ef856d",
+    "weftcodec_go": "8957998a64ef93f77877f89327a0dce7755f5b38",
+    "weftfs": "eb72c72bbb602fb9b4189ffb3b88341e2bb9b1dd",
+    "weftfs_go": "007bf11bda490b84427a79c872ed1c0b7172e556"
+  },
+  "schema": "weft.restore-pipeline.v1",
+  "speedup": {
+    "disk": {
+      "base_pipeline_t2_vs_t1": 1.495,
+      "base_pipeline_t4_vs_t1": 1.2645,
+      "base_pipeline_vs_batch_t1": 0.857,
+      "base_pipeline_vs_batch_t2": 0.8349,
+      "base_pipeline_vs_batch_t4": 0.7423,
+      "base_write_over_decode_t1": 0.2394,
+      "base_write_over_decode_t2": 0.446,
+      "base_write_over_decode_t4": 0.6729,
+      "instruct_pipeline_t2_vs_t1": 1.8634,
+      "instruct_pipeline_t4_vs_t1": 2.5586,
+      "instruct_pipeline_vs_batch_t1": 0.845,
+      "instruct_pipeline_vs_batch_t2": 1.0658,
+      "instruct_pipeline_vs_batch_t4": 1.1771,
+      "instruct_write_over_decode_t1": 0.2115,
+      "instruct_write_over_decode_t2": 0.3902,
+      "instruct_write_over_decode_t4": 0.0958
+    },
+    "tmpfs": {
+      "base_pipeline_t2_vs_t1": 1.6737,
+      "base_pipeline_t4_vs_t1": 2.2065,
+      "base_pipeline_vs_batch_t1": 1.0321,
+      "base_pipeline_vs_batch_t2": 1.1044,
+      "base_pipeline_vs_batch_t4": 1.0913,
+      "base_write_over_decode_t1": 0.0207,
+      "base_write_over_decode_t2": 0.0472,
+      "base_write_over_decode_t4": 0.07
+    }
+  },
+  "spread": {
+    "disk": {
+      "batch_materialize_ms": {
+        "max": 15325.731,
+        "median": 7305.335,
+        "min": 2526.441
+      },
+      "pipeline_total_ms": {
+        "max": 17519.341,
+        "median": 6364.496,
+        "min": 2975.987
+      },
+      "pipeline_write_ms": {
+        "max": 11966.969,
+        "median": 2195.293,
+        "min": 237.155
+      }
+    },
+    "tmpfs": {
+      "batch_materialize_ms": {
+        "max": 4926.627,
+        "median": 3140.93,
+        "min": 2341.41
+      },
+      "pipeline_total_ms": {
+        "max": 4775.373,
+        "median": 2844.049,
+        "min": 2157.247
+      },
+      "pipeline_write_ms": {
+        "max": 152.967,
+        "median": 134.252,
+        "min": 94.409
+      }
+    }
+  },
+  "store": {
+    "ingest_source": "reused-cached-planner-float",
+    "note": "Reuses the cached planner-float store and ingest receipt when present; the ingest step is skipped in that case and this field says so. Restore is read-only, so both modes see identical state.",
+    "path": "/work/.docker-cache/planner-float/store"
+  }
+}
