@@ -67,13 +67,14 @@ MODE_NAMES = {
     13: "activation_stream",
     14: "semantic_delta",
     15: "tensor_tiled",
+    16: "sparse_delta",
 }
 
 #: Modes this Python reader can actually materialize plaintext for.
-IMPLEMENTED_MODES = frozenset({0, 1, 2, 3, 4, 5, 6, 7, 8})
+IMPLEMENTED_MODES = frozenset(MODE_NAMES)
 
 #: Modes whose wire value is allocated but not implemented here.
-UNIMPLEMENTED_MODES = frozenset(MODE_NAMES) - IMPLEMENTED_MODES
+UNIMPLEMENTED_MODES = frozenset()
 
 
 @dataclass(frozen=True)
@@ -167,7 +168,7 @@ def _check_len(length: int, maximum: int, what: str) -> None:
 def mode_from_u8(value: int) -> int:
     if value in MODE_NAMES:
         return value
-    if 15 <= value <= 127:
+    if 17 <= value <= 127:
         raise UnsupportedMode("reserved mode %d is not defined in v1" % value)
     raise UnsupportedMode("experimental mode %d must not be persisted" % value)
 
@@ -417,7 +418,7 @@ def _validate_mode_rules(
             raise Malformed("STRUCTURED must not be chunked")
         if header.body_len != header.decoded_len:
             raise Malformed("STRUCTURED body_len must equal decoded_len")
-    elif mode in (6, 7, 8, 9, 10, 12, 13):  # AI modes without dependencies
+    elif mode in (6, 7, 8, 9, 10, 12, 13, 15):  # AI modes without dependencies
         payload_domain("AI-mode")
         no_dict("AI-mode")
         if header.dep_count != 0:
@@ -426,8 +427,12 @@ def _validate_mode_rules(
             raise Malformed("AI-mode frames must not be chunked")
         if header.body_len < 4:
             raise Malformed("AI-mode body is shorter than its 4-byte metadata length")
-    elif mode in (11, 14):  # WEIGHT_DELTA / SEMANTIC_DELTA
-        name = "WEIGHT_DELTA" if mode == 11 else "SEMANTIC_DELTA"
+    elif mode in (11, 14, 16):  # WEIGHT_DELTA / SEMANTIC_DELTA / SPARSE_DELTA
+        name = {
+            11: "WEIGHT_DELTA",
+            14: "SEMANTIC_DELTA",
+            16: "SPARSE_DELTA",
+        }[mode]
         payload_domain(name)
         no_dict(name)
         if header.dep_count != 1:

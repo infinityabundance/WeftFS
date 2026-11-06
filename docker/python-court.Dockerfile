@@ -1,12 +1,13 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
-# Minimal Python court for the independent WeftCodec Python reader. Only the
-# runtime cache library the Rust CLI needs (libgcc_s) and the test/build
-# dependencies are installed; no compilers are needed because blake3 and
-# zstandard publish manylinux wheels.
+# Minimal Python court for the independent WeftCodec Python reader. The
+# runtime cache library the Rust CLI needs (libgcc_s) and libfuse3-3 are
+# installed so the same `weftfs` binary used by the DCP tests runs here; no
+# /dev/fuse is passed and no mount is attempted. No compilers are needed
+# because blake3 and zstandard publish manylinux wheels.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates libgcc-s1 \
+      ca-certificates libgcc-s1 libfuse3-3 \
  && rm -rf /var/lib/apt/lists/*
 
 # PyTorch CPU is pinned so the DCP adapter tests run real

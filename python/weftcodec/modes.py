@@ -1,10 +1,14 @@
-"""Payload-mode decoders (WEFTCODEC-FORMAT §3–§6, WEFT-AI-CODEC §2–§4).
+"""Payload-mode decoders (WEFTCODEC-FORMAT §3–§6, WEFT-AI-CODEC §2–§17).
 
 Implemented modes: RAW (0), ZSTD (1), REFERENCE (2), DELTA (3), DICTIONARY (4),
-STRUCTURED (5), TENSOR (6), TOKEN_SEQUENCE (7), QUANTIZED_TENSOR (8).
+STRUCTURED (5), TENSOR (6), TOKEN_SEQUENCE (7), QUANTIZED_TENSOR (8),
+FLOAT_TENSOR (9), TENSOR_SHARDED (10), WEIGHT_DELTA (11), KV_CACHE (12),
+ACTIVATION_STREAM (13), SEMANTIC_DELTA (14), TENSOR_TILED (15), and
+SPARSE_DELTA (16).
 
-Every other allocated mode raises :class:`weftcodec.errors.UnsupportedMode`.
-There is no approximate or lossy fallback anywhere in this module.
+No allocated mode raises :class:`weftcodec.errors.UnsupportedMode`; reserved
+and experimental mode bytes are rejected by :mod:`weftcodec.frame`. There is no
+approximate or lossy fallback anywhere in this module.
 """
 
 from __future__ import annotations
@@ -15,7 +19,7 @@ import struct
 
 import zstandard
 
-from . import varint, wcb
+from . import ai_modes, varint, wcb
 from .dependency import Resolver, resolve_dependency
 from .errors import (
     Corrupt,
@@ -64,17 +68,19 @@ def decode_bytes(
     data: bytes,
     resolver: "Resolver | None" = None,
     limits: "Limits | None" = None,
+    base_frame: "bytes | None" = None,
 ) -> bytes:
     """Parse and decode a complete frame."""
     from .frame import parse
 
-    return decode_frame(parse(data, limits), resolver, limits)
+    return decode_frame(parse(data, limits), resolver, limits, base_frame)
 
 
 def decode_frame(
     frame: Frame,
     resolver: "Resolver | None" = None,
     limits: "Limits | None" = None,
+    base_frame: "bytes | None" = None,
 ) -> bytes:
     """Decode a parsed frame and verify its content hash."""
     limits = limits or Limits()
@@ -106,6 +112,28 @@ def decode_frame(
         _, plaintext = _parse_token_body(frame, limits)
     elif mode == 8:  # QUANTIZED_TENSOR
         _, plaintext = _parse_quantized_body(frame, limits)
+    elif mode == 9:  # FLOAT_TENSOR
+        plaintext = ai_modes.decode_float_tensor(frame, limits)
+    elif mode == 10:  # TENSOR_SHARDED
+        plaintext = ai_modes.decode_tensor_sharded(frame, limits).planes
+    elif mode == 11:  # WEIGHT_DELTA
+        plaintext = ai_modes.decode_weight_delta(
+            frame, resolver, limits, base_frame
+        )
+    elif mode == 12:  # KV_CACHE
+        plaintext = ai_modes.decode_kv_cache(frame, limits)
+    elif mode == 13:  # ACTIVATION_STREAM
+        plaintext = ai_modes.decode_activation_stream(frame, limits)
+    elif mode == 14:  # SEMANTIC_DELTA
+        plaintext = ai_modes.decode_semantic_delta(
+            frame, resolver, limits, base_frame
+        )
+    elif mode == 15:  # TENSOR_TILED
+        plaintext = ai_modes.decode_tensor_tiled(frame, limits)
+    elif mode == 16:  # SPARSE_DELTA
+        plaintext = ai_modes.decode_sparse_delta(
+            frame, resolver, limits, base_frame
+        )
     else:
         raise UnsupportedMode(
             "mode %d (%s) is allocated but not implemented by the Python reader"

@@ -20,6 +20,13 @@ DOMAIN_TENSOR_PAYLOAD = "weft/tensor/payload/v1"
 DOMAIN_TOKENS_PAYLOAD = "weft/tokens/payload/v1"
 DOMAIN_QUANTIZED_TENSOR_PAYLOAD = "weft/quantized-tensor/payload/v1"
 DOMAIN_FLOAT_TENSOR_PAYLOAD = "weft/float-tensor/payload/v1"
+DOMAIN_TENSOR_SHARDED_PAYLOAD = "weft/tensor-sharded/payload/v1"
+DOMAIN_TENSOR_VALUES = "weft/tensor/values/v1"
+DOMAIN_TENSOR_LOGICAL = "weft/tensor/logical/v1"
+DOMAIN_TENSOR_TILE = "weft/tensor/tile/v1"
+DOMAIN_TENSOR_SEMANTIC = "weft/tensor/semantic/v1"
+DOMAIN_TENSOR_SEMANTIC_VALUES = "weft/tensor/semantic-values/v1"
+DOMAIN_AI_STREAM = "weft/ai/stream/v1"
 
 
 def hash_domain(domain: str, data: bytes) -> bytes:

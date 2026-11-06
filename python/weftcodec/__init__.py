@@ -5,8 +5,11 @@ with domain-separated BLAKE3, and exposes a PyTorch-facing dataset over a
 mounted directory. It contains no Rust or Go extension modules.
 
 Implemented payload modes: RAW, ZSTD, REFERENCE, DELTA, DICTIONARY,
-STRUCTURED, TENSOR, TOKEN_SEQUENCE, QUANTIZED_TENSOR. Every other allocated
-mode raises :class:`UnsupportedMode`.
+STRUCTURED, TENSOR, TOKEN_SEQUENCE, QUANTIZED_TENSOR, FLOAT_TENSOR,
+TENSOR_SHARDED, WEIGHT_DELTA, KV_CACHE, ACTIVATION_STREAM, SEMANTIC_DELTA,
+TENSOR_TILED, and SPARSE_DELTA (every allocated mode 0-16). Reserved and
+experimental mode bytes raise :class:`UnsupportedMode` in
+:mod:`weftcodec.frame`.
 """
 
 from __future__ import annotations

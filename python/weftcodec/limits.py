@@ -22,6 +22,7 @@ DEFAULT_MAX_DELTA_OPS = 16_777_216
 DEFAULT_MAX_TENSOR_ELEMENTS = 1 << 32
 DEFAULT_MAX_TENSOR_RANK = 8
 DEFAULT_MAX_TOKENS = 1 << 24
+DEFAULT_MAX_SPARSE_RUNS = 1 << 24
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,7 @@ class Limits:
     max_tensor_elements: int = DEFAULT_MAX_TENSOR_ELEMENTS
     max_tensor_rank: int = DEFAULT_MAX_TENSOR_RANK
     max_tokens: int = DEFAULT_MAX_TOKENS
+    max_sparse_runs: int = DEFAULT_MAX_SPARSE_RUNS
 
     @classmethod
     def from_overrides(cls, overrides: "dict[str, int] | None") -> "Limits":

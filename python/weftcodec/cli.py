@@ -7,7 +7,7 @@ import json
 import sys
 
 from . import modes
-from .dependency import DirectoryResolver
+from .dependency import DirectoryFrameSourceResolver, DirectoryResolver
 from .errors import WeftError
 from .frame import parse
 from .identity import verify_frame
@@ -19,9 +19,22 @@ EXIT_USAGE = 2
 
 
 def _resolver(args):
+    if getattr(args, "resolve", False):
+        source = getattr(args, "frame_source", None)
+        if not source:
+            raise SystemExit("--resolve requires --frame-source")
+        return DirectoryFrameSourceResolver(source, Limits())
     if getattr(args, "deps", None):
         return DirectoryResolver(args.deps)
     return None
+
+
+def _base_frame(args):
+    path = getattr(args, "base", None)
+    if not path:
+        return None
+    with open(path, "rb") as handle:
+        return handle.read()
 
 
 def _print_error(exc: WeftError) -> None:
@@ -29,7 +42,9 @@ def _print_error(exc: WeftError) -> None:
 
 
 def _verify(args) -> int:
-    result = verify_frame(args.file, _resolver(args), Limits())
+    result = verify_frame(
+        args.file, _resolver(args), Limits(), _base_frame(args)
+    )
     if result.ok:
         if args.json:
             print(json.dumps(result.to_dict(), sort_keys=True))
@@ -60,7 +75,9 @@ def _decode(args) -> int:
         print("Io: %s" % exc, file=sys.stderr)
         return EXIT_FAILURE
     try:
-        plaintext = modes.decode_bytes(data, _resolver(args), Limits())
+        plaintext = modes.decode_bytes(
+            data, _resolver(args), Limits(), _base_frame(args)
+        )
     except WeftError as exc:
         _print_error(exc)
         return EXIT_FAILURE
@@ -191,6 +208,15 @@ def build_parser() -> argparse.ArgumentParser:
     verify = sub.add_parser("verify", help="validate a frame and every hash")
     verify.add_argument("file")
     verify.add_argument("--deps", help="directory of dependency files named by hex")
+    verify.add_argument(
+        "--base", help="base frame for WEIGHT_DELTA/SEMANTIC_DELTA/SPARSE_DELTA"
+    )
+    verify.add_argument(
+        "--resolve", action="store_true", help="resolve dependencies as frames"
+    )
+    verify.add_argument(
+        "--frame-source", dest="frame_source", help="directory of frames named by hex"
+    )
     verify.add_argument("--json", action="store_true", help="emit a JSON result")
     verify.set_defaults(func=_verify)
 
@@ -198,6 +224,15 @@ def build_parser() -> argparse.ArgumentParser:
     decode.add_argument("file")
     decode.add_argument("output", help="output path, or - for stdout")
     decode.add_argument("--deps", help="directory of dependency files named by hex")
+    decode.add_argument(
+        "--base", help="base frame for WEIGHT_DELTA/SEMANTIC_DELTA/SPARSE_DELTA"
+    )
+    decode.add_argument(
+        "--resolve", action="store_true", help="resolve dependencies as frames"
+    )
+    decode.add_argument(
+        "--frame-source", dest="frame_source", help="directory of frames named by hex"
+    )
     decode.set_defaults(func=_decode)
 
     inspect = sub.add_parser("inspect", help="emit frame metadata as JSON")

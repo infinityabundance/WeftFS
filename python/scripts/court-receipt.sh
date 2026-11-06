@@ -13,10 +13,13 @@ log="bench/receipts/python-bindings-${stamp}.log"
 
 export WEFT_VECTOR_SUMMARY="/tmp/weft-vectors.json"
 export WEFT_CROSS_SUMMARY="/tmp/weft-cross.json"
+export WEFT_AI_VECTOR_SUMMARY="/tmp/weft-ai-vectors.json"
+export WEFT_AI_DIFF_SUMMARY="/tmp/weft-ai-diff.json"
 export WEFT_REPO_ROOT="/work"
 
 rm -rf /tmp/weft-python-build /tmp/weft-dist /tmp/weft-venv /tmp/weft-junit.xml
 rm -f "$WEFT_VECTOR_SUMMARY" "$WEFT_CROSS_SUMMARY"
+rm -f "$WEFT_AI_VECTOR_SUMMARY" "$WEFT_AI_DIFF_SUMMARY"
 
 # Build from a copy so no build artifact (egg-info, build/) is written into the
 # read-only-ish source tree mounted from the host.
@@ -127,6 +130,10 @@ receipt = {
     },
     "vectors": load(env.get("WEFT_VECTOR_SUMMARY", "/nonexistent")),
     "cross_cli": load(env.get("WEFT_CROSS_SUMMARY", "/nonexistent")),
+    "ai_vectors": load(env.get("WEFT_AI_VECTOR_SUMMARY", "/nonexistent")),
+    "ai_random_differential": load(
+        env.get("WEFT_AI_DIFF_SUMMARY", "/nonexistent")
+    ),
     "tests": {
         "junit": junit_counts(env.get("WEFT_JUNIT_PATH", "/nonexistent")),
         "log": env.get("WEFT_LOG_PATH"),

@@ -74,6 +74,7 @@ def verify_bytes(
     data: bytes,
     resolver: "Resolver | None" = None,
     limits: "Limits | None" = None,
+    base_frame: "bytes | None" = None,
 ) -> VerifyResult:
     """Parse, decode, and verify every hash in ``data``."""
     limits = limits or Limits()
@@ -84,7 +85,7 @@ def verify_bytes(
         return _failure(result, exc)
     _fill_from_header(result, frame)
     try:
-        plaintext = decode_frame(frame, resolver, limits)
+        plaintext = decode_frame(frame, resolver, limits, base_frame)
     except Exception as exc:
         return _failure(result, exc, keep_header=True)
     result.computed_content_hash = content_root_hex(plaintext)
@@ -96,6 +97,7 @@ def verify_frame(
     path: "str | os.PathLike[str]",
     resolver: "Resolver | None" = None,
     limits: "Limits | None" = None,
+    base_frame: "bytes | None" = None,
 ) -> VerifyResult:
     """Read ``path``, parse, decode, and verify it. Never raises for codec errors."""
     limits = limits or Limits()
@@ -122,7 +124,7 @@ def verify_frame(
         from .errors import Io
 
         return _failure(result, Io("cannot read %s: %s" % (path, exc)))
-    return verify_bytes(data, resolver, limits)
+    return verify_bytes(data, resolver, limits, base_frame)
 
 
 def _failure(
