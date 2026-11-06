@@ -851,3 +851,24 @@ access counters are unchanged, and `verify`/GC/commits never consult them.
 
 Measured behaviour and losses: `bench/RESULTS-cache.md` and receipt
 `bench/receipts/cache-20261106T091322Z.json`.
+
+## R23 addendum — Azure credential forms (2026-11-06)
+
+A container-scoped service SAS is accepted by Azurite 3.35.0 for blob data
+operations: read-only open, object reads, a full `verify`, and create-once blob
+writes. It is **refused** at the `HEAD ?restype=container` (Get Container
+Properties) check that `ensure_container` performs at a writable open, under
+`sp=r`, `sp=rcwdl`, and `sp=racwdl` alike. A writable store open over a SAS is
+therefore refused `Unauthorized`; SharedKey is the proven writable path (an
+account SAS is untested). This is recorded, not worked around: skipping the
+container check would hide a real service refusal and weaken the writable-open
+proof. SAS is effectively read-only on this backend.
+
+Anonymous is a supported request form, but only **refusal** on a private
+container is proved. Acceptance requires a real account whose container ACL is
+`blob` or `container` and remains unproven; nothing here claims it.
+
+Residual risk: the court is Azurite on loopback, not Azure. Service-version
+acceptance, large-block-blob limits, `x-ms-*` edge cases, and listing paging
+are untested against the real service. Evidence: `docs/STATUS.md` R23 and
+`bench/RESULTS-azure-sas.md`.

@@ -4680,10 +4680,15 @@ token supplied out of band.
 
 ### Losses and non-claims
 
-* **Azure SAS and anonymous are not court-proven.** Only SharedKey is exercised
-  against Azurite. SAS is appended verbatim and anonymous sends no
-  `Authorization`; both are unit-tested for request construction only, so
-  neither is claimed as an accepted credential form on a real deployment.
+* **Azure SAS acceptance is measured; anonymous acceptance is not.** R23
+  (`bench/receipts/azure-20261106T235445Z.json`) proves a container-scoped
+  service SAS is accepted by Azurite 3.35.0 for read-only opens, object reads,
+  `verify(true)`, and blob writes. The same SAS is refused at the
+  `HEAD ?restype=container` check a writable open performs, so writable opens
+  need SharedKey (proven) or an account SAS (untested). Anonymous is refused on
+  a private container; acceptance needs a real account with container ACL
+  `blob` or `container` and remains unproven. Neither form is claimed as
+  accepted on a real Azure deployment.
 * **No live cloud run.** Azure has never been contacted; GCS has never received
   a token exchange. The precise gap is a credential and an account:
   * GCS needs a service-account JSON key with Storage permissions. Provide it
@@ -4822,3 +4827,87 @@ builds the shim under `./.docker-cache/`, an executable bind mount.
 * No Go 3FS transport.
 * The writer lock remains the store's single-writer `LOCK` file on the POSIX
   plane; USRBIO does not add or replace coordination.
+
+## Subphase R23 — Azure SAS acceptance (2026-11-06)
+
+R21 shipped the Azure SAS and anonymous credential forms with
+request-construction tests only. R23 mints a real container-scoped **service
+SAS** (15-field string-to-sign for `sv=2018-11-09`, HMAC-SHA256 over the account
+key, base64 with `+ / =` escaped) and requires Azurite to accept or refuse it.
+Code revision `dcbe066`.
+
+### Environment and command
+
+Azurite Blob `3.35.0`,
+`mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`
+(image id `sha256:03f7cb26ef…`), tmpfs `/data` 1 GiB, sibling container on a
+private network. Test court `weft/rust-court:1`: memory/swap 3g/3g, pids 1024,
+cpus 4, nproc 2048, `--cap-drop=ALL`, `no-new-privileges`, tmpfs `/tmp` 1 GiB.
+
+```sh
+bash bench/scripts/azure_court.sh
+```
+
+The inner court ran `cargo test --test azure_backend -- --test-threads=1
+--nocapture`, `cargo test --test azure_fencing -- --test-threads=1
+--nocapture`, then `cargo run --release --quiet --example azure_court`. The image
+was obtained; the court did not skip.
+
+### Result
+
+* `azure_backend`: **19 passed / 0 failed** (12.93 s). New live tests:
+  `live_sas_token_authenticates_and_preserves_the_store`,
+  `live_read_only_sas_refuses_a_writable_open`,
+  `live_a_tampered_sas_is_rejected`,
+  `live_anonymous_is_refused_on_a_private_container`, and
+  `live_sas_authorizes_blob_data_but_not_container_properties`.
+* `azure_fencing`: **7 passed / 0 failed** (15.02 s), unchanged.
+* End-to-end court: status `ok`, local and Azure content digest `2e3b9902…`,
+  generation 21, `content_root_match` / `generation_match` /
+  `generation_sequence_match` all `true`, peak RSS 7,488 KiB.
+* A service SAS with `sp=rcwdl` **was accepted** for a read-only store open
+  (FORMAT, commits, superblock, manifests, objects), an object read, a full
+  `verify(true)`, and a create-once blob PUT + GET.
+* The same SAS **was refused** on a writable open at
+  `HEAD ?restype=container` (Get Container Properties): class `Unauthorized`,
+  `Azure denied reading container \`…\``. Azurite returns 403 for that call
+  under `sp=r`, `sp=rcwdl`, and `sp=racwdl` alike, while blob data operations
+  are accepted when `w` is present. A writable open therefore needs SharedKey
+  (proven) or an account SAS (not tested). This is recorded as a limitation;
+  the container-properties check was not skipped to make SAS writable.
+* `sp=r` is refused earlier on a writable open, at the conditional-write probe:
+  `Unauthorized: Azure denied PUT \`tmp/conditional-probe-…\``.
+* A signature tampered from `sp=r` to `sp=rcwdl` is refused at the FORMAT read
+  (Azurite `AuthorizationFailure`) as `Unauthorized`.
+* Anonymous is **refused** at the FORMAT read of a private container
+  (`AuthorizationFailure`, `Unauthorized`). Acceptance remains unproven.
+
+### Defect found and fixed
+
+`Store::open_impl` wrapped every non-`Io` FORMAT-read failure as `Corrupt`, so a
+rejected credential was reported as damaged data (`Corrupt: cannot read FORMAT:
+Unauthorized: …`). The tampered-SAS test exposed it. `src/store.rs` now preserves
+`Class::Unauthorized` as well as `Class::Io`; a genuinely missing or mismatched
+FORMAT remains `Corrupt`. The failing run that found it
+(`azure-20261106T234510Z`, `15 passed; 2 failed`) is retained.
+
+### Receipts
+
+`bench/receipts/azure-20261106T235445Z.json` (sha256
+`f4e29469…d9f551`) and `bench/receipts/azure-court-20261106T235445Z.json` (sha256
+`13809ef7…686a8d`), with `.tests.log`, `.tests.txt`, `.fencing.log`, and
+`.fencing.txt`. Analysis: `bench/RESULTS-azure-sas.md`. The retained failing
+run is `azure-20261106T234510Z.*`.
+
+### Losses and non-claims
+
+* No live Azure account: Azurite is not Azure. Service-version acceptance,
+  block-blob limits, `x-ms-*` edge cases, and listing paging are untested.
+* No account-SAS acceptance test.
+* Anonymous acceptance is unproven; only refusal on a private container is
+  proved. Proving it needs a real account with container ACL `blob` or
+  `container`.
+* Writable SAS opens are refused by design of the endpoint's container check,
+  so SAS is effectively read-only on this backend.
+* One host, loopback, tmpfs, warm caches; no performance, power-loss,
+  multi-node, or fleet claim.

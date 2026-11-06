@@ -4407,12 +4407,12 @@
  },
  {
   "id": "r21_azure_sas_unproven",
-  "claim": "docs/STATUS.md discloses that only SharedKey is court-proven for Azure; SAS and anonymous are request-construction-tested only.",
-  "value": "Azure SAS and anonymous are not court-proven",
+  "claim": "docs/STATUS.md discloses that Azure SAS acceptance is measured while anonymous acceptance remains unproven.",
+  "value": "Azure SAS acceptance is measured; anonymous acceptance is not",
   "locations": [
    "docs/STATUS.md"
   ],
-  "receipt": "bench/receipts/azure-court-20261106T231026Z.json",
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
   "kind": "present"
  },
  {
@@ -4518,6 +4518,135 @@
    "bench/RESULTS-threefs.md"
   ],
   "receipt": "bench/receipts/threefs-20261106T232643Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_azure_backend_tests",
+  "claim": "The Azure backend suite passed 19/19 at WeftFS dcbe066 in the Azurite court.",
+  "value": "19 passed / 0 failed",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_azure_fencing_tests",
+  "claim": "The Azure fenced-writer suite passed 7/7 at WeftFS dcbe066.",
+  "value": "7 passed / 0 failed",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_sas_read_only_accepted",
+  "claim": "A container-scoped service SAS is accepted for a read-only open, object reads, verify(true), and blob data operations on Azurite 3.35.0.",
+  "value": "A service SAS with `sp=rcwdl` **was accepted**",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_sas_container_properties_refused",
+  "claim": "The service refuses Get Container Properties under a service SAS, so a writable open over a SAS fails Unauthorized naming the container.",
+  "value": "Azure denied reading container",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_sas_permission_sets",
+  "claim": "The container-properties refusal is observed under sp=r, sp=rcwdl, and sp=racwdl alike.",
+  "value": "`sp=r`, `sp=rcwdl`, and `sp=racwdl` alike",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/store-status.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_auth_not_corruption",
+  "claim": "An authorization failure reading FORMAT is classified Unauthorized, not Corrupt; the tampered-SAS test found the old misclassification.",
+  "value": "rejected credential was reported as damaged data",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T234510Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_anonymous_unproven",
+  "claim": "Anonymous acceptance is unproven; only refusal on a private container is proved.",
+  "value": "acceptance is unproven",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_account_sas_untested",
+  "claim": "An account SAS was not tested; a writable Azure open uses SharedKey.",
+  "value": "account SAS (not tested)",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_azurite_not_azure",
+  "claim": "The court is an Azurite emulator, not Azure; no live Azure run is claimed.",
+  "value": "Azurite is not Azure",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_final_receipt",
+  "claim": "The R23 passing Azure-court receipt is committed.",
+  "value": "azure-20261106T235445Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_failing_receipt",
+  "claim": "The failing run that found the SAS limitation and the Corrupt/Unauthorized misclassification is retained.",
+  "value": "azure-20261106T234510Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T234510Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r23_azurite_digest",
+  "claim": "The Azure court records the exact Azurite 3.35.0 image digest.",
+  "value": "647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-azure-sas.md"
+  ],
+  "receipt": "bench/receipts/azure-20261106T235445Z.json",
   "kind": "present"
  }
 ]
