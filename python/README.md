@@ -146,6 +146,38 @@ WEFT-TENSOR v1 set (`f16`, `bf16`, `f32`, `f64`, `i8`, `u8`, `i16`, `i32`,
 custom `planner_data` are not persisted. See `docs/PYTORCH-DCP.md` for the full
 contract and non-claims.
 
+### JAX / Orbax adapter
+
+`weftcodec.orbax` is an Orbax `AsyncCheckpointHandler` that stores a JAX PyTree
+as one canonical `weft.checkpoint.v1` checkpoint through the same Rust CLI and
+the same adapter plumbing as the DCP path. Each flattened leaf is recorded in a
+canonical WCB `weft.orbax.v1` record with its path, dtype, shape, BLAKE3 content
+root and logical root; the Orbax directory only carries a small canonical
+locator pointing at the store.
+
+```python
+import jax
+from weftcodec.orbax import WeftOrbaxHandler, WeftSaveArgs, WeftRestoreArgs
+
+handler = WeftOrbaxHandler(staging_bytes=256 * 1024 * 1024)
+target = jax.tree_util.tree_map(
+    lambda a: jax.ShapeDtypeStruct(a.shape, a.dtype, sharding=a.sharding), params
+)
+# Drive it with orbax.checkpoint.Checkpointer, AsyncCheckpointer, or
+# CheckpointManager:
+#   save(directory, args=WeftSaveArgs(
+#       item=params, store_root="/data/weft-store", checkpoint_id="run-0001"))
+#   restore(directory, args=WeftRestoreArgs(item=target))
+```
+
+Supported leaf dtypes are the same exact WEFT-TENSOR v1 set. A target PyTree
+with a missing, extra, differently typed, or differently shaped leaf fails
+closed; different JAX sharding topologies are accepted because the stored
+logical tensor is topology independent. `staging_bytes` bounds the staging
+container and the restored bytes. See `docs/JAX-ORBAX.md` for the full contract,
+measured comparison against Orbax's own OCDBT checkpoint, and non-claims (CPU
+only, single process, no TPU/GPU, no multi-host JAX).
+
 ## Supported modes
 
 | Mode | Value | Python reader |
