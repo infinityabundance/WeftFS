@@ -357,9 +357,19 @@ struct CatalogState {
     open_bytes: Vec<u8>,
     open_entries: Vec<Entry>,
     open_index: BTreeMap<(u8, Hash32), usize>,
+    /// Keys this plane has *observed* absent in the flat namespace, bounded.
+    /// The store reads a blob before publishing it; without this the plane
+    /// would ask the inner namespace the same question twice per put.
+    absent: BTreeSet<Key>,
+    absent_order: std::collections::VecDeque<Key>,
     counters: PackStats,
     notes: Vec<String>,
 }
+
+/// Bound on the negative cache. A single-writer store holds an exclusive lock,
+/// so a key observed absent cannot appear underneath it; the cache is an
+/// optimisation, never a correctness assumption.
+const MAX_ABSENT_KEYS: usize = 4096;
 
 /// A [`BlobPlane`] that groups small blobs into physical pack objects.
 pub struct PackedBlobPlane {
@@ -410,7 +420,9 @@ impl PackedBlobPlane {
         self.options
     }
 
-    /// Packing counters (sealed packs, packed/flat members, catalog size).
+    /// Packing counters from this handle's own activity (sealed packs, packed
+    /// and flat members, catalog size). Counters are per-process; use
+    /// [`PackedBlobPlane::catalog_stats`] for the on-disk truth.
     pub fn pack_stats(&self) -> PackStats {
         let state = self
             .state
@@ -425,6 +437,43 @@ impl PackedBlobPlane {
             .iter()
             .any(|note| note.starts_with("catalog bound reached"));
         stats
+    }
+
+    /// Read the catalog and report what it actually names: sealed packs,
+    /// members, and member bytes. Reads only; never writes. `flat_members` and
+    /// `flat_bytes` cannot be derived from the catalog and are left at zero.
+    pub fn catalog_stats(&mut self) -> Result<PackStats> {
+        let Self {
+            inner,
+            catalog,
+            options,
+            state,
+        } = self;
+        let mut state = state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        ensure_loaded(&**catalog, options, &mut state)?;
+        for index in 0..state.segment_ids.len() {
+            load_segment(&**inner, options, &mut state, index)?;
+        }
+        let mut packs: BTreeSet<Hash32> = BTreeSet::new();
+        let mut entries = 0u64;
+        let mut bytes = 0u64;
+        for segment in state.segments.iter().filter_map(|segment| segment.as_ref()) {
+            for entry in &segment.entries {
+                packs.insert(entry.pack);
+                entries += 1;
+                bytes += entry.length;
+            }
+        }
+        let mut stats = state.counters.clone();
+        stats.sealed_packs = packs.len() as u64;
+        stats.packed_members = entries;
+        stats.packed_bytes = bytes;
+        stats.catalog_entries = entries;
+        stats.open_pack_bytes = state.open_bytes.len() as u64;
+        stats.open_pack_members = state.open_entries.len() as u64;
+        Ok(stats)
     }
 }
 
@@ -457,7 +506,14 @@ impl BlobPlane for PackedBlobPlane {
         ensure_loaded(&**catalog, options, &mut state)?;
         match read_packed(&**inner, options, &mut state, key)? {
             Some(bytes) => Ok(bytes),
-            None => inner.get(key),
+            None => match inner.get(key) {
+                Ok(bytes) => Ok(bytes),
+                Err(err) if err.class() == Class::NotFound => {
+                    remember_absent(&mut state, key);
+                    Err(err)
+                }
+                Err(err) => Err(err),
+            },
         }
     }
 
@@ -473,7 +529,14 @@ impl BlobPlane for PackedBlobPlane {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
         let Some((entry, segment)) = find(&**inner, options, &mut state, key)? else {
-            return inner.get_range(key, offset, len);
+            return match inner.get_range(key, offset, len) {
+                Ok(bytes) => Ok(bytes),
+                Err(err) if err.class() == Class::NotFound => {
+                    remember_absent(&mut state, key);
+                    Err(err)
+                }
+                Err(err) => Err(err),
+            };
         };
         if offset > entry.length {
             return Err(Error::invalid_argument(format!(
@@ -552,19 +615,26 @@ impl BlobPlane for PackedBlobPlane {
                 )))
             };
         }
-        match inner.get(key) {
-            Ok(existing) => {
-                return if existing == bytes {
-                    Ok(())
-                } else {
-                    Err(Error::exists(format!(
-                        "key {} already exists with different bytes",
-                        key.display_path()
-                    )))
-                };
+        // A read immediately before this publication already observed the key
+        // absent (the store verifies a blob before publishing it). Skip the
+        // duplicate request for the same key in this process.
+        if !state.absent.contains(key) {
+            match inner.get(key) {
+                Ok(existing) => {
+                    return if existing == bytes {
+                        Ok(())
+                    } else {
+                        Err(Error::exists(format!(
+                            "key {} already exists with different bytes",
+                            key.display_path()
+                        )))
+                    };
+                }
+                Err(err) if err.class() == Class::NotFound => {
+                    remember_absent(&mut state, key);
+                }
+                Err(err) => return Err(err),
             }
-            Err(err) if err.class() == Class::NotFound => {}
-            Err(err) => return Err(err),
         }
         let Some((kind, id)) = member_identity(key) else {
             return inner.put_if_absent(key, bytes);
@@ -581,9 +651,12 @@ impl BlobPlane for PackedBlobPlane {
             }
             state.counters.flat_members += 1;
             state.counters.flat_bytes += length;
+            forget_absent(&mut state, key);
             return inner.put_if_absent(key, bytes);
         }
-        append(inner, catalog, options, &mut state, kind, id, bytes)
+        append(inner, catalog, options, &mut state, kind, id, bytes)?;
+        forget_absent(&mut state, key);
+        Ok(())
     }
 
     fn delete(&mut self, key: &Key) -> Result<()> {
@@ -603,7 +676,14 @@ impl BlobPlane for PackedBlobPlane {
         ensure_loaded(&**catalog, options, &mut state)?;
         match find(&**inner, options, &mut state, key)? {
             Some((entry, _)) => Ok(entry.length),
-            None => inner.len(key),
+            None => match inner.len(key) {
+                Ok(len) => Ok(len),
+                Err(err) if err.class() == Class::NotFound => {
+                    remember_absent(&mut state, key);
+                    Err(err)
+                }
+                Err(err) => Err(err),
+            },
         }
     }
 
@@ -620,7 +700,14 @@ impl BlobPlane for PackedBlobPlane {
         ensure_loaded(&**catalog, options, &mut state)?;
         match find(&**inner, options, &mut state, key)? {
             Some(_) => Ok(true),
-            None => inner.exists(key),
+            None => match inner.exists(key) {
+                Ok(true) => Ok(true),
+                Ok(false) => {
+                    remember_absent(&mut state, key);
+                    Ok(false)
+                }
+                Err(err) => Err(err),
+            },
         }
     }
 
@@ -1240,6 +1327,24 @@ fn rebuild_open(state: &mut CatalogState, removed: &BTreeSet<(u8, Hash32)>) {
 fn note(state: &mut CatalogState, text: String) {
     if state.notes.len() < 16 && !state.notes.contains(&text) {
         state.notes.push(text);
+    }
+}
+
+/// Record that a read observed `key` absent in the flat namespace.
+fn remember_absent(state: &mut CatalogState, key: &Key) {
+    if state.absent.insert(key.clone()) {
+        state.absent_order.push_back(key.clone());
+        while state.absent_order.len() > MAX_ABSENT_KEYS {
+            if let Some(old) = state.absent_order.pop_front() {
+                state.absent.remove(&old);
+            }
+        }
+    }
+}
+
+fn forget_absent(state: &mut CatalogState, key: &Key) {
+    if state.absent.remove(key) {
+        state.absent_order.retain(|known| known != key);
     }
 }
 
