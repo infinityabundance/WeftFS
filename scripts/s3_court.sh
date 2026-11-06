@@ -21,6 +21,10 @@
 #                                  # local-commits, local-blobs/s3-commits)
 #   scripts/s3_court.sh --packs    # the R11 physical pack court: flat vs packed
 #                                  # over local and MinIO
+#   scripts/s3_court.sh --distributed  # the R13 distributed correctness court:
+#                                  # one MinIO server started *inside* the bench
+#                                  # container so the harness can stop/restart
+#                                  # the process; S1-S9
 #
 # Every container has the same hard limits as `scripts/docker-court.sh`:
 # memory 3g, swap 3g, pids 1024, cpus 4, bounded tmpfs, no-new-privileges,
@@ -35,14 +39,16 @@ bench=0
 overlay=0
 planes=0
 packs=0
+distributed=0
 for arg in "$@"; do
   case "$arg" in
     --bench) bench=1 ;;
     --overlay) overlay=1 ;;
     --planes) planes=1 ;;
     --packs) packs=1 ;;
+    --distributed) distributed=1 ;;
     -h|--help)
-      sed -n '2,28p' "$0"
+      sed -n '2,34p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
@@ -77,6 +83,62 @@ if [[ "$actual_sha256" != "$minio_sha256" ]]; then
   exit 1
 fi
 minio_version="$("$minio_bin" --version | head -1)"
+
+if [[ "$distributed" == 1 ]]; then
+  # R13 distributed correctness court. The harness starts this verified binary
+  # itself, on loopback inside the bench container, so it can kill and restart
+  # the server process mid-run. No external MinIO container or network is used.
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  mkdir -p bench/receipts
+  chmod a+rwX bench/receipts 2>/dev/null || true
+  export WEFT_DIST_STAMP="$stamp"
+  export WEFT_MINIO_BIN="/work/.docker-cache/minio/minio"
+  export WEFT_S3_SERVER_LABEL="$minio_version"
+  export WEFT_S3_SERVER_VERSION="$minio_release"
+  export WEFT_S3_SERVER_RELEASE="$minio_release"
+  export WEFT_S3_SERVER_SHA256="$actual_sha256"
+
+  echo "s3_court: distributed court, MinIO $minio_release sha256=$actual_sha256 (started by the harness)" >&2
+  scripts/docker-court.sh bench \
+    "cd /work && bash bench/scripts/distributed_court.sh"
+
+  distributed_receipt="bench/receipts/distributed-${stamp}.json"
+  court_receipt="bench/receipts/s3-court-${stamp}.json"
+  cat > "$court_receipt" <<JSON
+{
+  "schema": "weft-s3-court-v1",
+  "generated_utc": "$stamp",
+  "server": {
+    "product": "MinIO",
+    "release": "$minio_release",
+    "version_line": "$minio_version",
+    "binary_sha256": "$actual_sha256",
+    "binary_url": "$minio_url",
+    "started_by": "bench/scripts/distributed_court.sh inside the bench court",
+    "note": "The harness starts the verified MinIO release binary on loopback inside the bench container so it can stop and restart the server process during S6. This is a process-lifecycle test, not a container or media test."
+  },
+  "container": {
+    "kind": "bench",
+    "memory": "$WEFT_MEMORY",
+    "memory_swap": "$WEFT_MEMORY",
+    "pids": "$WEFT_PIDS",
+    "cpus": "$WEFT_CPUS",
+    "nproc": "$WEFT_NPROC",
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "tmpfs": "/tmp 1g (MinIO data)"
+  },
+  "tests": {
+    "command": "bash bench/scripts/distributed_court.sh",
+    "deterministic_court": "cargo test --release --test distributed_semantics"
+  },
+  "benchmark": "$distributed_receipt",
+  "label": "Single-host distributed correctness court on loopback. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
+}
+JSON
+  echo "s3_court: receipt $court_receipt" >&2
+  exit 0
+fi
 
 container_image="debian:bookworm-slim"
 if ! docker image inspect "$container_image" >/dev/null 2>&1; then
