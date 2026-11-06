@@ -70,7 +70,7 @@ restore_once() {
   local out_dir="$1" topology="$2" json="$3" spool="$4"
   sync
   "$bin" --store "$work/store" --json checkpoint restore \
-    --name qwen --out "$out_dir" --topology "$topology" --axis "$axis" \
+    --name qwen --import --out "$out_dir" --topology "$topology" --axis "$axis" \
     --spool "$spool" \
     >"$json"
 }
@@ -90,14 +90,14 @@ restore_once /restored4b 4 "$work/restore4b.json" "$work/spool4b.safetensors"
 sync
 echo "checkpoint court: single-tensor restore"
 "$bin" --store "$work/store" --json checkpoint restore \
-  --name qwen --out /restored-single --out-name embed.safetensors \
+  --name qwen --import --out /restored-single --out-name embed.safetensors \
   --tensor "$single_tensor" \
   --spool "$work/spool-single.safetensors" \
   >"$work/single.json"
 
 echo "checkpoint court: slice restore (rows 1000..1100 of embed_tokens)"
 "$bin" --store "$work/store" --json checkpoint restore \
-  --name qwen --out /restored-slice --out-name embed-rows.safetensors \
+  --name qwen --import --out /restored-slice --out-name embed-rows.safetensors \
   --tensor "$single_tensor" --range "$slice_range" \
   --spool "$work/spool-slice.safetensors" \
   >"$work/slice.json"

@@ -840,14 +840,21 @@ enum CheckpointCommand {
         #[arg(long = "tile-shape", value_name = "A,B,...")]
         tile_shape: Option<String>,
     },
-    /// Restore a checkpoint, one tensor, or one tensor region into the store.
+    /// Restore a checkpoint, one tensor, or one tensor region.
+    ///
+    /// With `--import` the restored container is also published into the store
+    /// namespace under `--out` (and becomes visible through a mount). Without
+    /// it the store is only read and the bytes go to `--host-out`/`--spool`.
     Restore {
         #[arg(long)]
         name: String,
-        /// Destination directory inside the store.
+        /// Destination directory inside the store (requires --import).
         #[arg(long, value_name = "STORE_DIR")]
-        out: String,
-        /// Output file name (default `<checkpoint>.safetensors`).
+        out: Option<String>,
+        /// Import the restored container into the store (opt-in).
+        #[arg(long)]
+        import: bool,
+        /// Output file name inside the store (requires --import).
         #[arg(long = "out-name")]
         out_name: Option<String>,
         /// Restore only this tensor.
@@ -3221,6 +3228,7 @@ fn run_checkpoint(
         CheckpointCommand::Restore {
             name,
             out,
+            import,
             out_name,
             tensor,
             range,
@@ -3241,6 +3249,19 @@ fn run_checkpoint(
             if region.is_some() && tensor.is_none() {
                 return Err(Error::invalid_argument(
                     "--range requires --tensor (one named tensor)",
+                ));
+            }
+            if import && out.is_none() {
+                return Err(Error::invalid_argument("--import requires --out STORE_DIR"));
+            }
+            if !import && (out.is_some() || out_name.is_some()) {
+                return Err(Error::invalid_argument(
+                    "--out/--out-name only apply to --import; restore is read-only in the store",
+                ));
+            }
+            if !import && host_out.is_none() && spool.is_none() {
+                return Err(Error::invalid_argument(
+                    "a read-only restore needs --host-out FILE or --spool FILE ",
                 ));
             }
             let options = CheckpointRestoreOptions {
@@ -3279,50 +3300,59 @@ fn run_checkpoint(
                     }
                 }
             };
-            // Import the restored container into the store, then expose it
-            // through the ordinary namespace (and through a mount).
-            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
-            let parent = ensure_store_dir(&mut store, &out)?;
-            let file_name = out_name.unwrap_or_else(|| format!("{name}.safetensors"));
-            let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
-            let mut attrs = BTreeMap::new();
-            attrs.insert(
-                "weft.checkpoint.name".to_owned(),
-                Value::Str(report.name.clone()),
-            );
-            attrs.insert(
-                "weft.checkpoint.manifest_root".to_owned(),
-                wu::hash_value(report.manifest_root),
-            );
-            attrs.insert(
-                "weft.checkpoint.file_sha256".to_owned(),
-                Value::Bytes(report.file_sha256.to_vec()),
-            );
-            if let Some(source) = report.source_sha256 {
+            // Importing writes the restored container into the store namespace
+            // and is opt-in: a plain restore only reads the store and writes the
+            // host file.
+            let imported = if import {
+                let out_dir = out.as_deref().unwrap_or_default();
+                let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+                let parent = ensure_store_dir(&mut store, out_dir)?;
+                let file_name = out_name
+                    .clone()
+                    .unwrap_or_else(|| format!("{name}.safetensors"));
+                let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
+                let mut attrs = BTreeMap::new();
                 attrs.insert(
-                    "weft.checkpoint.source_sha256".to_owned(),
-                    Value::Bytes(source.to_vec()),
+                    "weft.checkpoint.name".to_owned(),
+                    Value::Str(report.name.clone()),
                 );
-            }
-            attrs.insert(
-                "weft.checkpoint.exact".to_owned(),
-                Value::Bool(report.exact_source_file),
-            );
-            let input = fs::File::open(&spool_path)
-                .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
-            let object_id = store.create_file_streaming(
-                parent,
-                file_name.as_bytes(),
-                std::io::BufReader::new(input),
-                0o644,
-                uid,
-                gid,
-                attrs,
-            )?;
+                attrs.insert(
+                    "weft.checkpoint.manifest_root".to_owned(),
+                    wu::hash_value(report.manifest_root),
+                );
+                attrs.insert(
+                    "weft.checkpoint.file_sha256".to_owned(),
+                    Value::Bytes(report.file_sha256.to_vec()),
+                );
+                if let Some(source) = report.source_sha256 {
+                    attrs.insert(
+                        "weft.checkpoint.source_sha256".to_owned(),
+                        Value::Bytes(source.to_vec()),
+                    );
+                }
+                attrs.insert(
+                    "weft.checkpoint.exact".to_owned(),
+                    Value::Bool(report.exact_source_file),
+                );
+                let input = fs::File::open(&spool_path)
+                    .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+                let object_id = store.create_file_streaming(
+                    parent,
+                    file_name.as_bytes(),
+                    std::io::BufReader::new(input),
+                    0o644,
+                    uid,
+                    gid,
+                    attrs,
+                )?;
+                let store_path_out = format!("{}/{}", out_dir.trim_end_matches('/'), file_name);
+                Some((object_id, store.generation(), store_path_out))
+            } else {
+                None
+            };
             if host_out.is_none() {
                 let _ = fs::remove_file(&spool_path);
             }
-            let store_path_out = format!("{}/{}", out.trim_end_matches('/'), file_name);
             if json {
                 print_json(&json!({
                     "checkpoint": report.name,
@@ -3332,9 +3362,10 @@ fn run_checkpoint(
                     "exact_source_file": report.exact_source_file,
                     "header_reproduced": report.header_reproduced,
                     "file_bytes": report.file_bytes,
-                    "object_id": object_id.to_hex(),
-                    "generation": store.generation(),
-                    "store_path": store_path_out,
+                    "imported": import,
+                    "object_id": imported.as_ref().map(|(id, _, _)| id.to_hex()),
+                    "generation": imported.as_ref().map(|(_, generation, _)| *generation),
+                    "store_path": imported.as_ref().map(|(_, _, path)| path.clone()),
                     "host_out": host_out.as_ref().map(|path| path.display().to_string()),
                     "shards_read": report.shards_read,
                     "units_touched": report.units_touched,
@@ -3363,8 +3394,12 @@ fn run_checkpoint(
                 println!("file_sha256={}", hex::encode(report.file_sha256));
                 println!("exact_source_file={}", report.exact_source_file);
                 println!("file_bytes={}", report.file_bytes);
-                println!("object_id={object_id}");
-                println!("store_path={store_path_out}");
+                println!("imported={import}");
+                if let Some((object_id, generation, store_path_out)) = &imported {
+                    println!("object_id={object_id}");
+                    println!("generation={generation}");
+                    println!("store_path={store_path_out}");
+                }
                 println!("shards_read={}", report.shards_read);
                 println!("units_touched={}", report.units_touched);
                 println!("store_bytes_read={}", report.store_bytes_read);

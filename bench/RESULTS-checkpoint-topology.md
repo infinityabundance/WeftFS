@@ -46,13 +46,13 @@ $BIN --store $STORE init --chunk-size 65536 --checkpoint-interval 256 --gc-grace
 $BIN --store $STORE --json checkpoint write \
   --file .docker-cache/real-corpus/Qwen2.5-0.5B.safetensors \
   --name qwen --shards 8 --axis 0 > write.json
-$BIN --store $STORE --json checkpoint restore --name qwen --out /restored8a \
+$BIN --store $STORE --json checkpoint restore --name qwen --import --out /restored8a \
   --topology 8 --axis 0 --spool spool8a.bin > restore8a.json
-$BIN --store $STORE --json checkpoint restore --name qwen --out /restored4a \
+$BIN --store $STORE --json checkpoint restore --name qwen --import --out /restored4a \
   --topology 4 --axis 0 --spool spool4a.bin > restore4a.json
-$BIN --store $STORE --json checkpoint restore --name qwen --out /restored-single \
+$BIN --store $STORE --json checkpoint restore --name qwen --import --out /restored-single \
   --out-name embed.safetensors --tensor model.embed_tokens.weight > single.json
-$BIN --store $STORE --json checkpoint restore --name qwen --out /restored-slice \
+$BIN --store $STORE --json checkpoint restore --name qwen --import --out /restored-slice \
   --out-name embed-rows.safetensors --tensor model.embed_tokens.weight \
   --range "1000:1100,0:896" > slice.json
 $BIN --store $STORE --json checkpoint verify --name qwen > verify.json

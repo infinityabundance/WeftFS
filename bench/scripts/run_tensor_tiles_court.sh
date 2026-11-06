@@ -54,7 +54,7 @@ echo "tensor-tiles court: mode-10 vs mode-15 region reads"
 
 echo "tensor-tiles court: restoring the tiled tensor into the store"
 "$bin" --store "$work/stores/tiled" --json checkpoint restore \
-  --name tiles --out bench-mount --out-name down.safetensors \
+  --name tiles --import --out bench-mount --out-name down.safetensors \
   --tensor "$tensor_name" --spool "$work/spool.safetensors" \
   >"$work/restore.json" 2>>"$log"
 

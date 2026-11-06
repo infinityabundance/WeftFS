@@ -195,10 +195,12 @@ leaves a readable tensor checkpoint without DCP metadata. For plain tensors the
 reader can still synthesise metadata from the manifest; for sharded or byte
 entries it fails closed.
 
-Reads are not read-only at the store level: the Rust CLI imports each restored
-container into the store under `/dcp-reads/<uuid>/`, which adds exact copies and
-one commit. They can be collected by GC once unreferenced. This is a property of
-the shipped `checkpoint restore` verb, not of the adapter.
+Reads are read-only in the store by default: `weftfs checkpoint restore`
+without `--import` decodes the checkpoint and writes only the host file. The
+adapter's `import_restored=True` (off by default) adds `--import`, which
+publishes an exact copy under `/dcp-reads/<uuid>/` in one commit; that copy can
+be collected by GC once unreferenced. The import is a property of the CLI verb,
+not of the adapter, and is never implied by a restore.
 
 Verification performed by the tests and the bench:
 

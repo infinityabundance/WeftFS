@@ -15,7 +15,9 @@ Everything durable goes through the shipped Rust CLI:
   serialised as canonical WCB and stored as an exact store file object at
   ``/checkpoints/<storage-name>/dcp.metadata``;
 * reads use ``weftfs checkpoint restore`` and re-verify every recorded BLAKE3
-  content root before handing bytes to DCP.
+  content root before handing bytes to DCP. The default restore is read-only in
+  the store; ``import_restored=True`` opts into the CLI's ``--import``, which
+  publishes a second exact copy under ``/dcp-reads/<uuid>/``.
 
 There is no approximate path and no silent fallback. A missing CLI, a missing
 store, a non-canonical manifest, a content-root mismatch, or an unsupported
@@ -26,9 +28,9 @@ exposes the same classes/methods (contract mode); operations that need tensors
 raise :class:`TorchRequired`. When PyTorch is importable the classes subclass the
 real DCP interfaces.
 
-Not claimed: GPU-direct I/O, a multi-rank cluster run, stock DCP binaries, or a
-read-only store (``checkpoint restore`` imports the restored container into the
-store namespace under ``/dcp-reads/...``).
+Not claimed: GPU-direct I/O, a multi-rank cluster run, or stock DCP binaries.
+The adapters do not need a read-only store: ``checkpoint restore`` only reads
+unless ``--import`` is requested.
 """
 
 from __future__ import annotations
@@ -524,18 +526,25 @@ class _Storage:
             args += ["--shard-strategy", strategy]
         return self._json(args)
 
-    def restore(self, name, *, entry=None, topology=None, axis=0, host_out):
-        out_dir = "/dcp-reads/%s" % uuid.uuid4().hex
+    def restore(self, name, *, entry=None, topology=None, axis=0, host_out, import_restored=False):
+        """Restore to ``host_out``; ``import_restored`` opts into a store copy.
+
+        ``checkpoint restore`` is read-only in the store by default. Passing
+        ``import_restored=True`` adds ``--import`` and publishes the exact
+        restored container under ``/dcp-reads/<uuid>/``, which is a real,
+        durable second copy and therefore opt-in.
+        """
         args = [
             "checkpoint",
             "restore",
             "--name",
             name,
-            "--out",
-            out_dir,
             "--host-out",
             os.fspath(host_out),
         ]
+        if import_restored:
+            out_dir = "/dcp-reads/%s" % uuid.uuid4().hex
+            args += ["--import", "--out", out_dir]
         if entry is not None:
             args += ["--tensor", entry]
         if topology is not None:
@@ -1478,18 +1487,15 @@ class WeftStorageReader(_StorageReaderBase):
         weftfs_cli=None,
         timeout=DEFAULT_TIMEOUT_SECONDS,
         allow_manifest_synthesis=True,
-        import_restored=True,
+        import_restored=False,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
         self.allow_manifest_synthesis = bool(allow_manifest_synthesis)
-        # ``checkpoint restore`` always imports the restored container into the
-        # store; this flag is kept for documentation and future CLI support.
-        if not import_restored:
-            raise ValueError(
-                "checkpoint restore always imports the restored container into "
-                "the store; import_restored=False is not supported"
-            )
+        # Restore is read-only in the store by default. Importing a second,
+        # exact copy into ``/dcp-reads/...`` is opt-in because it is a durable
+        # store mutation.
+        self.import_restored = bool(import_restored)
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
         self._storage_name = None
@@ -1692,6 +1698,7 @@ class WeftStorageReader(_StorageReaderBase):
                 topology=topology,
                 axis=axis,
                 host_out=host_out,
+                import_restored=self.import_restored,
             )
             parsed = _parse_safetensors(host_out)
         if not full and len(entries) != 1:

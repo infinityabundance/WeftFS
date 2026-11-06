@@ -900,11 +900,10 @@ def run_court(receipt):
                 "phase_bytes_after_save": store_physical_after_save["bytes"],
                 "phase_bytes_after_restores": store_physical_after_restores["bytes"],
                 "note": (
-                    "`weftfs checkpoint restore` imports each restored container "
-                    "into the store under /dcp-reads/<uuid>; the DCP and Orbax "
-                    "adapters reuse that CLI verb, so repeated restores grow the "
-                    "store. This is real adapter/CLI overhead and is not included "
-                    "in the checkpoint physical-byte comparison above."
+                    "The R15 receipt measured the old always-import behavior. Since "
+                    "R19 `weftfs checkpoint restore` is read-only unless `--import` "
+                    "(or the adapter's `import_restored=True`) is requested, so a "
+                    "rerun of this court reports 0 B here by default."
                 ),
             }
         )

@@ -303,8 +303,8 @@ def main():
             "single host, synthetic 8 x 4 MiB f32 tensors. All durable writes go "
             "through the Rust weftfs CLI (checkpoint write/restore) and are verified "
             "by it. No GPU-direct path, no multi-rank cluster run, no durability "
-            "claim. Store reads use checkpoint restore, which imports the restored "
-            "container into the store under /dcp-reads."
+            "claim. Store reads use checkpoint restore, which is read-only in "
+            "the store unless import_restored=True is requested."
         ),
         "environment": {
             "revision_weftfs": os.environ.get("WEFT_REPO_WEFTFS", "unknown"),

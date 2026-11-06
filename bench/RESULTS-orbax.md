@@ -93,11 +93,18 @@ Both are close to the 58,765,352 logical bytes because random floats are barely
 compressible. All **11/11 leaves exact** on both sides (dtype, shape, and exact
 bytes); the receipt records each leaf's SHA-256.
 
-`weftfs checkpoint restore` always imports the restored container into the store
-under `/dcp-reads/<uuid>` (the same CLI verb the DCP adapter uses). After the
-full, single-leaf, topology-8, topology-2, and re-shard restores in this run,
-the store had grown to **118,482,194 B** (1,239 files), i.e. **+67,615,378 B**
-of read-import overhead. That overhead is reported separately and is **not**
+`weftfs checkpoint restore` at the R15 revision always imported the restored
+container into the store under `/dcp-reads/<uuid>` (the same CLI verb the DCP
+adapter uses). After the full, single-leaf, topology-8, topology-2, and re-shard
+restores in this run, the store had grown to **118,482,194 B** (1,239 files),
+i.e. **+67,615,378 B** of read-import overhead. That overhead is reported
+separately and is **not**
+
+R19 note: since the pipelined-restore subphase, `checkpoint restore` is
+read-only in the store by default and imports only with `--import` (the Python
+adapters pass it only for `import_restored=True`). A rerun of this court would
+therefore report 0 B of import overhead; the numbers below are the historical
+R15 measurement and are kept as such.
 part of the checkpoint-byte comparison above.
 
 ### Topology independence

@@ -210,17 +210,21 @@ comparing the resulting SHA-256 with the recorded source SHA-256, never assumed.
 CLI:
 
 ```
-weftfs --store STORE checkpoint restore --name NAME --out STORE_DIR \
+weftfs --store STORE checkpoint restore --name NAME [--import --out STORE_DIR] \
   [--out-name FILE] [--tensor NAME] [--range "s0:e0,s1:e1,..."] \
   [--topology N --axis B] \
   [--layout row-major|column-major|blocked|sharded] \
   [--block-shape B0,B1,...] [--host-out FILE] [--spool FILE]
 ```
 
-`--out` is a path inside the store. The restored container is imported with
-`create_file_streaming` (bounded memory) and is therefore visible through
-`weftfs ls`/`cat` and through a FUSE mount. `--host-out` also keeps a host copy;
-the default spool is a temporary host file that is deleted after import.
+A restore is **read-only in the store** unless `--import` is given. Without it,
+the exact container is written to `--host-out` (or the spool file) and no store
+object or commit is created; `--out` and `--out-name` are rejected without
+`--import`. With `--import`, `--out` is a path inside the store and the restored
+container is imported with `create_file_streaming` (bounded memory), so it is
+visible through `weftfs ls`/`cat` and through a FUSE mount. `--host-out` also
+keeps a host copy; the default spool is a temporary host file that is deleted
+after import.
 
 `weftfs checkpoint list|show|verify` complete the surface. `verify` decodes
 every shard and re-checks every per-shard and per-tensor root.

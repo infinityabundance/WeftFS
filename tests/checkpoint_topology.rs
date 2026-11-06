@@ -20,7 +20,7 @@ use weftfs::checkpoint::{
     ShardStrategy,
 };
 use weftfs::safetensors::{self, SafetensorsEntry, SafetensorsFile};
-use weftfs::store::{Options, Store};
+use weftfs::store::{OpenMode, Options, Store};
 
 const SHAPE: [u64; 3] = [64, 32, 16];
 const TENSOR: &str = "weight";
@@ -527,6 +527,7 @@ fn cli_checkpoint_write_restore_verify() {
             "restore",
             "--name",
             "cli8",
+            "--import",
             "--out",
             "/restored",
             "--topology",
@@ -561,6 +562,111 @@ fn cli_checkpoint_write_restore_verify() {
             .len(),
         8
     );
+}
+
+#[test]
+fn cli_checkpoint_restore_is_read_only_unless_imported() {
+    let dir = tempdir().unwrap();
+    let store_path = dir.path().join("store");
+    let source = write_container(&dir.path().join("src"));
+    let source_bytes = fs::read(&source).unwrap();
+    let source_dir = source.parent().unwrap();
+
+    ok(&store_path, &["init"]);
+    json(
+        &store_path,
+        &[
+            "--json",
+            "checkpoint",
+            "write",
+            "--from-dir",
+            source_dir.to_str().unwrap(),
+            "--name",
+            "readonly",
+            "--shards",
+            "4",
+            "--axis",
+            "0",
+        ],
+    );
+    let generation_before = Store::open(&store_path, OpenMode::ReadOnly)
+        .unwrap()
+        .generation();
+
+    // No --import: bytes go to the host file, the store is untouched.
+    let host_out = dir.path().join("restored.safetensors");
+    let report: Json = json(
+        &store_path,
+        &[
+            "--json",
+            "checkpoint",
+            "restore",
+            "--name",
+            "readonly",
+            "--host-out",
+            host_out.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(report["imported"], false);
+    assert_eq!(report["object_id"], Json::Null);
+    assert_eq!(fs::read(&host_out).unwrap(), source_bytes);
+    let store = Store::open(&store_path, OpenMode::ReadOnly).unwrap();
+    assert_eq!(
+        store.generation(),
+        generation_before,
+        "a read-only restore must not commit"
+    );
+    assert!(
+        store
+            .resolve_components(&[b"restored", b"readonly.safetensors"])
+            .is_err(),
+        "a read-only restore must not add a store file"
+    );
+    drop(store);
+
+    // --out without --import is rejected rather than silently importing.
+    let rejected = run(
+        &store_path,
+        &[
+            "checkpoint",
+            "restore",
+            "--name",
+            "readonly",
+            "--out",
+            "/restored",
+        ],
+    );
+    assert!(!rejected.status.success());
+    assert!(
+        String::from_utf8_lossy(&rejected.stderr).contains("read-only"),
+        "{}",
+        String::from_utf8_lossy(&rejected.stderr)
+    );
+
+    // --import is the opt-in mutation: exactly one commit and one new file.
+    let imported: Json = json(
+        &store_path,
+        &[
+            "--json",
+            "checkpoint",
+            "restore",
+            "--name",
+            "readonly",
+            "--import",
+            "--out",
+            "/restored",
+        ],
+    );
+    assert_eq!(imported["imported"], true);
+    assert_eq!(imported["store_path"], "/restored/readonly.safetensors");
+    let cat = ok(&store_path, &["cat", "/restored/readonly.safetensors"]);
+    assert_eq!(cat.stdout, source_bytes);
+    let store = Store::open(&store_path, OpenMode::ReadOnly).unwrap();
+    assert!(
+        store.generation() > generation_before,
+        "--import must publish the restored file"
+    );
+    assert!(store.verify(true).unwrap().ok);
 }
 
 // ---------------------------------------------------------------------------
