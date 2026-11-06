@@ -30,13 +30,16 @@ CASES="$CACHE/signed-bench-$STAMP.cases.tsv"
 : > "$METRICS"
 : > "$CASES"
 
-# Deterministic benchmark-only keys. These are not secrets and are not an
-# identity; a real deployment supplies --sign-key from its own secret store.
+# Ephemeral benchmark-only keys generated for this run. They are not secrets
+# for any real identity and are never reused. A real deployment supplies
+# --sign-key from its own secret store.
 KEY="$CACHE/signed-bench-key.hex"
 OTHER_KEY="$CACHE/signed-bench-other.hex"
 umask 077
-printf '%s\n' "$(printf '44%.0s' {1..32})" > "$KEY"
-printf '%s\n' "$(printf '55%.0s' {1..32})" > "$OTHER_KEY"
+head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$KEY"
+printf '\n' >> "$KEY"
+head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$OTHER_KEY"
+printf '\n' >> "$OTHER_KEY"
 chmod 600 "$KEY" "$OTHER_KEY"
 
 now_ms() { printf '%s' "$(( $(date +%s%N) / 1000000 ))"; }
@@ -369,10 +372,10 @@ receipt = {
     },
     "hosts": 1,
     "label": (
-        "single host; deterministic benchmark-only signing keys; real receipt "
-        "bundle built from the committed bench/receipts and conformance corpus; "
-        "process-level signature court, not physical power loss and not a "
-        "statement about measurement truth"
+        "single host; ephemeral benchmark-only signing keys generated for this "
+        "run; real receipt bundle built from the committed bench/receipts and "
+        "conformance corpus; process-level signature court, not physical power "
+        "loss and not a statement about measurement truth"
     ),
     "signing": {
         "algorithm": "Ed25519",

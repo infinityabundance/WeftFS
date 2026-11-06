@@ -2313,7 +2313,7 @@ real ~1,061-file bundle.
   signature over the real manifest digest: `VERIFY OK`; a changed digest
   produced `VERIFY FAIL`. This was run in the Go court.
 - **Bench** (`bench/receipts/signed-bundles-20261106T004952Z.json`, raw log
-  beside it; single host, clean worktree at revision `facfb4a`, deterministic
+  beside it; single host, clean worktree at revision `facfb4a`, ephemeral
   benchmark-only keys, kernel `7.3.1-1-cachyos`, 3 GiB / 4 CPUs / 1024 pids):
   1,062 payload files, 1,137 tar entries. Signed package 19,659 ms; unsigned
   12,164 ms. Pinned-key verify 9,044 ms; unsigned verify 9,070 ms. Signature
