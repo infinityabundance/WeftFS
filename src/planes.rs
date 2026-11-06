@@ -262,6 +262,39 @@ pub trait BlobPlane: Send {
     /// Delete one object. A missing object is `NotFound`.
     fn delete(&mut self, key: &Key) -> Result<()>;
 
+    /// Delete several objects. The default deletes one at a time; a packed
+    /// plane overrides it so one catalog segment is republished per touched
+    /// segment instead of once per member.
+    fn delete_many(&mut self, keys: &[Key]) -> Result<()> {
+        for key in keys {
+            self.delete(key)?;
+        }
+        Ok(())
+    }
+
+    /// Flush buffered publications.
+    ///
+    /// The store calls this before publishing a commit record, so every blob
+    /// named by a published commit is durable and visible. The default plane
+    /// publishes eagerly and has nothing buffered.
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Reclaim physical pack objects whose every member has been deleted.
+    ///
+    /// Default: this plane has no packs. A packed plane returns the exact
+    /// number of packs and bytes deleted so GC can report them.
+    fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {
+        Ok(crate::packs::PackReclaim::default())
+    }
+
+    /// Report structural problems in the plane's own metadata (for example the
+    /// pack catalog). Default: this plane has no metadata of its own.
+    fn verify_packs(&self) -> Result<Vec<String>> {
+        Ok(Vec::new())
+    }
+
     /// Object length in bytes.
     fn len(&self, key: &Key) -> Result<u64>;
 

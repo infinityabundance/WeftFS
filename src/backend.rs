@@ -81,6 +81,15 @@ pub enum KeyKind {
     QuotaMigrated,
     /// `access/counts.v1`: advisory per-object read counters.
     Access,
+    /// `packs/<ab>/<hash>`: a physical pack of small immutable blobs
+    /// (subphase R11). Always on the blob plane.
+    Pack,
+    /// `pack-catalog/<ab>/<hash>`: an immutable content-addressed catalog
+    /// segment naming pack members. Always on the blob plane.
+    PackCatalog,
+    /// `pack-catalog.root`: the mutable catalog root control record. Always on
+    /// the commit plane and replaced by compare-and-swap.
+    PackCatalogRoot,
 }
 
 impl KeyKind {
@@ -102,6 +111,9 @@ impl KeyKind {
             KeyKind::Quota => "quota",
             KeyKind::QuotaMigrated => "quota-migrated",
             KeyKind::Access => "access",
+            KeyKind::Pack => "pack",
+            KeyKind::PackCatalog => "pack-catalog",
+            KeyKind::PackCatalogRoot => "pack-catalog-root",
         }
     }
 }
@@ -143,6 +155,16 @@ pub enum Key {
     AccessCounts,
     /// Advisory read-counter journal (`access/journal.v1`).
     AccessJournal,
+    /// One physical pack object (subphase R11).
+    Pack {
+        hash: Hash32,
+    },
+    /// One immutable catalog segment object (subphase R11).
+    PackCatalog {
+        hash: Hash32,
+    },
+    /// The catalog root control record (subphase R11).
+    PackCatalogRoot,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -214,6 +236,18 @@ impl Key {
         Key::AccessJournal
     }
 
+    pub fn pack(hash: Hash32) -> Key {
+        Key::Pack { hash }
+    }
+
+    pub fn pack_catalog(hash: Hash32) -> Key {
+        Key::PackCatalog { hash }
+    }
+
+    pub fn pack_catalog_root() -> Key {
+        Key::PackCatalogRoot
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -234,6 +268,9 @@ impl Key {
             Key::Quota => KeyKind::Quota,
             Key::QuotaMigrated => KeyKind::QuotaMigrated,
             Key::AccessCounts | Key::AccessJournal => KeyKind::Access,
+            Key::Pack { .. } => KeyKind::Pack,
+            Key::PackCatalog { .. } => KeyKind::PackCatalog,
+            Key::PackCatalogRoot => KeyKind::PackCatalogRoot,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -247,7 +284,10 @@ impl Key {
     /// keys, `None` otherwise.
     pub fn shard(&self) -> Option<String> {
         match self {
-            Key::Object { hash } | Key::Manifest { hash } => Some(hash.to_hex()[0..2].to_owned()),
+            Key::Object { hash }
+            | Key::Manifest { hash }
+            | Key::Pack { hash }
+            | Key::PackCatalog { hash } => Some(hash.to_hex()[0..2].to_owned()),
             Key::Index { commit } => Some(commit.to_hex()[0..2].to_owned()),
             _ => None,
         }
@@ -257,7 +297,12 @@ impl Key {
     pub fn name(&self) -> Option<&str> {
         match self {
             Key::Commit { .. } => None,
-            Key::Object { .. } | Key::Manifest { .. } | Key::Index { .. } => None,
+            Key::Object { .. }
+            | Key::Manifest { .. }
+            | Key::Index { .. }
+            | Key::Pack { .. }
+            | Key::PackCatalog { .. }
+            | Key::PackCatalogRoot => None,
             Key::SnapshotRef { name } | Key::Tag { name } | Key::Tmp { name } => Some(name),
             Key::Other { name, .. } => Some(name),
             _ => None,
@@ -291,6 +336,15 @@ impl Key {
             Key::QuotaMigrated => "quota.migrated".to_owned(),
             Key::AccessCounts => "access/counts.v1".to_owned(),
             Key::AccessJournal => "access/journal.v1".to_owned(),
+            Key::Pack { hash } => {
+                let hex = hash.to_hex();
+                format!("packs/{}/{hex}", &hex[0..2])
+            }
+            Key::PackCatalog { hash } => {
+                let hex = hash.to_hex();
+                format!("pack-catalog/{}/{hex}", &hex[0..2])
+            }
+            Key::PackCatalogRoot => "pack-catalog.root".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -418,6 +472,14 @@ pub enum BackendKind {
         commits: Box<BackendKind>,
         blob_root: Option<PathBuf>,
     },
+    /// Physical object packs (subphase R11): small immutable blobs are grouped
+    /// into larger pack objects, with membership recorded in a commit-plane
+    /// catalog. The inner kind supplies the blob plane, and its commit plane is
+    /// also where the catalog lives.
+    Packed {
+        inner: Box<BackendKind>,
+        options: crate::packs::PackOptions,
+    },
 }
 
 impl BackendKind {
@@ -448,6 +510,33 @@ impl BackendKind {
         })
     }
 
+    /// Build a packed configuration. Refuses up front when the inner blob
+    /// plane does not provide true range reads: a packed read fetches only the
+    /// member's byte range, so a plane that must materialise the whole pack is
+    /// never used for packing.
+    pub fn packed(inner: BackendKind, options: crate::packs::PackOptions) -> Result<BackendKind> {
+        if matches!(inner, BackendKind::Packed { .. }) {
+            return Err(Error::invalid_argument(
+                "a packed backend takes exactly one blob plane; nesting is not a supported \
+                 configuration",
+            ));
+        }
+        options.validate()?;
+        let capabilities = inner.capabilities();
+        if !capabilities.true_range_reads {
+            return Err(Error::unsupported_version(format!(
+                "packed blobs need true range reads from the inner blob plane; backend `{}` \
+                 does not provide them, so packing is refused rather than approximated by \
+                 reading whole packs",
+                inner.label()
+            )));
+        }
+        Ok(BackendKind::Packed {
+            inner: Box::new(inner),
+            options,
+        })
+    }
+
     pub fn label(&self) -> &'static str {
         match self {
             BackendKind::Local => "local",
@@ -455,6 +544,7 @@ impl BackendKind {
             BackendKind::S3 { .. } => "s3",
             BackendKind::Posix { .. } => "posix",
             BackendKind::Split { .. } => "split",
+            BackendKind::Packed { .. } => "packed",
         }
     }
 
@@ -465,7 +555,25 @@ impl BackendKind {
             BackendKind::Split { blobs, commits, .. } => {
                 format!("{}-blobs/{}-commits", blobs.label(), commits.label())
             }
+            BackendKind::Packed { inner, .. } => format!("packed-{}", inner.describe()),
             other => other.label().to_owned(),
+        }
+    }
+
+    /// Physical path of the blob plane for this kind.
+    fn blob_root(&self, root: &Path) -> PathBuf {
+        match self {
+            BackendKind::Split {
+                blob_root: Some(path),
+                ..
+            } => path.clone(),
+            BackendKind::Split {
+                blobs,
+                blob_root: None,
+                ..
+            } => blobs.blob_root(root),
+            BackendKind::Packed { inner, .. } => inner.blob_root(root),
+            _ => root.to_path_buf(),
         }
     }
 
@@ -482,6 +590,7 @@ impl BackendKind {
                 &commits.capabilities(),
                 self.describe(),
             ),
+            BackendKind::Packed { inner, .. } => inner.capabilities(),
         }
     }
 
@@ -491,6 +600,7 @@ impl BackendKind {
             BackendKind::Split { blobs, commits, .. } => {
                 Some((blobs.capabilities(), commits.capabilities()))
             }
+            BackendKind::Packed { inner, .. } => inner.split_planes(),
             _ => None,
         }
     }
@@ -502,6 +612,9 @@ impl BackendKind {
     /// published atomically, durably, and conditionally, because the head is
     /// what makes a commit visible.
     pub fn require_plane_contract(&self) -> Result<()> {
+        if let BackendKind::Packed { inner, .. } = self {
+            inner.require_plane_contract()?;
+        }
         let Some((blobs, commits)) = self.split_planes() else {
             return Ok(());
         };
@@ -539,14 +652,15 @@ impl BackendKind {
         match self {
             BackendKind::S3 { .. } => true,
             BackendKind::Split { commits, .. } => commits.is_remote(),
+            BackendKind::Packed { inner, .. } => inner.is_remote(),
             _ => false,
         }
     }
 
     /// Construct the backend rooted at `root`.
-    pub fn open(&self, root: impl AsRef<Path>) -> Box<dyn StorageBackend + Send> {
+    pub fn open(&self, root: impl AsRef<Path>) -> Result<Box<dyn StorageBackend + Send>> {
         let root = root.as_ref().to_path_buf();
-        match self {
+        Ok(match self {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
@@ -560,46 +674,63 @@ impl BackendKind {
             } => {
                 let blob_path = blob_root.as_deref().unwrap_or(&root);
                 Box::new(CompositeBackend::new(
-                    blobs.open_blob_plane(blob_path),
-                    commits.open_commit_plane(&root),
+                    blobs.open_blob_plane(blob_path)?,
+                    commits.open_commit_plane(&root)?,
                     format!("{}-blobs/{}-commits", blobs.label(), commits.label()),
                 ))
             }
-        }
+            BackendKind::Packed { .. } => Box::new(CompositeBackend::new(
+                self.open_blob_plane(&root)?,
+                self.open_commit_plane(&root)?,
+                self.describe(),
+            )),
+        })
     }
 
     /// Construct the blob plane as a [`crate::planes::BlobPlane`].
     pub fn open_blob_plane(
         &self,
         root: impl AsRef<Path>,
-    ) -> Box<dyn crate::planes::BlobPlane + Send> {
+    ) -> Result<Box<dyn crate::planes::BlobPlane + Send>> {
         let root = root.as_ref().to_path_buf();
-        match self {
+        Ok(match self {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
-            BackendKind::Split { blobs, .. } => blobs.open_blob_plane(&root),
-        }
+            BackendKind::Split { blobs, .. } => blobs.open_blob_plane(&root)?,
+            BackendKind::Packed { inner, options } => {
+                // The catalog lives on the same commit plane the store uses, so
+                // a split store keeps its pack metadata next to its control
+                // state rather than on the blob system.
+                let blob_root = inner.blob_root(&root);
+                let blobs = inner.open_blob_plane(&blob_root)?;
+                let catalog = inner.open_commit_plane(&root)?;
+                Box::new(crate::packs::PackedBlobPlane::new(
+                    blobs, catalog, *options,
+                )?)
+            }
+        })
     }
 
     /// Construct the commit plane as a [`crate::planes::CommitPlane`].
     pub fn open_commit_plane(
         &self,
         root: impl AsRef<Path>,
-    ) -> Box<dyn crate::planes::CommitPlane + Send> {
+    ) -> Result<Box<dyn crate::planes::CommitPlane + Send>> {
         let root = root.as_ref().to_path_buf();
-        match self {
+        Ok(match self {
             BackendKind::Local => Box::new(LocalBackend::new(root)),
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
-            BackendKind::Split { commits, .. } => commits.open_commit_plane(&root),
-        }
+            BackendKind::Split { commits, .. } => commits.open_commit_plane(&root)?,
+            BackendKind::Packed { inner, .. } => inner.open_commit_plane(&root)?,
+        })
     }
 }
 
@@ -784,6 +915,41 @@ pub trait StorageBackend: Send {
     /// Remove stale staging files older than `grace_secs`.
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()>;
 
+    /// Flush buffered blob publications.
+    ///
+    /// A plane that groups small blobs into larger physical objects may hold
+    /// the most recent publications in memory. The store calls this before it
+    /// publishes a commit record, so the protocol keeps its guarantee: every
+    /// blob named by a published commit is durable and visible. The default
+    /// implementation has nothing buffered.
+    fn flush_buffered_blobs(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Reclaim physical pack objects whose every member has been deleted.
+    ///
+    /// Default: the plane has no packs. A packed blob plane returns the exact
+    /// number of packs and bytes deleted, so GC can report them.
+    fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {
+        Ok(crate::packs::PackReclaim::default())
+    }
+
+    /// Report structural problems in the blob plane's own metadata (the pack
+    /// catalog, for example). Default: the plane has no metadata of its own.
+    fn verify_blob_plane(&self) -> Result<Vec<String>> {
+        Ok(Vec::new())
+    }
+
+    /// Delete several keys. The default deletes one at a time; a packed blob
+    /// plane overrides it so one catalog segment is republished per touched
+    /// segment instead of once per member.
+    fn delete_many(&mut self, keys: &[Key]) -> Result<()> {
+        for key in keys {
+            self.delete(key)?;
+        }
+        Ok(())
+    }
+
     /// Backend root directory.
     fn root(&self) -> &Path;
 
@@ -914,6 +1080,15 @@ impl LocalBackend {
             Key::QuotaMigrated => self.root.join("quota.migrated"),
             Key::AccessCounts => self.root.join("access").join("counts.v1"),
             Key::AccessJournal => self.root.join("access").join("journal.v1"),
+            Key::Pack { hash } => {
+                let hex = hash.to_hex();
+                self.root.join("packs").join(&hex[0..2]).join(hex)
+            }
+            Key::PackCatalog { hash } => {
+                let hex = hash.to_hex();
+                self.root.join("pack-catalog").join(&hex[0..2]).join(hex)
+            }
+            Key::PackCatalogRoot => self.root.join("pack-catalog.root"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -931,6 +1106,9 @@ impl LocalBackend {
             KeyKind::Quota => Some(self.root.clone()),
             KeyKind::QuotaMigrated => Some(self.root.clone()),
             KeyKind::Access => Some(self.root.join("access")),
+            KeyKind::Pack => Some(self.root.join("packs")),
+            KeyKind::PackCatalog => Some(self.root.join("pack-catalog")),
+            KeyKind::PackCatalogRoot => Some(self.root.clone()),
             _ => None,
         }
     }
@@ -1188,7 +1366,14 @@ impl StorageBackend for LocalBackend {
             return Ok(Vec::new());
         };
         let mut out = Vec::new();
-        let sharded = matches!(*kind, KeyKind::Object | KeyKind::Manifest | KeyKind::Index);
+        let sharded = matches!(
+            *kind,
+            KeyKind::Object
+                | KeyKind::Manifest
+                | KeyKind::Index
+                | KeyKind::Pack
+                | KeyKind::PackCatalog
+        );
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
             Err(err) if err.kind() == ErrorKind::NotFound => return Ok(out),
@@ -1402,6 +1587,17 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
             "journal.v1" => Some(Key::access_journal()),
             _ => None,
         },
+        KeyKind::Pack | KeyKind::PackCatalog => {
+            let hash = Hash32::from_lower_hex(name).ok()?;
+            if &hash.to_hex()[0..2] != shard {
+                return None;
+            }
+            Some(if kind == KeyKind::Pack {
+                Key::pack(hash)
+            } else {
+                Key::pack_catalog(hash)
+            })
+        }
         _ => None,
     }
 }
@@ -1465,7 +1661,9 @@ impl ObjectBackend {
             Key::AccessCounts => "a-counts.v1".to_owned(),
             Key::AccessJournal => "a-journal.v1".to_owned(),
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
-            Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
+            Key::Pack { hash } => format!("p-{}", hash.to_hex()),
+            Key::PackCatalog { hash } => format!("pc-{}", hash.to_hex()),
+            Key::PackCatalogRoot | Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
     }
 
@@ -2016,6 +2214,8 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
     let hex = match kind {
         KeyKind::Object => name,
         KeyKind::Manifest => name.strip_prefix("m-")?,
+        KeyKind::Pack => name.strip_prefix("p-")?,
+        KeyKind::PackCatalog => name.strip_prefix("pc-")?,
         KeyKind::Index => {
             let stem = name.strip_prefix("i-")?.strip_suffix(".idx")?;
             let commit = Hash32::from_lower_hex(stem).ok()?;
@@ -2067,6 +2267,8 @@ fn classify_object(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
     Some(match kind {
         KeyKind::Object => Key::object(hash),
         KeyKind::Manifest => Key::manifest(hash),
+        KeyKind::Pack => Key::pack(hash),
+        KeyKind::PackCatalog => Key::pack_catalog(hash),
         _ => return None,
     })
 }
@@ -2088,6 +2290,16 @@ fn known_object_name(name: &str) -> bool {
         .and_then(|name| name.strip_suffix(".idx"))
     {
         if Hash32::from_lower_hex(stem).is_ok() {
+            return true;
+        }
+    }
+    if let Some(hex) = name.strip_prefix("pc-") {
+        if Hash32::from_lower_hex(hex).is_ok() {
+            return true;
+        }
+    }
+    if let Some(hex) = name.strip_prefix("p-") {
+        if Hash32::from_lower_hex(hex).is_ok() {
             return true;
         }
     }
@@ -2254,7 +2466,11 @@ impl CompositeBackend {
     fn key_is_blob(key: &Key) -> bool {
         matches!(
             key.kind(),
-            KeyKind::Object | KeyKind::Manifest | KeyKind::Index
+            KeyKind::Object
+                | KeyKind::Manifest
+                | KeyKind::Index
+                | KeyKind::Pack
+                | KeyKind::PackCatalog
         )
     }
 
@@ -2381,7 +2597,14 @@ impl StorageBackend for CompositeBackend {
                 "list_prefix requires a Key::Prefix selector",
             ));
         };
-        if matches!(kind, KeyKind::Object | KeyKind::Manifest | KeyKind::Index) {
+        if matches!(
+            kind,
+            KeyKind::Object
+                | KeyKind::Manifest
+                | KeyKind::Index
+                | KeyKind::Pack
+                | KeyKind::PackCatalog
+        ) {
             self.blobs.list(prefix)
         } else {
             self.commits.list_control(prefix)
@@ -2450,6 +2673,35 @@ impl StorageBackend for CompositeBackend {
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
         self.blobs.clean_stale(grace_secs)?;
         self.commits.clean_stale(grace_secs)
+    }
+
+    fn flush_buffered_blobs(&mut self) -> Result<()> {
+        self.blobs.flush()
+    }
+
+    fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {
+        self.blobs.reclaim_unreferenced_packs()
+    }
+
+    fn verify_blob_plane(&self) -> Result<Vec<String>> {
+        self.blobs.verify_packs()
+    }
+
+    fn delete_many(&mut self, keys: &[Key]) -> Result<()> {
+        let mut blobs: Vec<Key> = Vec::new();
+        let mut commits: Vec<&Key> = Vec::new();
+        for key in keys {
+            if Self::key_is_blob(key) {
+                blobs.push(key.clone());
+            } else {
+                commits.push(key);
+            }
+        }
+        self.blobs.delete_many(&blobs)?;
+        for key in commits {
+            self.commits.delete_control(key)?;
+        }
+        Ok(())
     }
 
     fn root(&self) -> &Path {

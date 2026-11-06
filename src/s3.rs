@@ -1358,6 +1358,8 @@ fn prefix_for_kind(kind: KeyKind) -> Option<&'static str> {
         KeyKind::Tag => Some("refs/tags/"),
         KeyKind::Tmp => Some("tmp/"),
         KeyKind::Access => Some("access/"),
+        KeyKind::Pack => Some("packs/"),
+        KeyKind::PackCatalog => Some("pack-catalog/"),
         _ => None,
     }
 }
@@ -1400,6 +1402,18 @@ fn classify_relative(kind: KeyKind, relative: &str) -> Option<Key> {
             "journal.v1" => Some(Key::access_journal()),
             _ => None,
         },
+        KeyKind::Pack | KeyKind::PackCatalog => {
+            let (shard, name) = relative.split_once('/')?;
+            let hash = Hash32::from_lower_hex(name).ok()?;
+            if hash.to_hex()[0..2] != *shard {
+                return None;
+            }
+            Some(if kind == KeyKind::Pack {
+                Key::pack(hash)
+            } else {
+                Key::pack_catalog(hash)
+            })
+        }
         _ => None,
     }
 }

@@ -352,6 +352,11 @@ pub struct GcReport {
     pub deleted_indexes: Vec<String>,
     pub deleted_bytes: u64,
     pub retained: u64,
+    /// Physical pack objects reclaimed because every member had been deleted
+    /// (subphase R11). Zero for a plane without packs.
+    pub reclaimed_packs: u64,
+    pub reclaimed_pack_bytes: u64,
+    pub reclaimed_catalog_segments: u64,
     /// Unreferenced object records removed in a dedicated commit (a crash left
     /// an unlinked-but-pinned object behind).
     pub removed_orphans: Vec<String>,
@@ -780,7 +785,7 @@ impl Store {
         if backend_kind.is_remote() {
             // An S3 bucket is the store root. There is no local directory to
             // create or inspect; refuse if the bucket already holds a store.
-            let probe = backend_kind.open(&root);
+            let probe = backend_kind.open(&root)?;
             if probe.exists(&Key::format())? {
                 return Err(Error::exists(
                     "a WeftFS store already exists at this S3 bucket",
@@ -790,7 +795,7 @@ impl Store {
             if !root.is_dir() {
                 return Err(Error::exists("store path exists and is not a directory"));
             }
-            let probe = backend_kind.open(&root);
+            let probe = backend_kind.open(&root)?;
             if probe.exists(&Key::format())? {
                 return Err(Error::exists("a WeftFS store already exists at this path"));
             }
@@ -803,7 +808,7 @@ impl Store {
             crate::backend::make_dir(&root)?;
         }
 
-        let mut backend = backend_kind.open(&root);
+        let mut backend = backend_kind.open(&root)?;
         backend.init_layout()?;
         backend.put_atomic(&Key::format(), FORMAT_CONTENTS.as_bytes())?;
         backend.create_zeroed(&Key::superblock(), SUPERBLOCK_BYTES as u64)?;
@@ -894,7 +899,7 @@ impl Store {
             capabilities.require_durable_fsync("a read-write store")?;
             capabilities.require_conditional_head("a read-write store")?;
         }
-        let mut backend = backend_kind.open(&root);
+        let mut backend = backend_kind.open(&root)?;
         let format_bytes = backend
             .read_all(&Key::format())
             .map_err(|err| Error::corrupt(format!("cannot read FORMAT: {err}")))?;
@@ -5768,6 +5773,23 @@ impl Store {
             }
         }
 
+        // Blob-plane metadata of its own (the pack catalog). A plane without
+        // packs reports nothing.
+        match self.with_backend(|backend| backend.verify_blob_plane()) {
+            Ok(problems) => {
+                for problem in problems {
+                    report.problems.push(VerifyProblem {
+                        class: "Corrupt".to_owned(),
+                        detail: problem,
+                    });
+                }
+            }
+            Err(err) => report.problems.push(VerifyProblem {
+                class: err.class_name().to_owned(),
+                detail: format!("blob plane metadata: {err}"),
+            }),
+        }
+
         // Snapshot pointer files are caches; report mismatches, not absence.
         for (name, hash) in &self.state.snapshots {
             let key = Key::snapshot_ref(name.clone());
@@ -6444,10 +6466,23 @@ impl Store {
             let display = key.display_path();
             report.candidates.push(display.clone());
             if apply {
-                self.with_backend_mut(|backend| backend.delete(key))?;
                 report.deleted.push(display);
                 report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
             }
+        }
+        if apply && !candidates.is_empty() {
+            // One batch so a packed plane republishes one catalog segment per
+            // touched segment instead of once per deleted member.
+            let keys: Vec<Key> = candidates.iter().map(|(key, _)| key.clone()).collect();
+            self.with_backend_mut(|backend| backend.delete_many(&keys))?;
+            // A pack is reclaimed only once no catalog entry names it; a pack
+            // with one live member survives. Unreferenced packs (and catalog
+            // segments left by a crash between segment and root publication)
+            // are collected here.
+            let reclaim = self.with_backend_mut(|backend| backend.reclaim_unreferenced_packs())?;
+            report.reclaimed_packs = reclaim.deleted_packs;
+            report.reclaimed_pack_bytes = reclaim.deleted_pack_bytes;
+            report.reclaimed_catalog_segments = reclaim.deleted_catalog_segments;
         }
 
         // Advisory index segments are retained only for commits named by a
@@ -7660,6 +7695,10 @@ impl Store {
             let capabilities = backend.capabilities();
             capabilities.require_atomic_publish("commit publication")?;
             capabilities.require_durable_fsync("commit publication")?;
+            // A blob plane may buffer small members in memory (packs). The
+            // commit record must not name a blob that is not yet durable, so
+            // flush before the record is published.
+            backend.flush_buffered_blobs()?;
             if backend.exists(&key)? {
                 return Err(Error::corrupt(format!(
                     "commit file {} already exists",

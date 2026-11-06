@@ -127,6 +127,26 @@ struct Cli {
     /// Optional S3 session token (fallback: AWS_SESSION_TOKEN).
     #[arg(long = "s3-session-token", global = true, value_name = "TOKEN")]
     s3_session_token: Option<String>,
+    /// Group small immutable blobs into physical pack objects (subphase R11).
+    /// Members are recorded in a compare-and-swap catalog and read with one
+    /// ranged request per member. Refused when the blob plane cannot read a
+    /// byte range.
+    #[arg(long, global = true)]
+    pack: bool,
+    /// Pack target size in bytes when `--pack` is set (default 16 MiB).
+    #[arg(long = "pack-target-bytes", global = true, value_name = "BYTES")]
+    pack_target_bytes: Option<u64>,
+    /// Largest blob that is packed when `--pack` is set (default 64 KiB).
+    #[arg(long = "pack-member-threshold", global = true, value_name = "BYTES")]
+    pack_member_threshold: Option<u64>,
+    /// Upper bound on the encoded pack catalog when `--pack` is set (default
+    /// 8 MiB). When it is reached, new blobs are published flat.
+    #[arg(long = "pack-catalog-bytes", global = true, value_name = "BYTES")]
+    pack_catalog_bytes: Option<u64>,
+    /// Number of catalog segments when `--pack` is set (power of two, default
+    /// 256).
+    #[arg(long = "pack-segments", global = true, value_name = "N")]
+    pack_segments: Option<u32>,
     /// `codec-auto` leaves files smaller than this on the raw path.
     #[arg(
         long = "codec-min-bytes",
@@ -1063,6 +1083,8 @@ struct OpenPolicy {
     content_identity: ContentIdentity,
     codec_min_bytes: u64,
     backend: CliBackend,
+    /// When set, small immutable blobs are grouped into physical packs.
+    pack: Option<weftfs::packs::PackOptions>,
     quotas: Vec<weftfs::quota::QuotaBudget>,
     single_flight: bool,
     single_flight_max_entries: usize,
@@ -1072,6 +1094,15 @@ struct OpenPolicy {
 }
 
 impl OpenPolicy {
+    /// The backend this policy selects. Packing wraps the selected backend.
+    fn kind(&self) -> Result<BackendKind> {
+        let kind = self.backend.kind();
+        match self.pack {
+            Some(options) => BackendKind::packed(kind, options),
+            None => Ok(kind),
+        }
+    }
+
     fn options(&self) -> Options {
         Options {
             fixed_timestamp_ns: self.fixed_timestamp_ns,
@@ -1219,6 +1250,11 @@ fn run(cli: Cli) -> Result<()> {
         s3_access_key,
         s3_secret_key,
         s3_session_token,
+        pack,
+        pack_target_bytes,
+        pack_member_threshold,
+        pack_catalog_bytes,
+        pack_segments,
         codec_min_bytes,
         quotas,
         quota_file,
@@ -1264,6 +1300,25 @@ fn run(cli: Cli) -> Result<()> {
             s3_secret_key,
             s3_session_token,
         )?,
+        pack: if pack {
+            let mut options = weftfs::packs::PackOptions::default();
+            if let Some(bytes) = pack_target_bytes {
+                options.pack_target_bytes = bytes;
+            }
+            if let Some(bytes) = pack_member_threshold {
+                options.member_threshold_bytes = bytes;
+            }
+            if let Some(bytes) = pack_catalog_bytes {
+                options.max_catalog_bytes = bytes;
+            }
+            if let Some(segments) = pack_segments {
+                options.catalog_segments = segments;
+            }
+            options.validate()?;
+            Some(options)
+        } else {
+            None
+        },
         quotas: budgets,
         single_flight,
         single_flight_max_entries,
@@ -1321,7 +1376,7 @@ fn run(cli: Cli) -> Result<()> {
                 quotas: policy.quotas.clone(),
                 ..Options::default()
             };
-            let store = Store::init_with_backend(&store, options, policy.backend.kind())?;
+            let store = Store::init_with_backend(&store, options, policy.kind()?)?;
             if json {
                 print_json(&json!({
                     "generation": store.generation(),
@@ -2778,7 +2833,7 @@ fn run(cli: Cli) -> Result<()> {
 }
 
 fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Result<Store> {
-    Store::open_with_options_and_backend(path, mode, policy.options(), policy.backend.kind())
+    Store::open_with_options_and_backend(path, mode, policy.options(), policy.kind()?)
 }
 
 /// One `checkpoint` subcommand (`weftfs checkpoint` alone still forces a

@@ -32,6 +32,7 @@ pub mod fuse;
 pub mod identity;
 pub(crate) mod index;
 pub mod object_cache;
+pub mod packs;
 pub mod parallel;
 pub mod planes;
 pub mod provenance;
@@ -66,6 +67,7 @@ pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
 pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStats};
+pub use packs::{PackOptions, PackReclaim, PackStats, PackedBlobPlane};
 pub use parallel::{
     effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
     DEFAULT_MAX_INFLIGHT_BYTES,

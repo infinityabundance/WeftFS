@@ -499,7 +499,7 @@ fn assert_same_logical_state(local: &Store, s3: &Store) {
 }
 
 fn keys(kind: &BackendKind, root: &std::path::Path, key_kind: KeyKind) -> Vec<Key> {
-    let backend = kind.open(root);
+    let backend = kind.open(root).expect("open backend");
     let mut keys = backend
         .list_prefix(&Key::prefix(key_kind))
         .unwrap_or_else(|err| panic!("list {:?}: {err}", key_kind));
