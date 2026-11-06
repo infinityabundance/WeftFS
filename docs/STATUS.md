@@ -3344,7 +3344,7 @@ exact error `--calibration requires --planner-cost-model measured`. Without the
 flag, behaviour is byte-identical to R11.
 
 In the final scale court the host table differed from the baked table by
-+1.256% (float-tensor) to +9.199% (semantic-delta), and -1.401% for
++1.962% (float-tensor) to +8.720% (semantic-delta), and -2.541% for
 tensor-sharded, measured at 1 MiB. The table is host-bound by construction; the
 record names the exact image, kernel, CPU count, and WeftFS revision.
 
