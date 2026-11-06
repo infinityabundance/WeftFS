@@ -29,6 +29,7 @@ use std::time::{Duration, Instant};
 
 use tempfile::tempdir;
 
+use weftfs::azure::AzureBackend;
 use weftfs::backend::{BackendKind, Key, KeyKind, StorageBackend};
 use weftfs::gcs::GcsBackend;
 use weftfs::s3::S3Backend;
@@ -96,7 +97,10 @@ pub fn read_lock(kind: &BackendKind) -> Option<PublishedLock> {
         BackendKind::Gcs { config } => GcsBackend::new("<fence-observer>", config.clone())
             .read_lock_record()
             .expect("read LOCK"),
-        other => panic!("a fencing court needs an s3 or gcs backend, got {other:?}"),
+        BackendKind::Azure { config } => AzureBackend::new("<fence-observer>", config.clone())
+            .read_lock_record()
+            .expect("read LOCK"),
+        other => panic!("a fencing court needs an s3, gcs, or azure backend, got {other:?}"),
     }
 }
 
@@ -120,7 +124,13 @@ pub fn lock_bytes_and_token(kind: &BackendKind) -> (Vec<u8>, String) {
                 .expect("LOCK exists");
             (bytes, format!("generation:{generation}"))
         }
-        other => panic!("a fencing court needs an s3 or gcs backend, got {other:?}"),
+        BackendKind::Azure { config } => {
+            let observer = AzureBackend::new("<fence-observer>", config.clone());
+            let bytes = observer.read_all(&Key::lock()).expect("LOCK bytes");
+            let etag = observer.etag_for_test(&Key::lock()).expect("LOCK ETag");
+            (bytes, format!("etag:{etag}"))
+        }
+        other => panic!("a fencing court needs an s3, gcs, or azure backend, got {other:?}"),
     }
 }
 

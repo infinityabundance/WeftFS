@@ -22,6 +22,7 @@ use weftcodec::wcb::Value;
 use weftcodec::{Region, SemanticPolicy};
 
 use weftfs::auth::Principal;
+use weftfs::azure::AzureConfig;
 use weftfs::backend::BackendKind;
 use weftfs::checkpoint::{
     self, CheckpointRestoreOptions, CheckpointWriteOptions, RestoreTopology, ShardStrategy,
@@ -87,12 +88,13 @@ struct Cli {
     content_identity: Option<String>,
     /// Physical storage backend: `local` (normative POSIX layout), `object`
     /// (immutable object namespace published with link(2)), `s3` (SigV4
-    /// S3-compatible endpoint; see `--s3-*`), or `gcs` (GCS JSON API with
-    /// generation preconditions; see `--gcs-*`).
+    /// S3-compatible endpoint; see `--s3-*`), `gcs` (GCS JSON API with
+    /// generation preconditions; see `--gcs-*`), or `azure` (Azure Blob REST
+    /// with ETag preconditions; see `--azure-*`).
     #[arg(
         long,
         global = true,
-        value_name = "local|object|s3|gcs",
+        value_name = "local|object|s3|gcs|azure",
         default_value = "local"
     )]
     backend: String,
@@ -102,7 +104,7 @@ struct Cli {
     #[arg(
         long = "blob-backend",
         global = true,
-        value_name = "local|object|s3|gcs"
+        value_name = "local|object|s3|gcs|azure"
     )]
     blob_backend: Option<String>,
     /// Optional commit plane for a split store: `FORMAT`, `LOCK`, the
@@ -111,7 +113,7 @@ struct Cli {
     #[arg(
         long = "commit-backend",
         global = true,
-        value_name = "local|object|s3|gcs"
+        value_name = "local|object|s3|gcs|azure"
     )]
     commit_backend: Option<String>,
     /// Optional local directory for the blob plane of a split store, when both
@@ -154,6 +156,29 @@ struct Cli {
     /// was also supplied.
     #[arg(long = "gcs-anonymous", global = true)]
     gcs_anonymous: bool,
+    /// Azure Blob endpoint, e.g. `http://127.0.0.1:10000/devstoreaccount1` or
+    /// `https://<account>.blob.core.windows.net`.
+    #[arg(long = "azure-endpoint", global = true, value_name = "URL")]
+    azure_endpoint: Option<String>,
+    /// Azure Blob container that holds the store.
+    #[arg(long = "azure-container", global = true, value_name = "CONTAINER")]
+    azure_container: Option<String>,
+    /// Azure storage account name used as the SharedKey credential scope
+    /// (fallback: WEFT_AZURE_ACCOUNT or AZURE_STORAGE_ACCOUNT).
+    #[arg(long = "azure-account", global = true, value_name = "ACCOUNT")]
+    azure_account: Option<String>,
+    /// Azure storage account key (fallback: WEFT_AZURE_KEY or
+    /// AZURE_STORAGE_KEY). Never logged or written to receipts.
+    #[arg(long = "azure-key", global = true, value_name = "KEY")]
+    azure_key: Option<String>,
+    /// Azure SAS query string without the leading `?` (fallback:
+    /// WEFT_AZURE_SAS or AZURE_STORAGE_SAS_TOKEN). Never logged.
+    #[arg(long = "azure-sas", global = true, value_name = "QUERY")]
+    azure_sas: Option<String>,
+    /// Send no Azure credential (an emulator court). Refused when an account
+    /// key or SAS token was also supplied.
+    #[arg(long = "azure-anonymous", global = true)]
+    azure_anonymous: bool,
     /// Group small immutable blobs into physical pack objects (subphase R11).
     /// Members are recorded in a compare-and-swap catalog and read with one
     /// ranged request per member. Refused when the blob plane cannot read a
@@ -1102,6 +1127,7 @@ enum CliBackend {
     Object,
     S3(S3Config),
     Gcs(GcsConfig),
+    Azure(AzureConfig),
     /// Blobs on one plane, commit/control state on another.
     Split {
         blobs: Box<CliBackend>,
@@ -1121,6 +1147,9 @@ impl CliBackend {
             CliBackend::Gcs(config) => BackendKind::Gcs {
                 config: config.clone(),
             },
+            CliBackend::Azure(config) => BackendKind::Azure {
+                config: config.clone(),
+            },
             CliBackend::Split {
                 blobs,
                 commits,
@@ -1135,7 +1164,7 @@ impl CliBackend {
 
     fn is_remote(&self) -> bool {
         match self {
-            CliBackend::S3(_) | CliBackend::Gcs(_) => true,
+            CliBackend::S3(_) | CliBackend::Gcs(_) | CliBackend::Azure(_) => true,
             CliBackend::Split { commits, .. } => commits.is_remote(),
             _ => false,
         }
@@ -1186,41 +1215,57 @@ impl OpenPolicy {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn parse_backend(
-    text: &str,
-    endpoint: Option<String>,
-    bucket: Option<String>,
-    region: Option<String>,
-    access_key: Option<String>,
-    secret_key: Option<String>,
-    session_token: Option<String>,
+#[derive(Clone, Debug, Default)]
+struct RemoteOptions {
+    s3_endpoint: Option<String>,
+    s3_bucket: Option<String>,
+    s3_region: Option<String>,
+    s3_access_key: Option<String>,
+    s3_secret_key: Option<String>,
+    s3_session_token: Option<String>,
     gcs_endpoint: Option<String>,
     gcs_bucket: Option<String>,
     gcs_token: Option<String>,
     gcs_project: Option<String>,
-    gcs_anonymous: Option<bool>,
-) -> Result<CliBackend> {
+    gcs_anonymous: bool,
+    azure_endpoint: Option<String>,
+    azure_container: Option<String>,
+    azure_account: Option<String>,
+    azure_key: Option<String>,
+    azure_sas: Option<String>,
+    azure_anonymous: bool,
+}
+
+fn parse_backend(text: &str, remote: &RemoteOptions) -> Result<CliBackend> {
     match text {
         "local" => Ok(CliBackend::Local),
         "object" => Ok(CliBackend::Object),
         "s3" => Ok(CliBackend::S3(S3Config::resolve(
-            endpoint,
-            bucket,
-            region,
-            access_key,
-            secret_key,
-            session_token,
+            remote.s3_endpoint.clone(),
+            remote.s3_bucket.clone(),
+            remote.s3_region.clone(),
+            remote.s3_access_key.clone(),
+            remote.s3_secret_key.clone(),
+            remote.s3_session_token.clone(),
         )?)),
         "gcs" => Ok(CliBackend::Gcs(GcsConfig::resolve(
-            gcs_endpoint,
-            gcs_bucket,
-            gcs_token,
-            gcs_project,
-            gcs_anonymous,
+            remote.gcs_endpoint.clone(),
+            remote.gcs_bucket.clone(),
+            remote.gcs_token.clone(),
+            remote.gcs_project.clone(),
+            Some(remote.gcs_anonymous).filter(|value| *value),
+        )?)),
+        "azure" => Ok(CliBackend::Azure(AzureConfig::resolve(
+            remote.azure_endpoint.clone(),
+            remote.azure_container.clone(),
+            remote.azure_account.clone(),
+            remote.azure_key.clone(),
+            remote.azure_sas.clone(),
+            Some(remote.azure_anonymous).filter(|value| *value),
+            None,
         )?)),
         other => Err(Error::invalid_argument(format!(
-            "--backend must be `local`, `object`, `s3`, or `gcs` (got `{other}`)"
+            "--backend must be `local`, `object`, `s3`, `gcs`, or `azure` (got `{other}`)"
         ))),
     }
 }
@@ -1229,74 +1274,19 @@ fn parse_backend(
 ///
 /// Every CLI verb path relies on this, so the split is opt-in and a store is
 /// never silently opened with a different layout than it was written with.
-#[allow(clippy::too_many_arguments)]
 fn parse_planes(
     backend: &str,
     blob_backend: Option<&str>,
     commit_backend: Option<&str>,
     blob_root: Option<PathBuf>,
-    endpoint: Option<String>,
-    bucket: Option<String>,
-    region: Option<String>,
-    access_key: Option<String>,
-    secret_key: Option<String>,
-    session_token: Option<String>,
-    gcs_endpoint: Option<String>,
-    gcs_bucket: Option<String>,
-    gcs_token: Option<String>,
-    gcs_project: Option<String>,
-    gcs_anonymous: bool,
+    remote: &RemoteOptions,
 ) -> Result<CliBackend> {
-    let anonymous = Some(gcs_anonymous).filter(|value| *value);
-    let base = parse_backend(
-        backend,
-        endpoint.clone(),
-        bucket.clone(),
-        region.clone(),
-        access_key.clone(),
-        secret_key.clone(),
-        session_token.clone(),
-        gcs_endpoint.clone(),
-        gcs_bucket.clone(),
-        gcs_token.clone(),
-        gcs_project.clone(),
-        anonymous,
-    )?;
+    let base = parse_backend(backend, remote)?;
     let blobs = blob_backend
-        .map(|text| {
-            parse_backend(
-                text,
-                endpoint.clone(),
-                bucket.clone(),
-                region.clone(),
-                access_key.clone(),
-                secret_key.clone(),
-                session_token.clone(),
-                gcs_endpoint.clone(),
-                gcs_bucket.clone(),
-                gcs_token.clone(),
-                gcs_project.clone(),
-                anonymous,
-            )
-        })
+        .map(|text| parse_backend(text, remote))
         .transpose()?;
     let commits = commit_backend
-        .map(|text| {
-            parse_backend(
-                text,
-                endpoint,
-                bucket,
-                region,
-                access_key,
-                secret_key,
-                session_token,
-                gcs_endpoint,
-                gcs_bucket,
-                gcs_token,
-                gcs_project,
-                anonymous,
-            )
-        })
+        .map(|text| parse_backend(text, remote))
         .transpose()?;
     match (blobs, commits) {
         (None, None) => Ok(base),
@@ -1379,6 +1369,12 @@ fn run(cli: Cli) -> Result<()> {
         gcs_token,
         gcs_project,
         gcs_anonymous,
+        azure_endpoint,
+        azure_container,
+        azure_account,
+        azure_key,
+        azure_sas,
+        azure_anonymous,
         pack,
         pack_target_bytes,
         pack_member_threshold,
@@ -1443,17 +1439,25 @@ fn run(cli: Cli) -> Result<()> {
             blob_backend.as_deref(),
             commit_backend.as_deref(),
             blob_root,
-            s3_endpoint,
-            s3_bucket,
-            s3_region,
-            s3_access_key,
-            s3_secret_key,
-            s3_session_token,
-            gcs_endpoint,
-            gcs_bucket,
-            gcs_token,
-            gcs_project,
-            gcs_anonymous,
+            &RemoteOptions {
+                s3_endpoint,
+                s3_bucket,
+                s3_region,
+                s3_access_key,
+                s3_secret_key,
+                s3_session_token,
+                gcs_endpoint,
+                gcs_bucket,
+                gcs_token,
+                gcs_project,
+                gcs_anonymous,
+                azure_endpoint,
+                azure_container,
+                azure_account,
+                azure_key,
+                azure_sas,
+                azure_anonymous,
+            },
         )?,
         pack: if pack {
             let mut options = weftfs::packs::PackOptions::default();

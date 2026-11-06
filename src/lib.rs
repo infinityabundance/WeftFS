@@ -19,6 +19,8 @@
 
 pub mod access;
 pub mod auth;
+pub mod azure;
+pub mod b64;
 pub mod backend;
 pub mod calibration;
 pub mod checkpoint;

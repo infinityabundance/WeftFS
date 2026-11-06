@@ -23,6 +23,10 @@
 //!   If `link(2)` is unavailable the backend uses `rename(2)` and says so in
 //!   its [`Capabilities::publication`] text and diagnostics.
 //! * [`S3Backend`] — a real S3-compatible endpoint (see `src/s3.rs`).
+//! * [`GcsBackend`] — a real GCS JSON-API endpoint with generation
+//!   preconditions (see `src/gcs.rs`).
+//! * [`AzureBackend`] — a real Azure Blob endpoint with `If-Match` entity tags
+//!   and SharedKey/SAS authentication (see `src/azure.rs`).
 //!
 //! A caller may also declare a [`BackendKind::Posix`] backend with weaker
 //! capabilities (for example a network filesystem that does not honour
@@ -40,6 +44,7 @@ use std::time::SystemTime;
 use fs2::FileExt as Fs2FileExt;
 use serde::Serialize;
 
+use crate::azure::{AzureBackend, AzureConfig};
 use crate::error::{Error, Result};
 use crate::format::MAX_CHUNK_SIZE;
 use crate::gcs::{GcsBackend, GcsConfig};
@@ -540,6 +545,9 @@ pub enum BackendKind {
     /// A real GCS-compatible object store (JSON API with generation
     /// preconditions over HTTPS/HTTP).
     Gcs { config: GcsConfig },
+    /// A real Azure Blob-compatible object store (Blob REST with ETag
+    /// preconditions over HTTPS/HTTP).
+    Azure { config: AzureConfig },
     /// A POSIX-named backend whose guarantees are declared by the caller.
     /// Used to represent storage such as 3FS before its consistency and
     /// durability claims have been measured. The declared capabilities are
@@ -625,6 +633,7 @@ impl BackendKind {
             BackendKind::Object => "object",
             BackendKind::S3 { .. } => "s3",
             BackendKind::Gcs { .. } => "gcs",
+            BackendKind::Azure { .. } => "azure",
             BackendKind::Posix { .. } => "posix",
             BackendKind::Split { .. } => "split",
             BackendKind::Packed { .. } => "packed",
@@ -668,6 +677,7 @@ impl BackendKind {
             BackendKind::Object => Capabilities::immutable_object(),
             BackendKind::S3 { .. } => S3Backend::capabilities(),
             BackendKind::Gcs { .. } => GcsBackend::capabilities(),
+            BackendKind::Azure { .. } => AzureBackend::capabilities(),
             BackendKind::Posix { capabilities } => capabilities.clone(),
             BackendKind::Split { blobs, commits, .. } => combine_capabilities(
                 &blobs.capabilities(),
@@ -736,6 +746,7 @@ impl BackendKind {
         match self {
             BackendKind::S3 { .. } => true,
             BackendKind::Gcs { .. } => true,
+            BackendKind::Azure { .. } => true,
             BackendKind::Split { commits, .. } => commits.is_remote(),
             BackendKind::Packed { inner, .. } => inner.is_remote(),
             _ => false,
@@ -750,6 +761,7 @@ impl BackendKind {
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
+            BackendKind::Azure { config } => Box::new(AzureBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
@@ -784,6 +796,7 @@ impl BackendKind {
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
+            BackendKind::Azure { config } => Box::new(AzureBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
@@ -813,6 +826,7 @@ impl BackendKind {
             BackendKind::Object => Box::new(ObjectBackend::new(root)),
             BackendKind::S3 { config } => Box::new(S3Backend::new(root, config.clone())),
             BackendKind::Gcs { config } => Box::new(GcsBackend::new(root, config.clone())),
+            BackendKind::Azure { config } => Box::new(AzureBackend::new(root, config.clone())),
             BackendKind::Posix { capabilities } => {
                 Box::new(LocalBackend::with_capabilities(root, capabilities.clone()))
             }
