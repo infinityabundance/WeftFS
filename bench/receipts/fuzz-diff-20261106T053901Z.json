@@ -1,0 +1,66 @@
+{
+  "kind": "differential-fuzz",
+  "label": "CPU-only, synthetic inputs, not coverage-guided",
+  "timestamp_utc": "20261106T053901Z",
+  "generator": {
+    "prng": "xorshift64*",
+    "seed": "0x9E3779B97F4A7C15",
+    "multiplier": "0x2545F4914F6CDD1D",
+    "corpus_hash": "blake3-256 of LE64(len(input)) || input for each input in order",
+    "max_input_bytes": 4096,
+    "splits": {
+      "raw_random": "1/8",
+      "unrepaired_mutation": "1/8",
+      "repaired_mutation": "4/8",
+      "semantic_fault": "1/8",
+      "clean_seed": "1/8"
+    },
+    "repaired_mutation": "1..4 body/table mutations; body_len, header_crc32c, and frame_crc32c recomputed; content_hash deliberately not repaired",
+    "semantic_faults": "missing/lying/denying dependency, self-cycle REFERENCE via DAG, mode byte 9/127/128/255, decoded_len=u64::MAX, chunk extent past body, wrong content hash, unknown critical flag, non-canonical STRUCTURED body",
+    "seeds": "conformance/fuzz/v1/seeds.txt"
+  },
+  "n": 1000000,
+  "corpus_hash": {
+    "rust": "4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5",
+    "go": "4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5",
+    "match": true
+  },
+  "revisions": {
+    "WeftFS": "36bbbef6f2d19e418f0e456a676570869e3cc477",
+    "WeftCodec": "45a319b89e7712e937aac12627ce209b96c9523d",
+    "WeftCodec-Go": "e47fa03ee8d576106e3bace065d59f930cc741bd",
+    "WeftFS-Go": "47fd4d2229fc24e5750808a302432c32081064a5"
+  },
+  "court": {
+    "kernel": "7.3.1-1-cachyos",
+    "rust_image": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "go_image": "sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166",
+    "memory_limit": "3g",
+    "swap_limit": "3g",
+    "pids_limit": 1024,
+    "cpus": 4
+  },
+  "rust": {
+    "elapsed_ms": 1217,
+    "peak_rss_kib": 6600,
+    "result_lines": 1000000,
+    "panics": 0,
+    "classes": {"ok":172294,"LimitExceeded":16900,"Corrupt":174899,"UnsupportedMode":9409,"UnsupportedVersion":1699,"DependencyDenied":12313,"DependencyMissing":35987,"NonCanonical":67975,"Malformed":469747,"UnsupportedFeature":12347,"DependencyCycle":12349,"DependencyMismatch":14081}
+  },
+  "go": {
+    "elapsed_ms": 1982,
+    "peak_rss_kib": 197192,
+    "result_lines": 1000000,
+    "panics": 0,
+    "classes": {"ok":172294,"LimitExceeded":16900,"Corrupt":174899,"UnsupportedMode":9409,"UnsupportedVersion":1699,"DependencyDenied":12313,"DependencyMissing":35987,"NonCanonical":67975,"Malformed":469747,"UnsupportedFeature":12347,"DependencyCycle":12349,"DependencyMismatch":14081}
+  },
+  "comparison": {
+    "compared_lines": 1000000,
+    "mismatches": 0,
+    "first_mismatches": []
+  },
+  "total_elapsed_ms": 19000,
+  "errors": "",
+  "result": "pass",
+  "reasons": ""
+}
