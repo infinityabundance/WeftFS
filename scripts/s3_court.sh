@@ -25,6 +25,9 @@
 #                                  # one MinIO server started *inside* the bench
 #                                  # container so the harness can stop/restart
 #                                  # the process; S1-S9
+#   scripts/s3_court.sh --matrix   # the R16 compatibility matrix only: the
+#                                  # eight behaviours "S3-compatible" servers
+#                                  # differ on, measured against MinIO
 #
 # Every container has the same hard limits as `scripts/docker-court.sh`:
 # memory 3g, swap 3g, pids 1024, cpus 4, bounded tmpfs, no-new-privileges,
@@ -40,6 +43,7 @@ overlay=0
 planes=0
 packs=0
 distributed=0
+matrix=0
 for arg in "$@"; do
   case "$arg" in
     --bench) bench=1 ;;
@@ -47,8 +51,9 @@ for arg in "$@"; do
     --planes) planes=1 ;;
     --packs) packs=1 ;;
     --distributed) distributed=1 ;;
+    --matrix) matrix=1 ;;
     -h|--help)
-      sed -n '2,32p' "$0"
+      sed -n '2,35p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
@@ -148,6 +153,9 @@ container_image_digest="$(docker image inspect "$container_image" --format '{{in
 container_image_id="$(docker image inspect "$container_image" --format '{{.Id}}')"
 
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+if [[ -n "${WEFT_COMPAT_STAMP:-}" ]]; then
+  stamp="$WEFT_COMPAT_STAMP"
+fi
 suffix="$(printf '%s' "$stamp" | tr '[:upper:]' '[:lower:]')"
 access_key="${WEFT_S3_ACCESS_KEY:-weftcourt}"
 secret_key="${WEFT_S3_SECRET_KEY:-weftcourt-secret}"
@@ -216,7 +224,18 @@ echo "s3_court: MinIO $minio_release sha256=$actual_sha256 endpoint=$endpoint bu
 overlay_receipt=""
 planes_receipt=""
 packs_receipt=""
-if [[ "$planes" == 1 ]]; then
+matrix_receipt=""
+if [[ "$matrix" == 1 ]]; then
+  # R16: the compatibility matrix alone. Same MinIO, same hard limits, same
+  # bucket prefixing as the backend court; this receipt is what the Ceph RGW
+  # court compares its own matrix against.
+  export WEFT_S3_SERVER_LABEL="MinIO $minio_release"
+  export WEFT_S3_SERVER_VERSION="$minio_release"
+  export WEFT_COMPAT_STAMP="$stamp"
+  matrix_receipt="bench/receipts/s3-compat-minio-${stamp}.json"
+  scripts/docker-court.sh rust \
+    "cd /work && cargo run --quiet --example s3_court_bucket && cargo run --quiet --example s3_compat_matrix -- --out $matrix_receipt"
+elif [[ "$planes" == 1 ]]; then
   # Same bench court, same hard limits, same MinIO container. The plane court
   # derives one bucket per S3 layout so the four layouts never share control
   # state, and stamps every artifact with the same UTC second.
@@ -247,7 +266,7 @@ else
 fi
 
 receipt="bench/receipts/s3-backend-${stamp}.json"
-if [[ "$bench" == 1 && "$overlay" == 0 && "$packs" == 0 ]]; then
+if [[ "$bench" == 1 && "$overlay" == 0 && "$packs" == 0 && "$matrix" == 0 ]]; then
   scripts/docker-court.sh rust \
     "cd /work && cargo run --release --quiet --example bench_s3_backend -- --out ${receipt}"
 fi
@@ -280,10 +299,10 @@ cat > "$court_receipt" <<JSON
     "host_port": $host_port
   },
   "tests": {
-    "command": "$(if [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend -- --test-threads=1 --nocapture"; fi)",
+    "command": "$(if [[ "$matrix" == 1 ]]; then echo "cargo run --example s3_compat_matrix -- --out $matrix_receipt"; elif [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend -- --test-threads=1 --nocapture"; fi)",
     "bucket_prefix": "$WEFT_S3_TEST_PREFIX"
   },
-  "benchmark": $(if [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$packs" == 1 && -n "$packs_receipt" ]]; then echo "\"$packs_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
+  "benchmark": $(if [[ "$matrix" == 1 && -n "$matrix_receipt" ]]; then echo "\"$matrix_receipt\""; elif [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$packs" == 1 && -n "$packs_receipt" ]]; then echo "\"$packs_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
   "label": "Single-node MinIO on localhost in the OOM-protected Docker court with a tmpfs data directory. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }
 JSON

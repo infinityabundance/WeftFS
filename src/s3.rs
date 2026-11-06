@@ -263,8 +263,42 @@ impl Endpoint {
 struct HttpResponse {
     status: u16,
     etag: Option<String>,
+    content_range: Option<String>,
     content_length: Option<u64>,
     body: Vec<u8>,
+}
+
+/// Raw result of one signed S3 request, for the independent-implementation
+/// compatibility court (subphase R16). This is not part of the storage
+/// contract: the store never inspects `content_range` and never branches on
+/// anything but the status code and ETag above.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RawResponse {
+    pub status: u16,
+    pub etag: Option<String>,
+    pub content_range: Option<String>,
+    pub content_length: Option<u64>,
+    pub body: Vec<u8>,
+}
+
+impl RawResponse {
+    /// `<Code>` from an S3 XML error body, if the body is one.
+    pub fn error_code(&self) -> Option<String> {
+        let text = String::from_utf8_lossy(&self.body);
+        let start = text.find("<Code>")? + "<Code>".len();
+        let rest = &text[start..];
+        let end = rest.find("</Code>")?;
+        Some(rest[..end].to_owned())
+    }
+
+    /// `<Message>` from an S3 XML error body, if the body is one.
+    pub fn error_message(&self) -> Option<String> {
+        let text = String::from_utf8_lossy(&self.body);
+        let start = text.find("<Message>")? + "<Message>".len();
+        let rest = &text[start..];
+        let end = rest.find("</Message>")?;
+        Some(rest[..end].to_owned())
+    }
 }
 
 struct S3Stats {
@@ -301,6 +335,53 @@ pub struct S3Backend {
     stats: S3Stats,
     diagnostics: Mutex<Vec<String>>,
     probe: Mutex<Option<()>>,
+    /// How this endpoint compares `If-Match` against an ETag. Set by the
+    /// writable-open probe; never guessed. See [`IfMatchForm`].
+    if_match_form: Mutex<IfMatchForm>,
+}
+
+/// How the endpoint compares an `If-Match` header with its own ETag.
+///
+/// HTTP entity tags are quoted (`ETag: "abc"`). AWS S3 and MinIO compare the
+/// opaque value and accept either form. Ceph RGW 19.2.0 compares the header
+/// bytes literally against its unquoted ETag, so the RFC-correct quoted form
+/// is rejected with `412` even when it matches. The writable-open probe
+/// measures which form this endpoint honours, requires the matching form to be
+/// accepted *and* a stale form to be refused, and records the answer in
+/// [`StorageBackend::diagnostics`]. A backend that passes neither form is
+/// refused, exactly as before.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IfMatchForm {
+    /// Send the ETag exactly as the endpoint returned it (quoted).
+    AsReturned,
+    /// Strip the surrounding double quotes before sending it.
+    Dequoted,
+}
+
+impl IfMatchForm {
+    /// Apply this form to a raw ETag header value.
+    pub fn encode(self, etag: &str) -> String {
+        match self {
+            IfMatchForm::AsReturned => etag.to_owned(),
+            IfMatchForm::Dequoted => strip_etag_quotes(etag),
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            IfMatchForm::AsReturned => "quoted-as-returned",
+            IfMatchForm::Dequoted => "dequoted",
+        }
+    }
+}
+
+fn strip_etag_quotes(etag: &str) -> String {
+    let trimmed = etag.trim();
+    if trimmed.len() >= 2 && trimmed.starts_with('"') && trimmed.ends_with('"') {
+        trimmed[1..trimmed.len() - 1].to_owned()
+    } else {
+        trimmed.to_owned()
+    }
 }
 
 struct LockLease {
@@ -318,7 +399,16 @@ impl S3Backend {
             stats: S3Stats::default(),
             diagnostics: Mutex::new(Vec::new()),
             probe: Mutex::new(None),
+            if_match_form: Mutex::new(IfMatchForm::AsReturned),
         }
+    }
+
+    /// The `If-Match` comparison form this endpoint was measured to honour.
+    pub fn if_match_form(&self) -> IfMatchForm {
+        *self
+            .if_match_form
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     /// Declared guarantees for an S3-compatible endpoint.
@@ -490,10 +580,12 @@ impl S3Backend {
                 let content_length = response
                     .header("content-length")
                     .and_then(|value| value.parse::<u64>().ok());
+                let content_range = response.header("content-range").map(str::to_owned);
                 let bytes = read_bounded(response, content_length, key_path)?;
                 return Ok(HttpResponse {
                     status,
                     etag,
+                    content_range,
                     content_length,
                     body: bytes,
                 });
@@ -507,6 +599,7 @@ impl S3Backend {
         };
         let status = response.status();
         let etag = response.header("etag").map(str::to_owned);
+        let content_range = response.header("content-range").map(str::to_owned);
         let content_length = response
             .header("content-length")
             .and_then(|value| value.parse::<u64>().ok());
@@ -514,6 +607,7 @@ impl S3Backend {
         Ok(HttpResponse {
             status,
             etag,
+            content_range,
             content_length,
             body: bytes,
         })
@@ -576,6 +670,20 @@ impl S3Backend {
         if_match: Option<&str>,
         count_conflict: bool,
     ) -> Result<Option<String>> {
+        let header = if_match.map(|etag| self.if_match_form().encode(etag));
+        self.put_conditional_header(key, bytes, header, count_conflict)
+    }
+
+    /// `if_match_value` is the *literal* value sent in `If-Match`; `None` sends
+    /// `If-None-Match: *`. Only the probe passes a value that was not encoded
+    /// through [`IfMatchForm`].
+    fn put_conditional_header(
+        &self,
+        key: &Key,
+        bytes: &[u8],
+        if_match_value: Option<String>,
+        count_conflict: bool,
+    ) -> Result<Option<String>> {
         if bytes.len() as u64 > MAX_OBJECT_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "object is {} bytes, above the backend's {MAX_OBJECT_BYTES}-byte bound",
@@ -585,8 +693,8 @@ impl S3Backend {
         let path = Self::key_path(key)
             .ok_or_else(|| Error::invalid_argument("S3 backend cannot address the store root"))?;
         let mut extra: Vec<(String, String)> = Vec::new();
-        match if_match {
-            Some(etag) => extra.push(("if-match".to_owned(), etag.to_owned())),
+        match if_match_value {
+            Some(etag) => extra.push(("if-match".to_owned(), etag)),
             None => extra.push(("if-none-match".to_owned(), "*".to_owned())),
         }
         let extra_refs: Vec<(&str, &str)> = extra
@@ -703,30 +811,80 @@ impl S3Backend {
             ));
         }
 
-        // If-Match must reject a stale ETag, which is how the superblock head
-        // is published.
+        // If-Match must accept a matching ETag and reject a stale one, which is
+        // how the superblock head is published. Entity tags are quoted, so the
+        // RFC-correct value is the string the endpoint returned. Ceph RGW
+        // compares the header bytes literally against its unquoted ETag, so a
+        // rejected matching write is retried with the de-quoted value. The
+        // accepted form is only kept when a stale value in the *same* form is
+        // refused and the winner's bytes survive; otherwise the endpoint is
+        // refused exactly as before.
         let etag = current.etag.clone().ok_or_else(|| {
             Error::unsupported_version(
                 "S3-compatible endpoint did not return an ETag; refusing a writable store",
             )
         })?;
-        if self
-            .put_conditional(&key, b"probe-three", Some(&etag))?
-            .is_none()
-        {
+        let dequoted = strip_etag_quotes(&etag);
+        let as_returned =
+            self.put_conditional_header(&key, b"probe-three", Some(etag.clone()), false)?;
+        let (form, matching_value) = if as_returned.is_some() {
+            (IfMatchForm::AsReturned, etag.clone())
+        } else if dequoted != etag {
+            match self.put_conditional_header(
+                &key,
+                b"probe-three",
+                Some(dequoted.clone()),
+                false,
+            )? {
+                Some(_) => (IfMatchForm::Dequoted, dequoted),
+                None => {
+                    cleanup();
+                    return Err(Error::unsupported_version(format!(
+                        "S3-compatible endpoint rejected a matching If-Match in both forms \
+                         (as returned {etag:?} and dequoted {dequoted:?}); refusing a writable \
+                         store because head publication cannot be proven"
+                    )));
+                }
+            }
+        } else {
             cleanup();
             return Err(Error::io(
                 "S3 conditional probe: a matching If-Match was unexpectedly rejected",
             ));
+        };
+        let before = self.get(&key, None)?;
+        if before.status != 200 || before.body != b"probe-three" {
+            cleanup();
+            return Err(Error::io(
+                "S3 conditional probe: the matching conditional write is not readable",
+            ));
         }
         if self
-            .put_conditional_inner(&key, b"probe-four", Some(&etag), false)?
+            .put_conditional_header(&key, b"probe-four", Some(matching_value), false)?
             .is_some()
         {
             cleanup();
             return Err(Error::unsupported_version(
                 "S3-compatible endpoint ignored If-Match; refusing a writable store \
                  because head publication could lose a race silently",
+            ));
+        }
+        let after = self.get(&key, None)?;
+        if after.status != 200 || after.body != b"probe-three" {
+            cleanup();
+            return Err(Error::io(
+                "S3 conditional probe: a refused stale If-Match changed the object",
+            ));
+        }
+        *self
+            .if_match_form
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = form;
+        if form == IfMatchForm::Dequoted {
+            self.note(format!(
+                "endpoint compares If-Match literally: ETag {etag} is accepted only when the \
+                 surrounding quotes are stripped; using the dequoted form for every \
+                 conditional write (matching accepted, stale refused, winner bytes kept)"
             ));
         }
         cleanup();
@@ -739,6 +897,11 @@ impl S3Backend {
     }
 
     fn acquire_lock(&self) -> Result<()> {
+        // The writer lock is the first conditional write of a writable open
+        // (the store locks before it runs the plane probe), so negotiate the
+        // If-Match form here. Skipping this would make an endpoint that
+        // compares entity tags literally reject every expired-lease reclaim.
+        self.probe_conditional_writes()?;
         let now = now_ns();
         let owner = format!("{}-{}-{}", std::process::id(), unique_counter(), now);
         let expires = now
@@ -1301,6 +1464,17 @@ impl StorageBackend for S3Backend {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone();
+        let probed = self
+            .probe
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .is_some();
+        if probed {
+            out.push(format!(
+                "S3 If-Match form measured at open: {}",
+                self.if_match_form().label()
+            ));
+        }
         let conflicts = self.stats.conditional_conflicts.load(Ordering::Relaxed);
         if conflicts > 0 {
             out.push(format!(
@@ -1327,7 +1501,35 @@ impl S3Backend {
         bytes: &[u8],
         if_match: &str,
     ) -> Result<bool> {
+        // A caller-supplied ETag is the value the endpoint returned. Negotiate
+        // the comparison form exactly as a writable open does, so the hook
+        // exercises the same wire form the store uses.
+        self.probe_conditional_writes()?;
         Ok(self.put_conditional(key, bytes, Some(if_match))?.is_some())
+    }
+
+    /// Court hook: send one signed request and return the raw response.
+    ///
+    /// Used only by `examples/s3_compat_matrix.rs` to characterise the
+    /// conditional-write, range, and listing behaviour of an independent
+    /// S3-compatible server. Storage decisions never read this surface.
+    #[doc(hidden)]
+    pub fn raw_request_for_court(
+        &self,
+        method: &str,
+        key_path: &str,
+        query: &[(String, String)],
+        body: &[u8],
+        extra: &[(&str, &str)],
+    ) -> Result<RawResponse> {
+        let response = self.request(method, key_path, query, body, extra)?;
+        Ok(RawResponse {
+            status: response.status,
+            etag: response.etag,
+            content_range: response.content_range,
+            content_length: response.content_length,
+            body: response.body,
+        })
     }
 
     /// Test hook: current ETag for a key.
@@ -1606,5 +1808,40 @@ mod tests {
         let body = format!("{LOCK_SCHEMA}\nowner=x\nexpires_ns=42\n");
         assert_eq!(parse_lock_expiry(body.as_bytes()), Some(42));
         assert_eq!(parse_lock_expiry(b"garbage"), None);
+    }
+
+    #[test]
+    fn if_match_forms_encode_etags() {
+        // The wire value an ETag header carries, quoted, is what a
+        // spec-conforming server compares. Ceph RGW compares the raw header
+        // bytes against its unquoted ETag, which the dequoted form matches.
+        assert_eq!(strip_etag_quotes("\"abc123\""), "abc123");
+        assert_eq!(strip_etag_quotes("abc123"), "abc123");
+        assert_eq!(strip_etag_quotes("\"\""), "");
+        assert_eq!(strip_etag_quotes("W/\"abc\""), "W/\"abc\"");
+        assert_eq!(IfMatchForm::AsReturned.encode("\"abc123\""), "\"abc123\"");
+        assert_eq!(IfMatchForm::Dequoted.encode("\"abc123\""), "abc123");
+        assert_eq!(IfMatchForm::Dequoted.encode("abc123"), "abc123");
+        assert_eq!(IfMatchForm::AsReturned.label(), "quoted-as-returned");
+        assert_eq!(IfMatchForm::Dequoted.label(), "dequoted");
+    }
+
+    #[test]
+    fn a_fresh_backend_defaults_to_the_as_returned_form() {
+        let config = S3Config {
+            endpoint: "http://127.0.0.1:9000".to_owned(),
+            bucket: "bucket".to_owned(),
+            region: "us-east-1".to_owned(),
+            access_key: "key".to_owned(),
+            secret_key: "secret".to_owned(),
+            session_token: None,
+            path_style: true,
+            lock_lease: Duration::from_secs(900),
+            request_timeout: Duration::from_secs(30),
+        };
+        let backend = S3Backend::new("<test>", config);
+        assert_eq!(backend.if_match_form(), IfMatchForm::AsReturned);
+        // Nothing claims a measured form before the probe runs.
+        assert!(backend.diagnostics().is_empty());
     }
 }
