@@ -21,6 +21,30 @@
 //! GCS's own primitive. A failed precondition is HTTP `412`, which maps to the
 //! same `Busy` class the S3 backend reports.
 //!
+//! # Fenced writer (subphase R18)
+//!
+//! The single writer holds a lease in a `LOCK` object. The record is the same
+//! field set as the S3 backend's (`owner`, a monotonic **fencing token**,
+//! `sequence`, an absolute `lease_deadline_ns`, `renewed_ns`, and the head
+//! being published); only the conditional primitive differs. Generation
+//! numbers are GCS's own token, so:
+//!
+//! * takeover of an expired lease or a released tombstone is an upload with
+//!   `ifGenerationMatch=<generation observed at read>`;
+//! * the **fence** before every publication is one upload of `LOCK` with
+//!   `ifGenerationMatch=<the generation this handle last published>`, which
+//!   proves the object still carries this writer's token and renews the lease
+//!   when one publication budget remains;
+//! * release is a content-addressed tombstone written with
+//!   `ifGenerationMatch`, never a delete; a lock that now names another writer
+//!   is never touched;
+//! * a writer whose own deadline has passed refuses to publish before any
+//!   head object is touched.
+//!
+//! `LOCK` is never deleted after a read. The exact atomicity statement (the
+//! fence and the head compare-and-swap are two operations on two objects) is
+//! the same one `bench/RESULTS-fencing.md` records for S3.
+//!
 //! # Authentication
 //!
 //! Requests carry `Authorization: Bearer <token>`. The token is supplied by
@@ -81,7 +105,11 @@ const MAX_JSON_BYTES: u64 = 8 * 1024 * 1024;
 
 /// Default JSON API origin.
 const DEFAULT_ENDPOINT: &str = "https://storage.googleapis.com";
-const LOCK_SCHEMA: &str = "weftfs-gcs-lock v1";
+const LOCK_SCHEMA: &str = "weftfs-gcs-lock v2";
+const LOCK_SCHEMA_V1: &str = "weftfs-gcs-lock v1";
+const RELEASED_SCHEMA: &str = "weftfs-gcs-lock-released v1";
+/// A lease shorter than this cannot bound a publication, so it is refused.
+const MIN_LOCK_LEASE_SECS: u64 = 1;
 
 /// Connection and policy for a GCS (or GCS-compatible) endpoint.
 #[derive(Clone, PartialEq, Eq)]
@@ -292,10 +320,28 @@ struct GcsStats {
     bytes_written: AtomicU64,
     conditional_conflicts: AtomicU64,
     lock_acquires: AtomicU64,
+    /// Conditional lease writes that proved ownership before a publication.
+    fence_checks: AtomicU64,
+    /// Fence checks that also extended the lease deadline.
+    lease_renewals: AtomicU64,
+    /// Publications refused because the LOCK no longer named this writer.
+    fence_refusals: AtomicU64,
+    /// Publications refused because this writer's own deadline had passed.
+    lease_expired_publications: AtomicU64,
 }
 
 struct LockLease {
     owner: String,
+    /// Monotonic fencing token. Bumped by every takeover, never reused.
+    fence: u64,
+    /// Number of conditional writes this handle has made to the LOCK object.
+    sequence: u64,
+    /// Absolute lease deadline recorded in the published object.
+    deadline_ns: i64,
+    renewed_ns: i64,
+    /// GCS generation the endpoint assigned to the bytes published at
+    /// `sequence`. This is the token the fence conditions on.
+    generation: u64,
 }
 
 /// Metadata the store depends on: the object's length and its GCS generation.
@@ -367,7 +413,9 @@ impl GcsBackend {
             publication: "GCS JSON API upload with ifGenerationMatch=0 (create-once) or \
                           ifGenerationMatch=<observed generation> (compare-and-swap); both \
                           forms and a stale-generation refusal are probed before any commit \
-                          is published"
+                          is published. The writer lease is a fenced record whose takeover, \
+                          renewal, and release are all generation-conditioned; the fence is \
+                          the last upload before the head compare-and-swap"
                 .to_owned(),
         }
     }
@@ -640,6 +688,23 @@ impl GcsBackend {
     /// Returns `true` when the bytes were published and `false` when a
     /// generation precondition failed (HTTP 412). Everything else is an error.
     fn upload(&self, key: &Key, bytes: &[u8], precondition: Precondition) -> Result<bool> {
+        Ok(self.upload_tracked(key, bytes, precondition)?.is_some())
+    }
+
+    /// Publish `bytes` and report the generation the endpoint assigned them.
+    ///
+    /// `Ok(None)` means the precondition failed (HTTP 412). The generation is
+    /// the token a fenced writer conditions its next write on, so it must name
+    /// *these* bytes. The JSON API returns the object resource in the upload
+    /// reply; if an endpoint omits it, the generation is confirmed by a
+    /// read-after-write whose bytes must be exactly the bytes just published.
+    /// An endpoint that can do neither is refused rather than guessed at.
+    fn upload_tracked(
+        &self,
+        key: &Key,
+        bytes: &[u8],
+        precondition: Precondition,
+    ) -> Result<Option<u64>> {
         if bytes.len() as u64 > MAX_OBJECT_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "object is {} bytes, above the backend's {MAX_OBJECT_BYTES}-byte bound",
@@ -668,13 +733,30 @@ impl GcsBackend {
                 self.stats
                     .bytes_written
                     .fetch_add(bytes.len() as u64, Ordering::Relaxed);
-                Ok(true)
+                if let Some(generation) = response_generation(&response.body) {
+                    return Ok(Some(generation));
+                }
+                // The reply carried no object resource. Confirm the generation
+                // by re-reading, and require the bytes to be exactly ours: a
+                // successor's replacement would differ, so its generation can
+                // never be mistaken for this writer's token.
+                match self.read_with_generation(key)? {
+                    Some((observed, generation)) if observed == bytes => Ok(Some(generation)),
+                    Some(_) => Err(Error::busy(format!(
+                        "GCS object {} was replaced while its generation was being confirmed",
+                        key.display_path()
+                    ))),
+                    None => Err(Error::busy(format!(
+                        "GCS object {} disappeared while its generation was being confirmed",
+                        key.display_path()
+                    ))),
+                }
             }
             412 => {
                 self.stats
                     .conditional_conflicts
                     .fetch_add(1, Ordering::Relaxed);
-                Ok(false)
+                Ok(None)
             }
             401 | 403 => Err(Error::unauthorized(format!("GCS denied writing `{name}`"))),
             413 => Err(Error::limit_exceeded(format!(
@@ -975,55 +1057,212 @@ impl GcsBackend {
     }
 
     fn acquire_lock(&self) -> Result<()> {
+        // The writer lock is the first conditional write of a writable open
+        // (the store locks before it runs the plane probe). Proving the
+        // generation preconditions here means every later lease write, and the
+        // conditional release in `Drop`, already knows the endpoint honours
+        // them.
+        self.probe_generation_preconditions()?;
         let now = now_ns();
         let owner = format!("{}-{}-{}", std::process::id(), unique_counter(), now);
-        let expires = now
-            .saturating_add(i64::try_from(self.config.lock_lease.as_nanos()).unwrap_or(i64::MAX));
-        let body = format!("{LOCK_SCHEMA}\nowner={owner}\nexpires_ns={expires}\n");
+        let deadline = now.saturating_add(self.lease_ns());
         let key = Key::lock();
-        for _ in 0..3 {
-            if self.upload(&key, body.as_bytes(), Precondition::Missing)? {
-                self.take_lock(owner);
-                return Ok(());
-            }
-            let Some(meta) = self.metadata(&key)? else {
-                continue;
-            };
-            let held_until = match self.media(&key, None) {
-                Ok(response) if response.status == 200 => parse_lock_expiry(&response.body),
-                _ => None,
-            };
-            if held_until.map(|value| value > now).unwrap_or(true) {
-                return Err(Error::busy(
-                    "store is locked by another GCS writer (live LOCK object)",
-                ));
-            }
-            match self.upload(
-                &key,
-                body.as_bytes(),
-                Precondition::Matches(meta.generation),
-            )? {
-                true => {
-                    self.note("reclaimed an expired GCS writer lock".to_owned());
-                    self.take_lock(owner);
-                    return Ok(());
+        for _ in 0..4 {
+            match self.read_with_generation(&key)? {
+                None => {
+                    // No record at all: create it once. The first lease holder
+                    // takes fencing token 1.
+                    let body = encode_lock(&owner, 1, 1, deadline, now, None);
+                    if let Some(generation) =
+                        self.upload_tracked(&key, body.as_bytes(), Precondition::Missing)?
+                    {
+                        self.install_lease(owner, 1, 1, deadline, now, generation);
+                        return Ok(());
+                    }
+                    // Another writer created it between the read and the PUT.
+                    continue;
                 }
-                false => continue,
+                Some((observed_bytes, generation)) => {
+                    let Some(observed) = parse_lock(&observed_bytes) else {
+                        return Err(Error::busy(
+                            "store LOCK object is unreadable; refusing a writable open rather \
+                             than guessing whether a writer holds it",
+                        ));
+                    };
+                    if observed.is_live(now) {
+                        // The caller receives one fixed, non-disclosing
+                        // sentence; owner, fence, and remaining lease go to
+                        // diagnostics only.
+                        self.note(format!(
+                            "writable open refused: the LOCK is live (owner {} fence {}, lease ends \
+                             in {} ms)",
+                            observed.owner,
+                            observed.fence,
+                            (observed.deadline_ns - now) / 1_000_000
+                        ));
+                        return Err(Error::busy(
+                            "store is locked by another GCS writer (live LOCK object)",
+                        ));
+                    }
+                    // Expired lease or a released tombstone: take over with the
+                    // next fencing token, conditional on the exact generation
+                    // read. A lost race retries from a fresh read, never blind.
+                    let fence = observed.fence.checked_add(1).ok_or_else(|| {
+                        Error::limit_exceeded("GCS fencing token would overflow u64")
+                    })?;
+                    let body = encode_lock(&owner, fence, 1, deadline, now, None);
+                    match self.upload_tracked(
+                        &key,
+                        body.as_bytes(),
+                        Precondition::Matches(generation),
+                    )? {
+                        Some(new_generation) => {
+                            self.note(format!(
+                                "{} GCS writer lock: fence {} -> {}",
+                                if observed.released {
+                                    "reclaimed a released"
+                                } else {
+                                    "reclaimed an expired"
+                                },
+                                observed.fence,
+                                fence
+                            ));
+                            self.install_lease(owner, fence, 1, deadline, now, new_generation);
+                            return Ok(());
+                        }
+                        None => continue,
+                    }
+                }
             }
         }
         Err(Error::busy(
-            "could not acquire the GCS writer lock after three conditional attempts",
+            "could not acquire the GCS writer lock after four conditional attempts",
         ))
     }
 
-    fn take_lock(&self, owner: String) {
+    fn install_lease(
+        &self,
+        owner: String,
+        fence: u64,
+        sequence: u64,
+        deadline_ns: i64,
+        renewed_ns: i64,
+        generation: u64,
+    ) {
         self.stats.lock_acquires.fetch_add(1, Ordering::Relaxed);
         *self
             .lock
             .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(LockLease { owner });
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(LockLease {
+            owner,
+            fence,
+            sequence,
+            deadline_ns,
+            renewed_ns,
+            generation,
+        });
     }
 
+    /// Prove this handle may publish right now, renewing the lease when one
+    /// publication budget remains.
+    fn fence_lease(&self) -> Result<()> {
+        self.fence_lease_for(None)
+    }
+
+    /// The same conditional write, additionally naming the head that is about
+    /// to be published.
+    fn fence_head(&self, generation: u64, commit: &crate::identity::Hash32) -> Result<()> {
+        self.fence_lease_for(Some((generation, commit)))
+    }
+
+    fn fence_lease_for(&self, pending: Option<(u64, &crate::identity::Hash32)>) -> Result<()> {
+        let mut guard = self
+            .lock
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let Some(lease) = guard.as_mut() else {
+            return Err(Error::busy(
+                "GCS writer holds no lease; refusing to publish without a fenced lease",
+            ));
+        };
+        let now = now_ns();
+        if now >= lease.deadline_ns {
+            let owner = lease.owner.clone();
+            let fence = lease.fence;
+            let expired_ms = (now - lease.deadline_ns) / 1_000_000;
+            // Observation only. The decision never acts on it.
+            let observed = self.read_lock_record().ok().flatten();
+            self.stats
+                .lease_expired_publications
+                .fetch_add(1, Ordering::Relaxed);
+            return Err(Error::busy(format!(
+                "GCS writer lease deadline passed {expired_ms} ms ago (owner {owner} fence {fence}); \
+                 publication refused before the head was touched{}",
+                describe_observed(&observed, &owner, fence)
+            )));
+        }
+        let budget = self.publication_budget_ns();
+        let renew = now.saturating_add(budget) >= lease.deadline_ns;
+        let deadline = if renew {
+            now.saturating_add(self.lease_ns())
+        } else {
+            lease.deadline_ns
+        };
+        let sequence = lease.sequence.saturating_add(1);
+        let body = encode_lock(&lease.owner, lease.fence, sequence, deadline, now, pending);
+        // This is the fence. `ifGenerationMatch` names the generation this
+        // handle published last, so it succeeds only while the object still
+        // carries this writer's fencing token. A successor's reclaim rewrote
+        // the object, so this fails with 412 and nothing is published.
+        match self.upload_tracked(
+            &Key::lock(),
+            body.as_bytes(),
+            Precondition::Matches(lease.generation),
+        )? {
+            Some(generation) => {
+                lease.sequence = sequence;
+                lease.deadline_ns = deadline;
+                lease.renewed_ns = now;
+                lease.generation = generation;
+                self.stats.fence_checks.fetch_add(1, Ordering::Relaxed);
+                if renew {
+                    self.stats.lease_renewals.fetch_add(1, Ordering::Relaxed);
+                }
+                Ok(())
+            }
+            None => {
+                let observed = self.read_lock_record().ok().flatten();
+                self.stats.fence_refusals.fetch_add(1, Ordering::Relaxed);
+                Err(Error::busy(format!(
+                    "GCS writer lease was taken over: the conditional fence CAS for owner {} \
+                     fence {} was refused, so the publication was abandoned without writing the \
+                     head{}",
+                    lease.owner,
+                    lease.fence,
+                    describe_observed(&observed, &lease.owner, lease.fence)
+                )))
+            }
+        }
+    }
+
+    /// The published `LOCK` record, read fresh. Read-only: the store never acts
+    /// on this value, it only reports it.
+    pub fn read_lock_record(&self) -> Result<Option<PublishedLock>> {
+        let response = self.media(&Key::lock(), None)?;
+        match response.status {
+            200 => Ok(parse_lock(&response.body)),
+            404 => Ok(None),
+            status => Err(Error::io(format!("GCS LOCK read returned HTTP {status}"))),
+        }
+    }
+
+    /// Release the lease with a content-addressed tombstone published under
+    /// `ifGenerationMatch` on the generation this writer observed.
+    ///
+    /// Never an unconditional delete after a read: if the lock was replaced
+    /// between the read and this conditional write, the write fails and the
+    /// successor's lock is left byte-identical. Every failure is a note, never
+    /// a silent unconditional delete.
     fn release_lock(&self) {
         let lease = self
             .lock
@@ -1034,16 +1273,102 @@ impl GcsBackend {
             return;
         };
         let key = Key::lock();
-        if let Ok(response) = self.media(&key, None) {
-            if response.status == 200 {
-                let still_ours = String::from_utf8_lossy(&response.body)
-                    .lines()
-                    .any(|line| line == format!("owner={}", lease.owner));
-                if still_ours {
-                    let _ = self.delete_object(&key);
-                }
+        let observed = match self.read_with_generation(&key) {
+            Ok(observed) => observed,
+            Err(err) => {
+                self.note(format!("could not read LOCK to release it: {err}"));
+                return;
             }
+        };
+        let Some((body, generation)) = observed else {
+            return;
+        };
+        let Some(record) = parse_lock(&body) else {
+            self.note("refusing to release an unreadable LOCK record".to_owned());
+            return;
+        };
+        if record.owner != lease.owner || record.fence != lease.fence {
+            self.note(format!(
+                "refusing to release the GCS writer lock: it now names owner {} fence {} and this \
+                 handle holds fence {}; the conditional release was not attempted",
+                record.owner, record.fence, lease.fence
+            ));
+            return;
         }
+        let released_from = sha256_hex(&body);
+        let tombstone = encode_released(
+            &lease.owner,
+            lease.fence,
+            lease.sequence.saturating_add(1),
+            now_ns(),
+            &released_from,
+        );
+        match self.upload_tracked(
+            &key,
+            tombstone.as_bytes(),
+            Precondition::Matches(generation),
+        ) {
+            Ok(Some(_)) => self.note(format!(
+                "released the GCS writer lock with a conditional tombstone (fence {})",
+                lease.fence
+            )),
+            Ok(None) => self.note(format!(
+                "refusing to release the GCS writer lock: it was replaced between the read and the \
+                 conditional tombstone (this writer held fence {}); the successor's lock is intact",
+                lease.fence
+            )),
+            Err(err) => self.note(format!(
+                "conditional release of the GCS writer lock failed, nothing was deleted: {err}"
+            )),
+        }
+    }
+
+    /// Court/operator reset: replace the published `LOCK` with a released
+    /// tombstone under a generation precondition. Never called by the store,
+    /// which only ever releases a lease it still holds.
+    pub fn release_stale_lease(&self) -> Result<Option<PublishedLock>> {
+        self.probe_generation_preconditions()?;
+        let Some((body, generation)) = self.read_with_generation(&Key::lock())? else {
+            return Ok(None);
+        };
+        let Some(record) = parse_lock(&body) else {
+            return Err(Error::corrupt("published LOCK record is unreadable"));
+        };
+        let fence = record
+            .fence
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("GCS fencing token would overflow u64"))?;
+        let tombstone = encode_released(
+            &record.owner,
+            fence,
+            record.sequence.saturating_add(1),
+            now_ns(),
+            &sha256_hex(&body),
+        );
+        match self.upload_tracked(
+            &Key::lock(),
+            tombstone.as_bytes(),
+            Precondition::Matches(generation),
+        )? {
+            Some(_) => self.read_lock_record(),
+            None => Err(Error::busy(
+                "the LOCK was replaced while the court reset it; nothing was deleted",
+            )),
+        }
+    }
+
+    fn lease_ns(&self) -> i64 {
+        i64::try_from(self.config.lock_lease.as_nanos())
+            .unwrap_or(i64::MAX)
+            .max(MIN_LOCK_LEASE_SECS as i64 * 1_000_000_000)
+    }
+
+    /// The window a single publication may still occupy. A writer renews when
+    /// one budget remains, and a successor may not take over before the
+    /// recorded deadline, so a head publication always finishes inside the
+    /// lease it was started under.
+    fn publication_budget_ns(&self) -> i64 {
+        (self.lease_ns() / 2).max(1)
     }
 }
 
@@ -1291,6 +1616,18 @@ impl CommitPlane for GcsBackend {
         GcsBackend::acquire_lock(self)
     }
 
+    fn verify_write_lease(&mut self) -> Result<()> {
+        GcsBackend::fence_lease(self)
+    }
+
+    fn fence_head_publication(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+    ) -> Result<()> {
+        GcsBackend::fence_head(self, generation, commit)
+    }
+
     fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {
         BlobPlane::clean_stale(self, grace_secs)
     }
@@ -1347,6 +1684,24 @@ impl GcsBackend {
         if conflicts > 0 {
             out.push(format!(
                 "GCS generation preconditions observed {conflicts} lost/retried race(s)"
+            ));
+        }
+        let fences = self.stats.fence_checks.load(Ordering::Relaxed);
+        let renewals = self.stats.lease_renewals.load(Ordering::Relaxed);
+        if fences > 0 {
+            out.push(format!(
+                "GCS fence CAS proved the lease {fences} time(s), {renewals} with a renewal"
+            ));
+        }
+        let refusals = self.stats.fence_refusals.load(Ordering::Relaxed);
+        let expired = self
+            .stats
+            .lease_expired_publications
+            .load(Ordering::Relaxed);
+        if refusals > 0 || expired > 0 {
+            out.push(format!(
+                "GCS fence refused {refusals} publication(s) after a takeover and {expired} after \
+                 this writer's own deadline"
             ));
         }
         out
@@ -1583,6 +1938,18 @@ impl StorageBackend for GcsBackend {
         CommitPlane::acquire_lock(self)
     }
 
+    fn verify_write_lease(&mut self) -> Result<()> {
+        GcsBackend::fence_lease(self)
+    }
+
+    fn fence_head_publication(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+    ) -> Result<()> {
+        GcsBackend::fence_head(self, generation, commit)
+    }
+
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
         BlobPlane::clean_stale(self, grace_secs)
     }
@@ -1607,14 +1974,61 @@ impl StorageBackend for GcsBackend {
     }
 }
 
-fn parse_lock_expiry(bytes: &[u8]) -> Option<i64> {
-    let text = std::str::from_utf8(bytes).ok()?;
-    if !text.starts_with(LOCK_SCHEMA) {
-        return None;
-    }
-    text.lines()
-        .find_map(|line| line.strip_prefix("expires_ns="))
-        .and_then(|value| value.parse::<i64>().ok())
+pub use crate::writer_fence::PublishedLock;
+
+fn encode_lock(
+    owner: &str,
+    fence: u64,
+    sequence: u64,
+    deadline_ns: i64,
+    renewed_ns: i64,
+    pending: Option<(u64, &crate::identity::Hash32)>,
+) -> String {
+    crate::writer_fence::encode_lock(
+        LOCK_SCHEMA,
+        owner,
+        fence,
+        sequence,
+        deadline_ns,
+        renewed_ns,
+        pending,
+    )
+}
+
+fn encode_released(
+    owner: &str,
+    fence: u64,
+    sequence: u64,
+    released_ns: i64,
+    released_from: &str,
+) -> String {
+    crate::writer_fence::encode_released(
+        RELEASED_SCHEMA,
+        owner,
+        fence,
+        sequence,
+        released_ns,
+        released_from,
+    )
+}
+
+fn parse_lock(bytes: &[u8]) -> Option<PublishedLock> {
+    crate::writer_fence::parse_lock(bytes, LOCK_SCHEMA, LOCK_SCHEMA_V1, RELEASED_SCHEMA)
+}
+
+fn describe_observed(observed: &Option<PublishedLock>, owner: &str, fence: u64) -> String {
+    crate::writer_fence::describe_observed(observed, owner, fence)
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    crate::writer_fence::sha256_hex(bytes)
+}
+
+/// The `generation` field of an upload reply's object resource, if it carried
+/// one. Both string and numeric JSON spellings are accepted, without rounding.
+fn response_generation(body: &[u8]) -> Option<u64> {
+    let value = json::parse(body).ok()?;
+    value.get("generation").and_then(JsonValue::as_u64)
 }
 
 fn now_ns() -> i64 {
@@ -2162,10 +2576,40 @@ mod tests {
     }
 
     #[test]
-    fn lock_expiry_round_trips() {
-        let body = format!("{LOCK_SCHEMA}\nowner=x\nexpires_ns=42\n");
-        assert_eq!(parse_lock_expiry(body.as_bytes()), Some(42));
-        assert_eq!(parse_lock_expiry(b"garbage"), None);
+    fn lock_record_round_trips_and_legacy_reads_as_fence_zero() {
+        let body = encode_lock("x", 3, 7, 1_000, 900, None);
+        let record = parse_lock(body.as_bytes()).expect("v2 lock parses");
+        assert_eq!(record.owner, "x");
+        assert_eq!(record.fence, 3);
+        assert_eq!(record.sequence, 7);
+        assert_eq!(record.deadline_ns, 1_000);
+        assert!(!record.released);
+
+        let legacy = format!("{LOCK_SCHEMA_V1}\nowner=y\nexpires_ns=42\n");
+        let record = parse_lock(legacy.as_bytes()).expect("v1 lock parses");
+        assert_eq!(record.fence, 0);
+        assert_eq!(record.deadline_ns, 42);
+
+        let tombstone = encode_released("owner=x", 3, 8, 2_000, "deadbeef");
+        let record = parse_lock(tombstone.as_bytes()).expect("tombstone parses");
+        assert!(record.released);
+        assert_eq!(record.fence, 3);
+        assert_eq!(record.released_from.as_deref(), Some("deadbeef"));
+
+        assert_eq!(parse_lock(b"garbage"), None);
+    }
+
+    #[test]
+    fn upload_reply_generation_is_parsed_without_rounding() {
+        assert_eq!(
+            response_generation(br#"{"name":"LOCK","generation":"1699000000000001"}"#),
+            Some(1_699_000_000_000_001)
+        );
+        assert_eq!(
+            response_generation(br#"{"generation":1699000000000001}"#),
+            Some(1_699_000_000_000_001)
+        );
+        assert_eq!(response_generation(b""), None);
     }
 
     #[test]

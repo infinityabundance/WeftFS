@@ -52,6 +52,7 @@ pub mod tensor_store;
 pub mod timeparse;
 pub mod training_ready;
 pub mod wcb_util;
+pub mod writer_fence;
 
 pub use auth::Principal;
 pub use backend::{
@@ -108,3 +109,4 @@ pub use training_ready::{
     TrainingReadyFile, TrainingReadyOptions, TrainingReadyReport, TrainingReadyTensor,
     TrainingReadyVerification,
 };
+pub use writer_fence::PublishedLock;

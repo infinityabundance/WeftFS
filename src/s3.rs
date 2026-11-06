@@ -436,32 +436,7 @@ struct LockLease {
     etag: String,
 }
 
-/// A parsed `LOCK` object, as published right now.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PublishedLock {
-    pub owner: String,
-    /// Monotonic fencing token. `0` means a legacy `weftfs-s3-lock v1` record,
-    /// which predates fencing.
-    pub fence: u64,
-    pub sequence: u64,
-    /// Absolute lease deadline (nanoseconds since the Unix epoch).
-    pub deadline_ns: i64,
-    pub renewed_ns: i64,
-    /// The head this writer is publishing (0 / empty when none is in flight).
-    pub pending_generation: u64,
-    pub pending_commit: String,
-    /// True for a released tombstone: no writer holds the lock.
-    pub released: bool,
-    /// Hex digest of the lock record this tombstone conditionally replaced.
-    pub released_from: Option<String>,
-}
-
-impl PublishedLock {
-    /// Whether a writer still holds a live lease at `now_ns`.
-    pub fn is_live(&self, now_ns: i64) -> bool {
-        !self.released && now_ns <= self.deadline_ns
-    }
-}
+pub use crate::writer_fence::PublishedLock;
 
 fn encode_lock(
     owner: &str,
@@ -471,14 +446,14 @@ fn encode_lock(
     renewed_ns: i64,
     pending: Option<(u64, &Hash32)>,
 ) -> String {
-    let (generation, commit) = match pending {
-        Some((generation, commit)) => (generation, commit.to_hex()),
-        None => (0, "-".to_owned()),
-    };
-    format!(
-        "{LOCK_SCHEMA}\nowner={owner}\nfence={fence}\nsequence={sequence}\n\
-         lease_deadline_ns={deadline_ns}\nrenewed_ns={renewed_ns}\n\
-         pending_generation={generation}\npending_commit={commit}\n"
+    crate::writer_fence::encode_lock(
+        LOCK_SCHEMA,
+        owner,
+        fence,
+        sequence,
+        deadline_ns,
+        renewed_ns,
+        pending,
     )
 }
 
@@ -489,66 +464,20 @@ fn encode_released(
     released_ns: i64,
     released_from: &str,
 ) -> String {
-    format!(
-        "{RELEASED_SCHEMA}\nowner={owner}\nfence={fence}\nsequence={sequence}\n\
-         released_ns={released_ns}\nreleased_from={released_from}\n"
+    crate::writer_fence::encode_released(
+        RELEASED_SCHEMA,
+        owner,
+        fence,
+        sequence,
+        released_ns,
+        released_from,
     )
 }
 
 /// Parse a published `LOCK` object. Accepts the fenced v2 record, the legacy v1
 /// record (fence 0), and the released tombstone.
 fn parse_lock(bytes: &[u8]) -> Option<PublishedLock> {
-    let text = std::str::from_utf8(bytes).ok()?;
-    let mut lines = text.lines();
-    let schema = lines.next()?;
-    let mut fields: BTreeMap<&str, &str> = BTreeMap::new();
-    for line in lines {
-        if line.is_empty() {
-            continue;
-        }
-        let (key, value) = line.split_once('=')?;
-        fields.insert(key, value);
-    }
-    let number = |key: &str| fields.get(key).and_then(|text| text.parse::<i64>().ok());
-    match schema {
-        LOCK_SCHEMA => Some(PublishedLock {
-            owner: (*fields.get("owner")?).to_owned(),
-            fence: u64::try_from(number("fence")?).ok()?,
-            sequence: u64::try_from(number("sequence")?).ok()?,
-            deadline_ns: number("lease_deadline_ns")?,
-            renewed_ns: number("renewed_ns")?,
-            pending_generation: u64::try_from(number("pending_generation")?).ok()?,
-            pending_commit: fields
-                .get("pending_commit")
-                .map(|text| (*text).to_owned())
-                .unwrap_or_else(|| "-".to_owned()),
-            released: false,
-            released_from: None,
-        }),
-        LOCK_SCHEMA_V1 => Some(PublishedLock {
-            owner: (*fields.get("owner")?).to_owned(),
-            fence: 0,
-            sequence: 0,
-            deadline_ns: number("expires_ns")?,
-            renewed_ns: 0,
-            pending_generation: 0,
-            pending_commit: "-".to_owned(),
-            released: false,
-            released_from: None,
-        }),
-        RELEASED_SCHEMA => Some(PublishedLock {
-            owner: (*fields.get("owner")?).to_owned(),
-            fence: u64::try_from(number("fence")?).ok()?,
-            sequence: u64::try_from(number("sequence")?).ok()?,
-            deadline_ns: number("released_ns")?,
-            renewed_ns: number("released_ns")?,
-            pending_generation: 0,
-            pending_commit: "-".to_owned(),
-            released: true,
-            released_from: fields.get("released_from").map(|text| (*text).to_owned()),
-        }),
-        _ => None,
-    }
+    crate::writer_fence::parse_lock(bytes, LOCK_SCHEMA, LOCK_SCHEMA_V1, RELEASED_SCHEMA)
 }
 
 impl S3Backend {
@@ -1972,31 +1901,11 @@ impl S3Backend {
 }
 
 fn describe_observed(observed: &Option<PublishedLock>, owner: &str, fence: u64) -> String {
-    match observed {
-        Some(record) if record.owner != owner || record.fence != fence => format!(
-            "; the LOCK now names owner {} fence {}",
-            record.owner, record.fence
-        ),
-        Some(record) if record.released => "; the LOCK is a released tombstone".to_owned(),
-        Some(_) => "; the LOCK still names this writer, but its own lease expired".to_owned(),
-        None => "; the LOCK is absent".to_owned(),
-    }
+    crate::writer_fence::describe_observed(observed, owner, fence)
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    hex_lower(&hasher.finalize())
-}
-
-fn hex_lower(bytes: &[u8]) -> String {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push(DIGITS[(byte >> 4) as usize] as char);
-        out.push(DIGITS[(byte & 0x0f) as usize] as char);
-    }
-    out
+    crate::writer_fence::sha256_hex(bytes)
 }
 
 fn now_ns() -> i64 {
