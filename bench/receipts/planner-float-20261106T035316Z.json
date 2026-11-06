@@ -1,0 +1,295 @@
+{
+  "schema": "weft.planner-float-rebase.v1",
+  "label": "host-calibrated decode table and mode-9 planner candidate; single-host bench court, cached public Qwen2.5-0.5B weights, warm process cache, synthetic calibration payloads; not a fleet or portable-constant claim",
+  "generated_utc": "2026-11-06T03:53:16Z",
+  "environment": {
+    "kernel": "7.3.1-1-cachyos",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "weftfs_revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66",
+    "weftfs_go_revision": "bb15514da460ee32d5de0a82fa1b1e33bd27df4e",
+    "weftcodec_revision": "1ee5d907a679841c237846b8760307e081de8792",
+    "weftcodec_go_revision": "d1aab12c4de830cf13bb6d08c685716c9344a65a"
+  },
+  "corpus": {
+    "base": {
+      "blake3": "8cf89b829a9f723eb6350895d81afbaf887a0e9464a06a2607b65650c3df38a7",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "causal_parent_offered": true,
+    "dtype_mismatches": [],
+    "instruct": {
+      "blake3": "59dce3937a1047d8dbd6fdffb67a6f0ce20e056fd657c2c38cb7d76fc35cf7c2",
+      "dtype_histogram": {
+        "bf16": 290
+      },
+      "file_bytes": 988097824,
+      "header_bytes": 32288,
+      "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+      "tensor_count": 290,
+      "tensor_data_bytes": 988065536
+    },
+    "order": "safetensors data_offsets order",
+    "same_tensor_names": true,
+    "shape_mismatches": []
+  },
+  "decode_calibration": {
+    "id": "weftfs-r2/decode-calibration/v1",
+    "method": {
+      "fit": "fixed_ns + ns_per_mib * decoded_bytes / 1048576; fit from the small and large medians; delta rows subtract the measured base read",
+      "includes": "manifest read, frame/chunk verification, full logical decode",
+      "large_bytes": 16777216,
+      "reps": 7,
+      "small_bytes": 131072,
+      "warmup_reads": 1
+    },
+    "table_in_code": {
+      "raw": {
+        "fixed_ns": 11757,
+        "ns_per_mib": 307019
+      },
+      "zstd": {
+        "fixed_ns": 21285,
+        "ns_per_mib": 779888
+      },
+      "float-tensor": {
+        "fixed_ns": 18264,
+        "ns_per_mib": 4683726
+      },
+      "tensor-tiled": {
+        "fixed_ns": 14131,
+        "ns_per_mib": 3366772
+      },
+      "weight-delta": {
+        "fixed_ns": 30725,
+        "ns_per_mib": 5293987
+      },
+      "kv-cache": {
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576
+      },
+      "activation": {
+        "fixed_ns": 100000,
+        "ns_per_mib": 1048576
+      }
+    },
+    "this_run_vs_baked_ns_per_mib_ratio": {
+      "raw": 1.00929,
+      "zstd": 1.00662,
+      "float-tensor": 1.00281,
+      "tensor-tiled": 1.00699,
+      "weight-delta": 0.99634
+    },
+    "rows": [
+      {
+        "class": "raw",
+        "fixed_ns": 11650,
+        "ns_per_mib": 309872,
+        "median_ns_large": 4969606,
+        "median_ns_small": 50384
+      },
+      {
+        "class": "zstd",
+        "fixed_ns": 21753,
+        "ns_per_mib": 785047,
+        "median_ns_large": 12582507,
+        "median_ns_small": 119884
+      },
+      {
+        "class": "float-tensor",
+        "fixed_ns": 21082,
+        "ns_per_mib": 4696909,
+        "median_ns_large": 75171634,
+        "median_ns_small": 608196
+      },
+      {
+        "class": "tensor-sharded",
+        "fixed_ns": 60062,
+        "ns_per_mib": 8896287,
+        "median_ns_large": 142400651,
+        "median_ns_small": 1172098
+      },
+      {
+        "class": "tensor-tiled",
+        "fixed_ns": 11545,
+        "ns_per_mib": 3390298,
+        "median_ns_large": 54256313,
+        "median_ns_small": 435332
+      },
+      {
+        "class": "weight-delta",
+        "fixed_ns": 33906,
+        "ns_per_mib": 5274622,
+        "median_ns_large": 89410300,
+        "median_ns_small": 741985
+      },
+      {
+        "class": "semantic-delta",
+        "fixed_ns": 26864,
+        "ns_per_mib": 6482872,
+        "median_ns_large": 108749046,
+        "median_ns_small": 886825
+      }
+    ],
+    "errors": []
+  },
+  "planner": {
+    "candidates": [
+      "raw",
+      "zstd",
+      "float-tensor (mode 9)",
+      "tensor-sharded (q8_0)",
+      "tensor-tiled (opt-in)",
+      "weight-delta",
+      "semantic-delta"
+    ],
+    "default_cost_model": "measured",
+    "lambda_ns": 0,
+    "mode9_margin": "only priced when it saves >= 1/64 of the zstd frame"
+  },
+  "storage": {
+    "base": {
+      "store_total_bytes": 674729302,
+      "tensor_data_bytes": 658243887,
+      "indexes_bytes": 16217078,
+      "strategy_distribution": {
+        "logical_bytes_by_strategy": {
+          "float-tensor": 987922432,
+          "raw": 12288,
+          "zstd": 130816
+        },
+        "tensors_by_strategy": {
+          "float-tensor": 169,
+          "raw": 48,
+          "zstd": 73
+        }
+      },
+      "ingest_wall_ms": 65183.342
+    },
+    "instruct_marginal_bytes": 601399654,
+    "family": {
+      "store_total_bytes": 1276128956,
+      "data_only_bytes": 1199958505,
+      "indexes_bytes": 75584928,
+      "strategy_distribution": {
+        "logical_bytes_by_strategy": {
+          "raw": 12288,
+          "weight-delta": 988051456,
+          "zstd": 1792
+        },
+        "tensors_by_strategy": {
+          "raw": 48,
+          "weight-delta": 241,
+          "zstd": 1
+        }
+      },
+      "ingest_wall_ms": 111632.873
+    },
+    "comparison": {
+      "zipnn_0_5_4_total_bytes": 1316518229,
+      "previous_weftfs_total_bytes": 1389785926,
+      "new_total_vs_zipnn_ratio": 0.96932,
+      "data_only_vs_zipnn_ratio": 0.91146,
+      "new_total_vs_previous_weftfs_ratio": 0.91822,
+      "family_delta_vs_previous_bytes": -113656970,
+      "index_share_of_total": 0.05923
+    }
+  },
+  "restore": {
+    "open_ms": 26.355,
+    "full": {
+      "base": {
+        "read_ms": 4627.478,
+        "logical_root_check_ms": 4651.728,
+        "materialize_ms": 6494.32,
+        "hash_exact": true,
+        "logical_roots_exact": true,
+        "backend_bytes_read": 658130091
+      },
+      "instruct": {
+        "read_ms": 11371.21,
+        "logical_root_check_ms": 10790.248,
+        "materialize_ms": 12092.167,
+        "hash_exact": true,
+        "logical_roots_exact": true,
+        "backend_bytes_read": 1199399084
+      }
+    },
+    "single_tensor": {
+      "base": {
+        "tensor": "model.layers.10.mlp.down_proj.weight",
+        "logical_bytes": 8716288,
+        "median_ms": 39.771
+      },
+      "instruct": {
+        "tensor": "model.layers.10.mlp.down_proj.weight",
+        "logical_bytes": 8716288,
+        "median_ms": 92.691
+      }
+    },
+    "previous_full_restore_ms": {
+      "base_read": 968.789,
+      "base_materialize": 6464.085,
+      "instruct_read": 14367.419,
+      "instruct_materialize": 23752.104
+    },
+    "previous_single_tensor_ms": {
+      "base": 7.307,
+      "instruct": 118.552
+    }
+  },
+  "rebase": {
+    "threshold_ns": 1000000000,
+    "cost_model": "measured",
+    "dry_run": true,
+    "scanned": 291,
+    "candidate_count": 1,
+    "skipped_count": 0,
+    "truncated": false,
+    "hot_reads_per_tensor": 10,
+    "hot_logical_bytes_read": 9880655360,
+    "objects": [
+      {
+        "path": "/model.embed_tokens.weight",
+        "reads": 10,
+        "from_strategy": "weight-delta",
+        "to_strategy": "float-tensor",
+        "read_cost_ns": 25908245290,
+        "estimated_decode_ns": 2590824529,
+        "new_estimated_decode_ns": 1216176993,
+        "new_physical_bytes": 180547519
+      }
+    ],
+    "skipped_sample": []
+  },
+  "verify": {
+    "ingest_verify_full": {
+      "full": true,
+      "ok": true
+    },
+    "hot_rows": 290
+  },
+  "checks": {
+    "corpus_sha256_verified": true,
+    "restore_exact": true,
+    "logical_roots_exact": true,
+    "rebase_dry_run_only": true,
+    "rebase_candidates_nonzero": true,
+    "float_tensor_calibration_within_5pct": true
+  },
+  "residual_risks": [
+    "Single host and warm process cache; absolute times move with host state.",
+    "The measured decode table is court-calibrated, not a portable constant.",
+    "ZipNN is a recorded whole-file baseline from the F10 court, not re-run here."
+  ]
+}
