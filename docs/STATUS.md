@@ -1867,7 +1867,7 @@ cost, not more format coverage.
   3.5 ms with 4 tiles and **730,133 B fetched vs 180,625,100 B** (247x).
   Logical-root recheck stays sequential (0.99x); 100-row/1-row regions touch 4
   tiles and do not parallelise. Receipt
-  `bench/receipts/tiled-parallel-20261106T061820Z.json`, analysis
+  `bench/receipts/tiled-parallel-20261106T062146Z.json`, analysis
   `bench/RESULTS-tiled-parallel.md`, `tests/tiled_parallel.rs` 8/8, parent 265
   passed, FUSE 299 passed / 2 ignored / 0 failed (one transient
   `representation` failure in a loaded first run passed standalone and on

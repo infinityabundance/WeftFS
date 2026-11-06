@@ -250,7 +250,7 @@ separate sequential pass and does not speed up (0.99x). Materialize is still
 writeback bound. The required auto-tile configuration stores zero tiled objects,
 so its thread-count ratios are noise; the `0 / 290` result is the planner
 finding, not a failed run. Receipt
-[`bench/receipts/tiled-parallel-20261106T061820Z.json`](receipts/tiled-parallel-20261106T061820Z.json),
+[`bench/receipts/tiled-parallel-20261106T062146Z.json`](receipts/tiled-parallel-20261106T062146Z.json),
 full tables and every loss in
 [`bench/RESULTS-tiled-parallel.md`](RESULTS-tiled-parallel.md). Tests:
 `tests/tiled_parallel.rs` 8/8; parent 265 passed; FUSE 299 passed / 2 ignored /

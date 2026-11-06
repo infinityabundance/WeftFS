@@ -243,6 +243,8 @@ def main():
     checks["default_config_has_no_tiled_tensors"] = (
         configs["default"]["ingest"]["tiled_tensors"] == 0
     )
+    checks["restored_bytes_identical"] = len(restored_values) == 1
+    checks["materialized_bytes_identical"] = len(materialized_values) == 1
     checks["forced_control_has_tiled_tensors"] = (
         configs["forced_tiled_control"]["ingest"]["tiled_tensors"] > 0
     )

@@ -1,6 +1,6 @@
 # Bounded parallel tile decode and auto-tiling (Qwen2.5-0.5B, single host)
 
-Receipt: `bench/receipts/tiled-parallel-20261106T061820Z.json`
+Receipt: `bench/receipts/tiled-parallel-20261106T062146Z.json`
 Harness: `bench/scripts/tiled_parallel_court.sh`,
 `bench/scripts/assemble_tiled_parallel.py`,
 `examples/real_model_bench.rs` (`ingest`, `tiled`)
@@ -173,7 +173,7 @@ The receipt's `checks` object is 12/12 true.
 scripts/docker-court.sh bench 'cd /work && bash bench/scripts/tiled_parallel_court.sh'
 ```
 
-`bench/receipts/tiled-parallel-20261106T061820Z.json` is the committed receipt.
+`bench/receipts/tiled-parallel-20261106T062146Z.json` is the committed receipt.
 
 The script re-hashes both cached Qwen files against
 `bench/corpora/real-models/qwen2.5-0.5b-pair.json`, builds
