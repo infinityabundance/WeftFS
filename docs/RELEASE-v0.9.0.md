@@ -37,16 +37,28 @@ weftfs = "0.9.0"
   (`bench/receipts/python-bindings-20261106T142616Z.json`). The wheel metadata
   reports version 0.9.0. **Not published to PyPI** (no token); the wheel is
   attached to the GitHub release.
-- Images are published by each repository's container workflow when the release
-  tag is pushed. The parent `containers.yml` publishes the `weftfs` image on a
-  `v*` tag; the subprojects publish their own images. CI is triggered by
-  `v0.9.0`; no image is claimed here unless its own workflow run is verified.
+- crates.io: `weftcodec 0.9.0` was published first and then `weftfs 0.9.0`
+  with `scripts/publish-crates.sh`. Live registry checksums
+  (crates.io API, `yanked=false`): `weftcodec`
+  `f70b404c530c111fe30eda4c721d0be1c9cdb0d28793bd1179e0d98fae2f0e90`,
+  `weftfs`
+  `017bd760791f0f6551b35ac9fd49d441aec517fc2515779d036a9a937da84382`.
+- Images: pushing `v0.9.0` triggered the container workflows. All four runs
+  completed `success` (`WeftFS` run 42234670919 at `8410d99`, `WeftCodec` run
+  42234675021 at `a888d79`, `WeftCodec-Go` run 42234681320 at `8957998`,
+  `WeftFS-Go` run 42234686495 at `007bf11`), and
+  `docker manifest inspect ghcr.io/infinityabundance/<image>:v0.9.0` returned a
+  manifest index for `weftfs`, `weftcodec`, `weftcodec-go`, and `weftfs-go`.
+  Observed index digests: `weftfs`
+  `sha256:ae9e45e463be0c63c69f777954a60d7ad76ccac23a6242070d635c7479450cc2`,
+  `weftcodec`
+  `sha256:7ea50ec87fedba1df196fb86e92c88228c87b51ec98bddcc87fc8e6e8d4c2316`,
+  `weftcodec-go`
+  `sha256:e73929f3c2d63946dd39d8f7df253f18a8011faf53788c56fda9ea2195d03e80`,
+  `weftfs-go`
+  `sha256:41d0bfc82fdd28dd56bad61a04a911e7324c0f4233c972e9e81f1cb501959be3`.
   FUSE mounts need `--device /dev/fuse --cap-add SYS_ADMIN`; codec and
   store-only commands do not. See `docs/containers.md`.
-- crates.io publication is performed after the tag with
-  `scripts/publish-crates.sh`: `weftcodec 0.9.0` first, then `weftfs 0.9.0`
-  after the index is visible. The live registry checksum is reported with the
-  release, not guessed here.
 
 ## Verification at the release tree
 
@@ -71,9 +83,10 @@ Revisions pinned by that receipt:
 | `WeftFS-Go` | `007bf11` | independent Go store + FUSE, spec mirror |
 
 The tag is cut after the release-note and status commits, so the tagged commits
-are later than the verified code revisions; the only changes between them are
-version literals, the Python receipt-generator fix, and documentation. The
-host-only `claims` court is re-run on the final docs tree before the tag.
+are later than the verified code revision; the only changes between them are
+the Python receipt-generator fix, documentation, and the committed verification
+receipts. The host-only `claims` court is re-run on the final docs tree before
+the tag.
 
 The Rust FUSE suite inside that receipt reports **434 passed, 0 failed, 2
 ignored**, and the Go store/FUSE court reports `ok` for all four packages
