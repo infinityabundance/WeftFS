@@ -3202,6 +3202,16 @@ impl Store {
                 rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
             })
             .unwrap_or(false);
+        if old_manifest
+            .representation
+            .as_ref()
+            .map(|rep| rep.kind == RepresentationKind::Overlay)
+            .unwrap_or(false)
+        {
+            return Err(Error::invalid_argument(
+                "range write to a weft.manifest.v4 overlay is not implemented",
+            ));
+        }
         // CodecAuto, or writing back to a store whose current version is a
         // frame-backed (codec or tensor) representation, materialises the whole
         // object once. This keeps the experimental and tensor paths simple; the
@@ -3295,12 +3305,14 @@ impl Store {
             .representation
             .as_ref()
             .map(|rep| {
-                rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor
+                rep.kind == RepresentationKind::Codec
+                    || rep.kind == RepresentationKind::Tensor
+                    || rep.kind == RepresentationKind::Overlay
             })
             .unwrap_or(false)
         {
             return Err(Error::invalid_argument(
-                "streaming append to a frame-backed object is not implemented",
+                "streaming append to a frame-backed or overlay object is not implemented",
             ));
         }
         let chunk_size = old_manifest.chunk_size;
