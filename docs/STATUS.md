@@ -2,20 +2,23 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T225457Z.json` (29/29 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261106T232858Z.json` (30/30 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
-memory, `ceph_rgw` — Ceph RGW 19.2.0, an independent S3 implementation, now
-running both the S3 backend suite and the R17 fenced-writer suite — the MinIO
-`s3_court` (native S3 backend and fenced-writer suites), and `fuzz_diff`), at
-WeftFS `132e713`, WeftCodec `a888d79`, WeftCodec-Go `8957998`, WeftFS-Go
-`8670d77`. The previous 29/29 receipt (`verify-20261106T214749Z.json` at
-`9a6156c`), its 28/28 predecessor (`verify-20261106T174703Z.json` at
-`37a3a39`), the 28/28 receipt before that
-(`verify-20261106T162208Z.json` at `0e3670a`), and the failing first R20 aggregate
-(`verify-20261106T212741Z.json`, 28/29) are retained; that failure was the
-pre-existing `tests/quota.rs` writer-lock flake,
+memory, the R22 `threefs` court (3FS POSIX byte-identity plus the USRBIO ABI
+conformance court), `ceph_rgw` — Ceph RGW 19.2.0, an independent S3
+implementation, now running both the S3 backend suite and the R17 fenced-writer
+suite — the MinIO `s3_court` (native S3 backend and fenced-writer suites), and
+`fuzz_diff`), at
+WeftFS `4704ded`, WeftCodec `57288e1`, WeftCodec-Go `86ded1e`, WeftFS-Go
+`3b3695e`. The previous 29/29 receipt (`verify-20261106T225457Z.json` at
+`132e713`), the 29/29 receipt before it
+(`verify-20261106T214749Z.json` at `9a6156c`), its 28/28 predecessor
+(`verify-20261106T174703Z.json` at `37a3a39`), and the 28/28 receipt before that
+(`verify-20261106T162208Z.json` at `0e3670a`) are retained. The failing first
+R20 aggregate (`verify-20261106T212741Z.json`, 28/29) is also retained; that
+failure was the pre-existing `tests/quota.rs` writer-lock flake,
 `usage_survives_reopen_and_still_denies`, which passed standalone immediately
 after and in the rerun. A court that cannot run in the aggregate's environment
 (non-x86_64, no Docker daemon, a pinned image or binary unobtainable, or a
