@@ -76,14 +76,14 @@
       "path": "/mnt/weft-bench/restore-pipeline"
     }
   },
-  "generated_utc": "2026-11-07T04:48:14Z",
+  "generated_utc": "2026-11-07T04:56:03Z",
   "label": "single-host bench court, 4 vCPUs, warm cache, one store reused by both modes, no fleet or multi-node claim",
   "notes": [
     "Materialize writes 988,097,824 B per checkpoint. The pipeline overlaps decode with that write; it cannot make the write itself faster.",
     "pipeline.decode_wall_ms is the wall time until the last decode finished; decode_sum_ms (in the run JSONs) is the sum of worker busy time and can exceed it. transfer_ms is the writer waiting for the next in-order result; write_ms is time inside write_all.",
     "The 272 MB embedding exceeds the 64 MiB staging bound and runs as the single oversized task; the memory bound is max_inflight + 272,269,312 B.",
-    "The disk (host bind mount) rows are NOT a performance claim: across 1 repetitions the same batched 988 MB materialize ranged 2079.196 to 13940.42 ms and the pipeline total ranged 1359.669 to 12802.539 ms, a host writeback spread larger than any mode difference. The tmpfs rows are the controlled comparison.",
-    "On tmpfs the write is effectively free, so total_ms is decode-bound: the pipeline is 4.9% (1 worker), 13.7% (2), and 10.7% (4) faster at the medians, and its write time is almost entirely overlapped with decode.",
+    "The disk (host bind mount) rows are NOT a performance claim: across 1 repetitions the same batched 988 MB materialize ranged 4923.524 to 13368.842 ms and the pipeline total ranged 1437.017 to 15038.131 ms, a host writeback spread larger than any mode difference. The tmpfs rows are the controlled comparison.",
+    "On tmpfs the write is effectively free, so total_ms is decode-bound: the pipeline is 4.6% (1 worker), 14.3% (2), and 12.0% (4) faster at the medians, and its write time is almost entirely overlapped with decode.",
     "At one worker the pipeline still uses one decode thread plus the calling writer thread, so it is not bit-for-bit the old sequential cost; see the one-thread rows."
   ],
   "results": {
@@ -96,32 +96,32 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 4200.956,
+          "materialize_median_ms": 10519.289,
           "materialize_ms": [
-            4200.956
+            10519.289
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 2629.162,
+          "pipeline_decode_wall_median_ms": 2637.97,
           "pipeline_decode_wall_ms": [
-            2629.162
+            2637.97
           ],
-          "pipeline_total_median_ms": 3350.133,
+          "pipeline_total_median_ms": 3199.993,
           "pipeline_total_ms": [
-            3350.133
+            3199.993
           ],
           "pipeline_transfer_median_ms": 0.0,
           "pipeline_transfer_ms": [
             0.0
           ],
-          "pipeline_write_median_ms": 720.079,
+          "pipeline_write_median_ms": 561.366,
           "pipeline_write_ms": [
-            720.079
+            561.366
           ],
-          "read_median_ms": 3469.056,
+          "read_median_ms": 2816.976,
           "read_ms": [
-            3469.056
+            2816.976
           ]
         },
         "instruct": {
@@ -131,48 +131,48 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 9173.336,
+          "materialize_median_ms": 9103.908,
           "materialize_ms": [
-            9173.336
+            9103.908
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 9144.637,
+          "pipeline_decode_wall_median_ms": 8933.856,
           "pipeline_decode_wall_ms": [
-            9144.637
+            8933.856
           ],
-          "pipeline_total_median_ms": 12802.539,
+          "pipeline_total_median_ms": 10395.042,
           "pipeline_total_ms": [
-            12802.539
+            10395.042
           ],
           "pipeline_transfer_median_ms": 0.0,
           "pipeline_transfer_ms": [
             0.0
           ],
-          "pipeline_write_median_ms": 3634.766,
+          "pipeline_write_median_ms": 1437.303,
           "pipeline_write_ms": [
-            3634.766
+            1437.303
           ],
-          "read_median_ms": 10215.115,
+          "read_median_ms": 9923.811,
           "read_ms": [
-            10215.115
+            9923.811
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            2037428,
-            2037428
+            2034344,
+            2034344
           ],
           "pipeline": [
-            2037180,
-            2037180
+            2035344,
+            2035344
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 2037428,
-          "pipeline": 2037180
+          "batch": 2034344,
+          "pipeline": 2035344
         },
         "threads_effective": 1,
         "threads_requested": 1
@@ -185,32 +185,32 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 10882.738,
+          "materialize_median_ms": 5970.928,
           "materialize_ms": [
-            10882.738
+            5970.928
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 1718.234,
+          "pipeline_decode_wall_median_ms": 10663.241,
           "pipeline_decode_wall_ms": [
-            1718.234
+            10663.241
           ],
-          "pipeline_total_median_ms": 1720.22,
+          "pipeline_total_median_ms": 10664.632,
           "pipeline_total_ms": [
-            1720.22
+            10664.632
           ],
-          "pipeline_transfer_median_ms": 1439.957,
+          "pipeline_transfer_median_ms": 1116.165,
           "pipeline_transfer_ms": [
-            1439.957
+            1116.165
           ],
-          "pipeline_write_median_ms": 278.756,
+          "pipeline_write_median_ms": 9546.876,
           "pipeline_write_ms": [
-            278.756
+            9546.876
           ],
-          "read_median_ms": 1891.525,
+          "read_median_ms": 1855.477,
           "read_ms": [
-            1891.525
+            1855.477
           ]
         },
         "instruct": {
@@ -220,48 +220,48 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 13940.42,
+          "materialize_median_ms": 13368.842,
           "materialize_ms": [
-            13940.42
+            13368.842
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 5914.012,
+          "pipeline_decode_wall_median_ms": 13443.599,
           "pipeline_decode_wall_ms": [
-            5914.012
+            13443.599
           ],
-          "pipeline_total_median_ms": 5915.589,
+          "pipeline_total_median_ms": 15038.131,
           "pipeline_total_ms": [
-            5915.589
+            15038.131
           ],
-          "pipeline_transfer_median_ms": 4685.441,
+          "pipeline_transfer_median_ms": 4204.763,
           "pipeline_transfer_ms": [
-            4685.441
+            4204.763
           ],
-          "pipeline_write_median_ms": 1228.966,
+          "pipeline_write_median_ms": 10832.23,
           "pipeline_write_ms": [
-            1228.966
+            10832.23
           ],
-          "read_median_ms": 6252.085,
+          "read_median_ms": 5930.762,
           "read_ms": [
-            6252.085
+            5930.762
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            2168116,
-            2168116
+            2168352,
+            2168352
           ],
           "pipeline": [
-            2176532,
-            2176532
+            2171884,
+            2171884
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 2168116,
-          "pipeline": 2176532
+          "batch": 2168352,
+          "pipeline": 2171884
         },
         "threads_effective": 2,
         "threads_requested": 2
@@ -274,32 +274,32 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 2079.196,
+          "materialize_median_ms": 11258.963,
           "materialize_ms": [
-            2079.196
+            11258.963
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 1358.018,
+          "pipeline_decode_wall_median_ms": 1435.369,
           "pipeline_decode_wall_ms": [
-            1358.018
+            1435.369
           ],
-          "pipeline_total_median_ms": 1359.669,
+          "pipeline_total_median_ms": 1437.017,
           "pipeline_total_ms": [
-            1359.669
+            1437.017
           ],
-          "pipeline_transfer_median_ms": 1149.856,
+          "pipeline_transfer_median_ms": 1094.095,
           "pipeline_transfer_ms": [
-            1149.856
+            1094.095
           ],
-          "pipeline_write_median_ms": 207.952,
+          "pipeline_write_median_ms": 341.314,
           "pipeline_write_ms": [
-            207.952
+            341.314
           ],
-          "read_median_ms": 1414.165,
+          "read_median_ms": 1416.076,
           "read_ms": [
-            1414.165
+            1416.076
           ]
         },
         "instruct": {
@@ -309,48 +309,48 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 6005.877,
+          "materialize_median_ms": 4923.524,
           "materialize_ms": [
-            6005.877
+            4923.524
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 12697.281,
+          "pipeline_decode_wall_median_ms": 4948.634,
           "pipeline_decode_wall_ms": [
-            12697.281
+            4948.634
           ],
-          "pipeline_total_median_ms": 12697.686,
+          "pipeline_total_median_ms": 5395.489,
           "pipeline_total_ms": [
-            12697.686
+            5395.489
           ],
-          "pipeline_transfer_median_ms": 5287.35,
+          "pipeline_transfer_median_ms": 3463.87,
           "pipeline_transfer_ms": [
-            5287.35
+            3463.87
           ],
-          "pipeline_write_median_ms": 7408.917,
+          "pipeline_write_median_ms": 1930.025,
           "pipeline_write_ms": [
-            7408.917
+            1930.025
           ],
-          "read_median_ms": 4807.492,
+          "read_median_ms": 4434.697,
           "read_ms": [
-            4807.492
+            4434.697
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            2168448,
-            2168448
+            2258272,
+            2258272
           ],
           "pipeline": [
-            2266960,
-            2266960
+            2226660,
+            2226660
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 2168448,
-          "pipeline": 2266960
+          "batch": 2258272,
+          "pipeline": 2226660
         },
         "threads_effective": 4,
         "threads_requested": 4
@@ -365,46 +365,46 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 2891.29,
+          "materialize_median_ms": 2892.824,
           "materialize_ms": [
-            2891.29
+            2892.824
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 2631.832,
+          "pipeline_decode_wall_median_ms": 2643.47,
           "pipeline_decode_wall_ms": [
-            2631.832
+            2643.47
           ],
-          "pipeline_total_median_ms": 2755.297,
+          "pipeline_total_median_ms": 2764.537,
           "pipeline_total_ms": [
-            2755.297
+            2764.537
           ],
           "pipeline_transfer_median_ms": 0.0,
           "pipeline_transfer_ms": [
             0.0
           ],
-          "pipeline_write_median_ms": 122.833,
+          "pipeline_write_median_ms": 120.367,
           "pipeline_write_ms": [
-            122.833
+            120.367
           ],
-          "read_median_ms": 2803.917,
+          "read_median_ms": 2822.351,
           "read_ms": [
-            2803.917
+            2822.351
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            728180
+            727464
           ],
           "pipeline": [
-            727148
+            727128
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 728180,
-          "pipeline": 727148
+          "batch": 727464,
+          "pipeline": 727128
         },
         "threads_effective": 1,
         "threads_requested": 1
@@ -417,46 +417,46 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 1906.998,
+          "materialize_median_ms": 1918.974,
           "materialize_ms": [
-            1906.998
+            1918.974
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 1674.703,
+          "pipeline_decode_wall_median_ms": 1677.06,
           "pipeline_decode_wall_ms": [
-            1674.703
+            1677.06
           ],
-          "pipeline_total_median_ms": 1676.546,
+          "pipeline_total_median_ms": 1678.816,
           "pipeline_total_ms": [
-            1676.546
+            1678.816
           ],
-          "pipeline_transfer_median_ms": 1490.173,
+          "pipeline_transfer_median_ms": 1497.009,
           "pipeline_transfer_ms": [
-            1490.173
+            1497.009
           ],
-          "pipeline_write_median_ms": 185.54,
+          "pipeline_write_median_ms": 180.936,
           "pipeline_write_ms": [
-            185.54
+            180.936
           ],
-          "read_median_ms": 1849.204,
+          "read_median_ms": 1836.986,
           "read_ms": [
-            1849.204
+            1836.986
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            805724
+            856440
           ],
           "pipeline": [
-            864036
+            864252
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 805724,
-          "pipeline": 864036
+          "batch": 856440,
+          "pipeline": 864252
         },
         "threads_effective": 2,
         "threads_requested": 2
@@ -469,46 +469,46 @@
           "materialize_bytes": [
             988097824
           ],
-          "materialize_median_ms": 1484.373,
+          "materialize_median_ms": 1476.564,
           "materialize_ms": [
-            1484.373
+            1476.564
           ],
           "pipeline_bytes_written": [
             988065536
           ],
-          "pipeline_decode_wall_median_ms": 1337.403,
+          "pipeline_decode_wall_median_ms": 1316.241,
           "pipeline_decode_wall_ms": [
-            1337.403
+            1316.241
           ],
-          "pipeline_total_median_ms": 1341.06,
+          "pipeline_total_median_ms": 1317.949,
           "pipeline_total_ms": [
-            1341.06
+            1317.949
           ],
-          "pipeline_transfer_median_ms": 1094.483,
+          "pipeline_transfer_median_ms": 1091.9,
           "pipeline_transfer_ms": [
-            1094.483
+            1091.9
           ],
-          "pipeline_write_median_ms": 245.706,
+          "pipeline_write_median_ms": 225.384,
           "pipeline_write_ms": [
-            245.706
+            225.384
           ],
-          "read_median_ms": 1412.529,
+          "read_median_ms": 1420.761,
           "read_ms": [
-            1412.529
+            1420.761
           ]
         },
         "max_inflight_bytes": 67108864,
         "peak_rss_kib": {
           "batch": [
-            856416
+            850584
           ],
           "pipeline": [
-            930712
+            933576
           ]
         },
         "peak_rss_median_kib": {
-          "batch": 856416,
-          "pipeline": 930712
+          "batch": 850584,
+          "pipeline": 933576
         },
         "threads_effective": 4,
         "threads_requested": 4
@@ -518,73 +518,73 @@
   "revisions": {
     "weftcodec": "9d5d65122936257b33f2e5620c020626b7a7ae08",
     "weftcodec_go": "df43be053dda744373d5ad41daae36c882c10fe5",
-    "weftfs": "06bd94d961706ab1e4e3951a09ab1b3f9432876a",
-    "weftfs_go": "f7bcdb857c38d4caaafa280db940c7dd7c1d7901"
+    "weftfs": "954992c60806e8ebe008723d71c89a8f29285ed5",
+    "weftfs_go": "1b243fa568cb3165ecc76e0ec498590cdb48a601"
   },
   "schema": "weft.restore-pipeline.v1",
   "speedup": {
     "disk": {
-      "base_pipeline_t2_vs_t1": 1.9475,
-      "base_pipeline_t4_vs_t1": 2.4639,
-      "base_pipeline_vs_batch_t1": 1.254,
-      "base_pipeline_vs_batch_t2": 6.3264,
-      "base_pipeline_vs_batch_t4": 1.5292,
-      "base_write_over_decode_t1": 0.2739,
-      "base_write_over_decode_t2": 0.1622,
-      "base_write_over_decode_t4": 0.1531,
-      "instruct_pipeline_t2_vs_t1": 2.1642,
-      "instruct_pipeline_t4_vs_t1": 1.0083,
-      "instruct_pipeline_vs_batch_t1": 0.7165,
-      "instruct_pipeline_vs_batch_t2": 2.3566,
-      "instruct_pipeline_vs_batch_t4": 0.473,
-      "instruct_write_over_decode_t1": 0.3975,
-      "instruct_write_over_decode_t2": 0.2078,
-      "instruct_write_over_decode_t4": 0.5835
+      "base_pipeline_t2_vs_t1": 0.3001,
+      "base_pipeline_t4_vs_t1": 2.2268,
+      "base_pipeline_vs_batch_t1": 3.2873,
+      "base_pipeline_vs_batch_t2": 0.5599,
+      "base_pipeline_vs_batch_t4": 7.835,
+      "base_write_over_decode_t1": 0.2128,
+      "base_write_over_decode_t2": 0.8953,
+      "base_write_over_decode_t4": 0.2378,
+      "instruct_pipeline_t2_vs_t1": 0.6912,
+      "instruct_pipeline_t4_vs_t1": 1.9266,
+      "instruct_pipeline_vs_batch_t1": 0.8758,
+      "instruct_pipeline_vs_batch_t2": 0.889,
+      "instruct_pipeline_vs_batch_t4": 0.9125,
+      "instruct_write_over_decode_t1": 0.1609,
+      "instruct_write_over_decode_t2": 0.8058,
+      "instruct_write_over_decode_t4": 0.39
     },
     "tmpfs": {
-      "base_pipeline_t2_vs_t1": 1.6434,
-      "base_pipeline_t4_vs_t1": 2.0546,
-      "base_pipeline_vs_batch_t1": 1.0494,
-      "base_pipeline_vs_batch_t2": 1.1375,
-      "base_pipeline_vs_batch_t4": 1.1069,
-      "base_write_over_decode_t1": 0.0467,
-      "base_write_over_decode_t2": 0.1108,
-      "base_write_over_decode_t4": 0.1837
+      "base_pipeline_t2_vs_t1": 1.6467,
+      "base_pipeline_t4_vs_t1": 2.0976,
+      "base_pipeline_vs_batch_t1": 1.0464,
+      "base_pipeline_vs_batch_t2": 1.1431,
+      "base_pipeline_vs_batch_t4": 1.1203,
+      "base_write_over_decode_t1": 0.0455,
+      "base_write_over_decode_t2": 0.1079,
+      "base_write_over_decode_t4": 0.1712
     }
   },
   "spread": {
     "disk": {
       "batch_materialize_ms": {
-        "max": 13940.42,
-        "median": 7589.606,
-        "min": 2079.196
+        "max": 13368.842,
+        "median": 9811.599,
+        "min": 4923.524
       },
       "pipeline_total_ms": {
-        "max": 12802.539,
-        "median": 4632.861,
-        "min": 1359.669
+        "max": 15038.131,
+        "median": 7895.265,
+        "min": 1437.017
       },
       "pipeline_write_ms": {
-        "max": 7408.917,
-        "median": 974.522,
-        "min": 207.952
+        "max": 10832.23,
+        "median": 1683.664,
+        "min": 341.314
       }
     },
     "tmpfs": {
       "batch_materialize_ms": {
-        "max": 2891.29,
-        "median": 1906.998,
-        "min": 1484.373
+        "max": 2892.824,
+        "median": 1918.974,
+        "min": 1476.564
       },
       "pipeline_total_ms": {
-        "max": 2755.297,
-        "median": 1676.546,
-        "min": 1341.06
+        "max": 2764.537,
+        "median": 1678.816,
+        "min": 1317.949
       },
       "pipeline_write_ms": {
-        "max": 245.706,
-        "median": 185.54,
-        "min": 122.833
+        "max": 225.384,
+        "median": 180.936,
+        "min": 120.367
       }
     }
   },

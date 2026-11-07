@@ -2,12 +2,12 @@
   {
     "id": "verify_receipt_current",
     "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (30/30 courts pass, incl. threefs, ceph_rgw and s3_court).",
-    "value": "verify-20261107T032909Z.json",
+    "value": "verify-20261107T051237Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261107T032909Z.json",
+    "receipt": "bench/receipts/verify-20261107T051237Z.json",
     "kind": "present"
   },
   {
@@ -5034,6 +5034,117 @@
       "docs/FENCING.md"
     ],
     "receipt": "bench/receipts/azure-20261107T034219Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "simd_decode_floor_receipt",
+    "claim": "docs/STATUS.md cites the kernel decode-floor receipt.",
+    "value": "decode-floor-20261107T040250Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/decode-floor-20261107T040250Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "simd_huffman_speedup",
+    "claim": "docs/STATUS.md records the in-process Huffman kernel speedup and the absence of an absolute win.",
+    "value": "1.07\u20131.10x",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/decode-floor-20261107T040250Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "simd_join_speedup",
+    "claim": "docs/STATUS.md records the byte-wise BF16 join speedup.",
+    "value": "11.2x",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/decode-floor-20261107T040250Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "simd_go_word_loss",
+    "claim": "docs/STATUS.md records the Go word-level Huffman loss.",
+    "value": "0.93x",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/decode-floor-20261107T040250Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "mode17_schema_present",
+    "claim": "docs/SPEC and STATUS name the mode-17 schema.",
+    "value": "weft.ai.float_tiled.v1",
+    "locations": [
+      "docs/STATUS.md",
+      "spec/WEFT-AI-CODEC.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "mode17_byte_identity",
+    "claim": "docs/STATUS.md records the cross-language byte identity result.",
+    "value": "YES byte-identical float_tiled_bf16",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "mode17_vector_count",
+    "claim": "docs/STATUS.md records the mode-17 vector counts.",
+    "value": "3 valid + 8 reject",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "mode17_real_bytes_loss",
+    "claim": "docs/STATUS.md records the mode-17 byte overhead on the real embedding.",
+    "value": "+0.51%",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "planner_access_default",
+    "claim": "docs/STATUS.md names the default access pattern.",
+    "value": "AccessPattern::Whole",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/access-pattern-20261107T044101Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "planner_access_region_case",
+    "claim": "docs/STATUS.md records the 100-row region plan case.",
+    "value": "region:179200:1000",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/access-pattern-20261107T044101Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "planner_access_worse_case",
+    "claim": "docs/STATUS.md records the measured case where the pattern-aware plan is worse.",
+    "value": "7,437 ms",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
     "kind": "present"
   }
 ]

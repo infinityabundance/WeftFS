@@ -1,0 +1,54 @@
+goos: linux
+goarch: amd64
+pkg: github.com/infinityabundance/WeftCodec-Go/modes
+cpu: AMD Ryzen 7 9800X3D 8-Core Processor           
+BenchmarkHuffmanDecodeOptimised-4   	     313	   3813115 ns/op	 274.99 MB/s
+BenchmarkHuffmanDecodeOptimised-4   	     313	   3809796 ns/op	 275.23 MB/s
+BenchmarkHuffmanDecodeOptimised-4   	     314	   3814743 ns/op	 274.87 MB/s
+BenchmarkHuffmanDecodeScalar-4      	     336	   3563661 ns/op	 294.24 MB/s
+BenchmarkHuffmanDecodeScalar-4      	     336	   3566673 ns/op	 293.99 MB/s
+BenchmarkHuffmanDecodeScalar-4      	     336	   3568945 ns/op	 293.81 MB/s
+BenchmarkBF16JoinOptimised-4        	    2187	    512830 ns/op	2044.68 MB/s
+BenchmarkBF16JoinOptimised-4        	    2322	    512280 ns/op	2046.88 MB/s
+BenchmarkBF16JoinOptimised-4        	    2322	    512748 ns/op	2045.01 MB/s
+BenchmarkBF16JoinScalar-4           	    2961	    404900 ns/op	2589.72 MB/s
+BenchmarkBF16JoinScalar-4           	    2965	    404977 ns/op	2589.23 MB/s
+BenchmarkBF16JoinScalar-4           	    2964	    404894 ns/op	2589.76 MB/s
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/1MiB-4         	     316	   3782085 ns/op	 277.25 MB/s	 1048681 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/1MiB-4         	     315	   3783860 ns/op	 277.12 MB/s	 1048682 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/1MiB-4         	     316	   3783435 ns/op	 277.15 MB/s	 1048680 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/1MiB-4              	     331	   3615525 ns/op	 290.02 MB/s	 1049402 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/1MiB-4              	     331	   3611387 ns/op	 290.35 MB/s	 1049401 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/1MiB-4              	     331	   3611586 ns/op	 290.34 MB/s	 1049402 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/1MiB-4            	    5054	    219155 ns/op	4784.64 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/1MiB-4            	    5281	    218543 ns/op	4798.04 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/1MiB-4            	    5467	    219075 ns/op	4786.39 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/16MiB-4        	      16	  66075143 ns/op	 253.91 MB/s	92971118 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/16MiB-4        	      16	  65653612 ns/op	 255.54 MB/s	92971112 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/bf16-exponent-16/16MiB-4        	      18	  65660255 ns/op	 255.52 MB/s	92971112 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/16MiB-4             	      18	  63622619 ns/op	 263.70 MB/s	92971832 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/16MiB-4             	      18	  63459960 ns/op	 264.37 MB/s	92971832 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/uniform-256/16MiB-4             	      18	  63645998 ns/op	 263.60 MB/s	92971848 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/16MiB-4           	     307	   3876413 ns/op	4328.03 MB/s	16777216 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/16MiB-4           	     307	   3867215 ns/op	4338.32 MB/s	16777216 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeFast/single-symbol/16MiB-4           	     307	   3885843 ns/op	4317.52 MB/s	16777218 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/1MiB-4    	     126	   9452299 ns/op	 110.93 MB/s	 1048680 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/1MiB-4    	     126	   9448650 ns/op	 110.98 MB/s	 1048680 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/1MiB-4    	     126	   9459747 ns/op	 110.85 MB/s	 1048681 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/1MiB-4         	     100	  11326672 ns/op	  92.58 MB/s	 1049400 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/1MiB-4         	     100	  11294974 ns/op	  92.84 MB/s	 1049400 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/1MiB-4         	     100	  11320961 ns/op	  92.62 MB/s	 1049400 B/op	       5 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/1MiB-4       	    5325	    222366 ns/op	4715.54 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/1MiB-4       	    5355	    221099 ns/op	4742.56 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/1MiB-4       	    5232	    221556 ns/op	4732.77 MB/s	 1048577 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/16MiB-4   	       7	 156654413 ns/op	 107.10 MB/s	92971112 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/16MiB-4   	       7	 156677813 ns/op	 107.08 MB/s	92971112 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/bf16-exponent-16/16MiB-4   	       7	 157062743 ns/op	 106.82 MB/s	92971112 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/16MiB-4        	       6	 186056977 ns/op	  90.17 MB/s	92971848 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/16MiB-4        	       6	 182782692 ns/op	  91.79 MB/s	92971832 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/uniform-256/16MiB-4        	       6	 183665589 ns/op	  91.35 MB/s	92971832 B/op	      18 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/16MiB-4      	     314	   3824523 ns/op	4386.75 MB/s	16777217 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/16MiB-4      	     312	   3801639 ns/op	4413.15 MB/s	16777217 B/op	       1 allocs/op
+BenchmarkHuffmanDecodeReference/single-symbol/16MiB-4      	     312	   3814821 ns/op	4397.90 MB/s	16777217 B/op	       1 allocs/op
+PASS
+ok  	github.com/infinityabundance/WeftCodec-Go/modes	74.167s

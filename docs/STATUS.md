@@ -2,7 +2,7 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261107T032909Z.json` (30/30 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261107T051237Z.json` (30/30 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
@@ -5253,3 +5253,100 @@ Upgrade every writer before opening the store again.
   this section records the protocol change that the program memory also notes.
 * No physical media power loss; the courts remain process-fault and single-node
   device-model proxies.
+
+## Subphase S1 — decode floor, wide-word kernels, mode 17, access-pattern planner (2026-11-07)
+
+This subphase answers the reviewer's decode-throughput requirement with measured
+numbers, including every loss. Receipts:
+`decode-floor-20261107T034727Z.json` (baseline),
+`decode-floor-20261107T040250Z.json` (kernels),
+`float-tiled-20261107T042955Z.json` (real Qwen),
+`access-pattern-20261107T044101Z.json` (planner),
+`restore-pipeline-20261107T045603Z.json` (988 MB). Analysis:
+`bench/RESULTS-decode-simd.md`, `bench/RESULTS-mode17.md`.
+
+### Measured decode floor and kernels
+
+* Baseline, single-threaded, 16 MiB BF16: Huffman 15.4646 ms (1034.6 MiB/s of
+  exponent plane), plane join 18.0656 ms, whole mode-9 decode 34.7865 ms
+  (459.9 MiB/s). FP32 mode 9: 21.4125 ms (747.2 MiB/s).
+* Rust Huffman: an AVX2 eight-byte-refill, two-symbol-unroll kernel is
+  **1.07–1.10x** the retained scalar kernel in the same process. Cross-run
+  absolute change is +1.0% (1 MiB) to +3.7% (16 MiB), i.e. **no absolute win**;
+  a single Huffman bitstream cannot be lane-parallelised without a wire change.
+* Rust BF16 plane join: the byte-wise formulation is **11.2x** faster
+  end-to-end at 16 MiB (18.0656 → 1.6166 ms) because LLVM auto-vectorises it.
+  The explicit AVX2 kernel is a tie at ≥1 MiB (1.01–1.04x) and 3.8x slower at
+  128 KiB, so it is not selected.
+* Whole BF16 mode-9 decode: 34.7865 → 18.2186 ms (**1.91x**); 1 MiB 2.2621 →
+  1.2181 ms (1.86x). FP32 is unchanged; its +2–8% cross-run deltas are noise.
+* `unsafe` is confined to `WeftCodec/src/simd.rs`; the crate root is
+  `deny(unsafe_code)` and `tests/no_unsafe_outside_simd.rs` fails otherwise.
+  10,000-case differentials per kernel (Huffman streams including mutations,
+  BF16 plane pairs) pass.
+* Go: the word-level Huffman variant is **0.93x** (274.8 vs 294.0 MB/s) and is
+  not selected; the BF16 direct pack is **1.45x** (2044 vs 1413 MB/s). Go can
+  never match the Rust join because it has no SIMD intrinsics.
+
+### Mode 17 `FLOAT_TILED`
+
+* Wire: mode 17, schema `weft.ai.float_tiled.v1`; per-tile mode-9 plane split;
+  `tile_root = H("weft/tensor/float_tile/v1", WCB({dtype, dims, element_len,
+  exponent_plane_len, mantissa_plane_len, values_hash}))`; full decode verifies
+  every tile root and the logical root; region reads return `tiles_touched`.
+  Modes 0–16 are byte-identical and the reserved reject is now 18.
+* Conformance: **3 valid + 8 reject** vectors in both codec repos; manifest 338
+  entries, coverage gate `17:3/8`. Cross-language gate:
+  **YES byte-identical float_tiled_bf16** and **float_tiled_fp32**, both
+  directions decode exactly.
+* Store: `TensorStrategy::FloatTiled`, planner opt-in tile shape, write/read/
+  region paths, `checkpoint write --shard-strategy float-tiled`, full verify.
+  Go store: same planner option, writer, and reader (whole-object region
+  decode only); the same fixture selects the same strategies.
+* Real Qwen BF16 embedding `[151936,896]`, tile `[64,896]`: mode 9
+  **180,623,816 B** vs mode 17 **181,541,557 B (+0.51%)**. Write 2,287 vs
+  7,435 ms (3.25x slower). Whole read 745.7 → 486.6 ms at one thread and
+  740.2 → 235.9 ms at four. 100-row read 777.1 → 2.30 ms (337x); 1-row read
+  749.3 → 2.12 ms (353x). Every read byte-exact.
+* No whole-model mode-17 checkpoint: one tile shape cannot divide every tensor
+  rank/extent in the model. Mode-17 restore evidence is the embedding plus the
+  checkpoint test, not a 290-tensor rewrite.
+
+### Access-pattern planner
+
+* `TensorPlanOptions.access_pattern` (`AccessPattern::Whole` default, `Region {
+  region_bytes, reads_per_write }`, `Mixed { ... }`), `weft plan
+  --access-pattern`, and the same integer objective
+  `physical_bytes + lambda_ns * decode_at_pattern`. Tile-independent modes are
+  charged only for fetched region bytes per read; every other mode is charged a
+  whole-tensor decode per read. Defaults are unchanged and a test proves the
+  default and explicit `Whole` plans are identical (chosen, bytes, ns, cost,
+  every candidate).
+* Real embedding: `whole` at lambda 0 → `float-tensor` (180,623,816 B);
+  `region:1792:1000` and `region:179200:1000` → `float-tiled`;
+  `mixed:0:1792:1000` → `float-tiled`; `whole` at lambda 1 → `raw` (the model
+  prices no-decode highest under latency-only weighting); a whole-size region
+  read ×100 also selects `raw`.
+* Loss: the objective has no write term. `region:1792:1` selects `float-tiled`
+  by estimate, but measured end-to-end it is 7,437 ms (7,435 write + 2.12 read)
+  versus mode 9 3,036 ms (2,287 + 749). Break-even is about seven 1-row reads.
+* Go parity: the same 512x512 weight-like fixture selects `float-tensor` for
+  Whole and `float-tiled` for Region in both languages.
+
+### Restore pipeline
+
+* 988,097,824 B / 290 tensors, tmpfs, one repetition: batched read 2,822.4 /
+  1,837.0 / 1,420.8 ms and pipelined total 2,764.5 / 1,678.8 / 1,317.9 ms at
+  1/2/4 workers. Pipeline decode wall is 95.6% of total at one worker and 99.9%
+  at four: `total ≈ decode` still holds and decode fell 2.0x. Disk-destination
+  runs are writeback-bound (10–14 s at 2/4 workers) and are not the basis of the
+  claim.
+* Mode 9 has no sound intra-frame parallelism (one sequential Huffman stream),
+  so none was added. Mode-17 tiles use the bounded pool and do not parallelise a
+  1–2-tile region.
+
+### Not done here
+
+* Whole-model mode-17 checkpoint/restore; Go range fetch that reads only tile
+  bytes; write-cost term in the planner; per-tile rounding in the region
+  estimate; cold cache, GPU, or fleet claims.
