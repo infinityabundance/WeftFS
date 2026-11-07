@@ -102,6 +102,12 @@ impl Court {
         }
     }
 
+    fn kind_with_lease(&self, tag: &str, lease: Duration) -> BackendKind {
+        let mut config = self.config(tag);
+        config.lock_lease = lease;
+        BackendKind::S3 { config }
+    }
+
     /// A read-only lease observer: it never acquires the writer lock, so it can
     /// read the published record while another handle holds it.
     fn observer(&self, config: &S3Config) -> S3Backend {
@@ -192,6 +198,12 @@ fn paused_writer_is_fenced_after_a_lease_reclaim() {
     fencing::paused_writer_is_fenced_after_a_lease_reclaim(&court);
 }
 
+#[test]
+fn paused_after_the_fence_cannot_publish_after_a_takeover() {
+    let Some(court) = court() else { return };
+    fencing::paused_after_the_fence_cannot_publish_after_a_takeover(&court);
+}
+
 /// The child half of `paused_writer_is_fenced_after_a_lease_reclaim`. Returns
 /// immediately unless `WEFT_FENCE_CHILD` is set.
 #[test]
@@ -217,6 +229,32 @@ fn child_fenced_writer() {
         },
     };
     fencing::run_child(kind);
+}
+
+/// The child half of `paused_after_the_fence_cannot_publish_after_a_takeover`.
+#[test]
+fn child_fenced_writer_after_fence() {
+    if std::env::var("WEFT_FENCE_CHILD").is_err() {
+        return;
+    }
+    let lease = env("WEFT_FENCE_LEASE_SECS")
+        .and_then(|text| text.parse::<u64>().ok())
+        .unwrap_or(2)
+        .max(1);
+    let kind = BackendKind::S3 {
+        config: S3Config {
+            endpoint: env("WEFT_FENCE_S3_ENDPOINT").expect("endpoint"),
+            bucket: env("WEFT_FENCE_S3_BUCKET").expect("bucket"),
+            region: env("WEFT_FENCE_S3_REGION").unwrap_or_else(|| "us-east-1".to_owned()),
+            access_key: env("WEFT_FENCE_S3_ACCESS_KEY").expect("access key"),
+            secret_key: env("WEFT_FENCE_S3_SECRET_KEY").expect("secret key"),
+            session_token: None,
+            path_style: true,
+            lock_lease: Duration::from_secs(lease),
+            request_timeout: Duration::from_secs(60),
+        },
+    };
+    fencing::run_child_after_fence(kind);
 }
 
 // ---------------------------------------------------------------------------
@@ -350,4 +388,84 @@ fn observer_reads_the_published_lock_without_a_lease() {
     // An observer never acquires or mutates the lease.
     assert!(observer.read_lock_record().expect("reread").is_some());
     drop(store);
+}
+
+/// The conditional-write half of the review's interleaving, made deterministic:
+/// a successor replaces the LOCK record while the writer's own lease is still
+/// locally valid, so the *first* fence attempt must hit `412 -> Busy` and the
+/// head must not move. This isolates the CAS refusal from the own-deadline
+/// guard exercised by the `SIGSTOP` test.
+#[test]
+fn a_replaced_lock_record_makes_the_stale_publication_fail_412() {
+    let Some(court) = court() else { return };
+    let label = tempdir().unwrap();
+    let path = label.path().join("store");
+    // A long lease: the stale writer's own deadline stays valid for the whole
+    // test, so the only possible refusal is the conditional write.
+    let kind = court.kind_with_lease("cas-412", Duration::from_secs(600));
+    let config = config_of(&kind);
+    let store = Store::init_with_backend(&path, opts(), kind.clone()).expect("init");
+    drop(store);
+    let mut stale = Store::open_with_backend(&path, OpenMode::ReadWrite, kind.clone())
+        .expect("open the stale writer");
+    let generation = stale.generation();
+    let head = stale.snapshot_root();
+    let before = lock_record(&config).expect("lock");
+    assert!(!before.released);
+
+    // A successor rewrites the record (what a takeover after expiry does),
+    // conditional on the bytes it read.
+    let observer = court.observer(&config);
+    let etag = observer
+        .etag_for_test(&weftfs::backend::Key::lock())
+        .expect("LOCK etag");
+    let successor = format!(
+        "weftfs-s3-lock v3\nowner=successor\nfence={}\nsequence=1\n\
+         lease_deadline_ns=0\nrenewed_ns=0\npending_generation={}\n\
+         pending_commit={}\npending_commit_len={}\n",
+        before.fence + 1,
+        before.pending_generation,
+        before.pending_commit,
+        before.pending_commit_len
+    );
+    assert!(
+        observer
+            .conditional_put_for_test(&weftfs::backend::Key::lock(), successor.as_bytes(), &etag)
+            .expect("successor rewrite"),
+        "the successor's conditional rewrite was refused"
+    );
+    let replaced = lock_record(&config).expect("lock");
+    assert_eq!(replaced.owner, "successor");
+    assert_eq!(replaced.fence, before.fence + 1);
+
+    // The stale writer's next publication fences first, and that conditional
+    // write is refused with 412 -> Busy.
+    let err = fencing::write_file_result(&mut stale, b"stale", b"must-not-publish", b"cas-412")
+        .expect_err("the stale publication must fail");
+    assert_eq!(
+        err.class_name(),
+        "Busy",
+        "class: {} message: {}",
+        err.class_name(),
+        err.message()
+    );
+    assert!(
+        err.message().contains("taken over"),
+        "the refusal must name the takeover: {}",
+        err.message()
+    );
+    assert_eq!(stale.generation(), generation);
+    assert_eq!(stale.snapshot_root(), head);
+    assert!(stale.resolve_path("/stale").is_err());
+    let after = lock_record(&config).expect("lock");
+    assert_eq!(
+        after.owner, "successor",
+        "the successor's record was mutated"
+    );
+    assert_eq!(after.fence, before.fence + 1);
+    // The advertised head did not move.
+    let reopened = Store::open_with_backend(&path, OpenMode::ReadOnly, kind).expect("reopen");
+    assert_eq!(reopened.generation(), generation);
+    assert_eq!(reopened.snapshot_root(), head);
+    assert!(reopened.verify(true).expect("verify").ok);
 }

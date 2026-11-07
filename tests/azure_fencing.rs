@@ -165,6 +165,12 @@ fn paused_writer_is_fenced_after_a_lease_reclaim() {
     fencing::paused_writer_is_fenced_after_a_lease_reclaim(&court);
 }
 
+#[test]
+fn paused_after_the_fence_cannot_publish_after_a_takeover() {
+    let Some(court) = court() else { return };
+    fencing::paused_after_the_fence_cannot_publish_after_a_takeover(&court);
+}
+
 /// The child half of `paused_writer_is_fenced_after_a_lease_reclaim`. Returns
 /// immediately unless `WEFT_FENCE_CHILD` is set.
 #[test]
@@ -190,6 +196,32 @@ fn child_fenced_writer() {
         },
     };
     fencing::run_child(kind);
+}
+
+/// The child half of `paused_after_the_fence_cannot_publish_after_a_takeover`.
+#[test]
+fn child_fenced_writer_after_fence() {
+    if std::env::var("WEFT_FENCE_CHILD").is_err() {
+        return;
+    }
+    let lease = env("WEFT_FENCE_LEASE_SECS")
+        .and_then(|text| text.parse::<u64>().ok())
+        .unwrap_or(2)
+        .max(1);
+    let kind = BackendKind::Azure {
+        config: AzureConfig {
+            endpoint: env("WEFT_FENCE_AZURE_ENDPOINT").expect("endpoint"),
+            container: env("WEFT_FENCE_AZURE_CONTAINER").expect("container"),
+            account: env("WEFT_FENCE_AZURE_ACCOUNT")
+                .unwrap_or_else(|| "devstoreaccount1".to_owned()),
+            key: env("WEFT_FENCE_AZURE_KEY"),
+            sas_token: None,
+            anonymous: env("WEFT_FENCE_AZURE_KEY").is_none(),
+            lock_lease: Duration::from_secs(lease),
+            request_timeout: Duration::from_secs(60),
+        },
+    };
+    fencing::run_child_after_fence(kind);
 }
 
 // ---------------------------------------------------------------------------

@@ -604,6 +604,12 @@ fn store_round_trip_over_usrbio_is_byte_identical_to_local() {
 fn unsafe_is_confined_to_the_threefs_ffi_module() {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
     let mut offenders = Vec::new();
+    // One explicit, narrow exception: the fenced-writer court hook must stop the
+    // process with `raise(SIGSTOP)` at an exact publication boundary, and std
+    // has no safe wrapper for that. The hook is inert unless the court arms
+    // `WEFT_FENCE_PAUSE_AFTER_FENCE`, and the guard below still requires that
+    // this is the file's *only* unsafe line.
+    let mut hook_unsafe_lines = 0usize;
     let mut stack = vec![src.clone()];
     while let Some(dir) = stack.pop() {
         for entry in std::fs::read_dir(&dir).unwrap() {
@@ -620,19 +626,29 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
+            let hook = relative == Path::new("fence_pause.rs");
             for (number, line) in text.lines().enumerate() {
                 let trimmed = line.trim_start();
                 if trimmed.starts_with("//") {
                     continue;
                 }
-                if line.contains("unsafe") && !line.contains("unsafe_code") {
-                    offenders.push(format!("{}:{}", relative.display(), number + 1));
+                if !line.contains("unsafe") || line.contains("unsafe_code") {
+                    continue;
                 }
+                if hook && line.contains("libc::raise") {
+                    hook_unsafe_lines += 1;
+                    continue;
+                }
+                offenders.push(format!("{}:{}", relative.display(), number + 1));
             }
         }
     }
     assert!(
         offenders.is_empty(),
         "unsafe code escaped src/threefs/: {offenders:?}"
+    );
+    assert_eq!(
+        hook_unsafe_lines, 1,
+        "the fence-pause hook must contain exactly one unsafe call (libc::raise)"
     );
 }

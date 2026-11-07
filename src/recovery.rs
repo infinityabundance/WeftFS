@@ -794,15 +794,60 @@ fn recover_inner_via(
     let view = read_superblock_via(backend)?;
     let mut notes = view.notes.clone();
     let mut valid_slots: Vec<SuperblockSlot> = view.slots.iter().flatten().copied().collect();
-    if valid_slots.is_empty() {
-        return Err(Error::corrupt("no valid superblock slot"));
-    }
     valid_slots.sort_by_key(|slot| slot.generation);
-    let max_visible = valid_slots.last().expect("non-empty").generation;
-    let slot_hashes: BTreeMap<u64, Hash32> = valid_slots
+    let mut max_visible = valid_slots.last().map(|slot| slot.generation).unwrap_or(0);
+    let mut slot_hashes: BTreeMap<u64, Hash32> = valid_slots
         .iter()
         .map(|slot| (slot.generation, slot.commit))
         .collect();
+
+    // An object-store commit plane publishes the head by writing its `LOCK`
+    // record, and writes the two-slot superblock afterwards as a cache. The
+    // record is therefore the authority: a head that is ahead of the cache was
+    // published before a crash, and must be recovered as the new state. A cache
+    // that is ahead of the record means a pre-v3 writer published after the
+    // record was upgraded; refusing is the only honest answer, because
+    // accepting either head could lose a publication.
+    if let Some(attested) = backend.attested_head()? {
+        if attested.generation != 0 {
+            if let Some(existing) = slot_hashes.get(&attested.generation) {
+                if *existing != attested.commit {
+                    return Err(Error::corrupt(format!(
+                        "the writer lock record attests generation {} commit {} but the \
+                         superblock slot names {}; the record and the cache disagree",
+                        attested.generation, attested.commit, existing
+                    )));
+                }
+            }
+            if attested.generation > max_visible {
+                notes.push(format!(
+                    "recovered head generation {} from the writer lock record; the superblock \
+                     cache named generation {max_visible}",
+                    attested.generation
+                ));
+                max_visible = attested.generation;
+                slot_hashes.insert(attested.generation, attested.commit);
+                valid_slots.push(SuperblockSlot {
+                    generation: attested.generation,
+                    commit: attested.commit,
+                    commit_len: attested.commit_len,
+                    timestamp_ns: 0,
+                });
+            } else if attested.generation < max_visible {
+                return Err(Error::unsupported_version(format!(
+                    "the superblock cache names generation {max_visible} but the writer lock \
+                     record attests generation {}; this store was written by a pre-v3 writer \
+                     after the lock record was upgraded. Upgrade every writer before opening it \
+                     again.",
+                    attested.generation
+                )));
+            }
+        }
+    }
+
+    if max_visible == 0 {
+        return Err(Error::corrupt("no valid superblock slot"));
+    }
 
     if allow_directory_free && strategy == ReplayStrategy::Bounded {
         match recover_directory_free_via(backend, &view, &valid_slots, max_visible, &slot_hashes) {
@@ -864,7 +909,9 @@ fn recover_inner_via(
             .iter()
             .find(|slot| slot.generation == generation)
         {
-            if slot.commit_len != loaded.wcb_len {
+            // A record-derived slot may not know the commit length (a v2
+            // record); only compare when the length is attested.
+            if slot.commit_len != 0 && slot.commit_len != loaded.wcb_len {
                 notes.push(format!(
                     "generation {generation} rejected: superblock length {} does not match commit length {}",
                     slot.commit_len, loaded.wcb_len
@@ -957,7 +1004,7 @@ fn recover_directory_free_via(
         .iter()
         .find(|slot| slot.generation == max_visible)
     {
-        if slot.commit_len != loaded.wcb_len {
+        if slot.commit_len != 0 && slot.commit_len != loaded.wcb_len {
             return Err(Error::corrupt(format!(
                 "superblock length for generation {max_visible} does not match the commit record"
             )));

@@ -958,6 +958,21 @@ impl Store {
         } else {
             recovery::recover_via(&*backend)?
         };
+        // A writable open repairs the superblock cache from the writer lock
+        // record: the record is the publication point, the cache is a cache.
+        // A repair failure is not fatal (recovery already used the record).
+        if mode == OpenMode::ReadWrite {
+            if let Ok(Some(attested)) = backend.attested_head() {
+                if attested.generation != 0 && attested.commit_len != 0 {
+                    let _ = backend.refresh_head_cache(
+                        attested.generation,
+                        attested.commit,
+                        attested.commit_len,
+                        0,
+                    );
+                }
+            }
+        }
         let access = crate::access::AccessCounts::load(&*backend);
         let next_generation = recovery
             .generation
@@ -7723,6 +7738,13 @@ impl Store {
             // no commit record, no head change, and no mutated blob: every
             // blob is create-once.
             backend.verify_write_lease()?;
+            // Court hook: suspend after the fence and before the publication.
+            // See `src/fence_pause.rs`; inert unless the court arms it.
+            crate::fence_pause::after_fence(self.generation, &self.head);
+            // Local deadline re-check: a writer that was suspended past its own
+            // lease refuses here, before it leaves an unpublished commit tail.
+            // The publication write below is still the authority.
+            backend.check_lease_deadline()?;
             // A blob plane may buffer small members in memory (packs). The
             // commit record must not name a blob that is not yet durable, so
             // flush before the record is published.
@@ -7749,15 +7771,21 @@ impl Store {
             generation: self.generation,
             commit: self.head,
         };
-        self.with_backend_mut(|backend| {
+        let published_in_lock = self.with_backend_mut(|backend| {
             let capabilities = backend.capabilities();
             capabilities.require_durable_fsync("superblock publication")?;
             capabilities.require_conditional_head("superblock publication")?;
-            // The fence sits as close to the head compare-and-swap as the
-            // backend's conditional writes allow: one atomic write on LOCK
-            // that names this head. A successor that reclaimed the lease makes
-            // it fail `Busy`, so the head is never written under a stale token.
-            // See `docs/RESULTS-fencing.md` for the exact atomicity statement.
+            // The publication point. On an object-store commit plane the head is
+            // published by **one** conditional write of the `LOCK` record that
+            // carries both the fence and the new head: a successor's takeover
+            // rewrites the same object, so a stale writer cannot publish even
+            // when it is suspended between the fence and the head.
+            //
+            // A POSIX plane keeps its existing two-step publication under the
+            // exclusive kernel lock, which no suspension releases.
+            if backend.publish_fenced_head(commit.generation, &hash, wcb.len() as u64)? {
+                return Ok(true);
+            }
             backend.fence_head_publication(commit.generation, &hash)?;
             backend.publish_head(
                 expected,
@@ -7767,8 +7795,27 @@ impl Store {
                 commit.timestamp_ns,
                 offset,
                 &slot.encode(),
-            )
+            )?;
+            Ok(false)
         })?;
+
+        if published_in_lock {
+            // The head is published. The two-slot superblock is now only a
+            // cache for this commit plane: refresh it if this writer still owns
+            // the lease and the cache is behind. A cache failure (a lost race, or
+            // a successor that already advanced the cache) never turns a
+            // published head into a reported failure; the backend records its
+            // own diagnostic.
+            crash_point("after_fenced_head");
+            let _ = self.with_backend_mut(|backend| {
+                backend.refresh_head_cache(
+                    commit.generation,
+                    hash,
+                    wcb.len() as u64,
+                    commit.timestamp_ns,
+                )
+            });
+        }
 
         crash_point("after_superblock_write");
 

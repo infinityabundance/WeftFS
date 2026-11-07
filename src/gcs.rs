@@ -106,9 +106,18 @@ const MAX_JSON_BYTES: u64 = 8 * 1024 * 1024;
 
 /// Default JSON API origin.
 const DEFAULT_ENDPOINT: &str = "https://storage.googleapis.com";
-const LOCK_SCHEMA: &str = "weftfs-gcs-lock v2";
+const LOCK_SCHEMA: &str = "weftfs-gcs-lock v3";
+const LOCK_SCHEMA_V2: &str = "weftfs-gcs-lock v2";
 const LOCK_SCHEMA_V1: &str = "weftfs-gcs-lock v1";
-const RELEASED_SCHEMA: &str = "weftfs-gcs-lock-released v1";
+const RELEASED_SCHEMA: &str = "weftfs-gcs-lock-released v2";
+const RELEASED_SCHEMA_V1: &str = "weftfs-gcs-lock-released v1";
+const LOCK_SCHEMAS: crate::writer_fence::Schemas = crate::writer_fence::Schemas {
+    v3: LOCK_SCHEMA,
+    v2: LOCK_SCHEMA_V2,
+    v1: LOCK_SCHEMA_V1,
+    released_v2: RELEASED_SCHEMA,
+    released_v1: RELEASED_SCHEMA_V1,
+};
 /// A lease shorter than this cannot bound a publication, so it is refused.
 const MIN_LOCK_LEASE_SECS: u64 = 1;
 
@@ -151,10 +160,7 @@ impl fmt::Debug for GcsConfig {
             )
             .field(
                 "service_account_key",
-                &self
-                    .service_account
-                    .as_ref()
-                    .map(|_| "<redacted>"),
+                &self.service_account.as_ref().map(|_| "<redacted>"),
             )
             .field("scope", &self.scope)
             .field("project", &self.project)
@@ -229,17 +235,15 @@ impl GcsConfig {
                 config.scope = value;
             }
         }
-        let credentials_path = credentials.or_else(|| {
-            first_env(&["WEFT_GCS_CREDENTIALS", "GOOGLE_APPLICATION_CREDENTIALS"])
-        });
+        let credentials_path = credentials
+            .or_else(|| first_env(&["WEFT_GCS_CREDENTIALS", "GOOGLE_APPLICATION_CREDENTIALS"]));
         if let Some(path) = credentials_path {
-            let key = ServiceAccountKey::from_path(std::path::Path::new(&path))
-                .map_err(|err| {
-                    Error::new(
-                        err.class(),
-                        format!("service-account key from `{path}`: {}", err.message()),
-                    )
-                })?;
+            let key = ServiceAccountKey::from_path(std::path::Path::new(&path)).map_err(|err| {
+                Error::new(
+                    err.class(),
+                    format!("service-account key from `{path}`: {}", err.message()),
+                )
+            })?;
             if config.project.is_none() {
                 config.project = key.project_id().map(str::to_owned);
             }
@@ -392,6 +396,8 @@ struct GcsStats {
     fence_refusals: AtomicU64,
     /// Publications refused because this writer's own deadline had passed.
     lease_expired_publications: AtomicU64,
+    /// Publication writes that carried a new head (fence + head in one CAS).
+    head_publications: AtomicU64,
 }
 
 struct LockLease {
@@ -406,6 +412,9 @@ struct LockLease {
     /// GCS generation the endpoint assigned to the bytes published at
     /// `sequence`. This is the token the fence conditions on.
     generation: u64,
+    /// The head this handle last published, carried forward by every LOCK
+    /// rewrite so a crash never loses the attestation.
+    head: Option<(u64, crate::identity::Hash32, u64)>,
 }
 
 /// Metadata the store depends on: the object's length and its GCS generation.
@@ -618,12 +627,12 @@ impl GcsBackend {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         if guard.is_none() {
-            *guard = Some(ServiceAccountAuth::new(key.clone(), self.config.scope.clone()));
+            *guard = Some(ServiceAccountAuth::new(
+                key.clone(),
+                self.config.scope.clone(),
+            ));
         }
-        let token = guard
-            .as_ref()
-            .expect("just installed")
-            .token()?;
+        let token = guard.as_ref().expect("just installed").token()?;
         Ok(Some(format!("Bearer {}", token.access_token())))
     }
 
@@ -1168,12 +1177,22 @@ impl GcsBackend {
             match self.read_with_generation(&key)? {
                 None => {
                     // No record at all: create it once. The first lease holder
-                    // takes fencing token 1.
-                    let body = encode_lock(&owner, 1, 1, deadline, now, None);
+                    // takes fencing token 1 and carries forward the head the
+                    // superblock cache attests.
+                    let head = self.superblock_head();
+                    let body = encode_lock(
+                        &owner,
+                        1,
+                        1,
+                        deadline,
+                        now,
+                        head.as_ref()
+                            .map(|(generation, commit, len)| (*generation, commit, *len)),
+                    );
                     if let Some(generation) =
                         self.upload_tracked(&key, body.as_bytes(), Precondition::Missing)?
                     {
-                        self.install_lease(owner, 1, 1, deadline, now, generation);
+                        self.install_lease(owner, 1, 1, deadline, now, generation, head);
                         return Ok(());
                     }
                     // Another writer created it between the read and the PUT.
@@ -1204,10 +1223,25 @@ impl GcsBackend {
                     // Expired lease or a released tombstone: take over with the
                     // next fencing token, conditional on the exact generation
                     // read. A lost race retries from a fresh read, never blind.
+                    // The same write upgrades an expired v2/v1 record to v3.
                     let fence = observed.fence.checked_add(1).ok_or_else(|| {
                         Error::limit_exceeded("GCS fencing token would overflow u64")
                     })?;
-                    let body = encode_lock(&owner, fence, 1, deadline, now, None);
+                    let head = match observed.attested_head() {
+                        Some((generation, commit)) => {
+                            Some((generation, commit, observed.pending_commit_len))
+                        }
+                        None => self.superblock_head(),
+                    };
+                    let body = encode_lock(
+                        &owner,
+                        fence,
+                        1,
+                        deadline,
+                        now,
+                        head.as_ref()
+                            .map(|(generation, commit, len)| (*generation, commit, *len)),
+                    );
                     match self.upload_tracked(
                         &key,
                         body.as_bytes(),
@@ -1224,7 +1258,22 @@ impl GcsBackend {
                                 observed.fence,
                                 fence
                             ));
-                            self.install_lease(owner, fence, 1, deadline, now, new_generation);
+                            if observed.schema_version < crate::writer_fence::LockVersion::V3 {
+                                self.note(format!(
+                                    "upgraded the GCS writer lock record from {:?} to v3 (single \
+                                     conditional write; the head it attests is carried forward)",
+                                    observed.schema_version
+                                ));
+                            }
+                            self.install_lease(
+                                owner,
+                                fence,
+                                1,
+                                deadline,
+                                now,
+                                new_generation,
+                                head,
+                            );
                             return Ok(());
                         }
                         None => continue,
@@ -1237,6 +1286,29 @@ impl GcsBackend {
         ))
     }
 
+    /// The head the two-slot superblock cache attests, if any. Used only to
+    /// carry a head forward when the LOCK record does not name one.
+    fn superblock_head(&self) -> Option<(u64, crate::identity::Hash32, u64)> {
+        let (bytes, _) = self.read_with_generation(&Key::superblock()).ok()??;
+        let mut highest: Option<(u64, crate::identity::Hash32, u64)> = None;
+        for slot in crate::format::decode_superblock(&bytes)
+            .ok()?
+            .into_iter()
+            .flatten()
+        {
+            if slot.generation == 0 || slot.commit == crate::identity::Hash32::ZERO {
+                continue;
+            }
+            if highest
+                .map(|(generation, _, _)| slot.generation > generation)
+                .unwrap_or(true)
+            {
+                highest = Some((slot.generation, slot.commit, slot.commit_len));
+            }
+        }
+        highest
+    }
+
     fn install_lease(
         &self,
         owner: String,
@@ -1245,6 +1317,7 @@ impl GcsBackend {
         deadline_ns: i64,
         renewed_ns: i64,
         generation: u64,
+        head: Option<(u64, crate::identity::Hash32, u64)>,
     ) {
         self.stats.lock_acquires.fetch_add(1, Ordering::Relaxed);
         *self
@@ -1257,22 +1330,29 @@ impl GcsBackend {
             deadline_ns,
             renewed_ns,
             generation,
+            head,
         });
     }
 
     /// Prove this handle may publish right now, renewing the lease when one
-    /// publication budget remains.
+    /// publication budget remains. The conditional write carries forward the
+    /// head this handle last published.
     fn fence_lease(&self) -> Result<()> {
         self.fence_lease_for(None)
     }
 
-    /// The same conditional write, additionally naming the head that is about
-    /// to be published.
-    fn fence_head(&self, generation: u64, commit: &crate::identity::Hash32) -> Result<()> {
-        self.fence_lease_for(Some((generation, commit)))
+    /// The publication point: one `ifGenerationMatch` write of the LOCK record
+    /// that carries both the fence and the new head.
+    fn publish_fenced_head(
+        &self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+        commit_len: u64,
+    ) -> Result<()> {
+        self.fence_lease_for(Some((generation, commit, commit_len)))
     }
 
-    fn fence_lease_for(&self, pending: Option<(u64, &crate::identity::Hash32)>) -> Result<()> {
+    fn fence_lease_for(&self, pending: Option<(u64, &crate::identity::Hash32, u64)>) -> Result<()> {
         let mut guard = self
             .lock
             .lock()
@@ -1306,11 +1386,23 @@ impl GcsBackend {
             lease.deadline_ns
         };
         let sequence = lease.sequence.saturating_add(1);
-        let body = encode_lock(&lease.owner, lease.fence, sequence, deadline, now, pending);
-        // This is the fence. `ifGenerationMatch` names the generation this
-        // handle published last, so it succeeds only while the object still
-        // carries this writer's fencing token. A successor's reclaim rewrote
-        // the object, so this fails with 412 and nothing is published.
+        let head = pending
+            .map(|(generation, commit, len)| (generation, *commit, len))
+            .or(lease.head);
+        let body = encode_lock(
+            &lease.owner,
+            lease.fence,
+            sequence,
+            deadline,
+            now,
+            head.as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
+        );
+        // This is the publication point. `ifGenerationMatch` names the
+        // generation this handle published last, so it succeeds only while the
+        // object still carries this writer's fencing token. A successor's
+        // reclaim rewrote the same object, so this fails with 412 and nothing
+        // is published.
         match self.upload_tracked(
             &Key::lock(),
             body.as_bytes(),
@@ -1321,7 +1413,11 @@ impl GcsBackend {
                 lease.deadline_ns = deadline;
                 lease.renewed_ns = now;
                 lease.generation = generation;
+                lease.head = head;
                 self.stats.fence_checks.fetch_add(1, Ordering::Relaxed);
+                if pending.is_some() {
+                    self.stats.head_publications.fetch_add(1, Ordering::Relaxed);
+                }
                 if renew {
                     self.stats.lease_renewals.fetch_add(1, Ordering::Relaxed);
                 }
@@ -1393,12 +1489,18 @@ impl GcsBackend {
             return;
         }
         let released_from = sha256_hex(&body);
+        let head = record
+            .attested_head()
+            .map(|(generation, commit)| (generation, commit, record.pending_commit_len))
+            .or(lease.head);
         let tombstone = encode_released(
             &lease.owner,
             lease.fence,
             lease.sequence.saturating_add(1),
             now_ns(),
             &released_from,
+            head.as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
         );
         match self.upload_tracked(
             &key,
@@ -1441,6 +1543,11 @@ impl GcsBackend {
             record.sequence.saturating_add(1),
             now_ns(),
             &sha256_hex(&body),
+            record
+                .attested_head()
+                .map(|(generation, commit)| (generation, commit, record.pending_commit_len))
+                .as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
         );
         match self.upload_tracked(
             &Key::lock(),
@@ -1460,12 +1567,125 @@ impl GcsBackend {
             .max(MIN_LOCK_LEASE_SECS as i64 * 1_000_000_000)
     }
 
+    /// Local own-deadline check: no network write, no renewal.
+    fn check_own_deadline(&self) -> Result<()> {
+        let guard = self
+            .lock
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let Some(lease) = guard.as_ref() else {
+            return Err(Error::busy(
+                "GCS writer holds no lease; refusing to publish without a fenced lease",
+            ));
+        };
+        let now = now_ns();
+        if now >= lease.deadline_ns {
+            let owner = lease.owner.clone();
+            let fence = lease.fence;
+            let expired_ms = (now - lease.deadline_ns) / 1_000_000;
+            drop(guard);
+            let observed = self.read_lock_record().ok().flatten();
+            self.stats
+                .lease_expired_publications
+                .fetch_add(1, Ordering::Relaxed);
+            return Err(Error::busy(format!(
+                "GCS writer lease deadline passed {expired_ms} ms ago (owner {owner} fence {fence}); \
+                 publication refused before the head was touched{}",
+                describe_observed(&observed, &owner, fence)
+            )));
+        }
+        Ok(())
+    }
+
     /// The window a single publication may still occupy. A writer renews when
     /// one budget remains, and a successor may not take over before the
     /// recorded deadline, so a head publication always finishes inside the
     /// lease it was started under.
     fn publication_budget_ns(&self) -> i64 {
         (self.lease_ns() / 2).max(1)
+    }
+
+    /// The head the writer lock record attests, read fresh with a plain GET and
+    /// no probe.
+    fn lock_attested_head(&self) -> Result<Option<AttestedHead>> {
+        let Some(record) = self.read_lock_record()? else {
+            return Ok(None);
+        };
+        let Some((generation, commit)) = record.attested_head() else {
+            return Ok(None);
+        };
+        Ok(Some(AttestedHead {
+            generation,
+            commit,
+            commit_len: record.pending_commit_len,
+        }))
+    }
+
+    /// Refresh the two-slot superblock cache after a lock-record publication.
+    /// It never moves the cache backwards, and a failure is a diagnostic, not a
+    /// publication failure.
+    fn refresh_head_cache(
+        &self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        if commit_len == 0 {
+            self.note(
+                "superblock cache not refreshed: the lock record does not attest the commit \
+                 length (a pre-v3 record); the next publication fills it"
+                    .to_owned(),
+            );
+            return Ok(());
+        }
+        let key = Key::superblock();
+        for _ in 0..8 {
+            let Some((bytes, generation_token)) = self.read_with_generation(&key)? else {
+                return Err(Error::corrupt(
+                    "superblock cache is missing; the store layout is incomplete",
+                ));
+            };
+            if bytes.len() != crate::format::SUPERBLOCK_BYTES {
+                return Err(Error::corrupt(format!(
+                    "superblock is {} bytes, expected {}",
+                    bytes.len(),
+                    crate::format::SUPERBLOCK_BYTES
+                )));
+            }
+            let mut highest = 0u64;
+            for slot in crate::format::decode_superblock(&bytes)?
+                .into_iter()
+                .flatten()
+            {
+                highest = highest.max(slot.generation);
+            }
+            if highest >= generation {
+                return Ok(());
+            }
+            let mut image = bytes;
+            let offset = ((generation % 2) as usize) * crate::format::SLOT_BYTES;
+            let slot = crate::format::SuperblockSlot {
+                generation,
+                commit: *commit,
+                commit_len,
+                timestamp_ns,
+            };
+            image[offset..offset + crate::format::SLOT_BYTES].copy_from_slice(&slot.encode());
+            if self
+                .upload_tracked(&key, &image, Precondition::Matches(generation_token))?
+                .is_some()
+            {
+                return Ok(());
+            }
+            self.note(
+                "conditional superblock cache update lost a race; retrying from a fresh read"
+                    .to_owned(),
+            );
+        }
+        Err(Error::busy(
+            "superblock cache update kept losing to another writer",
+        ))
     }
 }
 
@@ -1717,12 +1937,41 @@ impl CommitPlane for GcsBackend {
         GcsBackend::fence_lease(self)
     }
 
+    fn check_lease_deadline(&self) -> Result<()> {
+        GcsBackend::check_own_deadline(self)
+    }
+
     fn fence_head_publication(
         &mut self,
         generation: u64,
         commit: &crate::identity::Hash32,
     ) -> Result<()> {
-        GcsBackend::fence_head(self, generation, commit)
+        let _ = (generation, commit);
+        GcsBackend::fence_lease(self)
+    }
+
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        GcsBackend::publish_fenced_head(self, generation, commit, commit_len)?;
+        Ok(true)
+    }
+
+    fn attested_head(&self) -> Result<Option<AttestedHead>> {
+        GcsBackend::lock_attested_head(self)
+    }
+
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: crate::identity::Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        GcsBackend::refresh_head_cache(self, generation, &commit, commit_len, timestamp_ns)
     }
 
     fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {
@@ -2056,12 +2305,41 @@ impl StorageBackend for GcsBackend {
         GcsBackend::fence_lease(self)
     }
 
+    fn check_lease_deadline(&self) -> Result<()> {
+        GcsBackend::check_own_deadline(self)
+    }
+
     fn fence_head_publication(
         &mut self,
         generation: u64,
         commit: &crate::identity::Hash32,
     ) -> Result<()> {
-        GcsBackend::fence_head(self, generation, commit)
+        let _ = (generation, commit);
+        GcsBackend::fence_lease(self)
+    }
+
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        GcsBackend::publish_fenced_head(self, generation, commit, commit_len)?;
+        Ok(true)
+    }
+
+    fn attested_head(&self) -> Result<Option<AttestedHead>> {
+        GcsBackend::lock_attested_head(self)
+    }
+
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: crate::identity::Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        GcsBackend::refresh_head_cache(self, generation, &commit, commit_len, timestamp_ns)
     }
 
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
@@ -2088,7 +2366,7 @@ impl StorageBackend for GcsBackend {
     }
 }
 
-pub use crate::writer_fence::PublishedLock;
+pub use crate::writer_fence::{AttestedHead, LockVersion, PublishedLock};
 
 fn encode_lock(
     owner: &str,
@@ -2096,7 +2374,7 @@ fn encode_lock(
     sequence: u64,
     deadline_ns: i64,
     renewed_ns: i64,
-    pending: Option<(u64, &crate::identity::Hash32)>,
+    pending: Option<(u64, &crate::identity::Hash32, u64)>,
 ) -> String {
     crate::writer_fence::encode_lock(
         LOCK_SCHEMA,
@@ -2115,6 +2393,7 @@ fn encode_released(
     sequence: u64,
     released_ns: i64,
     released_from: &str,
+    pending: Option<(u64, &crate::identity::Hash32, u64)>,
 ) -> String {
     crate::writer_fence::encode_released(
         RELEASED_SCHEMA,
@@ -2123,11 +2402,12 @@ fn encode_released(
         sequence,
         released_ns,
         released_from,
+        pending,
     )
 }
 
 fn parse_lock(bytes: &[u8]) -> Option<PublishedLock> {
-    crate::writer_fence::parse_lock(bytes, LOCK_SCHEMA, LOCK_SCHEMA_V1, RELEASED_SCHEMA)
+    crate::writer_fence::parse_lock(bytes, &LOCK_SCHEMAS)
 }
 
 fn describe_observed(observed: &Option<PublishedLock>, owner: &str, fence: u64) -> String {
@@ -2696,7 +2976,8 @@ mod tests {
     #[test]
     fn lock_record_round_trips_and_legacy_reads_as_fence_zero() {
         let body = encode_lock("x", 3, 7, 1_000, 900, None);
-        let record = parse_lock(body.as_bytes()).expect("v2 lock parses");
+        let record = parse_lock(body.as_bytes()).expect("v3 lock parses");
+        assert_eq!(record.schema_version, LockVersion::V3);
         assert_eq!(record.owner, "x");
         assert_eq!(record.fence, 3);
         assert_eq!(record.sequence, 7);
@@ -2705,10 +2986,11 @@ mod tests {
 
         let legacy = format!("{LOCK_SCHEMA_V1}\nowner=y\nexpires_ns=42\n");
         let record = parse_lock(legacy.as_bytes()).expect("v1 lock parses");
+        assert_eq!(record.schema_version, LockVersion::V1);
         assert_eq!(record.fence, 0);
         assert_eq!(record.deadline_ns, 42);
 
-        let tombstone = encode_released("owner=x", 3, 8, 2_000, "deadbeef");
+        let tombstone = encode_released("owner=x", 3, 8, 2_000, "deadbeef", None);
         let record = parse_lock(tombstone.as_bytes()).expect("tombstone parses");
         assert!(record.released);
         assert_eq!(record.fence, 3);

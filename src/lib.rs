@@ -37,6 +37,7 @@ pub mod context;
 pub mod cost_model;
 pub mod error;
 pub mod evaluate;
+pub(crate) mod fence_pause;
 pub mod format;
 #[cfg(feature = "fuse")]
 pub mod fuse;

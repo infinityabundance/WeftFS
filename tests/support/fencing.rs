@@ -77,6 +77,17 @@ pub fn write_file(store: &mut Store, name: &[u8], bytes: &[u8], seed: &[u8]) -> 
         .expect("create file")
 }
 
+/// The same write, returning the error instead of panicking.
+pub fn write_file_result(
+    store: &mut Store,
+    name: &[u8],
+    bytes: &[u8],
+    seed: &[u8],
+) -> weftfs::error::Result<Hash32> {
+    let root = store.resolve_path("/")?;
+    store.create_file_seeded(root, name, bytes, 0o644, 0, 0, Default::default(), seed)
+}
+
 /// Count published commit records, so a refused publication can be shown to
 /// have added none.
 pub fn commit_count(kind: &BackendKind, path: &Path) -> usize {
@@ -561,6 +572,230 @@ pub fn run_child(kind: BackendKind) {
             lock_after.map(|record| record.fence).unwrap_or(0)
         ),
     };
+    write_status(&status_path, &status);
+    drop(store);
+}
+
+/// The inverse sanity test: a writer suspended **after** the fence but
+/// **before** the publication must not publish once a successor has reclaimed
+/// the lease, even though the successor has not published a head yet.
+///
+/// This is the interleaving an external review found uncovered in the old
+/// two-object protocol (fence on `LOCK`, then a separate head CAS on the
+/// superblock). The v3 publication record makes the fence and the head one
+/// conditional write, so the takeover invalidates the stale writer's write.
+pub fn paused_after_the_fence_cannot_publish_after_a_takeover(court: &dyn FenceCourt) {
+    let label = tempdir().unwrap();
+    let work = label.path().join("work");
+    std::fs::create_dir_all(&work).unwrap();
+    let path = work.join("store");
+    let kind = court.new_store("after-fence");
+    let mut store = Store::init_with_backend(&path, opts(), kind.clone()).expect("init");
+    write_file(&mut store, b"f", b"seed", b"after-fence-seed");
+    let initial_generation = store.generation();
+    drop(store);
+    let released = read_lock(&kind).expect("tombstone");
+    assert!(released.released);
+    let child_fence = released.fence + 1;
+
+    let ready = work.join("after-fence.ready.json");
+    let status_path = work.join("after-fence.status.json");
+    let exe = std::env::current_exe().expect("current_exe");
+    let mut command = Command::new(&exe);
+    command
+        .args([
+            "--exact",
+            "child_fenced_writer_after_fence",
+            "--test-threads=1",
+            "--nocapture",
+        ])
+        .env("WEFT_FENCE_CHILD", "after-fence")
+        .env("WEFT_FENCE_PAUSE_AFTER_FENCE", "1")
+        .env("WEFT_FENCE_AFTER_FENCE_READY", &ready)
+        .env("WEFT_FENCE_STATUS", &status_path)
+        .env("WEFT_FENCE_STORE", &path)
+        .env(
+            "WEFT_FENCE_LEASE_SECS",
+            court.lease_duration().as_secs().to_string(),
+        )
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    for (name, value) in court.child_env(&kind) {
+        command.env(name, value);
+    }
+    let child = command.spawn().expect("spawn the after-fence writer");
+
+    // The hook writes this file after the conditional fence write and then
+    // stops itself with SIGSTOP, so the fence is durable and the publication
+    // has not started.
+    let ready_value = wait_for_child(&ready, READY_TIMEOUT);
+    let child_pid = ready_value["pid"].as_u64().expect("pid") as u32;
+    let child_generation = ready_value["generation"].as_u64().expect("generation");
+    let child_head = ready_value["head"].as_str().expect("head").to_owned();
+    assert_eq!(child_generation, initial_generation);
+    let fenced = read_lock(&kind).expect("lock");
+    assert_eq!(
+        fenced.fence,
+        child_fence,
+        "{}: the child must have fenced before pausing",
+        court.label()
+    );
+    assert_eq!(
+        fenced.pending_generation,
+        child_generation,
+        "{}: the fence record must still attest the published head",
+        court.label()
+    );
+
+    court.sleep_past_deadline();
+
+    // A successor reclaims the expired lease and **does not publish a head**.
+    let mut second =
+        Store::open_with_backend(&path, OpenMode::ReadWrite, kind.clone()).expect("reclaim");
+    let reclaimed = read_lock(&kind).expect("lock");
+    assert_eq!(
+        reclaimed.fence,
+        child_fence + 1,
+        "{}: the successor must take the next token",
+        court.label()
+    );
+    assert_eq!(
+        second.generation(),
+        child_generation,
+        "{}: the takeover itself must not publish a head",
+        court.label()
+    );
+    assert_eq!(
+        reclaimed.pending_generation,
+        child_generation,
+        "{}: the takeover must carry the published head forward",
+        court.label()
+    );
+
+    // Resume the suspended writer. Its publication must fail Busy.
+    kill_signal(child_pid, "CONT");
+    let child_status = wait_for_child(&status_path, READY_TIMEOUT);
+    assert_eq!(
+        child_status["ok"],
+        serde_json::json!(false),
+        "{}: the after-fence writer published after being fenced: {child_status}",
+        court.label()
+    );
+    assert_eq!(
+        child_status["class"],
+        "Busy",
+        "{}: status: {child_status}",
+        court.label()
+    );
+    assert_eq!(
+        child_status["generation"].as_u64(),
+        Some(child_generation),
+        "{}: the fenced writer's generation moved",
+        court.label()
+    );
+    assert_eq!(
+        child_status["head"].as_str(),
+        Some(child_head.as_str()),
+        "{}: the fenced writer's head moved",
+        court.label()
+    );
+    let message = child_status["message"].as_str().unwrap_or_default();
+    assert!(
+        message.contains("LOCK now names") || message.contains("taken over"),
+        "{}: the refusal must name the takeover, got {message:?}",
+        court.label()
+    );
+
+    let mut child = ChildGuard(child);
+    child.wait();
+
+    // The head is unchanged, and the successor can publish.
+    assert_eq!(second.generation(), child_generation);
+    assert!(
+        second.resolve_path("/fenced").is_err(),
+        "{}: the fenced writer's file became visible",
+        court.label()
+    );
+    write_file(&mut second, b"g", b"successor", b"after-fence-successor");
+    let successor_head = second.snapshot_root();
+    assert_eq!(second.generation(), child_generation + 1);
+    assert_eq!(
+        second
+            .read_object(second.resolve_path("/g").unwrap())
+            .unwrap(),
+        b"successor",
+        "{}: the successor's write is not visible",
+        court.label()
+    );
+    let report = second.verify(true).expect("verify");
+    assert!(
+        report.ok,
+        "{}: problems: {:?}",
+        court.label(),
+        report.problems
+    );
+    let final_lock = read_lock(&kind).expect("lock");
+    assert_eq!(final_lock.pending_generation, second.generation());
+    assert_eq!(final_lock.owner, reclaimed.owner);
+    let _ = successor_head;
+}
+
+/// The child half of
+/// [`paused_after_the_fence_cannot_publish_after_a_takeover`]. The publication
+/// hook in `src/fence_pause.rs` writes `WEFT_FENCE_AFTER_FENCE_READY` and then
+/// sends itself `SIGSTOP`.
+pub fn run_child_after_fence(kind: BackendKind) {
+    if std::env::var("WEFT_FENCE_CHILD").is_err() {
+        return;
+    }
+    assert_eq!(std::env::var("WEFT_FENCE_CHILD").unwrap(), "after-fence");
+    let status_path = PathBuf::from(std::env::var("WEFT_FENCE_STATUS").expect("status path"));
+    let store_path = PathBuf::from(std::env::var("WEFT_FENCE_STORE").expect("store path"));
+
+    let mut store = match Store::open_with_backend(&store_path, OpenMode::ReadWrite, kind) {
+        Ok(store) => store,
+        Err(err) => {
+            write_status(
+                &status_path,
+                &format!(
+                    "{{\"ok\":false,\"phase\":\"open\",\"class\":\"{}\",\"message\":\"{}\"}}",
+                    err.class_name(),
+                    err.message().replace('"', "'")
+                ),
+            );
+            std::process::exit(0);
+        }
+    };
+    let generation = store.generation();
+    let head = store.snapshot_root();
+    // Resume order: the hook pauses inside this call, after the fence.
+    let root = store.resolve_path("/").expect("root");
+    let outcome = store.create_file_seeded(
+        root,
+        b"fenced",
+        b"must-not-publish",
+        0o644,
+        0,
+        0,
+        Default::default(),
+        b"after-fence-child",
+    );
+    let status = match outcome {
+        Ok(_) => format!(
+            "{{\"ok\":true,\"phase\":\"published\",\"generation\":{},\"head\":\"{}\"}}",
+            store.generation(),
+            store.snapshot_root().to_hex()
+        ),
+        Err(err) => format!(
+            "{{\"ok\":false,\"phase\":\"publish\",\"class\":\"{}\",\"message\":\"{}\",\
+              \"generation\":{},\"head\":\"{}\"}}",
+            err.class_name(),
+            err.message().replace('"', "'"),
+            store.generation(),
+            store.snapshot_root().to_hex()
+        ),
+    };
+    let _ = (generation, head);
     write_status(&status_path, &status);
     drop(store);
 }

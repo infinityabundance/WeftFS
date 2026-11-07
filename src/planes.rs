@@ -484,6 +484,12 @@ pub trait CommitPlane: Send {
         Ok(())
     }
 
+    /// A local deadline check with no network write. See
+    /// [`crate::backend::StorageBackend::check_lease_deadline`].
+    fn check_lease_deadline(&self) -> Result<()> {
+        Ok(())
+    }
+
     /// The fenced form: the same proof, naming the head about to be published.
     /// A plane with only one conditional write per object calls
     /// [`Self::verify_write_lease`] here.
@@ -494,6 +500,37 @@ pub trait CommitPlane: Send {
     ) -> Result<()> {
         let _ = (generation, commit);
         self.verify_write_lease()
+    }
+
+    /// Publish the head through the writer lock record in one conditional write
+    /// (fence + head). Returns `true` when the plane did it; `false` means the
+    /// caller must use [`Self::fence_head_publication`] and its own superblock
+    /// write instead.
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &crate::identity::Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        let _ = (generation, commit, commit_len);
+        Ok(false)
+    }
+
+    /// The head the writer lock record attests as published.
+    fn attested_head(&self) -> Result<Option<crate::writer_fence::AttestedHead>> {
+        Ok(None)
+    }
+
+    /// Refresh the superblock cache after a lock-record publication.
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: crate::identity::Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        let _ = (generation, commit, commit_len, timestamp_ns);
+        Ok(())
     }
 
     /// Remove stale staging files older than `grace_secs`.
@@ -930,12 +967,45 @@ macro_rules! impl_planes_for_storage_backend {
                 StorageBackend::verify_write_lease(self)
             }
 
+            fn check_lease_deadline(&self) -> Result<()> {
+                StorageBackend::check_lease_deadline(self)
+            }
+
             fn fence_head_publication(
                 &mut self,
                 generation: u64,
                 commit: &crate::identity::Hash32,
             ) -> Result<()> {
                 StorageBackend::fence_head_publication(self, generation, commit)
+            }
+
+            fn publish_fenced_head(
+                &mut self,
+                generation: u64,
+                commit: &crate::identity::Hash32,
+                commit_len: u64,
+            ) -> Result<bool> {
+                StorageBackend::publish_fenced_head(self, generation, commit, commit_len)
+            }
+
+            fn attested_head(&self) -> Result<Option<crate::writer_fence::AttestedHead>> {
+                StorageBackend::attested_head(self)
+            }
+
+            fn refresh_head_cache(
+                &mut self,
+                generation: u64,
+                commit: crate::identity::Hash32,
+                commit_len: u64,
+                timestamp_ns: i64,
+            ) -> Result<()> {
+                StorageBackend::refresh_head_cache(
+                    self,
+                    generation,
+                    commit,
+                    commit_len,
+                    timestamp_ns,
+                )
             }
 
             fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {

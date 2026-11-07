@@ -1,0 +1,231 @@
+{
+  "bucket": "weft-ceph-court-20261107t025545z",
+  "checks": [
+    {
+      "detail": {
+        "first": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"8b04d5e3775d298e78455efc5ca404d5\"",
+          "status": 200
+        },
+        "first_writer_bytes_readable": true,
+        "second": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        }
+      },
+      "name": "if-none-match-create-once",
+      "summary": "create=200 repeat=412 bytes_kept=true",
+      "supported": true
+    },
+    {
+      "detail": {
+        "dequoted_accepted": true,
+        "etag_as_returned": "\"9abcde3c584628a02620bf796dee1204\"",
+        "matching_if_match_as_returned": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "matching_if_match_dequoted": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "status": 200
+        },
+        "read_after_stale": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "status": 200
+        },
+        "stale_if_match": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "winner_bytes_kept": true
+      },
+      "name": "if-match-conditional-overwrite",
+      "summary": "accepted only after de-quoting; stale=412 PreconditionFailed",
+      "supported": true
+    },
+    {
+      "detail": {
+        "body_matches": true,
+        "content_range_ok": true,
+        "response": {
+          "content_range": "bytes 4-15/16",
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"4032af8d61035123906e58e067140cc5\"",
+          "status": 206
+        }
+      },
+      "name": "range-open-ended",
+      "summary": "status=206 bytes=12 content-range=bytes 4-15/16",
+      "supported": true
+    },
+    {
+      "detail": {
+        "at_eof": {
+          "content_range": null,
+          "error_code": "InvalidRange",
+          "error_message": "",
+          "etag": null,
+          "status": 416
+        },
+        "past_end": {
+          "content_range": null,
+          "error_code": "InvalidRange",
+          "error_message": "",
+          "etag": null,
+          "status": 416
+        }
+      },
+      "name": "range-out-of-range",
+      "summary": "past_end=416/InvalidRange at_eof=416/InvalidRange",
+      "supported": true
+    },
+    {
+      "detail": {
+        "response": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 404
+        }
+      },
+      "name": "head-missing-key",
+      "summary": "status=404",
+      "supported": true
+    },
+    {
+      "detail": {
+        "create": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"321c3cf486ed509164edec1e1981fec8\"",
+          "status": 200
+        },
+        "first_delete": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 204
+        },
+        "second_delete": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 204
+        }
+      },
+      "name": "delete-idempotent",
+      "summary": "delete=204 delete_again=204",
+      "supported": true
+    },
+    {
+      "detail": {
+        "complete": true,
+        "duplicates": 0,
+        "expected_keys": [
+          "weft-ceph-test-20261107t025545z/run-71-1484800533/list/00",
+          "weft-ceph-test-20261107t025545z/run-71-1484800533/list/01",
+          "weft-ceph-test-20261107t025545z/run-71-1484800533/list/02",
+          "weft-ceph-test-20261107t025545z/run-71-1484800533/list/03",
+          "weft-ceph-test-20261107t025545z/run-71-1484800533/list/04"
+        ],
+        "pages": [
+          {
+            "is_truncated": true,
+            "keys": [
+              "weft-ceph-test-20261107t025545z/run-71-1484800533/list/00",
+              "weft-ceph-test-20261107t025545z/run-71-1484800533/list/01"
+            ],
+            "next_token_present": true,
+            "status": 200
+          },
+          {
+            "is_truncated": true,
+            "keys": [
+              "weft-ceph-test-20261107t025545z/run-71-1484800533/list/02",
+              "weft-ceph-test-20261107t025545z/run-71-1484800533/list/03"
+            ],
+            "next_token_present": true,
+            "status": 200
+          },
+          {
+            "is_truncated": false,
+            "keys": [
+              "weft-ceph-test-20261107t025545z/run-71-1484800533/list/04"
+            ],
+            "next_token_present": false,
+            "status": 200
+          }
+        ]
+      },
+      "name": "list-pagination",
+      "summary": "pages=3 keys=5 duplicates=0 complete=true",
+      "supported": true
+    },
+    {
+      "detail": {
+        "head_etag": "\"e1740315d3459ff864d6e5e7841cb2b5\"",
+        "if_match_form": "dequoted",
+        "loser": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "winner": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6f423b2de0c5fd2cd3fccd5c0b921834\"",
+          "status": 200
+        },
+        "winner_as_returned": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "",
+          "etag": null,
+          "status": 412
+        },
+        "winner_bytes_kept": true,
+        "winner_dequoted_form": true
+      },
+      "name": "stale-cas-probe",
+      "summary": "winner=200 (form=dequoted) loser=412 winner_bytes_kept=true",
+      "supported": true
+    }
+  ],
+  "endpoint": "http://10.213.77.10:8080",
+  "generated_utc": "20261107T025545Z",
+  "implementation": "Ceph RGW 19.2.0",
+  "label": "Single-host S3-compatible endpoint on localhost, synthetic objects. Protocol behaviour only; not a durability, media, power-loss, cloud, fleet, or production claim.",
+  "run_prefix": "weft-ceph-test-20261107t025545z/run-71-1484800533",
+  "schema": "weft-s3-compat-matrix-v1",
+  "summary": {
+    "supported": 8,
+    "total": 8,
+    "unsupported": 0
+  }
+}

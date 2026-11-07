@@ -76,9 +76,18 @@ use crate::identity::Hash32;
 /// bound so a single allocation stays bounded.
 const MAX_OBJECT_BYTES: u64 = MAX_CHUNK_SIZE * 64;
 const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const LOCK_SCHEMA: &str = "weftfs-s3-lock v2";
+const LOCK_SCHEMA: &str = "weftfs-s3-lock v3";
+const LOCK_SCHEMA_V2: &str = "weftfs-s3-lock v2";
 const LOCK_SCHEMA_V1: &str = "weftfs-s3-lock v1";
-const RELEASED_SCHEMA: &str = "weftfs-s3-lock-released v1";
+const RELEASED_SCHEMA: &str = "weftfs-s3-lock-released v2";
+const RELEASED_SCHEMA_V1: &str = "weftfs-s3-lock-released v1";
+const LOCK_SCHEMAS: crate::writer_fence::Schemas = crate::writer_fence::Schemas {
+    v3: LOCK_SCHEMA,
+    v2: LOCK_SCHEMA_V2,
+    v1: LOCK_SCHEMA_V1,
+    released_v2: RELEASED_SCHEMA,
+    released_v1: RELEASED_SCHEMA_V1,
+};
 /// A lease shorter than this cannot bound a publication, so it is refused.
 const MIN_LOCK_LEASE_SECS: u64 = 1;
 
@@ -338,6 +347,8 @@ struct S3Stats {
     lock_acquires: AtomicU64,
     /// Conditional lease writes that proved ownership before a publication.
     fence_checks: AtomicU64,
+    /// Publication writes that carried a new head (fence + head in one CAS).
+    head_publications: AtomicU64,
     /// Fence checks that also extended the lease deadline.
     lease_renewals: AtomicU64,
     /// Publications refused because the LOCK no longer named this writer.
@@ -357,6 +368,7 @@ impl Default for S3Stats {
             conditional_conflicts: AtomicU64::new(0),
             lock_acquires: AtomicU64::new(0),
             fence_checks: AtomicU64::new(0),
+            head_publications: AtomicU64::new(0),
             lease_renewals: AtomicU64::new(0),
             fence_refusals: AtomicU64::new(0),
             lease_expired_publications: AtomicU64::new(0),
@@ -434,9 +446,13 @@ struct LockLease {
     renewed_ns: i64,
     /// ETag the endpoint returned for the bytes published at `sequence`.
     etag: String,
+    /// The head this handle last published. Every LOCK rewrite (a renewal, the
+    /// pre-publication fence, and the publication itself) carries it forward,
+    /// so a crash can never lose the attestation of an already-published head.
+    head: Option<(u64, Hash32, u64)>,
 }
 
-pub use crate::writer_fence::PublishedLock;
+pub use crate::writer_fence::{AttestedHead, LockVersion, PublishedLock};
 
 fn encode_lock(
     owner: &str,
@@ -444,7 +460,7 @@ fn encode_lock(
     sequence: u64,
     deadline_ns: i64,
     renewed_ns: i64,
-    pending: Option<(u64, &Hash32)>,
+    pending: Option<(u64, &Hash32, u64)>,
 ) -> String {
     crate::writer_fence::encode_lock(
         LOCK_SCHEMA,
@@ -463,6 +479,7 @@ fn encode_released(
     sequence: u64,
     released_ns: i64,
     released_from: &str,
+    pending: Option<(u64, &Hash32, u64)>,
 ) -> String {
     crate::writer_fence::encode_released(
         RELEASED_SCHEMA,
@@ -471,13 +488,14 @@ fn encode_released(
         sequence,
         released_ns,
         released_from,
+        pending,
     )
 }
 
-/// Parse a published `LOCK` object. Accepts the fenced v2 record, the legacy v1
-/// record (fence 0), and the released tombstone.
+/// Parse a published `LOCK` object. Accepts the v3 publication record, the
+/// fenced v2 record, the legacy v1 record (fence 0), and both tombstones.
 fn parse_lock(bytes: &[u8]) -> Option<PublishedLock> {
-    crate::writer_fence::parse_lock(bytes, LOCK_SCHEMA, LOCK_SCHEMA_V1, RELEASED_SCHEMA)
+    crate::writer_fence::parse_lock(bytes, &LOCK_SCHEMAS)
 }
 
 impl S3Backend {
@@ -518,12 +536,13 @@ impl S3Backend {
                           (If-None-Match/If-Match) are required and probed by the court; \
                           a monotonic fencing token is carried in the LOCK object"
                 .to_owned(),
-            publication: "S3 PUT with If-None-Match: * (create-once); superblock \
-                          slot via GET+If-Match PUT; both conditional forms are \
-                          probed at writable open and a backend that ignores them \
-                          is refused; every head publication is preceded by one \
-                          conditional write on LOCK that carries the fencing token \
-                          and names the head, and release is a conditional tombstone"
+            publication: "S3 PUT with If-None-Match: * (create-once); the head is \
+                          published by one conditional write of the `weftfs-s3-lock v3` \
+                          record that carries both the fencing token and the new head \
+                          (If-Match); the two-slot superblock is a cache refreshed after \
+                          that write; both conditional forms are probed at writable open \
+                          and a backend that ignores them is refused; release is a \
+                          conditional tombstone"
                 .to_owned(),
         }
     }
@@ -1007,10 +1026,21 @@ impl S3Backend {
             match existing.status {
                 404 => {
                     // No record at all: create it once. The first lease holder
-                    // takes fencing token 1.
-                    let body = encode_lock(&owner, 1, 1, deadline, now, None);
+                    // takes fencing token 1 and carries forward the head the
+                    // superblock cache attests (a store whose LOCK was lost
+                    // keeps its head).
+                    let head = self.superblock_head();
+                    let body = encode_lock(
+                        &owner,
+                        1,
+                        1,
+                        deadline,
+                        now,
+                        head.as_ref()
+                            .map(|(generation, commit, len)| (*generation, commit, *len)),
+                    );
                     if let Some(etag) = self.put_conditional(&key, body.as_bytes(), None)? {
-                        self.install_lease(owner, 1, 1, deadline, now, etag);
+                        self.install_lease(owner, 1, 1, deadline, now, etag, head);
                         return Ok(());
                     }
                     // Another writer created it between the GET and the PUT.
@@ -1043,10 +1073,30 @@ impl S3Backend {
                     // Expired lease or a released tombstone: take over with the
                     // next fencing token, conditional on the exact record read.
                     // A lost race is retried from a fresh read, never blind.
+                    //
+                    // Protocol migration: an expired v2/v1 record is upgraded to
+                    // the v3 publication record in this same conditional write,
+                    // so the store is never half-v2 and half-v3 under a live
+                    // writer. The head the old record named (or, for a v1/v2
+                    // tombstone, the superblock cache) is carried forward.
                     let fence = observed.fence.checked_add(1).ok_or_else(|| {
                         Error::limit_exceeded("S3 fencing token would overflow u64")
                     })?;
-                    let body = encode_lock(&owner, fence, 1, deadline, now, None);
+                    let head = match observed.attested_head() {
+                        Some((generation, commit)) => {
+                            Some((generation, commit, observed.pending_commit_len))
+                        }
+                        None => self.superblock_head(),
+                    };
+                    let body = encode_lock(
+                        &owner,
+                        fence,
+                        1,
+                        deadline,
+                        now,
+                        head.as_ref()
+                            .map(|(generation, commit, len)| (*generation, commit, *len)),
+                    );
                     let Some(etag) = existing.etag else {
                         return Err(Error::unsupported_version(
                             "S3-compatible endpoint did not return an ETag for the writer lock; \
@@ -1065,7 +1115,14 @@ impl S3Backend {
                                 observed.fence,
                                 fence
                             ));
-                            self.install_lease(owner, fence, 1, deadline, now, etag);
+                            if observed.schema_version < crate::writer_fence::LockVersion::V3 {
+                                self.note(format!(
+                                    "upgraded the S3 writer lock record from {:?} to v3 (single \
+                                     conditional write; the head it attests is carried forward)",
+                                    observed.schema_version
+                                ));
+                            }
+                            self.install_lease(owner, fence, 1, deadline, now, etag, head);
                             return Ok(());
                         }
                         None => continue,
@@ -1079,6 +1136,34 @@ impl S3Backend {
         ))
     }
 
+    /// The head the two-slot superblock cache attests right now, if any. Used
+    /// only to carry a head forward when the LOCK record does not name one
+    /// (a fresh takeover of a v1/v2 tombstone, or a missing LOCK). Never used
+    /// as an authority in place of an attested record head.
+    fn superblock_head(&self) -> Option<(u64, Hash32, u64)> {
+        let response = self.get(&Key::superblock(), None).ok()?;
+        if response.status != 200 {
+            return None;
+        }
+        let mut highest: Option<(u64, Hash32, u64)> = None;
+        for slot in crate::format::decode_superblock(&response.body)
+            .ok()?
+            .into_iter()
+            .flatten()
+        {
+            if slot.generation == 0 || slot.commit == Hash32::ZERO {
+                continue;
+            }
+            if highest
+                .map(|(generation, _, _)| slot.generation > generation)
+                .unwrap_or(true)
+            {
+                highest = Some((slot.generation, slot.commit, slot.commit_len));
+            }
+        }
+        highest
+    }
+
     fn install_lease(
         &self,
         owner: String,
@@ -1087,6 +1172,7 @@ impl S3Backend {
         deadline_ns: i64,
         renewed_ns: i64,
         etag: String,
+        head: Option<(u64, Hash32, u64)>,
     ) {
         self.stats.lock_acquires.fetch_add(1, Ordering::Relaxed);
         *self
@@ -1099,6 +1185,7 @@ impl S3Backend {
             deadline_ns,
             renewed_ns,
             etag,
+            head,
         });
     }
 
@@ -1153,12 +1240,18 @@ impl S3Backend {
             return;
         };
         let released_from = sha256_hex(&observed.body);
+        let head = record
+            .attested_head()
+            .map(|(generation, commit)| (generation, commit, record.pending_commit_len))
+            .or(lease.head);
         let tombstone = encode_released(
             &lease.owner,
             lease.fence,
             lease.sequence.saturating_add(1),
             now_ns(),
             &released_from,
+            head.as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
         );
         match self.put_conditional(&key, tombstone.as_bytes(), Some(&etag)) {
             Ok(Some(_)) => self.note(format!(
@@ -1177,18 +1270,27 @@ impl S3Backend {
     }
 
     /// Prove this handle may publish right now, renewing the lease when one
-    /// publication budget remains.
+    /// publication budget remains. The conditional write carries forward the
+    /// head this handle last published, so a pre-publication fence never erases
+    /// the record's attestation.
     pub(crate) fn fence_lease(&self) -> Result<()> {
         self.fence_lease_for(None)
     }
 
-    /// The same conditional write, additionally naming the head that is about
-    /// to be published.
-    pub(crate) fn fence_head(&self, generation: u64, commit: &Hash32) -> Result<()> {
-        self.fence_lease_for(Some((generation, commit)))
+    /// The publication point: one conditional write on `LOCK` that both proves
+    /// this handle still owns the lease and names the new head. A successor's
+    /// takeover rewrites the same object, so this fails `Busy` with nothing
+    /// published.
+    pub(crate) fn publish_fenced_head(
+        &self,
+        generation: u64,
+        commit: &Hash32,
+        commit_len: u64,
+    ) -> Result<()> {
+        self.fence_lease_for(Some((generation, commit, commit_len)))
     }
 
-    fn fence_lease_for(&self, pending: Option<(u64, &Hash32)>) -> Result<()> {
+    fn fence_lease_for(&self, pending: Option<(u64, &Hash32, u64)>) -> Result<()> {
         let mut guard = self
             .lock
             .lock()
@@ -1222,18 +1324,35 @@ impl S3Backend {
             lease.deadline_ns
         };
         let sequence = lease.sequence.saturating_add(1);
-        let body = encode_lock(&lease.owner, lease.fence, sequence, deadline, now, pending);
-        // This is the fence. `If-Match` names the bytes this handle published
-        // last, so it succeeds only while the object still carries this
-        // writer's fencing token. A successor's reclaim rewrote the object, so
-        // this fails with 412 and nothing is published.
+        // The head this record will attest: the new one when publishing, or the
+        // one already published when this is only a pre-publication fence.
+        let head = pending
+            .map(|(generation, commit, len)| (generation, *commit, len))
+            .or(lease.head);
+        let body = encode_lock(
+            &lease.owner,
+            lease.fence,
+            sequence,
+            deadline,
+            now,
+            head.as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
+        );
+        // This is the publication point. `If-Match` names the bytes this handle
+        // published last, so it succeeds only while the object still carries
+        // this writer's fencing token. A successor's reclaim rewrote the same
+        // object, so this fails with 412 and nothing is published.
         match self.put_conditional(&Key::lock(), body.as_bytes(), Some(&lease.etag))? {
             Some(etag) => {
                 lease.sequence = sequence;
                 lease.deadline_ns = deadline;
                 lease.renewed_ns = now;
                 lease.etag = etag;
+                lease.head = head;
                 self.stats.fence_checks.fetch_add(1, Ordering::Relaxed);
+                if pending.is_some() {
+                    self.stats.head_publications.fetch_add(1, Ordering::Relaxed);
+                }
                 if renew {
                     self.stats.lease_renewals.fetch_add(1, Ordering::Relaxed);
                 }
@@ -1302,6 +1421,11 @@ impl S3Backend {
             record.sequence.saturating_add(1),
             now_ns(),
             &sha256_hex(&response.body),
+            record
+                .attested_head()
+                .map(|(generation, commit)| (generation, commit, record.pending_commit_len))
+                .as_ref()
+                .map(|(generation, commit, len)| (*generation, commit, *len)),
         );
         match self.put_conditional(&Key::lock(), tombstone.as_bytes(), Some(&etag))? {
             Some(_) => Ok(self.read_lock_record()?),
@@ -1311,8 +1435,136 @@ impl S3Backend {
         }
     }
 
+    /// Refuse to continue if this writer's own recorded deadline has passed. A
+    /// local check only: no network write and no lease renewal. The store calls
+    /// it immediately before it writes a commit record, so a writer suspended
+    /// past its own deadline leaves no unpublished commit tail behind.
+    pub(crate) fn check_own_deadline(&self) -> Result<()> {
+        let guard = self
+            .lock
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let Some(lease) = guard.as_ref() else {
+            return Err(Error::busy(
+                "S3 writer holds no lease; refusing to publish without a fenced lease",
+            ));
+        };
+        let now = now_ns();
+        if now >= lease.deadline_ns {
+            let owner = lease.owner.clone();
+            let fence = lease.fence;
+            let expired_ms = (now - lease.deadline_ns) / 1_000_000;
+            drop(guard);
+            let observed = self.read_lock_record().ok().flatten();
+            self.stats
+                .lease_expired_publications
+                .fetch_add(1, Ordering::Relaxed);
+            return Err(Error::busy(format!(
+                "S3 writer lease deadline passed {expired_ms} ms ago (owner {owner} fence {fence}); \
+                 publication refused before the head was touched{}",
+                describe_observed(&observed, &owner, fence)
+            )));
+        }
+        Ok(())
+    }
+
     fn lease_ns(&self) -> i64 {
         i64::try_from(self.config.lock_lease.as_nanos()).unwrap_or(i64::MAX)
+    }
+
+    /// The head the writer lock record attests, read fresh with a plain GET and
+    /// no probe. Used by recovery for every open (read-only and writable).
+    pub(crate) fn lock_attested_head(&self) -> Result<Option<AttestedHead>> {
+        let Some(record) = self.read_lock_record()? else {
+            return Ok(None);
+        };
+        let Some((generation, commit)) = record.attested_head() else {
+            return Ok(None);
+        };
+        Ok(Some(AttestedHead {
+            generation,
+            commit,
+            commit_len: record.pending_commit_len,
+        }))
+    }
+
+    /// Refresh the two-slot superblock cache to the head the LOCK record just
+    /// published. The record is the authority; this write only keeps recovery
+    /// fast and keeps the cache honest.
+    ///
+    /// It never moves the cache backwards: if the cache already names this head
+    /// or a newer one, nothing is written. A lost race is retried from a fresh
+    /// read, and a cache write that still fails is reported to the caller as a
+    /// diagnostic, never as a publication failure (the publication is the LOCK
+    /// write).
+    pub(crate) fn refresh_head_cache(
+        &self,
+        generation: u64,
+        commit: &Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        if commit_len == 0 {
+            self.note(
+                "superblock cache not refreshed: the lock record does not attest the commit \
+                 length (a pre-v3 record); the next publication fills it"
+                    .to_owned(),
+            );
+            return Ok(());
+        }
+        let key = Key::superblock();
+        for _ in 0..8 {
+            let current = self.get(&key, None)?;
+            if current.status != 200 {
+                return Err(Error::io(format!(
+                    "S3 cache read {} returned HTTP {}",
+                    key.display_path(),
+                    current.status
+                )));
+            }
+            if current.body.len() != SUPERBLOCK_BYTES {
+                return Err(Error::corrupt(format!(
+                    "superblock is {} bytes, expected {SUPERBLOCK_BYTES}",
+                    current.body.len()
+                )));
+            }
+            let mut highest = 0u64;
+            for slot in crate::format::decode_superblock(&current.body)?
+                .into_iter()
+                .flatten()
+            {
+                highest = highest.max(slot.generation);
+            }
+            if highest >= generation {
+                // The cache already names this head or a newer one. Do not move
+                // it backwards for a stale writer.
+                return Ok(());
+            }
+            let Some(etag) = current.etag else {
+                return Err(Error::io(
+                    "S3 endpoint did not return an ETag for a cache update",
+                ));
+            };
+            let mut image = current.body;
+            let offset = ((generation % 2) as usize) * crate::format::SLOT_BYTES;
+            let slot = crate::format::SuperblockSlot {
+                generation,
+                commit: *commit,
+                commit_len,
+                timestamp_ns,
+            };
+            image[offset..offset + crate::format::SLOT_BYTES].copy_from_slice(&slot.encode());
+            if self.put_conditional(&key, &image, Some(&etag))?.is_some() {
+                return Ok(());
+            }
+            self.note(
+                "conditional superblock cache update lost a race; retrying from a fresh read"
+                    .to_owned(),
+            );
+        }
+        Err(Error::busy(
+            "superblock cache update kept losing to another writer",
+        ))
     }
 
     /// The window a single publication may still occupy. A writer renews when
@@ -1771,8 +2023,32 @@ impl StorageBackend for S3Backend {
         self.fence_lease()
     }
 
-    fn fence_head_publication(&mut self, generation: u64, commit: &Hash32) -> Result<()> {
-        self.fence_head(generation, commit)
+    fn check_lease_deadline(&self) -> Result<()> {
+        S3Backend::check_own_deadline(self)
+    }
+
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        S3Backend::publish_fenced_head(self, generation, commit, commit_len)?;
+        Ok(true)
+    }
+
+    fn attested_head(&self) -> Result<Option<AttestedHead>> {
+        self.lock_attested_head()
+    }
+
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        S3Backend::refresh_head_cache(self, generation, &commit, commit_len, timestamp_ns)
     }
 
     fn clean_stale_tmp(&mut self, _grace_secs: u64) -> Result<()> {
@@ -2152,8 +2428,9 @@ mod tests {
     #[test]
     fn lock_record_round_trips_and_parses_legacy_v1() {
         let commit = Hash32::from_bytes([7u8; 32]);
-        let body = encode_lock("owner-a", 3, 9, 1_000, 900, Some((12, &commit)));
-        let record = parse_lock(body.as_bytes()).expect("v2 record parses");
+        let body = encode_lock("owner-a", 3, 9, 1_000, 900, Some((12, &commit, 4_096)));
+        let record = parse_lock(body.as_bytes()).expect("v3 record parses");
+        assert_eq!(record.schema_version, LockVersion::V3);
         assert_eq!(record.owner, "owner-a");
         assert_eq!(record.fence, 3);
         assert_eq!(record.sequence, 9);
@@ -2161,20 +2438,35 @@ mod tests {
         assert_eq!(record.renewed_ns, 900);
         assert_eq!(record.pending_generation, 12);
         assert_eq!(record.pending_commit, commit.to_hex());
+        assert_eq!(record.pending_commit_len, 4_096);
         assert!(!record.released);
         assert!(record.is_live(999));
         assert!(record.is_live(1_000));
         assert!(!record.is_live(1_001));
+        assert_eq!(record.attested_head(), Some((12, commit)));
 
         // A lease with no head in flight still round-trips.
         let idle = encode_lock("owner-a", 3, 10, 1_000, 950, None);
         let record = parse_lock(idle.as_bytes()).expect("idle record parses");
         assert_eq!(record.pending_generation, 0);
         assert_eq!(record.pending_commit, "-");
+        assert_eq!(record.pending_commit_len, 0);
+
+        // A v2 record is still readable; it reports an unknown head length.
+        let v2 = format!(
+            "{LOCK_SCHEMA_V2}\nowner=y\nfence=1\nsequence=1\nlease_deadline_ns=10\n\
+             renewed_ns=9\npending_generation=4\npending_commit={}\n",
+            commit.to_hex()
+        );
+        let record = parse_lock(v2.as_bytes()).expect("v2 record parses");
+        assert_eq!(record.schema_version, LockVersion::V2);
+        assert_eq!(record.pending_commit_len, 0);
+        assert_eq!(record.attested_head(), Some((4, commit)));
 
         // Legacy v1 records predate fencing and are read as fence 0.
         let legacy = format!("{LOCK_SCHEMA_V1}\nowner=x\nexpires_ns=42\n");
         let record = parse_lock(legacy.as_bytes()).expect("v1 record parses");
+        assert_eq!(record.schema_version, LockVersion::V1);
         assert_eq!(record.owner, "x");
         assert_eq!(record.fence, 0);
         assert_eq!(record.deadline_ns, 42);
@@ -2187,7 +2479,7 @@ mod tests {
 
     #[test]
     fn released_tombstone_records_are_content_addressed() {
-        let body = encode_released("owner-a", 4, 11, 5_000, "deadbeef");
+        let body = encode_released("owner-a", 4, 11, 5_000, "deadbeef", None);
         let record = parse_lock(body.as_bytes()).expect("tombstone parses");
         assert!(record.released);
         assert_eq!(record.fence, 4);

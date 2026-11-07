@@ -1113,12 +1113,65 @@ pub trait StorageBackend: Send {
         Ok(())
     }
 
+    /// A local deadline check: refuse if this writer's own recorded lease has
+    /// expired. No network write and no renewal. Called immediately before the
+    /// commit record is written, so a writer suspended past its own deadline
+    /// leaves no unpublished commit tail.
+    fn check_lease_deadline(&self) -> Result<()> {
+        Ok(())
+    }
+
     /// The fenced form of [`Self::verify_write_lease`]: the same proof, and the
-    /// head it names as about to be published. A backend with one conditional
-    /// write per object falls back to the plain proof.
+    /// head it names as about to be published. Used by a POSIX backend whose
+    /// exclusive lock already serialises the fence with the superblock slot; a
+    /// lock-record backend implements [`Self::publish_fenced_head`] instead.
     fn fence_head_publication(&mut self, generation: u64, commit: &Hash32) -> Result<()> {
         let _ = (generation, commit);
         self.verify_write_lease()
+    }
+
+    /// The fenced form of [`Self::verify_write_lease`]: publish a head through
+    /// the writer lock record in **one** conditional write that carries both the
+    /// fence and the head.
+    ///
+    /// Returns `true` when the backend uses its lock record as the publication
+    /// point (S3/GCS/Azure). Returns `false` for a POSIX backend whose exclusive
+    /// lock already serialises the fence and the superblock slot; the store then
+    /// calls [`Self::fence_head_publication`] followed by [`Self::publish_head`]
+    /// exactly as before.
+    ///
+    /// A successor's takeover rewrites the same record, so a stale writer's
+    /// write fails `Busy` and there is no second object write left to slip
+    /// through. See `docs/FENCING.md`.
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        let _ = (generation, commit, commit_len);
+        Ok(false)
+    }
+
+    /// The head the writer lock record attests as published. `None` for a
+    /// backend whose lock is a POSIX file lock (there is no record).
+    fn attested_head(&self) -> Result<Option<crate::writer_fence::AttestedHead>> {
+        Ok(None)
+    }
+
+    /// Refresh the superblock cache after a lock-record publication. The record
+    /// is already the authority; this call only keeps the cache current and may
+    /// never move it backwards. A failure here is a diagnostic, not a
+    /// publication failure.
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        let _ = (generation, commit, commit_len, timestamp_ns);
+        Ok(())
     }
 
     /// Remove stale staging files older than `grace_secs`.
@@ -3093,8 +3146,37 @@ impl StorageBackend for CompositeBackend {
         self.commits.verify_write_lease()
     }
 
+    fn check_lease_deadline(&self) -> Result<()> {
+        self.commits.check_lease_deadline()
+    }
+
     fn fence_head_publication(&mut self, generation: u64, commit: &Hash32) -> Result<()> {
         self.commits.fence_head_publication(generation, commit)
+    }
+
+    fn publish_fenced_head(
+        &mut self,
+        generation: u64,
+        commit: &Hash32,
+        commit_len: u64,
+    ) -> Result<bool> {
+        self.commits
+            .publish_fenced_head(generation, commit, commit_len)
+    }
+
+    fn attested_head(&self) -> Result<Option<crate::writer_fence::AttestedHead>> {
+        self.commits.attested_head()
+    }
+
+    fn refresh_head_cache(
+        &mut self,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+    ) -> Result<()> {
+        self.commits
+            .refresh_head_cache(generation, commit, commit_len, timestamp_ns)
     }
 
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
