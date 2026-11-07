@@ -895,10 +895,10 @@ enum CheckpointCommand {
         /// Glob filter on tensor names (repeatable; default all tensors).
         #[arg(long = "tensor-filter", value_name = "GLOB")]
         tensor_filters: Vec<String>,
-        /// Per-shard physical strategy: tensor-sharded, tensor-tiled, zstd, or raw.
+        /// Per-shard physical strategy: tensor-sharded, tensor-tiled, float-tiled, zstd, or raw.
         #[arg(long = "shard-strategy", default_value = "tensor-sharded")]
         shard_strategy: String,
-        /// Tile extents for mode 15 (`A,B,...`). Implies tensor-tiled shards.
+        /// Tile extents for mode 15/17 (`A,B,...`). Implies tensor-tiled shards.
         #[arg(long = "tile-shape", value_name = "A,B,...")]
         tile_shape: Option<String>,
     },
@@ -3241,18 +3241,21 @@ fn run_checkpoint(
             if tile_shape.is_some() {
                 match strategy {
                     ShardStrategy::TensorSharded => strategy = ShardStrategy::TensorTiled,
-                    ShardStrategy::TensorTiled => {}
+                    ShardStrategy::TensorTiled | ShardStrategy::FloatTiled => {}
                     other => {
                         return Err(Error::invalid_argument(format!(
-                            "--tile-shape requires tensor-tiled shards; --shard-strategy {} cannot carry a tile grid",
+                            "--tile-shape requires tensor-tiled or float-tiled shards; --shard-strategy {} cannot carry a tile grid",
                             other.as_str()
                         )))
                     }
                 }
-            } else if strategy == ShardStrategy::TensorTiled {
-                return Err(Error::invalid_argument(
-                    "--shard-strategy tensor-tiled requires --tile-shape A,B,...",
-                ));
+            } else if strategy == ShardStrategy::TensorTiled
+                || strategy == ShardStrategy::FloatTiled
+            {
+                return Err(Error::invalid_argument(format!(
+                    "--shard-strategy {} requires --tile-shape A,B,...",
+                    strategy.as_str()
+                )));
             }
             let options = CheckpointWriteOptions {
                 shards,

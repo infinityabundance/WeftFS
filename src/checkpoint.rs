@@ -60,6 +60,8 @@ pub enum ShardStrategy {
     TensorSharded,
     /// Mode 15 `TENSOR_TILED` over the shard's logical dtype.
     TensorTiled,
+    /// Mode 17 `FLOAT_TILED`: per-tile mode-9 plane split.
+    FloatTiled,
     /// One ZSTD frame per shard (exact fallback).
     Zstd,
     /// Raw chunks per shard (exact fallback).
@@ -71,10 +73,11 @@ impl ShardStrategy {
         match text {
             "tensor-sharded" => Ok(ShardStrategy::TensorSharded),
             "tensor-tiled" => Ok(ShardStrategy::TensorTiled),
+            "float-tiled" => Ok(ShardStrategy::FloatTiled),
             "zstd" => Ok(ShardStrategy::Zstd),
             "raw" => Ok(ShardStrategy::Raw),
             other => Err(Error::invalid_argument(format!(
-                "--shard-strategy must be `tensor-sharded`, `tensor-tiled`, `zstd`, or `raw` (got `{other}`)"
+                "--shard-strategy must be `tensor-sharded`, `tensor-tiled`, `float-tiled`, `zstd`, or `raw` (got `{other}`)"
             ))),
         }
     }
@@ -83,6 +86,7 @@ impl ShardStrategy {
         match self {
             ShardStrategy::TensorSharded => "tensor-sharded",
             ShardStrategy::TensorTiled => "tensor-tiled",
+            ShardStrategy::FloatTiled => "float-tiled",
             ShardStrategy::Zstd => "zstd",
             ShardStrategy::Raw => "raw",
         }
@@ -937,6 +941,20 @@ impl Store {
                                 Some(tile),
                             )
                         }
+                        ShardStrategy::FloatTiled => {
+                            let tile = options.tile_shape.clone().ok_or_else(|| {
+                                Error::invalid_argument(
+                                    "float-tiled checkpoint shards require --tile-shape",
+                                )
+                            })?;
+                            validate_tile_shape(&shard_shape, &tile)?;
+                            (
+                                dtype.as_str().to_owned(),
+                                shard_shape.clone(),
+                                TensorStrategy::FloatTiled,
+                                Some(tile),
+                            )
+                        }
                         ShardStrategy::Zstd => (
                             dtype.as_str().to_owned(),
                             shard_shape.clone(),
@@ -973,6 +991,9 @@ impl Store {
                                 }
                                 ShardStrategy::TensorTiled => {
                                     " (mode 15 needs a tile shape that divides every shard extent)"
+                                }
+                                ShardStrategy::FloatTiled => {
+                                    " (mode 17 needs a tile shape that divides every shard extent)"
                                 }
                                 _ => "",
                             };

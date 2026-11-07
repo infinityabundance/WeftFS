@@ -76,6 +76,8 @@ pub enum TensorStrategy {
     TensorSharded,
     /// One mode-15 `TENSOR_TILED` frame.
     TensorTiled,
+    /// One mode-17 `FLOAT_TILED` frame: per-tile mode-9 plane split.
+    FloatTiled,
     /// One mode-11 `WEIGHT_DELTA` frame against the causal parent.
     WeightDelta,
     /// One mode-16 `SPARSE_DELTA` frame against the causal parent. The same
@@ -99,6 +101,7 @@ impl TensorStrategy {
             TensorStrategy::FloatTensor => "float-tensor",
             TensorStrategy::TensorSharded => "tensor-sharded",
             TensorStrategy::TensorTiled => "tensor-tiled",
+            TensorStrategy::FloatTiled => "float-tiled",
             TensorStrategy::WeightDelta => "weight-delta",
             TensorStrategy::SparseDelta => "sparse-delta",
             TensorStrategy::SemanticDelta => "semantic-delta",
@@ -115,6 +118,7 @@ impl TensorStrategy {
             "float-tensor" => Ok(TensorStrategy::FloatTensor),
             "tensor-sharded" => Ok(TensorStrategy::TensorSharded),
             "tensor-tiled" => Ok(TensorStrategy::TensorTiled),
+            "float-tiled" => Ok(TensorStrategy::FloatTiled),
             "weight-delta" => Ok(TensorStrategy::WeightDelta),
             "sparse-delta" => Ok(TensorStrategy::SparseDelta),
             "semantic-delta" => Ok(TensorStrategy::SemanticDelta),
@@ -133,6 +137,7 @@ impl TensorStrategy {
             TensorStrategy::FloatTensor => Some(9),
             TensorStrategy::TensorSharded => Some(10),
             TensorStrategy::TensorTiled => Some(15),
+            TensorStrategy::FloatTiled => Some(17),
             TensorStrategy::WeightDelta => Some(11),
             TensorStrategy::SparseDelta => Some(16),
             TensorStrategy::KvCache => Some(12),
@@ -166,6 +171,11 @@ impl TensorStrategy {
             TensorStrategy::FloatTensor => CostClass::FloatTensor,
             TensorStrategy::TensorSharded => CostClass::TensorSharded,
             TensorStrategy::TensorTiled => CostClass::TensorTiled,
+            // Mode 17 is priced with the mode-15 tile coefficients: it runs
+            // the same per-tile geometry and a Huffman exponent decode, plus
+            // the BF16 join. The calibration schema's class set is frozen, so
+            // no new cost class was added.
+            TensorStrategy::FloatTiled => CostClass::TensorTiled,
             TensorStrategy::WeightDelta => CostClass::WeightDelta,
             TensorStrategy::SparseDelta => CostClass::SparseDelta,
             TensorStrategy::SemanticDelta => CostClass::SemanticDelta,
@@ -793,6 +803,14 @@ fn float_tensor_dtype(dtype: TensorElementDtype) -> Option<weftcodec::modes::Flo
     }
 }
 
+/// True when a mode-17 descriptor dtype names the manifest's element dtype.
+fn float_dtype_matches_tensor(
+    float: weftcodec::modes::FloatDtype,
+    tensor: TensorElementDtype,
+) -> bool {
+    float_tensor_dtype(tensor) == Some(float)
+}
+
 impl Store {
     /// Write one logical tensor as a new file object.
     ///
@@ -1083,7 +1101,7 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
-                    if tensor.tensor_mode == 15 {
+                    if tensor.tensor_mode == 15 || tensor.tensor_mode == 17 {
                         let frame_id = rep.frame.ok_or_else(|| {
                             Error::corrupt("tensor representation has no frame id")
                         })?;
@@ -1127,7 +1145,7 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
-                    if tensor.tensor_mode == 15 {
+                    if tensor.tensor_mode == 15 || tensor.tensor_mode == 17 {
                         let frame_id = rep.frame.ok_or_else(|| {
                             Error::corrupt("tensor representation has no frame id")
                         })?;
@@ -1182,7 +1200,7 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
-                    if tensor.tensor_mode == 15 {
+                    if tensor.tensor_mode == 15 || tensor.tensor_mode == 17 {
                         let frame_id = rep.frame.ok_or_else(|| {
                             Error::corrupt("tensor representation has no frame id")
                         })?;
@@ -1229,14 +1247,27 @@ impl Store {
         })?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
-        if frame.header.mode != Mode::TensorTiled {
+        let expected = match tensor.tensor_mode {
+            15 => Mode::TensorTiled,
+            17 => Mode::FloatTiled,
+            other => {
+                return Err(Error::corrupt(format!(
+                    "tensor mode {other} is not a tiled representation"
+                )))
+            }
+        };
+        if frame.header.mode != expected {
             return Err(Error::corrupt(format!(
-                "tensor representation mode 15 has frame mode `{}`",
+                "tensor representation mode {} has frame mode `{}`",
+                tensor.tensor_mode,
                 frame.header.mode.as_str()
             )));
         }
-        let (logical, stats) =
-            self.decode_mode15_with_options(&frame, tensor, manifest, rep, options)?;
+        let (logical, stats) = if tensor.tensor_mode == 17 {
+            self.decode_mode17_with_options(&frame, tensor, manifest, rep, options)?
+        } else {
+            self.decode_mode15_with_options(&frame, tensor, manifest, rep, options)?
+        };
         if identity::content_hash(&logical) != manifest.content_hash {
             return Err(Error::corrupt("whole-content hash mismatch"));
         }
@@ -1258,6 +1289,9 @@ impl Store {
         region: &Region,
         options: &TileDecodeOptions,
     ) -> Result<(RegionRead, TileDecodeStats)> {
+        if tensor.tensor_mode == 17 {
+            return self.read_float_tiled_region(frame_id, tensor, region, options);
+        }
         let limits = Limits::default();
         let key = crate::backend::Key::manifest(frame_id);
 
@@ -1388,6 +1422,152 @@ impl Store {
         )?;
         for (index, tile) in indices.iter().zip(tiles.iter()) {
             weftcodec::place_tiled_tile_region(&mut out, region, &meta, &meta.tiles[*index], tile)?;
+        }
+        Ok((
+            RegionRead {
+                shape: extent,
+                bytes: out,
+                units_touched: indices.len() as u64,
+            },
+            tile_stats(&run),
+        ))
+    }
+
+    /// Region read for a mode-17 float-tiled object.
+    ///
+    /// Only the frame prefix (header plus descriptor) and the stored ranges of
+    /// intersecting tiles are read. Each decoded tile is verified against its
+    /// own `tile_root`; dtype, shape and logical root are checked against the
+    /// representation manifest before any tile is read. Like the mode-15 path
+    /// this does not re-verify the whole-frame trailer or content hash.
+    fn read_float_tiled_region(
+        &self,
+        frame_id: Hash32,
+        tensor: &TensorRepresentation,
+        region: &Region,
+        options: &TileDecodeOptions,
+    ) -> Result<(RegionRead, TileDecodeStats)> {
+        let limits = Limits::default();
+        let key = crate::backend::Key::manifest(frame_id);
+        let probe = self.with_backend(|backend| backend.read(&key, 0, 100))?;
+        if probe.len() < 100 {
+            return Err(Error::corrupt(
+                "mode-17 frame is shorter than its header and descriptor length",
+            ));
+        }
+        let (header, _) = weftcodec::frame::parse_prefix(&probe, &limits)?;
+        if header.mode != Mode::FloatTiled {
+            return Err(Error::corrupt(format!(
+                "tensor representation mode 17 has frame mode `{}`",
+                header.mode.as_str()
+            )));
+        }
+        if header.table_len != 0 || header.dep_count != 0 || header.chunk_count != 0 {
+            return Err(Error::corrupt(
+                "mode-17 frame must not carry dependency or chunk tables",
+            ));
+        }
+        let meta_len = u64::from(u32::from_le_bytes([
+            probe[96], probe[97], probe[98], probe[99],
+        ]));
+        if meta_len
+            .checked_add(4)
+            .map(|end| end > header.body_len)
+            .unwrap_or(true)
+        {
+            return Err(Error::corrupt(
+                "mode-17 descriptor length extends past the frame body",
+            ));
+        }
+        weftcodec::limits::check_len(meta_len, limits.max_string_bytes, "mode-17 descriptor")?;
+        let prefix_len = 96u64
+            .checked_add(4)
+            .and_then(|value| value.checked_add(meta_len))
+            .ok_or_else(|| Error::limit_exceeded("mode-17 prefix length overflows"))?;
+        let prefix = if probe.len() as u64 >= prefix_len {
+            probe
+        } else {
+            self.with_backend(|backend| backend.read(&key, 0, prefix_len))?
+        };
+        if prefix.len() as u64 != prefix_len {
+            return Err(Error::corrupt("mode-17 frame prefix is truncated"));
+        }
+        let descriptor_bytes = &prefix[100..];
+        let stored_payload_len = header.body_len - 4 - meta_len;
+        let meta = weftcodec::modes::parse_float_tiled_descriptor(
+            descriptor_bytes,
+            header.decoded_len,
+            stored_payload_len,
+            &limits,
+        )?;
+        if !float_dtype_matches_tensor(meta.dtype, tensor.dtype) {
+            return Err(Error::corrupt(format!(
+                "mode-17 dtype `{}` disagrees with manifest dtype `{}`",
+                meta.dtype.as_str(),
+                tensor.dtype.as_str()
+            )));
+        }
+        if meta.shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-17 shape disagrees with the representation manifest",
+            ));
+        }
+        if meta.logical_root != tensor.logical_root {
+            return Err(Error::corrupt(
+                "mode-17 logical_root disagrees with the manifest logical_root",
+            ));
+        }
+        let indices = weftcodec::float_tiled_region_indices(&meta, region)?;
+        if indices.is_empty() {
+            return Ok((
+                RegionRead {
+                    shape: region.extent(),
+                    bytes: Vec::new(),
+                    units_touched: 0,
+                },
+                TileDecodeStats::none(options),
+            ));
+        }
+        let extent = region.extent();
+        let element_size = meta.dtype.element_size();
+        let count = extent.iter().try_fold(1u64, |acc, dim| {
+            acc.checked_mul(*dim)
+                .ok_or_else(|| Error::limit_exceeded("region element count overflows u64"))
+        })?;
+        let byte_len = count
+            .checked_mul(element_size)
+            .ok_or_else(|| Error::limit_exceeded("region payload length overflows u64"))?;
+        weftcodec::limits::check_len(byte_len, limits.max_decoded_bytes, "region payload")?;
+        let byte_len = usize::try_from(byte_len)
+            .map_err(|_| Error::limit_exceeded("region payload does not fit usize"))?;
+        let mut out = vec![0u8; byte_len];
+        let sizes: Vec<Result<usize>> = indices
+            .iter()
+            .map(|index| {
+                usize::try_from(meta.tiles[*index].element_len)
+                    .map_err(|_| Error::limit_exceeded("float tile length does not fit usize"))
+            })
+            .collect();
+        let payload_base = prefix_len;
+        let (tiles, run) = run_bounded(
+            &indices,
+            &sizes,
+            options.threads,
+            options.max_inflight_bytes,
+            |_position, index| {
+                let entry = &meta.tiles[*index];
+                let offset = payload_base
+                    .checked_add(entry.offset)
+                    .ok_or_else(|| Error::limit_exceeded("float tile offset overflows"))?;
+                let stored =
+                    self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len))?;
+                weftcodec::decode_float_tile(meta.dtype, entry, &stored, &limits)
+                    .map_err(Error::from)
+            },
+            |tile| tile.len(),
+        )?;
+        for (index, tile) in indices.iter().zip(tiles.iter()) {
+            weftcodec::place_float_tile_region(&mut out, region, &meta, &meta.tiles[*index], tile)?;
         }
         Ok((
             RegionRead {
@@ -1908,7 +2088,7 @@ impl Store {
                 None => None,
             },
         };
-        match tiled {
+        match tiled.clone() {
             Some((tile_shape, origin)) => {
                 match self.prepare_mode15(dtype, shape, logical, &tile_shape, &limits) {
                     Ok((frame, root)) => {
@@ -1950,6 +2130,78 @@ impl Store {
                 if options.auto_tile_bytes.is_none() {
                     out.push(skipped(
                         TensorStrategy::TensorTiled,
+                        "no tile shape supplied".to_owned(),
+                    ));
+                }
+            }
+        }
+
+        // Mode 17 float-tiled. The same opt-in as mode 15 (an explicit tile
+        // shape or `auto_tile_bytes`); it is the independently decodable form
+        // of the mode-9 plane split, so it is offered only for the dtypes that
+        // have both a mode-9 layout and a logical-tensor identity.
+        match tiled {
+            Some((tile_shape, origin)) => match float_tensor_dtype(dtype) {
+                Some(float_dtype)
+                    if matches!(
+                        float_dtype,
+                        weftcodec::modes::FloatDtype::Bf16
+                            | weftcodec::modes::FloatDtype::F16
+                            | weftcodec::modes::FloatDtype::F32
+                    ) =>
+                {
+                    match self.prepare_mode17(dtype, shape, logical, &tile_shape, &limits) {
+                        Ok((frame, root)) => {
+                            let physical = frame.len() as u64;
+                            let estimate = options
+                                .estimate_ns(crate::cost_model::CostClass::TensorTiled, size);
+                            out.push(PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::FloatTiled,
+                                    applicable: true,
+                                    detail: format!(
+                                        "one mode-17 float-tiled frame tiled {tile_shape:?} ({origin})"
+                                    ),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    cost: Some(price(physical, estimate, options.lambda_ns)),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Tensor,
+                                    strategy_name: "float-tiled".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: Some(TensorRepresentation {
+                                        tensor_mode: 17,
+                                        dtype,
+                                        shape: shape.to_vec(),
+                                        logical_root: root,
+                                        layout: layout.to_value(dtype, shape)?,
+                                    }),
+                                    tile_shape: Some(tile_shape),
+                                }),
+                            });
+                        }
+                        Err(err) => out.push(skipped(TensorStrategy::FloatTiled, err.to_string())),
+                    }
+                }
+                Some(float_dtype) => out.push(skipped(
+                    TensorStrategy::FloatTiled,
+                    format!(
+                        "{} has no logical-tensor identity layout for mode 17",
+                        float_dtype.as_str()
+                    ),
+                )),
+                None => out.push(skipped(
+                    TensorStrategy::FloatTiled,
+                    format!("dtype {} has no mode-9 float layout", dtype.as_str()),
+                )),
+            },
+            None => {
+                if options.auto_tile_bytes.is_none() {
+                    out.push(skipped(
+                        TensorStrategy::FloatTiled,
                         "no tile shape supplied".to_owned(),
                     ));
                 }
@@ -2184,6 +2436,31 @@ impl Store {
         if meta.shape != shape {
             return Err(Error::corrupt(
                 "mode-15 shape disagrees with the write shape",
+            ));
+        }
+        Ok((frame, meta.logical_root))
+    }
+
+    fn prepare_mode17(
+        &self,
+        dtype: TensorElementDtype,
+        shape: &[u64],
+        logical: &[u8],
+        tile_shape: &[u64],
+        limits: &Limits,
+    ) -> Result<(Vec<u8>, Hash32)> {
+        let float_dtype = float_tensor_dtype(dtype).ok_or_else(|| {
+            Error::invalid_argument(format!(
+                "dtype `{}` has no float layout for mode 17",
+                dtype.as_str()
+            ))
+        })?;
+        let frame = weftcodec::encode_float_tiled(logical, float_dtype, shape, tile_shape, limits)?;
+        let parsed = Frame::parse(&frame, limits)?;
+        let meta = weftcodec::float_tiled_metadata(&parsed, limits)?;
+        if meta.shape != shape {
+            return Err(Error::corrupt(
+                "mode-17 shape disagrees with the write shape",
             ));
         }
         Ok((frame, meta.logical_root))
@@ -2611,6 +2888,7 @@ impl Store {
             14 => Mode::SemanticDelta,
             15 => Mode::TensorTiled,
             16 => Mode::SparseDelta,
+            17 => Mode::FloatTiled,
             other => {
                 return Err(Error::corrupt(format!(
                     "tensor_mode {other} is not a defined tensor frame mode"
@@ -2663,6 +2941,7 @@ impl Store {
             12 => self.decode_kv_page(&frame, tensor, &limits)?,
             13 => self.decode_activation(&frame, tensor, &limits)?,
             15 => self.decode_mode15(&frame, tensor, manifest, rep, &limits)?,
+            17 => self.decode_mode17(&frame, tensor, manifest, rep, &limits)?,
             _ => unreachable!("checked above"),
         };
         if logical.len() as u64 != manifest.size || logical.len() as u64 != rep.decoded_size {
@@ -2807,6 +3086,19 @@ impl Store {
             .map(|(bytes, _stats)| bytes)
     }
 
+    /// Sequential form used by the generic `kind:"tensor"` read dispatch.
+    fn decode_mode17(
+        &self,
+        frame: &Frame<'_>,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        rep: &Representation,
+        _limits: &Limits,
+    ) -> Result<Vec<u8>> {
+        self.decode_mode17_with_options(frame, tensor, manifest, rep, &TileDecodeOptions::default())
+            .map(|(bytes, _stats)| bytes)
+    }
+
     /// Decode a mode-15 frame, optionally on a bounded tile worker pool.
     ///
     /// Every tile root is verified, the assembled logical root is recomputed,
@@ -2908,7 +3200,108 @@ impl Store {
         Ok((out, tile_stats(&run)))
     }
 
-    #[allow(clippy::too_many_arguments)]
+    /// Decode a mode-17 frame, optionally on a bounded tile worker pool.
+    ///
+    /// This is the mode-9 plane split applied per tile: each tile is an exact
+    /// stand-alone float frame, so tiles are independent units. Every tile root
+    /// is verified, the assembled logical root is recomputed, and descriptor
+    /// lengths are checked against the representation manifest.
+    fn decode_mode17_with_options(
+        &self,
+        frame: &Frame<'_>,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        rep: &Representation,
+        options: &TileDecodeOptions,
+    ) -> Result<(Vec<u8>, TileDecodeStats)> {
+        let limits = Limits::default();
+        let descriptor = weftcodec::parse_float_tiled(frame, &limits)?;
+        let meta = &descriptor.meta;
+        if !float_dtype_matches_tensor(meta.dtype, tensor.dtype) {
+            return Err(Error::corrupt(format!(
+                "mode-17 dtype `{}` disagrees with manifest dtype `{}`",
+                meta.dtype.as_str(),
+                tensor.dtype.as_str()
+            )));
+        }
+        if meta.shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-17 shape disagrees with the representation manifest",
+            ));
+        }
+        if meta.logical_root != tensor.logical_root {
+            return Err(Error::corrupt(
+                "mode-17 logical_root disagrees with the manifest logical_root",
+            ));
+        }
+        let total_u64 = meta
+            .element_count
+            .checked_mul(meta.dtype.element_size())
+            .ok_or_else(|| Error::limit_exceeded("float tiled decoded bytes overflow u64"))?;
+        if total_u64 != manifest.size || total_u64 != rep.decoded_size {
+            return Err(Error::corrupt(
+                "mode-17 decoded length disagrees with the manifest",
+            ));
+        }
+        let total = usize::try_from(total_u64)
+            .map_err(|_| Error::limit_exceeded("float tiled decoded bytes do not fit usize"))?;
+        let mut out = vec![0u8; total];
+        let sizes: Vec<Result<usize>> = meta
+            .tiles
+            .iter()
+            .map(|entry| {
+                usize::try_from(entry.element_len)
+                    .map_err(|_| Error::limit_exceeded("float tile length does not fit usize"))
+            })
+            .collect();
+        let (tiles, run) = run_bounded(
+            &meta.tiles,
+            &sizes,
+            options.threads,
+            options.max_inflight_bytes,
+            |_position, entry| {
+                let start = usize::try_from(entry.offset)
+                    .map_err(|_| Error::limit_exceeded("float tile offset does not fit usize"))?;
+                let end = start
+                    .checked_add(usize::try_from(entry.compressed_len).map_err(|_| {
+                        Error::limit_exceeded("float tile length does not fit usize")
+                    })?)
+                    .ok_or_else(|| Error::limit_exceeded("float tile range overflows usize"))?;
+                let stored = descriptor
+                    .payload
+                    .get(start..end)
+                    .ok_or_else(|| Error::corrupt("float tile range is outside the payload"))?;
+                weftcodec::decode_float_tile(meta.dtype, entry, stored, &limits)
+                    .map_err(Error::from)
+            },
+            |tile| tile.len(),
+        )?;
+        let mut tiles_bytes = 0usize;
+        for (entry, tile) in meta.tiles.iter().zip(tiles.iter()) {
+            tiles_bytes = tiles_bytes.checked_add(tile.len()).ok_or_else(|| {
+                Error::limit_exceeded("float tiled decoded length overflows usize")
+            })?;
+            weftcodec::place_float_tile(&mut out, meta, entry, tile)?;
+        }
+        if tiles_bytes != total {
+            return Err(Error::corrupt(format!(
+                "float tiled decoded to {tiles_bytes} bytes but the descriptor requires {total}"
+            )));
+        }
+        let tensor_dtype = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("mode-17 dtype has no element layout"))?;
+        let logical = weftcodec::tensor::logical_root(tensor_dtype, &meta.shape, &out, &limits)?;
+        if logical != meta.logical_root {
+            return Err(Error::corrupt(format!(
+                "float tiled logical root {logical} does not match the descriptor's {}",
+                meta.logical_root
+            )));
+        }
+        Ok((out, tile_stats(&run)))
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn decode_delta(
         &self,

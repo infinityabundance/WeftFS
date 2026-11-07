@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0",
+  "aggregate_sha256": "51fa3dd9259f36740e41f9437c4d7467f04013a8f66906596e0bb61f40a70126",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 205,
+    "frame": 217,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
-      "aggregate_sha256_from": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
-      "aggregate_sha256_to": "647c88caf2f4b8775ef98d95ab6cb5bedafb12a1dfb0b0262696e1f210f48557",
-      "common_files": 319,
+      "aggregate_sha256_common": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
+      "aggregate_sha256_from": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
+      "aggregate_sha256_to": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
+      "common_files": 331,
       "differing": [],
-      "files_from": 319,
-      "files_to": 319,
+      "files_from": 331,
+      "files_to": 331,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -375,10 +375,27 @@
       ]
     },
     "17": {
+      "error": 8,
+      "valid": 3,
+      "vectors": [
+        "WeftCodec/conformance/v1/float-tiled/001_float_tiled_bf16_4x4.json",
+        "WeftCodec/conformance/v1/float-tiled/002_float_tiled_fp32_2x2x2.json",
+        "WeftCodec/conformance/v1/float-tiled/003_float_tiled_f16_single_tile.json",
+        "WeftCodec/conformance/v1/float-tiled/101_non_dividing_tile_shape.json",
+        "WeftCodec/conformance/v1/float-tiled/102_tile_rank_mismatch.json",
+        "WeftCodec/conformance/v1/float-tiled/103_tile_root_mismatch.json",
+        "WeftCodec/conformance/v1/float-tiled/104_truncated_payload.json",
+        "WeftCodec/conformance/v1/float-tiled/105_out_of_range_tile_index.json",
+        "WeftCodec/conformance/v1/float-tiled/106_unknown_exponent_coder.json",
+        "WeftCodec/conformance/v1/float-tiled/107_zero_dimension.json",
+        "WeftCodec/conformance/v1/float-tiled/108_logical_root_mismatch.json"
+      ]
+    },
+    "18": {
       "error": 1,
       "valid": 0,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json"
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json"
       ]
     },
     "2": {
@@ -507,7 +524,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 326,
+  "vector_count": 338,
   "vectors": [
     {
       "expect": {
@@ -1844,13 +1861,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved17.json"
       ],
       "mode": 17,
-      "mode_name": null,
+      "mode_name": "float_tiled",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json",
-      "sha256": "3a62bb12795145b816f2ffcc06cddd68734c320c1ab4aa0c85bba2822ec7d534",
+      "sha256": "32199c6325f29a51aff29c534b404fef2bfda785e5327dbda0b2cb6272509c3f",
+      "superseded_by": "017_unknown_mode_reserved18",
       "supersedes": [
         "017_unknown_mode_reserved16"
       ],
       "vector_name": "017_unknown_mode_reserved17"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved18.json"
+      ],
+      "mode": 18,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json",
+      "sha256": "ac21110005d9e2ff88892ebcf82c687054098494a7cb483d26b88ff1a6e26135",
+      "supersedes": [
+        "017_unknown_mode_reserved17"
+      ],
+      "vector_name": "017_unknown_mode_reserved18"
     },
     {
       "expect": {
@@ -2983,6 +3018,177 @@
       "sha256": "24b2b6b44a6e1f815ca81fc32f907b5e6526f2297b701a99f6e1223929233c87",
       "subkind": "context_root",
       "vector_name": "110_unknown_key"
+    },
+    {
+      "expect": {
+        "content_root": "35153c5803d64f741aa02b737cb4cf0f300207f1613f09ffcc4e90668c151118",
+        "decoded_sha256": "cc6a84643457dbf8cb7bbfd5ac91393643de84b7c73047e785c49a23cecc0a18",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/001_float_tiled_bf16_4x4.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/001_float_tiled_bf16_4x4.json",
+      "sha256": "d581e818e1057dbe93422f071411a41c682279628f15bd82536abf2a4d509e62",
+      "subkind": "float_tiled",
+      "vector_name": "001_float_tiled_bf16_4x4"
+    },
+    {
+      "expect": {
+        "content_root": "2608e85fdb57a59180e410b4d2c7687d6f94c5c7f47dcb928f8ded28655ad06e",
+        "decoded_sha256": "a6d3dd386f1d0be29d79f0e6b3422d9a62f198621d49142c8e8648c3d83bf14a",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/002_float_tiled_fp32_2x2x2.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/002_float_tiled_fp32_2x2x2.json",
+      "sha256": "1ed71a0b63c1f75ec9557c6a148f4e46d2245f7b1473069614c2acfa668feabb",
+      "subkind": "float_tiled",
+      "vector_name": "002_float_tiled_fp32_2x2x2"
+    },
+    {
+      "expect": {
+        "content_root": "833426ce7c4baf5e1b8de7691c6aff366695bdb6e6272d84f23de3f2dc9f2195",
+        "decoded_sha256": "4458199158774caf147be50e4d47c65eacb312cdae5c9cc4490323fa9bc85978",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/003_float_tiled_f16_single_tile.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/003_float_tiled_f16_single_tile.json",
+      "sha256": "4c7837f7a0ba660bfca195b9463de4b482caec949afd2aa72b9d17f4fdce40ae",
+      "subkind": "float_tiled",
+      "vector_name": "003_float_tiled_f16_single_tile"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/101_non_dividing_tile_shape.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/101_non_dividing_tile_shape.json",
+      "sha256": "99ecceb6bb9da0e08a7931941f3ca6722634020b23a29a26f3422519b644081a",
+      "subkind": "float_tiled",
+      "vector_name": "101_non_dividing_tile_shape"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/102_tile_rank_mismatch.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/102_tile_rank_mismatch.json",
+      "sha256": "670a4abc9ebae6a50ca6cb496d474ea3814e4114ce9b205daab91f28a21360c5",
+      "subkind": "float_tiled",
+      "vector_name": "102_tile_rank_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/103_tile_root_mismatch.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/103_tile_root_mismatch.json",
+      "sha256": "b47daaf72ab97a402e52ed0c48978245d547878d09de8dac6cfc4560e36b867f",
+      "subkind": "float_tiled",
+      "vector_name": "103_tile_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/104_truncated_payload.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/104_truncated_payload.json",
+      "sha256": "c10223ee86e4618b618805080c55c558c2f089c7017c1214fc467640c3c14109",
+      "subkind": "float_tiled",
+      "vector_name": "104_truncated_payload"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/105_out_of_range_tile_index.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/105_out_of_range_tile_index.json",
+      "sha256": "80308af63817a00e29f1193cd5d9196d2affa577b89e53db46034a3eb29af7cf",
+      "subkind": "float_tiled",
+      "vector_name": "105_out_of_range_tile_index"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/106_unknown_exponent_coder.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/106_unknown_exponent_coder.json",
+      "sha256": "6ecd26b7ebc5be9d6a33cb40d9ee2fc3bed987984fcf401728d446e1348fecd7",
+      "subkind": "float_tiled",
+      "vector_name": "106_unknown_exponent_coder"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/107_zero_dimension.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/107_zero_dimension.json",
+      "sha256": "fbd6ec82143928d50673c2bd148b902ccb2d550ba63f02eb442adf99feefeaa7",
+      "subkind": "float_tiled",
+      "vector_name": "107_zero_dimension"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled/108_logical_root_mismatch.json"
+      ],
+      "mode": 17,
+      "mode_name": "float_tiled",
+      "path": "WeftCodec/conformance/v1/float-tiled/108_logical_root_mismatch.json",
+      "sha256": "f4d1dfe0957e38d69b4ddc85e8b02648676eebc4b8d8f177d988966a770c2d20",
+      "subkind": "float_tiled",
+      "vector_name": "108_logical_root_mismatch"
     },
     {
       "expect": {

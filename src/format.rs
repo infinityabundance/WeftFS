@@ -326,6 +326,7 @@ impl TensorRepresentation {
             "activation" => Some(13),
             "semantic-delta" => Some(14),
             "tensor-tiled" => Some(15),
+            "float-tiled" => Some(17),
             "sparse-delta" => Some(16),
             _ => None,
         }
@@ -342,6 +343,7 @@ impl TensorRepresentation {
             14 => Some("semantic-delta"),
             15 => Some("tensor-tiled"),
             16 => Some("sparse-delta"),
+            17 => Some("float-tiled"),
             _ => None,
         }
     }

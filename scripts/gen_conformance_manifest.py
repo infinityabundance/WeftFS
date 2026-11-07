@@ -53,6 +53,7 @@ MODE_NAMES = {
     14: "semantic_delta",
     15: "tensor_tiled",
     16: "sparse_delta",
+    17: "float_tiled",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -66,6 +67,7 @@ CODEC_DIRS = {
     "semantic-delta": ("frame", "semantic_delta", 14, "semantic_delta"),
     "tensor-tiled": ("frame", "tensor_tiled", 15, "frame"),
     "sparse-delta": ("frame", "sparse_delta", 16, "sparse_delta"),
+    "float-tiled": ("frame", "float_tiled", 17, "frame"),
     "structured": ("wcb", None, None, "wcb"),
     "selectors": ("selector", None, None, "selector"),
     "context": ("context", "context_root", None, "context"),
