@@ -14,6 +14,16 @@ run).
 Harness: `examples/family_lifecycle.rs`. Court:
 `bench/scripts/checkpoint_family_court.sh`.
 
+**Revision provenance.** Every measured phase ran against the working tree that
+was committed, immediately afterwards and unchanged in every measurement path, as
+`0d005ff`. The receipt's `repo_weftfs` field therefore records the parent HEAD at
+run time (`0c84c34`), because the harness was still uncommitted while it ran.
+The only later code change to the harness is the `recompare` subcommand added in
+`1901336`, which recomputes the `comparison` block from the `ingest` and
+`baselines` blocks already inside each configuration's receipt (it was used once,
+for the object-store configuration's per-tensor note); no measurement phase was
+re-run, and no measured value changed.
+
 The receipt is the authoritative evidence: it carries every per-phase JSON
 (ingest, measure, baselines, topology, recovery, both GC runs), every per-tensor
 row, every latency sample, and the corpus hashes. The court's combined `tee` log
