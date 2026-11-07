@@ -1,0 +1,58 @@
+{
+  "kind": "correctness-verification",
+  "timestamp_utc": "20261107T064719Z",
+  "host": {
+    "uname": "Linux 7.3.1-1-cachyos x86_64",
+    "docker": "Docker version 29.1.5, build 0e6fee6"
+  },
+  "revisions": {
+    "WeftFS": "468c1cf7b939a31e47d3d7dc97b26375b9c42082",
+    "WeftCodec": "46713726cd454f587c4db006ae723bd4bd4474a2",
+    "WeftCodec-Go": "bf6bb70e827fe801fbe83c9e352d0ff3621dc704",
+    "WeftFS-Go": "988062708406387dd1a5bf9005161b02b1f1decf"
+  },
+  "summary": {
+    "courts": 30,
+    "passed": 29,
+    "failed": 1,
+    "skipped": 0
+  },
+  "courts": {
+    "rust_codec": "pass",
+    "rust_store": "fail",
+    "go_codec": "pass",
+    "rust_fuse": "pass",
+    "go_store_and_fuse": "pass",
+    "codec_cross_rust_encode": "pass",
+    "codec_cross_go_all": "pass",
+    "codec_cross_rust_decode": "pass",
+    "codec_cross_compare": "pass",
+    "spec_drift": "pass",
+    "claims": "pass",
+    "conformance_manifest": "pass",
+    "conformance_coverage": "pass",
+    "generated_types": "pass",
+    "buck2_cas": "pass",
+    "buck2_cas_store": "pass",
+    "threefs": "pass",
+    "agent_memory": "pass",
+    "ceph_rgw": "pass",
+    "s3_court": "pass",
+    "context_cross_rust_gen": "pass",
+    "context_cross_go_gen": "pass",
+    "context_cross_rust_parse": "pass",
+    "context_cross_compare": "pass",
+    "capability_cross_rust_gen": "pass",
+    "capability_cross_go_gen": "pass",
+    "capability_cross_rust_verify": "pass",
+    "capability_cross_go_verify": "pass",
+    "capability_cross_compare": "pass",
+    "fuzz_diff": "pass"
+  },
+  "receipts": {
+    "ceph_rgw": "bench/receipts/ceph-rgw-20261107T064719Z.json",
+    "s3_court": "bench/receipts/s3-court-20261107T064719Z.json"
+  },
+  "result": "fail",
+  "raw_log": "bench/receipts/verify-20261107T064719Z.log"
+}

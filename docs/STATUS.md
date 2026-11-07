@@ -2,7 +2,7 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261107T052349Z.json` (30/30 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261107T065848Z.json` (30/30 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
@@ -5478,3 +5478,12 @@ watch (only `REFRESH`), no TLS/TCP, and no claim that a caller buffer is grown
 for it. No GPU-direct path: DCP still copies into the planner's tensor because
 that is DCP's own contract; Orbax feeds `device_put` from the mapping without an
 extra host copy. Single host, warm cache, synthetic fixtures.
+
+### Verification of the checkpoint-service tree
+
+`bench/receipts/verify-20261107T065848Z.json`: **30/30 courts pass, 0 failed, 0
+skipped** at WeftFS `468c1cf`. The immediately preceding run,
+`verify-20261107T064719Z.json` (29/30), is retained: `rust_store` failed on that
+run and passed on the rerun at the same revision. The failing court is the
+pre-existing `tests/quota.rs` writer-lock contention flake described above; no
+test was changed, skipped, or deleted.
