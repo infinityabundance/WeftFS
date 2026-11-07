@@ -5656,4 +5656,4 @@ because mode 17's is raw and the identity anchor is normative.
   ./...` all packages; WeftFS-Go `go test -race ./...` store+fusefs all pass;
   conformance Rust 246 pass / 0 fail / 109 skip, Go 246/0/109, Python 229/0/126
   (355 total); claims 555 OK; spec drift 42/42; `scripts/verify-all.sh`
-  **30/30 pass, 0 failed, 0 skipped** (`bench/receipts/verify-20261107T171355Z.json`).
+  **30/30 pass, 0 failed, 0 skipped** (`bench/receipts/verify-20261107T172305Z.json`).
