@@ -4,7 +4,9 @@ Research preview. v1.0.0 is the R2–R26 subphase release: the first release cut
 after v0.9.0. It does **not** freeze a new wire format. Every frozen v1 artifact
 from v0.9.0 is unchanged: the WFT1 frame, `weft.manifest.v1`/`v2`/`v3`/`v4`,
 the selector grammar, codec payload modes 0–16, canonical WCB, store fixture
-v1, and every conformance vector. The version bump is metadata plus one
+v1, and every conformance vector. **v1.0.0 covers codec modes 0–16.** Mode 17
+(`FLOAT_TILED`) and mode 18 (`FLOAT_TILED_STREAMS`) are additive allocations
+made *after* v1.0.0; v1.1.0 covers modes 0–17, and mode 18 is post-v1.1.0. The version bump is metadata plus one
 corrected tool-version string (see “Version bump and byte identity”).
 
 `1.0.0` here means “the first release whose program surface we are willing to
@@ -149,7 +151,7 @@ subphase. Full detail and raw receipts are in `docs/STATUS.md` and
 ### R6 — independent Python reader (modes 9–16)
 
 - 326 conformance vectors: 218 pass, 0 fail, 108 skip; no mode 0–16 vector
-  skipped. 16,003 randomized frames identical to the Rust CLI; 1,600 mutants,
+  skipped (the Python reader at that revision covered modes 0–16 only). 16,003 randomized frames identical to the Rust CLI; 1,600 mutants,
   1,581 expected reject classes all matched; 627/627 shard roots identical.
 - Residual: Python still does not implement selectors, Context Roots,
   capability envelopes, checkpoint manifests, archives, or WEFT-TENSOR layout

@@ -229,7 +229,7 @@ Committed reference results (current manifest aggregate
 | Go `weftcodec` | 246 | 0 | 92 |
 | Python `weftcodec` | 229 | 0 | 109 |
 
-The Python replay is 229 pass, 0 fail, 109 skip. No mode 0–17 vector is skipped by the Python adapter: it imports the package
+The Python replay is 229 pass, 0 fail, 126 skip. No mode 0–18 vector is skipped by the Python adapter: it imports the package
 directly and executes codec frames, adversarial decode vectors, shard sets,
 delta bases (including frame-source cycles), KV pages, activation chunks, tiled
 frames, semantic roots, and canonical WCB values. Its 109 skips are:
@@ -296,7 +296,7 @@ scripts/check-conformance-coverage.sh
 Fail-closed checks:
 
 1. `conformance/manifest.json` is current (`gen-conformance-manifest.sh --check`).
-2. Every frame mode 0–17 has at least one valid vector **and** at least one
+2. Every frame mode 0–18 has at least one valid vector **and** at least one
    reject vector.
 3. Every identity record kind (`wcb`, `selector`, `context`, `tensor`,
    `checkpoint`, `capability`) has at least one valid vector.

@@ -1,0 +1,236 @@
+{
+ "schema": "weftfs.mode18.court.v1",
+ "generated_utc": "20261107T165215Z",
+ "environment": {
+  "court": "weft/bench-court:1",
+  "image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+  "kernel": "7.3.1-1-cachyos",
+  "memory": "3g",
+  "memory_swap": "3g",
+  "cpus": 4,
+  "pids": 1024,
+  "tmpfs": "/tmp 1g",
+  "simd_path": "avx2"
+ },
+ "corpus": {
+  "file": ".docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+  "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+  "tensor": "model.embed_tokens.weight",
+  "dtype": "bf16",
+  "shape": [
+   151936,
+   896
+  ],
+  "tensor_bytes": 272269312,
+  "mib": 259.65625
+ },
+ "method": {
+  "reps": 3,
+  "tile_shape": [
+   64,
+   896
+  ],
+  "threads": "whole decode at 1 and 4 tile workers; mode 9 has no independent tile",
+  "region_rows": "whole tensor, 100 rows, 1 row",
+  "times": "median of per-configuration samples; one warmup decode before the whole-decode samples"
+ },
+ "calibration_mode18": {
+  "calibration_id": "weftfs-mode18/decode-calibration/v1",
+  "fit": {
+   "fixed_ns": 0,
+   "ns_per_mib": 3674824
+  },
+  "large": {
+   "logical_bytes": 16777216,
+   "median_ns": 58769939
+  },
+  "method": "single-thread mode-18 decode, 1 warmup + N reps, median; affine fit from the 128 KiB and 16 MiB medians",
+  "small": {
+   "logical_bytes": 131072,
+   "median_ns": 432106
+  }
+ },
+ "rows": [
+  {
+   "encode_ns": 1124849633,
+   "mode": "mode9",
+   "n_streams": null,
+   "physical_bytes": 180623816,
+   "region_100_rows": {
+    "bytes": 0,
+    "mib_per_s": 0.0,
+    "ns": 309077784
+   },
+   "region_1_row": {
+    "bytes": 0,
+    "mib_per_s": 0.0,
+    "ns": 309077784,
+    "streams_touched": null
+   },
+   "region_whole": {
+    "bytes": 0,
+    "mib_per_s": 0.0,
+    "ns": 309077784
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 840.100011846856,
+    "threads_1_ns": 309077784,
+    "threads_4_mib_per_s": 843.6056540875046,
+    "threads_4_ns": 307793397
+   }
+  },
+  {
+   "encode_ns": 1167001352,
+   "mode": "mode17",
+   "n_streams": null,
+   "physical_bytes": 181541557,
+   "region_100_rows": {
+    "bytes": 179200,
+    "mib_per_s": 603.6083944364386,
+    "ns": 283128
+   },
+   "region_1_row": {
+    "bytes": 1792,
+    "mib_per_s": 12.859368651145992,
+    "ns": 132898,
+    "streams_touched": null
+   },
+   "region_whole": {
+    "bytes": 272269312,
+    "mib_per_s": 759.1718899154571,
+    "ns": 342025638
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 715.8514596307926,
+    "threads_1_ns": 362723644,
+    "threads_4_mib_per_s": 1828.3240724534608,
+    "threads_4_ns": 142018723
+   }
+  },
+  {
+   "encode_ns": 1502167752,
+   "mode": "mode18",
+   "n_streams": 1,
+   "physical_bytes": 181598555,
+   "region_100_rows": {
+    "bytes": 179200,
+    "mib_per_s": 411.2534742693506,
+    "ns": 415555
+   },
+   "region_1_row": {
+    "bytes": 1792,
+    "mib_per_s": 6.6736868258889865,
+    "ns": 256078,
+    "streams_touched": 2
+   },
+   "region_whole": {
+    "bytes": 272269312,
+    "mib_per_s": 760.7754242397269,
+    "ns": 341304729
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 602.0982297077851,
+    "threads_1_ns": 431252306,
+    "threads_4_mib_per_s": 1800.3598913572575,
+    "threads_4_ns": 144224636
+   }
+  },
+  {
+   "encode_ns": 1536862332,
+   "mode": "mode18",
+   "n_streams": 2,
+   "physical_bytes": 182211848,
+   "region_100_rows": {
+    "bytes": 179200,
+    "mib_per_s": 331.73791785480654,
+    "ns": 515161
+   },
+   "region_1_row": {
+    "bytes": 1792,
+    "mib_per_s": 5.320640397386044,
+    "ns": 321199,
+    "streams_touched": 4
+   },
+   "region_whole": {
+    "bytes": 272269312,
+    "mib_per_s": 707.7107720319152,
+    "ns": 366895998
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 453.54031722310845,
+    "threads_1_ns": 572509742,
+    "threads_4_mib_per_s": 1501.0100285462518,
+    "threads_4_ns": 172987685
+   }
+  },
+  {
+   "encode_ns": 1522737653,
+   "mode": "mode18",
+   "n_streams": 4,
+   "physical_bytes": 183446037,
+   "region_100_rows": {
+    "bytes": 179200,
+    "mib_per_s": 393.52131689232755,
+    "ns": 434280
+   },
+   "region_1_row": {
+    "bytes": 1792,
+    "mib_per_s": 5.083131448780067,
+    "ns": 336207,
+    "streams_touched": 8
+   },
+   "region_whole": {
+    "bytes": 272269312,
+    "mib_per_s": 775.6459741728684,
+    "ns": 334761294
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 428.20961541047836,
+    "threads_1_ns": 606376505,
+    "threads_4_mib_per_s": 1390.2999854612335,
+    "threads_4_ns": 186762751
+   }
+  },
+  {
+   "encode_ns": 1539194786,
+   "mode": "mode18",
+   "n_streams": 8,
+   "physical_bytes": 185923029,
+   "region_100_rows": {
+    "bytes": 179200,
+    "mib_per_s": 388.81202507166586,
+    "ns": 439540
+   },
+   "region_1_row": {
+    "bytes": 1792,
+    "mib_per_s": 4.33108213418621,
+    "ns": 394586,
+    "streams_touched": 16
+   },
+   "region_whole": {
+    "bytes": 272269312,
+    "mib_per_s": 691.0092319618458,
+    "ns": 375763793
+   },
+   "whole_decode": {
+    "threads_1_mib_per_s": 408.2048992561588,
+    "threads_1_ns": 636092929,
+    "threads_4_mib_per_s": 1342.665119957816,
+    "threads_4_ns": 193388691
+   }
+  }
+ ],
+ "conclusions": {
+  "four_thread_winner": "mode 17 (1828.3 MiB/s), then mode 18 n=1 (1800.4), n=2 (1501.0), n=4 (1390.3), n=8 (1342.7), mode 9 (843.6)",
+  "single_thread": "mode 9 840.1 MiB/s, mode 17 715.9, mode 18 n=1 602.1, n=2 453.5, n=4 428.2, n=8 408.2",
+  "multi_stream_verdict": "lost: at four threads every mode-18 stream count is slower than tile-parallel mode 17, and at one thread it is 16-43% slower; bytes are +0.03% to +2.41% over mode 17",
+  "region_verdict": "lost: 100-row 0.42-0.52 ms vs mode 17 0.28 ms; 1-row 0.26-0.40 ms vs 0.13 ms; mode 18 touches whole tiles and every stream",
+  "cause": "the wide-word four-stream gather kernel decodes fewer symbols per probe than the shipped per-stream AVX2 kernel, and deinterleaving the exponent/mantissa planes costs one full pass; the four 256-byte Huffman tables add bytes",
+  "no_gpu_claim": "no GPU was present in the court and no GPU path was executed"
+ },
+ "checks": [
+  "every whole decode compared byte-for-byte with the source tensor",
+  "every region decode length checked against rows*896*2",
+  "calibration used 1 warmup + 7 repetitions at 128 KiB and 16 MiB"
+ ]
+}

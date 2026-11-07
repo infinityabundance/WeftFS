@@ -1,0 +1,150 @@
+{
+  "generated_utc": "20261107T170536Z",
+  "implementations": [
+    {
+      "bucket": "weft-s3-court-20261107t170536z",
+      "endpoint": "http://weft-s3-minio-409585:9000",
+      "name": "MinIO RELEASE.2025-04-22T22-12-26Z",
+      "summary": {
+        "supported": 8,
+        "total": 8,
+        "unsupported": 0
+      }
+    },
+    {
+      "bucket": "weft-ceph-court-20261107t170536z",
+      "endpoint": "http://10.213.77.10:8080",
+      "name": "Ceph RGW 19.2.0",
+      "summary": {
+        "supported": 8,
+        "total": 8,
+        "unsupported": 0
+      }
+    }
+  ],
+  "label": "Two independent S3 implementations measured with the same harness, same checks, same client. Single-host synthetic objects; protocol behaviour only, not a durability or production claim.",
+  "mode": "comparison",
+  "rows": [
+    {
+      "name": "if-none-match-create-once",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "create=200 repeat=412 bytes_kept=true",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "create=200 repeat=412 bytes_kept=true",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "if-match-conditional-overwrite",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "matching accepted; stale=412 PreconditionFailed",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "accepted only after de-quoting; stale=412 PreconditionFailed",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "range-open-ended",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "status=206 bytes=12 content-range=bytes 4-15/16",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "status=206 bytes=12 content-range=bytes 4-15/16",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "range-out-of-range",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "past_end=416/InvalidRange at_eof=416/InvalidRange",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "past_end=416/InvalidRange at_eof=416/InvalidRange",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "head-missing-key",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "status=404",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "status=404",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "delete-idempotent",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "delete=204 delete_again=204",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "delete=204 delete_again=204",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "list-pagination",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "pages=3 keys=5 duplicates=0 complete=true",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "pages=3 keys=5 duplicates=0 complete=true",
+          "supported": true
+        }
+      ]
+    },
+    {
+      "name": "stale-cas-probe",
+      "results": [
+        {
+          "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+          "summary": "winner=200 (form=as-returned) loser=412 winner_bytes_kept=true",
+          "supported": true
+        },
+        {
+          "implementation": "Ceph RGW 19.2.0",
+          "summary": "winner=200 (form=dequoted) loser=412 winner_bytes_kept=true",
+          "supported": true
+        }
+      ]
+    }
+  ],
+  "schema": "weft-s3-compat-matrix-v1"
+}

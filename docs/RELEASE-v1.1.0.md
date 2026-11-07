@@ -163,7 +163,9 @@ of exponent plane), plane join 18.0656 ms, whole mode-9 decode 34.7865 ms
 **Mode 17 `FLOAT_TILED`** (additive): per-tile mode-9 plane split, per-tile
 `tile_root`, full decode verifies every tile and the logical root, region reads
 report `tiles_touched`. Modes 0–16 are byte-identical; the reserved reject is
-now 18. 3 valid + 8 reject vectors in both codec repos, byte-identical frames.
+now 18. **v1.1.0 covers codec modes 0–17.** Mode 18 (`FLOAT_TILED_STREAMS`) is
+additive and post-v1.1.0: it is not part of this release and did not change any
+v1.1.0 byte. 3 valid + 8 reject vectors in both codec repos, byte-identical frames.
 Real Qwen BF16 embedding `[151936,896]`, tile `[64,896]`: mode 9
 **180,623,816 B** vs mode 17 **181,541,557 B (+0.51 %)**; write 2,287 vs
 7,435 ms (**3.25x slower**); whole read 745.7 -> 486.6 ms at one thread and

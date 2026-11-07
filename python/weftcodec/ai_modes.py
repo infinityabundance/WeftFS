@@ -40,6 +40,7 @@ from .hashing import (
     DOMAIN_TENSOR_SEMANTIC_VALUES,
     DOMAIN_TENSOR_TILE,
     DOMAIN_TENSOR_FLOAT_TILE,
+    DOMAIN_TENSOR_FLOAT_TILE_STREAMS,
     DOMAIN_TENSOR_VALUES,
     DOMAIN_TENSOR_SHARDED_PAYLOAD,
     hash_domain,
@@ -2910,5 +2911,450 @@ def decode_float_tiled(frame, limits: Limits) -> bytes:
     if logical != meta.logical_root:
         raise Corrupt(
             "float tiled tensor logical root does not match the descriptor"
+        )
+    return bytes(out)
+
+
+# ---------------------------------------------------------------------------
+# Mode 18 -- FLOAT_TILED_STREAMS
+# ---------------------------------------------------------------------------
+
+FLOAT_TILED_STREAMS_SCHEMA = "weft.ai.tensor_tiled_streams.v1"
+FLOAT_TILED_STREAMS_MIN = 1
+FLOAT_TILED_STREAMS_MAX = 16
+
+_FLOAT_TILED_STREAMS_KEYS = (
+    "schema",
+    "dtype",
+    "shape",
+    "element_count",
+    "layout",
+    "tile_shape",
+    "tile_counts",
+    "exponent_coder",
+    "n_streams",
+    "tiles",
+    "payload_len",
+    "logical_root",
+)
+
+_FLOAT_TILE_STREAMS_KEYS = (
+    "index",
+    "dims",
+    "offset",
+    "compressed_len",
+    "exponent_plane_len",
+    "mantissa_plane_len",
+    "element_len",
+    "stream_offsets",
+    "tile_root",
+)
+
+
+@dataclass
+class FloatTileStreamsEntry:
+    index: int
+    dims: "list[int]"
+    offset: int
+    compressed_len: int
+    exponent_plane_len: int
+    mantissa_plane_len: int
+    element_len: int
+    stream_offsets: "list[int]"
+    tile_root: bytes
+
+
+@dataclass
+class FloatTiledStreamsMeta:
+    dtype: str
+    shape: "list[int]"
+    element_count: int
+    tile_shape: "list[int]"
+    tile_counts: "list[int]"
+    n_streams: int
+    tiles: "list[FloatTileStreamsEntry]"
+    payload_len: int
+    logical_root: bytes
+
+
+def interleaved_stream_len(total: int, stream: int, n_streams: int) -> int:
+    if n_streams <= 0 or total <= stream:
+        return 0
+    return (total - stream + n_streams - 1) // n_streams
+
+
+def float_tile_streams_root(
+    dtype: str,
+    dims: "list[int]",
+    element_len: int,
+    exponent_plane_len: int,
+    mantissa_plane_len: int,
+    n_streams: int,
+    stream_offsets: "list[int]",
+    tile_bytes: bytes,
+    limits: Limits,
+) -> bytes:
+    record = {
+        "dtype": dtype,
+        "dims": _u64_vec(dims),
+        "element_len": wcb.U64(element_len),
+        "exponent_plane_len": wcb.U64(exponent_plane_len),
+        "mantissa_plane_len": wcb.U64(mantissa_plane_len),
+        "n_streams": wcb.U64(n_streams),
+        "stream_offsets": _u64_vec(stream_offsets),
+        "values_hash": values_hash(tile_bytes),
+    }
+    return hash_domain(DOMAIN_TENSOR_FLOAT_TILE_STREAMS, wcb.encode(record, limits))
+
+
+def parse_float_tiled_streams_descriptor(
+    descriptor_bytes: bytes, decoded_len: int, payload_len: int, limits: Limits
+) -> FloatTiledStreamsMeta:
+    map_value = _map(
+        _decode_descriptor(descriptor_bytes, limits), "float tiled streams tensor"
+    )
+    _exact_keys(map_value, _FLOAT_TILED_STREAMS_KEYS, "float tiled streams tensor")
+    schema = _text(map_value, "schema")
+    if schema != FLOAT_TILED_STREAMS_SCHEMA:
+        raise Malformed("unsupported float tiled streams schema `%s`" % schema)
+    dtype = _text(map_value, "dtype")
+    if dtype not in FLOAT_FIELD_BITS:
+        raise Malformed("unknown float tiled streams dtype `%s`" % dtype)
+    if dtype not in FLOAT_TILED_DTYPES:
+        raise UnsupportedFeature(
+            "float tiled streams dtype `%s` is not implemented in v1" % dtype
+        )
+    layout = _text(map_value, "layout")
+    if layout != TILE_LAYOUT:
+        raise Malformed(
+            "float tiled streams layout `%s` is specified but not implemented "
+            "in v1 (only %s)" % (layout, TILE_LAYOUT)
+        )
+    coder = _text(map_value, "exponent_coder")
+    if coder != PLANE_CODEC:
+        raise Malformed(
+            "unsupported float tiled streams exponent coder `%s` (v1 allows `%s`)"
+            % (coder, PLANE_CODEC)
+        )
+    n_streams = _u64(map_value, "n_streams")
+    if not FLOAT_TILED_STREAMS_MIN <= n_streams <= FLOAT_TILED_STREAMS_MAX:
+        raise Malformed(
+            "n_streams %d is outside %d..=%d"
+            % (n_streams, FLOAT_TILED_STREAMS_MIN, FLOAT_TILED_STREAMS_MAX)
+        )
+    shape = _shape(map_value)
+    element_count = _validate_shape(shape, limits, "float tiled streams tensor")
+    declared_count = _u64(map_value, "element_count")
+    if declared_count != element_count:
+        raise Malformed(
+            "float tiled streams element_count %d does not match shape product %d"
+            % (declared_count, element_count)
+        )
+    sign_bits, exponent_bits, mantissa_bits = FLOAT_FIELD_BITS[dtype]
+    element_size = (sign_bits + exponent_bits + mantissa_bits) // 8
+    decoded_bytes = _checked_mul(
+        element_count, element_size, "float tiled streams decoded bytes"
+    )
+    _check_len(
+        decoded_bytes, limits.max_decoded_bytes, "float tiled streams decoded bytes"
+    )
+    if decoded_len != decoded_bytes:
+        raise Corrupt(
+            "float tiled streams decoded_len is %d but the descriptor requires %d"
+            % (decoded_len, decoded_bytes)
+        )
+    tile_shape = _array_u64(map_value, "tile_shape")
+    counts = _tile_counts(shape, tile_shape)
+    if _array_u64(map_value, "tile_counts") != counts:
+        raise Malformed(
+            "float tiled streams tile_counts %r do not match shape/tile_shape %r"
+            % (_array_u64(map_value, "tile_counts"), counts)
+        )
+    tile_elements = _validate_shape(tile_shape, limits, "float tensor tile")
+    tile_element_len = _checked_mul(
+        tile_elements, element_size, "float tensor tile byte length"
+    )
+    tile_count = 1
+    for count in counts:
+        tile_count = _checked_mul(tile_count, count, "float tensor tile count")
+    if tile_count > limits.max_structured_items:
+        raise LimitExceeded(
+            "float tensor tile count %d exceeds limit %d"
+            % (tile_count, limits.max_structured_items)
+        )
+    mantissa_total_bits = _checked_mul(
+        tile_elements, sign_bits + mantissa_bits, "float tensor tile mantissa bits"
+    )
+    expected_tile_mantissa = _checked_add(
+        mantissa_total_bits, 7, "float tensor tile mantissa length"
+    ) // 8
+    declared_payload_len = _u64(map_value, "payload_len")
+    if declared_payload_len != payload_len:
+        raise Corrupt(
+            "float tiled streams payload is %d bytes but metadata declares %d"
+            % (payload_len, declared_payload_len)
+        )
+    entries = map_value.get("tiles")
+    if not isinstance(entries, list):
+        raise Malformed("float tiled streams `tiles` must be an array")
+    if len(entries) != tile_count:
+        raise Malformed(
+            "float tiled streams has %d tile entries but the grid requires %d"
+            % (len(entries), tile_count)
+        )
+    tiles = []
+    expected_offset = 0
+    for position, item in enumerate(entries):
+        entry = _map(item, "float tensor streams tile")
+        _exact_keys(entry, _FLOAT_TILE_STREAMS_KEYS, "float tensor streams tile")
+        index = _u64(entry, "index")
+        if index != position:
+            raise Malformed(
+                "float tiled streams entry %d declares index %d; entries must be "
+                "in canonical order" % (position, index)
+            )
+        dims = _array_u64(entry, "dims")
+        if dims != tile_shape:
+            raise Malformed(
+                "float tensor tile %d dims %r do not equal tile_shape %r; "
+                "partial tiles are not defined in v1" % (position, dims, tile_shape)
+            )
+        declared_element_len = _u64(entry, "element_len")
+        if declared_element_len != tile_element_len:
+            raise Malformed(
+                "float tensor tile %d element_len %d does not match %d"
+                % (position, declared_element_len, tile_element_len)
+            )
+        offset = _u64(entry, "offset")
+        if offset != expected_offset:
+            raise Malformed(
+                "float tensor tile %d offset %d is not the contiguous offset %d"
+                % (position, offset, expected_offset)
+            )
+        compressed_len = _u64(entry, "compressed_len")
+        exponent_plane_len = _u64(entry, "exponent_plane_len")
+        mantissa_plane_len = _u64(entry, "mantissa_plane_len")
+        if mantissa_plane_len != expected_tile_mantissa:
+            raise Malformed(
+                "float tensor tile %d mantissa_plane_len %d does not match the "
+                "tile arithmetic %d"
+                % (position, mantissa_plane_len, expected_tile_mantissa)
+            )
+        if exponent_plane_len + mantissa_plane_len != compressed_len:
+            raise Malformed(
+                "float tensor tile %d plane lengths do not sum to compressed_len"
+                % position
+            )
+        expected_offset = _checked_add(
+            expected_offset, compressed_len, "float tensor tile offset"
+        )
+        stream_offsets = _array_u64(entry, "stream_offsets")
+        if len(stream_offsets) != 2 * n_streams:
+            raise Malformed(
+                "float tile %d has %d stream offsets but n_streams %d requires %d"
+                % (position, len(stream_offsets), n_streams, 2 * n_streams)
+            )
+        if stream_offsets[0] != 0:
+            raise Malformed(
+                "float tile %d stream_offsets[0] is %d not 0"
+                % (position, stream_offsets[0])
+            )
+        for earlier, later in zip(stream_offsets, stream_offsets[1:]):
+            if later < earlier:
+                raise Malformed(
+                    "float tile %d stream_offsets are not monotonic: %d then %d"
+                    % (position, earlier, later)
+                )
+        if stream_offsets[-1] > compressed_len:
+            raise Malformed(
+                "float tile %d stream offset %d is past the %d-byte tile payload"
+                % (position, stream_offsets[-1], compressed_len)
+            )
+        if stream_offsets[n_streams] != exponent_plane_len:
+            raise Malformed(
+                "float tile %d stream boundary %d does not equal exponent_plane_len %d"
+                % (position, stream_offsets[n_streams], exponent_plane_len)
+            )
+        for stream in range(n_streams):
+            end = (
+                stream_offsets[stream + 1]
+                if stream + 1 < n_streams
+                else exponent_plane_len
+            )
+            if end - stream_offsets[stream] < 256:
+                raise Malformed(
+                    "float tile %d exponent stream %d is shorter than its "
+                    "256-byte code-length table" % (position, stream)
+                )
+        for stream in range(n_streams):
+            start = stream_offsets[n_streams + stream] - exponent_plane_len
+            end = (
+                stream_offsets[n_streams + stream + 1] - exponent_plane_len
+                if stream + 1 < n_streams
+                else mantissa_plane_len
+            )
+            expected = interleaved_stream_len(
+                mantissa_plane_len, stream, n_streams
+            )
+            if end - start != expected:
+                raise Malformed(
+                    "float tile %d mantissa stream %d is %d bytes but the "
+                    "interleave requires %d"
+                    % (position, stream, end - start, expected)
+                )
+        root = _bytes_of(entry, "tile_root")
+        if len(root) != HASH_LEN:
+            raise Malformed("float tensor tile_root must be 32 bytes")
+        tiles.append(
+            FloatTileStreamsEntry(
+                index=index,
+                dims=dims,
+                offset=offset,
+                compressed_len=compressed_len,
+                exponent_plane_len=exponent_plane_len,
+                mantissa_plane_len=mantissa_plane_len,
+                element_len=declared_element_len,
+                stream_offsets=stream_offsets,
+                tile_root=root,
+            )
+        )
+    if expected_offset != declared_payload_len:
+        raise Corrupt(
+            "float tensor tile ranges cover %d bytes but payload_len is %d"
+            % (expected_offset, declared_payload_len)
+        )
+    logical_root = _bytes_of(map_value, "logical_root")
+    if len(logical_root) != HASH_LEN:
+        raise Malformed("float tiled streams logical_root must be 32 bytes")
+    return FloatTiledStreamsMeta(
+        dtype=dtype,
+        shape=shape,
+        element_count=element_count,
+        tile_shape=tile_shape,
+        tile_counts=counts,
+        n_streams=n_streams,
+        tiles=tiles,
+        payload_len=declared_payload_len,
+        logical_root=logical_root,
+    )
+
+
+def _deinterleave(streams: "list[bytes]", total: int, what: str) -> bytes:
+    n_streams = len(streams)
+    if n_streams == 0:
+        raise Malformed("%s declares zero streams" % what)
+    out = bytearray(total)
+    for index in range(total):
+        stream = streams[index % n_streams]
+        position = index // n_streams
+        if position >= len(stream):
+            raise Corrupt("%s stream ended before its interleaved plane" % what)
+        out[index] = stream[position]
+    return bytes(out)
+
+
+def decode_float_tiled_streams(frame, limits: Limits) -> bytes:
+    descriptor_bytes, payload = _split_prefix(frame.body)
+    meta = parse_float_tiled_streams_descriptor(
+        descriptor_bytes, frame.header.decoded_len, len(payload), limits
+    )
+    sign_bits, exponent_bits, mantissa_bits = FLOAT_FIELD_BITS[meta.dtype]
+    element_size = (sign_bits + exponent_bits + mantissa_bits) // 8
+    total = meta.element_count * element_size
+    out = bytearray(total)
+    tiles_bytes = 0
+    n_streams = meta.n_streams
+    for entry in meta.tiles:
+        start = entry.offset
+        end = start + entry.compressed_len
+        if end > len(payload):
+            raise Corrupt("float tensor tile range is outside the payload")
+        stored = payload[start:end]
+        if entry.exponent_plane_len > len(stored):
+            raise Corrupt("float tile exponent plane is truncated")
+        exponent_stored = stored[: entry.exponent_plane_len]
+        mantissa_stored = stored[entry.exponent_plane_len :]
+        elements = entry.element_len // element_size
+        exponent_parts = []
+        for stream in range(n_streams):
+            s_start = entry.stream_offsets[stream]
+            s_end = (
+                entry.stream_offsets[stream + 1]
+                if stream + 1 < n_streams
+                else entry.exponent_plane_len
+            )
+            if s_end > len(exponent_stored) or s_start > s_end:
+                raise Corrupt("float tile exponent stream is outside the tile")
+            expected = interleaved_stream_len(elements, stream, n_streams)
+            exponent_parts.append(
+                huffman.decode(exponent_stored[s_start:s_end], expected)
+            )
+        exponent_plane = _deinterleave(exponent_parts, elements, "exponent plane")
+        mantissa_parts = []
+        for stream in range(n_streams):
+            s_start = entry.stream_offsets[n_streams + stream] - entry.exponent_plane_len
+            s_end = (
+                entry.stream_offsets[n_streams + stream + 1] - entry.exponent_plane_len
+                if stream + 1 < n_streams
+                else entry.mantissa_plane_len
+            )
+            if s_end > len(mantissa_stored) or s_start > s_end:
+                raise Corrupt("float tile mantissa stream is outside the tile")
+            expected = interleaved_stream_len(
+                entry.mantissa_plane_len, stream, n_streams
+            )
+            if s_end - s_start != expected:
+                raise Corrupt(
+                    "float tile %d mantissa stream %d length differs from the "
+                    "interleave" % (entry.index, stream)
+                )
+            mantissa_parts.append(mantissa_stored[s_start:s_end])
+        mantissa_plane = _deinterleave(
+            mantissa_parts, entry.mantissa_plane_len, "mantissa plane"
+        )
+        tile = _join_float_planes(
+            exponent_plane, mantissa_plane, meta.dtype, elements, limits
+        )
+        root = float_tile_streams_root(
+            meta.dtype,
+            entry.dims,
+            entry.element_len,
+            entry.exponent_plane_len,
+            entry.mantissa_plane_len,
+            n_streams,
+            entry.stream_offsets,
+            tile,
+            limits,
+        )
+        if root != entry.tile_root:
+            raise Corrupt(
+                "float tensor tile %d stream root does not match the descriptor"
+                % entry.index
+            )
+        tiles_bytes += len(tile)
+        tile_coords = _tile_start(meta.tile_counts, entry.index)
+        dst_start = [
+            coord * meta.tile_shape[axis] for axis, coord in enumerate(tile_coords)
+        ]
+        for local in _iter_coords(entry.dims):
+            src = _flat_index(local, entry.dims) * element_size
+            full = [dst_start[axis] + local[axis] for axis in range(len(meta.shape))]
+            dst = _flat_index(full, meta.shape) * element_size
+            out[dst : dst + element_size] = tile[src : src + element_size]
+    if tiles_bytes != total:
+        raise Corrupt(
+            "float tiled streams decoded to %d bytes but the descriptor requires %d"
+            % (tiles_bytes, total)
+        )
+    logical = tensor_logical_root(
+        FLOAT_TILED_LOGICAL_DTYPE[meta.dtype],
+        meta.shape,
+        meta.element_count,
+        bytes(out),
+        limits,
+    )
+    if logical != meta.logical_root:
+        raise Corrupt(
+            "float tiled streams logical root does not match the descriptor"
         )
     return bytes(out)

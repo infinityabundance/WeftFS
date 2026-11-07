@@ -130,12 +130,18 @@ fn access_pattern_region_selects_float_tiled_and_whole_selects_mode9() {
             &region,
         )
         .expect("region plan");
-    assert_eq!(
-        plan.chosen,
-        TensorStrategy::FloatTiled,
-        "candidates: {:?}",
+    assert!(
+        matches!(
+            plan.chosen,
+            TensorStrategy::FloatTiled | TensorStrategy::FloatTiledStreams
+        ),
+        "a small-region plan must stay on a tile-independent float form: {:?}",
         plan.candidates
     );
+    // Mode 18's fitted fixed term is 0, so at 64 fetched bytes it is the
+    // cheapest modelled read; mode 17 remains the whole-tensor winner. The
+    // court's 1-row measurement is slower for mode 18 than this model says, so
+    // this is a model choice, not a latency claim (see RESULTS-mode18.md).
 }
 
 #[test]

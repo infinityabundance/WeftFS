@@ -25,6 +25,9 @@ DOMAIN_TENSOR_VALUES = "weft/tensor/values/v1"
 DOMAIN_TENSOR_LOGICAL = "weft/tensor/logical/v1"
 DOMAIN_TENSOR_TILE = "weft/tensor/tile/v1"
 DOMAIN_TENSOR_FLOAT_TILE = "weft/tensor/float_tile/v1"
+#: Independently decodable multi-stream float-tile identity
+#: (WEFT-AI-CODEC §19).
+DOMAIN_TENSOR_FLOAT_TILE_STREAMS = "weft/tensor/float_tile_streams/v1"
 DOMAIN_TENSOR_SEMANTIC = "weft/tensor/semantic/v1"
 DOMAIN_TENSOR_SEMANTIC_VALUES = "weft/tensor/semantic-values/v1"
 DOMAIN_AI_STREAM = "weft/ai/stream/v1"

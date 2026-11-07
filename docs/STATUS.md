@@ -5,7 +5,7 @@ implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
 `WeftFS` `238d4e5`, `WeftCodec` `99cb87a`, `WeftCodec-Go` `a0a1ebf`,
 `WeftFS-Go` `dc7cfdb`; the full note with every loss is
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
-and both codec implementations cover every allocated mode 0–17. The current verification receipt is
+and both codec implementations cover every allocated mode 0–18. The current verification receipt is
 `bench/receipts/verify-20261107T155516Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
@@ -5578,3 +5578,77 @@ lifecycle harness exercises) run inside `rust_store` in the aggregate.
 constant-time capability check, KV encryption at rest, retention/expiry policy
 for snapshots, intra-frame block-independent mode-9 streams, any 3FS cluster
 run, and any fleet or cloud claim.
+
+**Mode 18 — `FLOAT_TILED_STREAMS` (additive, post-v1.1.0).** Mode 18 is the
+multi-stream form of mode 17: the same tile grid, plane split, offsets and
+per-tile roots, with each tile's Huffman exponent plane split round-robin into
+`n_streams` independently coded `huffman-canonical-v1` streams and its raw
+mantissa plane split round-robin into `n_streams` raw streams. `1 <= n_streams
+<= 16`; the tile entry carries a fixed-width `stream_offsets` table of `2 *
+n_streams` u64 entries. The tile root is
+`H("weft/tensor/float_tile_streams/v1", WCB({dtype, dims, element_len,
+exponent_plane_len, mantissa_plane_len, n_streams, stream_offsets,
+values_hash}))`, so the stream count and table are part of the identity.
+`n_streams = 1` is **byte-identical** to mode 17's stored tile payload; a unit
+test and the `001_streams_bf16_4x4_n1` vector prove it. The mantissa stays raw
+because mode 17's is raw and the identity anchor is normative.
+
+* Wire: mode 18, schema `weft.ai.tensor_tiled_streams.v1`, domain 0, no
+  dependencies/chunks, `decoded_len` and `content_hash` as every AI mode.
+  Modes 0–17 are byte-identical; the authoritative reserved-mode reject moved
+  to 19 (`017_unknown_mode_reserved18` retained and superseded).
+* Conformance: `conformance/v1/float-tiled-streams/` has 4 valid + 12 reject
+  vectors, byte-identical in both codec repos. Manifest 355 entries; coverage
+  `18:4/12`; spec drift 42/42.
+* Rust↔Go: `TestFloatTiledStreamsVectors` re-encodes every valid vector and
+  compares the frame bytes with the Rust vector. All four are byte-identical.
+* Decode: per-tile streams run on a bounded pool (`HuffmanDecode` per stream);
+  the whole-frame path runs tiles on a bounded pool. A new wide-word AVX2
+  four-stream lockstep kernel (`simd::unpack_multi`) is runtime-dispatched and
+  differential-tested against the canonical per-stream decoder over 10,000
+  randomised stream sets (bytes and error class), with the scalar fallback
+  retained; `simd_path=avx2` in the court.
+* Python reader: modes 0–18, 355 vectors, 229 pass / 0 fail / 126 skip. No
+  mode 0–18 frame vector is skipped.
+* Planner: `TensorStrategy::FloatTiledStreams` (mode 18) in Rust and
+  `TensorStrategyFloatTiledStreams` in Go, offered only with an explicit/auto
+  tile shape and `n_streams` (default 4). The baked row is measured separately:
+  `fixed_ns=0`, `ns_per_mib=3,674,824` (1 warmup + 7 reps at 128 KiB and
+  16 MiB, synthetic weight-like BF16) vs mode 17's `14,131 / 3,366,772`. The
+  bytes-only default is unchanged and never selects mode 18; a test proves the
+  row is distinct and a separate test proves the default is unchanged. Go has
+  the same candidate and row (`EstimateMode18NS`).
+* Court (`bench/receipts/mode18-20261107T165215Z.json`, `bench/RESULTS-mode18.md`):
+  Qwen2.5-0.5B BF16 embedding `[151936,896]`, tile `[64,896]`, 259.66 MiB.
+  Bytes: mode 9 180,623,816; mode 17 181,541,557; mode 18 n=1 181,598,555
+  (+0.03 %), n=2 182,211,848 (+0.37 %), n=4 183,446,037 (+1.05 %), n=8
+  185,923,029 (+2.41 %). Whole decode 1 thread: 840.1 / 715.9 / 602.1 / 453.5 /
+  428.2 / 408.2 MiB/s. 4 threads (tile-parallel for 17/18): 843.6 (mode 9 has
+  no independent tile) / **1,828.3** / 1,800.4 / 1,501.0 / 1,390.3 / 1,342.7
+  MiB/s. Region 100 rows: 0.283 ms mode 17 vs 0.416/0.515/0.434/0.440 ms mode
+  18; 1 row: 0.133 ms vs 0.256/0.321/0.336/0.395 ms. Encode n=4 1,522.7 ms vs
+  mode 17 1,167.0 ms.
+* **Result: multi-stream lost on every measured axis.** It is 1.5–26.6 %
+  slower at 4 threads, 15.9–43.0 % slower at 1 thread, +0.03–2.41 % larger,
+  and 1.5–3.0x slower on small regions. The measured cause is the gather
+  kernel (one symbol per lane per probe vs the shipped two-symbol AVX2 probe)
+  plus a full deinterleave pass; the wire format itself is not the problem.
+  The multi-stream row is honest; the bytes-only default never chooses it. A
+  small-region access plan *can* choose it because the fitted fixed term is 0
+  while mode 17's is 14,131 ns/read; the court's 1-row measurement (0.256 ms
+  vs 0.133 ms) contradicts that model, so the choice is a model artifact and
+  not a latency claim. No GPU was present and no GPU path was executed or
+  claimed. This is the same shape as
+  the R5 entropy-coder result: the shipped Huffman decoder is already fast
+  enough that extra stream machinery costs more than it saves.
+* Residual: no GPU/CUDA execution or build, one host, one public tensor, warm
+  caches, `n_streams` rows are measured single-thread only (4-thread mode 18
+  is still slower than mode 17), no Go store region path for mode 18 (whole
+  decode then slice, like mode 17).
+* Gates: WeftCodec `cargo test --all-targets` 39 binaries / 245 passed / 0
+  failed; parent 111 binaries / 572 passed / 0 failed; FUSE 111 binaries / 614
+  passed / 0 failed / 2 pre-existing ignored; WeftCodec-Go `go test -race
+  ./...` all packages; WeftFS-Go `go test -race ./...` store+fusefs all pass;
+  conformance Rust 246 pass / 0 fail / 109 skip, Go 246/0/109, Python 229/0/126
+  (355 total); claims 555 OK; spec drift 42/42; `scripts/verify-all.sh`
+  **30/30 pass, 0 failed, 0 skipped** (`bench/receipts/verify-20261107T171355Z.json`).

@@ -202,7 +202,7 @@ only, single process, no TPU/GPU, no multi-host JAX).
 | `TENSOR_TILED` | 15 | implemented (per-tile roots and whole-tensor logical root) |
 | `SPARSE_DELTA` | 16 | implemented (`zero-run-v1`, `delta_root`) |
 
-Every allocated mode 0–17 is implemented. There is no approximate or lossy
+Every allocated mode 0–18 is implemented. There is no approximate or lossy
 decode path. Reserved mode values 17–127 and experimental values 128–255 are
 rejected by `weftcodec.frame` with `UnsupportedMode`.
 

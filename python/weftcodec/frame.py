@@ -69,6 +69,7 @@ MODE_NAMES = {
     15: "tensor_tiled",
     16: "sparse_delta",
     17: "float_tiled",
+    18: "float_tiled_streams",
 }
 
 #: Modes this Python reader can actually materialize plaintext for.

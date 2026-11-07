@@ -108,8 +108,11 @@ store fixture v1, every conformance vector). The release covers R27 and S1–S5.
 
 Full note with every limit and every loss: [`docs/RELEASE-v1.0.0.md`](docs/RELEASE-v1.0.0.md).
 No frozen wire format changed (codec modes 0–16, WFT1, `weft.manifest.v1`–`v4`,
-store fixture v1, every conformance vector). The release is R2–R26; the v0.9.0
-notes below cover R2–R13 in detail.
+store fixture v1, every conformance vector). **v1.0.0 covers codec modes 0–16.**
+Mode 17 (`FLOAT_TILED`) is additive and post-v1.0.0; it landed with v1.1.0.
+Mode 18 (`FLOAT_TILED_STREAMS`) is additive and post-v1.1.0, so v1.1.0 covers
+modes 0–17. The release is R2–R26; the v0.9.0 notes below cover R2–R13 in
+detail.
 
 - **Remote object planes (R10, R14, R21):** probed blob/commit split planes,
   a GCS JSON backend with `ifGenerationMatch`, an Azure Blob backend, and

@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "51fa3dd9259f36740e41f9437c4d7467f04013a8f66906596e0bb61f40a70126",
+  "aggregate_sha256": "9818b5d3eb1e1f3511bdea2ced99ea9f265189ceca9a726634529ae09407e9ac",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 217,
+    "frame": 234,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
-      "aggregate_sha256_from": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
-      "aggregate_sha256_to": "e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466",
-      "common_files": 331,
+      "aggregate_sha256_common": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
+      "aggregate_sha256_from": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
+      "aggregate_sha256_to": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
+      "common_files": 348,
       "differing": [],
-      "files_from": 331,
-      "files_to": 331,
+      "files_from": 348,
+      "files_to": 348,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -392,10 +392,32 @@
       ]
     },
     "18": {
+      "error": 12,
+      "valid": 4,
+      "vectors": [
+        "WeftCodec/conformance/v1/float-tiled-streams/001_streams_bf16_4x4_n1.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/002_streams_fp32_2x2x2_n2.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/003_streams_bf16_16x16_n4.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/004_streams_f16_2x3_n16.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/101_n_streams_zero.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/102_n_streams_above_bound.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/103_stream_offsets_not_monotonic.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/104_stream_offset_past_payload.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/105_plane_boundary_mismatch.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/106_exponent_stream_shorter_than_table.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/107_tile_root_mismatch.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/108_truncated_stream.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/109_stream_decoded_length_disagrees.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/110_stream_count_without_retable.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/111_unknown_exponent_coder.json",
+        "WeftCodec/conformance/v1/float-tiled-streams/112_logical_root_mismatch.json"
+      ]
+    },
+    "19": {
       "error": 1,
       "valid": 0,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json"
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json"
       ]
     },
     "2": {
@@ -524,7 +546,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 338,
+  "vector_count": 355,
   "vectors": [
     {
       "expect": {
@@ -1879,13 +1901,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved18.json"
       ],
       "mode": 18,
-      "mode_name": null,
+      "mode_name": "float_tiled_streams",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json",
-      "sha256": "ac21110005d9e2ff88892ebcf82c687054098494a7cb483d26b88ff1a6e26135",
+      "sha256": "f3a6410ba6f88db7fc9d469b90f1c5c4bbaa77c793b51c2260ab41666d1910e5",
+      "superseded_by": "017_unknown_mode_reserved19",
       "supersedes": [
         "017_unknown_mode_reserved17"
       ],
       "vector_name": "017_unknown_mode_reserved18"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved19.json"
+      ],
+      "mode": 19,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json",
+      "sha256": "b0e265cf81336db31b935c28d7e204a1052af42feb6f3266cddb77717054ba3a",
+      "supersedes": [
+        "017_unknown_mode_reserved18"
+      ],
+      "vector_name": "017_unknown_mode_reserved19"
     },
     {
       "expect": {
@@ -3018,6 +3058,254 @@
       "sha256": "24b2b6b44a6e1f815ca81fc32f907b5e6526f2297b701a99f6e1223929233c87",
       "subkind": "context_root",
       "vector_name": "110_unknown_key"
+    },
+    {
+      "expect": {
+        "content_root": "35153c5803d64f741aa02b737cb4cf0f300207f1613f09ffcc4e90668c151118",
+        "decoded_sha256": "cc6a84643457dbf8cb7bbfd5ac91393643de84b7c73047e785c49a23cecc0a18",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/001_streams_bf16_4x4_n1.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/001_streams_bf16_4x4_n1.json",
+      "sha256": "0ad0e3e21ecde4367d705bbf1a3b79645499e928fb2f45c0cce65367deb821a3",
+      "subkind": "float_tiled_streams",
+      "vector_name": "001_streams_bf16_4x4_n1"
+    },
+    {
+      "expect": {
+        "content_root": "2608e85fdb57a59180e410b4d2c7687d6f94c5c7f47dcb928f8ded28655ad06e",
+        "decoded_sha256": "a6d3dd386f1d0be29d79f0e6b3422d9a62f198621d49142c8e8648c3d83bf14a",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/002_streams_fp32_2x2x2_n2.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/002_streams_fp32_2x2x2_n2.json",
+      "sha256": "bb98af6ee238683d2b3773af0236e808a48c17a48127b283feb3b6c9a9286039",
+      "subkind": "float_tiled_streams",
+      "vector_name": "002_streams_fp32_2x2x2_n2"
+    },
+    {
+      "expect": {
+        "content_root": "48605ab3eafb51bfc4a988cdccf6244f65f8ed43e574dd2a2fae8214d528c223",
+        "decoded_sha256": "6f0bbe259ba8444e8217a6b4f054857f179b84b1bbdb79577a1df73343c1bc92",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/003_streams_bf16_16x16_n4.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/003_streams_bf16_16x16_n4.json",
+      "sha256": "0e9e3e1b54d7241a13891021373893b01d4acf588221a06fcd19bddfdb977d87",
+      "subkind": "float_tiled_streams",
+      "vector_name": "003_streams_bf16_16x16_n4"
+    },
+    {
+      "expect": {
+        "content_root": "833426ce7c4baf5e1b8de7691c6aff366695bdb6e6272d84f23de3f2dc9f2195",
+        "decoded_sha256": "4458199158774caf147be50e4d47c65eacb312cdae5c9cc4490323fa9bc85978",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/004_streams_f16_2x3_n16.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/004_streams_f16_2x3_n16.json",
+      "sha256": "eef1ee4ac9eed6448b40f2a6eeb6b84c99d9214bb201621de956036021ea8e99",
+      "subkind": "float_tiled_streams",
+      "vector_name": "004_streams_f16_2x3_n16"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/101_n_streams_zero.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/101_n_streams_zero.json",
+      "sha256": "994178b5dc86c6df8fbc109bfaa81155bd9e9c12432a8fff43798f6d0cd4967a",
+      "subkind": "float_tiled_streams",
+      "vector_name": "101_n_streams_zero"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/102_n_streams_above_bound.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/102_n_streams_above_bound.json",
+      "sha256": "c7bac0597ad188fd17edf0ed7be3273973f8e59edb17474cb539a8d41247967a",
+      "subkind": "float_tiled_streams",
+      "vector_name": "102_n_streams_above_bound"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/103_stream_offsets_not_monotonic.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/103_stream_offsets_not_monotonic.json",
+      "sha256": "ff7292faeef2ddc02a3aa6078161378a5d19fbe7e5c3809fa6c1fbcc1e5cb5a3",
+      "subkind": "float_tiled_streams",
+      "vector_name": "103_stream_offsets_not_monotonic"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/104_stream_offset_past_payload.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/104_stream_offset_past_payload.json",
+      "sha256": "f12185a7914d16c05638e360a955bfb78305eadc9119eb8acfa156798c681f55",
+      "subkind": "float_tiled_streams",
+      "vector_name": "104_stream_offset_past_payload"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/105_plane_boundary_mismatch.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/105_plane_boundary_mismatch.json",
+      "sha256": "74a314cf5f459ec6c17475ab7d03d9d773387485788b0426522f00bb7d27fa6a",
+      "subkind": "float_tiled_streams",
+      "vector_name": "105_plane_boundary_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/106_exponent_stream_shorter_than_table.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/106_exponent_stream_shorter_than_table.json",
+      "sha256": "8187cae92268f79001f2e676de2e562868e055263eebacc3d272fed90364161f",
+      "subkind": "float_tiled_streams",
+      "vector_name": "106_exponent_stream_shorter_than_table"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/107_tile_root_mismatch.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/107_tile_root_mismatch.json",
+      "sha256": "e6210ccbf62da5d14a681e19fdf16428d58c8e7121ef39634b0f1962ba03eddd",
+      "subkind": "float_tiled_streams",
+      "vector_name": "107_tile_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/108_truncated_stream.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/108_truncated_stream.json",
+      "sha256": "17b7b648579546508edd961c3e9632875cb77c55c06961eef688adba94312616",
+      "subkind": "float_tiled_streams",
+      "vector_name": "108_truncated_stream"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/109_stream_decoded_length_disagrees.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/109_stream_decoded_length_disagrees.json",
+      "sha256": "76e60f6a0ccf8b66cf40ffa3d13b20bdabfce65a00bc0973a6eeb9d359c70d12",
+      "subkind": "float_tiled_streams",
+      "vector_name": "109_stream_decoded_length_disagrees"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/110_stream_count_without_retable.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/110_stream_count_without_retable.json",
+      "sha256": "12d89602703bee0b542d9a45dc3f5e592864815f9bb311d0166e4860b4d7a7c8",
+      "subkind": "float_tiled_streams",
+      "vector_name": "110_stream_count_without_retable"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/111_unknown_exponent_coder.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/111_unknown_exponent_coder.json",
+      "sha256": "a7ca0ca09b559bb9a168a9514e4726552126e2ee99bce3b5a3d29efc5eef0ca9",
+      "subkind": "float_tiled_streams",
+      "vector_name": "111_unknown_exponent_coder"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/float-tiled-streams/112_logical_root_mismatch.json"
+      ],
+      "mode": 18,
+      "mode_name": "float_tiled_streams",
+      "path": "WeftCodec/conformance/v1/float-tiled-streams/112_logical_root_mismatch.json",
+      "sha256": "31357fe11edf43dcbe813e009479b4b34c79f848d4313f47158ee75e98808a50",
+      "subkind": "float_tiled_streams",
+      "vector_name": "112_logical_root_mismatch"
     },
     {
       "expect": {

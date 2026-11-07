@@ -54,6 +54,7 @@ MODE_NAMES = {
     15: "tensor_tiled",
     16: "sparse_delta",
     17: "float_tiled",
+    18: "float_tiled_streams",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -68,6 +69,7 @@ CODEC_DIRS = {
     "tensor-tiled": ("frame", "tensor_tiled", 15, "frame"),
     "sparse-delta": ("frame", "sparse_delta", 16, "sparse_delta"),
     "float-tiled": ("frame", "float_tiled", 17, "frame"),
+    "float-tiled-streams": ("frame", "float_tiled_streams", 18, "frame"),
     "structured": ("wcb", None, None, "wcb"),
     "selectors": ("selector", None, None, "selector"),
     "context": ("context", "context_root", None, "context"),

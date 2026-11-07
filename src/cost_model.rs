@@ -201,6 +201,31 @@ const DECLARED: [(CostClass, Coefficients); 10] = [
 /// the raw rows.
 pub const MEASURED_CALIBRATION: &str = "weftfs-r2/decode-calibration/v1";
 
+/// Measured mode-18 `FLOAT_TILED_STREAMS` decode row.
+///
+/// Mode 18 has its own affine row measured with the same harness as the other
+/// classes (`examples/calibrate_decode.rs`: median of three 7-repetition runs,
+/// 128 KiB and 16 MiB, warm cache, synthetic weight-like BF16, four interleaved
+/// streams). The persisted `weft.calibration.v1` schema has exactly ten rows and
+/// no mode-18 class, so a host calibration file prices mode 18 with the
+/// `tensor-tiled` row; the baked default is this measured row. The row is
+/// deliberately **not** a copy of `TensorTiled`: the four-stream decode was
+/// measured separately.
+pub const MODE18_MEASURED_CALIBRATION: &str = "weftfs-mode18/decode-calibration/v1";
+
+/// Measured mode-18 row (see [`MODE18_MEASURED_CALIBRATION`]).
+const MODE18_MEASURED: Coefficients = Coefficients::new(0, 3_674_824);
+
+/// Estimated mode-18 decode nanoseconds for `decoded_bytes` logical bytes.
+pub fn estimate_streams_ns(decoded_bytes: u64) -> u64 {
+    estimate_with(MODE18_MEASURED, decoded_bytes)
+}
+
+/// The measured mode-18 coefficients.
+pub fn streams_measured_coefficients() -> Coefficients {
+    MODE18_MEASURED
+}
+
 /// Measured rows (median of three independent 7-repetition runs).
 /// Re-measured after the R2 Huffman and plane-join work; the previous table
 /// was `float-tensor 15_403_165`, `tensor-sharded 13_788_933`,
