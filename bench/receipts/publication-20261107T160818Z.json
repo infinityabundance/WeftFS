@@ -1,0 +1,158 @@
+{
+  "azure": {
+    "credential_search": {
+      "environment_variables": [
+        {
+          "name": "AZURE_STORAGE_ACCOUNT",
+          "present": false
+        },
+        {
+          "name": "AZURE_STORAGE_KEY",
+          "present": false
+        },
+        {
+          "name": "AZURE_STORAGE_SAS_TOKEN",
+          "present": false
+        },
+        {
+          "name": "WEFT_AZURE_ACCOUNT",
+          "present": false
+        },
+        {
+          "name": "WEFT_AZURE_KEY",
+          "present": false
+        },
+        {
+          "name": "WEFT_AZURE_SAS",
+          "present": false
+        }
+      ],
+      "files": [
+        {
+          "path": "~/.azure/azureProfile.json",
+          "present": false
+        },
+        {
+          "path": "~/.azure/accessTokens.json",
+          "present": false
+        }
+      ]
+    },
+    "live_run": null,
+    "note": "The existing Azurite 3.35.0 emulator evidence is unchanged. No live *.blob.core.windows.net endpoint was reached.",
+    "reason": "no Azure storage account, key, or SAS token is present",
+    "result": "not_attempted"
+  },
+  "gcs": {
+    "bucket_round_trip": null,
+    "credential_search": {
+      "environment_variables": [
+        {
+          "name": "WEFT_GCS_SA_KEY",
+          "present": false
+        },
+        {
+          "name": "GOOGLE_APPLICATION_CREDENTIALS",
+          "present": false
+        },
+        {
+          "name": "WEFT_GCS_BUCKET",
+          "present": false
+        },
+        {
+          "name": "WEFT_GCS_PROJECT",
+          "present": false
+        }
+      ],
+      "files": [
+        {
+          "path": "~/.config/gcloud/application_default_credentials.json",
+          "present": false
+        },
+        {
+          "path": "~/.config/gcloud/credentials.db",
+          "present": false
+        }
+      ]
+    },
+    "live_probe": null,
+    "note": "The existing fake-gcs-server emulator evidence is unchanged and remains the only GCS evidence. No live Google Cloud Storage service was reached.",
+    "reason": "no GCS service-account key, application-default credential, access token, project, or bucket name is present",
+    "result": "not_attempted"
+  },
+  "label": "Publication attempts made once from this host at release time. No credential was found for PyPI, GCS, or Azure; no token was invented and no live cloud service was contacted. The wheel is a release artifact, not a PyPI publication.",
+  "policy": "No secret value was read, printed, copied, or recorded. A credential is only reported by name and presence.",
+  "pypi": {
+    "credential_search": {
+      "command": "for each name above: printenv NAME; for each file: stat path",
+      "environment_variables": [
+        {
+          "name": "PYPI_API_TOKEN",
+          "present": false
+        },
+        {
+          "name": "TWINE_PASSWORD",
+          "present": false
+        },
+        {
+          "name": "TWINE_USERNAME",
+          "present": false
+        },
+        {
+          "name": "PYPI_TOKEN",
+          "present": false
+        }
+      ],
+      "files": [
+        {
+          "path": "~/.pypirc",
+          "present": false
+        },
+        {
+          "path": "~/.config/pypi/token",
+          "present": false
+        },
+        {
+          "path": "~/.config/pypi/credentials",
+          "present": false
+        },
+        {
+          "path": "~/.netrc",
+          "present": false
+        }
+      ],
+      "result": "all absent; no file has nonzero size and no variable is set"
+    },
+    "metadata_check": {
+      "conclusion": "no weftcodec project version 1.1.0 is published; the project JSON endpoint itself returns 404",
+      "http_status": 404,
+      "url": "https://pypi.org/pypi/weftcodec/json"
+    },
+    "reason": "no PyPI credential is present in the environment or the documented files",
+    "result": "not_published",
+    "upload_attempt": {
+      "command": "PYTHONPATH=/work/.docker-cache/py-twine timeout 180 python -m twine upload --non-interactive --repository-url https://upload.pypi.org/legacy/ python/dist/weftcodec-1.1.0-py3-none-any.whl",
+      "court": "weft/python-court:1",
+      "exit_code": 1,
+      "stderr": "ERROR    NonInteractive: Credential not found for API token.",
+      "stdout": "Uploading distributions to https://upload.pypi.org/legacy/",
+      "twine_version": "6.1.0"
+    },
+    "wheel": {
+      "built_by": "python/scripts/court-receipt.sh in weft/python-court:1",
+      "filename": "weftcodec-1.1.0-py3-none-any.whl",
+      "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
+      "sha256": "33e3d7e8b3fce8683245e16c59e5a97d719a574038eadc511af64fd8a59c9e58",
+      "size_bytes": 90884,
+      "tests": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 10,
+        "tests": 369
+      }
+    }
+  },
+  "release": "1.1.0",
+  "schema": "weft.publication-attempt.v1",
+  "stamp": "20261107T160818Z"
+}

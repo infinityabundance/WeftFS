@@ -1,0 +1,132 @@
++ exec docker run --rm --init --name weft-go-court-144582 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=817687d63a6092ceaf6d2406c8b93abd155feb02 -e WEFT_REPO_WEFTFS_GO=dc7cfdb7d9bd66ea7a39f38f3b198eb124d20a3d -e WEFT_REPO_WEFTCODEC=99cb87a0a8a298d39363deec33c6539b050037aa -e WEFT_REPO_WEFTCODEC_GO=a0a1ebfddc87ec536aedf77c28ed8899d07eb07c -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/cross.sh compare'
+== decode equivalence ==
+PASS rust->go  raw
+PASS go->rust  raw
+PASS rust->go  raw_empty
+PASS go->rust  raw_empty
+PASS rust->go  raw_chunked
+PASS go->rust  raw_chunked
+PASS rust->go  zstd
+PASS go->rust  zstd
+PASS rust->go  reference
+PASS go->rust  reference
+PASS rust->go  delta
+PASS go->rust  delta
+PASS rust->go  dictionary
+PASS go->rust  dictionary
+PASS rust->go  structured
+PASS go->rust  structured
+PASS rust->go  tensor
+PASS go->rust  tensor
+PASS rust->go  tokens
+PASS go->rust  tokens
+PASS rust->go  quantized
+PASS go->rust  quantized
+PASS rust->go  float_tensor
+PASS go->rust  float_tensor
+PASS rust->go  float_tensor_single
+PASS go->rust  float_tensor_single
+PASS rust->go  float_tensor_uniform
+PASS go->rust  float_tensor_uniform
+PASS rust->go  weight_delta_bf16
+PASS go->rust  weight_delta_bf16
+PASS rust->go  weight_delta_fp32
+PASS go->rust  weight_delta_fp32
+PASS rust->go  weight_delta_q8
+PASS go->rust  weight_delta_q8
+PASS rust->go  semantic_delta_bf16
+PASS go->rust  semantic_delta_bf16
+PASS rust->go  semantic_delta_fp32
+PASS go->rust  semantic_delta_fp32
+PASS rust->go  semantic_delta_q8
+PASS go->rust  semantic_delta_q8
+PASS rust->go  kv_cache_p0
+PASS go->rust  kv_cache_p0
+PASS rust->go  kv_cache_p1
+PASS go->rust  kv_cache_p1
+PASS rust->go  activation_c0
+PASS go->rust  activation_c0
+PASS rust->go  activation_c1
+PASS go->rust  activation_c1
+PASS rust->go  tensor_tiled_bf16
+PASS go->rust  tensor_tiled_bf16
+PASS rust->go  tensor_tiled_fp32
+PASS go->rust  tensor_tiled_fp32
+PASS rust->go  float_tiled_bf16
+PASS go->rust  float_tiled_bf16
+PASS rust->go  float_tiled_fp32
+PASS go->rust  float_tiled_fp32
+PASS rust->go  sparse_delta_bf16
+PASS go->rust  sparse_delta_bf16
+PASS rust->go  sparse_delta_q8
+PASS go->rust  sparse_delta_q8
+PASS rust->go  sparse_delta_fp32
+PASS go->rust  sparse_delta_fp32
+== deterministic frame bytes (Go == Rust) ==
+PASS identical raw
+PASS identical raw_empty
+PASS identical raw_chunked
+PASS identical reference
+PASS identical delta
+PASS identical structured
+PASS identical tensor
+PASS identical tokens
+PASS identical quantized
+PASS identical float_tensor
+PASS identical float_tensor_single
+PASS identical float_tensor_uniform
+PASS identical weight_delta_bf16
+PASS identical weight_delta_fp32
+PASS identical weight_delta_q8
+PASS identical kv_cache_p0
+PASS identical kv_cache_p1
+PASS identical activation_c0
+PASS identical activation_c1
+PASS identical tensor_tiled_bf16
+PASS identical tensor_tiled_fp32
+PASS identical float_tiled_bf16
+PASS identical float_tiled_fp32
+PASS identical sparse_delta_bf16
+PASS identical sparse_delta_q8
+PASS identical sparse_delta_fp32
+== TENSOR_SHARDED (mode 10) shard sets ==
+PASS identical tensor_sharded sharded_q8/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q8/shard-0
+PASS identical tensor_sharded sharded_q8/shard-1.wft1
+PASS decode-equivalent tensor_sharded sharded_q8/shard-1
+PASS identical logical root tensor_sharded sharded_q8
+PASS identical tensor_sharded sharded_q4/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-0
+PASS identical tensor_sharded sharded_q4/shard-1.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-1
+PASS identical tensor_sharded sharded_q4/shard-2.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-2
+PASS identical tensor_sharded sharded_q4/shard-3.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-3
+PASS identical logical root tensor_sharded sharded_q4
+PASS identical tensor_sharded sharded_q8_single/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q8_single/shard-0
+PASS identical logical root tensor_sharded sharded_q8_single
+== KV_CACHE (mode 12) / ACTIVATION_STREAM (mode 13) byte identity ==
+YES byte-identical kv_cache_p0
+YES byte-identical kv_cache_p1
+YES byte-identical activation_c0
+YES byte-identical activation_c1
+== SEMANTIC_DELTA (mode 14) byte identity ==
+YES byte-identical semantic_delta_bf16
+YES byte-identical semantic_delta_fp32
+YES byte-identical semantic_delta_q8
+== TENSOR_TILED (mode 15) byte identity ==
+YES byte-identical tensor_tiled_bf16
+YES byte-identical tensor_tiled_fp32
+== FLOAT_TILED (mode 17) byte identity ==
+YES byte-identical float_tiled_bf16
+YES byte-identical float_tiled_fp32
+== SPARSE_DELTA (mode 16) byte identity ==
+YES byte-identical sparse_delta_bf16
+YES byte-identical sparse_delta_q8
+YES byte-identical sparse_delta_fp32
+== zstd/dictionary are decode-equivalence modes ==
+NOTE differing bytes zstd (allowed by spec §12)
+NOTE differing bytes dictionary (allowed by spec §12)
+cross-language gate: all checks passed
