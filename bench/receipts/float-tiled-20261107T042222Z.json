@@ -1,0 +1,33 @@
+{
+  "schema": "weft.receipt.float-tiled.v1",
+  "stamp": "20261107T042222Z",
+  "command": "scripts/docker-court.sh bench \"cd /work && bash bench/scripts/float_tiled_court.sh\"",
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_cpus": "4",
+    "source": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "tensor": "model.embed_tokens.weight",
+    "tile_shape": "64,896",
+    "reps": 3,
+    "cache_state": "warm in-process store; source file read once"
+  },
+  "rows": [
+    {"decoded_bytes":272269312,"dtype":"bf16","event":"write","physical_bytes":180623816,"schema":"weft.decode-regions-bench.v1","shape":[151936,896],"strategy":"float-tensor","tensor":"model.embed_tokens.weight","tile_shape":null,"write_ms":2272.5766099999996},
+    {"decoded_bytes":272269312,"dtype":"bf16","event":"write","physical_bytes":181541557,"schema":"weft.decode-regions-bench.v1","shape":[151936,896],"strategy":"float-tiled","tensor":"model.embed_tokens.weight","tile_shape":[64,896],"write_ms":7430.485042},
+    {"event":"read","median_ms":751.50978,"p99_ms":756.3814629999999,"region_bytes":179200,"rows":100,"samples_ms":[756.3814629999999,751.50978,745.804032],"schema":"weft.decode-regions-bench.v1","shape":"region_100_rows","strategy":"float-tensor","threads":1,"units_touched":1},
+    {"event":"read","median_ms":760.049737,"p99_ms":764.045924,"region_bytes":1792,"rows":1,"samples_ms":[764.045924,760.049737,741.648435],"schema":"weft.decode-regions-bench.v1","shape":"region_1_row","strategy":"float-tensor","threads":1,"units_touched":1},
+    {"event":"read","median_ms":743.9824739999999,"p99_ms":779.355139,"region_bytes":272269312,"rows":151936,"samples_ms":[779.355139,743.9824739999999,740.408845],"schema":"weft.decode-regions-bench.v1","shape":"whole","strategy":"float-tensor","threads":1,"units_touched":0},
+    {"event":"read","median_ms":747.2064240000001,"p99_ms":752.837694,"region_bytes":179200,"rows":100,"samples_ms":[752.837694,744.211765,747.2064240000001],"schema":"weft.decode-regions-bench.v1","shape":"region_100_rows","strategy":"float-tensor","threads":4,"units_touched":1},
+    {"event":"read","median_ms":745.768669,"p99_ms":751.990801,"region_bytes":1792,"rows":1,"samples_ms":[739.9533670000001,751.990801,745.768669],"schema":"weft.decode-regions-bench.v1","shape":"region_1_row","strategy":"float-tensor","threads":4,"units_touched":1},
+    {"event":"read","median_ms":751.9331070000001,"p99_ms":753.027789,"region_bytes":272269312,"rows":151936,"samples_ms":[747.515924,751.9331070000001,753.027789],"schema":"weft.decode-regions-bench.v1","shape":"whole","strategy":"float-tensor","threads":4,"units_touched":0},
+    {"event":"read","median_ms":2.475801,"p99_ms":2.642051,"region_bytes":179200,"rows":100,"samples_ms":[2.642051,2.475801,2.458868],"schema":"weft.decode-regions-bench.v1","shape":"region_100_rows","strategy":"float-tiled","threads":1,"units_touched":2},
+    {"event":"read","median_ms":2.310782,"p99_ms":2.326833,"region_bytes":1792,"rows":1,"samples_ms":[2.326833,2.310782,2.3074060000000003],"schema":"weft.decode-regions-bench.v1","shape":"region_1_row","strategy":"float-tiled","threads":1,"units_touched":1},
+    {"event":"read","median_ms":489.86879300000004,"p99_ms":492.52055099999995,"region_bytes":272269312,"rows":151936,"samples_ms":[492.52055099999995,489.86879300000004,481.325107],"schema":"weft.decode-regions-bench.v1","shape":"whole","strategy":"float-tiled","threads":1,"units_touched":0},
+    {"event":"read","median_ms":2.683268,"p99_ms":2.960946,"region_bytes":179200,"rows":100,"samples_ms":[2.960946,2.683268,2.6455770000000003],"schema":"weft.decode-regions-bench.v1","shape":"region_100_rows","strategy":"float-tiled","threads":4,"units_touched":2},
+    {"event":"read","median_ms":2.650236,"p99_ms":2.6703230000000002,"region_bytes":1792,"rows":1,"samples_ms":[2.650236,2.64657,2.6703230000000002],"schema":"weft.decode-regions-bench.v1","shape":"region_1_row","strategy":"float-tiled","threads":4,"units_touched":1},
+    {"event":"read","median_ms":217.571186,"p99_ms":219.759729,"region_bytes":272269312,"rows":151936,"samples_ms":[219.759729,217.571186,205.081878],"schema":"weft.decode-regions-bench.v1","shape":"whole","strategy":"float-tiled","threads":4,"units_touched":0}
+  ]
+}
