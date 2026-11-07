@@ -66,6 +66,11 @@ A grant is the shipped `weft.capability.envelope.v1`, signed with Ed25519:
 Context Root list. That is the only new interpretation this document adds, and
 it is why a grant is page-scoped without changing the envelope format.
 
+The tenant check reads `CapabilityScope::principal`, which
+`CapabilityEnvelope::capability_scope()` sets from the envelope's `tenant` field,
+so the two are equal by construction; the read path tests the scope value
+because that is the frozen enforcement type.
+
 ## 3. Enforcement order (normative)
 
 `Store::read_kv_page(id, principal, now_ns)`:

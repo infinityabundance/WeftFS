@@ -5558,7 +5558,10 @@ invocation hit the pre-existing `tests/quota.rs`
 `usage_survives_reopen_and_still_denies` writer-lock flake; both passed on
 rerun and no test was changed. `scripts/verify-all.sh`:
 `bench/receipts/verify-20261107T154010Z.json`, **30/30 courts pass, 0 failed, 0
-skipped**.
+skipped**. The two new courts are standalone, not in the aggregate: the
+lifecycle court takes ~90 minutes of real-weight work and the KV court is a
+benchmark, while their *tests* (`kv_capability`, and the store tests the
+lifecycle harness exercises) run inside `rust_store` in the aggregate.
 
 **Not done:** Go parity for KV pages, a FUSE read path for KV pages, a
 constant-time capability check, KV encryption at rest, retention/expiry policy
