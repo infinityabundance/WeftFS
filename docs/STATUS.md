@@ -2,7 +2,7 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261107T065848Z.json` (30/30 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261107T154010Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
@@ -11,8 +11,10 @@ conformance court), `ceph_rgw` — Ceph RGW 19.2.0, an independent S3
 implementation, now running both the S3 backend suite and the R17 fenced-writer
 suite — the MinIO `s3_court` (native S3 backend and fenced-writer suites), and
 `fuzz_diff`), at
-WeftFS `7c10ad4`, WeftCodec `d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go
-`9fa39d3`. This is the v1.0.0 release receipt, run after the 1.0.0 version bump;
+WeftFS `1901336`, WeftCodec `9cffbcf`, WeftCodec-Go `a0a1ebf`, WeftFS-Go
+`16d54ca`. The v1.0.0 release receipt is `bench/receipts/verify-20261107T065848Z.json`
+(30/30), run after the 1.0.0 version bump at WeftFS `7c10ad4`, WeftCodec
+`d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go `9fa39d3`;
 `verify-20261107T014045Z.json` (30/30 at the pre-bump tree, WeftFS `0cfbea1`,
 WeftCodec `57288e1`, WeftCodec-Go `86ded1e`, WeftFS-Go `39b58f2`) is retained.
 One intermediate run was aborted because the shared host volume reached 100 %
@@ -5487,3 +5489,78 @@ skipped** at WeftFS `468c1cf`. The immediately preceding run,
 run and passed on the rerun at the same revision. The failing court is the
 pre-existing `tests/quota.rs` writer-lock contention flake described above; no
 test was changed, skipped, or deleted.
+
+## E1–E4 (2026-11-07): the end-to-end economics court and three governance deliverables
+
+**E1 — checkpoint-family lifecycle court.** `examples/family_lifecycle.rs` +
+`bench/scripts/checkpoint_family_court.sh` measure the whole artifact lifecycle
+in one court on real public weights (Qwen2.5-0.5B → Instruct as an independent
+fine-tune; pythia-70m step0 → step1 as consecutive training checkpoints), with
+every corpus SHA-256 verified in the court first. Receipt
+`bench/receipts/family-lifecycle-20261107T132359Z.json` (7 configurations),
+analysis `bench/RESULTS-family-lifecycle.md`.
+
+* Consecutive second checkpoint: **42,211 B** (sparse delta) vs 144,403,851 B for
+  per-tensor `zstd -19`; family data 173,233,994 B.
+* Fine-tune second checkpoint: **541,273,184 B** (weight delta) vs 767,597,259 B;
+  family data 1,199,958,249 B; base checkpoint 0.856× `zstd -19`.
+* Access-pattern plan: a 1-row read goes 2,366.7 ms / 333,871,119 B → **5.22 ms
+  / 2,896,846 B** (454×) at +9.8 % (region1) / +14.6 % (region100) storage.
+* Cross-topology restore verifies every root: 197,146,951 B (pythia, 0.700× raw)
+  and 823,438,236 B (qwen, 0.833×), but 2.9 s / 10.2 s at one thread.
+* Process-fault recovery at all three publication phases, 3 runs each: no
+  partial state, open 7.7–9.6 ms, time-to-usable 0.13–0.27 ms (old
+  `after_objects`/`after_commit_file`) or 114–266 ms (new).
+* GC: 141,682,009 B (pythia) / 231,628,264 B (qwen) reclaimed with no snapshot;
+  **0 blobs** (index files only) with a pinned snapshot.
+* Losses published: F32 base 1.20× `zstd -19` (the planner's zstd candidate is
+  codec level 3), 50–217 raw small tensors under region plans, the 1 MiB tile
+  plan **OOM-killed at the 3 GiB court** (all local configurations were then
+  measured at 6 GiB, recorded per configuration), MinIO ingest +17.9 %, and the
+  gated second checkpoint loses to a whole-file `--patch-from -12` on pythia.
+* The combined court log was overwritten when the object-store configuration ran
+  as a later invocation on the same path; the surviving log is that invocation
+  and every number is in the receipt.
+
+**E2 — zero-trust KV cache.** `src/kv_capability.rs`, `tests/kv_capability.rs`
+(13/13), `docs/KV-CACHE-GOVERNANCE.md`, receipt
+`bench/receipts/kv-capability-20261107T152958Z.json`. A frozen mode-12 page
+carries a canonical `weft.kv.capability.v1` descriptor (tenant, model version,
+session, layer, page position, token range, dtype, shape, page bytes) whose id is
+granted in an authenticated envelope's `roots` and whose `kv.<tenant>` namespace
+is granted in `namespaces`. Every pre-byte failure — absent object, torn
+descriptor, absent/expired/foreign grant, POSIX denial — is the same
+`Unauthorized` with the text `kv page is not available to this principal`; a
+content hash is not a credential. Measured cost (2,000 samples/path): cached check
+33.0/42.1 µs p50/p99 vs 18.0/21.2 µs decode-only control (**+15 µs fixed, +83 %
+at 1 KiB, +8 % at 64 KiB**); per-read envelope verify 81.2/96.6 µs; denied
+6.4 µs. Not a constant-time claim.
+
+**E3 — 3FS context plane.** `docs/THREEFS-CONTEXT-PLANE.md`. Layering statement,
+per-operation placement, what the USRBIO shim court proved (ABI transcription,
+registration lifetime, 1,500 requests in 50 submissions, byte-identical output)
+and did not (it is 1.127× slower and is not 3FS), the measured context-plane
+budget, and the eight-step experiment required on a deployed cluster. **No 3FS
+deployment was run.**
+
+**E4 — normative consolidation.** `spec/WEFT-AI-CODEC.md` §0 is an RFC-shaped
+mode index (mode, name, schema id, mode-specific root domains, version, status,
+conformance-vector directory) for modes 6–17 plus the reserved 18; exported to
+all three spec mirrors (`WeftCodec` `9cffbcf`, `WeftCodec-Go` `a0a1ebf`,
+`WeftFS-Go` `16d54ca`). Conformance manifest 338 entries and coverage OK; spec
+drift 42/42; claims 515 OK (one stale location corrected to
+`WeftFS-Go/store/fence_record.go`, the file that carries the literal).
+
+**Gates.** `cargo test --all-targets`: 109 binaries, 568 passed, 0 failed.
+`cargo test --features fuse --all-targets --no-fail-fast`: 109 binaries, 610
+passed, 0 failed, 2 ignored. One fail-fast FUSE invocation and one rust
+invocation hit the pre-existing `tests/quota.rs`
+`usage_survives_reopen_and_still_denies` writer-lock flake; both passed on
+rerun and no test was changed. `scripts/verify-all.sh`:
+`bench/receipts/verify-20261107T154010Z.json`, **30/30 courts pass, 0 failed, 0
+skipped**.
+
+**Not done:** Go parity for KV pages, a FUSE read path for KV pages, a
+constant-time capability check, KV encryption at rest, retention/expiry policy
+for snapshots, intra-frame block-independent mode-9 streams, any 3FS cluster
+run, and any fleet or cloud claim.
