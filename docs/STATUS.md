@@ -1,8 +1,12 @@
-# Implementation status — 2026-11-07
+# Implementation status — 2026-11-07 (v1.1.0)
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261107T154010Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
+implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
+`WeftFS` `238d4e5`, `WeftCodec` `99cb87a`, `WeftCodec-Go` `a0a1ebf`,
+`WeftFS-Go` `dc7cfdb`; the full note with every loss is
+[`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
+and both codec implementations cover every allocated mode 0–17. The current verification receipt is
+`bench/receipts/verify-20261107T155516Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
@@ -11,8 +15,9 @@ conformance court), `ceph_rgw` — Ceph RGW 19.2.0, an independent S3
 implementation, now running both the S3 backend suite and the R17 fenced-writer
 suite — the MinIO `s3_court` (native S3 backend and fenced-writer suites), and
 `fuzz_diff`), at
-WeftFS `1901336`, WeftCodec `9cffbcf`, WeftCodec-Go `a0a1ebf`, WeftFS-Go
-`16d54ca`. The v1.0.0 release receipt is `bench/receipts/verify-20261107T065848Z.json`
+WeftFS `817687d`, WeftCodec `99cb87a`, WeftCodec-Go `a0a1ebf`, WeftFS-Go
+`dc7cfdb`. The tag adds one evidence-only commit. The superseded receipt
+`verify-20261107T154010Z.json` (30/30 at `1901336`) is retained. The v1.0.0 release receipt is `bench/receipts/verify-20261107T065848Z.json`
 (30/30), run after the 1.0.0 version bump at WeftFS `7c10ad4`, WeftCodec
 `d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go `9fa39d3`;
 `verify-20261107T014045Z.json` (30/30 at the pre-bump tree, WeftFS `0cfbea1`,
@@ -4303,8 +4308,9 @@ One harness defect was found by the first court run and fixed:
 No multi-writer protocol: exactly one writer is admitted, and there is no merge,
 queue, or consensus point for the head. No single atomic fence+head operation
 (not expressible on GCS's per-object preconditions). No defence against a badly
-skewed writer clock beyond the budget assumption. **No Go parity: WeftFS-Go has
-no GCS backend.** No claim about a real Google Cloud Storage service: the
+skewed writer clock beyond the budget assumption. **At R14 there was no Go
+parity; WeftFS-Go has a GCS backend since R26.** No claim about a real Google
+Cloud Storage service: the
 evidence is one single-node emulator with a memory backend, so no multi-node,
 device-cache, media, power-loss, or production claim is made. No performance
 claim from the single-run phase comparison above.
@@ -4574,12 +4580,13 @@ no index persistence; those are now implemented. The reconciled list is:
   **measurement** (a Rust-accepted document with the identical id), a real
   **S3 backend** (SigV4, `If-None-Match`/`If-Match`, the fenced writer), and
   **WFX2** selector-index persistence readable both ways.
-* Go still has **no GCS or Azure backend**; its plane split over a remote
-  endpoint is S3-only, and there is no cross-vendor Go claim.
-* Go still has **no `calibrate --install`** command. It measures, validates,
-  loads, and applies a document.
-* Go has **no FUSE-over-S3 coverage**: the Go S3 court opens the store through
-  the API and the CLI, not through a mounted filesystem.
+* Go **has** S3 and GCS backends (R25/R26), each with the fenced v3 writer and
+  all four plane layouts. Go still has **no Azure backend**; there is no
+  cross-vendor Go claim beyond S3/GCS.
+* Go **has `calibrate --install`** (R27), matching Rust's strict load, temp
+  write, fsync, rename, and idempotence.
+* Go has **read-only FUSE over S3 and GCS** (R26, 3/3 files byte-identical
+  each). There is **no writable FUSE-over-object court**.
 * Packs are **never rewritten**: a dead member's bytes stay until the whole pack
   is unreferenced. A sub-member read cannot verify the member digest by design;
   only whole-member reads do.
@@ -5058,8 +5065,9 @@ focused/full/xlang logs beside it; `WeftFS-Go/NOTES.md` §R25 records commands,
 counts, host-local request counters (writer 110 requests / 30 writes / 101,104 B;
 reader 68 requests), and every limitation.
 
-**Not done.** No Go GCS or Azure backend; no FUSE-over-S3 mount court (the path
-exists through `store`, but it is not evidenced); no AWS, multi-node,
+**Not done at R25** (closed by R26/R27 where noted). No Go GCS backend then
+(GCS landed in R26); no Azure backend; no FUSE-over-S3 mount court then
+(read-only FUSE over S3/GCS landed in R26); no AWS, multi-node,
 replication, media, or power-loss claim; MinIO is loopback on tmpfs; the fence is
 still two conditional writes on two objects, not one atomic operation; the Ceph
 RGW dequoted form and the pack-plane `ReclaimUnreferencedPacks`/`VerifyPacks`

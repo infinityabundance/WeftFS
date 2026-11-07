@@ -895,31 +895,31 @@
  {
   "id": "conformance_runner_rust_receipt",
   "claim": "docs/CONFORMANCE.md cites the committed Rust adapter receipt.",
-  "value": "conformance-rust-20261106T050554Z.json",
+  "value": "conformance-rust-20261107T155350Z.json",
   "locations": [
    "docs/CONFORMANCE.md"
   ],
-  "receipt": "bench/receipts/conformance-rust-20261106T050554Z.json",
+  "receipt": "bench/receipts/conformance-rust-20261107T155350Z.json",
   "kind": "present"
  },
  {
   "id": "conformance_runner_go_receipt",
   "claim": "docs/CONFORMANCE.md cites the committed Go adapter receipt.",
-  "value": "conformance-go-20261106T050630Z.json",
+  "value": "conformance-go-20261107T155350Z.json",
   "locations": [
    "docs/CONFORMANCE.md"
   ],
-  "receipt": "bench/receipts/conformance-go-20261106T050630Z.json",
+  "receipt": "bench/receipts/conformance-go-20261107T155350Z.json",
   "kind": "present"
  },
  {
   "id": "conformance_runner_python_receipt",
   "claim": "docs/CONFORMANCE.md cites the committed Python adapter receipt.",
-  "value": "conformance-python-20261106T072745Z.json",
+  "value": "conformance-python-20261107T155350Z.json",
   "locations": [
    "docs/CONFORMANCE.md"
   ],
-  "receipt": "bench/receipts/conformance-python-20261106T072745Z.json",
+  "receipt": "bench/receipts/conformance-python-20261107T155350Z.json",
   "kind": "present"
  },
  {
@@ -1380,8 +1380,8 @@
  },
  {
   "id": "q4_s3_rust_only",
-  "claim": "The status records that only Rust implements the S3 backend.",
-  "value": "The S3 path is Rust-only",
+  "claim": "store-status qualifies the S3 comparison numbers as Rust-client measurements and names the Go S3/GCS planes.",
+  "value": "This table was measured with the Rust client",
   "locations": [
    "docs/store-status.md"
   ],
@@ -2579,69 +2579,67 @@
  },
  {
   "id": "python_reader_all_modes",
-  "claim": "The Python reader implements every allocated mode 0-16.",
-  "value": "mode 0\u201316",
+  "claim": "The Python reader implements every allocated mode 0-17.",
+  "value": "mode 0\u201317",
   "locations": [
    "docs/STATUS.md",
    "docs/CONFORMANCE.md",
    "python/README.md"
   ],
-  "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+  "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
   "kind": "present"
  },
  {
   "id": "python_conformance_counts",
-  "claim": "The Python conformance replay result and its receipt agree.",
-  "value": "218 pass, 0 fail, 108 skip",
+  "claim": "The current Python conformance replay result and its receipt agree.",
+  "value": "229 pass, 0 fail, 109 skip",
   "locations": [
-   "docs/STATUS.md",
    "docs/CONFORMANCE.md"
   ],
-  "receipt": "bench/receipts/conformance-python-20261106T072745Z.json",
+  "receipt": "bench/receipts/conformance-python-20261107T155350Z.json",
   "kind": "present"
  },
  {
   "id": "python_ai_vector_counts",
-  "claim": "The Python AI-vector suite asserts 40 valid and 88 reject AI vectors with no skips.",
-  "value": "128 AI vectors (40 valid, 88 rejects)",
+  "claim": "The Python AI-vector suite decodes every valid AI-mode vector to its recorded bytes.",
+  "value": "decodes every valid AI-mode vector to its recorded bytes",
   "locations": [
-   "docs/STATUS.md",
-   "docs/CONFORMANCE.md"
+   "docs/CONFORMANCE.md",
+   "python/README.md"
   ],
-  "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+  "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
   "kind": "present"
  },
  {
   "id": "python_random_differential_frames",
   "claim": "The randomized differential compares at least 2,000 frames per AI mode against the Rust CLI.",
-  "value": "16,003 frames",
+  "value": "2,000 frames per mode 9\u201316",
   "locations": [
-   "docs/STATUS.md",
-   "docs/CONFORMANCE.md"
+   "docs/CONFORMANCE.md",
+   "python/README.md"
   ],
-  "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+  "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
   "kind": "present"
  },
  {
   "id": "python_random_differential_mutants",
-  "claim": "The randomized differential also compares 200 body mutants per AI mode.",
+  "claim": "The randomized differential also compares 1,600 body mutants.",
   "value": "1,600 body mutants",
   "locations": [
-   "docs/STATUS.md",
-   "docs/CONFORMANCE.md"
+   "docs/CONFORMANCE.md",
+   "python/README.md"
   ],
-  "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+  "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
   "kind": "present"
  },
  {
   "id": "python_test_receipt_counts",
-  "claim": "The committed Python test receipt records 331 tests with no failures or errors.",
-  "value": "331 tests, 0 failures, 0 errors, 9 skips",
+  "claim": "The current Python test receipt records 369 tests with no failures or errors.",
+  "value": "369 tests, 0 failures, 0 errors, 10 skips",
   "locations": [
-   "docs/STATUS.md",
    "docs/CONFORMANCE.md"
   ],
-  "receipt": "bench/receipts/python-bindings-20261106T072822Z.json",
+  "receipt": "bench/receipts/python-bindings-20261107T160721Z.json",
   "kind": "present"
  },
  {
@@ -4145,11 +4143,10 @@
  },
  {
   "id": "r18_no_go_gcs",
-  "claim": "There is no Go GCS or Azure backend, so there is no cross-language GCS/Azure fence.",
-  "value": "no GCS or Azure backend",
+  "claim": "STATUS records that Go gained a GCS backend after the R14 non-parity note; Go still has no Azure backend.",
+  "value": "WeftFS-Go has a GCS backend since R26.",
   "locations": [
-   "docs/STATUS.md",
-   "bench/RESULTS-fencing.md"
+   "docs/STATUS.md"
   ],
   "receipt": null,
   "kind": "present"
@@ -4827,8 +4824,8 @@
  },
  {
   "id": "v100_crates_current",
-  "claim": "README.md and docs/containers.md advertise the 1.0.0 crate versions.",
-  "value": "weftcodec = \"1.0.0\"",
+  "claim": "README.md and docs/containers.md advertise the 1.1.0 crate versions.",
+  "value": "weftcodec = \"1.1.0\"",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -4838,8 +4835,8 @@
  },
  {
   "id": "v100_docker_tag_current",
-  "claim": "README.md and docs/containers.md advertise the v1.0.0 WeftFS image tag.",
-  "value": "weftfs:v1.0.0",
+  "claim": "README.md and docs/containers.md advertise the v1.1.0 WeftFS image tag.",
+  "value": "weftfs:v1.1.0",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -5490,6 +5487,321 @@
   "value": "## 0. Mode index",
   "locations": [
    "spec/WEFT-AI-CODEC.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_release_note",
+  "claim": "The v1.1.0 release note exists and is linked from the README, STATUS, and container docs.",
+  "value": "docs/RELEASE-v1.1.0.md",
+  "locations": [
+   "README.md",
+   "docs/STATUS.md",
+   "docs/containers.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_verify_receipt",
+  "claim": "The README, STATUS, and release note cite the v1.1.0 aggregate receipt.",
+  "value": "verify-20261107T155516Z.json",
+  "locations": [
+   "README.md",
+   "docs/STATUS.md",
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/verify-20261107T155516Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_verify_counts",
+  "claim": "The release note records the aggregate as 30/30 pass with no failure or skip.",
+  "value": "**30/30 courts `pass`, 0 failed, 0 skipped**",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/verify-20261107T155516Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_manifest_aggregate",
+  "claim": "The release note and CONFORMANCE cite the same 338-vector manifest aggregate.",
+  "value": "51fa3dd9259f36740e41f9437c4d7467f04013a8f66906596e0bb61f40a70126",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/CONFORMANCE.md"
+  ],
+  "receipt": "bench/receipts/conformance-rust-20261107T155350Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_conformance_counts",
+  "claim": "Rust and Go execute 246 vectors with no failure and 92 explicit skips at 1.1.0.",
+  "value": "| 246 | 0 | 92 |",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/CONFORMANCE.md"
+  ],
+  "receipt": "bench/receipts/conformance-rust-20261107T155350Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_python_conformance",
+  "claim": "The Python reader executes 229 vectors with no failure and 109 explicit skips at 1.1.0.",
+  "value": "| 229 | 0 | 109 |",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/CONFORMANCE.md"
+  ],
+  "receipt": "bench/receipts/conformance-python-20261107T155350Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_adapter_fix",
+  "claim": "The release note records the pre-fix adapter symptom for the tiled vector directories.",
+  "value": "kind None has no adapter",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_wheel_sha",
+  "claim": "The 1.1.0 wheel sha256 is recorded in the release note and publication receipt.",
+  "value": "33e3d7e8b3fce8683245e16c59e5a97d719a574038eadc511af64fd8a59c9e58",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "bench/receipts/publication-20261107T160818Z.json"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_wheel_size",
+  "claim": "The release note records the wheel size as 90,884 bytes.",
+  "value": "90,884 bytes",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_pypi_error",
+  "claim": "The PyPI upload failure text is recorded verbatim in the release note and publication receipt.",
+  "value": "NonInteractive: Credential not found for API token.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "bench/receipts/publication-20261107T160818Z.json"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_pypi_http",
+  "claim": "The release note records that the PyPI metadata endpoint returned HTTP 404.",
+  "value": "HTTP 404",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_pypi_unpublished",
+  "claim": "The release note states that PyPI publication did not happen for lack of a credential.",
+  "value": "PyPI: not published. No credential exists.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_gcs_absent",
+  "claim": "The release note records that no live GCS run was attempted.",
+  "value": "Live GCS: not attempted.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_azure_absent",
+  "claim": "The release note records that no live Azure run was attempted.",
+  "value": "Live Azure: not attempted.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_crate_codec_sha",
+  "claim": "The live crates.io checksum for weftcodec 1.1.0 is recorded.",
+  "value": "38a8dccfaa8a4223c03631131909676117b3b7a85fd7ce001b487c32b54bd8a7",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_crate_fs_sha",
+  "claim": "The live crates.io checksum for weftfs 1.1.0 is recorded.",
+  "value": "5b318b528368dc7dad0dccc5404005d79cbe7276834c8ab32a99a351fc21f13d",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_tag_parent",
+  "claim": "The parent v1.1.0 tag commit is recorded.",
+  "value": "238d4e5aa41d7747e600aae16225a26ee1b17c29",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_fence_lock",
+  "claim": "The release note and FENCING record the v3 S3 lock record.",
+  "value": "weftfs-s3-lock v3",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/FENCING.md"
+  ],
+  "receipt": "bench/receipts/s3-court-20261107T025420Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_mode17",
+  "claim": "The release note and README name mode 17 FLOAT_TILED.",
+  "value": "FLOAT_TILED",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "README.md"
+  ],
+  "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_service_restore",
+  "claim": "The release note and STATUS record the checkpoint-service single-tensor restore median.",
+  "value": "2.550 ms",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/checkpoint-service-20261107T063519Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_go_gcs_receipt",
+  "claim": "The release note and WeftFS-Go notes cite the Go GCS court receipt.",
+  "value": "go-gcs-20261107T115759Z.json",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "WeftFS-Go/NOTES.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_go_s3_receipt",
+  "claim": "The release note and WeftFS-Go notes cite the Go S3 court receipt.",
+  "value": "go-s3-20261107T120121Z.json",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "WeftFS-Go/NOTES.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_no_live_cloud",
+  "claim": "The release note states no live cloud service was reached.",
+  "value": "No live service was reached.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/publication-20261107T160818Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_not_claimed_power",
+  "claim": "The not-claimed list includes physical media power loss.",
+  "value": "Physical media power loss.",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_kv_not_constant",
+  "claim": "The release note does not claim a constant-time capability check.",
+  "value": "Constant-time capability checks",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_lifecycle_sparse",
+  "claim": "The release note and STATUS record the consecutive-checkpoint sparse-delta bytes.",
+  "value": "42,211 B",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v110_image_weftfs",
+  "claim": "The weftfs v1.1.0 image index digest is recorded.",
+  "value": "038f4989bc507c03e1684cec6b23d3239126ca203e0bfa0689322e2129538a07",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_image_weftcodec",
+  "claim": "The weftcodec v1.1.0 image index digest is recorded.",
+  "value": "40238751fe927ca014fe7d2f7717bdc0c5515a01d427a174e061f55ddebed894",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_image_weftcodec_go",
+  "claim": "The weftcodec-go v1.1.0 image index digest is recorded.",
+  "value": "15ff5b4293084244766f63780c588b52ca1a2e8472d260f1c4975decb3b88f9d",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v110_image_weftfs_go",
+  "claim": "The weftfs-go v1.1.0 image index digest is recorded.",
+  "value": "cfe0815609e5faed31eb12e4a19114f79018bc0ed670eb1e44ab216fad67bd50",
+  "locations": [
+   "docs/RELEASE-v1.1.0.md"
   ],
   "receipt": null,
   "kind": "present"

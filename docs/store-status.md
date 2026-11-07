@@ -48,8 +48,10 @@ power loss.
 > and snapshot-ref keys; `tests/s3_backend.rs` proves this against a live MinIO
 > server. Writable open requires the endpoint to honour `If-None-Match: *` and
 > `If-Match`; a server that ignores either form is refused with
-> `UnsupportedVersion` rather than silently overwriting a head. No AWS, GCS,
-> 3FS, cloud, multi-node, media, or power-loss claim is made.
+> `UnsupportedVersion` rather than silently overwriting a head. GCS
+> (`ifGenerationMatch`) and Azure Blob (`If-None-Match` / `If-Match`) have the
+> same contract, and Go implements both S3 and GCS (not Azure). No live AWS,
+> Azure, or Google service, multi-node, media, or power-loss claim is made.
 
 ### 0.1 Backend matrix
 
@@ -57,7 +59,9 @@ power loss.
 |---|---|---|---|---|---|
 | `LocalBackend` | `--backend local` (default) | `tmp` + `fsync` + `rename(2)` + dir `fsync` | yes | `flock(2)` on `LOCK` | all existing courts |
 | `ObjectBackend` | `--backend object` | `tmp` + `fsync` + `link(2)` + unlink + dir `fsync` (rename fallback stated) | yes | `flock(2)` on `LOCK` | `tests/backend.rs` |
-| `S3Backend` | `--backend s3` + `--s3-*` | `PUT` `If-None-Match: *`; superblock `GET` + `PUT` `If-Match` | yes | `LOCK` object, owner + lease, `If-Match` reclaim | `scripts/s3_court.sh` |
+| `S3Backend` | `--backend s3` + `--s3-*` | objects `PUT` `If-None-Match: *`; **v3 `LOCK` record is the publication point** (`If-Match`); superblock is an attested cache | yes | fenced `LOCK` v3, `If-Match` reclaim | `scripts/s3_court.sh` |
+| `GcsBackend` | `--backend gcs` + `--gcs-*` | objects `ifGenerationMatch=0`; **v3 `LOCK` record** (`ifGenerationMatch=<gen>`); superblock cache | yes | fenced `LOCK` v3 | `bench/scripts/gcs_court.sh`, Go `scripts/go-gcs-court.sh` |
+| `AzureBackend` | `--backend azure` + `--azure-*` | `Put Blob` `If-None-Match: *`; **v3 `LOCK` record** (`If-Match`); superblock cache | yes | fenced `LOCK` v3 | `bench/scripts/azure_court.sh` (Rust only) |
 | `Posix` | caller-declared capabilities | whatever the declaration says (enforced) | declared | `flock(2)` | capability-refusal tests |
 | `ThreeFs` (posix) | `--backend 3fs` | `tmp` + `fsync` + `rename(2)` + dir `fsync` through the 3FS mount | yes | `flock(2)` on `LOCK` | `tests/threefs.rs` |
 | `ThreeFs` (usrbio) | `--backend 3fs --threefs-mode usrbio` | same publication; staging filled through hf3fs rings | yes (rings) | `flock(2)` on `LOCK` | `scripts/threefs_court.sh` (conformance library, not 3FS) |
@@ -157,7 +161,7 @@ superblock object instead of one 4096-byte slot, and lock/probe traffic is
 counted. S3 provides no physical-byte counter, so the receipt reports the
 requested payload bytes per phase and sets `physical_bytes` to 0 there.
 
-**Residual risks.** The S3 path is Rust-only. MinIO is single-node on
+**Residual risks.** This table was measured with the Rust client; Go has its own S3 and GCS planes (R25/R26) and the same fenced publication point, but the numbers here are not a Go throughput claim. MinIO is single-node on
 localhost with a tmpfs data directory, so this court proves protocol behaviour
 and conditional-write safety, not media durability or power-loss recovery. The
 writer lock is a lease, so a paused writer longer than the lease can lose the
@@ -222,7 +226,7 @@ Tests map to the P4 requirements as follows:
 - Portable on-disk layout: `FORMAT`, `LOCK`, 8192-byte superblock (two 4096-byte
   CRC32C slots), `commits/<gen>.commit`, `objects/<ab>/<hex>`,
   `manifests/<ab>/<hex>`, `refs/snapshots/<name>`, `refs/tags/`, `tmp/`.
-- **Advisory selector-index segments** (Rust-only, not part of the portable
+- **Advisory selector-index segments** (Rust and Go, not part of the portable
   format): `indexes/<ab>/<commit>.idx`, written after a commit publishes the
   new head. Bytes are WFX2: magic, u32le version, `commit[32]`, u64le
   `generation`/`object_count`/`relation_count`/`entry_count`, then fixed-order
@@ -816,8 +820,10 @@ reading. They are part of the Go handoff contract.
 6. **GC roots depend on readable snapshot states.** If a snapshot's chunks or
    manifests are already missing, GC records the problem but cannot mark that
    snapshot's content; the snapshot was already unreadable.
-7. **Single-host lock only.** `flock` is advisory and local; NFS/multi-host
-   writers are not supported.
+7. **Single-host lock only on local/POSIX planes.** `flock` is advisory and
+   local; the S3/GCS/Azure planes use the v3 fenced record instead. Both are
+   single-writer designs; NFS/multi-host/multi-writer operation is not
+   supported.
 8. **Timestamp clock.** Real writes use wall-clock nanoseconds; a backwards
    clock can make version mtimes non-monotonic. Version identity includes
    content/mtime/parent and remains well-defined.

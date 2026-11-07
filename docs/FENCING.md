@@ -6,9 +6,10 @@ The store admits **one writer at a time**. On a POSIX namespace the proof is a
 token, an absolute deadline, and — since R27 — the head being published.
 
 This document is the protocol specification for the object-store form. It is
-implemented three times, independently: Rust `src/s3.rs`, `src/gcs.rs`,
+implemented four times, independently: Rust `src/s3.rs`, `src/gcs.rs`,
 `src/azure.rs` (one shared record parser in `src/writer_fence.rs`), and Go
-`WeftFS-Go/store/s3commit.go` + `store/s3client.go`.
+`WeftFS-Go/store/s3commit.go` + `store/s3client.go` and
+`store/gcscommit.go` + `store/gcsclient.go`. Go has no Azure backend.
 
 ## 1. Why the publication point matters
 
