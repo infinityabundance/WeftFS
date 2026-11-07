@@ -5350,3 +5350,131 @@ numbers, including every loss. Receipts:
 * Whole-model mode-17 checkpoint/restore; Go range fetch that reads only tile
   bytes; write-cost term in the planner; per-tile rounding in the region
   estimate; cold cache, GPU, or fleet claims.
+
+## Subphase S3 — persistent checkpoint service, memfd restore, DCP/Orbax re-measure (2026-11-07)
+
+Closes the external review item: "the Orbax adapter stages a safetensors file,
+launches the Rust CLI, and restores through a path that imports reconstructed
+files into the store." Save and load now use one long-lived
+`weftfs checkpoint-service` process, payloads cross as `SCM_RIGHTS` memfds, and
+a restore cannot write to the store at all.
+
+Receipts: `bench/receipts/checkpoint-service-20261107T063519Z.json` (11/11),
+`bench/receipts/orbax-20261107T063412Z.json` (13/13),
+`bench/receipts/pytorch-dcp-20261107T063540Z.json`. Analysis:
+`bench/RESULTS-checkpoint-service.md`. Protocol:
+`docs/CHECKPOINT-SERVICE.md`.
+
+### Protocol and bounds
+
+Frame `u32 length | u8 opcode | u32 request_id | u8 status | body` over an
+`AF_UNIX` stream; responses echo the id; errors carry the normative `Class`
+string. Opcodes: `INFO`, `LIST_CHECKPOINTS`, `CHECKPOINT_MANIFEST`,
+`RESTORE_TENSOR`, `WRITE_CHECKPOINT`, `VERIFY_CHECKPOINT`, `REFRESH`,
+`WRITE_FILE`, `STAT_FILE`, `READ_FILE`, `SHUTDOWN`. One request in flight.
+Bounds: 1 MiB per control frame, 4 GiB per tensor or staged container, 16 MiB
+per metadata file, one descriptor per frame, 8 cached manifests. A framing
+violation or unknown opcode answers `Malformed` and exits non-zero rather than
+resynchronising.
+
+The store is opened read-only once. A write opens a read-write handle for that
+operation, publishes, and reopens the read handle. `REFRESH` is the only way a
+pinned read handle sees another process's commits; the adapters call it before
+a read.
+
+### Service court (32 x 1 MiB f32, 4-way zstd)
+
+| operation | service | CLI per call | ratio |
+| --- | ---: | ---: | ---: |
+| restore one tensor (median of 20) | **2.550 ms** | 10.386 ms | 4.07x |
+| restore all 32 (median of 3) | **79.465 ms** | 96.363 ms | 1.21x |
+| write checkpoint | **1,206.718 ms** | 1,286.272 ms | 1.07x |
+| manifest | 0.467 ms | – | – |
+
+230 requests / 216 restores / 226,492,416 B in one process. After 100 restores
+the store was identical: **34,027,955 B, 270 files, generation 2**.
+
+### Orbax (same fixture as R15)
+
+11 leaves, 8-way sharded, 58,765,352 logical bytes, `zstd`.
+
+| metric | Orbax OCDBT | WeftFS S3 | CLI control (same revision) | R15 before |
+| --- | ---: | ---: | ---: | ---: |
+| save total | **77.958 ms** | 1,859.152 ms | 2,603.080 ms | 1,770.713 ms |
+| full restore | **22.927 ms** | 185.788 ms | 205.633 ms | 2,690.338 ms |
+| single leaf | **5.327 ms** | 21.948 ms | 27.049 ms | 380.432 ms |
+| physical bytes | 50,643,641 | 50,866,872 (+0.44 %) | – | 50,866,816 |
+| store growth from restores | – | **0 B** | – | +67,615,378 B |
+
+Save is 1.40x faster than the CLI path it replaces, full restore 1.11x, single
+leaf 1.23x. Requested 2-device restore sharding is honoured (Orbax 0.12.9
+returns the saved 8-device sharding). 11/11 leaves are byte-identical, and
+`checkpoint verify` + `verify --full` pass after save and after all restores.
+
+Remaining deficits: save is still **23.85x** Orbax and restore **8.10x**; the
+Rust checkpoint write (1,808 ms of the 1,859 ms save) and 11 per-leaf decodes
+dominate, not the boundary.
+
+### DCP (8 x 4 MiB f32, topology 8)
+
+| metric | Q5 before | S3 | CLI control (same revision) |
+| --- | ---: | ---: | ---: |
+| full save (median of 3) | 1,223.642 ms | 1,498.649 ms | 1,521.614 ms |
+| full load (median of 3) | 152.208 ms | **101.006 ms** | 106.475 ms |
+| single-tensor load (median of 5) | 67.171 ms | **24.135 ms** | 22.362 ms |
+| async submit | 0.720 ms | 1.549 ms | – |
+| physical bytes / `torch.save` | 0.9294 | 0.9294 | – |
+| store growth from restores | 0 B | 0 B | – |
+
+Save is 1.5 % faster than the CLI control and 22.5 % slower than the Q5 record
+(the difference is the Rust write, not the boundary). Single-tensor load is
+7.8 % slower than the control because the control omits `dcp.load` metadata and
+framework work; per leaf the service is 4x faster. Both adapters report
+**0 CLI subprocess calls** in save and load (`store_command_calls: 0`).
+
+### No PyO3
+
+`pyo3` is absent from `Cargo.lock` (0 matches) and from the court's cargo
+registry cache and extracted sources (0 matches each), so an in-process
+extension module would need a network dependency. No crate was added. The
+persistent service is the delivered in-process boundary; that limitation is
+recorded here and in `docs/CHECKPOINT-SERVICE.md` §1.
+
+### Fixes found on the way
+
+* A pre-existing region-restore bug: the region path byte-scaled the last axis
+  for every shard strategy, but only the mode-10 `q8_0` transport is
+  byte-addressed. A region read of a `zstd`-sharded checkpoint failed
+  `NonCanonical` ("region axis 2 end 32 exceeds shape extent 8"). Fixed in
+  `src/checkpoint.rs`; `test_service::test_region_restore_writes_only_the_region`
+  covers it.
+* `WeftStorageReader(import_restored=True)` fails closed: the service has no
+  container to import.
+
+### Tests
+
+Rust `cargo test --all-targets`: **106 test binaries, 0 failed** (includes the
+new `tests/checkpoint_service.rs` 7/7 and the second `unsafe` island guard in
+`tests/threefs.rs`). FUSE all-targets is reported with the release verification.
+
+Python court receipt `bench/receipts/python-bindings-20261107T064323Z.json`
+(built wheel, not the source tree): **369 tests, 0 failures, 10 skipped**
+(`tests/test_service.py` 8, `tests/test_dcp.py` 10, `tests/test_orbax.py` 18).
+The first S3 Python court run failed 12 checks: the independent Python reader
+did not implement mode 17, so every `float-tiled` vector failed
+(`bench/receipts/python-bindings-20261107T063910Z.json`, retained). Mode 17 is
+now implemented in `python/weftcodec/ai_modes.py` (per-tile Huffman exponent
+plane + mantissa plane, tile roots, logical root, all reject classes) and those
+vectors pass.
+
+Intermediate runs of the bench harnesses before the final control columns were
+added are not retained; the final receipts above supersede them and no claim
+depends on the removed files.
+
+### Not done
+
+No Go client, no multi-client server, no parallel decode inside the service, no
+watch (only `REFRESH`), no TLS/TCP, and no claim that a caller buffer is grown
+for it. No GPU-direct path: DCP still copies into the planner's tensor because
+that is DCP's own contract; Orbax feeds `device_put` from the mapping without an
+extra host copy. Single host, warm cache, synthetic fixtures.

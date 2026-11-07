@@ -710,32 +710,37 @@ class CheckpointService:
             os.ftruncate(fd, size)
         return fd
 
-    def restore_tensor(self, name, tensor, *, region=None, topology=None):
+    def restore_tensor(self, name, tensor, *, region=None, topology=None, expected_size=None):
         """Restore one tensor straight into a caller-owned memfd.
 
         ``region`` is ``(start, end)`` in full-tensor coordinates; ``topology``
         is ``(shards, axis)`` and re-lays-out the bytes before verifying the
-        same full logical root. The returned :class:`TensorBuffer` owns the
-        mapping; call ``close()`` (or use it as a context manager).
+        same full logical root. ``expected_size`` skips the manifest round trip
+        when the caller already knows the payload length (the adapters do).
+        The returned :class:`TensorBuffer` owns the mapping; call ``close()``
+        (or use it as a context manager).
         """
-        rows = None
-        manifest = self.manifest(name)
-        row = manifest.by_name().get(tensor)
-        if row is None:
-            raise ServiceError(
-                "NotFound", "checkpoint %r has no tensor %r" % (name, tensor)
-            )
-        if region is not None:
-            start, end = region
-            if len(start) != len(row.shape) or len(end) != len(row.shape):
-                raise ValueError("region rank does not match the tensor rank")
-            extent = tuple(int(b) - int(a) for a, b in zip(start, end))
+        row = None
+        if region is None and expected_size is not None:
+            size = int(expected_size)
         else:
-            extent = row.shape
-        elements = 1
-        for dim in extent:
-            elements *= int(dim)
-        size = elements * canonical_element_bytes(row.dtype)
+            manifest = self.manifest(name)
+            row = manifest.by_name().get(tensor)
+            if row is None:
+                raise ServiceError(
+                    "NotFound", "checkpoint %r has no tensor %r" % (name, tensor)
+                )
+            if region is not None:
+                start, end = region
+                if len(start) != len(row.shape) or len(end) != len(row.shape):
+                    raise ValueError("region rank does not match the tensor rank")
+                extent = tuple(int(b) - int(a) for a, b in zip(start, end))
+            else:
+                extent = row.shape
+            elements = 1
+            for dim in extent:
+                elements *= int(dim)
+            size = elements * canonical_element_bytes(row.dtype)
         if size > self.max_tensor_bytes:
             raise ServiceError(
                 "LimitExceeded",
@@ -749,7 +754,7 @@ class CheckpointService:
             body += _string(tensor)
             body += bytes((1,)) if region is not None else bytes((0,))
             if region is not None:
-                body += bytes((len(row.shape),))
+                body += bytes((len(region[0]),))
                 for value in region[0]:
                     body += _u64(value)
                 for value in region[1]:

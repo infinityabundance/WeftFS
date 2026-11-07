@@ -134,6 +134,8 @@ def decode_frame(
         plaintext = ai_modes.decode_sparse_delta(
             frame, resolver, limits, base_frame
         )
+    elif mode == 17:  # FLOAT_TILED
+        plaintext = ai_modes.decode_float_tiled(frame, limits)
     else:
         raise UnsupportedMode(
             "mode %d (%s) is allocated but not implemented by the Python reader"

@@ -1161,6 +1161,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                         storage_name,
                         leaf.entry,
                         topology=None if shards is None else (shards, axis),
+                        expected_size=int(leaf.element_bytes),
                     )
                 except ServiceError as exc:
                     raise self._translate(exc) from exc
@@ -1242,6 +1243,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                     storage_name,
                     leaf.entry,
                     topology=None if shards is None else (shards, axis),
+                    expected_size=int(leaf.element_bytes),
                 )
             except ServiceError as exc:
                 raise self._translate(exc) from exc

@@ -1,36 +1,52 @@
-# PyTorch Distributed Checkpoint adapter (Q5)
+# PyTorch Distributed Checkpoint adapter (Q5, updated in S3)
 
-Status: **implemented and measured** on `staging` at
-`d732a9631d0fae395ddacf36d99e816a214dc289` (code commit `464b38f` plus one
-test-only fix). Python court evidence:
-`bench/receipts/python-bindings-20261106T000719Z.json` (191 tests, 0 failures,
-62 skipped from the built wheel). Bench receipt:
-`bench/receipts/pytorch-dcp-20261106T000734Z.json`.
+Status: **implemented and measured** on `staging`. Python court evidence:
+`bench/receipts/python-bindings-20261106T000719Z.json` (Q5) and the S3 Python
+court receipt (below). Bench receipts:
+`bench/receipts/pytorch-dcp-20261106T000734Z.json` (Q5, before) and
+`bench/receipts/pytorch-dcp-20261107T063540Z.json` (S3, after).
+
+**S3 change:** save and load no longer start the `weftfs` CLI and no longer
+stage a host safetensors file. They use one persistent
+`weftfs checkpoint-service` process per adapter object
+(`weftcodec.service.CheckpointService`), restore straight into caller-owned
+memfds, and never import into the store. The protocol is normative in
+`docs/CHECKPOINT-SERVICE.md`; the measured comparison is in
+`bench/RESULTS-checkpoint-service.md`.
 
 Real PyTorch ran in the court: **torch 2.15.0+cpu** (official
 `download.pytorch.org/whl/cpu` wheel, 209.5 MB as downloaded, baked into
 `docker/python-court.Dockerfile`). There is no CUDA runtime in the image, no
-GPU was present, and no GPU claim is made.
+GPU was present, and no GPU claim is made. The Q5 wheel-built Python court ran
+**191 tests** with 0 failures (62 skipped); the S3 court is reported below.
 
 ## 1. What it is
 
 `weftcodec.dcp` (Python) implements the documented shape of
 `torch.distributed.checkpoint.StorageWriter` / `StorageReader` over a WeftFS
-store. The training process never mounts anything: every durable transfer is a
-subprocess call to the shipped Rust `weftfs` CLI.
+store. The training process never mounts anything: durable transfers go through
+one long-lived helper process over an `AF_UNIX` socket, and tensor payloads
+cross as `SCM_RIGHTS` memfds.
 
 ```
 torch.distributed.checkpoint.save/load
         │  StorageWriter / StorageReader
         ▼
 weftcodec.dcp  (host memory, one tensor at a time)
-        │  weftfs checkpoint write / restore / cat / create
+        │  weftcodec.service.CheckpointService  (one process, memfd payloads)
+        ▼
+weftfs checkpoint-service
+        │  the same Store::write_checkpoint / restore_tensor paths the CLI uses
         ▼
 WeftFS store
   /checkpoints/<name>/manifest          weft.checkpoint.v1 (canonical WCB)
   /checkpoints/<name>/tNNNNN.sNNN       mode-10 shard or exact zstd/raw shard
   /checkpoints/<name>/dcp.metadata      weft.dcp.metadata.v1 (canonical WCB)
 ```
+
+The Rust CLI remains the oracle in tests (`checkpoint verify`, `verify --full`,
+`checkpoint show`) and still initialises a store (`init`). It is no longer in
+the save or load path: both report `store_command_calls: 0`.
 
 Two independent descriptions exist on purpose:
 
@@ -226,6 +242,37 @@ reports 10 passed / 0 failed / 0 skipped in the Python court. `test_real_dcp_rou
 
 ## 6. Bench (8 tensors x 4 MiB, CPU)
 
+### S3 (after): service-backed, same fixture and court
+
+Receipt `bench/receipts/pytorch-dcp-20261107T063540Z.json`. Same fixture
+(synthetic f32, 8 x 4 MiB, `topology=8`, `zstd`, `staging_bytes=64 MiB`).
+
+| Metric | S3 | Q5 (before) | same-revision CLI control |
+|---|---:|---:|---:|
+| Full save (median of 3) | 1,498.649 ms | 1,223.642 ms | 1,521.614 ms |
+| Full load (median of 3) | **101.006 ms** | 152.208 ms | 106.475 ms |
+| Single-tensor load (median of 5) | **24.135 ms** | 67.171 ms | 22.362 ms |
+| Async save submit | 1.55 ms | 0.72 ms | – |
+| Async save completion | 1,621.1 ms | 1,329.0 ms | – |
+| WeftFS physical bytes after first save | 31,187,381 B | 31,187,325 B | – |
+| `torch.save` baseline | 33,557,979 B (ratio **0.9294**) | same | – |
+| Store growth from restores | **0 B** | 0 B | – |
+| CLI subprocess calls in save/load | **0** | 2+ per operation | 1 per operation |
+
+The service path is 1.5 % faster than the CLI path it replaces for save and
+5 % faster for a full load. Against the Q5 receipt, load is 33.6 % faster and
+single-tensor load 64.1 % faster; save is 22.5 % slower, and the whole of that
+difference is in the Rust checkpoint write (1,344 ms of service `request_ms`
+on a 32 MiB container), not in the boundary — the same-revision CLI control is
+slower still.
+
+Losses: single-tensor load is 7.8 % slower than the CLI control because the
+control excludes `dcp.load` metadata/framework work; async submit is 0.8 ms
+slower (one service round trip instead of an immediate thread start); a full
+save is still ~160x a single `torch.save` file on this fixture.
+
+### Q5 (before, retained)
+
 Receipt `bench/receipts/pytorch-dcp-20261106T000734Z.json` (revision
 `d732a96`). Court: `weft/python-court:1`, kernel `7.3.1-1-cachyos`, 3 GiB
 memory (swap 3 GiB), 4 CPUs, 1024 pids, bounded 1 GiB `/tmp`,
@@ -269,7 +316,13 @@ the next tensor copy.
 * No media power-loss or host-cache-loss durability claim. The store's own
   crash courts cover that separately; this receipt is a single host with a
   local store and synthetic fixtures.
-* Reads import restored containers into the store; they are not read-only.
+* Reads never import restored containers into the store. `import_restored=True`
+  now fails closed: the service restores into caller memfds and cannot
+  materialize a container.
+* The destination tensor copy is DCP's own contract (the planner allocates the
+  target); the adapter does not claim zero-copy into a planner-owned tensor.
+  The decoded bytes themselves land in a caller-owned memfd with no staging
+  file.
 * `checkpoint restore` decodes whole shards (mode-10 frames are not
   independently seekable); region/tile-level savings are not claimed here.
 * `BYTE_IO` objects under `topology > 1` require divisible lengths; the adapter

@@ -1,0 +1,272 @@
+{
+  "baseline": {
+    "file_bytes": 33557979,
+    "kind": "torch.save(state_dict, file) on the same tensors",
+    "weftfs_over_baseline_bytes": -2370598,
+    "weftfs_over_baseline_ratio": 0.9294
+  },
+  "commands": [
+    "scripts/docker-court.sh python \"python python/scripts/bench-dcp.py\"",
+    "weftfs --store <store> checkpoint verify --name <checkpoint> --json",
+    "weftfs --store <store> verify --full --json"
+  ],
+  "environment": {
+    "court_cap_drop": "ALL",
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:af751fc866908fb6e6abb190c6e139739b62246ea019447a6a754e5c3b2a849e",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_memory": "3g",
+    "court_no_new_privileges": true,
+    "court_pids": "1024",
+    "court_tmpfs": "/tmp:rw,size=1g,nosuid,nodev",
+    "cuda_available": false,
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "python_version": "3.12.16",
+    "revision_weftcodec": "46713726cd454f587c4db006ae723bd4bd4474a2",
+    "revision_weftcodec_go": "bf6bb70e827fe801fbe83c9e352d0ff3621dc704",
+    "revision_weftfs": "2fe0d1b02d0b1ab679be69b4a549a370a5141e7c",
+    "revision_weftfs_go": "988062708406387dd1a5bf9005161b02b1f1decf",
+    "torch_version": "2.15.0+cpu",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs"
+  },
+  "fixture": {
+    "bytes_per_tensor": 4194304,
+    "dtype": "torch.float32",
+    "elements_per_tensor": 1048576,
+    "reps": 3,
+    "shape": [
+      8,
+      131072
+    ],
+    "single_reps": 5,
+    "source_bytes": 33554432,
+    "staging_bytes": 67108864,
+    "tensors": 8,
+    "topology": [
+      8,
+      0
+    ]
+  },
+  "generated_at_utc": "2026-11-07T06:35:58Z",
+  "label": "PyTorch Distributed Checkpoint adapter over a WeftFS store, CPU only, single host, synthetic 8 x 4 MiB f32 tensors. Save and load run through one persistent in-process checkpoint service (no per-op CLI process); the Rust CLI is used only as the verification oracle. Restores decode straight into caller-owned memfds and never import into the store. No GPU-direct path, no multi-rank cluster run, no durability claim.",
+  "not_claimed": [
+    "GPU-direct or zero-copy staging (tensors are copied through host memory)",
+    "multi-rank distributed training or a cluster test",
+    "stock PyTorch DCP binaries; the adapter implements the documented StorageWriter/StorageReader interfaces",
+    "media power loss or host cache loss durability"
+  ],
+  "phases": {
+    "adapter_stats": {
+      "load_reader_cli_calls": 0,
+      "reader": {
+        "checkpoint_id": "weft-dcp-bench-zstd",
+        "entries_restored": 0,
+        "metadata_source": "dcp",
+        "restored_bytes": 0,
+        "restores": 0,
+        "service": {
+          "request_ms": 10.442346014315262,
+          "requests": 7,
+          "restored_bytes": 0,
+          "restores": 0,
+          "writes": 0,
+          "written_bytes": 0
+        },
+        "storage_name": "weft-dcp-bench-zstd.v3",
+        "store_command_calls": 0,
+        "store_command_ms": 0.0,
+        "store_root": "/tmp/weft-dcp-bench-l3gzfzoq/store"
+      },
+      "writer": {
+        "checkpoint_id": "weft-dcp-bench-zstd",
+        "checkpoint_write_ms": 1347.8324480092851,
+        "container_bytes": 33555126,
+        "entries": 8,
+        "service": {
+          "request_ms": 1344.1763629816705,
+          "requests": 4,
+          "restored_bytes": 0,
+          "restores": 0,
+          "writes": 1,
+          "written_bytes": 33555126
+        },
+        "shard_strategy": "zstd",
+        "staging_bytes": 67108864,
+        "staging_peak_bytes": 4194304,
+        "storage_name": "weft-dcp-bench-zstd",
+        "store_command_calls": 0,
+        "store_command_ms": 0.0,
+        "store_root": "/tmp/weft-dcp-bench-l3gzfzoq/store",
+        "tensor_bytes": 33554432,
+        "topology": [
+          8,
+          0
+        ]
+      },
+      "writer_cli_calls": 0
+    },
+    "async_save_completion_ms": {
+      "median_ms": 1621.105,
+      "samples_ms": [
+        1619.949,
+        1621.105,
+        1630.413
+      ]
+    },
+    "async_save_submit_ms": {
+      "median_ms": 1.549,
+      "samples_ms": [
+        0.696,
+        3.044,
+        1.549
+      ]
+    },
+    "async_staging_peak_bytes": 4194304,
+    "full_load_ms": {
+      "max_ms": 101.867,
+      "median_ms": 101.006,
+      "min_ms": 99.613,
+      "samples_ms": [
+        101.867,
+        99.613,
+        101.006
+      ]
+    },
+    "full_save_ms": {
+      "max_ms": 1541.883,
+      "median_ms": 1498.649,
+      "min_ms": 1364.637,
+      "samples_ms": [
+        1364.637,
+        1541.883,
+        1498.649
+      ]
+    },
+    "legacy_cli_control": {
+      "cli_calls_total": 4,
+      "cli_ms_total": 1726.886,
+      "full_load_ms": {
+        "max_ms": 106.475,
+        "median_ms": 106.475,
+        "min_ms": 106.475,
+        "samples_ms": [
+          106.475
+        ]
+      },
+      "save_cli_calls": 1,
+      "save_ms": 1521.614,
+      "single_load_ms": {
+        "max_ms": 22.362,
+        "median_ms": 22.362,
+        "min_ms": 22.362,
+        "samples_ms": [
+          22.362
+        ]
+      }
+    },
+    "restore_store_growth": {
+      "bytes_after": 64358437,
+      "bytes_before": 64358437,
+      "files_after": 294,
+      "files_before": 294,
+      "growth_bytes": 0,
+      "growth_files": 0
+    },
+    "rss_after_async_kib": 360456,
+    "rss_after_full_load_kib": 360456,
+    "rss_after_save_kib": 330744,
+    "rss_after_single_load_kib": 360456,
+    "rss_after_torch_baseline_kib": 360456,
+    "rust_verification": {
+      "checkpoint": "weft-dcp-bench-zstd.v3",
+      "problems": [],
+      "tensors_verified": 8,
+      "verify_full_ok": true
+    },
+    "single_tensor_load_ms": {
+      "max_ms": 25.908,
+      "median_ms": 24.135,
+      "min_ms": 22.3,
+      "samples_ms": [
+        23.297,
+        22.3,
+        25.908,
+        24.135,
+        25.674
+      ]
+    },
+    "synchronous_save_ms": {
+      "max_ms": 1608.78,
+      "median_ms": 1588.517,
+      "min_ms": 1584.905,
+      "samples_ms": [
+        1588.517,
+        1584.905,
+        1608.78
+      ]
+    },
+    "tensor_sharded_save_ms": {
+      "max_ms": 729.907,
+      "median_ms": 729.907,
+      "min_ms": 729.907,
+      "samples_ms": [
+        729.907
+      ]
+    },
+    "tensor_sharded_store_bytes": {
+      "files": 136,
+      "note": "incremental over the primary checkpoint, before any restore",
+      "physical_bytes": 32826090
+    },
+    "tensor_sharded_verification": 8,
+    "torch_load_ms": {
+      "max_ms": 7.666,
+      "median_ms": 7.133,
+      "min_ms": 5.842,
+      "samples_ms": [
+        7.133,
+        5.842,
+        7.666
+      ]
+    },
+    "torch_save_ms": {
+      "max_ms": 9.88,
+      "median_ms": 8.39,
+      "min_ms": 8.096,
+      "samples_ms": [
+        9.88,
+        8.39,
+        8.096
+      ]
+    }
+  },
+  "receipt": "weftfs-pytorch-dcp/1",
+  "rss_peak_kib": 360456,
+  "weftfs": {
+    "checkpoint": {
+      "checkpoint": "weft-dcp-bench-zstd.v3",
+      "element_bytes": 33554432,
+      "manifest_root": "18b525309d1b74ef97ddd29dc5ebab384dd2ac2f1247f69da344916fcc682a8d",
+      "shards_per_tensor": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "source_file_bytes": 33555126,
+      "tensors": 8
+    },
+    "note": "Final store bytes include every timing repetition (each save is a new <id>.vN generation). Restores add nothing: see phases.restore_store_growth.",
+    "store_bytes_after_first_save": 31187381,
+    "store_bytes_final": 66973359,
+    "store_dir": "temporary directory inside the court (not committed)",
+    "store_files_after_first_save": 142,
+    "store_files_final": 346
+  }
+}

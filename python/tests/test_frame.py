@@ -48,8 +48,8 @@ def test_varint_u64_max_bytes():
 
 def test_mode_sets_are_disjoint_and_complete():
     assert IMPLEMENTED_MODES.isdisjoint(UNIMPLEMENTED_MODES)
-    # Modes 0-16 are allocated and implemented; 17 and above remain reserved.
-    assert IMPLEMENTED_MODES | UNIMPLEMENTED_MODES == set(range(17))
+    # Modes 0-17 are allocated and implemented; 18 and above remain reserved.
+    assert IMPLEMENTED_MODES | UNIMPLEMENTED_MODES == set(range(18))
 
 
 def test_raw_frame_header_and_plaintext():

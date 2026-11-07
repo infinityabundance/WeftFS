@@ -1,11 +1,36 @@
 # JAX / Orbax adapter (`weftcodec.orbax`)
 
 `weftcodec.orbax` is an Orbax `AsyncCheckpointHandler` that stores a JAX PyTree
-as one canonical `weft.checkpoint.v1` checkpoint through the shipped Rust
-`weftfs` CLI. It reuses the DCP adapter's storage plumbing and writes no new
+as one canonical `weft.checkpoint.v1` checkpoint. Since S3 it does so through a
+single persistent `weftfs checkpoint-service` process: save hands the canonical
+safetensors container over as a memfd (no host staging file, no CLI process),
+and each restore decodes straight into a caller-owned memfd before the JAX
+device copy. It reuses the DCP adapter's metadata plumbing and writes no new
 wire format. The measured comparison against Orbax's own OCDBT checkpoint is in
-`bench/RESULTS-orbax.md`; the receipt is
-`bench/receipts/orbax-20261106T152612Z.json`.
+`bench/RESULTS-checkpoint-service.md` and `bench/RESULTS-orbax.md`;
+the current receipts are `bench/receipts/orbax-20261107T063412Z.json` (S3) and
+`bench/receipts/orbax-20261106T152612Z.json` (R15, retained for comparison).
+
+## S3 measured result (same fixture as R15)
+
+8 forced CPU devices, one 11-leaf 8-way sharded PyTree, 58,765,352 logical
+bytes, `write_topology=(8,0)`, `zstd`.
+
+| metric | Orbax OCDBT | WeftFS S3 | WeftFS R15 (before) |
+|---|---:|---:|---:|
+| save total | **77.958 ms** | 1,859.152 ms | 1,770.713 ms |
+| full restore | **22.927 ms** | 185.788 ms | 2,690.338 ms |
+| single-leaf restore | **5.327 ms** | 21.948 ms | 380.432 ms |
+| physical bytes | 50,643,641 | 50,866,872 (+0.44 %) | 50,866,816 |
+| store growth from restores | – | **0 B** | +67,615,378 B |
+| requested 2-device restore sharding honoured | no (0.12.9 keeps 8) | **yes** | yes |
+
+Against a same-revision CLI control (staging file + one process per operation),
+the service is 1.40x faster to save, 1.11x faster for a full restore and 1.23x
+faster for a single leaf. Against Orbax it is still **23.9x** slower to save,
+**8.1x** slower for a full restore, and **4.1x** slower for one leaf: the
+checkpoint write (1,808 ms) and 11 per-leaf memfd restores dominate, not the
+process boundary. The 67.6 MB import that dominated the R15 restore is gone.
 
 ## Install
 
@@ -105,12 +130,15 @@ leaves by canonical path, and then:
 2. rejects a stored leaf absent from the target unless
    `partial_restore=True` (`MissingLeaf`);
 3. checks dtype and shape before reading data (`MismatchedLeaf`);
-4. restores through `weftfs checkpoint restore`, checking the manifest dtype,
-   shape, element bytes, content root, and logical root;
+4. restores each leaf through the checkpoint service into a caller-owned memfd,
+   checking the manifest dtype, shape, element bytes, content root, and logical
+   root (and the re-layout topology root when requested);
 5. recomputes each restored payload's BLAKE3 content root and fails
    (`ExactnessError`) on any mismatch;
 6. re-materialises the target PyTree in target flatten order, honouring a
-   requested JAX `sharding` when the target carries one.
+   requested JAX `sharding` when the target carries one. A JAX destination is
+   handed to `device_put` with no extra host copy; a numpy destination gets one
+   explicit contiguous copy because the memfd is released after the call.
 
 A different JAX sharding topology is allowed because the stored logical tensor
 is topology independent. `restore_topology` is a separate Rust-side proof
@@ -125,11 +153,12 @@ Supported leaf dtypes are exactly the WEFT-TENSOR v1 set: `f16`, `bf16`, `f32`,
 `AsyncCheckpointer` calls `async_save`, which returns a future. The save starts
 on Orbax's background commit thread only after Orbax has created its temporary
 directory; this avoids a real create/remove race. The caller's `save()` returns
-immediately. `staging_bytes` bounds the total leaf bytes of the staging
-container and the total bytes materialised for one restore; exceeding it raises
-`StagingLimitExceeded` before publishing. The handler's worker pool is bounded
-to 1–4 workers. Every leaf is copied through host memory; this is not a
-zero-copy or GPU-direct path.
+immediately. `staging_bytes` bounds the total leaf bytes of the in-memory
+safetensors container and the total bytes materialised for one restore;
+exceeding it raises `StagingLimitExceeded` before publishing. The handler's
+worker pool is bounded to 1–4 workers and it owns exactly one checkpoint
+service process (closed by `handler.close()`). Every leaf still crosses host
+memory (a memfd) before the device copy; this is not a GPU-direct path.
 
 ## Verification
 

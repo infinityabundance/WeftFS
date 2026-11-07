@@ -32,6 +32,8 @@ from weftcodec.dcp import (
     DEFAULT_CLI,
     WeftStorageReader,
     WeftStorageWriter,
+    _Storage,
+    _parse_safetensors,
     init_store,
     save_checkpoint_async,
     verify_checkpoint,
@@ -222,6 +224,9 @@ def main():
         store, secondary_reader.storage_name, full=True, weftfs_cli=cli
     )["tensors_verified"]
 
+    # The store must not grow from a restore: nothing is imported.
+    before_restores, before_restores_files = _store_bytes(store)
+
     def full_load():
         target = {name: torch.empty_like(tensor) for name, tensor in state.items()}
         dcp.load(target, storage_reader=WeftStorageReader(primary, store_root=store,
@@ -241,6 +246,73 @@ def main():
 
     phases["single_tensor_load_ms"], _ = _timed(single_load, args.single_reps)
     phases["rss_after_single_load_kib"] = _rss_kib()
+    after_restores, after_restores_files = _store_bytes(store)
+    load_reader = WeftStorageReader(primary, store_root=store, weftfs_cli=cli)
+    load_reader.read_metadata()
+    phases["restore_store_growth"] = {
+        "bytes_before": before_restores,
+        "bytes_after": after_restores,
+        "growth_bytes": after_restores - before_restores,
+        "files_before": before_restores_files,
+        "files_after": after_restores_files,
+        "growth_files": after_restores_files - before_restores_files,
+    }
+    phases["adapter_stats"] = {
+        "writer": primary_writer.stats,
+        "reader": load_reader.stats,
+        "load_reader_cli_calls": load_reader._store.calls,
+        "writer_cli_calls": primary_writer._store.calls,
+    }
+
+    # ---- control: the pre-service path, same court, same fixture --------
+    # This is exactly what the adapter did before S3: a safetensors staging
+    # file on disk, one CLI process per operation, and a restored container
+    # parsed on the host. It is a control, not the current path.
+    controls = {}
+    control_dir = Path(tempfile.mkdtemp(prefix="weft-dcp-control-"))
+
+    def _entry_for(fqn):
+        for key, info in primary_metadata.storage_data.items():
+            if key.fqn == fqn:
+                return info.entry
+        raise KeyError(fqn)
+
+    control_staging = control_dir / "checkpoint.safetensors"
+    legacy = _Storage(store, cli=cli, timeout=600)
+    legacy.restore(primary_writer.store_name, host_out=control_staging)
+    legacy_calls_before = legacy.calls
+    started = time.perf_counter()
+    legacy.checkpoint_write(
+        control_staging, "weft-dcp-control", shards=8, axis=0, strategy="zstd"
+    )
+    controls["save_ms"] = round((time.perf_counter() - started) * 1000.0, 3)
+    controls["save_cli_calls"] = legacy.calls - legacy_calls_before
+
+    def legacy_full_load():
+        target_path = control_dir / "full.safetensors"
+        legacy.restore(primary_writer.store_name, host_out=target_path)
+        parsed = _parse_safetensors(target_path)
+        assert len(parsed) == TENSOR_COUNT
+        for name, (_dtype, _shape, payload) in parsed.items():
+            actual = torch.frombuffer(bytearray(payload), dtype=torch.uint8)
+            expected = state[name].contiguous().view(torch.uint8).reshape(-1)
+            assert torch.equal(actual, expected), name
+
+    controls["full_load_ms"], _ = _timed(legacy_full_load, 1)
+
+    def legacy_single_load():
+        target_path = control_dir / "single.safetensors"
+        legacy.restore(
+            primary_writer.store_name,
+            entry=_entry_for("layer03.weight"),
+            host_out=target_path,
+        )
+        parsed = _parse_safetensors(target_path)
+        assert len(parsed) == 1
+
+    controls["single_load_ms"], _ = _timed(legacy_single_load, 1)
+    controls["cli_calls_total"] = legacy.calls
+    controls["cli_ms_total"] = round(legacy.command_ms, 3)
 
     # ---- synchronous vs asynchronous save wall -------------------------
     sync_ms, _ = _timed(
@@ -292,6 +364,7 @@ def main():
 
     phases["torch_load_ms"], _ = _timed(torch_load, args.reps)
     phases["rss_after_torch_baseline_kib"] = _rss_kib()
+    phases["legacy_cli_control"] = controls
 
     final_physical, final_files = _store_bytes(store)
 
@@ -300,11 +373,12 @@ def main():
         "generated_at_utc": _utc_stamp(),
         "label": (
             "PyTorch Distributed Checkpoint adapter over a WeftFS store, CPU only, "
-            "single host, synthetic 8 x 4 MiB f32 tensors. All durable writes go "
-            "through the Rust weftfs CLI (checkpoint write/restore) and are verified "
-            "by it. No GPU-direct path, no multi-rank cluster run, no durability "
-            "claim. Store reads use checkpoint restore, which is read-only in "
-            "the store unless import_restored=True is requested."
+            "single host, synthetic 8 x 4 MiB f32 tensors. Save and load run "
+            "through one persistent in-process checkpoint service (no per-op CLI "
+            "process); the Rust CLI is used only as the verification oracle. "
+            "Restores decode straight into caller-owned memfds and never import "
+            "into the store. No GPU-direct path, no multi-rank cluster run, no "
+            "durability claim."
         ),
         "environment": {
             "revision_weftfs": os.environ.get("WEFT_REPO_WEFTFS", "unknown"),
@@ -348,7 +422,8 @@ def main():
             "store_files_final": final_files,
             "note": (
                 "Final store bytes include every timing repetition (each save is a "
-                "new <id>.vN generation) and every restore's imported container."
+                "new <id>.vN generation). Restores add nothing: see "
+                "phases.restore_store_growth."
             ),
         },
         "baseline": {

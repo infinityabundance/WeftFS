@@ -1,0 +1,775 @@
+{
+  "checks": [
+    {
+      "detail": "jax 0.12.0.1, orbax-checkpoint 0.12.9",
+      "name": "orbax_importable",
+      "ok": true
+    },
+    {
+      "detail": [],
+      "name": "standard_save_restore_exact",
+      "ok": true
+    },
+    {
+      "detail": [],
+      "name": "weft_save_restore_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "actual_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "dtype": "bfloat16",
+        "expected_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "ok": true,
+        "path": "params.embed",
+        "shape": [
+          8192,
+          512
+        ]
+      },
+      "name": "weft_single_leaf_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "metadata": 11,
+        "workload": 11
+      },
+      "name": "weft_metadata_leaf_count",
+      "ok": true
+    },
+    {
+      "detail": [],
+      "name": "weft_topology_8_exact",
+      "ok": true
+    },
+    {
+      "detail": [],
+      "name": "weft_topology_2_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "exactness": {
+          "leaf_sha256": {
+            "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+            "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+            "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+            "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+            "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+            "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+            "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+            "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+            "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+            "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+            "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+          },
+          "leaves_checked": 11,
+          "mismatches": [],
+          "ok": true
+        },
+        "requested_sharding": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "requested_sharding_honored": true,
+        "restore_ms": 289.884,
+        "returned_sharding": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "supported": true
+      },
+      "name": "weft_different_sharding_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "requested": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "returned": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      "name": "weft_requested_sharding_honored",
+      "ok": true
+    },
+    {
+      "detail": [],
+      "name": "standard_different_sharding_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "checkpoint": "orbax-court",
+        "full": null,
+        "tensors_verified": 11
+      },
+      "name": "rust_checkpoint_verify",
+      "ok": true
+    },
+    {
+      "detail": {
+        "generation": 3,
+        "problems": []
+      },
+      "name": "rust_verify_full",
+      "ok": true
+    },
+    {
+      "detail": {
+        "generation": 3,
+        "problems": []
+      },
+      "name": "rust_verify_full_after_restores",
+      "ok": true
+    }
+  ],
+  "commands": [],
+  "environment": {
+    "court_cap_drop": "ALL",
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:af751fc866908fb6e6abb190c6e139739b62246ea019447a6a754e5c3b2a849e",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_memory": "3g",
+    "court_no_new_privileges": true,
+    "court_pids": "1024",
+    "court_tmpfs": "/tmp:rw,size=1g,nosuid,nodev",
+    "cpu_count": 16,
+    "docker_client": "29.1.5",
+    "docker_server": "29.9.2",
+    "platform": "Linux-7.3.1-1-cachyos-x86_64-with-glibc2.36",
+    "python_executable": "/usr/local/bin/python",
+    "python_version": "3.12.16",
+    "revision_weftcodec": "46713726cd454f587c4db006ae723bd4bd4474a2",
+    "revision_weftcodec_go": "bf6bb70e827fe801fbe83c9e352d0ff3621dc704",
+    "revision_weftfs": "2fe0d1b02d0b1ab679be69b4a549a370a5141e7c",
+    "revision_weftfs_go": "988062708406387dd1a5bf9005161b02b1f1decf",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs",
+    "weftfs_version": {
+      "argv": [
+        "/work/.docker-cache/target-rust/release/weftfs",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "weftfs 1.0.0"
+    },
+    "xla_flags": "--xla_force_host_platform_device_count=8"
+  },
+  "generated_at_utc": "2026-11-07T06:34:17Z",
+  "install": {
+    "command": "env TMPDIR=/work/.docker-cache/py-orbax-tmp PIP_CACHE_DIR=/work/.docker-cache/py-orbax-pip python -m pip install --disable-pip-version-check --no-cache-dir --upgrade --target /work/.docker-cache/py-orbax 'jax[cpu]' orbax-checkpoint",
+    "log": "bench/receipts/orbax-20261107T063412Z.install.log",
+    "log_tail": "orbax target already importable; pip install skipped\n",
+    "performed": false,
+    "status": 0,
+    "target": "/work/.docker-cache/py-orbax"
+  },
+  "label": "WeftFS Orbax adapter court: a real 8-device CPU JAX mesh, one sharded PyTree, compared against Orbax's own OCDBT checkpoint. Save and restore use one persistent in-process checkpoint service (no per-op CLI process); restores decode straight into caller-owned memfds and import nothing. Single process, single host, synthetic random weights, warm cache. No TPU, GPU, multi-host, or fleet claim.",
+  "losses": [
+    {
+      "delta_bytes": 222968,
+      "metric": "physical_bytes",
+      "note": "WeftFS bytes are the whole store directory immediately after the checkpoint publish (objects, manifests, commits, index/lock files, and the Orbax metadata object); Orbax bytes are its checkpoint directory. The restore path decodes directly into caller-owned memfds, so restores add no store bytes (see store_growth_from_restores).",
+      "orbax_standard": 50643904,
+      "ratio_weft_over_standard": 1.004403,
+      "weft_orbax": 50866872
+    },
+    {
+      "metric": "restored_container_import_bytes",
+      "note": "The R15 receipt measured the old always-import behavior (67,615,378 B). Since R19 restore is read-only, and since S3 the service restores into caller memfds and cannot materialize a container at all, this must be 0 B.",
+      "phase_bytes_after_restores": 50866872,
+      "phase_bytes_after_save": 50866872,
+      "weft_orbax": 0
+    },
+    {
+      "delta_ms": -9.387,
+      "metric": "save_pause_ms",
+      "orbax_standard": 10.421,
+      "weft_orbax": 1.034
+    },
+    {
+      "delta_ms": 1781.194,
+      "metric": "save_total_ms",
+      "orbax_standard": 77.958,
+      "weft_orbax": 1859.152
+    },
+    {
+      "delta_ms": 162.861,
+      "metric": "restore_ms",
+      "orbax_standard": 22.927,
+      "weft_orbax": 185.788
+    },
+    {
+      "delta_ms": 16.621,
+      "metric": "single_leaf_restore_ms",
+      "orbax_standard": 5.327,
+      "weft_orbax": 21.948
+    },
+    {
+      "metric": "different_sharding_request",
+      "note": "Orbax 0.12.9 restores with the sharding recorded in the checkpoint and warns about a different topology; the WeftFS adapter re-shards the restored leaves into the requested target sharding.",
+      "orbax_standard": {
+        "honored": false,
+        "requested": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "returned": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      "weft_orbax": {
+        "honored": true,
+        "requested": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "returned": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      }
+    },
+    {
+      "metric": "staging_copy",
+      "orbax_standard": "TensorStore writes its own chunk files",
+      "weft_orbax": "the adapter writes a safetensors staging container inside the Orbax temporary directory before the Rust CLI ingests it, then removes it; this is an extra full-size host write"
+    }
+  ],
+  "not_covered": [
+    "CPU only (8 forced CPU devices in one process); no TPU and no GPU.",
+    "Single process and single host; no jax.distributed.initialize, no multi-host run, and no real distributed JAX.",
+    "Orbax's own checkpoint is OCDBT/TensorStore on a local filesystem; the WeftFS store is a separate format. The comparison measures two independent implementations, not interchangeable files.",
+    "Orbax features not exercised: Zarr3, per-leaf save_args/restore_args, transforms, custom metadata, step metadata contents, retention/deletion internals, emergency checkpointing, multi-axis meshes, and dtypes outside the exact WEFT-TENSOR v1 set.",
+    "No process crash, power loss, or media failure during an Orbax save.",
+    "Synthetic random weights, warm caches, one run; timings are not a fleet or production claim.",
+    "The adapter's save pause is the time until Orbax's AsyncCheckpointer returns; the actual copy/store work runs on Orbax's background commit thread via a bounded worker."
+  ],
+  "observations": [
+    {
+      "honored": false,
+      "name": "orbax_standard_requested_sharding",
+      "note": "Orbax 0.12.9 restores with the saved sharding and warns instead of re-sharding to the requested target; this is recorded as an observation, not a WeftFS failure.",
+      "requested": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+      "returned": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+    }
+  ],
+  "orbax_available": true,
+  "receipt": "weftfs-orbax-court/1",
+  "results": {
+    "adapter_stats": {
+      "last_save": {
+        "checkpoint_id": "orbax-court",
+        "checkpoint_write_ms": 1808.4608540084446,
+        "directory": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-orbax.orbax-checkpoint-tmp",
+        "leaf_bytes": 58765352,
+        "leaf_count": 11,
+        "shard_strategy": "zstd",
+        "source_file_bytes": 58766211,
+        "source_sha256": "f76cda8e78b54f450a58a3132fb7c253e1829894fdfe48fd974c8e9fdd4d4dc2",
+        "staging_bytes": 268435456,
+        "staging_peak_bytes": 16777216,
+        "storage_name": "orbax-court",
+        "store_command_ms": 1.7372009897371754,
+        "store_root": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-store",
+        "write_topology": [
+          8,
+          0
+        ]
+      },
+      "leaves_restored": 45,
+      "restored_bytes": 243450016,
+      "restores": 5,
+      "saves": 1,
+      "staging_bytes": 268435456
+    },
+    "legacy_cli_control": {
+      "cli_calls_total": 4,
+      "cli_ms_total": 3032.061,
+      "full_restore_exact": true,
+      "full_restore_ms": 205.633,
+      "label": "pre-S3 path: staging file + one CLI process per operation",
+      "save_cli_calls": 1,
+      "save_ms": 2603.08,
+      "single_leaf_restore_ms": 27.049
+    },
+    "orbax_standard": {
+      "checkpoint_dir": "/work/.docker-cache/weft-orbax-court-oavcyv4p/orbax-ocdbt",
+      "different_sharding": {
+        "exactness": {
+          "leaf_sha256": {
+            "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+            "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+            "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+            "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+            "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+            "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+            "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+            "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+            "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+            "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+            "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+          },
+          "leaves_checked": 11,
+          "mismatches": [],
+          "ok": true
+        },
+        "requested_sharding": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "requested_sharding_honored": false,
+        "restore_ms": 27.807,
+        "returned_sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "supported": true
+      },
+      "exactness": {
+        "leaf_sha256": {
+          "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+          "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+          "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+          "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+          "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+          "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+          "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+          "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+          "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+          "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+          "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+        },
+        "leaves_checked": 11,
+        "mismatches": [],
+        "ok": true
+      },
+      "leaf_count": 11,
+      "physical": {
+        "bytes": 50643904,
+        "files": 13
+      },
+      "physical_vs_logical": 0.861799,
+      "restore_ms": 22.927,
+      "save_pause_ms": 10.421,
+      "save_total_ms": 77.958,
+      "single_leaf_exactness": {
+        "actual_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "dtype": "bfloat16",
+        "expected_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "ok": true,
+        "path": "params.embed",
+        "shape": [
+          8192,
+          512
+        ]
+      },
+      "single_leaf_restore_ms": 5.327,
+      "single_leaf_supported": true
+    },
+    "rss": {
+      "peak_rss_kib": 1602236,
+      "phases": {
+        "done": {
+          "elapsed_s": 7.637,
+          "rss_kib": 1604348,
+          "vm_hwm_kib": 1604348
+        },
+        "legacy_control": {
+          "elapsed_s": 7.637,
+          "rss_kib": 1604348,
+          "vm_hwm_kib": 1604348
+        },
+        "rust_verify_after_restores": {
+          "elapsed_s": 4.544,
+          "rss_kib": 1561360,
+          "vm_hwm_kib": 1561360
+        },
+        "rust_verify_after_save": {
+          "elapsed_s": 3.291,
+          "rss_kib": 1189928,
+          "vm_hwm_kib": 1189928
+        },
+        "source_built": {
+          "elapsed_s": 0.793,
+          "rss_kib": 671072,
+          "vm_hwm_kib": 671072
+        },
+        "standard_reshard": {
+          "elapsed_s": 1.058,
+          "rss_kib": 1115860,
+          "vm_hwm_kib": 1115860
+        },
+        "standard_restored": {
+          "elapsed_s": 0.959,
+          "rss_kib": 950612,
+          "vm_hwm_kib": 950612
+        },
+        "standard_saved": {
+          "elapsed_s": 0.871,
+          "rss_kib": 721916,
+          "vm_hwm_kib": 721916
+        },
+        "standard_single_leaf": {
+          "elapsed_s": 0.972,
+          "rss_kib": 952088,
+          "vm_hwm_kib": 952088
+        },
+        "weft_reshard": {
+          "elapsed_s": 4.339,
+          "rss_kib": 1561360,
+          "vm_hwm_kib": 1561360
+        },
+        "weft_restored": {
+          "elapsed_s": 3.54,
+          "rss_kib": 1260588,
+          "vm_hwm_kib": 1260588
+        },
+        "weft_saved": {
+          "elapsed_s": 2.943,
+          "rss_kib": 1189928,
+          "vm_hwm_kib": 1189928
+        },
+        "weft_single_leaf": {
+          "elapsed_s": 3.569,
+          "rss_kib": 1267068,
+          "vm_hwm_kib": 1267068
+        },
+        "weft_topology": {
+          "elapsed_s": 3.991,
+          "rss_kib": 1526332,
+          "vm_hwm_kib": 1526332
+        }
+      },
+      "vm_hwm_kib": 1604348
+    },
+    "weft_orbax": {
+      "checkpoint_dir": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-orbax",
+      "checkpoint_id": "orbax-court",
+      "checkpoint_write_ms": 1808.461,
+      "different_sharding": {
+        "exactness": {
+          "leaf_sha256": {
+            "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+            "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+            "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+            "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+            "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+            "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+            "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+            "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+            "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+            "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+            "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+          },
+          "leaves_checked": 11,
+          "mismatches": [],
+          "ok": true
+        },
+        "requested_sharding": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "requested_sharding_honored": true,
+        "restore_ms": 289.884,
+        "returned_sharding": "NamedSharding(mesh=Mesh('x': 2, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+        "supported": true
+      },
+      "exactness": {
+        "leaf_sha256": {
+          "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+          "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+          "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+          "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+          "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+          "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+          "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+          "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+          "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+          "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+          "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+        },
+        "leaves_checked": 11,
+        "mismatches": [],
+        "ok": true
+      },
+      "leaf_count": 11,
+      "logical_bytes": 58765352,
+      "manifest": {
+        "complete": true,
+        "schema": null,
+        "source_file_bytes": 58766211,
+        "source_sha256": "f76cda8e78b54f450a58a3132fb7c253e1829894fdfe48fd974c8e9fdd4d4dc2"
+      },
+      "metadata_leaf_count": 11,
+      "physical": {
+        "bytes": 50866872,
+        "files": 190
+      },
+      "physical_after_restores": {
+        "bytes": 50866872,
+        "files": 190
+      },
+      "physical_vs_logical": 0.865593,
+      "pointer": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-orbax/weft.orbax.wcb",
+      "pointer_bytes": 207,
+      "restore_ms": 185.788,
+      "rust_checkpoint_verify": {
+        "checkpoint": "orbax-court",
+        "full": null,
+        "tensors_verified": 11
+      },
+      "rust_topology_proof": {
+        "2": {
+          "exactness": {
+            "leaf_sha256": {
+              "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+              "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+              "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+              "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+              "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+              "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+              "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+              "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+              "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+              "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+              "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+            },
+            "leaves_checked": 11,
+            "mismatches": [],
+            "ok": true
+          },
+          "restore_ms": 152.766
+        },
+        "8": {
+          "exactness": {
+            "leaf_sha256": {
+              "['counters']": "a251eed9a9e9a69b659d5e13ce068386357c87a16fccce6dfe729e3b80c04846",
+              "['opt_state']['momentum']['embed']": "265aa2e6daa7c1d57d215f426874ec9e11b49a321d18cbec64e291a97e831bcf",
+              "['opt_state']['step']": "9155b03f624d9c5c5ea71cd44fab2d9a1a5a7c9c8993fe6f75f5e54a045b8638",
+              "['opt_state']['variance']['embed']": "f1b3d0458d7272b5e1cffb75078b77810cf3f6bc4e9d14636107d292b41f18f4",
+              "['params']['embed']": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+              "['params']['layers'][0]['b']": "0cbd63c30647894cc620ac7d610dc382cf1e00b7ed83ae7d8ac422af79fae1ec",
+              "['params']['layers'][0]['scale']": "7e14460ed87276f3b7cd7a93392f88f7e08f03a179d42d09d58ab1abc0acd700",
+              "['params']['layers'][0]['w']": "8cef90488ceb5ab157565e49d0a6efdf50b9dfe6942fd4a486feeeb583f7adf5",
+              "['params']['layers'][1]['b']": "34e759fcbd128fe7b55dc6422ce73ece795c56e3fcfcc042cf34303793eba2fa",
+              "['params']['layers'][1]['mask']": "a8bac8d92f7de324f82f8f2988e6cc979abdce2f2cb187c3efb158cafebf98c0",
+              "['params']['layers'][1]['w']": "f0d3f86f2bcf87a791dbec92f44f54958718e0a6f0852056ba7234590348af9d"
+            },
+            "leaves_checked": 11,
+            "mismatches": [],
+            "ok": true
+          },
+          "restore_ms": 150.831
+        }
+      },
+      "rust_verify_full": {
+        "checkpoint": "orbax-court",
+        "full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 2,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 90,
+          "checked_objects": 90,
+          "checked_provenance": 0,
+          "checked_representations": 88,
+          "commit": "14da2d4a36b07c51c678b1eef1cd8bceab66f14138522355a26fb08c9b8da399",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        },
+        "tensors_verified": 11
+      },
+      "rust_verify_full_after_restores": {
+        "checkpoint": "orbax-court",
+        "full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 2,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 90,
+          "checked_objects": 90,
+          "checked_provenance": 0,
+          "checked_representations": 88,
+          "commit": "14da2d4a36b07c51c678b1eef1cd8bceab66f14138522355a26fb08c9b8da399",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        },
+        "tensors_verified": 11
+      },
+      "save_pause_ms": 1.034,
+      "save_total_ms": 1859.152,
+      "service_processes": 1,
+      "service_stats": {
+        "checkpoint_id": "orbax-court",
+        "checkpoint_write_ms": 1808.4608540084446,
+        "directory": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-orbax.orbax-checkpoint-tmp",
+        "leaf_bytes": 58765352,
+        "leaf_count": 11,
+        "shard_strategy": "zstd",
+        "source_file_bytes": 58766211,
+        "source_sha256": "f76cda8e78b54f450a58a3132fb7c253e1829894fdfe48fd974c8e9fdd4d4dc2",
+        "staging_bytes": 268435456,
+        "staging_peak_bytes": 16777216,
+        "storage_name": "orbax-court",
+        "store_command_ms": 1.7372009897371754,
+        "store_root": "/work/.docker-cache/weft-orbax-court-oavcyv4p/weft-store",
+        "write_topology": [
+          8,
+          0
+        ]
+      },
+      "single_leaf_exactness": {
+        "actual_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "dtype": "bfloat16",
+        "expected_sha256": "90c0a036e8beffc4398ca9f3dcb9334741215791cda1b4adef76d92e4b583257",
+        "ok": true,
+        "path": "params.embed",
+        "shape": [
+          8192,
+          512
+        ]
+      },
+      "single_leaf_restore_ms": 21.948,
+      "storage_name": "orbax-court",
+      "store_command_ms": 1.737,
+      "store_growth_from_restores": {
+        "bytes_after": 50866872,
+        "bytes_before": 50866872,
+        "files_after": 190,
+        "files_before": 190,
+        "growth_bytes": 0,
+        "growth_files": 0
+      }
+    }
+  },
+  "status": "ok",
+  "tests": {
+    "junit": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 18,
+      "time_s": 3.283
+    },
+    "log": "bench/receipts/orbax-20261107T063412Z.tests.log",
+    "status": "0"
+  },
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "orbax_checkpoint": "0.12.9",
+    "tensorstore": "unknown",
+    "weft_orbax_adapter": "weftcodec.orbax"
+  },
+  "workload": {
+    "description": "one deterministic sharded PyTree: params + optimizer state, 11 leaves, bf16/f16/f32/i8/u8/i32",
+    "device_kind": "cpu",
+    "devices": 8,
+    "dtypes": [
+      "bfloat16",
+      "float16",
+      "float32",
+      "int32",
+      "int8",
+      "uint8"
+    ],
+    "leaf_count": 11,
+    "leaves": [
+      {
+        "bytes": 8,
+        "dtype": "uint8",
+        "path": "['counters']",
+        "shape": [
+          8
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 8388608,
+        "dtype": "bfloat16",
+        "path": "['opt_state']['momentum']['embed']",
+        "shape": [
+          8192,
+          512
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 32,
+        "dtype": "int32",
+        "path": "['opt_state']['step']",
+        "shape": [
+          8
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 16777216,
+        "dtype": "float32",
+        "path": "['opt_state']['variance']['embed']",
+        "shape": [
+          8192,
+          512
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 8388608,
+        "dtype": "bfloat16",
+        "path": "['params']['embed']",
+        "shape": [
+          8192,
+          512
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 16384,
+        "dtype": "float32",
+        "path": "['params']['layers'][0]['b']",
+        "shape": [
+          4096
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 8192,
+        "dtype": "float16",
+        "path": "['params']['layers'][0]['scale']",
+        "shape": [
+          4096
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 8388608,
+        "dtype": "bfloat16",
+        "path": "['params']['layers'][0]['w']",
+        "shape": [
+          4096,
+          1024
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 16384,
+        "dtype": "float32",
+        "path": "['params']['layers'][1]['b']",
+        "shape": [
+          4096
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 4096,
+        "dtype": "int8",
+        "path": "['params']['layers'][1]['mask']",
+        "shape": [
+          4096
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      },
+      {
+        "bytes": 16777216,
+        "dtype": "float32",
+        "path": "['params']['layers'][1]['w']",
+        "shape": [
+          4096,
+          1024
+        ],
+        "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)"
+      }
+    ],
+    "logical_bytes": 58765352,
+    "mesh": "Mesh('x': 8, axis_types=(Auto,))",
+    "seed": "jax.random.PRNGKey(20261106)",
+    "sharding": "NamedSharding(mesh=Mesh('x': 8, axis_types=(Auto,)), spec=P('x',), memory_kind=device)",
+    "synthetic": true
+  }
+}

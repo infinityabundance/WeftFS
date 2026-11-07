@@ -10,6 +10,7 @@ Modes implemented here:
 * 14 ``SEMANTIC_DELTA``
 * 15 ``TENSOR_TILED``
 * 16 ``SPARSE_DELTA``
+* 17 ``FLOAT_TILED``
 
 Every function is an independent decoder written from the normative spec and
 the canonical WCB reader in :mod:`weftcodec.wcb`. No Rust or Go code is loaded
@@ -38,6 +39,7 @@ from .hashing import (
     DOMAIN_TENSOR_SEMANTIC,
     DOMAIN_TENSOR_SEMANTIC_VALUES,
     DOMAIN_TENSOR_TILE,
+    DOMAIN_TENSOR_FLOAT_TILE,
     DOMAIN_TENSOR_VALUES,
     DOMAIN_TENSOR_SHARDED_PAYLOAD,
     hash_domain,
@@ -2566,5 +2568,347 @@ def decode_tensor_tiled(frame, limits: Limits) -> bytes:
     if logical != meta.logical_root:
         raise Corrupt(
             "tiled tensor logical root does not match the descriptor"
+        )
+    return bytes(out)
+
+
+# ---------------------------------------------------------------------------
+# Mode 17 -- FLOAT_TILED
+# ---------------------------------------------------------------------------
+
+FLOAT_TILED_SCHEMA = "weft.ai.float_tiled.v1"
+FLOAT_TILED_DTYPES = ("bf16", "fp16", "fp32")
+# The descriptor uses the AI-codec spelling; the WEFT-TENSOR identity uses `f16`.
+FLOAT_TILED_LOGICAL_DTYPE = {"bf16": "bf16", "fp16": "f16", "fp32": "f32"}
+
+_FLOAT_TILED_KEYS = (
+    "schema",
+    "dtype",
+    "shape",
+    "element_count",
+    "layout",
+    "tile_shape",
+    "tile_counts",
+    "exponent_coder",
+    "tiles",
+    "payload_len",
+    "logical_root",
+)
+
+_FLOAT_TILE_KEYS = (
+    "index",
+    "dims",
+    "offset",
+    "compressed_len",
+    "exponent_plane_len",
+    "mantissa_plane_len",
+    "element_len",
+    "tile_root",
+)
+
+
+@dataclass
+class FloatTileEntry:
+    index: int
+    dims: "list[int]"
+    offset: int
+    compressed_len: int
+    exponent_plane_len: int
+    mantissa_plane_len: int
+    element_len: int
+    tile_root: bytes
+
+
+@dataclass
+class FloatTiledMeta:
+    dtype: str
+    shape: "list[int]"
+    element_count: int
+    tile_shape: "list[int]"
+    tile_counts: "list[int]"
+    tiles: "list[FloatTileEntry]"
+    payload_len: int
+    logical_root: bytes
+
+
+def float_tile_root(
+    dtype: str,
+    dims: "list[int]",
+    element_len: int,
+    exponent_plane_len: int,
+    mantissa_plane_len: int,
+    tile_bytes: bytes,
+    limits: Limits,
+) -> bytes:
+    record = {
+        "dtype": dtype,
+        "dims": _u64_vec(dims),
+        "element_len": wcb.U64(element_len),
+        "exponent_plane_len": wcb.U64(exponent_plane_len),
+        "mantissa_plane_len": wcb.U64(mantissa_plane_len),
+        "values_hash": values_hash(tile_bytes),
+    }
+    return hash_domain(DOMAIN_TENSOR_FLOAT_TILE, wcb.encode(record, limits))
+
+
+def parse_float_tiled_descriptor(
+    descriptor_bytes: bytes, decoded_len: int, payload_len: int, limits: Limits
+) -> FloatTiledMeta:
+    map_value = _map(_decode_descriptor(descriptor_bytes, limits), "float tiled tensor")
+    _exact_keys(map_value, _FLOAT_TILED_KEYS, "float tiled tensor")
+    schema = _text(map_value, "schema")
+    if schema != FLOAT_TILED_SCHEMA:
+        raise Malformed("unsupported float tiled tensor schema `%s`" % schema)
+    dtype = _text(map_value, "dtype")
+    if dtype not in FLOAT_FIELD_BITS:
+        raise Malformed(
+            "unknown float tiled tensor dtype `%s` (v1 allows bf16, fp16, "
+            "fp32, fp8-e4m3, fp8-e5m2)" % dtype
+        )
+    if dtype not in FLOAT_TILED_DTYPES:
+        raise UnsupportedFeature(
+            "float tiled tensor dtype `%s` is not implemented in v1" % dtype
+        )
+    layout = _text(map_value, "layout")
+    if layout != TILE_LAYOUT:
+        raise Malformed(
+            "float tiled tensor layout `%s` is specified but not implemented "
+            "in v1 (only %s)" % (layout, TILE_LAYOUT)
+        )
+    coder = _text(map_value, "exponent_coder")
+    if coder != PLANE_CODEC:
+        raise Malformed(
+            "unsupported float tiled tensor exponent coder `%s` (v1 allows `%s`)"
+            % (coder, PLANE_CODEC)
+        )
+    shape = _shape(map_value)
+    element_count = _validate_shape(shape, limits, "float tiled tensor")
+    declared_count = _u64(map_value, "element_count")
+    if declared_count != element_count:
+        raise Malformed(
+            "float tiled tensor element_count %d does not match shape product %d"
+            % (declared_count, element_count)
+        )
+    sign_bits, exponent_bits, mantissa_bits = FLOAT_FIELD_BITS[dtype]
+    element_bits = sign_bits + exponent_bits + mantissa_bits
+    if element_bits % 8 != 0:
+        raise Malformed("float tiled tensor element width is not byte-aligned")
+    element_size = element_bits // 8
+    decoded_bytes = _checked_mul(
+        element_count, element_size, "float tiled tensor decoded bytes"
+    )
+    _check_len(decoded_bytes, limits.max_decoded_bytes, "float tiled tensor decoded bytes")
+    if decoded_len != decoded_bytes:
+        raise Corrupt(
+            "float tiled tensor decoded_len is %d but the descriptor requires %d"
+            % (decoded_len, decoded_bytes)
+        )
+    tile_shape = _array_u64(map_value, "tile_shape")
+    counts = _tile_counts(shape, tile_shape)
+    declared_counts = _array_u64(map_value, "tile_counts")
+    if declared_counts != counts:
+        raise Malformed(
+            "float tiled tensor tile_counts %r do not match shape/tile_shape %r"
+            % (declared_counts, counts)
+        )
+    tile_elements = _validate_shape(tile_shape, limits, "float tensor tile")
+    tile_element_len = _checked_mul(
+        tile_elements, element_size, "float tensor tile byte length"
+    )
+    tile_count = 1
+    for count in counts:
+        tile_count = _checked_mul(tile_count, count, "float tensor tile count")
+    if tile_count > limits.max_structured_items:
+        raise LimitExceeded(
+            "float tensor tile count %d exceeds limit %d"
+            % (tile_count, limits.max_structured_items)
+        )
+    declared_payload_len = _u64(map_value, "payload_len")
+    if declared_payload_len != payload_len:
+        # The frame body is the authority; a declared length that disagrees is
+        # a truncated or over-long payload, which is corruption.
+        raise Corrupt(
+            "float tiled tensor payload is %d bytes but metadata declares %d"
+            % (payload_len, declared_payload_len)
+        )
+    mantissa_total_bits = _checked_mul(
+        tile_elements, sign_bits + mantissa_bits, "float tensor tile mantissa bits"
+    )
+    expected_tile_mantissa = _checked_add(
+        mantissa_total_bits, 7, "float tensor tile mantissa length"
+    ) // 8
+    entries = map_value.get("tiles")
+    if not isinstance(entries, list):
+        raise Malformed("float tiled tensor `tiles` must be an array")
+    if len(entries) != tile_count:
+        raise Malformed(
+            "float tiled tensor has %d tile entries but the grid requires %d"
+            % (len(entries), tile_count)
+        )
+    tiles = []
+    expected_offset = 0
+    for position, item in enumerate(entries):
+        entry = _map(item, "float tensor tile")
+        _exact_keys(entry, _FLOAT_TILE_KEYS, "float tensor tile")
+        index = _u64(entry, "index")
+        if index != position:
+            raise Malformed(
+                "float tiled tensor entry %d declares index %d; entries must be "
+                "in canonical order" % (position, index)
+            )
+        if index >= tile_count:
+            raise Malformed(
+                "float tiled tensor tile index %d is outside the %d-tile grid"
+                % (index, tile_count)
+            )
+        dims = _array_u64(entry, "dims")
+        if dims != tile_shape:
+            raise Malformed(
+                "float tensor tile %d dims %r do not equal tile_shape %r; "
+                "partial tiles are not defined in v1" % (position, dims, tile_shape)
+            )
+        declared_element_len = _u64(entry, "element_len")
+        if declared_element_len != tile_element_len:
+            raise Malformed(
+                "float tensor tile %d element_len %d does not match %d"
+                % (position, declared_element_len, tile_element_len)
+            )
+        offset = _u64(entry, "offset")
+        if offset != expected_offset:
+            raise Malformed(
+                "float tensor tile %d offset %d is not the contiguous offset %d"
+                % (position, offset, expected_offset)
+            )
+        compressed_len = _u64(entry, "compressed_len")
+        if compressed_len == 0:
+            raise Malformed("float tensor tile %d has an empty stored range" % position)
+        exponent_plane_len = _u64(entry, "exponent_plane_len")
+        if exponent_plane_len < 256:
+            raise Malformed(
+                "float tensor tile %d exponent_plane_len %d is below the "
+                "Huffman table minimum" % (position, exponent_plane_len)
+            )
+        mantissa_plane_len = _u64(entry, "mantissa_plane_len")
+        if mantissa_plane_len != expected_tile_mantissa:
+            raise Malformed(
+                "float tensor tile %d mantissa_plane_len %d does not match the "
+                "tile arithmetic %d"
+                % (position, mantissa_plane_len, expected_tile_mantissa)
+            )
+        if exponent_plane_len + mantissa_plane_len != compressed_len:
+            raise Malformed(
+                "float tensor tile %d plane lengths %d + %d do not sum to "
+                "compressed_len %d"
+                % (
+                    position,
+                    exponent_plane_len,
+                    mantissa_plane_len,
+                    compressed_len,
+                )
+            )
+        expected_offset = _checked_add(
+            expected_offset, compressed_len, "float tensor tile offset"
+        )
+        root = _bytes_of(entry, "tile_root")
+        if len(root) != HASH_LEN:
+            raise Malformed("float tensor tile_root must be 32 bytes")
+        tiles.append(
+            FloatTileEntry(
+                index=index,
+                dims=dims,
+                offset=offset,
+                compressed_len=compressed_len,
+                exponent_plane_len=exponent_plane_len,
+                mantissa_plane_len=mantissa_plane_len,
+                element_len=declared_element_len,
+                tile_root=root,
+            )
+        )
+    if expected_offset != declared_payload_len:
+        raise Corrupt(
+            "float tensor tile ranges cover %d bytes but payload_len is %d"
+            % (expected_offset, declared_payload_len)
+        )
+    logical_root = _bytes_of(map_value, "logical_root")
+    if len(logical_root) != HASH_LEN:
+        raise Malformed("float tiled tensor logical_root must be 32 bytes")
+    return FloatTiledMeta(
+        dtype=dtype,
+        shape=shape,
+        element_count=element_count,
+        tile_shape=tile_shape,
+        tile_counts=counts,
+        tiles=tiles,
+        payload_len=declared_payload_len,
+        logical_root=logical_root,
+    )
+
+
+def decode_float_tiled(frame, limits: Limits) -> bytes:
+    descriptor_bytes, payload = _split_prefix(frame.body)
+    meta = parse_float_tiled_descriptor(
+        descriptor_bytes, frame.header.decoded_len, len(payload), limits
+    )
+    sign_bits, exponent_bits, mantissa_bits = FLOAT_FIELD_BITS[meta.dtype]
+    element_size = (sign_bits + exponent_bits + mantissa_bits) // 8
+    total = meta.element_count * element_size
+    out = bytearray(total)
+    tiles_bytes = 0
+    for entry in meta.tiles:
+        start = entry.offset
+        end = start + entry.compressed_len
+        if end > len(payload):
+            raise Corrupt("float tensor tile range is outside the payload")
+        stored = payload[start:end]
+        exponent_compressed = stored[: entry.exponent_plane_len]
+        mantissa_plane = stored[entry.exponent_plane_len :]
+        elements = entry.element_len // element_size
+        exponent_plane = huffman.decode(exponent_compressed, elements)
+        tile = _join_float_planes(
+            exponent_plane,
+            mantissa_plane,
+            meta.dtype,
+            elements,
+            limits,
+        )
+        root = float_tile_root(
+            meta.dtype,
+            entry.dims,
+            entry.element_len,
+            entry.exponent_plane_len,
+            entry.mantissa_plane_len,
+            tile,
+            limits,
+        )
+        if root != entry.tile_root:
+            raise Corrupt(
+                "float tensor tile %d root does not match the descriptor"
+                % entry.index
+            )
+        tiles_bytes += len(tile)
+        tile_coords = _tile_start(meta.tile_counts, entry.index)
+        dst_start = [
+            coord * meta.tile_shape[axis] for axis, coord in enumerate(tile_coords)
+        ]
+        for local in _iter_coords(entry.dims):
+            src = _flat_index(local, entry.dims) * element_size
+            full = [dst_start[axis] + local[axis] for axis in range(len(meta.shape))]
+            dst = _flat_index(full, meta.shape) * element_size
+            out[dst : dst + element_size] = tile[src : src + element_size]
+    if tiles_bytes != total:
+        raise Corrupt(
+            "float tiled tensor decoded to %d bytes but the descriptor "
+            "requires %d" % (tiles_bytes, total)
+        )
+    logical = tensor_logical_root(
+        FLOAT_TILED_LOGICAL_DTYPE[meta.dtype],
+        meta.shape,
+        meta.element_count,
+        bytes(out),
+        limits,
+    )
+    if logical != meta.logical_root:
+        raise Corrupt(
+            "float tiled tensor logical root does not match the descriptor"
         )
     return bytes(out)

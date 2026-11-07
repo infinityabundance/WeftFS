@@ -1,0 +1,268 @@
+{
+  "checks": [
+    {
+      "detail": null,
+      "name": "service_write_complete",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "service_write_tensor_count",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "service_write_source_sha",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "manifest_rows",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "manifest_element_bytes",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "service_leaf_exact",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "cli_leaf_exact",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "service_all_exact",
+      "ok": true
+    },
+    {
+      "detail": null,
+      "name": "cli_all_exact",
+      "ok": true
+    },
+    {
+      "detail": {
+        "after": {
+          "bytes": 34027955,
+          "files": 270
+        },
+        "before": {
+          "bytes": 34027955,
+          "files": 270
+        }
+      },
+      "name": "restore_does_not_mutate",
+      "ok": true
+    },
+    {
+      "detail": {
+        "cli_median_ms": 10.386,
+        "cli_samples_ms": [
+          10.733,
+          10.616,
+          11.29,
+          10.629,
+          10.262,
+          10.215,
+          10.173,
+          11.117,
+          10.482,
+          10.16,
+          10.344,
+          10.114,
+          11.452,
+          10.469,
+          10.253,
+          10.269,
+          10.091,
+          11.123,
+          10.428,
+          10.226
+        ],
+        "ratio_cli_over_service": 4.073,
+        "service_median_ms": 2.55,
+        "service_samples_ms": [
+          2.86,
+          2.605,
+          2.716,
+          2.687,
+          2.485,
+          2.458,
+          2.45,
+          2.611,
+          2.826,
+          2.503,
+          2.491,
+          2.47,
+          2.59,
+          3.06,
+          2.505,
+          2.504,
+          2.456,
+          2.573,
+          3.09,
+          2.527
+        ]
+      },
+      "name": "service_one_leaf_faster_than_cli",
+      "ok": true
+    }
+  ],
+  "environment": {
+    "court_cap_drop": "ALL",
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:af751fc866908fb6e6abb190c6e139739b62246ea019447a6a754e5c3b2a849e",
+    "court_kernel": "7.3.1-1-cachyos",
+    "court_memory": "3g",
+    "court_no_new_privileges": true,
+    "court_pids": "1024",
+    "peak_rss_kib": 342660,
+    "platform": "Linux-7.3.1-1-cachyos-x86_64-with-glibc2.36",
+    "python_version": "3.12.16",
+    "revision_weftcodec": "46713726cd454f587c4db006ae723bd4bd4474a2",
+    "revision_weftfs": "2fe0d1b02d0b1ab679be69b4a549a370a5141e7c",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs",
+    "weftfs_version": "weftfs 1.0.0"
+  },
+  "fixture": {
+    "bytes_per_tensor": 1048576,
+    "container_bytes": 33557040,
+    "dtype": "f32",
+    "logical_bytes": 33554432,
+    "shape": [
+      1024,
+      256
+    ],
+    "shard_strategy": "zstd",
+    "shards": 4,
+    "synthetic": true,
+    "tensors": 32
+  },
+  "generated_at_utc": "2026-11-07T06:35:23Z",
+  "label": "Persistent checkpoint service court: one store, 32 x 1 MiB f32 tensors, 4-way zstd shards. The service path is one long-lived helper with one read handle and memfd payloads; the CLI path is one process per operation plus a host staging file. Single host, warm cache, synthetic data.",
+  "not_claimed": [
+    "no GPU, multi-host, fleet, or cloud run",
+    "no media power-loss or host cache claim",
+    "warm cache; a cold store open is measured separately by the store bench",
+    "the CLI path here includes a host staging file, which is the pre-S3 code path"
+  ],
+  "receipt": "weftfs-checkpoint-service/1",
+  "results": {
+    "restore_one_leaf_ms": {
+      "cli_median_ms": 10.386,
+      "cli_samples_ms": [
+        10.733,
+        10.616,
+        11.29,
+        10.629,
+        10.262,
+        10.215,
+        10.173,
+        11.117,
+        10.482,
+        10.16,
+        10.344,
+        10.114,
+        11.452,
+        10.469,
+        10.253,
+        10.269,
+        10.091,
+        11.123,
+        10.428,
+        10.226
+      ],
+      "ratio_cli_over_service": 4.073,
+      "service_median_ms": 2.55,
+      "service_samples_ms": [
+        2.86,
+        2.605,
+        2.716,
+        2.687,
+        2.485,
+        2.458,
+        2.45,
+        2.611,
+        2.826,
+        2.503,
+        2.491,
+        2.47,
+        2.59,
+        3.06,
+        2.505,
+        2.504,
+        2.456,
+        2.573,
+        3.09,
+        2.527
+      ]
+    },
+    "restore_whole_checkpoint_ms": {
+      "cli_median_ms": 96.363,
+      "cli_samples_ms": [
+        95.405,
+        96.363,
+        98.647
+      ],
+      "ratio_cli_over_service": 1.213,
+      "service_median_ms": 79.465,
+      "service_samples_ms": [
+        78.244,
+        79.971,
+        79.465
+      ]
+    },
+    "service": {
+      "manifest_ms": {
+        "median_ms": 0.467,
+        "samples_ms": [
+          1.081,
+          0.534,
+          0.475,
+          0.47,
+          0.462,
+          0.457,
+          0.459,
+          0.464,
+          0.474,
+          0.458
+        ]
+      },
+      "stats": {
+        "request_ms": 1625.290979834972,
+        "requests": 230,
+        "restored_bytes": 226492416,
+        "restores": 216,
+        "writes": 1,
+        "written_bytes": 33557040
+      }
+    },
+    "store": {
+      "bytes_after": {
+        "bytes": 34027955,
+        "files": 270
+      },
+      "bytes_before": {
+        "bytes": 34027955,
+        "files": 270
+      },
+      "generation_after": 2,
+      "generation_before": 2,
+      "physical_after_write": {
+        "bytes": 34027955,
+        "files": 270
+      }
+    },
+    "write_checkpoint_ms": {
+      "cli_processes": 1,
+      "cli_staging_file_ms": 1286.272,
+      "service_memfd_ms": 1206.718
+    }
+  }
+}

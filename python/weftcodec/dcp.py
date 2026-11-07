@@ -437,6 +437,7 @@ class _Storage:
         self.timeout = float(timeout)
         self._lock = threading.Lock()
         self.command_ms = 0.0
+        self.calls = 0
 
     # -- process plumbing ---------------------------------------------------
 
@@ -464,6 +465,7 @@ class _Storage:
         elapsed = (time.monotonic() - started) * 1000.0
         with self._lock:
             self.command_ms += elapsed
+            self.calls += 1
         if proc.returncode != 0:
             stderr = proc.stderr.decode("utf-8", "replace").strip()
             error_class = _parse_error_class(stderr)
@@ -1100,6 +1102,7 @@ class WeftStorageWriter(_StorageWriterBase):
                 "storage_name": self._storage_name,
                 "store_root": os.fspath(self.store_root),
                 "store_command_ms": self._store.command_ms,
+                "store_command_calls": self._store.calls,
                 "service": (
                     None if self._service is None else dict(self._service.stats)
                 ),
@@ -1607,6 +1610,7 @@ class WeftStorageReader(_StorageReaderBase):
                 "metadata_source": self._metadata_source,
                 "store_root": os.fspath(self.store_root),
                 "store_command_ms": self._store.command_ms,
+                "store_command_calls": self._store.calls,
                 "service": (
                     None if self._service is None else dict(self._service.stats)
                 ),
@@ -1784,7 +1788,10 @@ class WeftStorageReader(_StorageReaderBase):
                 info = self._entry_info(entry)
                 try:
                     buffer = service.restore_tensor(
-                        self._storage_name, entry, topology=topology_arg
+                        self._storage_name,
+                        entry,
+                        topology=topology_arg,
+                        expected_size=int(manifest_rows[entry]["element_bytes"]),
                     )
                 except ServiceError as exc:
                     raise self._translate(exc) from exc

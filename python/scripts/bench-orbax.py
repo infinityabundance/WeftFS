@@ -195,8 +195,10 @@ def base_receipt():
         "label": (
             "WeftFS Orbax adapter court: a real 8-device CPU JAX mesh, one "
             "sharded PyTree, compared against Orbax's own OCDBT checkpoint. "
-            "Single process, single host, synthetic random weights, warm cache. "
-            "No TPU, GPU, multi-host, or fleet claim."
+            "Save and restore use one persistent in-process checkpoint service "
+            "(no per-op CLI process); restores decode straight into caller-owned "
+            "memfds and import nothing. Single process, single host, synthetic "
+            "random weights, warm cache. No TPU, GPU, multi-host, or fleet claim."
         ),
         "environment": environment(),
         "install": {
@@ -443,7 +445,7 @@ def run_court(receipt):
     from jax.sharding import Mesh, NamedSharding, PartitionSpec as P
 
     from weftcodec import orbax as wo
-    from weftcodec.dcp import init_store
+    from weftcodec.dcp import _Storage, _parse_safetensors, init_store
 
     receipt["orbax_available"] = True
     receipt["versions"] = {
@@ -640,6 +642,7 @@ def run_court(receipt):
             weft_async.close()
         phase("weft_saved")
         store_physical_after_save = directory_physical(store)
+        store_physical_before_restores = store_physical_after_save
         rust_checkpoint_after_save = wo.verify_checkpoint(
             store, weft_result.storage_name, full=False
         )
@@ -707,6 +710,66 @@ def run_court(receipt):
         )
         phase("rust_verify_after_restores")
 
+        # ---- control: the pre-service path, same court, same fixture -----
+        # A safetensors staging file on disk, one CLI process per operation,
+        # and a restored container parsed on the host. This is exactly what
+        # the adapter did before S3; it is a control, not the current path.
+        control_dir = root / "legacy-control"
+        control_dir.mkdir(parents=True, exist_ok=True)
+        legacy = _Storage(store, cli=CLI, timeout=1800)
+        legacy_staging = control_dir / "staging.safetensors"
+        legacy.restore(weft_result.storage_name, host_out=legacy_staging)
+        legacy_calls_before = legacy.calls
+        t0 = time.monotonic()
+        legacy.checkpoint_write(
+            legacy_staging,
+            "legacy-control",
+            shards=8,
+            axis=0,
+            strategy="zstd",
+        )
+        legacy_save_ms = (time.monotonic() - t0) * 1000.0
+        legacy_save_calls = legacy.calls - legacy_calls_before
+
+        legacy_out = control_dir / "full.safetensors"
+        t0 = time.monotonic()
+        legacy.restore(weft_result.storage_name, host_out=legacy_out)
+        legacy_parsed = _parse_safetensors(legacy_out)
+        expected_rows = flatten_rows(source)
+        legacy_mismatches = []
+        for path, row in expected_rows.items():
+            leaf_meta = metadata.by_path()[path]
+            payload = legacy_parsed[leaf_meta.entry][2]
+            if hashlib.sha256(payload).hexdigest() != row["sha256"]:
+                legacy_mismatches.append(path)
+            # Materialise exactly as the pre-S3 adapter did: a host array from
+            # the container payload, then the device copy.
+            host = np.frombuffer(payload, dtype=wo._numpy_dtype(leaf_meta.dtype))
+            host = host.reshape(leaf_meta.shape)
+            jax.numpy.asarray(host)
+        legacy_full_ms = (time.monotonic() - t0) * 1000.0
+        legacy_exact = {"ok": not legacy_mismatches, "mismatches": legacy_mismatches}
+        legacy_leaf_out = control_dir / "leaf.safetensors"
+        t0 = time.monotonic()
+        legacy.restore(
+            weft_result.storage_name,
+            entry=metadata.by_path()["['params']['embed']"].entry,
+            host_out=legacy_leaf_out,
+        )
+        _parse_safetensors(legacy_leaf_out)
+        legacy_single_ms = (time.monotonic() - t0) * 1000.0
+        phase("legacy_control")
+        legacy_control = {
+            "label": "pre-S3 path: staging file + one CLI process per operation",
+            "save_ms": round(legacy_save_ms, 3),
+            "save_cli_calls": legacy_save_calls,
+            "full_restore_ms": round(legacy_full_ms, 3),
+            "single_leaf_restore_ms": round(legacy_single_ms, 3),
+            "full_restore_exact": legacy_exact["ok"],
+            "cli_calls_total": legacy.calls,
+            "cli_ms_total": round(legacy.command_ms, 3),
+        }
+
         standard_dir_physical = standard_physical
         weft_manifest = weft_result.manifest
 
@@ -740,12 +803,24 @@ def run_court(receipt):
                 "save_pause_ms": round(weft_save_pause * 1000.0, 3),
                 "save_total_ms": round(weft_save_total * 1000.0, 3),
                 "store_command_ms": round(weft_result.store_command_ms, 3),
+                "service_stats": weft_handler.stats.get("last_save"),
+                "service_processes": 1,
                 "checkpoint_write_ms": round(weft_result.checkpoint_write_ms, 3),
                 "restore_ms": round(weft_restore_ms, 3),
                 "single_leaf_restore_ms": round(weft_single_leaf_ms, 3),
                 "single_leaf_exactness": weft_single_leaf,
                 "physical": store_physical_after_save,
                 "physical_after_restores": store_physical_after_restores,
+                "store_growth_from_restores": {
+                    "bytes_before": store_physical_before_restores["bytes"],
+                    "bytes_after": store_physical_after_restores["bytes"],
+                    "growth_bytes": store_physical_after_restores["bytes"]
+                    - store_physical_before_restores["bytes"],
+                    "files_before": store_physical_before_restores["files"],
+                    "files_after": store_physical_after_restores["files"],
+                    "growth_files": store_physical_after_restores["files"]
+                    - store_physical_before_restores["files"],
+                },
                 "physical_vs_logical": round(
                     store_physical_after_save["bytes"] / logical_bytes, 6
                 ),
@@ -772,6 +847,8 @@ def run_court(receipt):
                 "vm_hwm_kib": vm_hwm_kib(),
                 "phases": phases,
             },
+            "adapter_stats": weft_handler.stats,
+            "legacy_cli_control": legacy_control,
         }
         receipt["results"] = results
 
@@ -887,8 +964,9 @@ def run_court(receipt):
                     "WeftFS bytes are the whole store directory immediately after "
                     "the checkpoint publish (objects, manifests, commits, "
                     "index/lock files, and the Orbax metadata object); Orbax bytes "
-                    "are its checkpoint directory. Restored-container imports are "
-                    "excluded here and reported separately."
+                    "are its checkpoint directory. The restore path decodes "
+                    "directly into caller-owned memfds, so restores add no store "
+                    "bytes (see store_growth_from_restores)."
                 ),
             }
         )
@@ -900,10 +978,10 @@ def run_court(receipt):
                 "phase_bytes_after_save": store_physical_after_save["bytes"],
                 "phase_bytes_after_restores": store_physical_after_restores["bytes"],
                 "note": (
-                    "The R15 receipt measured the old always-import behavior. Since "
-                    "R19 `weftfs checkpoint restore` is read-only unless `--import` "
-                    "(or the adapter's `import_restored=True`) is requested, so a "
-                    "rerun of this court reports 0 B here by default."
+                    "The R15 receipt measured the old always-import behavior "
+                    "(67,615,378 B). Since R19 restore is read-only, and since S3 "
+                    "the service restores into caller memfds and cannot materialize "
+                    "a container at all, this must be 0 B."
                 ),
             }
         )

@@ -68,6 +68,7 @@ MODE_NAMES = {
     14: "semantic_delta",
     15: "tensor_tiled",
     16: "sparse_delta",
+    17: "float_tiled",
 }
 
 #: Modes this Python reader can actually materialize plaintext for.

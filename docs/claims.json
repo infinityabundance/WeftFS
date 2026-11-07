@@ -5146,5 +5146,172 @@
     ],
     "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
     "kind": "present"
+  },
+  {
+    "id": "svc_receipt_current",
+    "claim": "docs/STATUS.md and docs/CHECKPOINT-SERVICE.md cite the S3 checkpoint-service court receipt.",
+    "value": "checkpoint-service-20261107T063519Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CHECKPOINT-SERVICE.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-service-20261107T063519Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "svc_one_leaf_ratio",
+    "claim": "The service restores one 1 MiB tensor 4.07x faster than the CLI-per-call path on the same fixture.",
+    "value": "4.07x",
+    "locations": [
+      "docs/CHECKPOINT-SERVICE.md",
+      "bench/RESULTS-checkpoint-service.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-service-20261107T063519Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "svc_no_read_mutation",
+    "claim": "docs/STATUS.md records an unchanged store tree and generation after 100 restores.",
+    "value": "34,027,955 B, 270 files, generation 2",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/CHECKPOINT-SERVICE.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-service-20261107T063519Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "svc_no_pyo3",
+    "claim": "docs/STATUS.md records that pyo3 is absent from Cargo.lock and the court cache, so no FFI crate was added.",
+    "value": "`pyo3` is absent from `Cargo.lock` (0 matches)",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "svc_not_a_multi_client_server",
+    "claim": "docs/CHECKPOINT-SERVICE.md states the service is one connection with one request in flight.",
+    "value": "Not a multi-client server",
+    "locations": [
+      "docs/CHECKPOINT-SERVICE.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "dcp_after_receipt",
+    "claim": "docs/PYTORCH-DCP.md cites the S3 DCP receipt.",
+    "value": "pytorch-dcp-20261107T063540Z.json",
+    "locations": [
+      "docs/PYTORCH-DCP.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261107T063540Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "dcp_load_after",
+    "claim": "docs/PYTORCH-DCP.md records a 101.0 ms full load after S3.",
+    "value": "101.006 ms",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261107T063540Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "dcp_no_cli_calls",
+    "claim": "Save and load make zero CLI subprocess calls and record it as store_command_calls: 0.",
+    "value": "store_command_calls: 0",
+    "locations": [
+      "docs/PYTORCH-DCP.md",
+      "bench/RESULTS-checkpoint-service.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261107T063540Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "dcp_save_loss_published",
+    "claim": "docs/PYTORCH-DCP.md publishes that save is 22.5 % slower than the Q5 record.",
+    "value": "22.5 % slower",
+    "locations": [
+      "docs/PYTORCH-DCP.md"
+    ],
+    "receipt": "bench/receipts/pytorch-dcp-20261107T063540Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "orbax_after_receipt",
+    "claim": "docs/JAX-ORBAX.md cites the S3 Orbax receipt.",
+    "value": "orbax-20261107T063412Z.json",
+    "locations": [
+      "docs/JAX-ORBAX.md"
+    ],
+    "receipt": "bench/receipts/orbax-20261107T063412Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "orbax_restore_after",
+    "claim": "docs/JAX-ORBAX.md records a 185.788 ms full restore after S3.",
+    "value": "185.788 ms",
+    "locations": [
+      "docs/JAX-ORBAX.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/orbax-20261107T063412Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "orbax_store_growth_zero",
+    "claim": "The S3 Orbax run records zero store growth from restores, versus +67,615,378 B in R15.",
+    "value": "+67,615,378 B",
+    "locations": [
+      "docs/JAX-ORBAX.md",
+      "bench/RESULTS-checkpoint-service.md"
+    ],
+    "receipt": "bench/receipts/orbax-20261107T063412Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "orbax_save_loss_published",
+    "claim": "docs/JAX-ORBAX.md publishes that save is still 23.9x slower than Orbax OCDBT.",
+    "value": "23.9x",
+    "locations": [
+      "docs/JAX-ORBAX.md"
+    ],
+    "receipt": "bench/receipts/orbax-20261107T063412Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "orbax_reshard_honored",
+    "claim": "The S3 Orbax receipt records that a requested 2-device restore sharding is honoured.",
+    "value": "requested 2-device restore sharding honoured",
+    "locations": [
+      "docs/JAX-ORBAX.md"
+    ],
+    "receipt": "bench/receipts/orbax-20261107T063412Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "svc_python_court",
+    "claim": "docs/STATUS.md records the S3 Python court result from the built wheel.",
+    "value": "369 tests, 0 failures, 10 skipped",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261107T064323Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "svc_python_mode17",
+    "claim": "docs/STATUS.md records that the Python reader now implements mode 17 and retained the failing first run.",
+    "value": "python-bindings-20261107T063910Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/python-bindings-20261107T063910Z.json",
+    "kind": "present"
   }
 ]
