@@ -1,5 +1,7 @@
 # WeftFS
 
+[![Release](https://img.shields.io/github/v/release/infinityabundance/WeftFS?label=release)](https://github.com/infinityabundance/WeftFS/releases/tag/v1.0.0)
+
 **Context-addressed storage, with byte-exact reconstruction.**
 
 WeftFS is a research program building four independent, interoperable
@@ -35,7 +37,7 @@ tested in the Docker court.
 | P5 | Rust FUSE frontend, POSIX matrix, context views | **Implemented** — 232 Rust FUSE-court tests pass, 0 fail, 2 `#[ignore]`d: ownership needs `CAP_SETUID`; same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) |
 | P5a | Commit-time write budgets + branching time travel (Rust + Go) | **Implemented** — admission budgets fail closed with `BudgetExceeded` before publication; usage is a committed-state-derived `quota` record that survives reopen and fails closed on mismatch; `snapshot branch` / `context branch` / union `merge` at parity. Rust `tests/quota.rs` + `tests/branching.rs` (19 tests) and Go `store/quota_test.go` + `store/branch_test.go` (14 tests) pass, including both cross-language directions; bench receipt `bench/receipts/quota-branch-20261105T071244Z.json`, 10,000-version demo receipt `bench/receipts/branching-20261105T071457Z.json` (7/7). See [`spec/WEFT-QUOTA.md`](spec/WEFT-QUOTA.md) and [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — 31 Go tests + 13 GC tests, byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. R20 adds the Rust-equivalent `weft.manifest.v4` overlay writer and compaction, a probed blob/commit plane split, the physical pack plane, and `weft.calibration.v1` loading to Go, with cross-language byte-equality courts. R24 adds Go `calibrate` measurement (a Rust-accepted `weft.calibration.v1` document with the identical id) and FUSE mount coverage for packed, split, and packed-split stores. R25 adds a real **Go S3 backend** — SigV4, `If-None-Match`/`If-Match` planes, the ported fenced writer, all four split layouts — with a MinIO court and 17/17 Rust↔Go checks in both directions. R26 adds **WFX2 selector-index persistence** to Go, byte-compatible with Rust in both directions, cutting the first relation query after a 10k-object reopen from ~16.85 to ~7.75 ms. Go still has no GCS/Azure backend and no `calibrate --install`. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md#subphase-r20--go-parity-for-the-r9r12-storage-surfaces-2026-11-06) |
-| P7 | Bench courts, receipt bundle, showcase, release | **v0.9.0 released; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-20261106T232858Z.json` (**30/30**, including `claims`, `conformance_manifest`, `conformance_coverage`, the five authenticated-capability cross-language courts, `ceph_rgw` against Ceph RGW 19.2.0 running the S3 backend *and* the fenced-writer suite, the MinIO `s3_court`, `threefs` (3FS POSIX byte-identity plus the USRBIO ABI conformance court), and `fuzz_diff`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md), [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md), [`bench/RESULTS-fuse-v0.5.md`](bench/RESULTS-fuse-v0.5.md), [`bench/RESULTS-capability-envelope.md`](bench/RESULTS-capability-envelope.md), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md), [`bench/RESULTS-float-tensor-real.md`](bench/RESULTS-float-tensor-real.md), [`bench/RESULTS-checkpoint-topology.md`](bench/RESULTS-checkpoint-topology.md), [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md), [`bench/RESULTS-context-mounts-1000.md`](bench/RESULTS-context-mounts-1000.md), [`bench/RESULTS-merkle-identity.md`](bench/RESULTS-merkle-identity.md), [`bench/RESULTS-tensor-tiles.md`](bench/RESULTS-tensor-tiles.md), [`bench/RESULTS-sparse-delta.md`](bench/RESULTS-sparse-delta.md), and [`docs/PYTORCH-DCP.md`](docs/PYTORCH-DCP.md); no headline performance claim is made. See [`docs/RELEASE-v0.9.0.md`](docs/RELEASE-v0.9.0.md); the previous release note is [`docs/RELEASE-v0.8.0.md`](docs/RELEASE-v0.8.0.md). |
+| P7 | Bench courts, receipt bundle, showcase, release | **v1.0.0 released; ongoing** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, verification court, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-20261107T021227Z.json` (**30/30**, including `claims`, `conformance_manifest`, `conformance_coverage`, the five authenticated-capability cross-language courts, `ceph_rgw` against Ceph RGW 19.2.0 running the S3 backend *and* the fenced-writer suite, the MinIO `s3_court`, `threefs` (3FS POSIX byte-identity plus the USRBIO ABI conformance court), and `fuzz_diff`). Losses and gaps are published in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md), [`bench/RESULTS-comparative-v1.md`](bench/RESULTS-comparative-v1.md), [`bench/RESULTS-fuse-v0.5.md`](bench/RESULTS-fuse-v0.5.md), [`bench/RESULTS-capability-envelope.md`](bench/RESULTS-capability-envelope.md), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md), [`bench/RESULTS-float-tensor-real.md`](bench/RESULTS-float-tensor-real.md), [`bench/RESULTS-checkpoint-topology.md`](bench/RESULTS-checkpoint-topology.md), [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md), [`bench/RESULTS-context-mounts-1000.md`](bench/RESULTS-context-mounts-1000.md), [`bench/RESULTS-merkle-identity.md`](bench/RESULTS-merkle-identity.md), [`bench/RESULTS-tensor-tiles.md`](bench/RESULTS-tensor-tiles.md), [`bench/RESULTS-sparse-delta.md`](bench/RESULTS-sparse-delta.md), and [`docs/PYTORCH-DCP.md`](docs/PYTORCH-DCP.md); no headline performance claim is made. See [`docs/RELEASE-v1.0.0.md`](docs/RELEASE-v1.0.0.md); the previous release note is [`docs/RELEASE-v0.9.0.md`](docs/RELEASE-v0.9.0.md). |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 | F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; default 3-mount demo plus **100 concurrent read-only context mounts** (50 `by:task`, 25 `by:model`, 25 `derived_from` roots; 425 file checks, 100/100 distinct listing digests) and a **1,000 concurrent context-mount court** (500 Rust + 500 Go daemons, 1,000 distinct roots, 4,250 file SHA-256 checks, 1,000 distinct digests, 1,000 cat comparisons, `semantic_match=true`, at explicit `52g / 8 CPUs / 16384 pids` court overrides — at `24g / 8 / 4096` the same court reaches 692 mounted and passes completely at 400, so 1,000 is **not** claimed to fit the default court); ambiguity fails closed and lists every ObjectId; default 100-version plus **10,000-version time travel** (101 snapshots, 10 mounted at once, later live write/rename leaves every snapshot byte-identical); Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6, default), `context-mounts-20261104T125344Z.json` (5/5, 100 mounts, `semantic_match=true`), `context-mounts-20261105T122643Z.json` + `context-mounts-20261105T131116Z.json` (5/5 each, 1,000 mounts, `semantic_match=true`), `context-mounts-20261105T140342Z.json` (INCOMPLETE 692/1000 at the directed limits), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4, default), `time-travel-20261104T125947Z.json` (6/6, 10,000 versions, `semantic_match=true`), `replay-bundle-20261103T210824Z.json` (4/4). Single-host court, synthetic fixtures; not a fleet claim. Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
 | F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **100,000/100,000 crash iterations at 19.2 it/s** (66,667 old / 33,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T104233Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
@@ -47,6 +49,59 @@ tested in the Docker court.
 
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
+
+## What's new in v1.0.0
+
+Full note with every limit and every loss: [`docs/RELEASE-v1.0.0.md`](docs/RELEASE-v1.0.0.md).
+No frozen wire format changed (codec modes 0–16, WFT1, `weft.manifest.v1`–`v4`,
+store fixture v1, every conformance vector). The release is R2–R26; the v0.9.0
+notes below cover R2–R13 in detail.
+
+- **Remote object planes (R10, R14, R21):** probed blob/commit split planes,
+  a GCS JSON backend with `ifGenerationMatch`, an Azure Blob backend, and
+  GCS service-account RS256 auth (the RFC 7515 A.2 signature vector matches
+  exactly). All four local/S3 split layouts reproduce one root and generation.
+- **Fenced writers (R17/R18):** the lease is a fenced record whose conditional
+  rewrite is the last gate before the head CAS; takeover is fence+1; release is
+  a content-addressed tombstone. Adversarial `SIGSTOP` tests pass on MinIO
+  (8/8), Ceph RGW 19.2.0 (8/8), and fake-GCS; the local suite is 4/4. The fence
+  and head are still two conditional writes, not one atomic operation.
+- **Independent S3 implementation (R16) and Azure SAS (R23):** Ceph RGW 8/8
+  compatibility behaviours and 6/6 backend tests; Azurite accepts a real
+  service SAS for read-only use (19 backend + 7 fencing tests, 0 failures),
+  while a writable SAS open is refused by Azurite’s container check. SAS is
+  effectively read-only; account SAS is untested.
+- **Go S3 backend (R25):** SigV4 on the standard library, the ported fenced
+  writer, `--backend s3`, all four split layouts; MinIO focused **17 pass /
+  1 skip**, full `go test -race` 0 failures, cross-language **17/17**.
+- **3FS transports (R22):** POSIX is byte-identical to local; the USRBIO ring
+  path turns 1,500 requests into 50 submissions. It is **1.127x slower** than
+  positional reads in the conformance court, and **no 3FS deployment was run**.
+- **Tensor restore pipeline (R19):** ordered producer/consumer with one
+  in-order writer; tmpfs restore 4,913.0 -> 2,157.3 ms at 4 threads. No disk
+  performance claim: the host bind-mount spread exceeded every mode difference.
+- **Orbax adapter (R15):** real JAX/Orbax, 11/11 leaves exact — but **22.2x
+  slower save, 126.7x slower full restore, 72.5x slower single leaf, +0.44 %
+  bytes**. It is an interoperability result, not a competitiveness claim.
+- **Go parity (R20, R24, R26):** v4 overlay writer and compaction (identical
+  manifest and head for a fixed clock), pack plane, calibration loading and
+  measurement (Rust accepts the Go `weft.calibration.v1` document with the
+  identical id), S3, and `WFX2` selector-index persistence (first relation
+  query after a 10k reopen 16.85 -> 7.75 ms). Go still has no GCS/Azure
+  backend and no `calibrate --install`.
+- **Verification:** `verify-20261107T021227Z.json` is **30/30 courts pass** at
+  WeftFS `7c10ad4`, WeftCodec `d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go
+  `9fa39d3`. The aggregate is unchanged in shape from v0.9.0 (including
+  `ceph_rgw`, `s3_court`, `threefs`, and `fuzz_diff`); writer-fence tests run
+  inside `s3_court`/`ceph_rgw`. Standalone courts are cited separately:
+  Azure/Azurite (`azure-20261107T015947Z.json`), Go S3 (`go-s3-20261107T020137Z.json`),
+  3FS `--bench` (`threefs-20261107T020623Z.json`), and the Python court
+  (`python-bindings-20261107T015918Z.json`, **349 tests, 0 failures, 9 skipped**).
+- **Still not claimed:** physical media power loss, host page-cache loss,
+  RAPL/joule energy, GPU/TPU/SIMD decode, any fleet/multi-host/multi-writer
+  claim, constant-time RSA, live Azure/GCS/3FS deployments, Go GCS/Azure
+  backends, Go `calibrate --install`, Orbax competitiveness, general-purpose
+  filesystem performance, and PyPI publication (no token).
 
 ## What's new in v0.9.0
 
@@ -257,7 +312,7 @@ the first failing receipt is retained. Every limit (single node, process faults
 rather than media loss, no TCP partition, exclusive writers, Rust-only) is in
 [`bench/RESULTS-distributed.md`](bench/RESULTS-distributed.md).
 
-Prior releases: [`docs/RELEASE-v0.8.0.md`](docs/RELEASE-v0.8.0.md) (fast mount writes, tiled tensors, commit-time quotas, S3, PyTorch DCP, signed bundles), [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).
+Prior releases: [`docs/RELEASE-v0.9.0.md`](docs/RELEASE-v0.9.0.md) (decoder throughput, sparse and tiled tensors, shared mounts, caches, overlays, split planes, packs, host calibration, distributed court, GCS, Orbax, Ceph RGW, fenced writers, pipelined restore, Go parity, 3FS POSIX/USRBIO, Azure/GCS auth, Azure SAS, Go calibrate/S3/WFX2), [`docs/RELEASE-v0.8.0.md`](docs/RELEASE-v0.8.0.md) (fast mount writes, tiled tensors, commit-time quotas, S3, PyTorch DCP, signed bundles), [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).
 
 Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](docs/STATUS.md).
 
@@ -281,10 +336,10 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
 Published on GHCR, anonymously pullable:
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftcodec:v0.9.0
-docker pull ghcr.io/infinityabundance/weftcodec-go:v0.9.0
-docker pull ghcr.io/infinityabundance/weftfs:v0.9.0
-docker pull ghcr.io/infinityabundance/weftfs-go:v0.9.0
+docker pull ghcr.io/infinityabundance/weftcodec:v1.0.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v1.0.0
+docker pull ghcr.io/infinityabundance/weftfs:v1.0.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v1.0.0
 ```
 
 `latest` is also published. FUSE mounts require `--device /dev/fuse --cap-add
@@ -297,13 +352,13 @@ Published on crates.io:
 
 ```toml
 [dependencies]
-weftcodec = "0.9.0"
-weftfs = "0.9.0"
+weftcodec = "1.0.0"
+weftfs = "1.0.0"
 ```
 
 ```sh
-cargo add weftcodec@0.9.0
-cargo add weftfs@0.9.0
+cargo add weftcodec@1.0.0
+cargo add weftfs@1.0.0
 ```
 
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the

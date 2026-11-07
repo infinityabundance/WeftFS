@@ -2,12 +2,12 @@
  {
   "id": "verify_receipt_current",
   "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (30/30 courts pass, incl. threefs, ceph_rgw and s3_court).",
-  "value": "verify-20261106T232858Z.json",
+  "value": "verify-20261107T021227Z.json",
   "locations": [
    "docs/STATUS.md",
    "README.md"
   ],
-  "receipt": "bench/receipts/verify-20261106T232858Z.json",
+  "receipt": "bench/receipts/verify-20261107T021227Z.json",
   "kind": "present"
  },
  {
@@ -356,22 +356,20 @@
  },
  {
   "id": "release_v090_crates",
-  "claim": "README.md and docs/containers.md advertise the v0.9.0 crate versions.",
+  "claim": "The v0.9.0 release note records the v0.9.0 crate versions; the current README and docs/containers.md advertise 1.0.0.",
   "value": "weftcodec = \"0.9.0\"",
   "locations": [
-   "README.md",
-   "docs/containers.md"
+   "docs/RELEASE-v0.9.0.md"
   ],
   "receipt": null,
   "kind": "present"
  },
  {
   "id": "release_v090_docker_tag",
-  "claim": "README.md and docs/containers.md advertise the v0.9.0 WeftFS image tag.",
-  "value": "weftfs:v0.9.0",
+  "claim": "The v0.9.0 release note records that each repository publishes its own image under the v0.9.0 tag.",
+  "value": "ghcr.io/infinityabundance/<image>:v0.9.0",
   "locations": [
-   "README.md",
-   "docs/containers.md"
+   "docs/RELEASE-v0.9.0.md"
   ],
   "receipt": null,
   "kind": "present"
@@ -4647,6 +4645,205 @@
    "bench/RESULTS-azure-sas.md"
   ],
   "receipt": "bench/receipts/azure-20261106T235445Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_release_note",
+  "claim": "The v1.0.0 release note exists and is linked from the README and STATUS.",
+  "value": "docs/RELEASE-v1.0.0.md",
+  "locations": [
+   "README.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/verify-20261107T021227Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_crates_weftcodec",
+  "claim": "crates.io reports the live weftcodec 1.0.0 checksum recorded in the release note.",
+  "value": "ea436adb2dd807c49a419e541359c1f55b0c86c12097d6b7e9d5bd2b8117f464",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_crates_weftfs",
+  "claim": "crates.io reports the live weftfs 1.0.0 checksum recorded in the release note.",
+  "value": "3552b5242c1bc1aa459e2ed4eabd3d999d39d5a7ff5c76379895609d6297bf88",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_wheel_sha256",
+  "claim": "The 1.0.0 wheel digest is recorded in the release note and the Python court receipt.",
+  "value": "1e8088672616eae2f9cf6fd972c64c921aaa6fcfb024329e36bfe36442260aa2",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md",
+   "bench/receipts/python-bindings-20261107T015918Z.json"
+  ],
+  "receipt": "bench/receipts/python-bindings-20261107T015918Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_wheel_size",
+  "claim": "The 1.0.0 wheel size is recorded in the release note.",
+  "value": "80,261 bytes",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": "bench/receipts/python-bindings-20261107T015918Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_pypi_not_published",
+  "claim": "PyPI publication did not happen because no token is available; the release note says so plainly.",
+  "value": "Not published to PyPI: no token is available.",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_conformance_manifest",
+  "claim": "The three conformance adapters all report the same manifest aggregate at 1.0.0.",
+  "value": "1fc710a88e610290e65810d6b0c53a687d02b7316cd7cc5626dd195c07a1dcc0",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md",
+   "bench/receipts/conformance-rust-20261107T015750Z.json",
+   "bench/receipts/conformance-go-20261107T015800Z.json",
+   "bench/receipts/conformance-python-20261107T015820Z.json"
+  ],
+  "receipt": "bench/receipts/conformance-rust-20261107T015750Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_azure_standalone",
+  "claim": "The release note records the standalone Azure court test counts.",
+  "value": "19 backend + 7 fencing",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": "bench/receipts/azure-20261107T015947Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_go_s3_standalone",
+  "claim": "The release note records the standalone Go S3 court counts.",
+  "value": "17 pass / 0 fail / 1 skip",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_threefs_bench",
+  "claim": "The release note records the measured USRBIO ring loss.",
+  "value": "1.2388x slower",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": "bench/receipts/threefs-20261107T020623Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_python_court",
+  "claim": "The release note records the Python court test counts.",
+  "value": "349 tests, 340 passed, 0 failures, 0 errors, 9 skipped",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": "bench/receipts/python-bindings-20261107T015918Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_aborted_run",
+  "claim": "The release note and STATUS record the disk-full aborted aggregate run with its exact error.",
+  "value": "No space left on device",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_ghcr_source_weftcodec",
+  "claim": "The weftcodec image source label names its own repository in the release note.",
+  "value": "https://github.com/infinityabundance/WeftCodec",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_ghcr_digest_weftfs",
+  "claim": "The weftfs 1.0.0 image index digest is recorded in the release note.",
+  "value": "8089148c82fbace0777b0e559bc80d48bbad27e783a0ddd78030a56cd310d717",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_not_claimed_power",
+  "claim": "The release note's not-claimed list names physical media power loss.",
+  "value": "Physical media power loss",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_not_claimed_pypi",
+  "claim": "The release note's not-claimed list states that PyPI publication did not happen.",
+  "value": "No token; the wheel is not on PyPI.",
+  "locations": [
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_orbax_not_competitive",
+  "claim": "The README and release note record the measured Orbax adapter save slowdown without calling it competitive.",
+  "value": "22.2x",
+  "locations": [
+   "README.md",
+   "docs/RELEASE-v1.0.0.md"
+  ],
+  "receipt": "bench/receipts/orbax-20261106T152612Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "v100_crates_current",
+  "claim": "README.md and docs/containers.md advertise the 1.0.0 crate versions.",
+  "value": "weftcodec = \"1.0.0\"",
+  "locations": [
+   "README.md",
+   "docs/containers.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "v100_docker_tag_current",
+  "claim": "README.md and docs/containers.md advertise the v1.0.0 WeftFS image tag.",
+  "value": "weftfs:v1.0.0",
+  "locations": [
+   "README.md",
+   "docs/containers.md"
+  ],
+  "receipt": null,
   "kind": "present"
  }
 ]

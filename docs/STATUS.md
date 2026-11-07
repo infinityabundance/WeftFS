@@ -2,7 +2,7 @@
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. The current verification receipt is
-`bench/receipts/verify-20261106T232858Z.json` (30/30 courts `pass`, 0 skipped,
+`bench/receipts/verify-20261107T021227Z.json` (30/30 courts `pass`, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
 context and authenticated-capability cross-language gates, Buck2 CAS, agent
@@ -11,8 +11,23 @@ conformance court), `ceph_rgw` — Ceph RGW 19.2.0, an independent S3
 implementation, now running both the S3 backend suite and the R17 fenced-writer
 suite — the MinIO `s3_court` (native S3 backend and fenced-writer suites), and
 `fuzz_diff`), at
-WeftFS `4704ded`, WeftCodec `57288e1`, WeftCodec-Go `86ded1e`, WeftFS-Go
-`3b3695e`. The previous 29/29 receipt (`verify-20261106T225457Z.json` at
+WeftFS `7c10ad4`, WeftCodec `d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go
+`9fa39d3`. This is the v1.0.0 release receipt, run after the 1.0.0 version bump;
+`verify-20261107T014045Z.json` (30/30 at the pre-bump tree, WeftFS `0cfbea1`,
+WeftCodec `57288e1`, WeftCodec-Go `86ded1e`, WeftFS-Go `39b58f2`) is retained.
+One intermediate run was aborted because the shared host volume reached 100 %
+(`No space left on device`); its log `verify-20261107T020631Z.log` is retained
+and **no receipt exists** for it, because the script never reached receipt
+writing; after deleting only gitignored `.docker-cache` scratch, the rerun
+passed 30/30. Standalone courts not in the aggregate are cited in
+`docs/RELEASE-v1.0.0.md` and in the per-subphase notes: Azure/Azurite
+`azure-20261107T015947Z.json` (19 backend + 7 fencing, 0 failures), Go S3
+`WeftFS-Go/bench/receipts/go-s3-20261107T020137Z.json` (17 pass / 1 skip
+focused, full `-race` 0 failures, 17/17 cross-language), 3FS `--bench`
+`threefs-20261107T020623Z.json`, and the Python court
+`python-bindings-20261107T015918Z.json` (349 tests, 0 failures, 9 skipped). The
+previous 30/30 receipt (`verify-20261106T232858Z.json` at `4704ded`), the
+29/29 receipt (`verify-20261106T225457Z.json` at
 `132e713`), the 29/29 receipt before it
 (`verify-20261106T214749Z.json` at `9a6156c`), its 28/28 predecessor
 (`verify-20261106T174703Z.json` at `37a3a39`), and the 28/28 receipt before that
