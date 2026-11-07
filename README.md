@@ -145,8 +145,9 @@ notes below cover R2–R13 in detail.
   manifest and head for a fixed clock), pack plane, calibration loading and
   measurement (Rust accepts the Go `weft.calibration.v1` document with the
   identical id), S3, and `WFX2` selector-index persistence (first relation
-  query after a 10k reopen 16.85 -> 7.75 ms). Go still has no GCS/Azure
-  backend and no `calibrate --install`.
+  query after a 10k reopen 16.85 -> 7.75 ms). At v1.0.0 Go had no GCS/Azure
+  backend and no `calibrate --install`; v1.1.0 adds GCS and install (Azure
+  remains absent).
 - **Verification:** `verify-20261107T065848Z.json` is **30/30 courts pass** at
   WeftFS `f945de2`, WeftCodec `d61ed76`, WeftCodec-Go `86ded1e`, WeftFS-Go
   `43f9c45`. The aggregate is unchanged in shape from v0.9.0 (including
@@ -249,7 +250,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.8.0.md`](docs/RELEA
 - **Tiled tensors (Q2):** codec mode 15 `TENSOR_TILED`. A 100-row Qwen slice drops from 130.13 to **12.05 ms** (10.8×) and 7,213,077 to **934,413 B**; a 1-row slice from 129.98 to **3.22 ms** (40.4×) and 281,816 B; the mounted `safetensors` loader reproduces the source SHA-256. Limits: full tiles only, descriptor grows with tile count, no Go mode-15 checkpoint writer.
 - **Sparse deltas (R3):** codec mode 16 `SPARSE_DELTA`. A 19-word pythia checkpoint change stores **29,887 B instead of 7,434,959 B** (0.40 % of mode 11, 0.988× a whole-file `zstd --patch-from -3`), 76/76 tensors smaller. Mode 11 remains the right choice for dense deltas: mode 16 is 2.22× larger on step2→step4, 3.29× on step4→step8, and 1.94× larger on the Qwen fine-tune, and `max_sparse_runs` refuses the two densest tensors. Planner, store read path, and vectors in both languages; see [`bench/RESULTS-sparse-delta.md`](bench/RESULTS-sparse-delta.md).
 - **Quota in the commit (Q3):** one `set_quota_usage` op replaces a second durable write. Per-commit p50 is **11.344 ms vs 11.278 ms** with no quota (**+0.59%**) and −17.5% against the historical separate-record design; usage is replayed and validated, with a one-time `WFQ1` migration.
-- **Real S3 backend (Q4):** SigV4, `If-None-Match`/`If-Match` publication, advisory lease, and a real MinIO court (official binary in a minimal container). **9,442 creates/s local vs 552.6/s S3**; 100 MiB at **520.9 vs 85.6 MiB/s**; byte-identical artifacts. Rust-only, single-node localhost; not AWS/GCS/3FS/multi-node.
+- **Real S3 backend (Q4):** SigV4, `If-None-Match`/`If-Match` publication, advisory lease, and a real MinIO court (official binary in a minimal container). **9,442 creates/s local vs 552.6/s S3**; 100 MiB at **520.9 vs 85.6 MiB/s**; byte-identical artifacts. Rust client only at Q4 (Go S3 landed in R25), single-node localhost; not AWS/GCS/3FS/multi-node.
 - **PyTorch DCP (Q5):** real torch 2.15.0+cpu `save`/`load`, **9/9 topology-identical restores**, save **1,223.6 ms**, load **152.2 ms**, single-tensor **67.2 ms**, async submit **0.72 ms**, **0.9294×** `torch.save` bytes. Losses: **141× slower save, 30× slower load**; no GPU path, one process.
 - **Signed bundles (Q6):** Ed25519 over a canonical manifest, `SIGNATURE OK ed25519:…`, **15/15** acceptance/rejection cases, Go verifier agrees. Signing adds a ~128 KB manifest to a 1,064-file bundle. Non-claims: no CA, transparency log, or rotation; integrity is relative to a key only.
 - **Verification:** `verify-20261106T083428Z.json` is **27/27 courts pass** at WeftFS `a4e2c3d` (the R7 shared-mount tree); `verify-20261106T053501Z.json` (27/27 at `36bbbef`, the mode-16 tree), `verify-20261106T052933Z.json` (27/27 at `e4cdc55`), `verify-20261106T044258Z.json` (27/27 at `a8f8a3e`), and the v0.8.0 release receipt `verify-20261106T011444Z.json` (also 27/27) are retained. Retained failures and flakes are listed in the release note.
@@ -371,7 +372,7 @@ a real defect: an unreachable store was reported as `Corrupt`, not `Io`, both at
 open and on the read path. Passing receipt:
 `distributed-20261106T134839Z.json` (**9/9 scenarios, 229 checks, 0 failed**);
 the first failing receipt is retained. Every limit (single node, process faults
-rather than media loss, no TCP partition, exclusive writers, Rust-only) is in
+rather than media loss, no TCP partition, exclusive writers, Rust client only) is in
 [`bench/RESULTS-distributed.md`](bench/RESULTS-distributed.md).
 
 Prior releases: [`docs/RELEASE-v0.9.0.md`](docs/RELEASE-v0.9.0.md) (decoder throughput, sparse and tiled tensors, shared mounts, caches, overlays, split planes, packs, host calibration, distributed court, GCS, Orbax, Ceph RGW, fenced writers, pipelined restore, Go parity, 3FS POSIX/USRBIO, Azure/GCS auth, Azure SAS, Go calibrate/S3/WFX2), [`docs/RELEASE-v0.8.0.md`](docs/RELEASE-v0.8.0.md) (fast mount writes, tiled tensors, commit-time quotas, S3, PyTorch DCP, signed bundles), [`docs/RELEASE-v0.7.0.md`](docs/RELEASE-v0.7.0.md) (real weights, checkpoint topology, quotas, 1,000 mounts, Merkle identity, CAS, conformance) and [`docs/RELEASE-v0.6.0.md`](docs/RELEASE-v0.6.0.md) (authenticated capability envelopes, cross-tenant isolation).

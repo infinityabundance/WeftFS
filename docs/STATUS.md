@@ -3148,7 +3148,8 @@ Stage commits: `fa37197` (format + spec mirrors), `eaad6eb` (read path),
 docs/receipts commit. The writer-bound spec paragraph was exported to WeftCodec
 `54cb4f6`, WeftCodec-Go `8957998`, WeftFS-Go `17cef27`.
 
-Residual: write and compaction parity is Rust-only; the truncate-shrink,
+Residual at R9 (write/compaction parity closed in R20): write and compaction
+parity was Rust-only; the truncate-shrink,
 insert, and collapse paths refuse rather than rewrite; the writer bounds are
 library options, not CLI flags; coalescing can inflate `overlay_bytes`; a
 fresh-process read pays chain resolution; the court is one host with a warm
@@ -3254,8 +3255,9 @@ single-backend proxies. The split publishes the head with
 
 ### Residual (unchanged by this subphase)
 
-* Split parity is Rust-only; WeftFS-Go keeps the single backend and there is no
-  cross-language split handoff.
+* At R10 split parity was Rust-only and WeftFS-Go kept the single backend
+  (R20 adds the Go split planes, R25 the Go S3 plane, with cross-language
+  courts).
 * The commit plane is single-writer; there is no distributed coordination or
   fleet claim. The single writer is enforced by `flock` locally and by a fenced
   lease with a conditional compare-and-swap on object stores. An external
@@ -3755,8 +3757,8 @@ and fixed clock.
   crate has no date parser); the store does not depend on it.
 * No batch/JSON-multipart upload path, no retry on `429`/`5xx`, no client-side
   rate limiting. A `429` is an `Io` error.
-* Rust only. WeftFS-Go has no GCS backend, so there is no cross-language GCS
-  parity claim; the on-disk format is unchanged by this subphase.
+* At R14 only Rust had a GCS backend (Go GCS landed in R26); that subphase
+  made no cross-language GCS parity claim, and the on-disk format was unchanged.
 * The in-process fake service returns one listing page and does not paginate;
   the real emulator court exercises pagination-free listings of 21 commits plus
   objects. Pagination is implemented in the backend but only exercised for the
@@ -4755,9 +4757,10 @@ token supplied out of band.
 * **Service-account assertions are re-signed per token**, not cached; a token is
   cached for its lifetime and refreshed in the bounded window. A clock skewed by
   more than the one-hour assertion lifetime will be refused by the provider.
-* **No Go parity** for either addition: WeftFS-Go has no Azure or S3/GCS
-  backend and no service-account flow. `src/azure.rs` and
-  `src/service_account.rs` are Rust-only.
+* **At R21 there was no Go parity** for Azure or S3/GCS and no Go
+  service-account flow. R25/R26 add Go S3, Go GCS, and Go RS256
+  service-account auth; **Go Azure remains absent**. `src/azure.rs` is still
+  Rust-only.
 * The Azure backend has **no performance claim** and was not added to
   `scripts/verify-all.sh`. The GCS auth suite likewise runs inside the existing
   standalone `gcs_court`, not the aggregate.
