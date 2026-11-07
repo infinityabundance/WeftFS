@@ -4911,3 +4911,57 @@ run is `azure-20261106T234510Z.*`.
   so SAS is effectively read-only on this backend.
 * One host, loopback, tmpfs, warm caches; no performance, power-loss,
   multi-node, or fleet claim.
+
+## Subphase R24 — Go calibrate measurement and packed/split mount coverage (2026-11-06)
+
+Two named Go gaps are closed. Work is in WeftFS-Go `staging` `af8ad88`; the
+parent pins that revision.
+
+**Go `weftfs calibrate` (measurement).** `store/calibrate.go` measures the
+planner classes with the shipped Go encoders/decoders (raw, zstd, modes 9, 10,
+15, 11, 14) at two sizes with medians, a warm-up, and incremental delta rows
+(base decode subtracted), then fits the same affine
+`fixed_ns + decoded_bytes*ns_per_mib/2^20` model and rounding as Rust.
+`sparse-delta` reuses the weight-delta row; `kv-cache` and `activation` stay
+declared. The command is `weftfs calibrate [--out|--from|--reps|--large-mib|
+--small-kib]`, with `--json` output shaped like Rust.
+
+Rust accepts the Go document: `weftfs --json calibrate --from
+go-calibration.json` exits 0 with schema `weft.calibration.v1`, 10 rows
+(7 measured) and calibration id
+`b07fbff6f59d6bbd284f15520673ac5d51635a7a2d86d1bd230c9f0b56a9bec7`, identical
+in both languages. Automated as `TestRustAcceptsGoCalibrationDocument`, which
+ran rather than skipped.
+
+**Real defect found and fixed.** Go's `q8BlockSize` preferred the *smallest*
+dividing mode-10 block (16) while Rust prefers the largest (256). At 8 MiB any
+`q8_0` write failed `LimitExceeded: WCB item count 1000001 exceeds limit
+1000000`, and mode-10 bytes diverged from Rust. The order is now
+`256,128,64,32,16`, matching Rust's `q8_0_block_size`.
+
+Measured, host-local and not portable (default 7 reps, 128 KiB / 16 MiB, go
+court image, kernel 7.3.1, 4 CPUs, wall 4.422 s), `ns_per_mib` under the Go
+codec-level method: raw 819,494; zstd 1,115,176; float-tensor 2,837,430;
+tensor-sharded 3,475,654; tensor-tiled 4,828,817; weight-delta 6,003,877;
+semantic-delta 7,206,540. Go measures codec frames while Rust measures store
+reads, so the divergence from the baked Rust table is method and machine, not a
+speed claim. Two minimum-size runs drifted ≤11.1 % on slope and ≤57,648 ns on
+intercept.
+
+**Packed and split mount coverage.** `fusefs/packed_mount_test.go` builds three
+layouts with the Go CLI — `--pack`, `--blob-backend object --commit-backend
+local`, and `--pack` over that split — creates 9 files (12 B…300,000 B) and 3
+directories in each, asserts `info --json` reports the expected pack and plane
+state, mounts a real read-only daemon, compares every file byte-for-byte and by
+SHA-256, performs an 8 KiB `ReadAt` at offset 100,000, checks listing digests
+(identical across layouts), unmounts, and runs `verify --full` three times.
+
+Court: `scripts/docker-court.sh fuse "cd /work/WeftFS-Go && go test -race
+-count=1 ./..."` → **0 failures**; top-level tests store 173, `cmd/weftfs` 17,
+`fusefs` 25 (was 168/15/24). `gofmt`, `go vet`, and a CGO-disabled build are
+clean.
+
+**Not done:** no Go `calibrate --install`; the calibration exercises the codec,
+not a store-side mode-15/14 read path (Go has no writer for those); the FUSE
+coverage mounts read-only; no power-loss, multi-host, or fleet claim; a
+calibration is host-local by construction.
