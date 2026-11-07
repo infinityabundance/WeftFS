@@ -40,12 +40,12 @@ section 2.6 and the shared courts in section 4.5.
 
 ## 2. The protocol
 
-### 2.1 The `LOCK` object
+### 2.1 The `LOCK` object (v3 is the publication point)
 
-`weftfs-s3-lock v2` is a small text record, one field per line:
+`weftfs-s3-lock v3` is a small text record, one field per line:
 
 ```
-weftfs-s3-lock v2
+weftfs-s3-lock v3
 owner=462-1-1793984165314626737
 fence=2
 sequence=7
@@ -53,6 +53,7 @@ lease_deadline_ns=1793984170122999455
 renewed_ns=1793984168314626737
 pending_generation=3
 pending_commit=90dc1bf3e66b8b5a893f307648f2c0c235f2992816ad13df82a82cd040a34f4b
+pending_commit_len=931
 ```
 
 * `owner` — `pid-counter-now_ns`.
@@ -64,23 +65,30 @@ pending_commit=90dc1bf3e66b8b5a893f307648f2c0c235f2992816ad13df82a82cd040a34f4b
 * `sequence` — conditional writes this handle has made to `LOCK`.
 * `lease_deadline_ns` — absolute deadline. Never extended by a publication that
   is outside the renewal window.
-* `pending_generation` / `pending_commit` — the head this lease holder is
-  publishing, written by the fenced CAS that immediately precedes the head
-  write (`-` / `0` when nothing is in flight).
+* `pending_generation` / `pending_commit` / `pending_commit_len` — **the head
+  this record publishes**. Written by the single conditional write that is the
+  publication point (`0` / `-` when nothing has been published yet). Every other
+  record write carries the current values forward.
 
-Release writes `weftfs-s3-lock-released v1`:
+A v2 record (same fields minus `pending_commit_len`) is readable and reports the
+length as `0` (unknown). Release writes
+`weftfs-s3-lock-released v2`, which also carries `pending_*`:
 
 ```
-weftfs-s3-lock-released v1
+weftfs-s3-lock-released v2
 owner=462-1-1793984165314626737
 fence=2
 sequence=8
 released_ns=1793984169...
 released_from=<sha256 hex of the exact lock bytes this release replaced>
+pending_generation=3
+pending_commit=90dc1b...
+pending_commit_len=931
 ```
 
 `released_from` makes the tombstone content-addressed to the record it
-replaced, which is what makes the release auditable after the fact.
+replaced, which is what makes the release auditable after the fact. A v1
+tombstone is still readable but names no head.
 
 ### 2.2 Acquire, takeover, renewal, deadline
 
@@ -102,19 +110,20 @@ replaced, which is what makes the release auditable after the fact.
   writer, but its own lease expired
   ```
 
-### 2.3 The fence, and where it sits in the publication
+### 2.3 The fence is the publication
 
-`Store::publish_commit` now calls the lease proof twice:
+`Store::publish_commit` calls the lease proof twice:
 
-1. `verify_write_lease()` before the commit record is written.
-2. `fence_head_publication(generation, commit)` immediately before the
-   superblock slot write.
+1. `verify_write_lease()` before the commit record is written (a conditional
+   `LOCK` write that carries the current head forward, so it never erases the
+   attestation).
+2. `publish_fenced_head(generation, commit, commit_len)` — **one conditional
+   write on `LOCK` that is the head publication itself**.
 
-Both are **one conditional write on `LOCK`** whose `If-Match` is the ETag of
-the bytes *this handle last published*. The gate therefore succeeds only while
-the object still carries this writer's fencing token: a successor's takeover
-rewrote the object, which changes its ETag, so the stale writer receives `412`
-and the store returns `Busy`:
+Both use `If-Match` on the ETag of the bytes *this handle last published*, so
+neither can succeed while a successor owns the object. The publication write
+names the new head, so the fencing token and the head are carried by the same
+atomic operation:
 
 ```
 S3 writer lease was taken over: the conditional fence CAS for owner
@@ -122,9 +131,14 @@ S3 writer lease was taken over: the conditional fence CAS for owner
 the head (the LOCK now names owner 458-1-… fence 3)
 ```
 
-The second call also writes `pending_generation` / `pending_commit`: the
-fencing token is carried by the same atomic operation that names the head about
-to be published.
+The two-slot superblock is written *after* the publication as a cache. It is
+validated against the record at every open (the record's head is the authority),
+repaired on a writable open, and a refresh never moves the cache backwards. A
+process suspended between the publication and the cache write has already
+published; nothing it does afterwards can move the head.
+
+See [`../docs/FENCING.md`](../docs/FENCING.md) for the state machine and the
+full interleaving table.
 
 ### 2.4 Release
 
@@ -157,9 +171,9 @@ handle then fails `Busy` before the commit record or the head is written.
 
 GCS has no ETags: its conditional write is a **generation precondition**. The
 records are the same
-(`weftfs-gcs-lock v2` / `weftfs-gcs-lock-released v1`, identical fields to S3's;
-encode/parse/describe live in `src/writer_fence.rs`), and only the primitive and
-the token source change:
+(`weftfs-gcs-lock v3` / `weftfs-gcs-lock-released v2`, identical fields to S3's
+including `pending_commit_len`; encode/parse/describe live in
+`src/writer_fence.rs`), and only the primitive and the token source change:
 
 | concern | S3 | GCS |
 |---|---|---|
@@ -172,12 +186,13 @@ the token source change:
 | release | tombstone with `If-Match` | tombstone with `ifGenerationMatch` |
 | writable-open proof | `If-Match` accepted, stale refused | matching generation accepted, stale refused |
 
-Everything that is *not* the primitive is identical: the fence precedes the
-head CAS, it carries `pending_generation` / `pending_commit`, it renews the
-deadline when one publication budget remains, a writer refuses once its own
-deadline passed, and release is a conditional tombstone that never deletes
-`LOCK`. A stale writer's conditional upload names an old generation, so a
-successor's reclaim makes it fail `412` → `Busy` before the head is touched.
+Everything that is *not* the primitive is identical: the publication write is a
+single conditional upload of `LOCK` that carries `pending_generation` /
+`pending_commit` / `pending_commit_len`, it renews the deadline when one
+publication budget remains, a writer refuses once its own deadline passed, and
+release is a conditional tombstone that never deletes `LOCK`. A stale writer's
+conditional upload names an old generation, so a successor's reclaim makes it
+fail `412` → `Busy` with nothing published.
 
 Because the generation must name *this* writer's bytes, an endpoint that
 returns neither the object resource nor the same bytes on re-read is refused
@@ -190,18 +205,24 @@ S3 and GCS each give one conditional write per object and no multi-object
 transaction. The protocol is built to be safe under that constraint, and the
 boundary is stated plainly:
 
-* The fence and the head write are **two** operations on **two** objects.
-  They cannot be fused on a plain S3 endpoint.
-* Safety does not rely on them being fused. It relies on the ordering rule:
-  a publication is only *started* while `now + budget <= deadline`, where
-  `budget = lease/2`; a takeover is only allowed at `now > deadline`. The
-  publication window therefore closes before any successor may touch the lock,
-  and the gate is the last write before the head CAS. A successor that takes
-  over has, by construction, replaced the lock bytes, so the stale writer's
-  gate fails.
+* **The publication point is one conditional write.** Since R27 the fence and
+  the new head are carried by a single conditional write of the `LOCK` record
+  (v3). A successor that reclaims the lease rewrites that same object, so the
+  stale writer's publication is refused `412 -> Busy`; there is no second
+  object write left to slip through.
+* The superblock is a **cache** written after the publication. It is never the
+  authority on an object-store commit plane: recovery merges the record's head,
+  a writable open repairs the cache, and the cache refresh never moves it
+  backwards.
+* An earlier R17/R18 shape wrote the fence and the head as two conditional
+  writes on two objects and relied on the ordering rule (publication starts only
+  while `now + budget <= deadline`; takeover only at `now > deadline`). The R27
+  acceptance test shows that shape's uncovered interleaving is now closed; the
+  ordering rule and the own-deadline refusal are retained as independent
+  guards.
 * A `SIGSTOP`ped writer whose lease is reclaimed is fenced by both mechanisms
-  at once: its own deadline has passed *and* its gate token is stale. The court
-  records which sentence fired and which token the successor holds.
+  at once: its own deadline has passed *and* its publication token is stale. The
+  court records which sentence fired and which token the successor holds.
 
 What is **not** covered: a request whose reply is lost in the network. S3 has
 no idempotency token for `PUT`, so a head write can succeed while the writer
@@ -449,10 +470,9 @@ following exists:
 1. **Concurrent writers.** `LOCK` still admits exactly one writer. Handling N
    writers needs per-writer sessions plus a merge or serialisation point for
    the head (a consensus log, a queue, or an external CAS service).
-2. **A single atomic fence+head operation.** On plain S3 that needs the head to
-   live in the same object as the fence, or a provider with multi-object
-   transactions. WeftFS ships the two-write ordering argument instead, and says
-   so.
+2. **Concurrent writers.** `LOCK` still admits exactly one writer. Handling N
+   writers needs per-writer sessions plus a merge or serialisation point for
+   the head (a consensus log, a queue, or an external CAS service).
 3. **Recovery of a partially published writer without a reopen.** A successor
    detects and adopts a newer valid head only when it opens or retries; there is
    no in-flight handover protocol.
@@ -460,18 +480,19 @@ following exists:
    within the lease budget. A writer with a badly skewed clock is not defended
    against; a monotonic clock source and a bounded skew assumption would be
    needed.
-5. **Cross-object atomicity.** The fence and the head write are two
-   conditional writes on two objects on both S3 and GCS. Keeping the
-   two-write ordering argument is deliberate; a provider with multi-object
-   transactions is not used.
+5. **Cross-object atomicity for the cache.** Since R27 the publication point is
+   one conditional write, but the superblock cache is a second write on a second
+   object. That write follows the publication, is monotonic, and is never
+   trusted over the record, so it cannot lose a published head.
 6. **The GCS backend is now fenced (R18), but against an emulator.**
    `fake-gcs-server` proves the generation-precondition protocol, not the
    behaviour of a real Google Cloud Storage deployment: no multi-region
    consistency, TLS, credential rotation, service-side throttling, or
    partition was tested. The release is a single-node memory-backed process on
    loopback.
-7. **Go.** There is no Go parity: WeftFS-Go has no S3 and no GCS backend, so
-   there is no cross-language fence and no Go GCS court.
+7. **Go.** WeftFS-Go now has an S3 backend with the same v3 record and the same
+   R27 acceptance test against MinIO. Go has no GCS or Azure backend, so there is
+   no cross-language GCS/Azure fence.
 8. **Physical media and power loss.** Everything here is a process-fault court
    on a tmpfs-backed endpoint or an emulator's memory backend.
 

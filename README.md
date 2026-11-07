@@ -61,11 +61,15 @@ notes below cover R2–R13 in detail.
   a GCS JSON backend with `ifGenerationMatch`, an Azure Blob backend, and
   GCS service-account RS256 auth (the RFC 7515 A.2 signature vector matches
   exactly). All four local/S3 split layouts reproduce one root and generation.
-- **Fenced writers (R17/R18):** the lease is a fenced record whose conditional
-  rewrite is the last gate before the head CAS; takeover is fence+1; release is
-  a content-addressed tombstone. Adversarial `SIGSTOP` tests pass on MinIO
-  (8/8), Ceph RGW 19.2.0 (8/8), and fake-GCS; the local suite is 4/4. The fence
-  and head are still two conditional writes, not one atomic operation.
+- **Fenced writers (R17/R18, replaced by R27):** the lease is a fenced record,
+  takeover is fence+1, and release is a content-addressed tombstone.
+  Adversarial `SIGSTOP` tests pass on MinIO, Ceph RGW 19.2.0, and fake-GCS. R17
+  wrote the fence and the head as two conditional writes on two objects; **R27
+  makes the head publication one conditional write of the `LOCK` record itself**
+  (`weftfs-*-lock v3`, carrying `pending_generation` / `pending_commit` /
+  `pending_commit_len`), with the superblock demoted to a validated cache. The
+  review's uncovered interleaving (suspended after the fence, takeover without a
+  new head) now fails `Busy`. See [`docs/FENCING.md`](docs/FENCING.md).
 - **Independent S3 implementation (R16) and Azure SAS (R23):** Ceph RGW 8/8
   compatibility behaviours and 6/6 backend tests; Azurite accepts a real
   service SAS for read-only use (19 backend + 7 fencing tests, 0 failures),
@@ -100,8 +104,9 @@ notes below cover R2–R13 in detail.
 - **Still not claimed:** physical media power loss, host page-cache loss,
   RAPL/joule energy, GPU/TPU/SIMD decode, any fleet/multi-host/multi-writer
   claim, constant-time RSA, live Azure/GCS/3FS deployments, Go GCS/Azure
-  backends, Go `calibrate --install`, Orbax competitiveness, general-purpose
-  filesystem performance, and PyPI publication (no token).
+  backends, Go FUSE over an S3 store, Go `calibrate --install`, Orbax
+  competitiveness, general-purpose filesystem performance, and PyPI publication
+  (no token).
 
 ## What's new in v0.9.0
 
@@ -213,7 +218,10 @@ local-blobs/s3-commits) reproduce the same content root, generation, and digest
 in the MinIO court; every loss is in
 [`bench/RESULTS-planes.md`](bench/RESULTS-planes.md), and the contract,
 including what an external metadata engine must implement, is in
-[`docs/PLANES.md`](docs/PLANES.md).
+[`docs/PLANES.md`](docs/PLANES.md). The writer lease that guards every commit
+on a remote commit plane — its record, state machine, covered interleavings,
+and explicit non-guarantees — is specified in
+[`docs/FENCING.md`](docs/FENCING.md).
 
 ### GCS backend (R14, post-0.8.0 work)
 
@@ -328,8 +336,10 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
    Containers enforce hard memory/swap/pids/CPU limits.
 5. **Identity separation.** A selector is a query, not an object. A hash is not
    an authorization token. Ambiguity is returned, never silently resolved.
-6. **One writer.** The store is single-host, single-writer with an explicit
-   `flock` ownership protocol.
+6. **One writer.** The store is single-writer: enforced by `flock` on a local
+   or object namespace, and by a **fenced lease whose conditional write is both
+   the fence and head publication** on S3, GCS, and Azure. See
+   [`docs/FENCING.md`](docs/FENCING.md). Not a multi-writer protocol.
 
 ## Container images
 

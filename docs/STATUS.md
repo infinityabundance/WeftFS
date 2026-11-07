@@ -405,9 +405,11 @@ four repositories).
 - Portable store: `FORMAT`, `LOCK`, dual CRC32C superblock slots, `WFC1`
   commits, canonical commit/checkpoint schemas, immutable chunks/manifests,
   snapshots, relations, tips, xattrs, saved contexts.
-- Atomic publication with fsync ordering; single-writer `flock`; generation
-  fallback; recovery; full verify; mark-and-sweep GC; checkpoints; selector
-  evaluation with POSIX + `weft.acl.read` authorization; ambiguity errors.
+- Atomic publication with fsync ordering; one writer (`flock` on a local or
+  object namespace, a fenced lease with a conditional compare-and-swap on S3,
+  GCS, and Azure); generation fallback; recovery; full verify; mark-and-sweep
+  GC; checkpoints; selector evaluation with POSIX + `weft.acl.read`
+  authorization; ambiguity errors.
 - FUSE: lookup/getattr/setattr/open/create/read/write/flush/fsync/release,
   readdir(+plus), mkdir/rmdir/unlink/rename(+NOREPLACE/EXCHANGE)/link/symlink/
   readlink, xattrs, statfs, access, mknod(regular; FIFO/device `EPERM`),
@@ -2387,10 +2389,14 @@ Implemented in Rust on `staging` at `8683ecc` (code commit); not pushed.
   ignores either. CLI: `--backend s3` plus `--s3-endpoint`, `--s3-bucket`,
   `--s3-region`, `--s3-access-key`, `--s3-secret-key` (or the AWS_* variables).
   `--store` is optional for S3.
-- **Lock.** The writer lock is a `LOCK` object with an owner and an expiry
-  lease, created with `If-None-Match: *`. A live second writer fails `Busy`; a
-  crashed writer's lease is reclaimed with `If-Match`. This is advisory and is
-  not a POSIX `flock` or a multi-host protocol.
+- **Lock.** The writer lock is a `LOCK` object carrying an owner, a monotonic
+  fencing token, an absolute lease deadline, and the head being published,
+  created with `If-None-Match: *`. A live second writer fails `Busy`; a crashed
+  writer's lease is reclaimed with `If-Match` at the next fencing token. Since
+  R27 the record itself publishes the head (one conditional write), so a stale
+  writer cannot publish after a takeover; the superblock is an attested cache.
+  This is advisory and is not a POSIX `flock` or a multi-host protocol. See
+  [`FENCING.md`](FENCING.md); the Q4 paragraph below records the pre-R27 shape.
 - **Capabilities.** `atomic_publish`, `durable_fsync` (provider
   acknowledgement only; no local fsync), `true_range_reads`, max object bound
   1 GiB, consistency `single-node S3-compatible endpoint; read-after-write and
@@ -3244,7 +3250,9 @@ single-backend proxies. The split publishes the head with
 * Split parity is Rust-only; WeftFS-Go keeps the single backend and there is no
   cross-language split handoff.
 * The commit plane is single-writer; there is no distributed coordination or
-  fleet claim. An external metadata engine is specified but not implemented.
+  fleet claim. The single writer is enforced by `flock` locally and by a fenced
+  lease with a conditional compare-and-swap on object stores. An external
+  metadata engine is specified but not implemented.
 * Process-fault crash proxy only; no physical power loss, host cache loss, or
   media error injection.
 * One host, warm caches, synthetic 6 MiB fixture; MinIO is a single node with a
@@ -4554,21 +4562,27 @@ the test passed standalone immediately after and in the rerun.
 
 ### Losses, non-claims, and what Go still lacks
 
-* Go has **no S3 or GCS backend**, so its plane split is filesystem-only
-  (local/object, with an explicit `posix` refusal plane). No MinIO/S3-backed Go
-  store, no cross-vendor Go claim.
-* Go has **no `calibrate` measurement command**. It accepts, validates, and
-  applies a document; host measurement remains Rust-only. The `--calibration`
-  table is used exactly as written.
+Revised after R24–R27. The original R20 text below was written when the Go
+store had no S3 backend, no calibration measurement, no pack/plane courts, and
+no index persistence; those are now implemented. The reconciled list is:
+
+* Go **has** a v4 overlay writer and compaction, the physical pack plane, a
+  probed blob/commit plane split (`--blob-backend`/`--commit-backend`, all four
+  local/object/S3 layouts), `weft.calibration.v1` **loading**, `calibrate`
+  **measurement** (a Rust-accepted document with the identical id), a real
+  **S3 backend** (SigV4, `If-None-Match`/`If-Match`, the fenced writer), and
+  **WFX2** selector-index persistence readable both ways.
+* Go still has **no GCS or Azure backend**; its plane split over a remote
+  endpoint is S3-only, and there is no cross-vendor Go claim.
+* Go still has **no `calibrate --install`** command. It measures, validates,
+  loads, and applies a document.
+* Go has **no FUSE-over-S3 coverage**: the Go S3 court opens the store through
+  the API and the CLI, not through a mounted filesystem.
 * Packs are **never rewritten**: a dead member's bytes stay until the whole pack
   is unreferenced. A sub-member read cannot verify the member digest by design;
-  only whole-member reads do. Pack data lives on one local filesystem.
+  only whole-member reads do.
 * Overlay: Go refuses shrinking truncate, `collapse_range`, and `insert_range`
-  (matching Rust); there is no streaming overlay writer. Range writes publish a
-  new manifest per write, subject to the same bounds.
-* No on-disk advisory selector index persistence in Go (pre-existing gap,
-  unchanged here). The plane/packing flags are accepted by `mount`, but no
-  dedicated FUSE court exercises a packed or split store.
+  (matching Rust); there is no streaming overlay writer.
 * No performance claim, no physical power loss, no multi-writer, no fleet or
   cloud claim. Crash evidence is the process-fault proxy used elsewhere.
 
@@ -5118,3 +5132,118 @@ grace is 3600 s; and there is no CLI switch to disable segment writes.
 **Not done.** No index in `RequireOne`/saved-context paths; the in-memory index
 cache is not persisted; single host, synthetic fixture, warm cache — no
 device, power-loss, or fleet claim.
+
+## Subphase R27 — one conditional write for the fenced head (2026-11-07)
+
+**Status: implemented and tested on MinIO, Ceph RGW, fake-GCS, Azurite, and Go
+MinIO.** No wire format, codec mode, manifest, commit record, or superblock
+layout changed.
+
+### The defect, as found in source
+
+R17/R18 wrote the fence as one conditional `LOCK` rewrite and the head as a
+*second* conditional write on the `superblock`. An external review identified the
+interleaving no existing test covered: A's fence succeeds, A is suspended before
+the head CAS, A's lease expires, B takes over the fence without publishing a new
+head, A resumes, and A's head CAS still succeeds because the head is the value A
+read. The `SIGSTOP` tests only stopped a writer *before* the fence.
+
+### What changed
+
+* The lock record is now `weftfs-s3-lock v3` / `weftfs-gcs-lock v3` /
+  `weftfs-azure-lock v3`: `owner`, `fence`, `sequence`, `lease_deadline_ns`,
+  `renewed_ns`, `pending_generation`, `pending_commit`, **`pending_commit_len`**.
+* **The head is published by writing that record**, with `If-Match` (S3/Azure) or
+  `ifGenerationMatch` (GCS) on the bytes this handle last published. One
+  conditional write carries both the fence and the new head. A takeover rewrites
+  the same object, so the stale write is `412 -> Busy`.
+* The two-slot superblock is an **attested cache** on an object-store commit
+  plane: written after the record, never moved backwards by a cache refresh,
+  merged as the authoritative head by recovery, and repaired on a writable open.
+  A cache *ahead* of the record is refused `UnsupportedVersion` (mixed-version
+  store). Local/POSIX backends keep the superblock as the publication point:
+  `flock` cannot be taken by a suspended process.
+* Every non-publication record write (pre-commit fence, renewal, release
+  tombstone) carries the current head forward. Tombstones are
+  `weftfs-<backend>-lock-released v2` with the head; v1 tombstones stay readable.
+* v2 records stay readable (`pending_commit_len` reported as 0 = unknown); v1
+  reads as fence 0. A writable open upgrades an expired/released v2/v1 record to
+  v3 in the same takeover conditional write; a live v2 record still refuses the
+  open `Busy`.
+* A local own-deadline re-check runs between the fence and the commit record, so
+  a writer suspended past its lease leaves no unpublished commit tail.
+* Implementation: Rust `src/writer_fence.rs`, `src/s3.rs`, `src/gcs.rs`,
+  `src/azure.rs`, `src/backend.rs`, `src/planes.rs`, `src/recovery.rs`,
+  `src/store.rs`, `src/fence_pause.rs`; Go `store/s3client.go`,
+  `store/s3commit.go`, `store/control.go`, `store/recovery.go`, `store/store.go`,
+  `store/fence_pause.go`.
+
+### The acceptance test
+
+`tests/support/fencing.rs::paused_after_the_fence_cannot_publish_after_a_takeover`
+(shared by the S3, GCS, and Azure suites) and
+`WeftFS-Go/store/s3_integration_test.go::TestS3FencedWriterPausedAfterFenceCannotPublish`.
+
+1. A child opens and fences, then suspends itself at the hook
+   `WEFT_FENCE_PAUSE_AFTER_FENCE=1` (it first writes
+   `WEFT_FENCE_AFTER_FENCE_READY` with pid, generation, and head). Rust uses
+   `raise(SIGSTOP)`; Go blocks on a named FIFO because its runtime does not
+   deliver a self-sent `SIGSTOP` as a group stop in this court. The hook is inert
+   unless armed and fires at most once per process.
+2. The parent lets the lease expire and writer B takes over the fence **without
+   publishing a head**.
+3. The parent resumes A (`SIGCONT` in Rust, one byte on the FIFO in Go). A's
+   publication is `Busy`; the error text names the takeover
+   (`the LOCK now names owner … fence …`) or the taken-over CAS; generation and
+   head are unchanged.
+4. B then publishes and succeeds; `verify --full` is clean and A's file is not
+   visible.
+5. The inverse sanity test (suspended *before* the fence) is retained and still
+   passes.
+
+`tests/s3_fencing.rs::a_replaced_lock_record_makes_the_stale_publication_fail_412`
+forces the same `412` deterministically while the stale writer's own lease is
+still valid, isolating the conditional-write refusal from the own-deadline guard.
+
+### Evidence (this host, Docker courts, all limits unchanged)
+
+* MinIO (`scripts/s3_court.sh`): `s3_backend` 6/6, `s3_fencing` **11/11**
+  including both new tests; receipt `bench/receipts/s3-court-20261107T025420Z.json`.
+* Ceph RGW 19.2.0 (`scripts/ceph_court.sh`): `s3_backend` 6/6, `s3_fencing`
+  **11/11**; receipt `bench/receipts/ceph-rgw-20261107T025545Z.json`.
+* Go MinIO (`WeftFS-Go/scripts/go-s3-court.sh --focused-only`): **20 pass /
+  0 fail / 1 skip** (the crash child helper), including
+  `TestS3FencedWriterPausedAfterFenceCannotPublish`; receipt
+  `WeftFS-Go/bench/receipts/go-s3-20261107T032512Z.json`.
+* Rust `cargo test --all-targets`: **540 passed / 0 failed / 0 ignored**, 103
+  suites. FUSE `cargo test --features fuse --all-targets`: **582 passed /
+  0 failed / 2 ignored** (the pre-existing `CAP_SETUID` and kernel-7.3 direct-I/O
+  tests).
+* Go `go test -race -count=1 ./...` in the FUSE court: all packages ok;
+  `go vet ./...` clean; `CGO_ENABLED=0 go build ./...` clean.
+* The crate-level unsafe guard was extended with one explicit, narrow exception:
+  `src/fence_pause.rs` may contain exactly one `unsafe` line
+  (`libc::raise(SIGSTOP)`), and the guard fails if a second appears.
+
+### Migration
+
+A store last written by R17/R18 has a v2 `LOCK` record. The next writable open
+takes the lease over (the record must not be live) and writes a v3 record in that
+one conditional write, filling `pending_commit_len` from the record (0 = unknown
+until the next publication). If a v2 writer publishes after that upgrade, the
+superblock cache can be ahead of the record; the store then refuses to open with
+`UnsupportedVersion` naming both generations rather than silently choosing one.
+Upgrade every writer before opening the store again.
+
+### Residual
+
+* Still one writer; not a multi-writer or fleet protocol.
+* No clock-skew defence; deadlines are the writer's wall clock.
+* A lost network reply to the publication write is the usual at-least-once
+  ambiguity (the next write fails `Busy` and the handle reopens).
+* The cache write is a second object write, but it follows the publication and
+  can never move the cache backwards or be trusted over the record.
+* `WeftFS/AGENTS.md` is gitignored by operator directive and is not committed;
+  this section records the protocol change that the program memory also notes.
+* No physical media power loss; the courts remain process-fault and single-node
+  device-model proxies.

@@ -82,17 +82,22 @@ S3 key mapping is the local logical layout, not a private encoding:
 3. Every S3 `write_at` is a whole-object rewrite because object stores have no
    in-place range write. This preserves the two-slot protocol, not a physical
    in-place update.
-4. `LOCK` is a fenced control object: `weftfs-s3-lock v2` on S3 and
-   `weftfs-gcs-lock v2` on GCS, with identical fields (`owner`, monotonic
+4. `LOCK` is a fenced control object **and the publication point**:
+   `weftfs-s3-lock v3` on S3, `weftfs-gcs-lock v3` on GCS, and
+   `weftfs-azure-lock v3` on Azure, with identical fields (`owner`, monotonic
    `fence`, `sequence`, absolute `lease_deadline_ns`, `renewed_ns`, the pending
-   head). A live second writer fails `Busy`. Before every publication the
-   holder rewrites `LOCK` conditionally on the token it last published
-   (`If-Match` on S3, `ifGenerationMatch` on GCS), which both proves ownership
-   and renews the lease; a successor's takeover makes that write fail `412` and
-   the stale writer returns `Busy` before the head is touched. A writer whose
-   own deadline passed refuses locally. Release writes a conditional tombstone
-   (`weftfs-*-lock-released v1`); it never deletes `LOCK` after a read. The lock
-   is advisory and provider-side, not a POSIX file lock.
+   head `pending_generation` / `pending_commit` / `pending_commit_len`). A live
+   second writer fails `Busy`. Publishing a head is one conditional write of that
+   record on the token this handle last published (`If-Match` on S3/Azure,
+   `ifGenerationMatch` on GCS), which proves ownership, renews the lease, and
+   names the new head in the same write. A successor's takeover rewrites the
+   same object, so the stale writer's publication fails `412` -> `Busy` with
+   nothing published. The superblock is a validated cache after that write. A
+   writer whose own deadline passed refuses locally. Release writes a conditional
+   tombstone (`weftfs-*-lock-released v2`) carrying the head; it never deletes
+   `LOCK` after a read. v1/v2 records stay readable and an expired v2/v1 record
+   is upgraded to v3 in the same takeover write. The lock is advisory and
+   provider-side, not a POSIX file lock. See [`FENCING.md`](FENCING.md).
 5. Writable open probes both conditional forms on a temporary key. Ignoring
    either one fails closed with `UnsupportedVersion`; there is no degraded mode.
    GCS uses the same gate with `ifGenerationMatch=0` (create-once) and a stale
