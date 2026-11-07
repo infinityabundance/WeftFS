@@ -114,6 +114,7 @@ fn pipeline(threads: usize, bound: usize) -> RestorePipelineOptions {
     RestorePipelineOptions {
         threads,
         max_inflight_bytes: bound,
+        tile_threads: 1,
     }
 }
 

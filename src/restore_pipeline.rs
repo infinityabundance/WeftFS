@@ -66,6 +66,10 @@ pub struct RestorePipelineOptions {
     /// workers that are decoding, whose result has not been written yet, or
     /// that the writer is currently writing.
     pub max_inflight_bytes: usize,
+    /// Workers for one tensor's independently decodable tiles (mode 15/17).
+    /// `1` is the shipped sequential read; this is separate from `threads`,
+    /// which parallelises across tensors.
+    pub tile_threads: usize,
 }
 
 impl Default for RestorePipelineOptions {
@@ -73,6 +77,7 @@ impl Default for RestorePipelineOptions {
         RestorePipelineOptions {
             threads: 1,
             max_inflight_bytes: DEFAULT_MAX_INFLIGHT_BYTES,
+            tile_threads: 1,
         }
     }
 }
@@ -504,7 +509,15 @@ impl Store {
             authorized,
             &declared,
             options,
-            |_index, token| self.read_tensor_authorized(token, &TileDecodeOptions::default()),
+            |_index, token| {
+                self.read_tensor_authorized(
+                    token,
+                    &TileDecodeOptions {
+                        threads: options.tile_threads,
+                        ..TileDecodeOptions::default()
+                    },
+                )
+            },
             |bytes| bytes.len(),
             |_index, bytes| write_sink(sink, bytes),
         )

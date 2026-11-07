@@ -46,7 +46,9 @@ use weftfs::state::{
 use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
-use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec};
+use weftfs::tensor_store::{
+    AccessPattern, TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec,
+};
 use weftfs::threefs::ThreeFsConfig;
 use weftfs::training_ready::{verify_training_ready_output, TrainingReadyOptions};
 use weftfs::wcb_util as wu;
@@ -413,6 +415,9 @@ enum Command {
         /// budget and offer it to the planner.
         #[arg(long = "auto-tile-bytes")]
         auto_tile_bytes: Option<u64>,
+        /// Access pattern: whole | region:BYTES:READS | mixed:WHOLE:BYTES:READS.
+        #[arg(long = "access-pattern", default_value = "whole")]
+        access_pattern: String,
     },
     /// Canonicalise an overlay-represented file into one chunk table. The
     /// logical content root must be unchanged.
@@ -475,6 +480,9 @@ enum Command {
         /// budget and offer it to the planner.
         #[arg(long = "auto-tile-bytes")]
         auto_tile_bytes: Option<u64>,
+        /// Access pattern: whole | region:BYTES:READS | mixed:WHOLE:BYTES:READS.
+        #[arg(long = "access-pattern", default_value = "whole")]
+        access_pattern: String,
     },
     /// List a directory.
     Ls { path: String },
@@ -1761,6 +1769,7 @@ fn run(cli: Cli) -> Result<()> {
             candidates,
             tile_shape,
             auto_tile_bytes,
+            access_pattern,
         } => {
             let bytes = read_input(text, input_file)?;
             let causal = parse_causal_entries(causal.as_deref())?;
@@ -1791,6 +1800,7 @@ fn run(cli: Cli) -> Result<()> {
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
                         candidates: parse_object_ids(candidates.as_deref())?,
                         auto_tile_bytes,
+                        access_pattern: AccessPattern::parse(&access_pattern)?,
                         ..TensorPlanOptions::default()
                     },
                     tile_shape: match tile_shape.as_deref() {
@@ -1851,6 +1861,7 @@ fn run(cli: Cli) -> Result<()> {
             candidates,
             tile_shape,
             auto_tile_bytes,
+            access_pattern,
         } => {
             let bytes = fs::read(&input_file)
                 .map_err(|err| Error::io(format!("cannot read {}: {err}", input_file.display())))?;
@@ -1863,6 +1874,7 @@ fn run(cli: Cli) -> Result<()> {
                 shard_index,
             )?;
             let causal = parse_causal_entries(causal.as_deref())?;
+            let plan_access_pattern = AccessPattern::parse(&access_pattern)?;
             let options = TensorPlanOptions {
                 lambda_ns,
                 cost_model: planner_cost_model,
@@ -1874,6 +1886,7 @@ fn run(cli: Cli) -> Result<()> {
                     None => None,
                 },
                 auto_tile_bytes,
+                access_pattern: plan_access_pattern,
                 ..TensorPlanOptions::default()
             };
             let store = open_store(&store, OpenMode::ReadOnly, policy)?;
@@ -1894,7 +1907,7 @@ fn run(cli: Cli) -> Result<()> {
                         })
                     })
                     .collect();
-                print_json(&json!({
+                let value = json!({
                     "chosen": plan.chosen.as_str(),
                     "chosen_physical_bytes": plan.chosen_physical_bytes,
                     "chosen_estimated_decode_ns": plan.chosen_estimated_decode_ns,
@@ -1905,8 +1918,13 @@ fn run(cli: Cli) -> Result<()> {
                     "runner_up_cost": plan.runner_up_cost.map(|cost| cost.to_string()),
                     "lambda_ns": lambda_ns,
                     "cost_model": planner_cost_model.as_str(),
+                    "access_pattern": plan_access_pattern.as_str(),
                     "candidates": candidates,
-                }))
+                });
+                // One line per plan so receipt harnesses can join rows without
+                // a JSON parser; the value itself is ordinary JSON.
+                println!("{value}");
+                Ok(())
             } else {
                 println!("chosen={}", plan.chosen.as_str());
                 println!("chosen_physical_bytes={}", plan.chosen_physical_bytes);

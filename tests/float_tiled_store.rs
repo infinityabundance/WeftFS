@@ -60,6 +60,120 @@ fn write_tiled(
         .expect("mode-17 write")
 }
 
+/// Weight-like BF16: a clustered exponent byte and a random mantissa byte,
+/// the distribution mode 9 is built for.
+fn weight_like_bf16(elements: usize, seed: u64) -> Vec<u8> {
+    let mut state = seed | 1;
+    let mut out = Vec::with_capacity(elements * 2);
+    for _ in 0..elements {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        let high = if state % 16 == 0 { 0x40u8 } else { 0x3fu8 };
+        let low = (state >> 8) as u8;
+        out.push(low);
+        out.push(high);
+    }
+    out
+}
+
+#[test]
+fn access_pattern_region_selects_float_tiled_and_whole_selects_mode9() {
+    use weftfs::tensor_store::AccessPattern;
+
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let shape = [512u64, 512];
+    let bytes = weight_like_bf16(512 * 512, 0x1234);
+
+    // Bytes-only, whole-tensor: the single mode-9 frame wins on bytes.
+    let whole = TensorPlanOptions {
+        tile_shape: Some(vec![16, 32]),
+        ..TensorPlanOptions::default()
+    };
+    let plan = store
+        .plan_tensor(
+            "bf16",
+            &shape,
+            &bytes,
+            &TensorLayoutSpec::row_major(),
+            &[],
+            &whole,
+        )
+        .expect("whole plan");
+    assert_eq!(
+        plan.chosen,
+        TensorStrategy::FloatTensor,
+        "candidates: {:?}",
+        plan.candidates
+    );
+
+    // 1,000 repeated small region reads: a non-tile representation pays a
+    // whole-tensor decode per read, the float-tiled form pays one tile.
+    let region = TensorPlanOptions {
+        tile_shape: Some(vec![16, 32]),
+        lambda_ns: 1,
+        access_pattern: AccessPattern::Region {
+            region_bytes: 2 * 32,
+            reads_per_write: 1000,
+        },
+        ..TensorPlanOptions::default()
+    };
+    let plan = store
+        .plan_tensor(
+            "bf16",
+            &shape,
+            &bytes,
+            &TensorLayoutSpec::row_major(),
+            &[],
+            &region,
+        )
+        .expect("region plan");
+    assert_eq!(
+        plan.chosen,
+        TensorStrategy::FloatTiled,
+        "candidates: {:?}",
+        plan.candidates
+    );
+}
+
+#[test]
+fn default_plan_equals_explicit_whole_pattern() {
+    use weftfs::tensor_store::AccessPattern;
+
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let _ = root;
+    let shape = [64u64, 64];
+    let bytes = weight_like_bf16(64 * 64, 0x99);
+    let layout = TensorLayoutSpec::row_major();
+    let base = TensorPlanOptions {
+        tile_shape: Some(vec![16, 32]),
+        lambda_ns: 7,
+        ..TensorPlanOptions::default()
+    };
+    let explicit = TensorPlanOptions {
+        access_pattern: AccessPattern::Whole,
+        ..base.clone()
+    };
+    let left = store
+        .plan_tensor("bf16", &shape, &bytes, &layout, &[], &base)
+        .expect("default");
+    let right = store
+        .plan_tensor("bf16", &shape, &bytes, &layout, &[], &explicit)
+        .expect("whole");
+    assert_eq!(left.chosen, right.chosen);
+    assert_eq!(left.chosen_physical_bytes, right.chosen_physical_bytes);
+    assert_eq!(
+        left.chosen_estimated_decode_ns,
+        right.chosen_estimated_decode_ns
+    );
+    assert_eq!(left.chosen_cost, right.chosen_cost);
+    assert_eq!(left.candidates, right.candidates);
+}
+
 #[test]
 fn mode17_round_trips_and_reads_regions() {
     let dir = tempdir().unwrap();

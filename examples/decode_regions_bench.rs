@@ -65,18 +65,12 @@ fn options() -> Options {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let store_dir = arg(&args, "--store").expect("--store");
     let source_path = arg(&args, "--safetensors").expect("--safetensors");
     let tensor_name = arg(&args, "--tensor").expect("--tensor");
-    let tile_text = arg(&args, "--tile-shape").expect("--tile-shape");
     let reps: usize = arg(&args, "--reps")
         .and_then(|value| value.parse().ok())
         .unwrap_or(5);
     let out_path = arg(&args, "--out");
-
-    std::fs::create_dir_all(&store_dir).expect("store dir");
-    let mut store = Store::init(Path::new(&store_dir), options()).expect("store init");
-    let root = store.resolve_path("/").expect("root");
 
     let file =
         weftfs::safetensors::SafetensorsFile::parse(Path::new(&source_path)).expect("safetensors");
@@ -88,6 +82,28 @@ fn main() {
     let dtype = tensor.dtype.clone();
     let shape = tensor.shape.clone();
     let bytes = file.read_tensor(tensor).expect("tensor bytes");
+    if let Some(path) = arg(&args, "--extract") {
+        std::fs::write(&path, &bytes).expect("extract tensor");
+        println!(
+            "{}",
+            json!({
+                "schema": "weft.decode-regions-bench.v1",
+                "event": "extract",
+                "tensor": tensor_name,
+                "dtype": dtype,
+                "shape": shape,
+                "bytes": bytes.len(),
+                "path": path,
+            })
+        );
+        return;
+    }
+
+    let store_dir = arg(&args, "--store").expect("--store");
+    let tile_text = arg(&args, "--tile-shape").expect("--tile-shape");
+    std::fs::create_dir_all(&store_dir).expect("store dir");
+    let mut store = Store::init(Path::new(&store_dir), options()).expect("store init");
+    let root = store.resolve_path("/").expect("root");
     let tile_shape: Vec<u64> = tile_text
         .split(',')
         .map(|part| part.trim().parse().expect("tile extent"))

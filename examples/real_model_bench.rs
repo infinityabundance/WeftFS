@@ -1432,6 +1432,9 @@ fn restore_checkpoint(
             let pipeline_options = RestorePipelineOptions {
                 threads: options.threads,
                 max_inflight_bytes: options.max_inflight_bytes,
+                // The pipeline already parallelises across tensors; using the
+                // same count inside each tensor would multiply the worker set.
+                tile_threads: 1,
             };
             Some(
                 store

@@ -457,6 +457,83 @@ impl TensorLayoutSpec {
     }
 }
 
+/// The access pattern a plan is priced for.
+///
+/// `Whole` is the default and reproduces the historical bytes-only plan exactly
+/// (the decode term is the full-tensor estimate, and `lambda_ns` still defaults
+/// to 0). `Region` and `Mixed` price repeated region reads: an independently
+/// tiled representation pays only for the fetched region per read, while a
+/// single-frame representation pays a whole-tensor decode per read.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AccessPattern {
+    /// The whole tensor is read once (or the caller did not say).
+    #[default]
+    Whole,
+    /// `reads_per_write` reads of `region_bytes` each.
+    Region {
+        region_bytes: u64,
+        reads_per_write: u64,
+    },
+    /// Both whole-tensor reads and region reads.
+    Mixed {
+        whole_reads: u64,
+        region_bytes: u64,
+        region_reads: u64,
+    },
+}
+
+impl AccessPattern {
+    /// Parse `whole`, `region:BYTES:READS`, or `mixed:WHOLE:REGION_BYTES:REGION_READS`.
+    pub fn parse(text: &str) -> Result<Self> {
+        let parts: Vec<&str> = text.split(':').collect();
+        match parts.as_slice() {
+            ["whole"] => Ok(AccessPattern::Whole),
+            ["region", bytes, reads] => Ok(AccessPattern::Region {
+                region_bytes: bytes.parse().map_err(|_| {
+                    Error::invalid_argument(format!("--access-pattern region bytes `{bytes}` is not u64"))
+                })?,
+                reads_per_write: reads.parse().map_err(|_| {
+                    Error::invalid_argument(format!(
+                        "--access-pattern reads_per_write `{reads}` is not u64"
+                    ))
+                })?,
+            }),
+            ["mixed", whole, bytes, reads] => Ok(AccessPattern::Mixed {
+                whole_reads: whole.parse().map_err(|_| {
+                    Error::invalid_argument(format!("--access-pattern whole_reads `{whole}` is not u64"))
+                })?,
+                region_bytes: bytes.parse().map_err(|_| {
+                    Error::invalid_argument(format!("--access-pattern region bytes `{bytes}` is not u64"))
+                })?,
+                region_reads: reads.parse().map_err(|_| {
+                    Error::invalid_argument(format!(
+                        "--access-pattern region_reads `{reads}` is not u64"
+                    ))
+                })?,
+            }),
+            _ => Err(Error::invalid_argument(format!(
+                "--access-pattern must be whole, region:BYTES:READS, or mixed:WHOLE:BYTES:READS (got `{text}`)"
+            ))),
+        }
+    }
+
+    /// Canonical spelling for JSON output.
+    pub fn as_str(self) -> String {
+        match self {
+            AccessPattern::Whole => "whole".to_owned(),
+            AccessPattern::Region {
+                region_bytes,
+                reads_per_write,
+            } => format!("region:{region_bytes}:{reads_per_write}"),
+            AccessPattern::Mixed {
+                whole_reads,
+                region_bytes,
+                region_reads,
+            } => format!("mixed:{whole_reads}:{region_bytes}:{region_reads}"),
+        }
+    }
+}
+
 /// Planner options. The default is bytes-only (`lambda_ns = 0`) with the
 /// host-calibrated decode cost table.
 #[derive(Clone, Debug)]
@@ -488,6 +565,9 @@ pub struct TensorPlanOptions {
     /// bytes fit in this budget and offers mode 15 alongside the other
     /// candidates. `None` (the default) never offers mode 15 implicitly.
     pub auto_tile_bytes: Option<u64>,
+    /// Access pattern the decode estimate is priced for. `Whole` is the default
+    /// and reproduces the historical plan exactly.
+    pub access_pattern: AccessPattern,
 }
 
 impl Default for TensorPlanOptions {
@@ -501,6 +581,7 @@ impl Default for TensorPlanOptions {
             candidates: Vec::new(),
             tile_shape: None,
             auto_tile_bytes: None,
+            access_pattern: AccessPattern::Whole,
         }
     }
 }
@@ -512,6 +593,46 @@ impl TensorPlanOptions {
         match &self.calibration {
             Some(table) => table.estimate_ns(class, size),
             None => crate::cost_model::estimate_ns(class, size, self.cost_model),
+        }
+    }
+
+    /// Decode cost at the configured access pattern.
+    ///
+    /// A tile-independent strategy (mode 15/17) pays only for the fetched
+    /// region bytes per region read; every other strategy decodes the whole
+    /// tensor per read. `Whole` is exactly [`Self::estimate_ns`].
+    pub fn estimate_ns_at_pattern(
+        &self,
+        class: crate::cost_model::CostClass,
+        strategy: TensorStrategy,
+        size: u64,
+    ) -> u64 {
+        let full = self.estimate_ns(class, size);
+        let tile_independent = matches!(
+            strategy,
+            TensorStrategy::TensorTiled | TensorStrategy::FloatTiled
+        );
+        let region_cost = |region_bytes: u64| {
+            let fetched = region_bytes.min(size);
+            if tile_independent {
+                self.estimate_ns(class, fetched)
+            } else {
+                full
+            }
+        };
+        match self.access_pattern {
+            AccessPattern::Whole => full,
+            AccessPattern::Region {
+                region_bytes,
+                reads_per_write,
+            } => region_cost(region_bytes).saturating_mul(reads_per_write.max(1)),
+            AccessPattern::Mixed {
+                whole_reads,
+                region_bytes,
+                region_reads,
+            } => full
+                .saturating_mul(whole_reads)
+                .saturating_add(region_cost(region_bytes).saturating_mul(region_reads)),
         }
     }
 }
@@ -1886,11 +2007,11 @@ impl Store {
                     detail: "canonical row-major chunks".to_owned(),
                     physical_bytes: Some(size),
                     estimated_decode_ns: Some(
-                        options.estimate_ns(crate::cost_model::CostClass::Raw, size),
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::Raw, TensorStrategy::Raw, size),
                     ),
                     cost: Some(price(
                         size,
-                        options.estimate_ns(crate::cost_model::CostClass::Raw, size),
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::Raw, TensorStrategy::Raw, size),
                         options.lambda_ns,
                     )),
                     dependency: None,
@@ -1923,7 +2044,7 @@ impl Store {
             ) {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
-                    let estimate = options.estimate_ns(crate::cost_model::CostClass::Zstd, size);
+                    let estimate = options.estimate_ns_at_pattern(crate::cost_model::CostClass::Zstd, TensorStrategy::Zstd, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::Zstd,
@@ -1982,7 +2103,7 @@ impl Store {
                             ));
                         } else {
                             let estimate = options
-                                .estimate_ns(crate::cost_model::CostClass::FloatTensor, size);
+                                .estimate_ns_at_pattern(crate::cost_model::CostClass::FloatTensor, TensorStrategy::FloatTensor, size);
                             let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
                             out.push(PreparedCandidate {
                                 candidate: TensorPlanCandidate {
@@ -2031,7 +2152,7 @@ impl Store {
                 Ok((frame, root)) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        options.estimate_ns(crate::cost_model::CostClass::TensorSharded, size);
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::TensorSharded, TensorStrategy::TensorSharded, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::TensorSharded,
@@ -2094,7 +2215,7 @@ impl Store {
                     Ok((frame, root)) => {
                         let physical = frame.len() as u64;
                         let estimate =
-                            options.estimate_ns(crate::cost_model::CostClass::TensorTiled, size);
+                            options.estimate_ns_at_pattern(crate::cost_model::CostClass::TensorTiled, TensorStrategy::TensorTiled, size);
                         out.push(PreparedCandidate {
                             candidate: TensorPlanCandidate {
                                 strategy: TensorStrategy::TensorTiled,
@@ -2154,7 +2275,7 @@ impl Store {
                         Ok((frame, root)) => {
                             let physical = frame.len() as u64;
                             let estimate = options
-                                .estimate_ns(crate::cost_model::CostClass::TensorTiled, size);
+                                .estimate_ns_at_pattern(crate::cost_model::CostClass::TensorTiled, TensorStrategy::FloatTiled, size);
                             out.push(PreparedCandidate {
                                 candidate: TensorPlanCandidate {
                                     strategy: TensorStrategy::FloatTiled,
@@ -2226,7 +2347,7 @@ impl Store {
                 Ok(Some((frame, dependency))) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        options.estimate_ns(crate::cost_model::CostClass::WeightDelta, size);
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::WeightDelta, TensorStrategy::WeightDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::WeightDelta,
@@ -2283,7 +2404,7 @@ impl Store {
                 Ok(Some((frame, dependency))) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        options.estimate_ns(crate::cost_model::CostClass::SparseDelta, size);
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::SparseDelta, TensorStrategy::SparseDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::SparseDelta,
@@ -2330,7 +2451,7 @@ impl Store {
                 Ok(Some((frame, dependency, policy))) => {
                     let physical = frame.len() as u64;
                     let estimate =
-                        options.estimate_ns(crate::cost_model::CostClass::SemanticDelta, size);
+                        options.estimate_ns_at_pattern(crate::cost_model::CostClass::SemanticDelta, TensorStrategy::SemanticDelta, size);
                     out.push(PreparedCandidate {
                         candidate: TensorPlanCandidate {
                             strategy: TensorStrategy::SemanticDelta,
