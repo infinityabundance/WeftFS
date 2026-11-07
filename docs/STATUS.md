@@ -5033,3 +5033,73 @@ replication, media, or power-loss claim; MinIO is loopback on tmpfs; the fence i
 still two conditional writes on two objects, not one atomic operation; the Ceph
 RGW dequoted form and the pack-plane `ReclaimUnreferencedPacks`/`VerifyPacks`
 are unexercised on S3; no performance claim.
+
+## Subphase R26 — Go selector-index persistence (WFX2) (2026-11-06)
+
+Go now persists its selector index in the same `WFX2` segment format Rust
+writes, so a reopen no longer replays and re-indexes the whole state. Work is in
+WeftFS-Go `staging` `39b58f2`; the parent pins it.
+
+**Implemented.** `index/` ports Rust's `StateIndex` and the WFX2 codec
+(presence/equality attribute maps, `(subject,predicate)` relation edges,
+`tagged_as` tags; equality keys are the canonical WCB `["weft.eq.<tag>", v]`, and
+numeric families share `["weft.eq.num","<decimal>"]`). `resolver/indexed.go`
+ports `candidates_for` and keeps `evalExpr` authoritative for every candidate.
+`store/index.go` writes a segment after **all four** publish sites (`init`,
+`commitOps`, `publishGroupOps`, `publishQuotaUsageOp`); a write failure is a
+note and never fails the commit. Load validates the commit key, generation, all
+three counts, state shape, digest and canonical ordering, and rejects with a
+note + rebuild otherwise. Only complete indexes are written. Read-only opens
+never write. `IndexStats{ DiskLoads, Builds, Rejects, Writes, WriteErrors,
+GCDeleted, Notes }` is the observable surface. GC deletes segments not named by
+the head, a snapshot, or a checkpoint (grace honoured) and reports them in
+`GCReport.DeletedIndexes`; `verify` never reads segments.
+
+**Byte layout, measured on a real 10,000-object segment.** 2,423,650 bytes —
+the same length as Rust's own 10k WFX2 file. Header is 72 B
+(`WFX2 | u32 version | commit[32] | u64 generation | u64 objects | u64
+relations | u64 entries`), then sorted fixed-width sections, then
+`BLAKE3("weft/index/v2", preceding bytes)`. Consistency of length is not used
+as an equality proof; the cross-language tests below are.
+
+**Cross-language, real binaries in the fuse court.**
+
+* Rust loads a Go-written segment: Go writes; Rust `query` agrees. Then the Go
+  segment's `tags` section (and separately `attr_eq`) is emptied and re-sealed
+  with a valid digest: Rust answers **0 matches** where a rebuild would have
+  returned matches — proof that Rust decoded and trusted the Go bytes. Bytes
+  restored, Rust answers again.
+* Go loads a Rust-written segment: Rust writes init/creates with string and u64
+  attributes, `tagged_as`, `links`, and a snapshot; Go opens read-only and
+  answers five query shapes with `DiskLoads=1, Builds=0, Rejects=0`, equal to the
+  scan oracle for two principals. `DecodeFile`→`EncodeFile` of the Rust file is
+  byte-identical.
+
+**Tests.** `go test -race -count=1 ./...` in the fuse court: all packages ok
+(`store` 112.4 s). Top-level test functions: store 197, fusefs 25, index 4,
+model 6, `cmd/weftfs` 18. Nine corruption modes each assert `Rejects≥1`,
+`DiskLoads=0`, `Builds≥1`, a note naming the index, unchanged answers versus the
+scan oracle, and a clean verify: bad magic, wrong version, wrong commit, wrong
+generation, wrong object count, bad digest, truncated, trailing bytes, and WFX1
+magic.
+
+**Measured, host-local, synthetic, warm cache, `/tmp` tmpfs, 5 samples, two
+independent runs.** With the segment present, the first relation query after
+reopen is **7.749 / 8.042 ms** versus **16.838 / 16.852 ms** rebuilt
+(ratio 0.460 / 0.477); the first tag query is **16.583 / 16.884 ms** versus
+**24.841 / 23.851 ms** (ratio 0.668 / 0.708). Cold build 8.5–10.4 ms; write
+including build 25.4–25.7 ms for 2,423,650 B; peak RSS 419–423 MiB.
+
+**Published losses.** The index is rewritten per commit, so its cost is O(state)
+in time and bytes (~17 ms on top of the build at 10k objects here); absolute
+times are not comparable to Rust's different fixture; queries that cannot narrow
+(`select true`, `score > 5`) still pay the load for nothing and are **not
+measured**; packing makes pack layout depend on commit timestamps, so
+`TestPackedLayoutIsDeterministic` now pins its clock; `RequireOne` and
+saved-context resolution still scan; there is no cross-language proof for
+I64/Timestamp attribute keys (the Rust CLI cannot author them); the default GC
+grace is 3600 s; and there is no CLI switch to disable segment writes.
+
+**Not done.** No index in `RequireOne`/saved-context paths; the in-memory index
+cache is not persisted; single host, synthetic fixture, warm cache — no
+device, power-loss, or fleet claim.
