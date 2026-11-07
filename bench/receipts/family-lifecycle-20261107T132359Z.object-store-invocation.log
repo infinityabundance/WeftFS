@@ -1,0 +1,52 @@
+family_lifecycle: stamp=20261107T132359Z
+family_lifecycle: court=Linux 7.3.1-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+family_lifecycle: limits memory=6g cpus=4 pids=1024
+family_lifecycle: revisions weftfs=0c84c34853fff19d30799d37df9b1e1a889b8bbb weftfs-go=b3e85b83b3ceb108f7ffa30d3130944b077297af weftcodec=46713726cd454f587c4db006ae723bd4bd4474a2 weftcodec-go=bf6bb70e827fe801fbe83c9e352d0ff3621dc704
+family_lifecycle: reps ingest=3 measure=3 topology=3 recovery=3 configs=
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+== build ==
+    Finished `release` profile [optimized] target(s) in 0.02s
+== starting MinIO on 127.0.0.1:9311 ==
+family_lifecycle: MinIO ready (pid 43)
+== ingest qwen-finetune/s3-reduced pattern=whole lambda=0 backend=s3 ==
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/ingest.json
+== measure qwen-finetune/s3-reduced ==
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/measure.json
+== gc fixture qwen-finetune/s3-reduced (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/gc/gc-pinned.json
+== assemble qwen-finetune/s3-reduced ==
+
+== qwen-finetune / s3-reduced ==
+ingest median wall 167894.494 ms, peak RSS 3000976 KiB
+  strategies base: {"float-tensor":169,"raw":48,"zstd":73}
+  strategies next: {"raw":48,"weight-delta":241,"zstd":1}
+  full_family_threads_1: p50 9340.767 ms p99 9340.807 ms bytes 1199642104 match true
+  full_family_threads_4: p50 4293.725 ms p99 4315.728 ms bytes 1199642104 match true
+  region_100_rows_threads_1: p50 2418.045 ms p99 2418.858 ms bytes 333871119 match true
+  region_100_rows_threads_4: p50 2411.547 ms p99 2417.86 ms bytes 333871119 match true
+  region_1_row_threads_1: p50 2419.423 ms p99 2422.347 ms bytes 333871119 match true
+  region_1_row_threads_4: p50 2413.56 ms p99 2415.343 ms bytes 333871119 match true
+  single_tensor_threads_1: p50 2413.695 ms p99 2421.242 ms bytes 333871119 match true
+  single_tensor_threads_4: p50 2414.135 ms p99 2415.536 ms bytes 333871119 match true
+  subset100_threads_1: p50 4741.138 ms p99 4750.235 ms bytes 644377858 match true
+  subset100_threads_4: p50 3009.542 ms p99 3011.575 ms bytes 644377858 match true
+  topology sharded_8: p50 10204.327 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology sharded_4: p50 10027.924 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology row_major: p50 10161.392 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology blocked_largest_tensor: p50 2970.816 ms, bytes 225254705 (0.827x naive), roots_ok true
+  recovery after_objects: open p50 7.944 ms, usable p50 0.13 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 7.719 ms, usable p50 0.301 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 7.821 ms, usable p50 265.94 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 231628264 bytes in false, retained blob bytes 231471817, verify_ok true, live-restore true
+  gc with_snapshot: deleted 78278 bytes in true, retained blob bytes 231471817, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261107T132359Z/qwen-finetune/s3-reduced/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261107T132359Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261107T132359Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261107T132359Z.log
