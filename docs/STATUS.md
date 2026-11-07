@@ -5602,6 +5602,11 @@ because mode 17's is raw and the identity anchor is normative.
   `18:4/12`; spec drift 42/42.
 * Rust↔Go: `TestFloatTiledStreamsVectors` re-encodes every valid vector and
   compares the frame bytes with the Rust vector. All four are byte-identical.
+* Rust↔Go store handoff: `TestTensorHandoffRustThenGo` writes `/streams.bin`
+  with the Rust CLI as mode 18 and reads it from Go (whole object, exact
+  logical root, exact region); `TestTensorHandoffGoThenRust` writes it with the
+  Go store and reads it with `weftfs cat` (whole and `--region 10,0:12,512`),
+  and Rust `verify --full` accepts the Go store.
 * Decode: per-tile streams run on a bounded pool (`HuffmanDecode` per stream);
   the whole-frame path runs tiles on a bounded pool. A new wide-word AVX2
   four-stream lockstep kernel (`simd::unpack_multi`) is runtime-dispatched and
