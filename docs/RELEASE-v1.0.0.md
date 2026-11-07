@@ -36,6 +36,13 @@ the R17 fenced-writer suite); `s3_court` (MinIO, same two suites); the four
 context cross-language courts; the five authenticated-capability courts; and
 `fuzz_diff` (1,000,000 differential inputs, identical classes, no panics).
 
+The `v1.0.0` tags are cut on the receipt commit. `WeftFS` tag `v1.0.0` peels to
+`4bfabd1`; its `WeftFS-Go` pin is `6f1749f`, which is one receipt-only commit
+after the verified `9fa39d3` (no code differs). `WeftCodec` `d61ed76` and
+`WeftCodec-Go` `86ded1e` are both the verified revisions and the tagged ones.
+This release-note commit is later than the tag; only documentation
+and the claims manifest changed after the tag.
+
 The same tree was also verified **before** the version bump:
 `bench/receipts/verify-20261107T014045Z.json`, 30/30, at WeftFS `0cfbea1`,
 WeftCodec `57288e1`, WeftCodec-Go `86ded1e`, WeftFS-Go `39b58f2`.
