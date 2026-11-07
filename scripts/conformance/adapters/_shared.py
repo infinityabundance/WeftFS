@@ -581,6 +581,8 @@ def annotate(path, vector):
         "activation-stream": ("frame", "activation_stream"),
         "semantic-delta": ("frame", "semantic_delta"),
         "sparse-delta": ("frame", "sparse_delta"),
+        "tensor-tiled": ("frame", None),
+        "float-tiled": ("frame", None),
         "structured": ("wcb", None),
         "selectors": ("selector", None),
         "context": ("context", "context_root"),

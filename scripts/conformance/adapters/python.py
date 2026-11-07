@@ -388,7 +388,7 @@ def main():
         handle_kv_cache(vector, limits)
     elif sub == "activation-stream":
         handle_activation_stream(vector, limits)
-    elif sub == "tensor-tiled":
+    elif sub in ("tensor-tiled", "float-tiled"):
         handle_frame_bytes(vector["frame_hex"], vector, limits)
     elif sub == "semantic-root":
         handle_semantic_root(vector, limits)
