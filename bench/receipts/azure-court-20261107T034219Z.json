@@ -1,0 +1,48 @@
+{
+  "schema": "weft-azure-court-v1",
+  "status": "ok",
+  "generated_utc": "20261107T034219Z",
+  "emulator": {
+    "product": "Azurite Blob service (mcr.microsoft.com/azure-storage/azurite)",
+    "release": "3.35.0",
+    "image": "mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+    "image_id": "sha256:03f7cb26ef2cda2c06ec6760c91975a85460e7bb63277a0df5c9f1d02071ead3",
+    "image_digest": "mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+    "backend": "tmpfs /data, memory-backed file layout",
+    "started_by": "bench/scripts/azure_court.sh as a sibling container on a private user-defined network",
+    "api_version": "2021-12-02",
+    "auth": "SharedKey with the published Azurite development account key",
+    "note": "Azurite is distributed on mcr.microsoft.com, not Docker Hub. The digest above is the exact image that ran; no Docker Hub image is claimed."
+  },
+  "container": {
+    "kind": "rust",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "pids": "1024",
+    "cpus": "4",
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "tmpfs": "/tmp 1g (client), /data 1g (emulator)"
+  },
+  "endpoint": "http://weft-azure-azurite-3674210:10000/devstoreaccount1",
+  "container_name_prefix": "weft-az-20261107t034219z",
+  "account": "devstoreaccount1",
+  "tests": {
+    "command": "cargo test --test azure_backend -- --test-threads=1 --nocapture",
+    "log": "bench/receipts/azure-20261107T034219Z.tests.log",
+    "summary": "bench/receipts/azure-20261107T034219Z.tests.txt"
+  },
+  "fencing": {
+    "command": "cargo test --test azure_fencing -- --test-threads=1 --nocapture",
+    "log": "bench/receipts/azure-20261107T034219Z.fencing.log",
+    "summary": "bench/receipts/azure-20261107T034219Z.fencing.txt",
+    "lease_secs": "3",
+    "shared_bodies": "tests/support/fencing.rs (also run by scripts/s3_court.sh on MinIO and bench/scripts/gcs_court.sh on fake-gcs-server)",
+    "note": "ETag-precondition fencing: takeover, fence-before-head, renewal, own-deadline stop, and a conditional tombstone release."
+  },
+  "court": {
+    "command": "cargo run --release --quiet --example azure_court -- --out bench/receipts/azure-20261107T034219Z.json",
+    "receipt": "bench/receipts/azure-20261107T034219Z.json"
+  },
+  "label": "Single-host Azurite emulator on loopback in the OOM-protected Docker court with a tmpfs data directory. Not an Azure, cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
+}

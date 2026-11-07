@@ -1,0 +1,54 @@
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4279:8
+     |
+4279 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4286:8
+     |
+4286 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4303:7
+     |
+4303 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4305:4
+     |
+4305 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4338:4
+     |
+4338 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/service_account.rs (.docker-cache/target-rust/debug/deps/service_account-1addc4c4395938c3)
+
+running 14 tests
+test a_short_lived_token_uses_half_its_lifetime_as_the_window ... ok
+test an_inconsistent_key_is_refused ... ok
+test assertion_for_an_empty_scope_is_refused ... ok
+test assertion_has_the_standard_header_and_claim_shape ... ok
+test debug_output_redacts_the_key_assertion_and_token ... ok
+test encrypted_and_non_rsa_keys_are_refused_by_name ... ok
+test gcs_backend_sends_the_service_account_bearer_token ... ok
+test gcs_config_refuses_two_credential_forms_and_loads_one_key_file ... ok
+test malformed_input_never_echoes_key_material ... ok
+test non_service_account_credentials_are_refused_by_name ... ok
+test pkcs8_and_pkcs1_encodings_are_the_same_key ... ok
+test provider_refusals_are_typed_and_do_not_echo_the_assertion ... ok
+test rfc7515_rs256_vector_signs_to_the_published_bytes ... ok
+test token_is_cached_and_refreshed_inside_a_bounded_window ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+

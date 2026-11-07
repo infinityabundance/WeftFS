@@ -5211,6 +5211,12 @@ still valid, isolating the conditional-write refusal from the own-deadline guard
   including both new tests; receipt `bench/receipts/s3-court-20261107T025420Z.json`.
 * Ceph RGW 19.2.0 (`scripts/ceph_court.sh`): `s3_backend` 6/6, `s3_fencing`
   **11/11**; receipt `bench/receipts/ceph-rgw-20261107T025545Z.json`.
+* `fake-gcs-server` v1.56.1 (`bench/scripts/gcs_court.sh`): `gcs_fencing`
+  **9/9**, including the new test; receipt
+  `bench/receipts/gcs-20261107T034113Z.json`.
+* Azurite 3.35.0 (`bench/scripts/azure_court.sh`): `azure_fencing` **9/9**,
+  including the new test; receipt
+  `bench/receipts/azure-20261107T034219Z.json`.
 * Go MinIO (`WeftFS-Go/scripts/go-s3-court.sh --focused-only`): **20 pass /
   0 fail / 1 skip** (the crash child helper), including
   `TestS3FencedWriterPausedAfterFenceCannotPublish`; receipt

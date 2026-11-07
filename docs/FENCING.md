@@ -174,13 +174,13 @@ Properties:
 
 ## 7. Evidence
 
-| court | suite | result |
-|---|---|---|
-| MinIO (`scripts/s3_court.sh`) | `tests/s3_backend.rs` + `tests/s3_fencing.rs` | 6/6 + 11/11 |
-| Ceph RGW 19.2.0 (`scripts/ceph_court.sh`) | same | 6/6 + 11/11 |
-| MinIO, Go (`WeftFS-Go/scripts/go-s3-court.sh`) | focused S3 package tests | 20 pass, 0 fail, 1 skip (crash helper) |
-| `fake-gcs-server` (`bench/scripts/gcs_court.sh`) | `tests/gcs_fencing.rs` | 8/8 |
-| Azurite 3.35.0 (`scripts/azure_court.sh`) | `tests/azure_fencing.rs` | 8/8 |
+| court | suite | result | receipt |
+|---|---|---|---|
+| MinIO (`scripts/s3_court.sh`) | `tests/s3_backend.rs` + `tests/s3_fencing.rs` | 6/6 + 11/11 | `bench/receipts/s3-court-20261107T032909Z.json` |
+| Ceph RGW 19.2.0 (`scripts/ceph_court.sh`) | same | 6/6 + 11/11 | `bench/receipts/ceph-rgw-20261107T032909Z.json` |
+| MinIO, Go (`WeftFS-Go/scripts/go-s3-court.sh`) | focused S3 package tests | 20 pass, 0 fail, 1 skip (crash helper) | `WeftFS-Go/bench/receipts/go-s3-20261107T032512Z.json` |
+| `fake-gcs-server` (`bench/scripts/gcs_court.sh`) | `tests/gcs_fencing.rs` | 9/9 | `bench/receipts/gcs-20261107T034113Z.json` |
+| Azurite 3.35.0 (`bench/scripts/azure_court.sh`) | `tests/azure_fencing.rs` | 9/9 | `bench/receipts/azure-20261107T034219Z.json` |
 
 The new R27 acceptance test is
 `paused_after_the_fence_cannot_publish_after_a_takeover` in
