@@ -4965,3 +4965,71 @@ clean.
 not a store-side mode-15/14 read path (Go has no writer for those); the FUSE
 coverage mounts read-only; no power-loss, multi-host, or fleet claim; a
 calibration is host-local by construction.
+
+## Subphase R25 — Go S3 backend (2026-11-06)
+
+The largest remaining dual-implementation gap is closed: WeftFS-Go has a real
+S3 backend with SigV4, conditional publication, and the fenced writer. Work is
+in WeftFS-Go `staging` `c421590` (tested code `3e14f26`); the parent pins it.
+
+**What is implemented.**
+
+* `store/s3client.go` — SigV4 over `net/http`, standard library only. Canonical
+  path/query, every body hashed, no `UNSIGNED-PAYLOAD` path. Pinned by the AWS
+  published "GET Object" vector plus a payload-digest test. Config precedence is
+  `--s3-*` flags, then `WEFT_S3_*`, then `AWS_*`.
+* `store/s3blob.go` — create-once `PUT` with `If-None-Match: *` (identical bytes
+  idempotent, different bytes `Exists`), whole and ranged `GET` (an ignored
+  `Range` is sliced locally; `416` is EOF), `HEAD` length, `DELETE`, and
+  `ListObjectsV2` with continuation tokens, under the same 1 GiB object bound.
+* `store/s3commit.go` — control records create-once or `If-Match` CAS, and the
+  8192-byte two-slot superblock via read-modify-write + `If-Match` with bounded
+  retry. The writable-open probe requires a matching conditional write to
+  succeed **and** a stale one to be refused with the winner's bytes intact; an
+  endpoint that ignores either form is `UnsupportedVersion`.
+* `store/s3fence` (fenced writer ported verbatim): `weftfs-s3-lock v2` with
+  owner, monotonic fence, sequence, absolute deadline, renewal stamp, and the
+  pending head. Fence+1 takeover, a conditional `LOCK` rewrite as the last gate
+  before the head CAS, renewal at one publication budget, refusal after the
+  writer's own deadline, and a content-addressed tombstone release under
+  `If-Match` — never an unconditional delete.
+* `store/control.go` — `--backend s3`, `--blob-backend s3`, `--commit-backend
+  s3`, and all four split layouts. Snapshots, GC, verify, quota, access
+  counters, checkpoints, and packs are unchanged.
+
+**Measured If-Match form.** MinIO accepts the quoted ETag as returned
+(`S3 If-Match form measured at open: quoted-as-returned`, also in the receipt as
+`measured_if_match_form`). The dequoted form (Ceph RGW's literal comparison,
+found in R16) is implemented but **unexercised** in the Go court.
+
+**A real defect the full suite caught.** Control-record replacement staged under
+`tmp/tmp` (and would have created `access/tmp`); fixed in `6fc87cc`, failing log
+retained.
+
+**Courts.** `scripts/go-s3-court.sh` (and `--focused-only`) start the official
+MinIO release `RELEASE.2025-04-22T22-12-26Z` (binary sha256 `53e2a2cb…bb817c`)
+as a sibling container under the usual hard limits, with a tmpfs data directory
+and a private bridge, path-style over `http://<container>:9000`.
+
+* Focused (go court): `gofmt -l`, `go vet`, `CGO_ENABLED=0 go build` clean;
+  **17 pass / 0 fail / 1 skip** (the skip is a crash-child helper).
+* Full `go test -race -count=1 ./...` (fuse court): all four packages ok,
+  **0 failures** — `cmd/weftfs` 24.8 s, `fusefs` 7.5 s, `model` 1.0 s, `store`
+  116.9 s.
+* Cross-language `scripts/go-s3-xlang.sh`: **17/17** checks. Go init + files +
+  snapshot → Rust `verify --full`, same head, byte-exact reads including a
+  70,000-byte file; Rust init + files → Go `verify --full`, same head,
+  byte-exact; then Go unlinks and runs `gc --apply` on the Rust-written store
+  and both implementations agree the file is gone.
+
+Receipts live in `WeftFS-Go/bench/receipts/go-s3-20261107T005722Z.json` and the
+focused/full/xlang logs beside it; `WeftFS-Go/NOTES.md` §R25 records commands,
+counts, host-local request counters (writer 110 requests / 30 writes / 101,104 B;
+reader 68 requests), and every limitation.
+
+**Not done.** No Go GCS or Azure backend; no FUSE-over-S3 mount court (the path
+exists through `store`, but it is not evidenced); no AWS, multi-node,
+replication, media, or power-loss claim; MinIO is loopback on tmpfs; the fence is
+still two conditional writes on two objects, not one atomic operation; the Ceph
+RGW dequoted form and the pack-plane `ReclaimUnreferencedPacks`/`VerifyPacks`
+are unexercised on S3; no performance claim.
