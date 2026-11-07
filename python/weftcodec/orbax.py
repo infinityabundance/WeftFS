@@ -64,6 +64,8 @@ from .dcp import (
     verify_checkpoint,
 )
 from .hashing import content_root
+from .service import CheckpointService, ServiceError
+from .dcp import _default_cli
 
 __all__ = [
     "DEFAULT_STAGING_BYTES",
@@ -704,12 +706,20 @@ def _target_sharding(leaf):
     return getattr(leaf, "sharding", None)
 
 
-def _to_target(payload, *, canonical, shape, target):
+def _to_target(buffer, *, canonical, shape, target):
+    """Materialise one restored leaf from its caller-owned memfd buffer.
+
+    ``buffer`` is the service's :class:`weftcodec.service.TensorBuffer`; the
+    dtype/shape were already verified against the metadata, so the mapping is
+    used directly. For a JAX destination the host array is handed to
+    ``device_put`` with no extra host copy; for a numpy destination the caller
+    owns the result, so exactly one bounded copy is made.
+    """
     _require_jax("materialising a restored leaf")
     np_dtype = _numpy_dtype(canonical)
-    array = _NP.frombuffer(payload, dtype=np_dtype).reshape(tuple(shape)).copy()
+    array = _NP.frombuffer(buffer.view, dtype=np_dtype).reshape(tuple(shape))
     if _NP is not None and isinstance(target, _NP.ndarray):
-        return _NP.ascontiguousarray(array)
+        return _NP.array(array, copy=True, order="C")
     jnp = _JAX.numpy
     value = jnp.asarray(array)
     sharding = _target_sharding(target)
@@ -799,6 +809,9 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         self._executor = ThreadPoolExecutor(
             max_workers=workers, thread_name_prefix="weft-orbax-save"
         )
+        self._service_cli = _default_cli(weftfs_cli)
+        self._service = None
+        self._service_root = None
         self._lock = threading.RLock()
         self._last_result = None
         self._stats = {
@@ -809,6 +822,18 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         }
 
     # -- properties ---------------------------------------------------------
+
+    def _get_service(self, store_root):
+        """One helper process for every operation of this handler."""
+        root = os.path.abspath(os.fspath(store_root))
+        if self._service is None or self._service_root != root:
+            if self._service is not None:
+                self._service.close()
+            self._service = CheckpointService(
+                root, cli=self._service_cli, timeout=self.timeout
+            )
+            self._service_root = root
+        return self._service
 
     @property
     def stats(self):
@@ -859,7 +884,15 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         return None
 
     def close(self):
+        if self._service is not None:
+            self._service.close()
+            self._service = None
+            self._service_root = None
         self._executor.shutdown(wait=True, cancel_futures=False)
+
+    @staticmethod
+    def _translate(exc):
+        return _translate_service_error(exc)
 
     # -- save ---------------------------------------------------------------
 
@@ -918,7 +951,6 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
 
         directory = Path(directory)
         directory.mkdir(parents=True, exist_ok=True)
-        staging = directory / "weft.staging.safetensors"
         pointer_path = directory / ORBAX_POINTER_NAME
         peak = 0
         storage_name = None
@@ -926,6 +958,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         if save_args.init_store:
             store.init()
         store.requires_store()
+        service = self._get_service(store_root)
         try:
             header = {}
             cursor = 0
@@ -940,38 +973,41 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             header_raw = _json_bytes(header)
             if len(header_raw) > 64 * 1024 * 1024:
                 raise SaveFailed("staging safetensors header exceeds 64 MiB")
-            with open(staging, "wb") as handle:
-                handle.write(struct.pack("<Q", len(header_raw)))
-                handle.write(header_raw)
-                for leaf, (path_tuple, source_leaf) in zip(leaves, flat):
-                    payload = _array_bytes(source_leaf)
-                    if len(payload) != leaf["nbytes"]:
-                        raise SaveFailed(
-                            "leaf %r produced %d bytes, header declared %d"
-                            % (leaf["path"], len(payload), leaf["nbytes"])
-                        )
-                    peak = max(peak, len(payload))
-                    handle.write(payload)
-                    leaf["content_root"] = content_root(payload)
-                handle.flush()
-                os.fsync(handle.fileno())
+            # The container must exist as safetensors bytes (the checkpoint
+            # manifest records its header and SHA-256), but it is staged in
+            # memory only: no host file, no CLI argument, one memfd hand-off.
+            container = bytearray(struct.pack("<Q", len(header_raw)))
+            container += header_raw
+            for leaf, (path_tuple, source_leaf) in zip(leaves, flat):
+                payload = _array_bytes(source_leaf)
+                if len(payload) != leaf["nbytes"]:
+                    raise SaveFailed(
+                        "leaf %r produced %d bytes, header declared %d"
+                        % (leaf["path"], len(payload), leaf["nbytes"])
+                    )
+                peak = max(peak, len(payload))
+                container += payload
+                leaf["content_root"] = content_root(payload)
 
             storage_name = _allocate_storage_name(
                 store, checkpoint_id, bool(save_args.overwrite)
             )
             started = time.monotonic()
-            report = store.checkpoint_write(
-                staging,
+            write_report = service.write_checkpoint(
                 storage_name,
+                container,
                 shards=shards,
                 axis=axis,
                 strategy=save_args.shard_strategy,
             )
             checkpoint_write_ms = (time.monotonic() - started) * 1000.0
-            show = store.checkpoint_show(storage_name)
+            manifest = write_report.manifest.to_value()
+            show = {
+                "manifest_root": write_report.manifest_root,
+                "manifest": manifest,
+            }
             _verify_manifest(show, leaves, storage_name)
 
-            manifest = show["manifest"]
             manifest_rows = {row["name"]: row for row in manifest.get("tensors", [])}
             recorded = []
             for index, leaf in enumerate(leaves):
@@ -1002,7 +1038,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                 orbax_version=_orbax_version(),
             )
             metadata_bytes = serialize_metadata(metadata)
-            store.put_file(
+            service.write_file(
                 "/checkpoints/%s/%s" % (storage_name, ORBAX_METADATA_NAME),
                 metadata_bytes,
             )
@@ -1040,10 +1076,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                 self._last_result = result
             return result
         finally:
-            try:
-                staging.unlink()
-            except OSError:
-                pass
+            pass
 
     # -- restore ------------------------------------------------------------
 
@@ -1059,6 +1092,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             storage_name=restore_args.storage_name,
             weftfs_cli=self.weftfs_cli,
             timeout=self.timeout,
+            service_factory=self._get_service,
         )
         _verify_metadata_manifest(metadata, show)
         staging_bound = (
@@ -1119,47 +1153,49 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
 
         all_entries = metadata.by_entry()
         full = len(wanted) == len(all_entries)
-        payloads = {}
-        with tempfile.TemporaryDirectory(prefix="weft-orbax-restore-") as tmp:
-            host_out = Path(tmp) / "restored.safetensors"
-            if full:
-                report = store.restore(
-                    storage_name,
-                    entry=None,
-                    topology=shards,
-                    axis=axis,
-                    host_out=host_out,
-                )
-                parsed = _parse_safetensors(host_out)
-                _check_restored_payloads(parsed, wanted, storage_name)
-                payloads = {leaf.entry: parsed[leaf.entry][2] for leaf in wanted}
-                _record_restore_stats(self, len(wanted), sum(len(v) for v in payloads.values()))
-            else:
-                for leaf in wanted:
-                    report = store.restore(
+        buffers = {}
+        try:
+            for leaf in wanted:
+                try:
+                    buffer = store.restore_tensor(
                         storage_name,
-                        entry=leaf.entry,
-                        topology=shards,
-                        axis=axis,
-                        host_out=host_out,
+                        leaf.entry,
+                        topology=None if shards is None else (shards, axis),
                     )
-                    parsed = _parse_safetensors(host_out)
-                    _check_restored_payloads(parsed, [leaf], storage_name)
-                    payloads[leaf.entry] = parsed[leaf.entry][2]
-                    _record_restore_stats(self, 1, len(payloads[leaf.entry]))
-
-        restored_leaves = []
-        for (path_tuple, target_leaf), path in zip(flat, target_paths):
-            leaf_meta = stored[path]
-            restored_leaves.append(
-                _to_target(
-                    payloads[leaf_meta.entry],
-                    canonical=leaf_meta.dtype,
-                    shape=leaf_meta.shape,
-                    target=target_leaf,
-                )
+                except ServiceError as exc:
+                    raise self._translate(exc) from exc
+                if tuple(buffer.shape) != leaf.shape:
+                    buffer.close()
+                    raise ExactnessError(
+                        "leaf %r restored shape %r, expected %r"
+                        % (leaf.path, tuple(buffer.shape), leaf.shape)
+                    )
+                actual = content_root(buffer.view)
+                if actual != leaf.content_root:
+                    buffer.close()
+                    raise ExactnessError(
+                        "leaf %r restored content root %s != recorded %s"
+                        % (leaf.path, actual.hex(), leaf.content_root.hex())
+                    )
+                buffers[leaf.entry] = buffer
+            _record_restore_stats(
+                self, len(wanted), sum(buffer.size for buffer in buffers.values())
             )
-        return _JAX.tree_util.tree_unflatten(_treedef(target), restored_leaves)
+            restored_leaves = []
+            for (path_tuple, target_leaf), path in zip(flat, target_paths):
+                leaf_meta = stored[path]
+                restored_leaves.append(
+                    _to_target(
+                        buffers[leaf_meta.entry],
+                        canonical=leaf_meta.dtype,
+                        shape=leaf_meta.shape,
+                        target=target_leaf,
+                    )
+                )
+            return _JAX.tree_util.tree_unflatten(_treedef(target), restored_leaves)
+        finally:
+            for buffer in buffers.values():
+                buffer.close()
 
     # -- extension: single-leaf restore -------------------------------------
 
@@ -1174,7 +1210,11 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         restore_topology = kwargs.pop("restore_topology", None)
         axis_arg = kwargs.pop("axis", 0)
         store, storage_name, metadata, show, _pointer = _resolve_metadata(
-            directory, weftfs_cli=self.weftfs_cli, timeout=self.timeout, **kwargs
+            directory,
+            weftfs_cli=self.weftfs_cli,
+            timeout=self.timeout,
+            service_factory=self._get_service,
+            **kwargs,
         )
         _verify_metadata_manifest(metadata, show)
         stored = metadata.by_path()
@@ -1195,26 +1235,46 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             if restore_topology is None
             else _parse_topology(restore_topology, axis_arg)
         )
-        with tempfile.TemporaryDirectory(prefix="weft-orbax-leaf-") as tmp:
-            host_out = Path(tmp) / "leaf.safetensors"
-            store.restore(
-                storage_name,
-                entry=leaf.entry,
-                topology=shards,
-                axis=axis,
-                host_out=host_out,
+        buffer = None
+        try:
+            try:
+                buffer = store.restore_tensor(
+                    storage_name,
+                    leaf.entry,
+                    topology=None if shards is None else (shards, axis),
+                )
+            except ServiceError as exc:
+                raise self._translate(exc) from exc
+            if tuple(buffer.shape) != leaf.shape:
+                raise ExactnessError(
+                    "leaf %r restored shape %r, expected %r"
+                    % (path, tuple(buffer.shape), leaf.shape)
+                )
+            actual = content_root(buffer.view)
+            if actual != leaf.content_root:
+                raise ExactnessError(
+                    "leaf %r restored content root %s != recorded %s"
+                    % (path, actual.hex(), leaf.content_root.hex())
+                )
+            _record_restore_stats(self, 1, buffer.size)
+            if target is None:
+                # The returned numpy array owns its bytes; this is the one
+                # explicit copy on the "no destination given" path.
+                return (
+                    _NP.frombuffer(buffer.view, dtype=_numpy_dtype(leaf.dtype))
+                    .reshape(leaf.shape)
+                    .copy()
+                )
+            return _to_target(
+                buffer, canonical=leaf.dtype, shape=leaf.shape, target=target
             )
-            parsed = _parse_safetensors(host_out)
-        _check_restored_payloads(parsed, [leaf], storage_name)
-        payload = parsed[leaf.entry][2]
-        _record_restore_stats(self, 1, len(payload))
-        if target is None:
-            np_dtype = _numpy_dtype(leaf.dtype)
-            return _NP.frombuffer(payload, dtype=np_dtype).reshape(leaf.shape).copy()
-        return _to_target(payload, canonical=leaf.dtype, shape=leaf.shape, target=target)
+        finally:
+            if buffer is not None:
+                buffer.close()
 
     def leaf_paths(self, directory):
-        return [leaf.path for leaf in read_metadata(Path(directory))[2].leaves]
+        metadata = metadata_of(Path(directory))
+        return [leaf.path for leaf in metadata.leaves]
 
 
 if ORBAX_AVAILABLE:  # pragma: no branch - registered only with a real Orbax
@@ -1460,6 +1520,8 @@ def _resolve_metadata(
     storage_name=None,
     weftfs_cli=None,
     timeout=DEFAULT_TIMEOUT_SECONDS,
+    service=None,
+    service_factory=None,
 ):
     directory = Path(os.fspath(directory))
     pointer = None
@@ -1494,8 +1556,16 @@ def _resolve_metadata(
             )
         checkpoint_id = pointer["checkpoint_id"]
         storage_name = pointer["storage_name"]
-    store = _Storage(store_root, cli=weftfs_cli, timeout=timeout)
-    store.requires_store()
+    if service is None:
+        if service_factory is not None:
+            service = service_factory(store_root)
+        else:
+            service = CheckpointService(store_root, cli=weftfs_cli, timeout=timeout)
+    store = service
+    # Refresh before reading so a commit made by another process (the CLI oracle
+    # in the adversarial tests, for example) is visible on this long-lived
+    # service. The refresh reopens the read handle; it is not a write.
+    store.refresh()
     if storage_name is None:
         if checkpoint_id is None:
             raise InvalidMetadata(
@@ -1510,12 +1580,14 @@ def _resolve_metadata(
                 % (storage_name, checkpoint_id)
             )
     metadata_path = "/checkpoints/%s/%s" % (storage_name, ORBAX_METADATA_NAME)
-    if not store.file_exists(metadata_path):
+    exists, _size = store.stat_file(metadata_path)
+    if not exists:
         raise MetadataMissing(
             "checkpoint %r has no %s; was it written by the Orbax adapter?"
             % (metadata_path, ORBAX_METADATA_NAME)
         )
-    blob = store.get_file(metadata_path)
+    with store.read_file(metadata_path) as view:
+        blob = view.bytes
     if pointer is not None and content_root(blob) != pointer["metadata_root"]:
         raise InvalidMetadata(
             "store metadata root %s != locator metadata_root %s"
@@ -1538,8 +1610,28 @@ def _resolve_metadata(
             "store metadata names checkpoint %r but resolved %r"
             % (metadata.checkpoint_id, checkpoint_id)
         )
-    show = store.checkpoint_show(storage_name)
+    show = _show_from_manifest(store.manifest(storage_name))
     return store, storage_name, metadata, show, pointer
+
+
+def _show_from_manifest(descriptor):
+    return {
+        "manifest_root": descriptor.manifest_root,
+        "manifest": descriptor.to_value(),
+    }
+
+
+def _translate_service_error(exc):
+    """Map a typed service error onto this adapter's error hierarchy."""
+    message = str(exc)
+    class_name = getattr(exc, "class_name", "")
+    if class_name == "NotFound":
+        return MetadataMissing(message)
+    if class_name in ("Corrupt", "Malformed", "NonCanonical", "DependencyMismatch"):
+        return ExactnessError(message)
+    if class_name in ("LimitExceeded", "BudgetExceeded"):
+        return StagingLimitExceeded(message)
+    return SaveFailed(message)
 
 
 def _latest_storage_name(store, checkpoint_id):
@@ -1630,4 +1722,11 @@ def flatten_pytree(item):
 
 def metadata_of(directory, **kwargs):
     """Return the decoded :class:`OrbaxMetadata` for a directory."""
-    return read_metadata(Path(directory), **kwargs)[2]
+    resolved = read_metadata(Path(directory), **kwargs)
+    service = resolved[0]
+    try:
+        return resolved[2]
+    finally:
+        close = getattr(service, "close", None)
+        if callable(close):
+            close()

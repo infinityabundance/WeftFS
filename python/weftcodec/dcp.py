@@ -54,6 +54,13 @@ from pathlib import Path
 
 from . import wcb
 from .hashing import content_root
+from .service import (
+    CheckpointService,
+    ServiceError,
+    ServiceProtocolError,
+    ServiceUnavailable,
+    canonical_element_bytes,
+)
 
 __all__ = [
     "AsyncSaveHandle",
@@ -80,6 +87,7 @@ __all__ = [
     "save_checkpoint_async",
     "verify_checkpoint",
 ]
+
 
 DCP_METADATA_SCHEMA = "weft.dcp.metadata.v1"
 DCP_METADATA_NAME = "dcp.metadata"
@@ -1034,6 +1042,9 @@ class WeftStorageWriter(_StorageWriterBase):
         if init_store:
             self._store.init()
         self._store.requires_store()
+        self._service_cli = _default_cli(weftfs_cli)
+        self._timeout = float(timeout)
+        self._service = None
         self._lock = threading.RLock()
         self._save_id = uuid.uuid4().hex
         self._storage_name = None
@@ -1063,6 +1074,19 @@ class WeftStorageWriter(_StorageWriterBase):
     def checkpoint_id(self):
         return self._path
 
+    def _get_service(self):
+        """One helper process for every operation of this writer."""
+        if self._service is None:
+            self._service = CheckpointService(
+                self.store_root, cli=self._service_cli, timeout=self._timeout
+            )
+        return self._service
+
+    def close(self):
+        if self._service is not None:
+            self._service.close()
+            self._service = None
+
     @property
     def store_name(self):
         return self._storage_name
@@ -1076,6 +1100,9 @@ class WeftStorageWriter(_StorageWriterBase):
                 "storage_name": self._storage_name,
                 "store_root": os.fspath(self.store_root),
                 "store_command_ms": self._store.command_ms,
+                "service": (
+                    None if self._service is None else dict(self._service.stats)
+                ),
                 "topology": self._topology,
                 "shard_strategy": self.shard_strategy,
                 "staging_bytes": self.staging_bytes,
@@ -1162,11 +1189,11 @@ class WeftStorageWriter(_StorageWriterBase):
                 storage_name=self._storage_name,
             )
             try:
-                self._store.put_file(
+                self._get_service().write_file(
                     "/checkpoints/%s/%s" % (self._storage_name, DCP_METADATA_NAME),
                     blob,
                 )
-            except StoreCommandError as exc:
+            except (StoreCommandError, ServiceError) as exc:
                 raise SaveFailed(
                     "checkpoint %r was published but its DCP metadata was not: %s"
                     % (self._storage_name, exc)
@@ -1178,7 +1205,7 @@ class WeftStorageWriter(_StorageWriterBase):
     # -- internals ----------------------------------------------------------
 
     def _allocate_storage_name(self):
-        existing = set(self._store.list_checkpoints())
+        existing = set(self._get_service().list_checkpoints())
         if self._path not in existing:
             return self._path
         if not self.overwrite:
@@ -1315,105 +1342,107 @@ class WeftStorageWriter(_StorageWriterBase):
         if len(header_raw) > 64 * 1024 * 1024:
             raise SaveFailed("staging safetensors header exceeds 64 MiB")
 
-        staging_dir = tempfile.mkdtemp(prefix="weft-dcp-staging-")
-        staging = Path(staging_dir) / "checkpoint.safetensors"
+        # Stage the canonical container in memory. It must exist as
+        # safetensors bytes because the checkpoint manifest records the source
+        # header and SHA-256, but it never reaches the disk, is never a path
+        # argument to a CLI process, and is handed to the helper over a memfd.
+        container = bytearray(struct.pack("<Q", len(header_raw)))
+        container += header_raw
         infos = []
         peak = 0
-        try:
-            with open(staging, "wb") as handle:
-                handle.write(struct.pack("<Q", len(header_raw)))
-                handle.write(header_raw)
-                for row in staged:
-                    if row["kind"] == "bytes":
-                        payload = row["payload"]
-                    else:
-                        tensor = planner.resolve_data(row["item"])
-                        if not hasattr(tensor, "detach"):
-                            raise UnsupportedStateObject(
-                                "tensor write item %r resolved to %s"
-                                % (row["item"].index.fqn, type(tensor).__name__)
-                            )
-                        actual_dtype = _dtype_name(tensor.dtype)
-                        actual_shape = tuple(int(x) for x in tensor.shape)
-                        if actual_dtype != row["dtype"] or actual_shape != row["shape"]:
-                            raise SaveFailed(
-                                "planner resolved %r as %s%r, plan said %s%r"
-                                % (
-                                    row["item"].index.fqn,
-                                    actual_dtype,
-                                    actual_shape,
-                                    row["dtype"],
-                                    row["shape"],
-                                )
-                            )
-                        if row["nbytes"] > self.staging_bytes:
-                            raise StagingLimitExceeded(
-                                "tensor %r needs %d staged bytes, above the %d "
-                                "staging_bytes bound"
-                                % (
-                                    row["item"].index.fqn,
-                                    row["nbytes"],
-                                    self.staging_bytes,
-                                )
-                            )
-                        payload = _tensor_bytes(tensor)
-                        peak = max(peak, len(payload))
-                    if len(payload) != row["nbytes"]:
-                        raise SaveFailed(
-                            "entry %r produced %d bytes, header declared %d"
-                            % (row["entry"], len(payload), row["nbytes"])
-                        )
-                    handle.write(payload)
-                    infos.append(
-                        StorageInfo(
-                            entry=row["entry"],
-                            dtype=row["dtype"],
-                            shape=row["shape"],
-                            storage_offsets=row["offsets"],
-                            lengths=row["lengths"],
-                            content_root=content_root(payload),
+        for row in staged:
+            if row["kind"] == "bytes":
+                payload = row["payload"]
+            else:
+                tensor = planner.resolve_data(row["item"])
+                if not hasattr(tensor, "detach"):
+                    raise UnsupportedStateObject(
+                        "tensor write item %r resolved to %s"
+                        % (row["item"].index.fqn, type(tensor).__name__)
+                    )
+                actual_dtype = _dtype_name(tensor.dtype)
+                actual_shape = tuple(int(x) for x in tensor.shape)
+                if actual_dtype != row["dtype"] or actual_shape != row["shape"]:
+                    raise SaveFailed(
+                        "planner resolved %r as %s%r, plan said %s%r"
+                        % (
+                            row["item"].index.fqn,
+                            actual_dtype,
+                            actual_shape,
+                            row["dtype"],
+                            row["shape"],
                         )
                     )
-                handle.flush()
-                os.fsync(handle.fileno())
-
-            shards, axis = self._topology
-            storage_name = self._allocate_storage_name()
-            started = time.monotonic()
-            report = self._store.checkpoint_write(
-                staging,
-                storage_name,
-                shards=shards,
-                axis=axis,
-                strategy=self.shard_strategy,
-            )
-            self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0
-            show = self._store.checkpoint_show(storage_name)
-            self._verify_report(
-                report, show["manifest"].get("tensors", []), infos, storage_name
-            )
-            self._storage_name = storage_name
-            self._manifest = report
-            self._stats["entries"] = len(infos)
-            self._stats["tensor_bytes"] = sum(
-                int(t["element_bytes"]) for t in report.get("tensors", [])
-            )
-            self._stats["staging_peak_bytes"] = peak
-
-            results = []
-            for row, info in zip(staged, infos):
-                results.append(
-                    _write_result(row["item"], info, row["nbytes"])
+                if row["nbytes"] > self.staging_bytes:
+                    raise StagingLimitExceeded(
+                        "tensor %r needs %d staged bytes, above the %d "
+                        "staging_bytes bound"
+                        % (
+                            row["item"].index.fqn,
+                            row["nbytes"],
+                            self.staging_bytes,
+                        )
+                    )
+                payload = _tensor_bytes(tensor)
+                peak = max(peak, len(payload))
+            if len(payload) != row["nbytes"]:
+                raise SaveFailed(
+                    "entry %r produced %d bytes, header declared %d"
+                    % (row["entry"], len(payload), row["nbytes"])
                 )
-            with self._lock:
-                self._results = results
-                self._entries = {info.entry: info for info in infos}
-            return results
-        finally:
-            if not self.keep_staging:
-                shutil.rmtree(staging_dir, ignore_errors=True)
-            else:
-                self.staging_path = staging
+            container += payload
+            infos.append(
+                StorageInfo(
+                    entry=row["entry"],
+                    dtype=row["dtype"],
+                    shape=row["shape"],
+                    storage_offsets=row["offsets"],
+                    lengths=row["lengths"],
+                    content_root=content_root(payload),
+                )
+            )
+
+        shards, axis = self._topology
+        storage_name = self._allocate_storage_name()
+        service = self._get_service()
+        started = time.monotonic()
+        write_report = service.write_checkpoint(
+            storage_name,
+            container,
+            shards=shards,
+            axis=axis,
+            strategy=self.shard_strategy,
+        )
+        self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0
+        self._stats["container_bytes"] = len(container)
+        manifest_value = write_report.manifest.to_value()
+        self._verify_report(
+            {
+                "complete": write_report.complete,
+                "tensors": manifest_value["tensors"],
+            },
+            manifest_value["tensors"],
+            infos,
+            storage_name,
+        )
+        self._storage_name = storage_name
+        self._manifest = {
+            "manifest_root": write_report.manifest_root,
+            "manifest": manifest_value,
+        }
+        self._stats["entries"] = len(infos)
+        self._stats["tensor_bytes"] = sum(
+            int(t["element_bytes"]) for t in manifest_value["tensors"]
+        )
+        self._stats["staging_peak_bytes"] = peak
+
+        results = []
+        for row, info in zip(staged, infos):
+            results.append(_write_result(row["item"], info, row["nbytes"]))
+        with self._lock:
+            self._results = results
+            self._entries = {info.entry: info for info in infos}
+        return results
 
     def _verify_report(self, report, manifest_tensors, infos, storage_name):
         tensors = manifest_tensors
@@ -1468,6 +1497,17 @@ def _write_result(item, info, nbytes):
 # Reader
 
 
+class _RestoredHandle:
+    """One memfd-backed restored tensor plus its recorded metadata."""
+
+    __slots__ = ("entry", "buffer", "info")
+
+    def __init__(self, entry, buffer, info):
+        self.entry = entry
+        self.buffer = buffer
+        self.info = info
+
+
 class WeftStorageReader(_StorageReaderBase):
     """DCP ``StorageReader`` over a WeftFS checkpoint.
 
@@ -1496,8 +1536,17 @@ class WeftStorageReader(_StorageReaderBase):
         # exact copy into ``/dcp-reads/...`` is opt-in because it is a durable
         # store mutation.
         self.import_restored = bool(import_restored)
+        if self.import_restored:
+            raise DcpError(
+                "import_restored is no longer supported: the checkpoint service "
+                "restores directly into caller buffers and never materializes a "
+                "container to import"
+            )
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
+        self._service_cli = _default_cli(weftfs_cli)
+        self._timeout = float(timeout)
+        self._service = None
         self._storage_name = None
         self._manifest = None
         self._metadata = None
@@ -1524,6 +1573,26 @@ class WeftStorageReader(_StorageReaderBase):
     def storage_name(self):
         return self._storage_name
 
+    def _get_service(self):
+        """One helper process for every read of this reader."""
+        if self._service is None:
+            self._service = CheckpointService(
+                self.store_root, cli=self._service_cli, timeout=self._timeout
+            )
+        return self._service
+
+    def close(self):
+        if self._service is not None:
+            self._service.close()
+            self._service = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
+
     @property
     def metadata_source(self):
         return self._metadata_source
@@ -1538,6 +1607,9 @@ class WeftStorageReader(_StorageReaderBase):
                 "metadata_source": self._metadata_source,
                 "store_root": os.fspath(self.store_root),
                 "store_command_ms": self._store.command_ms,
+                "service": (
+                    None if self._service is None else dict(self._service.stats)
+                ),
             }
         )
         return payload
@@ -1555,7 +1627,7 @@ class WeftStorageReader(_StorageReaderBase):
         return None
 
     def _resolve_storage_name(self):
-        names = set(self._store.list_checkpoints())
+        names = set(self._get_service().list_checkpoints())
         highest = 1
         chosen = None
         for name in names:
@@ -1575,15 +1647,25 @@ class WeftStorageReader(_StorageReaderBase):
             if self._metadata is not None:
                 return self._metadata
             storage_name = self._resolve_storage_name()
-            show = self._store.checkpoint_show(storage_name)
-            manifest = show["manifest"]
+            service = self._get_service()
+            # A reader is a long-lived object; refresh so commits made by
+            # another process are visible before the manifest is read.
+            service.refresh()
+            descriptor = service.manifest(storage_name)
+            manifest = descriptor.to_value()
+            show = {
+                "manifest_root": descriptor.manifest_root,
+                "manifest": manifest,
+            }
             manifest_rows = {
                 row["name"]: row for row in manifest.get("tensors", [])
             }
             metadata_path = "/checkpoints/%s/%s" % (storage_name, DCP_METADATA_NAME)
             blob = None
-            if self._store.file_exists(metadata_path):
-                blob = self._store.get_file(metadata_path)
+            exists, _size = service.stat_file(metadata_path)
+            if exists:
+                with service.read_file(metadata_path) as view:
+                    blob = view.bytes
             if blob is not None:
                 try:
                     value = wcb.decode(blob)
@@ -1676,9 +1758,16 @@ class WeftStorageReader(_StorageReaderBase):
                 )
 
     def _restore(self, entries, *, topology=None, axis=0):
-        """Restore a set of entries, returning ``{entry: RestoredEntry}``."""
+        """Restore entries straight into caller-owned memfds.
+
+        Returns ``{entry: _RestoredHandle}``. The handle owns a memfd-backed
+        mapping; callers must ``close()`` it (or pass it to
+        :meth:`_release_handles`). No file is written and the store is never
+        mutated.
+        """
         if self._storage_name is None:
             raise DcpError("read_data() before read_metadata()")
+        service = self._get_service()
         manifest_rows = {
             row["name"]: row for row in self._manifest["manifest"].get("tensors", [])
         }
@@ -1688,71 +1777,58 @@ class WeftStorageReader(_StorageReaderBase):
                 "requested entries %r are not in checkpoint %r"
                 % (sorted(unknown), self._storage_name)
             )
-        all_entries = set(manifest_rows)
-        full = set(entries) == all_entries
-        with tempfile.TemporaryDirectory(prefix="weft-dcp-restore-") as tmp:
-            host_out = Path(tmp) / "restored.safetensors"
-            report = self._store.restore(
-                self._storage_name,
-                entry=None if full else sorted(entries)[0],
-                topology=topology,
-                axis=axis,
-                host_out=host_out,
-                import_restored=self.import_restored,
-            )
-            parsed = _parse_safetensors(host_out)
-        if not full and len(entries) != 1:
-            raise DcpError(
-                "partial restore of multiple entries needs the full container; "
-                "this is an adapter bug"
-            )
+        topology_arg = None if topology is None else (int(topology), int(axis))
         found = {}
-        tensors = report.get("tensors") or [{}]
-        topology_root = tensors[0].get("topology_root")
-        report_shards = int(report.get("shards_read", 0))
-        report_bytes = int(report.get("store_bytes_read", 0))
-        for entry in entries:
-            if entry not in parsed:
-                raise InvalidMetadata(
-                    "restored container has no entry %r (has %r)"
-                    % (entry, sorted(parsed))
-                )
-            sf_dtype, shape, payload = parsed[entry]
-            info = self._entry_info(entry)
-            if tuple(shape) != info.shape:
-                raise ExactnessError(
-                    "entry %r restored with shape %r, expected %r"
-                    % (entry, shape, info.shape)
-                )
-            actual = content_root(payload)
-            if actual != info.content_root:
-                raise ExactnessError(
-                    "entry %r restored content root %s != recorded %s"
-                    % (entry, actual.hex(), info.content_root.hex())
-                )
-            expected_sf = _safetensors_dtype(info.dtype)
-            if sf_dtype != expected_sf:
-                raise ExactnessError(
-                    "entry %r restored dtype %s, expected %s"
-                    % (entry, sf_dtype, expected_sf)
-                )
-            found[entry] = RestoredEntry(
-                entry=entry,
-                data=payload,
-                dtype=info.dtype,
-                shape=tuple(shape),
-                content_root=actual,
-                topology_root=topology_root,
-                shards_read=report_shards,
-                store_bytes_read=report_bytes,
-            )
+        try:
+            for entry in sorted(entries):
+                info = self._entry_info(entry)
+                try:
+                    buffer = service.restore_tensor(
+                        self._storage_name, entry, topology=topology_arg
+                    )
+                except ServiceError as exc:
+                    raise self._translate(exc) from exc
+                if tuple(buffer.shape) != tuple(info.shape):
+                    buffer.close()
+                    raise ExactnessError(
+                        "entry %r restored with shape %r, expected %r"
+                        % (entry, tuple(buffer.shape), info.shape)
+                    )
+                actual = content_root(buffer.view)
+                if actual != info.content_root:
+                    buffer.close()
+                    raise ExactnessError(
+                        "entry %r restored content root %s != recorded %s"
+                        % (entry, actual.hex(), info.content_root.hex())
+                    )
+                found[entry] = _RestoredHandle(entry, buffer, info)
+        except BaseException:
+            self._release_handles(found)
+            raise
         with self._lock:
             self._stats["restores"] += 1
             self._stats["entries_restored"] += len(found)
             self._stats["restored_bytes"] += sum(
-                len(item.data) for item in found.values()
+                handle.buffer.size for handle in found.values()
             )
         return found
+
+    @staticmethod
+    def _release_handles(handles):
+        for handle in handles.values():
+            handle.buffer.close()
+
+    @staticmethod
+    def _translate(exc):
+        """Map a typed service error onto the adapter's error hierarchy."""
+        message = str(exc)
+        if exc.class_name == "NotFound":
+            return MetadataMissing(message)
+        if exc.class_name in ("Corrupt", "Malformed", "NonCanonical"):
+            return ExactnessError(message)
+        if exc.class_name in ("LimitExceeded", "BudgetExceeded"):
+            return StagingLimitExceeded(message)
+        return DcpError(message)
 
     def _entry_info(self, entry):
         for info in self._storage_data.values():
@@ -1763,14 +1839,29 @@ class WeftStorageReader(_StorageReaderBase):
     def restore_entry(self, entry, *, topology=None, axis=0):
         """Restore exactly one manifest entry, optionally through a topology.
 
-        This calls ``weftfs checkpoint restore --tensor ENTRY`` (and
-        ``--topology N --axis A`` when given), which re-lays out the reassembled
-        logical tensor and verifies the same full logical root. The bytes are
-        checked against the recorded BLAKE3 content root before returning.
+        The service decodes the entry straight into a caller-owned memfd and
+        verifies the shard roots, the whole-tensor logical root (and the
+        re-layout topology root when requested). ``data`` is an explicit copy
+        of those bytes; the zero-copy path is ``WeftStorageReader.load``.
         """
         if self._metadata is None:
             self.read_metadata()
-        return self._restore([entry], topology=topology, axis=axis)[entry]
+        handles = self._restore([entry], topology=topology, axis=axis)
+        handle = handles[entry]
+        try:
+            buffer = handle.buffer
+            return RestoredEntry(
+                entry=entry,
+                data=buffer.bytes,
+                dtype=handle.info.dtype,
+                shape=tuple(buffer.shape),
+                content_root=handle.info.content_root,
+                topology_root=buffer.topology_root,
+                shards_read=buffer.shards_read,
+                store_bytes_read=buffer.store_bytes_read,
+            )
+        finally:
+            handle.buffer.close()
 
     def _read_plan(self, plan, planner):
         _require_torch("reading checkpoint data")
@@ -1805,45 +1896,44 @@ class WeftStorageReader(_StorageReaderBase):
             items_by_entry.setdefault(info.entry, []).append((read_item, info))
 
         entries = sorted(items_by_entry)
-        restored = {}
-        # Restore the whole container in one CLI call when every entry is
-        # wanted; otherwise restore each requested entry on its own.
-        if len(entries) == len({info.entry for info in storage.values()}):
-            restored.update(self._restore(entries))
-        else:
+        handles = self._restore(entries)
+        try:
             for entry in entries:
-                restored.update(self._restore([entry]))
-
-        for entry in entries:
-            info = items_by_entry[entry][0][1]
-            entry_row = restored[entry]
-            for read_item, _info in items_by_entry[entry]:
-                item_type = getattr(read_item.type, "name", str(read_item.type))
-                if item_type == "BYTE_IO":
-                    planner.load_bytes(read_item, io.BytesIO(entry_row.data))
-                    continue
-                dtype = _torch_dtype(info.dtype)
-                payload = entry_row.data
-                if payload:
-                    base = _TORCH.frombuffer(bytearray(payload), dtype=_TORCH.uint8)
-                    base = base.view(dtype).reshape(tuple(info.shape))
-                else:
-                    base = _TORCH.empty(tuple(info.shape), dtype=dtype)
-                offsets = tuple(int(x) for x in read_item.storage_offsets)
-                lengths = tuple(int(x) for x in read_item.lengths)
-                narrowed = _narrow(base, offsets, lengths)
-                target = planner.resolve_tensor(read_item).detach()
-                if tuple(target.shape) != tuple(narrowed.shape):
-                    raise ExactnessError(
-                        "target %r shape %r != stored slice %r"
-                        % (
-                            read_item.dest_index.fqn,
-                            tuple(target.shape),
-                            tuple(narrowed.shape),
+                info = items_by_entry[entry][0][1]
+                handle = handles[entry]
+                buffer = handle.buffer
+                for read_item, _info in items_by_entry[entry]:
+                    item_type = getattr(read_item.type, "name", str(read_item.type))
+                    if item_type == "BYTE_IO":
+                        planner.load_bytes(read_item, io.BytesIO(buffer.bytes))
+                        continue
+                    dtype = _torch_dtype(info.dtype)
+                    if buffer.size:
+                        # Zero-copy: torch views the caller-owned memfd.
+                        base = _TORCH.frombuffer(buffer.view, dtype=_TORCH.uint8)
+                        base = base.view(dtype).reshape(tuple(info.shape))
+                    else:
+                        base = _TORCH.empty(tuple(info.shape), dtype=dtype)
+                    offsets = tuple(int(x) for x in read_item.storage_offsets)
+                    lengths = tuple(int(x) for x in read_item.lengths)
+                    narrowed = _narrow(base, offsets, lengths)
+                    target = planner.resolve_tensor(read_item).detach()
+                    if tuple(target.shape) != tuple(narrowed.shape):
+                        raise ExactnessError(
+                            "target %r shape %r != stored slice %r"
+                            % (
+                                read_item.dest_index.fqn,
+                                tuple(target.shape),
+                                tuple(narrowed.shape),
+                            )
                         )
-                    )
-                target.copy_(narrowed)
-                planner.commit_tensor(read_item, target)
+                    # DCP allocates the destination tensor, so this copy is the
+                    # interface's own contract, not the adapter's staging.
+                    target.copy_(narrowed)
+                    planner.commit_tensor(read_item, target)
+                    del narrowed, base
+        finally:
+            self._release_handles(handles)
 
 
 # ---------------------------------------------------------------------------

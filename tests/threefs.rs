@@ -604,11 +604,15 @@ fn store_round_trip_over_usrbio_is_byte_identical_to_local() {
 fn unsafe_is_confined_to_the_threefs_ffi_module() {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
     let mut offenders = Vec::new();
-    // One explicit, narrow exception: the fenced-writer court hook must stop the
-    // process with `raise(SIGSTOP)` at an exact publication boundary, and std
-    // has no safe wrapper for that. The hook is inert unless the court arms
-    // `WEFT_FENCE_PAUSE_AFTER_FENCE`, and the guard below still requires that
-    // this is the file's *only* unsafe line.
+    // Two explicit, narrow exceptions, each with an invariant list at the top
+    // of the file:
+    //  * `threefs/` — the 3FS USRBIO C-ABI boundary;
+    //  * `checkpoint_service/ancillary.rs` — `recvmsg`/`sendmsg`
+    //    descriptor passing, which `std` does not wrap on stable Rust.
+    // One more line-level exception: the fenced-writer court hook must stop the
+    // process with `raise(SIGSTOP)` at an exact publication boundary. The hook
+    // is inert unless the court arms `WEFT_FENCE_PAUSE_AFTER_FENCE`, and the
+    // guard below still requires that this is the file's *only* unsafe line.
     let mut hook_unsafe_lines = 0usize;
     let mut stack = vec![src.clone()];
     while let Some(dir) = stack.pop() {
@@ -623,6 +627,9 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
             }
             let relative = path.strip_prefix(&src).unwrap();
             if relative.starts_with("threefs") {
+                continue;
+            }
+            if relative == Path::new("checkpoint_service/ancillary.rs") {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
@@ -645,7 +652,7 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
     }
     assert!(
         offenders.is_empty(),
-        "unsafe code escaped src/threefs/: {offenders:?}"
+        "unsafe code escaped the two syscall-boundary modules: {offenders:?}"
     );
     assert_eq!(
         hook_unsafe_lines, 1,

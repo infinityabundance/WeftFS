@@ -584,6 +584,22 @@ enum Command {
         #[command(subcommand)]
         command: Option<CheckpointCommand>,
     },
+    /// Serve checkpoint reads/writes over one persistent, bounded binary
+    /// protocol connection (no per-call CLI start, no host staging file).
+    CheckpointService {
+        /// Connected unix socket descriptor inherited from the caller.
+        #[arg(long, value_name = "N")]
+        fd: Option<i32>,
+        /// Alternatively bind this unix socket path and accept one client.
+        #[arg(long, value_name = "PATH")]
+        socket: Option<PathBuf>,
+        /// Largest accepted control frame, in bytes (bounded).
+        #[arg(long = "max-frame-bytes", default_value_t = 1048576)]
+        max_frame_bytes: usize,
+        /// Largest single restored tensor or staged container, in bytes.
+        #[arg(long = "max-tensor-bytes", default_value_t = 4294967296u64)]
+        max_tensor_bytes: u64,
+    },
     /// Context Root persistence, resolution, and materialization.
     Context {
         #[command(subcommand)]
@@ -2648,6 +2664,20 @@ fn run(cli: Cli) -> Result<()> {
             }
             Some(subcommand) => run_checkpoint(&store, json, policy, subcommand),
         },
+        Command::CheckpointService {
+            fd,
+            socket,
+            max_frame_bytes,
+            max_tensor_bytes,
+        } => {
+            let config = weftfs::checkpoint_service::ServiceConfig {
+                fd,
+                socket,
+                max_frame_bytes,
+                max_tensor_bytes,
+            };
+            weftfs::checkpoint_service::serve(&store, policy.options(), policy.kind()?, config)
+        }
         Command::Context { command } => run_context(&store, json, policy, command),
         Command::Materialize {
             root,

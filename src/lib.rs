@@ -17,11 +17,13 @@
 //!
 //! # `unsafe`
 //!
-//! The crate is `#![deny(unsafe_code)]`. Exactly one module is allowed to opt
-//! out: [`threefs::ffi`], the 3FS USRBIO C-ABI boundary, which is a transcription
-//! of the upstream header plus the invariant list at the top of that file. Every
-//! other module is safe Rust, and `tests/threefs.rs` grows this into a failure if
-//! an `unsafe` block appears anywhere else in `src/`.
+//! The crate is `#![deny(unsafe_code)]`. Exactly two modules opt out:
+//! [`threefs::ffi`], the 3FS USRBIO C-ABI boundary, and
+//! `checkpoint_service::ancillary`, the `recvmsg`/`sendmsg` descriptor-passing
+//! boundary of the persistent checkpoint service (both transcribe a syscall
+//! boundary with the invariant list at the top of the file). Every other module
+//! is safe Rust, and `tests/threefs.rs` grows this into a failure if an
+//! `unsafe` block appears anywhere else in `src/`.
 
 #![deny(unsafe_code)]
 
@@ -32,6 +34,7 @@ pub mod b64;
 pub mod backend;
 pub mod calibration;
 pub mod checkpoint;
+pub mod checkpoint_service;
 pub mod conformance;
 pub mod context;
 pub mod cost_model;

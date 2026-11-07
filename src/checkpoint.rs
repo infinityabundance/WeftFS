@@ -239,6 +239,17 @@ pub struct RestoredTensor {
     pub sha256: Sha256Digest,
 }
 
+/// One tensor restored to memory (no container header).
+///
+/// This is the primitive the persistent checkpoint service serves: the bytes
+/// are the exact decoded tensor payload and the report carries the same
+/// verification fields the whole-container restore reports per tensor.
+#[derive(Clone, Debug)]
+pub struct RestoredTensorBytes {
+    pub bytes: Vec<u8>,
+    pub report: RestoredTensor,
+}
+
 /// Result of a restore.
 #[derive(Clone, Debug)]
 pub struct CheckpointRestoreReport {
@@ -1488,6 +1499,69 @@ impl Store {
         })
     }
 
+    /// Restore exactly one named tensor's payload, without a container header.
+    ///
+    /// `snapshot` pins the manifest and every shard read to one commit. The
+    /// returned bytes are the tensor's canonical row-major payload (or the
+    /// region's payload when `region` is set). Every shard root, the whole
+    /// tensor root, the content root, and (when requested) the re-layout
+    /// topology root are verified before bytes are returned.
+    pub fn restore_named_tensor_at(
+        &self,
+        snapshot: Option<Hash32>,
+        checkpoint: &str,
+        tensor_name: &str,
+        region: Option<&Region>,
+        topology: Option<&RestoreTopology>,
+    ) -> Result<RestoredTensorBytes> {
+        if region.is_some() && topology.is_some() {
+            return Err(Error::invalid_argument(
+                "a region restore cannot be verified against a full-tensor topology",
+            ));
+        }
+        let state = match snapshot {
+            Some(commit) => Some(self.state_at(commit)?),
+            None => None,
+        };
+        let manifest = match state.as_ref() {
+            Some(state) => {
+                self.load_checkpoint_with_id_at(state, snapshot, checkpoint)?
+                    .1
+            }
+            None => self.load_checkpoint(checkpoint)?,
+        };
+        let tensor = manifest.tensor(tensor_name)?;
+        let limits = Limits::default();
+        let restored = self.restore_tensor(
+            checkpoint,
+            tensor,
+            region,
+            topology,
+            &limits,
+            state.as_ref(),
+            snapshot,
+        )?;
+        let report = RestoredTensor {
+            name: tensor.name.clone(),
+            dtype: tensor.dtype.clone(),
+            shape: restored.shape.clone(),
+            full_shape: tensor.shape.clone(),
+            full_logical_root: tensor.logical_root,
+            restored_content_root: restored.restored_content_root,
+            bytes: restored.bytes.len() as u64,
+            shards_read: restored.shards_read,
+            units_touched: restored.units_touched,
+            full_root_verified: restored.full_root_verified,
+            shard_roots_verified: restored.shard_roots_verified,
+            topology_root: restored.topology_root,
+            sha256: safetensors::sha256(&restored.bytes),
+        };
+        Ok(RestoredTensorBytes {
+            bytes: restored.bytes,
+            report,
+        })
+    }
+
     /// Restore a single tensor to memory (used by `checkpoint verify`).
     pub fn restore_checkpoint_bytes(
         &self,
@@ -1678,7 +1752,14 @@ impl Store {
                     let local_extent = local.extent();
                     let expected_len = tc::payload_len(checked_product(&local_extent)?, physical)?;
                     let rank = local_extent.len();
-                    let read = if store_meta.strategy == "tensor-tiled" {
+                    // Only the mode-10 `q8_0` byte transport addresses the
+                    // stored object in byte coordinates (its last extent is the
+                    // logical last extent times the element size). Every other
+                    // shard strategy is stored under the logical dtype/shape and
+                    // is addressed in logical coordinates.
+                    let byte_addressed =
+                        store_meta.dtype == crate::representation::TensorElementDtype::Q8_0;
+                    let read = if !byte_addressed {
                         self.read_tensor_region(shard.object_id, &local)
                             .map_err(|err| context(&tensor.name, shard, err))?
                     } else {
