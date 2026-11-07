@@ -29,7 +29,11 @@ Everything was built and measured in the Docker courts with the hard limits in
 The parent tag is one evidence-only commit after the verified revision
 (`238d4e5` adds the receipt, conformance, wheel, and publication-attempt
 artifacts; no source file differs). The submodule tags are the verified
-revisions. `staging == main` in all four repositories.
+revisions. `staging == main` in all four repositories. Two later commits on
+`staging`/`main` (parent `c3d0809` onward; WeftFS-Go `ab7218b`) add this
+release note, the README/STATUS refresh, the claims, and the stale-statement
+reconciliation; they change no source, wire, or on-disk byte and are not part
+of the tagged tree.
 
 Courts: `rust_codec`, `rust_store`, `go_codec`, `rust_fuse`,
 `go_store_and_fuse`; codec cross-encode/decode in both directions and the byte
