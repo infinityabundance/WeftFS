@@ -4872,12 +4872,12 @@
  },
  {
   "id": "fence_pending_commit_len",
-  "claim": "The v3 record carries the published head length as well as its generation and commit id.",
+  "claim": "The v3 record carries the published head length as well as its generation and commit id; the shared Go fence body is store/fence_record.go (s3client.go calls it with camelCase arguments and carries no literal schema text).",
   "value": "pending_commit_len",
   "locations": [
    "docs/FENCING.md",
    "src/writer_fence.rs",
-   "WeftFS-Go/store/s3client.go",
+   "WeftFS-Go/store/fence_record.go",
    "docs/store-status.md"
   ],
   "receipt": null,
@@ -5312,6 +5312,186 @@
    "docs/STATUS.md"
   ],
   "receipt": "bench/receipts/python-bindings-20261107T063910Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_lifecycle_receipt",
+  "claim": "The lifecycle court receipt carries seven configurations and no failed inputs.",
+  "value": "7 configurations",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_consecutive_delta",
+  "claim": "The consecutive training checkpoint's second state costs 42,211 B with sparse deltas.",
+  "value": "42,211 B",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_finetune_delta",
+  "claim": "The independent fine-tune's second state costs 541,273,184 B with weight deltas.",
+  "value": "541,273,184 B",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_region_read",
+  "claim": "A 1-row region read under the access-pattern plan is 454x cheaper on the qwen family.",
+  "value": "454\u00d7",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_f32_loss",
+  "claim": "The F32 base checkpoint is published as 1.20x the independent zstd -19 baseline.",
+  "value": "1.20\u00d7",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_gc_snapshot",
+  "claim": "GC with a pinned snapshot reclaims index files only (75,188 B on pythia).",
+  "value": "75,188",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_minio_ingest",
+  "claim": "The object-store ingest is +17.9 % versus local.",
+  "value": "+17.9 %",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "family_oom_loss",
+  "claim": "The access-pattern plan ingest was OOM-killed at the 3 GiB court limit.",
+  "value": "OOM-killed",
+  "locations": [
+   "bench/RESULTS-family-lifecycle.md"
+  ],
+  "receipt": "bench/receipts/family-lifecycle-20261107T132359Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "kvcap_tests",
+  "claim": "The KV capability test suite passes 13 of 13.",
+  "value": "13/13",
+  "locations": [
+   "docs/KV-CACHE-GOVERNANCE.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "kvcap_denial_text",
+  "claim": "Every pre-byte failure uses one non-disclosing denial text.",
+  "value": "kv page is not available to this principal",
+  "locations": [
+   "docs/KV-CACHE-GOVERNANCE.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "kvcap_cached_cost",
+  "claim": "A cached capability check costs about 33 us at p50 on a 1 KiB page.",
+  "value": "33.0 / 42.1 \u00b5s",
+  "locations": [
+   "docs/KV-CACHE-GOVERNANCE.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "kvcap_full_cost",
+  "claim": "Re-verifying the envelope per read costs about 81 us at p50 on a 1 KiB page.",
+  "value": "81.2 / 96.6 \u00b5s",
+  "locations": [
+   "docs/KV-CACHE-GOVERNANCE.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "kvcap_not_constant_time",
+  "claim": "The KV governance surface explicitly does not claim constant-time behaviour.",
+  "value": "Not constant-time.",
+  "locations": [
+   "docs/KV-CACHE-GOVERNANCE.md"
+  ],
+  "receipt": "bench/receipts/kv-capability-20261107T152958Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "threefs_plane_not_run",
+  "claim": "The 3FS context-plane note states no experiment was run against a deployment.",
+  "value": "No experiment in this document was run against a 3FS deployment",
+  "locations": [
+   "docs/THREEFS-CONTEXT-PLANE.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "threefs_plane_layering",
+  "claim": "The note states the one-sentence layering statement.",
+  "value": "WeftFS sits **above** 3FS",
+  "locations": [
+   "docs/THREEFS-CONTEXT-PLANE.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "threefs_plane_usrbio",
+  "claim": "The note records the shim court's measured USRBIO slowdown.",
+  "value": "1.127\u00d7",
+  "locations": [
+   "docs/THREEFS-CONTEXT-PLANE.md"
+  ],
+  "receipt": "bench/receipts/threefs-20261106T232643Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "threefs_plane_experiment",
+  "claim": "The note names the eight-step cluster experiment required before any 3FS claim.",
+  "value": "Only after steps 1\u20138",
+  "locations": [
+   "docs/THREEFS-CONTEXT-PLANE.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "aicodec_mode_index",
+  "claim": "WEFT-AI-CODEC carries the RFC-shaped mode index at its head.",
+  "value": "## 0. Mode index",
+  "locations": [
+   "spec/WEFT-AI-CODEC.md"
+  ],
+  "receipt": null,
   "kind": "present"
  }
 ]

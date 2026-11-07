@@ -8,7 +8,9 @@ access-pattern plan for 1-row and 100-row reads, against independent per-tensor
 `zstd -19`, against `zstd --patch-from`, and over the local backend and a real
 MinIO object store.
 
-Receipt: `bench/receipts/family-lifecycle-20261107T132359Z.json` (3,305,116 B).
+Receipt: `bench/receipts/family-lifecycle-20261107T132359Z.json` (3,305,116 B;
+7 configurations: two families × three plans, plus the reduced object-store
+run).
 Harness: `examples/family_lifecycle.rs`. Court:
 `bench/scripts/checkpoint_family_court.sh`.
 

@@ -47,6 +47,7 @@ pub mod fuse;
 pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
+pub mod kv_capability;
 pub mod object_cache;
 pub mod packs;
 pub mod parallel;
