@@ -114,9 +114,12 @@ a faster full restore.
   --replica LABEL`; `checkpoint restore --first-needed FILE --first-cache DIR
   [--abort-after-first]`.
 * DCP / Orbax: the Python service speaks checkpoint protocol v2 (write policy)
-  and the adapters honour `WEFT_LOAD_RECEIPT`, `WEFT_VERIFY_LOAD` and
-  `WEFT_REPLICA` on every restore. The write policy is selected with
-  `WEFT_WRITE_POLICY`, `WEFT_FAST_CODEC`, `WEFT_FAST_ZSTD_LEVEL`.
+  and the adapters' **container restore helper** (`_Storage.restore`) forwards
+  `--load-receipt` when `WEFT_LOAD_RECEIPT` is set, with `WEFT_VERIFY_LOAD` and
+  `WEFT_REPLICA`. The write policy is selected with `WEFT_WRITE_POLICY`,
+  `WEFT_FAST_CODEC`, `WEFT_FAST_ZSTD_LEVEL`. The per-tensor service restore
+  path (used by `dcp.load` and the Orbax handler's tree restore) does **not**
+  emit a receipt; that path is not claimed.
 * FUSE: `weftfs mount --verify-load --load-receipt-dir DIR` verifies each tensor
   file through the load path on `open`, writes one `.wcb` receipt per file, and
   fails the open with an error naming the tile if verification fails
@@ -133,5 +136,8 @@ a faster full restore.
   mount file is not necessarily a checkpoint member. The tensor roots are the
   attestation.
 * The recovery cache is host-local, per tensor, and not shared across replicas.
+* DCP/Orbax tree restores go through the per-tensor service and do not produce
+  a load receipt; only the container-restore helper does. Extending the service
+  opcode would be the next step and is not done.
 * One host, synthetic tiled fixture, warm caches; the 0.5B pair is not tiled
   (one global tile shape cannot divide every tensor).
