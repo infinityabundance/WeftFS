@@ -17,12 +17,14 @@
 //!
 //! # `unsafe`
 //!
-//! The crate is `#![deny(unsafe_code)]`. Exactly two modules opt out:
-//! [`threefs::ffi`], the 3FS USRBIO C-ABI boundary, and
+//! The crate is `#![deny(unsafe_code)]`. Exactly four modules opt out:
+//! [`threefs::ffi`], the 3FS USRBIO C-ABI boundary,
 //! `checkpoint_service::ancillary`, the `recvmsg`/`sendmsg` descriptor-passing
-//! boundary of the persistent checkpoint service (both transcribe a syscall
-//! boundary with the invariant list at the top of the file). Every other module
-//! is safe Rust, and `tests/threefs.rs` grows this into a failure if an
+//! boundary of the persistent checkpoint service, [`writer_lock`], the
+//! `flock(2)`/`fcntl(2)` `F_OFD_SETLK` writer-lock boundary (each transcribes a
+//! syscall boundary with the invariant list at the top of the file), and the
+//! single inert `raise(SIGSTOP)` court hook in `fence_pause`. Every other
+//! module is safe Rust, and `tests/threefs.rs` grows this into a failure if an
 //! `unsafe` block appears anywhere else in `src/`.
 
 #![deny(unsafe_code)]
@@ -74,6 +76,7 @@ pub mod training_ready;
 pub mod transcode;
 pub mod wcb_util;
 pub mod writer_fence;
+pub mod writer_lock;
 
 pub use auth::Principal;
 pub use backend::{
@@ -116,7 +119,9 @@ pub use provenance::{
 pub use rebase::{
     RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
 };
-pub use recovery_first::{CachedTensor, RecoveryFirstOptions, RecoveryFirstReport, RECOVERY_CACHE_SCHEMA};
+pub use recovery_first::{
+    CachedTensor, RecoveryFirstOptions, RecoveryFirstReport, RECOVERY_CACHE_SCHEMA,
+};
 pub use restore_pipeline::{run_ordered_pipeline, RestorePipelineOptions, RestorePipelineStats};
 pub use s3::{S3Backend, S3Config};
 pub use singleflight::{

@@ -1,0 +1,69 @@
+{
+  "iterations": 2000,
+  "kernel": "7.3.1-1-cachyos",
+  "mode": "mechanism",
+  "note": "court tmpfs; one host; synthetic probe, not a store benchmark",
+  "rows": [
+    {
+      "fork_window_detail": "busy: Resource temporarily unavailable (os error 11)",
+      "fork_window_reopen_acquired": false,
+      "mechanism": "flock",
+      "stress_forks": 13,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 289,
+      "unlock_on_drop": false
+    },
+    {
+      "fork_window_detail": "acquired",
+      "fork_window_reopen_acquired": true,
+      "mechanism": "flock",
+      "stress_forks": 13,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 0,
+      "unlock_on_drop": true
+    },
+    {
+      "fork_window_detail": "busy: Resource temporarily unavailable (os error 11)",
+      "fork_window_reopen_acquired": false,
+      "mechanism": "ofd",
+      "stress_forks": 14,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 478,
+      "unlock_on_drop": false
+    },
+    {
+      "fork_window_detail": "acquired",
+      "fork_window_reopen_acquired": true,
+      "mechanism": "ofd",
+      "stress_forks": 18,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 0,
+      "unlock_on_drop": true
+    },
+    {
+      "fork_window_detail": "acquired",
+      "fork_window_reopen_acquired": true,
+      "mechanism": "posix",
+      "stress_forks": 15,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 0,
+      "unlock_on_drop": false
+    },
+    {
+      "fork_window_detail": "acquired",
+      "fork_window_reopen_acquired": true,
+      "mechanism": "posix",
+      "stress_forks": 17,
+      "stress_iterations": 2000,
+      "stress_other_errors": 0,
+      "stress_spurious_busy": 0,
+      "unlock_on_drop": true
+    }
+  ],
+  "schema": "weft.lock.probe.v1"
+}

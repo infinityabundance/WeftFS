@@ -6288,5 +6288,115 @@
     ],
     "receipt": null,
     "kind": "present"
+  },
+  {
+    "id": "ofdlock_mechanism",
+    "claim": "The POSIX writer lock is F_OFD_SETLK plus a compatibility flock(2).",
+    "value": "F_OFD_SETLK",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md",
+      "src/writer_lock.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_inherited_across_fork",
+    "claim": "docs/FENCING.md documents that OFD locks are inherited across fork(2).",
+    "value": "OFD locks are inherited across `fork(2)`",
+    "locations": [
+      "docs/FENCING.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_refuted_assumption",
+    "claim": "docs/STATUS.md records that the OFD-only assumption was wrong.",
+    "value": "exempt from",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_explicit_unlock",
+    "claim": "The explicit unlock before close is the root fix and is measurable.",
+    "value": "explicit unlock",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md",
+      "src/writer_lock.rs"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_separate_namespaces",
+    "claim": "Linux flock and OFD locks are separate namespaces, so both are held for mixed-version exclusion.",
+    "value": "separate lock namespaces",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_mechanism_receipt",
+    "claim": "The mechanism probe receipt is cited.",
+    "value": "lock-probe-mechanisms.json",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/lock-probe-mechanisms.json",
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_store_receipt",
+    "claim": "The store-level probe receipt is cited.",
+    "value": "lock-probe-store.json",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/lock-probe-store.json",
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_tests",
+    "claim": "The Rust regression court is cited by name.",
+    "value": "tests/writer_lock.rs",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_go_tests",
+    "claim": "The Go regression court is cited by name.",
+    "value": "store/lock_inheritance_test.go",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "ofdlock_no_format_change",
+    "claim": "The lock remains outside the stored format.",
+    "value": "not a stored format",
+    "locations": [
+      "docs/FENCING.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
   }
 ]

@@ -1,9 +1,11 @@
 # Fenced writer protocol (R17/R18, single-publication-point protocol R27)
 
-The store admits **one writer at a time**. On a POSIX namespace the proof is a
-`flock` on `LOCK`. On an object store there is no kernel lock, so the proof is a
-**fenced lease**: a `LOCK` object that carries an owner, a monotonic fencing
-token, an absolute deadline, and — since R27 — the head being published.
+The store admits **one writer at a time**. On a POSIX namespace the proof is an
+exclusive kernel lock on `LOCK` (`F_OFD_SETLK` plus a compatibility `flock(2)`,
+with an explicit unlock before close; see §9). On an object store there is no
+kernel lock, so the proof is a **fenced lease**: a `LOCK` object that carries an
+owner, a monotonic fencing token, an absolute deadline, and — since R27 — the
+head being published.
 
 This document is the protocol specification for the object-store form. It is
 implemented four times, independently: Rust `src/s3.rs`, `src/gcs.rs`,
@@ -60,10 +62,10 @@ pending_commit_len=<u64 WCB length, 0 when idle>
   tombstone) carries the current head forward, so the record never loses the
   attestation of an already-published head.
 * The two-slot `superblock` remains the **publication point on local/POSIX
-  backends** (a `flock` cannot be stolen by a suspended process, so the two
-  writes are already serialised by the kernel). On an object-store commit plane
-  it is an **attested cache**: written after the record, validated against the
-  record at every open, and repaired on a writable open.
+  backends** (the kernel lock cannot be stolen by a suspended process, so the
+  two writes are already serialised by the kernel). On an object-store commit
+  plane it is an **attested cache**: written after the record, validated against
+  the record at every open, and repaired on a writable open.
 
 ### Release
 
@@ -207,3 +209,91 @@ bash WeftFS-Go/scripts/go-s3-court.sh --focused-only
 bash bench/scripts/gcs_court.sh
 bash scripts/azure_court.sh
 ```
+
+## 9. The POSIX writer lock (T2): OFD + compatibility `flock` + explicit unlock
+
+Sections 1–8 describe the **object-store** proof. The local/POSIX proof is a
+kernel lock on the `LOCK` file, and subphase T2 changed how that lock is held.
+The `LOCK` file and its bytes are unchanged (it is an empty marker; the lock is
+not a stored format).
+
+### Why `flock(2)` alone was wrong
+
+`flock(2)` attaches the lock to the **open file description**, which `fork(2)`
+shares with the child. An unrelated `fork()` in another thread (a `Command`
+spawn, a test harness) keeps the description — and therefore the lock — alive
+until the child `exec`s and the `FD_CLOEXEC` descriptor closes. A handle that
+is dropped inside that window releases nothing, so a concurrent reopen in the
+same process sees `Busy`. Measured on the court kernel:
+
+| mechanism (close only) | spurious `Busy` / 2,000 |
+|---|---|
+| `flock(2)` | 289 |
+| `fcntl(2)` `F_OFD_SETLK` | 478 |
+| `fcntl(2)` `F_SETLK` (POSIX record lock) | 0 |
+
+The third row is not the fix: POSIX record locks are per process (not inherited
+across `fork`), but they are dropped by **any** close of the file in the same
+process, which is the hazard that made `flock` the usual choice.
+
+**OFD locks are inherited across `fork(2)`** exactly like `flock` (the child
+shares the open file description). Switching to OFD alone therefore does *not*
+fix the flake; it was measured at 478/2,000.
+
+### The mechanism now
+
+1. `open(LOCK, O_RDWR | O_CLOEXEC)`; `FD_CLOEXEC` is set again with
+   `F_SETFD` (`src/writer_lock.rs`).
+2. `flock(LOCK_EX | LOCK_NB)` — the **compatibility** lock. On Linux, `flock`
+   and OFD/POSIX record locks live in **separate lock namespaces** and do not
+   conflict, so this is what keeps an older OFD-less binary from sharing the
+   store with a new one, and vice versa.
+3. `fcntl(F_OFD_SETLK, F_WRLCK)` over the whole file — the primary ownership
+   lock. It belongs to this open file description, so an unrelated close in the
+   same process cannot drop it (the POSIX `F_SETLK` hazard). If the kernel or
+   filesystem answers `EINVAL` (Linux < 3.15, filesystem without OFD support)
+   the store keeps the `flock` as the only lock and reports `flock` as the
+   mechanism.
+4. **`Drop` unlocks both explicitly, then closes.** The explicit unlock removes
+   the lock from the shared open file description, so a forked child that still
+   holds a duplicate cannot keep the store locked. This is the root fix.
+   Measured after the change: **0/2,000** spurious `Busy` for both mechanisms,
+   and 0/2,000 real `Store::open` calls under 1,182 concurrent forks.
+
+A failed acquisition unlocks the compatibility `flock` before returning, for the
+same reason (the descriptor is about to close, but a forked child may still
+reference the description).
+
+### What is unchanged
+
+* The guarantee: one writer per store. A second live handle is refused `Busy`
+  with the same error class and the same message.
+* Mixed-version exclusion in both directions, via the compatibility `flock`.
+* `verify_write_lease` still proves the `LOCK` name resolves to the inode this
+  handle locked; publication fails closed if the name was replaced.
+* No stored bytes and no on-disk format changed. Frozen v1 fixtures still
+  reproduce byte-for-byte.
+
+### Residual
+
+If a process is killed without running `Drop`, the kernel closes its
+descriptors; a forked child that still references the description keeps the
+lock until it execs. That is the forking process's window and it is identical
+for `flock`, OFD, and POSIX locks. The store never holds two live handles in
+one process. Go has the same treatment (`WeftFS-Go/store/lock.go`,
+`lock_linux.go`) and cannot fork without exec, so its court proves the property
+by passing a duplicate of the open file description to a child through
+`exec.Cmd.ExtraFiles`.
+
+### Evidence
+
+* `examples/lock_probe.rs` → `bench/receipts/lock-probe-mechanisms.json` and
+  `bench/receipts/lock-probe-store.json`.
+* `tests/writer_lock.rs` 8/8: the two failing forms are executable
+  documentation (`legacy_flock_close_only_is_blocked_by_a_forked_child`,
+  `ofd_close_only_is_also_blocked_by_a_forked_child`), the fix
+  (`ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child`,
+  `flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child`),
+  mixed-version exclusion both ways, live-handle refusal, and a 200-iteration
+  store reopen under concurrent forks.
+* `WeftFS-Go/store/lock_inheritance_test.go` 5/5.

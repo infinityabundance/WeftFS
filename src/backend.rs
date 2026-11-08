@@ -41,7 +41,6 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 
-use fs2::FileExt as Fs2FileExt;
 use serde::Serialize;
 
 use crate::azure::{AzureBackend, AzureConfig};
@@ -51,6 +50,7 @@ use crate::gcs::{GcsBackend, GcsConfig};
 use crate::identity::Hash32;
 use crate::s3::{S3Backend, S3Config};
 use crate::threefs::{self, SharedUsrbio, ThreeFsConfig, ThreeFsMode};
+use crate::writer_lock::WriterLock;
 
 /// Logical namespace of a key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1292,7 +1292,7 @@ pub trait StorageBackend: Send {
 pub struct LocalBackend {
     root: PathBuf,
     capabilities: Capabilities,
-    lock: Option<File>,
+    lock: Option<WriterLock>,
     stats: AtomicStats,
     /// Receipt label. `"local"` for the normative backend, `"3fs"` for a 3FS
     /// transport, so a receipt never reports one as the other.
@@ -1925,20 +1925,16 @@ impl StorageBackend for LocalBackend {
 
     fn acquire_writer_lock(&mut self) -> Result<()> {
         let path = self.root.join("LOCK");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(false)
-            .open(&path)
-            .map_err(|err| Error::io(format!("cannot open LOCK: {err}")))?;
-        Fs2FileExt::try_lock_exclusive(&file)
-            .map_err(|err| Error::busy(format!("store is locked by another writer: {err}")))?;
-        self.lock = Some(file);
+        let lock = WriterLock::acquire(&path)?;
+        self.lock = Some(lock);
         Ok(())
     }
 
     fn verify_write_lease(&mut self) -> Result<()> {
-        verify_lockfile_identity(&self.root.join("LOCK"), self.lock.as_ref())
+        verify_lockfile_identity(
+            &self.root.join("LOCK"),
+            self.lock.as_ref().map(WriterLock::file),
+        )
     }
 
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()> {
@@ -2057,7 +2053,7 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
 pub struct ObjectBackend {
     root: PathBuf,
     capabilities: std::sync::Mutex<Capabilities>,
-    lock: Option<File>,
+    lock: Option<WriterLock>,
     stats: AtomicStats,
     link_supported: std::sync::Mutex<Option<bool>>,
     diagnostics: std::sync::Mutex<Vec<String>>,
@@ -2602,22 +2598,15 @@ impl StorageBackend for ObjectBackend {
 
     fn acquire_writer_lock(&mut self) -> Result<()> {
         let path = self.root.join("objects").join("00").join("LOCK");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(false)
-            .open(&path)
-            .map_err(|err| Error::io(format!("cannot open LOCK: {err}")))?;
-        Fs2FileExt::try_lock_exclusive(&file)
-            .map_err(|err| Error::busy(format!("store is locked by another writer: {err}")))?;
-        self.lock = Some(file);
+        let lock = WriterLock::acquire(&path)?;
+        self.lock = Some(lock);
         Ok(())
     }
 
     fn verify_write_lease(&mut self) -> Result<()> {
         verify_lockfile_identity(
             &self.root.join("objects").join("00").join("LOCK"),
-            self.lock.as_ref(),
+            self.lock.as_ref().map(WriterLock::file),
         )
     }
 
@@ -2790,10 +2779,11 @@ fn list_flat(dir: &Path, kind: KeyKind) -> Result<Vec<Key>> {
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-/// A POSIX writer's lease is its `flock` on the `LOCK` file. Prove the name
-/// still resolves to the exact inode this handle locked: replacing or removing
-/// the file hands the namespace to someone else, so a publication under the old
-/// handle must fail closed rather than write under a lock it no longer holds.
+/// A POSIX writer's lease is its exclusive lock on the `LOCK` file. Prove the
+/// name still resolves to the exact inode this handle locked: replacing or
+/// removing the file hands the namespace to someone else, so a publication
+/// under the old handle must fail closed rather than write under a lock it no
+/// longer holds.
 fn verify_lockfile_identity(path: &Path, held: Option<&File>) -> Result<()> {
     let Some(held) = held else {
         return Err(Error::busy(

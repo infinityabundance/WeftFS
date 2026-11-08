@@ -608,7 +608,9 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
     // of the file:
     //  * `threefs/` — the 3FS USRBIO C-ABI boundary;
     //  * `checkpoint_service/ancillary.rs` — `recvmsg`/`sendmsg`
-    //    descriptor passing, which `std` does not wrap on stable Rust.
+    //    descriptor passing, which `std` does not wrap on stable Rust;
+    //  * `writer_lock.rs` — `open(2)` flags, `flock(2)` and `fcntl(2)`
+    //    `F_OFD_SETLK` on a descriptor the module itself opened.
     // One more line-level exception: the fenced-writer court hook must stop the
     // process with `raise(SIGSTOP)` at an exact publication boundary. The hook
     // is inert unless the court arms `WEFT_FENCE_PAUSE_AFTER_FENCE`, and the
@@ -632,6 +634,9 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
             if relative == Path::new("checkpoint_service/ancillary.rs") {
                 continue;
             }
+            if relative == Path::new("writer_lock.rs") {
+                continue;
+            }
             let text = std::fs::read_to_string(&path).unwrap();
             let hook = relative == Path::new("fence_pause.rs");
             for (number, line) in text.lines().enumerate() {
@@ -652,7 +657,7 @@ fn unsafe_is_confined_to_the_threefs_ffi_module() {
     }
     assert!(
         offenders.is_empty(),
-        "unsafe code escaped the two syscall-boundary modules: {offenders:?}"
+        "unsafe code escaped the syscall-boundary modules: {offenders:?}"
     );
     assert_eq!(
         hook_unsafe_lines, 1,

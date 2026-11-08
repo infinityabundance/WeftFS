@@ -1,0 +1,24 @@
+{
+  "iterations": 2000,
+  "kernel": "7.3.1-1-cachyos",
+  "mode": "store",
+  "note": "court tmpfs; one host; real Store LOCK and real Store::open",
+  "rows": [
+    {
+      "mechanism": "legacy_flock_close_only",
+      "store_reopen_after_fork_saw_busy": true
+    },
+    {
+      "mechanism": "shipped_ofd_explicit_unlock",
+      "store_reopen_after_fork_saw_busy": false
+    },
+    {
+      "forks": 1182,
+      "iterations": 2000,
+      "mechanism": "shipped_store_open_stress",
+      "other_errors": 0,
+      "spurious_busy": 0
+    }
+  ],
+  "schema": "weft.lock.probe.v1"
+}

@@ -5956,3 +5956,79 @@ Residual for this revision: the parallel checkpoint path is Rust-only (Go has
 no checkpoint writer); constant-time execution is not formally audited; an
 attacker who can rewrite the commit record is outside the index-attestation
 threat model; no multi-writer, fleet, RAPL, GPU, or physical power-loss claim.
+
+### T2 — writer-lock flake: root cause, fix, and a refuted assumption (2026-11-08)
+
+The `tests/quota.rs::usage_survives_reopen_and_still_denies` flake that appeared
+in three T1 aggregate receipts (and in R9/R18/R19 before it) is fixed at the
+root. Nothing about the on-disk `LOCK` file changed: it is still an empty
+marker, and the lock is not a stored format.
+
+**Root cause, measured.** `examples/lock_probe.rs` isolates the mechanism.
+On the court kernel (`7.3.1-1-cachyos`, tmpfs), 2,000 acquire/drop/reopen
+cycles per row while another thread continuously forks and execs `/bin/true`:
+
+| mechanism | close only | explicit unlock before close |
+|---|---|---|
+| `flock(2)` | **289 spurious `Busy`** | 0 |
+| `fcntl(F_OFD_SETLK)` | **478 spurious `Busy`** | 0 |
+| `fcntl(F_SETLK)` (POSIX) | 0 | 0 |
+
+The row-by-row receipt is `bench/receipts/lock-probe-mechanisms.json`.
+
+A second run of the same probe measured 519 and 592 respectively; the counts
+are race-dependent, the ordering and the zeroes are not. `fork-window` rows
+agree: with close only, a child that never execs keeps the lock for both
+`flock` and OFD; with the explicit unlock, the reopen acquires immediately.
+
+**The assumption in the T1 note was wrong.** OFD locks are *not* exempt from
+`fork` inheritance: the child shares the open file description, so both the
+`flock` and the OFD record lock stay held until it execs. Switching to OFD
+alone would have left the flake in place. This is now an executable test
+(`ofd_close_only_is_also_blocked_by_a_forked_child`), not a comment.
+
+**A second, separate defect was found in the same change.** Linux `flock` and
+OFD/POSIX record locks live in separate lock namespaces and do not conflict.
+An OFD-only writer would therefore have silently shared a store with an older
+`flock`-only binary. The shipped lock takes **both** — `flock(2)` first as the
+mixed-version compatibility lock, then `F_OFD_SETLK` as the primary ownership
+lock — and proves exclusion in both directions
+(`a_legacy_flock_holder_blocks_the_shipped_writer`,
+`the_shipped_writer_blocks_a_legacy_flock_holder`).
+
+**The fix.** `src/writer_lock.rs`: `O_CLOEXEC` on open, `FD_CLOEXEC` via
+`F_SETFD`, `flock` + OFD acquisition with the `flock` released on any failed
+OFD acquisition, and — the actual root fix — an explicit `F_UNLCK` + `LOCK_UN`
+in `Drop` **before** the descriptor closes. An explicit unlock removes the lock
+from the shared open file description, so a forked child cannot keep it alive.
+`flock(2)` remains the documented fallback when `F_OFD_SETLK` returns `EINVAL`.
+`fs2` is no longer a dependency.
+
+**Store-level probe** (`bench/receipts/lock-probe-store.json`): a real `LOCK`
+file and real `Store::open`. Legacy `flock` acquired before the fork, then
+close-only → reopen saw `Busy` **true**; shipped `WriterLock` in the same shape
+→ **false**; 2,000 `Store::open` calls under **1,182** concurrent forks →
+**0** spurious `Busy`, 0 other errors.
+
+**Courts.**
+* Rust `tests/writer_lock.rs` **8/8** (two executable bug documents, the fix,
+  the fallback, mixed-version exclusion both ways, live-handle refusal, a
+  200-iteration store reopen under concurrent forks).
+* `cargo test --test quota -- --test-threads=8` **20/20** (was 12/15 at T1).
+* WeftFS-Go `store/lock_inheritance_test.go` **5/5**. Go cannot fork without
+  exec; `exec.Cmd.ExtraFiles` duplicates the descriptor into the child, which
+  shares the open file description — the same property. Go now also holds
+  `F_OFD_SETLK` (via `golang.org/x/sys/unix`) plus `flock`, and already
+  unlocked before close; this is now explicit and tested.
+* Rust `cargo test --all-targets`: **604 passed / 0 failed**; FUSE
+  `--features fuse --all-targets`: **647 passed / 0 failed / 2 pre-existing
+  ignored**. Go `go test -race ./...` is run at the end of the subphase.
+
+**Losses / residuals.** `flock` and OFD are two locks on one descriptor, so
+acquisition costs two syscalls (not measured separately; below noise). If a
+process is killed without `Drop`, a forked child can keep the lock until it
+execs; that window belongs to the forking process and is identical for every
+mechanism. The POSIX `F_SETLK` row is measured but not used: it fixes `fork`
+inheritance and introduces the "any close drops the lock" hazard.
+
+Docs: `docs/FENCING.md` §9; `docs/PLANES.md` §6; claims `ofdlock_*`.

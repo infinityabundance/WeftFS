@@ -246,9 +246,11 @@ single-backend store.
 ## 6. What is not claimed
 
 * No distributed, multi-writer, or fleet claim: one store is one writer at a
-  time. Locally that writer is enforced by `flock`; on an object-store commit
-  plane it is enforced by a **fenced lease with a conditional compare-and-swap**
-  (see [`docs/FENCING.md`](FENCING.md)). Neither form is a multi-writer protocol.
+  time. Locally that writer is enforced by an exclusive `LOCK` lock
+  (`F_OFD_SETLK` plus a compatibility `flock(2)`; see
+  [`docs/FENCING.md`](FENCING.md) §9); on an object-store commit plane it is
+  enforced by a **fenced lease with a conditional compare-and-swap** (see the
+  same document). Neither form is a multi-writer protocol.
 * No physical media power loss: the crash court is a process-fault proxy and
   the split court inherits that limit.
 * No S3-as-a-database claim: the S3 commit plane is a working shape used to
