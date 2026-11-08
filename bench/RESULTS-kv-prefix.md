@@ -103,7 +103,7 @@ transfer/decode), while recompute is 63 ms even at 512 tokens.
   prefixes this would dominate every decision. A persisted KV index is future
   work.
 * **`get` re-verifies the envelope for every page** (existing per-page KV rule),
-  so 126–210 pages cost 23.7 ms p50 even warm. That is a real per-page cost of
+  so 126–210 pages cost 23.4 ms p50 even warm. That is a real per-page cost of
   the zero-trust KV surface, not a decode cost.
 * **Physical bytes exceed logical page bytes by ~5.2 %** (frame headers and
   descriptors).
