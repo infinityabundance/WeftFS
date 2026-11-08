@@ -1,0 +1,789 @@
+{
+  "artifacts": {
+    "court_log": "bench/receipts/family-lifecycle-20261108T143027Z.log",
+    "court_receipt": "bench/receipts/family-lifecycle-20261108T143027Z.json"
+  },
+  "byte_identity": {
+    "asserted": [
+      "same head",
+      "same manifest id",
+      "same manifest root",
+      "identical canonical manifest bytes",
+      "manifest content_root == identity::content_hash(whole tensor)",
+      "manifest logical_root == weftcodec::tensor::logical_root(whole tensor)"
+    ],
+    "case": "same container written twice with the same deterministic_seed and max_ingest_bytes = exact largest tensor length vs 1 GiB",
+    "other_tests": [
+      "streaming_shard_reads_match_shard_bytes_and_manifest_roots",
+      "ingest_bound_refuses_without_publishing",
+      "src/safetensors.rs::streamed_shards_match_shard_bytes",
+      "src/safetensors.rs::streamed_digests_match_one_shot"
+    ],
+    "test": "cargo test --test checkpoint_streaming (streaming_ingest_publishes_the_one_shot_identity)"
+  },
+  "commands": {
+    "half_after": "scripts/docker-court.sh bench \"cd /work && .docker-cache/target-rust/release/examples/family_lifecycle ingest --store /work/.docker-cache/s12-final-05b/store --base-file /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors --next-file /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --family qwen-finetune --variant s12-final --access-pattern whole --lambda-ns 0 --reps 1 --out /work/.docker-cache/s12-final-05b/ingest.json\"",
+    "half_before": "same ingest command with the binary built from git archive HEAD (WeftFS d5e78ce, WeftCodec 3d9ae04) into /work/.docker-cache/target-rust-before (the pre-change tree)",
+    "three_b_full_court": "scripts/docker-court.sh bench \"cd /work && WEFT_FAMILY_FAMILIES=qwen3b-finetune WEFT_FAMILY_CONFIGS=default WEFT_FAMILY_INGEST_REPS=1 WEFT_FAMILY_MEASURE_REPS=1 WEFT_FAMILY_TOPOLOGY_REPS=1 WEFT_FAMILY_RECOVERY_REPS=1 WEFT_FAMILY_S3=0 bash bench/scripts/checkpoint_family_court.sh\""
+  },
+  "corpus": {
+    "qwen2.5-0.5b": {
+      "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "tensor_count": 290
+    },
+    "qwen2.5-0.5b-instruct": {
+      "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "tensor_count": 290
+    },
+    "qwen2.5-3b": {
+      "bytes": 6171927112,
+      "path": ".docker-cache/real-corpus/Qwen2.5-3B.safetensors",
+      "sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+      "tensor_count": 434
+    },
+    "qwen2.5-3b-instruct": {
+      "bytes": 6171927112,
+      "path": ".docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors",
+      "sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+      "tensor_count": 434
+    }
+  },
+  "court": {
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cap_drop": "ALL",
+      "cpus": "4",
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": "1024",
+      "tmpfs": "/tmp 1g"
+    }
+  },
+  "losses": [
+    "The 593 MiB Qwen2.5-3B embedding is not offered the weight/sparse/patch candidates: TensorPlanOptions::max_delta_bytes defaults to 512 MiB because those encoders hold several full-size copies and cannot run inside 3 GiB. On this corpus the skipped candidates were not the cheapest (the tensor is stored as float-tensor, 413,019,145 B vs raw 622,329,856 B; it was 413,019,145 B on the base pass too).",
+    "Mode-9 (float-tensor) encoding is still the single largest transient: the 3B ingest peak is 2,765,636 KiB, and the base+next passes on a 622 MB tensor are the peak.",
+    "The stopgap zstd-19 CPU gate skips the embedding at level 19 (estimated 20.8 s > 20 s budget), so the level-19 baseline is not a candidate there.",
+    "The full court was run in the reduced configuration only (one family, default config, one rep per phase); the region1/region100 configurations were not re-run for 3B."
+  ],
+  "non_claims": [
+    "single host, warm page cache, fixed clock fixture",
+    "process-fault crash proxy, not physical media power loss",
+    "no fleet, cloud, or production claim",
+    "no Go parity for the streaming codec API or the ingest bound"
+  ],
+  "revision": {
+    "weftcodec": "cffcc1aab59b02d83144da158039718eb1f450b7",
+    "weftcodec_go": "0db665ea4c6b1d69d1d1640801ed475848d361f1",
+    "weftfs": "9822d566647c86e43b571f4c76668da7b1802cf2",
+    "weftfs_go": "6d58137ca888c0b10d01f2fd93f3af00d544e5f6"
+  },
+  "schema": "weft.s12.bounded-ingest.v1",
+  "stamp": "20261108T143027Z",
+  "status": "implemented; the full reduced court completed every phase inside the default 3 GiB bench court",
+  "three_b": {
+    "checkpoint_8way": {
+      "peak_rss_kib": 614920,
+      "shard_objects": 3472,
+      "tensors": 434,
+      "verify_ok": true,
+      "wall_ms": 187089.716
+    },
+    "configuration": "reduced: one family, default configuration, one rep per phase (not the full three-configuration court)",
+    "gc": {
+      "with_snapshot": {
+        "retained_blob_bytes": 592708039,
+        "retention_after_gc": {
+          "commits_bytes": 23859,
+          "data_only_bytes": 1185383670,
+          "indexes_bytes": 13587,
+          "indexes_percent_of_total": 0.001,
+          "manifests_bytes": 1185333934,
+          "objects_bytes": 49736,
+          "other_bytes": 8207,
+          "refs_bytes": 65,
+          "store_total_bytes": 1185429388
+        },
+        "retention_before": {
+          "commits_bytes": 22131,
+          "data_only_bytes": 1185383670,
+          "indexes_bytes": 78278,
+          "indexes_percent_of_total": 0.007,
+          "manifests_bytes": 1185333934,
+          "objects_bytes": 49736,
+          "other_bytes": 8207,
+          "refs_bytes": 0,
+          "store_total_bytes": 1185492286
+        },
+        "snapshot_pinned": true,
+        "verify_ok": true
+      },
+      "without_snapshot": {
+        "retained_blob_bytes": 592708039,
+        "retention_after_gc": {
+          "commits_bytes": 23468,
+          "data_only_bytes": 592708039,
+          "indexes_bytes": 4128,
+          "indexes_percent_of_total": 0.001,
+          "manifests_bytes": 592658303,
+          "objects_bytes": 49736,
+          "other_bytes": 8207,
+          "refs_bytes": 0,
+          "store_total_bytes": 592743842
+        },
+        "retention_before": {
+          "commits_bytes": 22131,
+          "data_only_bytes": 1185383670,
+          "indexes_bytes": 78278,
+          "indexes_percent_of_total": 0.007,
+          "manifests_bytes": 1185333934,
+          "objects_bytes": 49736,
+          "other_bytes": 8207,
+          "refs_bytes": 0,
+          "store_total_bytes": 1185492286
+        },
+        "snapshot_pinned": false,
+        "verify_ok": true
+      }
+    },
+    "ingest": {
+      "checked_objects": 870,
+      "checked_representations": 731,
+      "peak_rss_kib": 2765636,
+      "strategy_distribution": {
+        "base": {
+          "data_bytes_by_strategy": {
+            "float-tensor": 4129306016,
+            "raw": 54576,
+            "zstd": 287062
+          },
+          "logical_bytes_by_strategy": {
+            "float-tensor": 6171463680,
+            "raw": 36864,
+            "zstd": 376832
+          },
+          "tensors_by_strategy": {
+            "float-tensor": 270,
+            "raw": 72,
+            "zstd": 92
+          }
+        },
+        "next": {
+          "data_bytes_by_strategy": {
+            "float-tensor": 413019145,
+            "raw": 49270,
+            "sparse-delta": 128972,
+            "weight-delta": 2231742234
+          },
+          "logical_bytes_by_strategy": {
+            "float-tensor": 622329856,
+            "raw": 33280,
+            "sparse-delta": 437760,
+            "weight-delta": 5549076480
+          },
+          "tensors_by_strategy": {
+            "float-tensor": 1,
+            "raw": 65,
+            "sparse-delta": 113,
+            "weight-delta": 255
+          }
+        }
+      },
+      "verify_ok": true,
+      "wall_ms": 976527.164
+    },
+    "phase_peak_rss_kib": {
+      "baselines": 1228240,
+      "checkpoint": 614920,
+      "gc_with_snapshot": 1089536,
+      "gc_without_snapshot": 1089068,
+      "ingest": 2765636,
+      "measure": 1840524,
+      "recovery": 250388,
+      "topology": 1863172
+    },
+    "recovery": [
+      {
+        "all_expected": true,
+        "expected_note": "verify --full must be clean",
+        "new_state": 0,
+        "old_state": 1,
+        "open_ms": {
+          "all_ms": [
+            8.915
+          ],
+          "max_ms": 8.915,
+          "mean_ms": 8.915,
+          "min_ms": 8.915,
+          "p50_ms": 8.915,
+          "p95_ms": 8.915,
+          "p99_ms": 8.915,
+          "samples": 1
+        },
+        "partial_state": 0,
+        "phase": "after_objects",
+        "reps": [
+          {
+            "aborted_with_signal": 6,
+            "checkpoint": {
+              "present": false
+            },
+            "expected": true,
+            "generation": 2,
+            "open_ms": 8.915,
+            "problem_details": [],
+            "problems": 0,
+            "rejected_generations": [],
+            "usable_ms": 0.146,
+            "verify_ms": 0.143,
+            "verify_ok": true
+          }
+        ],
+        "time_to_usable_ms": {
+          "all_ms": [
+            0.146
+          ],
+          "max_ms": 0.146,
+          "mean_ms": 0.146,
+          "min_ms": 0.146,
+          "p50_ms": 0.146,
+          "p95_ms": 0.146,
+          "p99_ms": 0.146,
+          "samples": 1
+        },
+        "verify_all_ok": true
+      },
+      {
+        "all_expected": true,
+        "expected_note": "the commit file exists but the superblock never published it: the old state is selected and verify names the unpublished tail; that is the documented outcome, not data loss",
+        "new_state": 0,
+        "old_state": 1,
+        "open_ms": {
+          "all_ms": [
+            8.283
+          ],
+          "max_ms": 8.283,
+          "mean_ms": 8.283,
+          "min_ms": 8.283,
+          "p50_ms": 8.283,
+          "p95_ms": 8.283,
+          "p99_ms": 8.283,
+          "samples": 1
+        },
+        "partial_state": 0,
+        "phase": "after_commit_file",
+        "reps": [
+          {
+            "aborted_with_signal": 6,
+            "checkpoint": {
+              "present": false
+            },
+            "expected": true,
+            "generation": 2,
+            "open_ms": 8.283,
+            "problem_details": [
+              {
+                "class": "Corrupt",
+                "detail": "commit file for generation 3 exists above the highest published superblock generation 2"
+              }
+            ],
+            "problems": 1,
+            "rejected_generations": [],
+            "usable_ms": 0.3,
+            "verify_ms": 0.298,
+            "verify_ok": false
+          }
+        ],
+        "time_to_usable_ms": {
+          "all_ms": [
+            0.3
+          ],
+          "max_ms": 0.3,
+          "mean_ms": 0.3,
+          "min_ms": 0.3,
+          "p50_ms": 0.3,
+          "p95_ms": 0.3,
+          "p99_ms": 0.3,
+          "samples": 1
+        },
+        "verify_all_ok": false
+      },
+      {
+        "all_expected": true,
+        "expected_note": "verify --full must be clean",
+        "new_state": 1,
+        "old_state": 0,
+        "open_ms": {
+          "all_ms": [
+            9.189
+          ],
+          "max_ms": 9.189,
+          "mean_ms": 9.189,
+          "min_ms": 9.189,
+          "p50_ms": 9.189,
+          "p95_ms": 9.189,
+          "p99_ms": 9.189,
+          "samples": 1
+        },
+        "partial_state": 0,
+        "phase": "after_superblock_write",
+        "reps": [
+          {
+            "aborted_with_signal": 6,
+            "checkpoint": {
+              "container": "safetensors",
+              "present": true,
+              "tensors": 12
+            },
+            "expected": true,
+            "generation": 3,
+            "open_ms": 9.189,
+            "problem_details": [],
+            "problems": 0,
+            "rejected_generations": [],
+            "usable_ms": 1386.055,
+            "verify_ms": 1385.881,
+            "verify_ok": true
+          }
+        ],
+        "time_to_usable_ms": {
+          "all_ms": [
+            1386.055
+          ],
+          "max_ms": 1386.055,
+          "mean_ms": 1386.055,
+          "min_ms": 1386.055,
+          "p50_ms": 1386.055,
+          "p95_ms": 1386.055,
+          "p99_ms": 1386.055,
+          "samples": 1
+        },
+        "verify_all_ok": true
+      }
+    ],
+    "restore": {
+      "full_family_threads_1": {
+        "backend_bytes_read_last_rep": 6361877101,
+        "backend_requests_last_rep": 2906,
+        "latency": {
+          "all_ms": [
+            57551.7
+          ],
+          "max_ms": 57551.7,
+          "mean_ms": 57551.7,
+          "min_ms": 57551.7,
+          "p50_ms": 57551.7,
+          "p95_ms": 57551.7,
+          "p99_ms": 57551.7,
+          "samples": 1
+        },
+        "logical_bytes": 6171877376,
+        "phase": "full_family",
+        "sha256_match": true,
+        "threads": 1
+      },
+      "full_family_threads_4": {
+        "backend_bytes_read_last_rep": 6361877101,
+        "backend_requests_last_rep": 2906,
+        "latency": {
+          "all_ms": [
+            50759.94
+          ],
+          "max_ms": 50759.94,
+          "mean_ms": 50759.94,
+          "min_ms": 50759.94,
+          "p50_ms": 50759.94,
+          "p95_ms": 50759.94,
+          "p99_ms": 50759.94,
+          "samples": 1
+        },
+        "logical_bytes": 6171877376,
+        "phase": "full_family",
+        "sha256_match": true,
+        "threads": 4
+      },
+      "region_100_rows_threads_1": {
+        "backend_bytes_read_last_rep": 413020001,
+        "backend_requests_last_rep": 4,
+        "latency": {
+          "all_ms": [
+            1656.358
+          ],
+          "max_ms": 1656.358,
+          "mean_ms": 1656.358,
+          "min_ms": 1656.358,
+          "p50_ms": 1656.358,
+          "p95_ms": 1656.358,
+          "p99_ms": 1656.358,
+          "samples": 1
+        },
+        "logical_bytes": 409600,
+        "phase": "region_100_rows",
+        "region": {
+          "end": [
+            100,
+            2048
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 1,
+        "units_touched": 1
+      },
+      "region_100_rows_threads_4": {
+        "backend_bytes_read_last_rep": 413020001,
+        "backend_requests_last_rep": 4,
+        "latency": {
+          "all_ms": [
+            1660.012
+          ],
+          "max_ms": 1660.012,
+          "mean_ms": 1660.012,
+          "min_ms": 1660.012,
+          "p50_ms": 1660.012,
+          "p95_ms": 1660.012,
+          "p99_ms": 1660.012,
+          "samples": 1
+        },
+        "logical_bytes": 409600,
+        "phase": "region_100_rows",
+        "region": {
+          "end": [
+            100,
+            2048
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 4,
+        "units_touched": 1
+      },
+      "region_1_row_threads_1": {
+        "backend_bytes_read_last_rep": 413020001,
+        "backend_requests_last_rep": 4,
+        "latency": {
+          "all_ms": [
+            1714.22
+          ],
+          "max_ms": 1714.22,
+          "mean_ms": 1714.22,
+          "min_ms": 1714.22,
+          "p50_ms": 1714.22,
+          "p95_ms": 1714.22,
+          "p99_ms": 1714.22,
+          "samples": 1
+        },
+        "logical_bytes": 4096,
+        "phase": "region_1_row",
+        "region": {
+          "end": [
+            1,
+            2048
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 1,
+        "units_touched": 1
+      },
+      "region_1_row_threads_4": {
+        "backend_bytes_read_last_rep": 413020001,
+        "backend_requests_last_rep": 4,
+        "latency": {
+          "all_ms": [
+            1658.283
+          ],
+          "max_ms": 1658.283,
+          "mean_ms": 1658.283,
+          "min_ms": 1658.283,
+          "p50_ms": 1658.283,
+          "p95_ms": 1658.283,
+          "p99_ms": 1658.283,
+          "samples": 1
+        },
+        "logical_bytes": 4096,
+        "phase": "region_1_row",
+        "region": {
+          "end": [
+            1,
+            2048
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 4,
+        "units_touched": 1
+      },
+      "single_tensor_threads_1": {
+        "backend_bytes_read_last_rep": 413020001,
+        "latency": {
+          "all_ms": [
+            1846.094
+          ],
+          "max_ms": 1846.094,
+          "mean_ms": 1846.094,
+          "min_ms": 1846.094,
+          "p50_ms": 1846.094,
+          "p95_ms": 1846.094,
+          "p99_ms": 1846.094,
+          "samples": 1
+        },
+        "logical_bytes": 622329856,
+        "phase": "single_tensor",
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 1
+      },
+      "single_tensor_threads_4": {
+        "backend_bytes_read_last_rep": 413020001,
+        "latency": {
+          "all_ms": [
+            1655.087
+          ],
+          "max_ms": 1655.087,
+          "mean_ms": 1655.087,
+          "min_ms": 1655.087,
+          "p50_ms": 1655.087,
+          "p95_ms": 1655.087,
+          "p99_ms": 1655.087,
+          "samples": 1
+        },
+        "logical_bytes": 622329856,
+        "phase": "single_tensor",
+        "sha256_match": true,
+        "tensor": "model.embed_tokens.weight",
+        "threads": 4
+      },
+      "subset100_threads_1": {
+        "backend_bytes_read_last_rep": 1822545621,
+        "latency": {
+          "all_ms": [
+            14848.704
+          ],
+          "max_ms": 14848.704,
+          "mean_ms": 14848.704,
+          "min_ms": 14848.704,
+          "p50_ms": 14848.704,
+          "p95_ms": 14848.704,
+          "p99_ms": 14848.704,
+          "samples": 1
+        },
+        "phase": "subset100",
+        "sha256_match": true,
+        "tensors": 100,
+        "threads": 1
+      },
+      "subset100_threads_4": {
+        "backend_bytes_read_last_rep": 1822545621,
+        "latency": {
+          "all_ms": [
+            12751.659
+          ],
+          "max_ms": 12751.659,
+          "mean_ms": 12751.659,
+          "min_ms": 12751.659,
+          "p50_ms": 12751.659,
+          "p95_ms": 12751.659,
+          "p99_ms": 12751.659,
+          "samples": 1
+        },
+        "phase": "subset100",
+        "sha256_match": true,
+        "tensors": 100,
+        "threads": 4
+      }
+    },
+    "retention": {
+      "commits_bytes": 1011574,
+      "data_only_bytes": 6775861261,
+      "indexes_bytes": 169652106,
+      "indexes_percent_of_total": 2.442,
+      "manifests_bytes": 6775741381,
+      "objects_bytes": 119880,
+      "other_bytes": 8207,
+      "refs_bytes": 195,
+      "store_total_bytes": 6946533343
+    },
+    "topology": [
+      {
+        "all_roots_verified": true,
+        "backend_bytes_read_last_rep": 5161501106,
+        "backend_requests_last_rep": 13888,
+        "bytes_ratio_vs_naive_full": 0.836,
+        "exact_source_file": true,
+        "full_roots_verified": 434,
+        "label": "sharded_8",
+        "latency": {
+          "all_ms": [
+            82180.123
+          ],
+          "max_ms": 82180.123,
+          "mean_ms": 82180.123,
+          "min_ms": 82180.123,
+          "p50_ms": 82180.123,
+          "p95_ms": 82180.123,
+          "p99_ms": 82180.123,
+          "samples": 1
+        },
+        "naive_full_read_bytes": 6171877376,
+        "shard_roots_verified": 434,
+        "tensor_filter": null,
+        "tensors_restored": 434,
+        "topology": "Some(Sharded { axis: 0, shards: 8 })"
+      },
+      {
+        "all_roots_verified": true,
+        "backend_bytes_read_last_rep": 5161501106,
+        "backend_requests_last_rep": 13888,
+        "bytes_ratio_vs_naive_full": 0.836,
+        "exact_source_file": true,
+        "full_roots_verified": 434,
+        "label": "sharded_4",
+        "latency": {
+          "all_ms": [
+            88299.767
+          ],
+          "max_ms": 88299.767,
+          "mean_ms": 88299.767,
+          "min_ms": 88299.767,
+          "p50_ms": 88299.767,
+          "p95_ms": 88299.767,
+          "p99_ms": 88299.767,
+          "samples": 1
+        },
+        "naive_full_read_bytes": 6171877376,
+        "shard_roots_verified": 434,
+        "tensor_filter": null,
+        "tensors_restored": 434,
+        "topology": "Some(Sharded { axis: 0, shards: 4 })"
+      },
+      {
+        "all_roots_verified": true,
+        "backend_bytes_read_last_rep": 5161501106,
+        "backend_requests_last_rep": 13888,
+        "bytes_ratio_vs_naive_full": 0.836,
+        "exact_source_file": true,
+        "full_roots_verified": 434,
+        "label": "row_major",
+        "latency": {
+          "all_ms": [
+            69759.65
+          ],
+          "max_ms": 69759.65,
+          "mean_ms": 69759.65,
+          "min_ms": 69759.65,
+          "p50_ms": 69759.65,
+          "p95_ms": 69759.65,
+          "p99_ms": 69759.65,
+          "samples": 1
+        },
+        "naive_full_read_bytes": 6171877376,
+        "shard_roots_verified": 434,
+        "tensor_filter": null,
+        "tensors_restored": 434,
+        "topology": "Some(RowMajor)"
+      },
+      {
+        "all_roots_verified": true,
+        "backend_bytes_read_last_rep": 518097908,
+        "backend_requests_last_rep": 32,
+        "bytes_ratio_vs_naive_full": 0.833,
+        "exact_source_file": false,
+        "full_roots_verified": 1,
+        "label": "blocked_largest_tensor",
+        "latency": {
+          "all_ms": [
+            7456.88
+          ],
+          "max_ms": 7456.88,
+          "mean_ms": 7456.88,
+          "min_ms": 7456.88,
+          "p50_ms": 7456.88,
+          "p95_ms": 7456.88,
+          "p99_ms": 7456.88,
+          "samples": 1
+        },
+        "naive_full_read_bytes": 622329856,
+        "shard_roots_verified": 1,
+        "tensor_filter": "model.embed_tokens.weight",
+        "tensors_restored": 1,
+        "topology": "Some(Blocked { block_shape: [128, 128] })"
+      }
+    ]
+  },
+  "zero_point_five_b": {
+    "after": {
+      "checked_objects": 582,
+      "peak_rss_kib": 2257928,
+      "revision": "WeftFS 9822d56, WeftCodec cffcc1a",
+      "strategy_distribution": {
+        "base": {
+          "data_bytes_by_strategy": {
+            "float-tensor": 657881943,
+            "raw": 24096,
+            "zstd": 123840
+          },
+          "logical_bytes_by_strategy": {
+            "float-tensor": 987922432,
+            "raw": 12288,
+            "zstd": 130816
+          },
+          "tensors_by_strategy": {
+            "float-tensor": 169,
+            "raw": 48,
+            "zstd": 73
+          }
+        },
+        "next": {
+          "data_bytes_by_strategy": {
+            "raw": 24096,
+            "weight-delta": 541247695,
+            "zstd": 1393
+          },
+          "logical_bytes_by_strategy": {
+            "raw": 12288,
+            "weight-delta": 988051456,
+            "zstd": 1792
+          },
+          "tensors_by_strategy": {
+            "raw": 48,
+            "weight-delta": 241,
+            "zstd": 1
+          }
+        }
+      },
+      "verify_ok": true,
+      "wall_ms": 315114.203
+    },
+    "before": {
+      "peak_rss_kib": null,
+      "result": "OOM-killed (exit 137) at the default 3 GiB bench court while ingesting the same command",
+      "revision": "WeftFS d5e78ce, WeftCodec 3d9ae04 (pre-change tree)"
+    },
+    "representation_invariance": {
+      "compare": "s12-new-05b (retention only) vs s12-final-05b (retention + borrow + delta bound + harness bounds)",
+      "differing": [],
+      "differing_rows": 0,
+      "rows": 580,
+      "strategy_distribution_equal": true
+    }
+  }
+}

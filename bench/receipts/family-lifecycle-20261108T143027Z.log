@@ -1,0 +1,61 @@
+family_lifecycle: stamp=20261108T143027Z
+family_lifecycle: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+family_lifecycle: limits memory=3g cpus=4 pids=1024
+family_lifecycle: revisions weftfs=9822d566647c86e43b571f4c76668da7b1802cf2 weftfs-go=6d58137ca888c0b10d01f2fd93f3af00d544e5f6 weftcodec=cffcc1aab59b02d83144da158039718eb1f450b7 weftcodec-go=0db665ea4c6b1d69d1d1640801ed475848d361f1
+family_lifecycle: reps ingest=1 measure=1 topology=1 recovery=1 configs=default
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+family_lifecycle: verified Qwen2.5-3B.safetensors sha256=52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab
+family_lifecycle: verified Qwen2.5-3B-Instruct.safetensors sha256=54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2
+== build ==
+    Finished `release` profile [optimized] target(s) in 0.05s
+== baselines qwen3b-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/baselines.json
+== checkpoint 8-way qwen3b-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/checkpoint.json
+== cross-topology qwen3b-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/topology.json
+== process-fault recovery qwen3b-finetune (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/recovery.json
+== ingest qwen3b-finetune/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/ingest.json
+== measure qwen3b-finetune/default ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/measure.json
+== gc fixture qwen3b-finetune/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/gc/gc-pinned.json
+== assemble qwen3b-finetune/default ==
+
+== qwen3b-finetune / default ==
+ingest median wall 976527.164 ms, peak RSS 2765636 KiB
+  strategies base: {"float-tensor":270,"raw":72,"zstd":92}
+  strategies next: {"float-tensor":1,"raw":65,"sparse-delta":113,"weight-delta":255}
+  physical data-only 6775861261, indexes 169652106, total 6946533343
+  full_family_threads_1: p50 57551.7 ms p99 57551.7 ms bytes 6361877101 match true
+  full_family_threads_4: p50 50759.94 ms p99 50759.94 ms bytes 6361877101 match true
+  region_100_rows_threads_1: p50 1656.358 ms p99 1656.358 ms bytes 413020001 match true
+  region_100_rows_threads_4: p50 1660.012 ms p99 1660.012 ms bytes 413020001 match true
+  region_1_row_threads_1: p50 1714.22 ms p99 1714.22 ms bytes 413020001 match true
+  region_1_row_threads_4: p50 1658.283 ms p99 1658.283 ms bytes 413020001 match true
+  single_tensor_threads_1: p50 1846.094 ms p99 1846.094 ms bytes 413020001 match true
+  single_tensor_threads_4: p50 1655.087 ms p99 1655.087 ms bytes 413020001 match true
+  subset100_threads_1: p50 14848.704 ms p99 14848.704 ms bytes 1822545621 match true
+  subset100_threads_4: p50 12751.659 ms p99 12751.659 ms bytes 1822545621 match true
+  topology sharded_8: p50 82180.123 ms, bytes 5161501106 (0.836x naive), roots_ok true
+  topology sharded_4: p50 88299.767 ms, bytes 5161501106 (0.836x naive), roots_ok true
+  topology row_major: p50 69759.65 ms, bytes 5161501106 (0.836x naive), roots_ok true
+  topology blocked_largest_tensor: p50 7456.88 ms, bytes 518097908 (0.833x naive), roots_ok true
+  recovery after_objects: open p50 8.915 ms, usable p50 0.146 ms, old 1 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.283 ms, usable p50 0.3 ms, old 1 new 0, verify_ok true
+  recovery after_superblock_write: open p50 9.189 ms, usable p50 1386.055 ms, old 0 new 1, verify_ok true
+  gc without_snapshot: deleted 592675631 bytes in false, retained blob bytes 592708039, verify_ok true, live-restore true
+  gc with_snapshot: deleted 0 bytes in true, retained blob bytes 592708039, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T143027Z/qwen3b-finetune/default/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261108T143027Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261108T143027Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261108T143027Z.log

@@ -6210,3 +6210,109 @@ claims OK; spec drift 42/42; aggregate **37/37**
 (`verify-20261108T100623Z.json`). The first aggregate run
 (`verify-20261108T090639Z.json`, 33/37) is retained because it found the four
 defects listed at the top of this file.
+
+## Subphase S12 — bounded / streaming ingest (2026-11-08)
+
+Goal: ingest the real Qwen2.5-3B BF16 family inside the program's default
+**3 GiB** bench court. Memory-only change: no wire format, frame byte,
+manifest field, price, candidate order, tie-break or selected strategy
+changed.
+
+### What changed
+
+- `retain_candidate` keeps at most the frames that can still be chosen
+  (first applicable candidate for a strategy hint, else the running
+  minimum-cost candidate). Peak retained frames drop from ~6 per tensor to 2;
+  candidate order, pricing, ties and the chosen strategy are untouched. Both
+  zstd-3 and zstd-19 map to `TensorStrategy::Zstd`, so the second frame is
+  dropped.
+- `TensorLayoutSpec::canonicalize_cow` borrows a row-major caller's bytes
+  instead of cloning them (same validation; other layouts still allocate).
+- `SafetensorsFile::{read_tensor_range, read_tensor_shard,
+  hash_tensor_digests}`: exact shard reads (contiguous on axis 0, strided on
+  other axes) and streamed content/values digests in fixed windows. The
+  codec side is `DomainHasher`, `values_hasher` and
+  `logical_root_from_values_hash` (WeftCodec `cffcc1a`).
+- `write_checkpoint` streams: whole-tensor digests are incremental, the
+  logical root comes from the streamed values hash, and each shard is read
+  separately. `CheckpointWriteOptions::max_ingest_bytes` (default 1 GiB) and
+  `checkpoint write --max-ingest-bytes` bound it; the prepare/commit path
+  enforces the same bound.
+- `TensorPlanOptions::max_delta_bytes` (default 512 MiB) skips the
+  whole-tensor weight/sparse/patch candidates; see the loss below.
+- The family-lifecycle harness compares/digests in 4 MiB windows and drops
+  the subject tensor after slicing the region expectations.
+  `WEFT_FAMILY_PROGRESS=1` and `WEFT_TRACE_CANDIDATES=1` are opt-in traces.
+
+### Measurement (reduced configuration)
+
+Corpus re-verified in the court: `Qwen2.5-3B.safetensors` 6,171,927,112 B
+`52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab`;
+`Qwen2.5-3B-Instruct.safetensors` 6,171,927,112 B
+`54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2`; 434
+BF16 tensors each, largest 622,329,856 B.
+
+Command: `scripts/docker-court.sh bench` with
+`WEFT_FAMILY_FAMILIES=qwen3b-finetune WEFT_FAMILY_CONFIGS=default
+WEFT_FAMILY_INGEST_REPS=1 WEFT_FAMILY_MEASURE_REPS=1
+WEFT_FAMILY_TOPOLOGY_REPS=1 WEFT_FAMILY_RECOVERY_REPS=1
+WEFT_FAMILY_S3=0 bash bench/scripts/checkpoint_family_court.sh`
+(one family, one configuration, one rep per phase — not the full
+three-configuration court).
+
+Peak RSS per phase (`VmHWM` of a fresh process):
+
+| phase | peak |
+|---|---:|
+| ingest | **2,765,636 KiB** |
+| topology | 1,863,172 KiB |
+| measure | 1,840,524 KiB |
+| baselines | 1,228,240 KiB |
+| gc without snapshot | 1,089,068 KiB |
+| gc with snapshot | 1,089,536 KiB |
+| checkpoint (8-way) | **614,920 KiB** |
+| recovery | 250,388 KiB |
+
+Every phase completed under the 3 GiB limit; no OOM kill and no limit was
+raised. Ingest wall 976,527.164 ms; `verify --full` ok (870 objects, 873
+manifests, 731 representations, 139 chunks, 0 problems). Base strategies:
+270 float-tensor / 92 zstd / 72 raw. Instruct: 255 weight-delta / 113
+sparse-delta / 1 float-tensor / 65 raw. Checkpoint: 434 tensors, 3,472 shard
+objects, 187,089.716 ms, 6,171,877,376 element bytes, verify ok.
+Store: data-only 6,775,861,261 B, indexes 169,652,106 B (2.442 %), total
+6,946,533,343 B.
+
+0.5B, same command: the pre-change tree (`d5e78ce` / `3d9ae04`) is
+**OOM-killed, exit 137** at 3 GiB; this tree (`9822d56` / `cffcc1a`) peaks at
+**2,257,928 KiB** with verify ok. Across the two new-code runs, 580/580
+per-tensor rows match on `logical_root`, `strategy`, `data_bytes` and source
+`sha256`, and the strategy distribution is unchanged.
+
+Byte identity: `tests/checkpoint_streaming.rs` writes the same container with
+the same `deterministic_seed` at `max_ingest_bytes` = largest tensor vs 1 GiB
+and requires the same head, manifest id, manifest root and canonical manifest
+bytes; it also recomputes the one-shot content and logical roots. Streamed
+shard bytes equal `weftcodec::tensor::shard_bytes` exactly.
+
+Receipts: `bench/receipts/family-lifecycle-20261108T143027Z.json` and
+`bench/receipts/s12-bounded-ingest-20261108T143027Z.json`; analysis
+`bench/RESULTS-bounded-ingest.md`.
+
+### Losses and remaining work
+
+- The 593.5 MiB embedding is above the 512 MiB delta bound, so weight-delta,
+  sparse-delta and zstd-patch are not offered for it. The skipped candidates
+  were not the cheapest (float-tensor 413,019,145 B vs raw 622,329,856 B), but
+  this is a planner-policy bound, not equivalence with the unbounded plan.
+- Mode-9 encoding of that tensor still defines the ingest peak; reducing it
+  further needs a streaming mode-9 encoder.
+- zstd-19 is CPU-gated off for the embedding (estimated 20.8 s > 20 s).
+- The prepare/commit split still materialises one whole tensor per worker.
+- Rust only; no Go parity for the streaming codec API, the ingest bound or the
+  delta bound. Single host, warm cache, process-fault recovery only.
+- `verify-all` was not re-run for S12.
+
+Gates at `9822d56` / `cffcc1a`: WeftCodec `cargo test --lib` 75 passed; Rust
+`cargo test --all-targets` 128 suites, 640 passed, 0 failed; FUSE
+`cargo test --features fuse --all-targets` 128 suites, 683 passed, 0 failed,
+2 pre-existing ignored; claims OK; spec drift 42/42; conformance manifest OK.
