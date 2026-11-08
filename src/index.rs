@@ -42,6 +42,11 @@ pub(crate) const INDEX_MAGIC_V2: &[u8; 4] = b"WFX2";
 pub(crate) const INDEX_VERSION_V2: u32 = 1;
 /// Domain for the integrity digest over every preceding WFX2 byte.
 pub(crate) const INDEX_V2_DOMAIN: &str = "weft/index/v2";
+/// Domain for the digest of the candidate sections, attested by the commit.
+pub(crate) const INDEX_CANDIDATES_DOMAIN: &str = "weft/index/candidates/v1";
+/// Domain for the digest of the six authoritative commit fields, attested by
+/// the commit and recomputed by the loader.
+pub(crate) const INDEX_STATE_DOMAIN: &str = "weft/index/state/v1";
 /// `magic(4) + version(4) + commit(32) + generation/object/relation/entry(32)`.
 const INDEX_V2_HEADER_BYTES: usize = 72;
 /// Trailing BLAKE3 digest length.
@@ -164,6 +169,30 @@ impl StateIndex {
         self.commit
     }
 
+    pub(crate) fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    pub(crate) fn relation_count(&self) -> usize {
+        self.relation_count
+    }
+
+    pub(crate) fn entry_count(&self) -> usize {
+        self.entry_count
+    }
+
+    /// `H("weft/index/candidates/v1", section bytes)`.
+    ///
+    /// This is the digest the commit attests: it covers every candidate set and
+    /// every tag/relation entry, so a self-consistent *subset* cannot match it.
+    pub(crate) fn candidates_root(&self) -> Result<Hash32> {
+        let body = self.encode_body()?;
+        Ok(identity::h(
+            INDEX_CANDIDATES_DOMAIN,
+            &body[INDEX_V2_HEADER_BYTES..],
+        ))
+    }
+
     /// Attach the commit key before persisting a freshly built index.
     pub(crate) fn with_commit(mut self, commit: Hash32) -> StateIndex {
         self.commit = commit;
@@ -176,6 +205,23 @@ impl StateIndex {
     /// map insertion. Cross-language index parity is not claimed; the payload
     /// is internal and rebuildable, not a frozen store format.
     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+        let mut out = self.encode_body()?;
+        let total = out
+            .len()
+            .checked_add(INDEX_DIGEST_BYTES)
+            .ok_or_else(|| Error::limit_exceeded("index file size overflows usize"))?;
+        if total as u64 > MAX_INDEX_FILE_BYTES {
+            return Err(Error::limit_exceeded(format!(
+                "index file is {total} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap"
+            )));
+        }
+        let digest = identity::h(INDEX_V2_DOMAIN, &out);
+        out.extend_from_slice(digest.as_bytes());
+        Ok(out)
+    }
+
+    /// Header plus sections, without the trailing digest.
+    fn encode_body(&self) -> Result<Vec<u8>> {
         // A WFX2 segment is only written when every scalar attribute value was
         // encodable; the loaded index is therefore always `complete`. An
         // incomplete index must never be persisted and later treated as exact.
@@ -238,17 +284,6 @@ impl StateIndex {
             push_ids(&mut out, &self.tags[tag])?;
         }
 
-        let total = out
-            .len()
-            .checked_add(INDEX_DIGEST_BYTES)
-            .ok_or_else(|| Error::limit_exceeded("index file size overflows usize"))?;
-        if total as u64 > MAX_INDEX_FILE_BYTES {
-            return Err(Error::limit_exceeded(format!(
-                "index file is {total} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap"
-            )));
-        }
-        let digest = identity::h(INDEX_V2_DOMAIN, &out);
-        out.extend_from_slice(digest.as_bytes());
         Ok(out)
     }
 

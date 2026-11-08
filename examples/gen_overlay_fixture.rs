@@ -117,6 +117,8 @@ fn main() {
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
         content_identity: ContentIdentity::MerkleV3,
+        // The committed overlay fixture is frozen v1 commit bytes.
+        attest_indexes: false,
         ..Options::default()
     };
     let mut store = Store::init(out, options).unwrap();

@@ -28,8 +28,12 @@ pub const COMMIT_MAGIC: &[u8; 4] = b"WFC1";
 pub const FORMAT_MAJOR: u16 = 1;
 /// Store format minor.
 pub const FORMAT_MINOR: u16 = 0;
-/// Commit schema string.
+/// Commit schema string (no index attestation).
 pub const COMMIT_SCHEMA: &str = "weftfs.commit.v1";
+/// Commit schema that may carry an `index_attestation` map. The key set is the
+/// v1 set plus one optional field, so a v1 reader that checks exact keys must
+/// be taught the new schema (both languages here are).
+pub const COMMIT_SCHEMA_V2: &str = "weftfs.commit.v2";
 /// File manifest schema string (see `WEFT-MODEL.md` §2.3).
 pub const MANIFEST_SCHEMA: &str = "weft.manifest.v1";
 /// Legacy v1 spelling accepted on read (see `docs/store-status.md` §3.1).
@@ -138,6 +142,68 @@ pub fn decode_superblock(bytes: &[u8]) -> Result<[Result<SuperblockSlot>; 2]> {
     Ok([first, second])
 }
 
+/// A commit's attestation of the selector index it published.
+///
+/// The index segment is derived data, and its own BLAKE3 digest only proves the
+/// bytes did not change by accident. It cannot prove the segment is a complete,
+/// correct derivative of the authoritative state: a forger who removes one
+/// candidate, re-sorts, fixes the counts, and recomputes the self-digest gets a
+/// self-consistent subset. This record closes that gap by putting the expected
+/// shape **into the commit**:
+///
+/// * `object_count` / `relation_count` / `entry_count` — the replayed state's
+///   shape (also independently checked against the replayed state);
+/// * `state_root` — `H("weft/index/state/v1", canonical v1 commit fields)`, so
+///   the attestation is bound to this exact commit's generation, parent,
+///   timestamp, ops, and checkpoint;
+/// * `candidates_root` — `H("weft/index/candidates/v1", WFX2 section bytes)`,
+///   a digest of the full candidate sets an honest index must contain.
+///
+/// A loader accepts a segment only when all three agree *and* the segment's
+/// self-digest is valid. Anything else is rejected and rebuilt. An attacker who
+/// can rewrite the commit record itself is a different threat class (documented
+/// in `docs/INDEX-TRUST.md`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct IndexAttestation {
+    pub object_count: u64,
+    pub relation_count: u64,
+    pub entry_count: u64,
+    pub state_root: Hash32,
+    pub candidates_root: Hash32,
+}
+
+impl IndexAttestation {
+    const KEYS: &'static [&'static str] = &[
+        "candidates_root",
+        "entry_count",
+        "object_count",
+        "relation_count",
+        "state_root",
+    ];
+
+    pub fn to_value(&self) -> Value {
+        wu::map([
+            ("object_count", Value::U64(self.object_count)),
+            ("relation_count", Value::U64(self.relation_count)),
+            ("entry_count", Value::U64(self.entry_count)),
+            ("state_root", wu::hash_value(self.state_root)),
+            ("candidates_root", wu::hash_value(self.candidates_root)),
+        ])
+    }
+
+    pub fn from_wcb(value: &Value) -> Result<Self> {
+        let map = wu::as_map(value)?;
+        wu::check_keys(map, Self::KEYS)?;
+        Ok(IndexAttestation {
+            object_count: wu::get_u64(map, "object_count")?,
+            relation_count: wu::get_u64(map, "relation_count")?,
+            entry_count: wu::get_u64(map, "entry_count")?,
+            state_root: wu::get_hash(map, "state_root")?,
+            candidates_root: wu::get_hash(map, "candidates_root")?,
+        })
+    }
+}
+
 /// A commit record (`WEFT-MODEL.md` §2.2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Commit {
@@ -146,10 +212,12 @@ pub struct Commit {
     pub timestamp_ns: i64,
     pub ops: Vec<Op>,
     pub checkpoint: Option<Hash32>,
+    /// Present only in a `weftfs.commit.v2` record.
+    pub index_attestation: Option<IndexAttestation>,
 }
 
 impl Commit {
-    const KEYS: &'static [&'static str] = &[
+    const KEYS_V1: &'static [&'static str] = &[
         "schema",
         "generation",
         "parent",
@@ -157,10 +225,21 @@ impl Commit {
         "ops",
         "checkpoint",
     ];
+    const KEYS_V2: &'static [&'static str] = &[
+        "schema",
+        "generation",
+        "parent",
+        "timestamp_ns",
+        "ops",
+        "checkpoint",
+        "index_attestation",
+    ];
 
-    pub fn to_value(&self) -> Value {
-        wu::map([
-            ("schema", Value::Str(COMMIT_SCHEMA.to_owned())),
+    /// The six v1 fields as a canonical map. This is also the `state_root`
+    /// preimage, so it is independent of whether this record carries an
+    /// attestation.
+    fn fields(&self) -> Vec<(&'static str, Value)> {
+        vec![
             ("generation", Value::U64(self.generation)),
             ("parent", wu::opt_hash_value(self.parent)),
             ("timestamp_ns", Value::Timestamp(self.timestamp_ns)),
@@ -169,12 +248,37 @@ impl Commit {
                 Value::Array(self.ops.iter().map(Op::to_value).collect()),
             ),
             ("checkpoint", wu::opt_hash_value(self.checkpoint)),
-        ])
+        ]
+    }
+
+    pub fn to_value(&self) -> Value {
+        match &self.index_attestation {
+            None => {
+                let mut pairs = vec![("schema", Value::Str(COMMIT_SCHEMA.to_owned()))];
+                pairs.extend(self.fields());
+                wu::map(pairs)
+            }
+            Some(attestation) => {
+                let mut pairs = vec![("schema", Value::Str(COMMIT_SCHEMA_V2.to_owned()))];
+                pairs.extend(self.fields());
+                pairs.push(("index_attestation", attestation.to_value()));
+                wu::map(pairs)
+            }
+        }
     }
 
     /// Canonical WCB bytes of the commit record.
     pub fn encode(&self) -> Result<Vec<u8>> {
         wu::encode(&self.to_value())
+    }
+
+    /// Canonical v1-shaped bytes of the six authoritative fields, used as the
+    /// `state_root` preimage. A v2 commit and a v1 commit with the same fields
+    /// produce the same preimage.
+    pub fn encode_fields(&self) -> Result<Vec<u8>> {
+        let mut pairs = vec![("schema", Value::Str(COMMIT_SCHEMA.to_owned()))];
+        pairs.extend(self.fields());
+        wu::encode(&wu::map(pairs))
     }
 
     /// `H("weft/store/commit/v1", WCB(commit))`.
@@ -184,13 +288,25 @@ impl Commit {
 
     pub fn from_wcb(value: &Value) -> Result<Self> {
         let map = wu::as_map(value)?;
-        wu::check_keys(map, Self::KEYS)?;
         let schema = wu::get_text(map, "schema")?;
-        if schema != COMMIT_SCHEMA {
-            return Err(Error::unknown_schema(format!(
-                "commit schema `{schema}` is not `{COMMIT_SCHEMA}`"
-            )));
-        }
+        let index_attestation = match schema.as_str() {
+            COMMIT_SCHEMA => {
+                wu::check_keys(map, Self::KEYS_V1)?;
+                None
+            }
+            COMMIT_SCHEMA_V2 => {
+                wu::check_keys(map, Self::KEYS_V2)?;
+                match map.get("index_attestation") {
+                    None | Some(Value::Null) => None,
+                    Some(item) => Some(IndexAttestation::from_wcb(item)?),
+                }
+            }
+            other => {
+                return Err(Error::unknown_schema(format!(
+                    "commit schema `{other}` is neither `{COMMIT_SCHEMA}` nor `{COMMIT_SCHEMA_V2}`"
+                )))
+            }
+        };
         let ops = wu::get_array(map, "ops")?
             .iter()
             .map(Op::from_wcb)
@@ -201,6 +317,7 @@ impl Commit {
             timestamp_ns: wu::get_timestamp(map, "timestamp_ns")?,
             ops,
             checkpoint: wu::get_opt_hash(map, "checkpoint")?,
+            index_attestation,
         })
     }
 }

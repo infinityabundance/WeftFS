@@ -73,6 +73,10 @@ pub fn build_fixture_store(path: &Path) -> Result<FixtureSummary> {
         checkpoint_interval: 256,
         gc_grace_secs: 3_600,
         fixed_timestamp_ns: Some(FIXTURE_TIMESTAMP_NS),
+        // The committed fixture is a frozen `weftfs.commit.v1` byte sequence;
+        // reproduce it exactly (a v2 commit would attest the index and change
+        // every commit hash).
+        attest_indexes: false,
         ..Options::default()
     };
     let mut store = Store::init(path, options)?;

@@ -31,7 +31,11 @@ use crate::format::{
     SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
-use crate::index::{StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, MAX_INDEX_FILE_BYTES};
+use crate::format::IndexAttestation;
+use crate::index::{
+    StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, INDEX_STATE_DOMAIN,
+    MAX_INDEX_FILE_BYTES,
+};
 use crate::object_cache::{
     CacheKey, ObjectCache, ObjectCacheOptions, ObjectCacheStats, MAX_CACHE_ENTRIES,
 };
@@ -179,6 +183,11 @@ pub struct Options {
     /// Bound on the number of cached entries (books keeping). The byte bound is
     /// the primary limit; this bounds the eviction scan for tiny objects.
     pub cache_entries: usize,
+    /// Attest the advisory selector index in the commit record
+    /// (`weftfs.commit.v2`). Default on. Turning it off writes `weftfs.commit.v1`
+    /// and no index segment: a segment without an attestation is never trusted,
+    /// so it exists only to reproduce the frozen v1 fixture bytes.
+    pub attest_indexes: bool,
 }
 
 impl Default for Options {
@@ -202,6 +211,7 @@ impl Default for Options {
             single_flight_max_bytes: crate::singleflight::DEFAULT_MAX_BYTES,
             cache_bytes: 0,
             cache_entries: MAX_CACHE_ENTRIES,
+            attest_indexes: true,
         }
     }
 }
@@ -1393,23 +1403,125 @@ impl Store {
             ));
             return None;
         }
+        // Trust requires the commit to attest this index. A self-consistent
+        // segment (valid digest, matching generation and counts) can still be a
+        // forged *subset*; only the commit's `candidates_root` can refute that.
+        let Some(attestation) = self.attested_index(commit, index.generation()) else {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: the commit carries no index attestation (v1 \
+                 commit or unverifiable record); rebuild-only"
+            ));
+            return None;
+        };
+        if attestation.object_count != index.object_count() as u64
+            || attestation.relation_count != index.relation_count() as u64
+            || attestation.entry_count != index.entry_count() as u64
+        {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: counts disagree with the commit attestation"
+            ));
+            return None;
+        }
+        let candidates = match index.candidates_root() {
+            Ok(value) => value,
+            Err(err) => {
+                self.note_index_reject(format!(
+                    "ignoring index {displayed}: cannot re-derive its candidate root: {err}"
+                ));
+                return None;
+            }
+        };
+        if candidates != attestation.candidates_root {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: candidate root disagrees with the commit attestation \
+                 (forged or incomplete index); rebuild-only"
+            ));
+            return None;
+        }
+        let (_, record) = match self.read_commit_record(index.generation()) {
+            Some(record) => record,
+            None => {
+                self.note_index_reject(format!(
+                    "ignoring index {displayed}: cannot re-read its commit record"
+                ));
+                return None;
+            }
+        };
+        let state_root = match record.encode_fields() {
+            Ok(bytes) => identity::h(INDEX_STATE_DOMAIN, &bytes),
+            Err(err) => {
+                self.note_index_reject(format!(
+                    "ignoring index {displayed}: cannot recompute the attested state root: {err}"
+                ));
+                return None;
+            }
+        };
+        if state_root != attestation.state_root {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: attested state root disagrees with the commit record"
+            ));
+            return None;
+        }
         self.bump_index_stat(|stats| stats.disk_loads += 1);
         Some(Arc::new(index))
     }
 
-    /// Write the advisory index for a published commit, atomically. The index
-    /// is derived data: a failure here is recorded but must never fail the
-    /// commit that already published.
-    fn write_state_index(&self, commit: Hash32, state: &State) -> Result<u64> {
-        if self.mode != OpenMode::ReadWrite {
-            return Ok(0);
+    /// Read and validate the commit record for `generation`.
+    fn read_commit_record(&self, generation: u64) -> Option<(Vec<u8>, crate::format::Commit)> {
+        let key = Key::commit(generation);
+        let bytes = self
+            .with_backend(|backend| backend.read_all(&key))
+            .ok()?;
+        crate::format::decode_commit_file(&bytes).ok()
+    }
+
+    /// The attestation `commit` carries, only when the on-disk record re-hashes
+    /// to that commit id.
+    fn attested_index(&self, commit: Hash32, generation: u64) -> Option<IndexAttestation> {
+        let (_, record) = self.read_commit_record(generation)?;
+        if record.id().ok()? != commit {
+            return None;
         }
-        let index = StateIndex::build(state).with_commit(commit);
+        record.index_attestation
+    }
+
+    /// Build the index attestation for a commit that is about to publish, and
+    /// return the index it describes so the segment write does not rebuild it.
+    ///
+    /// `commit` must not carry an attestation yet: `state_root` is computed over
+    /// the six authoritative fields only, which is exactly what the loader can
+    /// recompute from the published record.
+    fn index_attestation_for(
+        &self,
+        state: &State,
+        commit: &crate::format::Commit,
+    ) -> Result<(Option<IndexAttestation>, Option<StateIndex>)> {
+        if !self.options.attest_indexes || self.mode != OpenMode::ReadWrite {
+            return Ok((None, None));
+        }
+        let index = StateIndex::build(state);
         if !index.complete() {
-            // Persisting an incomplete index would later be loaded as exact and
-            // could under-select. Keep it in memory only; the commit stands.
-            return Ok(0);
+            // An incomplete index is never persisted; without an attestation
+            // the commit is v1 and no segment can be trusted.
+            return Ok((None, None));
         }
+        let state_root = identity::h(INDEX_STATE_DOMAIN, &commit.encode_fields()?);
+        let candidates_root = index.candidates_root()?;
+        Ok((
+            Some(IndexAttestation {
+                object_count: index.object_count() as u64,
+                relation_count: index.relation_count() as u64,
+                entry_count: index.entry_count() as u64,
+                state_root,
+                candidates_root,
+            }),
+            Some(index),
+        ))
+    }
+
+    /// Publish an index that was built for the attestation, atomically.
+    fn write_built_index(&self, commit: Hash32, index: StateIndex) -> Result<u64> {
+        let index = index.with_commit(commit);
         let bytes = index.encode_file()?;
         if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
@@ -1417,8 +1529,6 @@ impl Store {
                 bytes.len()
             )));
         }
-        let hex = commit.to_hex();
-        let _ = hex;
         self.with_backend_mut(|backend| backend.put_atomic(&Key::index(commit), &bytes))
             .map_err(|err| {
                 Error::io(format!(
@@ -1434,10 +1544,13 @@ impl Store {
         Ok(bytes.len() as u64)
     }
 
-    /// Best-effort index write after a commit has published. Errors become
-    /// diagnostics; the commit's success and durability are unaffected.
-    fn persist_index_after_commit(&self, commit: Hash32, state: &State) {
-        if let Err(err) = self.write_state_index(commit, state) {
+    /// Best-effort index write after a commit has published. The index is
+    /// derived data: a failure is a diagnostic and never fails the commit.
+    fn persist_built_index(&self, commit: Hash32, index: StateIndex) {
+        if self.mode != OpenMode::ReadWrite {
+            return;
+        }
+        if let Err(err) = self.write_built_index(commit, index) {
             self.note_index_write_error(format!("index for {commit} was not written: {err}"));
         }
     }
@@ -1495,7 +1608,19 @@ impl Store {
     #[doc(hidden)]
     pub fn write_index_for_bench(&self) -> Result<u64> {
         self.require_writable()?;
-        self.write_state_index(self.head, &self.state)
+        let (_, record) = self
+            .read_commit_record(self.generation)
+            .ok_or_else(|| Error::corrupt("cannot read the head commit record"))?;
+        let attestation = record.index_attestation.ok_or_else(|| {
+            Error::invalid_argument("a loadable index needs an attested head commit")
+        })?;
+        let index = StateIndex::build(&self.state).with_commit(self.head);
+        if index.candidates_root()? != attestation.candidates_root {
+            return Err(Error::corrupt(
+                "rebuilt index differs from the head commit's attestation",
+            ));
+        }
+        self.write_built_index(self.head, index)
     }
 
     /// Build an index from `state` without writing it (benchmark only).
@@ -6762,13 +6887,16 @@ impl Store {
         } else {
             None
         };
-        let commit = Commit {
+        let mut commit = Commit {
             generation: new_generation,
             parent: Some(self.head),
             timestamp_ns: timestamp,
             ops,
             checkpoint,
+            index_attestation: None,
         };
+        let (attestation, built_index) = self.index_attestation_for(&next_state, &commit)?;
+        commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
         self.state = next_state;
         self.head = hash;
@@ -6776,7 +6904,9 @@ impl Store {
         self.next_generation = new_generation
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
-        self.persist_index_after_commit(hash, &self.state);
+        if let Some(index) = built_index {
+            self.persist_built_index(hash, index);
+        }
         Ok(hash)
     }
 
@@ -7488,19 +7618,24 @@ impl Store {
         let mut state = State::default();
         state.apply_ops(&ops)?;
         state.generation = 1;
-        let commit = Commit {
+        let mut commit = Commit {
             generation: 1,
             parent: None,
             timestamp_ns: mtime,
             ops,
             checkpoint: None,
+            index_attestation: None,
         };
+        let (attestation, built_index) = self.index_attestation_for(&state, &commit)?;
+        commit.index_attestation = attestation;
         self.publish_commit(&commit)?;
         self.state = state;
         self.head = commit.id()?;
         self.generation = 1;
         self.next_generation = 2;
-        self.persist_index_after_commit(self.head, &self.state);
+        if let Some(index) = built_index {
+            self.persist_built_index(self.head, index);
+        }
         Ok(())
     }
 
@@ -7547,13 +7682,16 @@ impl Store {
         // Every content blob and checkpoint manifest is durable here.
         crash_point("after_objects");
 
-        let commit = Commit {
+        let mut commit = Commit {
             generation: new_generation,
             parent: Some(self.head),
             timestamp_ns: timestamp,
             ops,
             checkpoint,
+            index_attestation: None,
         };
+        let (attestation, built_index) = self.index_attestation_for(&next_state, &commit)?;
+        commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
 
         // Keep the in-memory state consistent with the published commit.
@@ -7565,7 +7703,9 @@ impl Store {
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
         // Advisory only: the commit is already durable and visible. A failed
         // index write is recorded and ignored.
-        self.persist_index_after_commit(hash, &self.state);
+        if let Some(index) = built_index {
+            self.persist_built_index(hash, index);
+        }
         if let Some(plan) = quota {
             self.record_quota_after_commit(plan);
         }
@@ -7723,19 +7863,24 @@ impl Store {
         // this point still leaves the previous generation whole.
         crash_point("after_objects");
 
-        let commit = Commit {
+        let mut commit = Commit {
             generation: new_generation,
             parent: Some(self.head),
             timestamp_ns: timestamp,
             ops,
             checkpoint,
+            index_attestation: None,
         };
+        let (attestation, built_index) = self.index_attestation_for(&self.state, &commit)?;
+        commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
 
         self.head = hash;
         self.generation = new_generation;
         // Advisory only: the commit is already durable and visible.
-        self.persist_index_after_commit(hash, &self.state);
+        if let Some(index) = built_index {
+            self.persist_built_index(hash, index);
+        }
         Ok(hash)
     }
 

@@ -665,3 +665,102 @@ fn read_only_open_never_writes_or_creates_indexes() {
         "read-only open must not create the index layout"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Commit-attested indexes (`weftfs.commit.v2`)
+// ---------------------------------------------------------------------------
+
+fn read_u32(bytes: &[u8], pos: &mut usize) -> u32 {
+    let value = u32::from_le_bytes(bytes[*pos..*pos + 4].try_into().unwrap());
+    *pos += 4;
+    value
+}
+
+/// Remove one candidate id from the first `objects_with_attr` set, decrement
+/// that set's own count, and recompute the trailing digest. Every
+/// self-consistency check the loader performs before the attestation still
+/// passes: the magic, version, commit, generation, all three state counts, the
+/// canonical layout, and the segment's own digest.
+fn forge_one_missing_candidate(path: &Path) {
+    let mut bytes = fs::read(path).expect("read index");
+    let mut pos = INDEX_HEADER_BYTES;
+    let names = read_u32(&bytes, &mut pos) as usize;
+    assert!(names > 0, "fixture index must have an attribute set");
+    let mut removed = false;
+    for _ in 0..names {
+        let name_len = read_u32(&bytes, &mut pos) as usize;
+        pos += name_len;
+        let count_pos = pos;
+        let count = read_u32(&bytes, &mut pos) as usize;
+        if !removed && count > 1 {
+            let last = pos + (count - 1) * 32;
+            bytes.drain(last..last + 32);
+            bytes[count_pos..count_pos + 4]
+                .copy_from_slice(&((count - 1) as u32).to_le_bytes());
+            removed = true;
+            break;
+        }
+        pos += count * 32;
+    }
+    assert!(removed, "fixture index must contain a set with >=2 members");
+    let body_len = bytes.len() - 32;
+    let digest = weftfs::identity::h(INDEX_V2_DOMAIN, &bytes[..body_len]);
+    bytes[body_len..].copy_from_slice(digest.as_bytes());
+    fs::write(path, bytes).expect("write forged index");
+}
+
+#[test]
+fn forged_self_consistent_subset_is_rejected_by_the_commit_attestation() {
+    let fixture = build_fixture();
+    let root = fixture.store.root().to_path_buf();
+    let head = fixture.store.head();
+    let path = index_path(&root, head);
+    assert!(path.exists(), "the writer attests and persists the head index");
+    drop(fixture.store);
+
+    // The honest segment loads on reopen.
+    {
+        let store = Store::open(&root, OpenMode::ReadOnly).unwrap();
+        store.reset_index_stats();
+        let query = selector::parse("select tag(\"alpha\")").unwrap();
+        let limits = weftcodec::Limits::default();
+        store
+            .resolve(&query, None, &principal(), &limits)
+            .unwrap();
+        let stats = store.index_stats();
+        assert_eq!(stats.disk_loads, 1, "attested segment must load: {stats:?}");
+        assert_eq!(stats.rejects, 0, "{stats:?}");
+    }
+
+    // Forge one missing candidate and reopen: only the commit attestation can
+    // refute this, and it must.
+    forge_one_missing_candidate(&path);
+    let store = Store::open(&root, OpenMode::ReadOnly).unwrap();
+    store.reset_index_stats();
+    let query = selector::parse("select tag(\"alpha\")").unwrap();
+    let limits = weftcodec::Limits::default();
+    let result = store
+        .resolve(&query, None, &principal(), &limits)
+        .unwrap();
+    let scan = store
+        .resolve_scan(&query, None, &principal(), &limits)
+        .unwrap();
+    compare("forged subset", &result, &scan);
+    let stats = store.index_stats();
+    assert_eq!(
+        stats.disk_loads, 0,
+        "a forged subset must never load: {stats:?}"
+    );
+    assert!(stats.rejects >= 1, "the reject must be visible: {stats:?}");
+    assert!(
+        stats.builds >= 1,
+        "the answer must come from a rebuild: {stats:?}"
+    );
+    assert!(
+        stats
+            .notes
+            .iter()
+            .any(|note| note.contains("attestation") || note.contains("candidate root")),
+        "the reject note must name the attestation: {stats:?}"
+    );
+}

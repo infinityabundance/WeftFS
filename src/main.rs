@@ -2483,12 +2483,20 @@ fn run(cli: Cli) -> Result<()> {
                             json!({"object_id": item.object_id.to_hex(), "entries": entries})
                         })
                         .collect();
+                    let index_stats = store.index_stats();
                     print_json(&json!({
                         "selector_id": resolution.selector_id.to_hex(),
                         "snapshot_id": resolution.snapshot_id.to_hex(),
                         "matched_count": resolution.matched_count,
                         "results": results,
                         "evidence": evidence,
+                        // Advisory index diagnostics: a load is provable from
+                        // outside (loads>0, builds==0). Never part of a format.
+                        "index": {
+                            "loads": index_stats.disk_loads,
+                            "builds": index_stats.builds,
+                            "rejects": index_stats.rejects,
+                        },
                     }))
                 } else {
                     for reference in &resolution.results {

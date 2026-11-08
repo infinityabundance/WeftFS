@@ -5883,3 +5883,31 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
   audit, one microarchitecture/compiler, no cache/branch-predictor/frequency
   adversary model. `BigUint::rem` still runs on public message bytes. The Go
   GCS backend uses vetted `crypto/rsa`; this is Rust-only.
+
+### Selector-index trust: commit-attested WFX2 (`docs/INDEX-TRUST.md`)
+
+* The reported gap is closed: a segment is accepted only when its WFX2 digest
+  is valid, its commit/generation/counts match the replayed state, **and** the
+  commit record re-hashes to that commit and attests the expected index shape
+  (`object_count`, `relation_count`, `entry_count`,
+  `H("weft/index/state/v1", six-field v1 WCB)`, and
+  `H("weft/index/candidates/v1", WFX2 section bytes)`). A forged,
+  self-consistent subset fails the candidate-root check and is rebuilt; the
+  reject is a diagnostic note and never affects commit durability or `verify`.
+* New additive commit schema `weftfs.commit.v2` (v1 keys + `index_attestation`);
+  the commit identity domain is unchanged. `weftfs.commit.v1` remains fully
+  valid, and an index named by a v1 commit is **never trusted** (rebuild-only).
+  The frozen conformance fixture still reproduces v1 byte-for-byte via
+  `attest_indexes: false` / `AttestIndexes: false`. The WFX2 segment layout and
+  digest domain are unchanged.
+* Adversarial proof in both languages: remove one candidate, keep every header
+  count, recompute the digest, reopen → Rust
+  `tests/index_persistence.rs::forged_self_consistent_subset_is_rejected_by_the_commit_attestation`
+  and Go `TestForgedSubsetIndexIsRejectedByCommitAttestation` both report
+  `rejects >= 1`, `disk_loads == 0`, `builds >= 1`, identical scan answers.
+  The cross-language court now also proves a genuine Go segment is *loaded* by
+  Rust (`index.loads > 0`, `builds == 0`) and that Rust rejects the forged
+  subset; Rust segments load in Go with `DiskLoads=1, Builds=0`.
+* Residual: an attacker who can rewrite the commit record is a different threat
+  class (no signed/anchor-authenticated commit chain yet); the index stays
+  advisory, so a forged segment costs at most a rebuild.
