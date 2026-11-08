@@ -37,7 +37,7 @@ use crate::identity::{self, Hash32};
 use crate::representation::TensorElementDtype;
 use crate::safetensors::{self, SafetensorsFile, SafetensorsTensor};
 use crate::state::{ObjectKind, State};
-use crate::store::{OpenMode, Store};
+use crate::store::Store;
 use crate::tensor_store::{
     FastCodec, TensorLayoutSpec, TensorStrategy, TensorWriteSpec, WritePolicy,
 };
