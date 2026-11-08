@@ -1,0 +1,21 @@
+write_policy: stamp=20261107T174813Z
+write_policy: court=Linux 7.3.1-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+write_policy: limits memory=3g cpus=4 pids=1024
+write_policy: revisions weftfs=3975ab688ce3de90b087a7c8b6b040f3de9018ea weftcodec=06810cf95d6611a68d1829c07ca329d438cc8f3d
+write_policy: configs=planned fast-zstd1 models=base
+88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342  /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors
+fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe  /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors
+write_policy: building release harness
+write_policy: base-planned save
+write_policy: base-planned restore (full / single / 1-row)
+write_policy: base-fast-zstd1 save
+write_policy: base-fast-zstd1 restore (full / single / 1-row)
+write_policy: base-fast-zstd1 transcode
+write_policy: crash proxy (fast-raw save)
+bench/scripts/write_policy_court.sh: line 122:    41 Aborted                 (core dumped) "$bin" transcode --store "$crash_store" --root /checkpoints/model "$@" > "$work/phases/crash-$label-transcode.json" 2> "$work/phases/crash-$label-transcode.err"
+write_policy: crash after-publish exit=134
+bench/scripts/write_policy_court.sh: line 122:    44 Aborted                 (core dumped) "$bin" transcode --store "$crash_store" --root /checkpoints/model "$@" > "$work/phases/crash-$label-transcode.json" 2> "$work/phases/crash-$label-transcode.err"
+write_policy: crash before-publish exit=134
+assembled bench/receipts/write-policy-base-pilot2.json
+write_policy: receipt=bench/receipts/write-policy-base-pilot2.json
+1.4M	/work/.docker-cache/write-policy-20261107T174813Z

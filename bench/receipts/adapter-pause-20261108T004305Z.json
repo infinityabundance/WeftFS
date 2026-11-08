@@ -1,0 +1,223 @@
+{
+  "schema": "weft.adapter-pause.court.v1",
+  "stamp": "20261108T004305Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "image_id": "sha256:af751fc866908fb6e6abb190c6e139739b62246ea019447a6a754e5c3b2a849e",
+    "kernel": "7.3.1-1-cachyos",
+    "memory": "3g",
+    "cpus": "4"
+  },
+  "fixture": {
+    "dcp": {
+      "tensors": 8,
+      "shape": [
+        8,
+        131072
+      ],
+      "dtype": "float32"
+    },
+    "orbax": {
+      "leaves": 8,
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "float32"
+    },
+    "note": "synthetic CPU fixture; the 0.5B pair is measured in the CLI court"
+  },
+  "reps": 2,
+  "dcp": {
+    "rows": [
+      {
+        "policy": "planned",
+        "rep": 0,
+        "pause_ms": 1380.167,
+        "cpu_ms": 20.0,
+        "checkpoint_write_ms": 1364.267,
+        "container_bytes": 33555126,
+        "store_physical": {
+          "bytes": 31186687,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 354232
+      },
+      {
+        "policy": "planned",
+        "rep": 1,
+        "pause_ms": 1390.557,
+        "cpu_ms": 10.0,
+        "checkpoint_write_ms": 1375.418,
+        "container_bytes": 33555126,
+        "store_physical": {
+          "bytes": 31186687,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 354284
+      },
+      {
+        "policy": "fast",
+        "rep": 0,
+        "pause_ms": 113.938,
+        "cpu_ms": 20.0,
+        "checkpoint_write_ms": 98.622,
+        "container_bytes": 33555126,
+        "store_physical": {
+          "bytes": 31186675,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 354400
+      },
+      {
+        "policy": "fast",
+        "rep": 1,
+        "pause_ms": 113.352,
+        "cpu_ms": 20.0,
+        "checkpoint_write_ms": 98.406,
+        "container_bytes": 33555126,
+        "store_physical": {
+          "bytes": 31186675,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 358304
+      }
+    ],
+    "summary": {
+      "planned": {
+        "reps": 2,
+        "pause_median_ms": 1385.362,
+        "pause_samples_ms": [
+          1380.167,
+          1390.557
+        ],
+        "cpu_median_ms": 15.0,
+        "checkpoint_write_median_ms": 1369.842,
+        "all_verified": true,
+        "all_exact": true,
+        "peak_rss_kib_max": 354284
+      },
+      "fast": {
+        "reps": 2,
+        "pause_median_ms": 113.645,
+        "pause_samples_ms": [
+          113.938,
+          113.352
+        ],
+        "cpu_median_ms": 20.0,
+        "checkpoint_write_median_ms": 98.514,
+        "all_verified": true,
+        "all_exact": true,
+        "peak_rss_kib_max": 358304
+      },
+      "fast_speedup": 12.19
+    }
+  },
+  "orbax": {
+    "rows": [
+      {
+        "policy": "planned",
+        "rep": 0,
+        "pause_ms": 1390.696,
+        "cpu_ms": 90.0,
+        "store_physical": {
+          "bytes": 31187054,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 613400
+      },
+      {
+        "policy": "planned",
+        "rep": 1,
+        "pause_ms": 1398.539,
+        "cpu_ms": 50.0,
+        "store_physical": {
+          "bytes": 31187054,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 637800
+      },
+      {
+        "policy": "fast",
+        "rep": 0,
+        "pause_ms": 132.776,
+        "cpu_ms": 90.0,
+        "store_physical": {
+          "bytes": 31187036,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 664452
+      },
+      {
+        "policy": "fast",
+        "rep": 1,
+        "pause_ms": 129.802,
+        "cpu_ms": 60.0,
+        "store_physical": {
+          "bytes": 31187036,
+          "files": 142
+        },
+        "verified": true,
+        "exact": true,
+        "peak_rss_kib": 680780
+      }
+    ],
+    "summary": {
+      "planned": {
+        "reps": 2,
+        "pause_median_ms": 1394.617,
+        "pause_samples_ms": [
+          1390.696,
+          1398.539
+        ],
+        "cpu_median_ms": 70.0,
+        "checkpoint_write_median_ms": null,
+        "all_verified": true,
+        "all_exact": true,
+        "peak_rss_kib_max": 637800
+      },
+      "fast": {
+        "reps": 2,
+        "pause_median_ms": 131.289,
+        "pause_samples_ms": [
+          132.776,
+          129.802
+        ],
+        "cpu_median_ms": 75.0,
+        "checkpoint_write_median_ms": null,
+        "all_verified": true,
+        "all_exact": true,
+        "peak_rss_kib_max": 680780
+      },
+      "fast_speedup": 10.62
+    },
+    "standard_ocdbt": {
+      "reps": 2,
+      "pause_median_ms": 31.903,
+      "pause_samples_ms": [
+        47.758,
+        16.048
+      ],
+      "store_physical": {
+        "bytes": 31020645,
+        "files": 12
+      }
+    },
+    "fast_vs_standard_ratio": 4.12,
+    "planned_vs_standard_ratio": 43.71
+  }
+}

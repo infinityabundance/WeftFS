@@ -5657,3 +5657,147 @@ because mode 17's is raw and the identity anchor is normative.
   conformance Rust 246 pass / 0 fail / 109 skip, Go 246/0/109, Python 229/0/126
   (355 total); claims 555 OK; spec drift 42/42; `scripts/verify-all.sh`
   **30/30 pass, 0 failed, 0 skipped** (`bench/receipts/verify-20261107T172305Z.json`).
+
+## Subphase T1 — hot raw / cold planned, trajectory, load receipts, recovery-first (2026-11-08)
+
+New mechanisms: an explicit critical-path **write policy**, a bounded
+**background transcode** pass, a causal-checkpoint link for the checkpoint
+writer, **load receipts** (`weft.load.receipt.v1`), and **recovery-first**
+restore. All work on `staging`; receipts and results are cited per section.
+
+### Write policy (receipt `write-policy-20261107T235728Z.json`)
+
+`--write-policy fast|planned|auto` (`Options`-level:
+`TensorPlanOptions::write_policy`; checkpoint:
+`CheckpointWriteOptions::write_policy`) plus `--fast-codec raw|zstd` and
+`--fast-zstd-level`. `Fast` restricts the candidate set to raw chunks or one
+ZSTD frame and never runs a mode-9/10/15/16/17/18 or delta encoder; `Auto`
+resolves fast when the caller declares `--critical-path` or `--deadline-ms`.
+`CheckpointWriteOptions.plan.causal_checkpoint` links the previous checkpoint's
+matching shard versions, and `--shard-strategy planned` lets the planner choose
+per shard. The fast codec defaults to **ZSTD level 1** (measured: within 9 % of
+raw's CPU and 21.8 % smaller; raw won the base wall on this single run).
+
+Qwen2.5-0.5B base + Instruct, 8-way shards, 290 tensors (pause/wall/CPU):
+
+| policy | base pause | base CPU | instruct pause | instruct CPU | store B |
+|---|---:|---:|---:|---:|---:|
+| planned | 98,882.7 ms | 18,770 ms | 108,088.5 ms | 18,780 ms | 824.0/824.5 MB |
+| fast raw | **55,689.4** | **2,470** | 110,191.2 | 2,780 | 992.5 MB |
+| fast zstd-1 | 75,815.3 | 2,690 | **76,572.7** | 2,720 | 775.7/776.2 MB |
+| fast zstd-3 | 137,135.5 | 2,910 | 95,997.7 | 2,800 | 775.6 MB |
+
+Encode CPU falls **6.5–7.6×**. Wall/pause is dominated by 2,320 object
+publications and host cache state; the codec ordering is not stable on single
+runs, so only the CPU reduction is claimed as a stable result. Raw writes
+28.0 % more bytes than zstd-1.
+
+### Background transcode (same receipt)
+
+`weftfs transcode --root … [--dry-run] [--max-objects/--max-bytes/--max-millis]
+[--min-saved-percent]` (`Store::transcode`): exclusive single-writer bounded
+pass, per-object one-encode decision (`rebase_tensor_object_decided`), new
+version of the same object id, old version retained, `weft.provenance.v1`
+`operation: "transcode"`, read-back byte comparison. Base raw 123.6 s /
+34.1 s CPU, 987.9 → 658.4 MB (1,352 rewritten); raw-source objects whose
+planned form is also raw are left alone. Base zstd-1 227.6 s / 60.6 s CPU,
+772.0 → 658.6 MB (2,320). Instruct zstd-1 242.8 s / 61.4 s CPU, 772.5 →
+658.5 MB. **Transcode is a storage win and a restore loss**: full restore
+1,675.8 → 4,431.5 ms (base raw) and 2,194.5 → 4,755.9 ms (base zstd-1); the
+planned form is mode 9, ~2–2.7× slower to decode. Crash proxy: `SIGABRT` after
+1 publication and just before the next → exit 134, after reopen 1/2
+float-tensor + 2,319/2,318 raw, `checkpoint verify` exact, 0 problems; a clean
+pass then completes. Process-fault proxy only.
+
+### Adapter pause (`adapter-pause-20261108T004305Z.json`)
+
+Checkpoint-service protocol v2 carries the write policy (v1 bodies still work).
+`WEFT_WRITE_POLICY` / `WEFT_FAST_CODEC` / `WEFT_FAST_ZSTD_LEVEL` are the
+deployment knobs. Synthetic 32 MiB fixture, every save verified + restored:
+
+| adapter | planned | fast | speedup | standard |
+|---|---:|---:|---:|---:|
+| PyTorch DCP | 1,384.5 ms | 114.8 ms | 12.06× | — |
+| Orbax handler | 1,394.6 | 131.3 | 10.62× | 31.9 ms (OCDBT) |
+
+On this fixture the Orbax deficit is **43.7× planned → 4.12× fast**; the
+remaining gap is staging/memfd/service/commit, not encode. The prior 58.7 MB
+receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
+
+### Trajectory (`trajectory-20261107T220652Z.json`, `bench/RESULTS-trajectory.md`)
+
+* Pythia-70M steps 0/1/2/4/8 plus **step16/64/512/1000** fetched and LFS-SHA
+  verified in a python court: 9 checkpoints, 281.7 MB each. Cumulative
+  **173,235,935 → 660,220,076 B**; nine independent `zstd -19` checkpoints sum
+  to 1,299,182,221 B (49.2 % larger). Final-step baselines: `final + Σ
+  zstd19(XOR delta)` 672,210,950 (ours 1.8 % smaller), `first + Σ
+  zstd19(--patch-from)` 1,031,422,235 (ours 36.0 % smaller). Early steps lose
+  to a single `zstd -19`; cross-over after step 2. 9/9 exact (684 tensor + 9
+  file SHA-256). Restore grows 683.3 → 9,520.8 ms with depth 0 → 8.
+* Qwen base → Instruct: 658,187,354 → **1,199,651,657 B** (marginal
+  541,464,303; 241 weight-delta + 1 zstd + 48 raw). Independents 1,535,945,154
+  (+21.9 %), `final + Σ XOR` 1,384,249,213 (+13.3 %); `--patch-from` is
+  unavailable (both `-19` and `-12` failed with `long mode automatically
+  triggered`). 2/2 exact (580 tensor + 2 file checks). Full restore
+  3,956.8 → 10,082.7 ms.
+* Declared **synthetic 50-step** series (64 × [256,256] BF16, documented rule):
+  4,652,647 → **34,894,788 B**, 6.6× below 50 independent zstd-19 checkpoints;
+  50/50 exact (3,200 tensor + 50 file). Restore 23.4 → 220.9 ms at depth 8. The
+  depth-8 codec bound forces a full checkpoint every 9th step (5 resets,
+  23.5 MB). **Loss: `final + Σ zstd19(XOR)` is ≈4.88 MB, far below 34.9 MB** —
+  sparse-delta framing dominates when only a few dozen words change.
+* GC: with 50 snapshots, 49 unlinked checkpoints free **0 bytes**; without
+  snapshots, 49 unlinked checkpoints free **150,596 B / 142 blobs** and the
+  final restore is exact. `GcReport::deleted_bytes` (3,467,041,895) is
+  inconsistent with the measured tree delta and is not used as a claim.
+* Court-side fix: the mode-14 semantic candidate search decoded up to
+  `max_candidates` live tensors and OOM-killed pythia; it is now bounded by
+  `TensorPlanOptions::max_semantic_bytes` (512 MiB) and can be disabled with
+  `--no-semantic`. Both code paths are tested/computed; the trajectory run uses
+  `--no-semantic`.
+
+### Load receipts + recovery-first (`recovery-load-20261108T004358Z.json`, `docs/LOAD-RECEIPTS.md`)
+
+* `weft.load.receipt.v1` (canonical WCB) per replica: per-tensor attested and
+  loaded roots, content root, SHA-256, bytes, units verified, loaded/attested
+  set roots, exactness, container SHA-256, lazy/full. CLI
+  `checkpoint restore --load-receipt`, DCP/Orbax via `WEFT_LOAD_RECEIPT`,
+  FUSE `mount --verify-load --load-receipt-dir`.
+* 512 MiB synthetic tiled checkpoint (16,384 tiles): lazy median 2,181.2 ms
+  (4,362 ms/GiB), full 3,836.6 ms (7,673 ms/GiB), same set root and exact
+  output; full is 1.76× lazy. Corrupted one tile on disk → typed `Corrupt`
+  naming `tile 0`, **0 bytes emitted** (`tests/load_receipt.rs`).
+* Recovery-first: 4 required of 16 → first usable **1,037.0 ms** vs complete
+  8,261.7 ms; 15,336,426 of 245,382,816 B (6.3 %) fetched before the first
+  usable tensor. After a real `SIGABRT` once the required set was cached, the
+  restart serves it from the verified cache: first usable **51.9 ms**, 0 bytes
+  fetched, exact. Cold time-to-complete is slower than a plain restore
+  (8.26 s vs 2.18 s) because the mode re-resolves the manifest per tensor.
+
+### Gates
+
+* Rust `cargo test --all-targets`: **585 passed / 0 failed** (117 binaries),
+  including new `tests/transcode.rs` 7/7, `tests/load_receipt.rs` 3/3,
+  `tests/recovery_first.rs` 3/3.
+* FUSE `cargo test --features fuse --all-targets`: **628 passed / 0 failed /
+  2 pre-existing ignored** (117 binaries), including
+  `tests/fuse_verify_load.rs` 1/1.
+* WeftFS-Go `go test -race -count=1 ./...`: all packages pass (store 189.4 s).
+* Checkpoint service protocol v2 test: 7/7.
+* Claims: 581 OK (`bash scripts/check-claims.sh`).
+* `scripts/verify-all.sh`: **30/30 pass, 0 failed, 0 skipped**
+  (`bench/receipts/verify-20261108T005940Z.json`). The new courts
+  (`trajectory`, `write_policy`, `recovery_load`, `adapter_pause`) are run
+  standalone and are not yet added to `verify-all.sh`.
+
+### Residual
+
+* Wall/pause ordering across fast codecs is not stable on single runs; CPU is.
+* Transcode is a separate exclusive pass (not concurrent with the writer) and
+  is slower than the save; Go has no write policy, transcode, load receipt or
+  recovery-first path.
+* The FUSE receipt is per file; partial reads pay full verification.
+* The trajectory court is one host, warm caches, one public family plus a
+  synthetic series; the synthetic curve loses to the XOR baseline.
+* No physical power-loss court for transcode (process abort only); no
+  multi-writer, fleet, RAPL, or GPU claim.

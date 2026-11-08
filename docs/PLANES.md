@@ -255,3 +255,19 @@ single-backend store.
   prove the contract, not a performance or scale recommendation.
 * The advisory index/access records are not a metadata engine; they are
   rebuildable and are never read for correctness.
+
+## 7. Background transcode on the single-writer store
+
+`weftfs transcode` (`Store::transcode`) is an **exclusive** bounded pass, in the
+same class as `gc --apply`: it opens the store writable and therefore holds the
+single-writer lock. It does not run concurrently with a training writer; the
+intended deployment is "save fast, close, run the transcode pass" (or run it
+from the same job after the save). Each rewrite republishes the same object id
+with a new version through the normal commit protocol, so a crash at any point
+leaves the old or the new representation and never a partial one, and the old
+version stays reachable for every snapshot. The pass publishes
+`weft.provenance.v1` records (`operation: "transcode"`) through the commit
+plane and moves no blob outside the blob plane. Budgets are objects, logical
+bytes, wall milliseconds and a cancellation flag. A concurrent in-process
+worker is not implemented; that would need a second store handle and is not
+claimed.

@@ -883,3 +883,22 @@ Residual risk: the court is Azurite on loopback, not Azure. Service-version
 acceptance, large-block-blob limits, `x-ms-*` edge cases, and listing paging
 are untested against the real service. Evidence: `docs/STATUS.md` R23 and
 `bench/RESULTS-azure-sas.md`.
+
+### T1 addendum — write policy, transcode, load receipts, recovery-first
+
+* `WritePolicy { Fast, Planned, Auto { on_critical_path, deadline_ms } }` and
+  `FastCodec { Raw, Zstd }` gate the planner's candidate set. `Fast` builds only
+  raw chunks or one ZSTD-1/3 frame; no mode 9/10/15/16/17/18 or delta encoder
+  runs. `--write-policy`, `--fast-codec`, `--fast-zstd-level`,
+  `--critical-path`, `--deadline-ms`.
+* `CheckpointWriteOptions::causal_checkpoint` links the previous checkpoint's
+  matching shard versions; `ShardStrategy::Planned` lets the planner choose per
+  shard. Reserved attrs and the manifest format are unchanged.
+* `Store::transcode` + `weftfs transcode`: bounded, exclusive, cancellable,
+  old-version-retaining, provenance-recording; verify-after read-back.
+* `weft.load.receipt.v1` (`src/load_receipt.rs`), `checkpoint restore
+  --load-receipt`, FUSE `--verify-load`, Python `WEFT_LOAD_RECEIPT`.
+* `Store::restore_checkpoint_recovery_first` + `--first-needed`/`--first-cache`.
+* The tiled region decoder now names the tile in a decode error
+  (`tile N (offset …)`).
+* Store format, manifest schemas, commit protocol, and GC roots are unchanged.

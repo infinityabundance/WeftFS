@@ -5915,5 +5915,285 @@
     ],
     "receipt": "bench/receipts/mode18-20261107T165215Z.json",
     "kind": "present"
+  },
+  {
+    "id": "transcode_write_policy_cpu",
+    "claim": "Fast write policy removes 6.5-7.6x of encode CPU on the Qwen pair.",
+    "value": "6.5\u20137.6\u00d7",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/write-policy-20261107T235728Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_qwen_bytes",
+    "claim": "Base container after transcode.",
+    "value": "658,437,460",
+    "locations": [
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/write-policy-20261107T235728Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_restore_loss",
+    "claim": "Transcode makes full restore slower (base zstd-1 before -> after).",
+    "value": "2,194.5 ms",
+    "locations": [
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/write-policy-20261107T235728Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_crash_old_or_new",
+    "claim": "After an abort one publication in, the store reopens old-or-new and verifies.",
+    "value": "float-tensor 1, raw 2,319",
+    "locations": [
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/write-policy-20261107T235728Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_adapter_dcp",
+    "claim": "DCP save-pause speedup with the fast policy.",
+    "value": "12.06\u00d7",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/adapter-pause-20261108T004305Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_adapter_orbax",
+    "claim": "Orbax handler save-pause speedup with the fast policy.",
+    "value": "10.62\u00d7",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/adapter-pause-20261108T004305Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "transcode_remaining_deficit",
+    "claim": "Remaining Orbax OCDBT save deficit with the fast policy on the same fixture.",
+    "value": "4.12\u00d7",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-write-policy.md"
+    ],
+    "receipt": "bench/receipts/adapter-pause-20261108T004305Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_pythia_first",
+    "claim": "First stored pythia checkpoint.",
+    "value": "173,235,935",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_pythia_final",
+    "claim": "Nine-checkpoint pythia cumulative bytes.",
+    "value": "660,220,076",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_pythia_zstd_sum",
+    "claim": "Nine independent zstd -19 checkpoints.",
+    "value": "1,299,182,221",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_qwen_total",
+    "claim": "Qwen base -> Instruct trajectory total.",
+    "value": "1,199,651,657",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_qwen_independent",
+    "claim": "Independent zstd -19 total for the Qwen pair.",
+    "value": "1,535,945,154",
+    "locations": [
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_synthetic_final",
+    "claim": "Synthetic 50-step cumulative bytes.",
+    "value": "34,894,788",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_synthetic_xor_loss",
+    "claim": "The XOR-delta baseline on the synthetic series.",
+    "value": "4,882,259",
+    "locations": [
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_exactness",
+    "claim": "Exactness checks on the synthetic series.",
+    "value": "3,200",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_gc_reclaim",
+    "claim": "Bytes reclaimed after unlinking 49 of 50 checkpoints without snapshots.",
+    "value": "150,596",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "trajectory_depth_resets",
+    "claim": "Full-checkpoint resets forced by the depth bound.",
+    "value": "23.5 MB",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-trajectory.md"
+    ],
+    "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "loadreceipt_schema",
+    "claim": "Load receipt schema.",
+    "value": "weft.load.receipt.v1",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "loadreceipt_lazy_cost",
+    "claim": "Lazy verification cost.",
+    "value": "4,362 ms/GiB",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "loadreceipt_full_cost",
+    "claim": "Full verification cost.",
+    "value": "7,673 ms/GiB",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "loadreceipt_corrupt_tile",
+    "claim": "A corrupted tile is named by the loader.",
+    "value": "tile 0",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "loadreceipt_fuse",
+    "claim": "FUSE load-receipt wiring.",
+    "value": "mount --verify-load",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "recovery_first_usable",
+    "claim": "Cold time to first usable tensor.",
+    "value": "1,037.0 ms",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "recovery_cached_usable",
+    "claim": "Restart time to first usable from the verified cache.",
+    "value": "51.9 ms",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "recovery_bytes_before",
+    "claim": "Bytes fetched before the first usable tensor.",
+    "value": "15,336,426",
+    "locations": [
+      "docs/STATUS.md",
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "recovery_abort_cache",
+    "claim": "The abort/restart run reuses the verified cache.",
+    "value": "exit 134",
+    "locations": [
+      "docs/LOAD-RECEIPTS.md"
+    ],
+    "receipt": "bench/receipts/recovery-load-20261108T004358Z.json",
+    "kind": "present"
   }
 ]

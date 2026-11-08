@@ -1,0 +1,16 @@
+trajectory: stamp=20261107T182844Z
+trajectory: court=Linux 7.3.1-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+trajectory: limits memory=3g cpus=4 pids=1024
+trajectory: revisions weftfs=3975ab688ce3de90b087a7c8b6b040f3de9018ea weftcodec=06810cf95d6611a68d1829c07ca329d438cc8f3d
+trajectory: building release harness
+trajectory: generating a declared synthetic 50-step series
+trajectory: synthetic series (snapshot pinned at every step)
+series wrote /work/.docker-cache/trajectory-20261107T182844Z/phases/synthetic-series.json
+trajectory: synthetic GC with snapshots pinned
+gc wrote /work/.docker-cache/trajectory-20261107T182844Z/phases/synthetic-gc-pinned.json
+trajectory: synthetic series (no snapshots) for the GC-reclaim phase
+series wrote /work/.docker-cache/trajectory-20261107T182844Z/phases/synthetic-series-nosnap.json
+trajectory: synthetic GC without snapshots
+gc wrote /work/.docker-cache/trajectory-20261107T182844Z/phases/synthetic-gc-reclaim.json
+trajectory: pythia-70m consecutive steps
+bench/scripts/trajectory_court.sh: line 98: 38526 Killed                  "$bin" series --store "$work/store-pythia" --out "$work/phases/pythia-series.json" --steps "$pythia_arg" --strategy planned --shards 1 --snapshots --range "0:1,0:256"
