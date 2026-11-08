@@ -5844,17 +5844,19 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
 * `CheckpointWriteOptions::deterministic_seed` / `--checkpoint-seed` makes the
   sequential and split paths publish identical bytes for the same input.
   Local court (Qwen2.5-0.5B, 8 shards, 5 reps, 4 vCPU): best prepare
-  13.18/11.34/6.18/3.39 s at 1/2/4/8 ranks (3.89× at 8 vs 1); best wall
-  14.91/13.09/7.92/5.13 s; commit 63–65 ms; verify 1.25 s; peak RSS
-  394→508 MiB; every configuration stored 775,692,888 B with head
-  `64f685d8341098bf…`. MinIO subset court: prepare 176.2/110.2/60.5/53.5 ms,
-  commit ~4.0 ms, identical head `844648f4694936b7…`.
+  13.61/11.55/6.36/3.50 s at 1/2/4/8 ranks (3.89× at 8 vs 1); best wall
+  15.40/13.37/8.16/5.31 s; commit 73–74 ms; verify 1.29 s; peak RSS
+  393→507 MiB; every configuration stored 775,693,224 B with head
+  `53a8c743a9e0b451…`. MinIO subset court: prepare 192.4/121.0/64.9/58.0 ms,
+  commit ~4.5 ms, identical head `2438460a33504a09…`.
 * Losses: single runs are bimodal because of the host page cache (medians
   published); 8 ranks on 4 vCPUs is worse than 4 in the median; RSS grows with
   ranks; the S3 phase is a tensor subset on a 1 GiB tmpfs; Rust only.
-* Receipts `bench/receipts/parallel-checkpoint-20261108T030000Z.json` and
-  `bench/receipts/parallel-checkpoint-s3-20261108T015555Z.json`; tests
-  `tests/parallel_checkpoint.rs` 6/6.
+* Receipts `bench/receipts/parallel-checkpoint-20261108T033000Z.json` and
+  `bench/receipts/parallel-checkpoint-s3-20261108T033921Z.json`; tests
+  `tests/parallel_checkpoint.rs` 7/7. Superseded receipts `030000Z`/`015555Z`
+  measured the same data before the v2 commit schema (identical manifest root,
+  different commit id).
 
 ### RS256 constant-time ladder + fault check + timing smoke test (`examples/rsa_timing.rs`)
 
@@ -5944,8 +5946,8 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
   child until `exec`. Fixing it needs OFD locks with a mixed-version
   compatibility story, which is **not** done here.
 
-Stage receipts: `parallel-checkpoint-20261108T030000Z.json` (local) and
-`parallel-checkpoint-s3-20261108T015555Z.json` (MinIO subset);
+Stage receipts: `parallel-checkpoint-20261108T033000Z.json` (local) and
+`parallel-checkpoint-s3-20261108T033921Z.json` (MinIO subset);
 `rsa-timing-20261108T041500Z.json` (and the retained single-round
 `rsa-timing-20261108T040000Z.json`). The new courts are standalone and are not
 yet added to `verify-all.sh`.

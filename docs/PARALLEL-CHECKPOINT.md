@@ -101,39 +101,47 @@ Qwen2.5-0.5B base, BF16, 290 tensors, 988,097,824 B, SHA-256
 `--write-policy fast --fast-codec zstd` (level 1), fixed clock, deterministic
 seed, 4 vCPU / 3 GiB court, 5 repetitions per configuration.
 
-Local backend, receipt `bench/receipts/parallel-checkpoint-20261108T030000Z.json`:
+Local backend, receipt `bench/receipts/parallel-checkpoint-20261108T033000Z.json`:
 
 | ranks | best prepare ms | best wall ms | median prepare ms | median wall ms | peak RSS KiB |
 | --- | --- | --- | --- | --- | --- |
-| sequential | — | 13,747.9 | — | 13,941.5 | 393,932 |
-| 1 | 13,184.9 | 14,913.3 | 73,830.3 | 75,572.9 | 430,184 |
-| 2 | 11,338.4 | 13,092.4 | 11,391.6 | 13,130.8 | 437,736 |
-| 4 | 6,175.5 | 7,922.2 | 6,198.9 | 7,931.8 | 461,652 |
-| 8 | 3,386.3 | 5,128.1 | 12,278.7 | 14,784.2 | 508,208 |
+| sequential | — | 14,232.4 | — | 14,316.8 | 393,240 |
+| 1 | 13,610.9 | 15,402.5 | 13,688.5 | 15,503.0 | 430,196 |
+| 2 | 11,549.7 | 13,369.6 | 11,625.2 | 13,419.0 | 436,904 |
+| 4 | 6,356.7 | 8,156.0 | 6,412.0 | 8,247.5 | 460,016 |
+| 8 | 3,498.4 | 5,309.4 | 3,618.4 | 5,644.7 | 506,508 |
 
-* Committer time (median): fragment verification 1,252–1,258 ms; the single
-  commit 63.4–64.9 ms.
-* Prepare speedup vs ranks=1 (best): 1.16× (2), 2.14× (4), 3.89× (8) on 4 vCPUs.
-* Wall speedup vs the sequential path (best): 1.05× (2), 1.74× (4), 2.68× (8).
-* Every configuration stored **775,692,888 B** and published head
-  `64f685d8341098bfc15112e07339979116031da8c9124b3fc9970c8b316773a6` and manifest
+* Committer time (median): fragment verification 1,292–1,318 ms; the single
+  commit 73.2–74.4 ms.
+* Prepare speedup vs ranks=1 (best): 1.18× (2), 2.14× (4), 3.89× (8) on 4 vCPUs.
+* Wall speedup vs the sequential path (best): 1.06× (2), 1.75× (4), 2.68× (8).
+* Every configuration stored **775,693,224 B** and published head
+  `53a8c743a9e0b451bd7f15446c3c724107c88af377291d6aaf38a0b86f8b5b7a` and manifest
   root `a2c5ec8e21c5fc354a613880d1329e97fd970615e8e3c21588b88bf924769666`.
+* Superseded receipt `parallel-checkpoint-20261108T030000Z.json` measured the
+  same data before the commit-attested index change (`docs/INDEX-TRUST.md`):
+  the checkpoint **manifest root is identical**, the head differs
+  (`64f685d8…`) because `weftfs.commit.v2` adds the index attestation, and the
+  store is 336 B larger. Both receipts publish the same 1/2/4/8-rank
+  identity proof at their own revision.
 
 MinIO (single node, tmpfs data dir, tensor subset `model.layers.0.*`, 96 shard
 objects, 29,824,768 element bytes), receipt
-`bench/receipts/parallel-checkpoint-s3-20261108T015555Z.json`:
+`bench/receipts/parallel-checkpoint-s3-20261108T033921Z.json`:
 
 | ranks | best prepare ms | commit ms | wall ms |
 | --- | --- | --- | --- |
-| sequential | — | — | 595.9 |
-| 1 | 176.2 | 3.9 | 675.9 |
-| 2 | 110.2 | 4.0 | 611.9 |
-| 4 | 60.5 | 4.0 | 559.8 |
-| 8 | 53.5 | 4.0 | 553.0 |
+| sequential | — | — | 622.8 |
+| 1 | 192.4 | 4.6 | 713.9 |
+| 2 | 121.0 | 4.3 | 640.9 |
+| 4 | 64.9 | 4.4 | 590.0 |
+| 8 | 58.0 | 4.8 | 578.6 |
 
 All five configurations publish head
-`844648f4694936b72274dfff73c7647d298d7f81af9be98a25308acab0649490` and manifest
+`2438460a33504a090ecd621b6527a6a1a74afebe62bb60e20a8237c2231221cf` and manifest
 root `334375091246f6b2a8e903804960d8e46a09797f1711c3dec2066017e72157d1`.
+(Superseded: `parallel-checkpoint-s3-20261108T015555Z.json`, same data and
+manifest root, head `844648f4…` before the v2 commit schema.)
 Create-once PUTs are concurrency-safe on MinIO; the split needs no conditional
 write in the prepare phase.
 
@@ -168,4 +176,4 @@ scripts/docker-court.sh bench "cd /work && cargo run --release --quiet \
   --out /tmp/parallel.json"
 ```
 
-Tests: `cargo test --test parallel_checkpoint` (6/6).
+Tests: `cargo test --test parallel_checkpoint` (7/7).
