@@ -55,6 +55,7 @@ pub mod load_receipt;
 pub mod object_cache;
 pub mod packs;
 pub mod parallel;
+pub mod plan_graph;
 pub mod planes;
 pub mod provenance;
 pub mod quota;
@@ -107,6 +108,10 @@ pub use packs::{PackOptions, PackReclaim, PackStats, PackedBlobPlane};
 pub use parallel::{
     effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
     DEFAULT_MAX_INFLIGHT_BYTES,
+};
+pub use plan_graph::{
+    EdgeCost, ParentGraphPlan, PlanOptions as ParentGraphPlanOptions, Solver as ParentGraphSolver,
+    VersionCost, VersionGraph,
 };
 pub use planes::{
     BlobCapabilities, BlobPlane, BlobProbe, CommitCapabilities, CommitHead, CommitPlane,

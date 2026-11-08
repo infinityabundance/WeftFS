@@ -624,6 +624,68 @@ enum Command {
         #[command(subcommand)]
         command: Option<CheckpointCommand>,
     },
+    /// Choose a parent graph for an ordered checkpoint trajectory.
+    ///
+    /// Prices every earlier-version parent with the shipped tensor planner,
+    /// then runs the dependency-graph optimizer. `--apply` writes the chosen
+    /// graph into a new store through the existing `causal_checkpoint` path.
+    PlanParents {
+        /// `NAME=FILE` in trajectory order (repeatable). The name is the
+        /// checkpoint directory name used by `--apply`.
+        #[arg(long = "versions", value_name = "NAME=FILE", required = true)]
+        versions: Vec<String>,
+        /// Maximum chain length (the frozen reader bound is 8).
+        #[arg(long = "max-depth", default_value_t = 8)]
+        max_depth: u32,
+        /// Bytes charged per estimated nanosecond of decode time (0 = bytes only).
+        #[arg(long = "lambda-ns", default_value_t = 0)]
+        lambda_ns: u64,
+        /// Expected reads per version; each read pays its whole chain.
+        #[arg(long = "reads-per-version", default_value_t = 1)]
+        reads_per_version: u64,
+        /// Worst-case cold-restore bound for any version, in milliseconds.
+        #[arg(long = "sla-ms", value_name = "MS")]
+        sla_ms: Option<u64>,
+        /// Maximum predicted total edge bytes.
+        #[arg(long = "storage-budget", value_name = "BYTES")]
+        storage_budget: Option<u64>,
+        /// `dp` (chain/restart, the default), `brute-force` (exact oracle,
+        /// small graphs), or `greedy` (one pass over every earlier parent).
+        #[arg(long = "solver", default_value = "dp")]
+        solver: String,
+        /// Write the chosen graph into a new store (must be `--store` or `--out`).
+        #[arg(long)]
+        apply: bool,
+        /// Target store for `--apply` (defaults to `--store`).
+        #[arg(long = "out", value_name = "DIR")]
+        out: Option<PathBuf>,
+        /// Scratch store used for independent probes (default:
+        /// `<target>.plan-parents-scratch`). Must not exist.
+        #[arg(long = "scratch", value_name = "DIR")]
+        scratch: Option<PathBuf>,
+        /// Keep the scratch probe store (diagnostics only).
+        #[arg(long = "keep-scratch")]
+        keep_scratch: bool,
+        /// Shards per tensor (only 1 is supported by the graph planner).
+        #[arg(long, default_value_t = 1)]
+        shards: u32,
+        /// Split axis.
+        #[arg(long, default_value_t = 0)]
+        axis: u32,
+        /// Per-shard physical strategy (only `planned` can choose deltas).
+        #[arg(long = "shard-strategy", default_value = "planned")]
+        shard_strategy: String,
+        /// Do not run the mode-14 semantic-delta candidate search.
+        #[arg(long = "no-semantic")]
+        no_semantic: bool,
+        /// Per-tensor streaming ingest bound in bytes.
+        #[arg(
+            long = "max-ingest-bytes",
+            default_value_t = 1024 * 1024 * 1024,
+            value_name = "BYTES"
+        )]
+        max_ingest_bytes: u64,
+    },
     /// Serve checkpoint reads/writes over one persistent, bounded binary
     /// protocol connection (no per-call CLI start, no host staging file).
     CheckpointService {
@@ -2995,6 +3057,44 @@ fn run(cli: Cli) -> Result<()> {
             }
             Some(subcommand) => run_checkpoint(&store, json, policy, subcommand),
         },
+        Command::PlanParents {
+            versions,
+            max_depth,
+            lambda_ns,
+            reads_per_version,
+            sla_ms,
+            storage_budget,
+            solver,
+            apply,
+            out,
+            scratch,
+            keep_scratch,
+            shards,
+            axis,
+            shard_strategy,
+            no_semantic,
+            max_ingest_bytes,
+        } => run_plan_parents(
+            &store,
+            json,
+            policy,
+            versions,
+            max_depth,
+            lambda_ns,
+            reads_per_version,
+            sla_ms,
+            storage_budget,
+            solver,
+            apply,
+            out,
+            scratch,
+            keep_scratch,
+            shards,
+            axis,
+            shard_strategy,
+            no_semantic,
+            max_ingest_bytes,
+        ),
         Command::CheckpointService {
             fd,
             socket,
@@ -4283,6 +4383,310 @@ fn run_checkpoint(
             }
         }
     }
+}
+
+/// `weftfs plan-parents`: price every earlier-version parent, optimize the
+/// dependency graph, and optionally write the chosen graph.
+#[allow(clippy::too_many_arguments)]
+fn run_plan_parents(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    versions: Vec<String>,
+    max_depth: u32,
+    lambda_ns: u64,
+    reads_per_version: u64,
+    sla_ms: Option<u64>,
+    storage_budget: Option<u64>,
+    solver: String,
+    apply: bool,
+    out: Option<PathBuf>,
+    scratch: Option<PathBuf>,
+    keep_scratch: bool,
+    shards: u32,
+    axis: u32,
+    shard_strategy: String,
+    no_semantic: bool,
+    max_ingest_bytes: u64,
+) -> Result<()> {
+    if versions.is_empty() {
+        return Err(Error::invalid_argument(
+            "plan-parents needs at least one --versions NAME=FILE",
+        ));
+    }
+    if shards != 1 {
+        return Err(Error::invalid_argument(
+            "plan-parents supports only --shards 1",
+        ));
+    }
+    let strategy = ShardStrategy::parse(&shard_strategy)?;
+    if strategy != ShardStrategy::Planned {
+        return Err(Error::invalid_argument(
+            "plan-parents requires --shard-strategy planned (only that strategy can choose a delta)",
+        ));
+    }
+    if !matches!(policy.backend, CliBackend::Local) {
+        return Err(Error::invalid_argument(
+            "plan-parents is local-only: the probe store is a private local directory",
+        ));
+    }
+    let mut sources: Vec<(String, PathBuf)> = Vec::with_capacity(versions.len());
+    let mut seen = std::collections::BTreeSet::new();
+    for spec in &versions {
+        // Accept both repeated `--versions NAME=FILE` and one comma-separated
+        // list, which is what the court scripts use.
+        for entry in spec.split(',') {
+            let entry = entry.trim();
+            if entry.is_empty() {
+                continue;
+            }
+            let (name, path) = entry.split_once('=').ok_or_else(|| {
+                Error::invalid_argument(format!(
+                    "--versions entries must be NAME=FILE (got `{entry}`)"
+                ))
+            })?;
+            if name.is_empty() || path.is_empty() {
+                return Err(Error::invalid_argument(format!(
+                    "--versions entries must be NAME=FILE (got `{entry}`)"
+                )));
+            }
+            if !seen.insert(name.to_owned()) {
+                return Err(Error::invalid_argument(format!(
+                    "checkpoint name `{name}` appears twice in --versions"
+                )));
+            }
+            sources.push((name.to_owned(), PathBuf::from(path)));
+        }
+    }
+    if sources.is_empty() {
+        return Err(Error::invalid_argument(
+            "--versions did not name any checkpoint",
+        ));
+    }
+
+    let target = out.clone().unwrap_or_else(|| store_path.clone());
+    let scratch = scratch.unwrap_or_else(|| {
+        let mut path = target.clone().into_os_string();
+        path.push(".plan-parents-scratch");
+        PathBuf::from(path)
+    });
+    if scratch == target {
+        return Err(Error::invalid_argument(
+            "--scratch must differ from the target store",
+        ));
+    }
+    if scratch.exists() {
+        return Err(Error::invalid_argument(format!(
+            "scratch store {} already exists; remove it or choose --scratch",
+            scratch.display()
+        )));
+    }
+    if apply && target.exists() {
+        return Err(Error::invalid_argument(format!(
+            "--apply needs a new target store; {} already exists",
+            target.display()
+        )));
+    }
+
+    let write = CheckpointWriteOptions {
+        shards,
+        axis,
+        strategy,
+        write_policy: weftfs::tensor_store::WritePolicy::Planned,
+        causal_checkpoint: None,
+        semantic_search: !no_semantic,
+        max_ingest_bytes,
+        ..CheckpointWriteOptions::default()
+    };
+
+    let mut probe = Store::init(&scratch, policy.options())?;
+    let probe_names: Vec<String> = (0..sources.len())
+        .map(|index| format!("probe-{index:04}"))
+        .collect();
+    for (index, (_, path)) in sources.iter().enumerate() {
+        probe.write_checkpoint(&probe_names[index], path, &write)?;
+    }
+    let price_options = weftfs::plan_graph::PriceOptions {
+        plan: weftfs::tensor_store::TensorPlanOptions {
+            semantic_search: !no_semantic,
+            ..weftfs::tensor_store::TensorPlanOptions::default()
+        },
+        max_tensors: 200_000,
+        shards,
+    };
+    let graph = probe.price_parent_graph(&probe_names, &price_options)?;
+    drop(probe);
+
+    let plan_options = weftfs::plan_graph::PlanOptions {
+        lambda_read_ns: lambda_ns,
+        reads_per_version,
+        max_depth,
+        sla_ns: sla_ms.map(|ms| ms.saturating_mul(1_000_000)),
+        storage_budget,
+        solver: weftfs::plan_graph::Solver::parse(&solver)?,
+        ..weftfs::plan_graph::PlanOptions::default()
+    };
+    let plan = weftfs::plan_graph::optimize(&graph, &plan_options)?;
+
+    // The chain/restart DP and the exhaustive oracle are both cheap here; the
+    // report always shows both so a reader can see the DP's restriction.
+    let mut dp_plan = None;
+    let mut brute_plan = None;
+    if graph.len() <= weftfs::plan_graph::DEFAULT_BRUTEFORCE_LIMIT {
+        let mut dp_options = plan_options.clone();
+        dp_options.solver = weftfs::plan_graph::Solver::Dp;
+        dp_plan = weftfs::plan_graph::optimize(&graph, &dp_options).ok();
+        let mut brute_options = plan_options.clone();
+        brute_options.solver = weftfs::plan_graph::Solver::BruteForce;
+        brute_plan = weftfs::plan_graph::optimize(&graph, &brute_options).ok();
+    }
+
+    let mut reports = Vec::new();
+    if apply {
+        let mut out_store = Store::init(&target, policy.options())?;
+        reports = out_store.write_parent_graph(&sources, &plan, &write)?;
+    }
+
+    let output = if json {
+        let version_rows: Vec<serde_json::Value> = graph
+            .versions
+            .iter()
+            .enumerate()
+            .map(|(index, version)| {
+                json!({
+                    "index": index,
+                    "name": sources[index].0,
+                    "logical_bytes": version.logical_bytes,
+                    "independent_bytes": version.independent.bytes,
+                    "independent_decode_ns": version.independent.decode_ns,
+                    "parent": plan.parents[index].map(|p| p as i64).unwrap_or(-1),
+                    "parent_name": plan.parents[index].map(|p| sources[p].0.clone()),
+                    "edge_bytes": graph
+                        .edge(index, plan.parents[index])
+                        .map(|edge| edge.bytes)
+                        .unwrap_or(0),
+                    "edge_decode_ns": graph
+                        .edge(index, plan.parents[index])
+                        .map(|edge| edge.decode_ns)
+                        .unwrap_or(0),
+                    "chain_decode_ns": plan.predicted_chain_ns[index],
+                    "depth": plan.depths[index],
+                    "candidates": version.edges.iter().enumerate().map(|(j, edge)| json!({
+                        "parent": j,
+                        "parent_name": sources[j].0,
+                        "compatible": edge.is_some(),
+                        "bytes": edge.as_ref().map(|e| e.bytes),
+                        "decode_ns": edge.as_ref().map(|e| e.decode_ns),
+                        "coupled_tensors": edge.as_ref().map(|e| e.coupled_tensors),
+                    })).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        print_json(&json!({
+            "schema": weftfs::plan_graph::VERSION_GRAPH_SCHEMA,
+            "plan_schema": plan.schema,
+            "store": target.display().to_string(),
+            "applied": apply,
+            "versions": version_rows,
+            "plan": {
+                "solver": plan.solver.as_str(),
+                "parents": plan.parent_indices(),
+                "predicted_bytes": plan.predicted_bytes,
+                "predicted_chain_ns": plan.predicted_chain_ns,
+                "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
+                "depth": plan.depths,
+                "dependencies": plan.dependencies,
+                "max_depth": plan.max_depth,
+                "worst_restore_ns": plan.worst_restore_ns,
+                "objective": plan.objective.to_string(),
+                "sla_satisfied": plan.sla_satisfied,
+                "budget_satisfied": plan.budget_satisfied,
+            },
+            "dp": dp_plan.as_ref().map(|p| json!({
+                "parents": p.parent_indices(),
+                "objective": p.objective.to_string(),
+                "predicted_bytes": p.predicted_bytes,
+                "worst_restore_ns": p.worst_restore_ns,
+            })),
+            "brute_force": brute_plan.as_ref().map(|p| json!({
+                "parents": p.parent_indices(),
+                "objective": p.objective.to_string(),
+                "predicted_bytes": p.predicted_bytes,
+                "worst_restore_ns": p.worst_restore_ns,
+            })),
+            "applied_checkpoints": reports.iter().map(|report| json!({
+                "name": report.name,
+                "commit": report.head.to_hex(),
+                "manifest_id": report.manifest_id.to_hex(),
+                "source_sha256": hex::encode(report.source_sha256),
+                "shard_objects": report.shard_objects,
+                "total_element_bytes": report.total_element_bytes,
+            })).collect::<Vec<_>>(),
+            "scratch": scratch.display().to_string(),
+        }))
+    } else {
+        println!("schema={}", weftfs::plan_graph::VERSION_GRAPH_SCHEMA);
+        println!("plan_schema={}", plan.schema);
+        println!("solver={}", plan.solver.as_str());
+        println!("versions={}", graph.len());
+        for (index, version) in graph.versions.iter().enumerate() {
+            let parent = plan.parents[index]
+                .map(|p| sources[p].0.clone())
+                .unwrap_or_else(|| "none".to_owned());
+            println!(
+                "version={index} name={} parent={parent} independent_bytes={} edge_bytes={} chain_ns={} depth={}",
+                sources[index].0,
+                version.independent.bytes,
+                graph
+                    .edge(index, plan.parents[index])
+                    .map(|edge| edge.bytes)
+                    .unwrap_or(0),
+                plan.predicted_chain_ns[index],
+                plan.depths[index]
+            );
+        }
+        println!("predicted_bytes={}", plan.predicted_bytes);
+        println!(
+            "predicted_total_decode_ns={}",
+            plan.predicted_total_decode_ns
+        );
+        println!("worst_restore_ns={}", plan.worst_restore_ns);
+        println!("max_depth={}", plan.max_depth);
+        println!("dependencies={}", plan.dependencies);
+        println!("objective={}", plan.objective);
+        println!("sla_satisfied={}", plan.sla_satisfied);
+        println!("budget_satisfied={}", plan.budget_satisfied);
+        if let Some(dp) = &dp_plan {
+            println!(
+                "dp_parents={:?} dp_objective={} dp_bytes={} dp_worst_restore_ns={}",
+                dp.parent_indices(),
+                dp.objective,
+                dp.predicted_bytes,
+                dp.worst_restore_ns
+            );
+        }
+        if let Some(brute) = &brute_plan {
+            println!(
+                "brute_parents={:?} brute_objective={} brute_bytes={} brute_worst_restore_ns={}",
+                brute.parent_indices(),
+                brute.objective,
+                brute.predicted_bytes,
+                brute.worst_restore_ns
+            );
+        }
+        if apply {
+            for report in &reports {
+                println!("applied={} commit={}", report.name, report.head);
+            }
+        }
+        Ok(())
+    };
+    output?;
+
+    if !keep_scratch {
+        let _ = fs::remove_dir_all(&scratch);
+    }
+    Ok(())
 }
 
 fn resolve_checkpoint_source(from_dir: Option<&Path>, file: Option<&Path>) -> Result<PathBuf> {
