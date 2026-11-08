@@ -1,0 +1,65 @@
+{
+  "kind": "correctness-verification",
+  "timestamp_utc": "20261108T090639Z",
+  "host": {
+    "uname": "Linux 7.3.3-1-cachyos x86_64",
+    "docker": "Docker version 29.1.5, build 0e6fee6"
+  },
+  "revisions": {
+    "WeftFS": "e722127f8fcbeea063e898c36a843443b6c56e15",
+    "WeftCodec": "7c6c9701e63f3c6df5cfa9f3f7435a857e69b997",
+    "WeftCodec-Go": "0db665ea4c6b1d69d1d1640801ed475848d361f1",
+    "WeftFS-Go": "6d58137ca888c0b10d01f2fd93f3af00d544e5f6"
+  },
+  "summary": {
+    "courts": 37,
+    "passed": 33,
+    "failed": 4,
+    "skipped": 0
+  },
+  "courts": {
+    "rust_codec": "pass",
+    "rust_store": "pass",
+    "go_codec": "pass",
+    "rust_fuse": "pass",
+    "go_store_and_fuse": "pass",
+    "codec_cross_rust_encode": "pass",
+    "codec_cross_go_all": "pass",
+    "codec_cross_rust_decode": "fail",
+    "codec_cross_compare": "pass",
+    "spec_drift": "pass",
+    "claims": "pass",
+    "conformance_manifest": "pass",
+    "conformance_coverage": "pass",
+    "generated_types": "pass",
+    "buck2_cas": "pass",
+    "buck2_cas_store": "pass",
+    "threefs": "pass",
+    "checkpoint_family_lifecycle": "pass",
+    "trajectory": "pass",
+    "write_policy": "pass",
+    "recovery_load": "pass",
+    "kv_capability": "fail",
+    "parallel_checkpoint": "fail",
+    "index_trust": "pass",
+    "agent_memory": "pass",
+    "ceph_rgw": "pass",
+    "s3_court": "pass",
+    "context_cross_rust_gen": "pass",
+    "context_cross_go_gen": "pass",
+    "context_cross_rust_parse": "pass",
+    "context_cross_compare": "pass",
+    "capability_cross_rust_gen": "pass",
+    "capability_cross_go_gen": "pass",
+    "capability_cross_rust_verify": "pass",
+    "capability_cross_go_verify": "pass",
+    "capability_cross_compare": "pass",
+    "fuzz_diff": "fail"
+  },
+  "receipts": {
+    "ceph_rgw": "bench/receipts/ceph-rgw-20261108T090639Z.json",
+    "s3_court": "bench/receipts/s3-court-20261108T090639Z.json"
+  },
+  "result": "fail",
+  "raw_log": "bench/receipts/verify-20261108T090639Z.log"
+}

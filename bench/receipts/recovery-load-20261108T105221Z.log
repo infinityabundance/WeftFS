@@ -1,0 +1,19 @@
+recovery_load: stamp=20261108T105221Z
+recovery_load: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+recovery_load: limits memory=3g cpus=4 pids=1024
+recovery_load: revisions weftfs=c6f160b10f92bfe5ddffdf1b9a9012a445566a61 weftcodec=3d9ae04d075cc751ef7eea9e213c6119d377be84
+recovery_load: building release harness
+recovery_load: generating a synthetic 16 x [4096,4096] BF16 tensor
+fac956daeb263a20db36f35b1c2d489418b96aa1198cb6eedf75dd5823bbd514  /work/.docker-cache/recovery-load-20261108T105221Z/source/step001.safetensors
+recovery_load: checkpoint write (mode 15, tile 128x128)
+235M	/work/.docker-cache/recovery-load-20261108T105221Z/store
+recovery_load: load receipt (lazy)
+recovery_load: load receipt (full)
+recovery_load: recovery-first (cold cache)
+recovery_load: restart after the required set is cached (verify only)
+recovery_load: abort after the required set is verified and cached
+bench/scripts/recovery_load_court.sh: line 86:    36 Aborted                 (core dumped) "$bin" recovery --store "$store" --name tiled --required "$required" --cache "$cache" --host-out "$work/recovery-abort.safetensors" --abort-after-required > "$work/phases/recovery-abort.json" 2> "$work/phases/recovery-abort.err"
+recovery_load: abort exit=134 (SIGABRT is expected)
+assembled bench/receipts/recovery-load-20261108T105221Z.json
+recovery_load: receipt=bench/receipts/recovery-load-20261108T105221Z.json
+3.5G	/work/.docker-cache/recovery-load-20261108T105221Z

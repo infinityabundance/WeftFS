@@ -5,12 +5,15 @@ implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
 `WeftFS` `238d4e5`, `WeftCodec` `99cb87a`, `WeftCodec-Go` `a0a1ebf`,
 `WeftFS-Go` `dc7cfdb`; the full note with every loss is
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
-and both codec implementations cover every allocated mode 0–18. **T2 update
-(2026-11-08):** the current verification receipt is
-`bench/receipts/verify-20261108T050823Z.json` (**30/30** courts `pass`, 0 failed,
-0 skipped; the fifth of five consecutive 30/30 runs after the T2 writer-lock
-and KV-prefix work — see the two `### T2` sections at the end). The v1.1.0-era
-verification receipt was
+and both codec implementations cover every allocated mode 0–18. **Stage S6
+update (2026-11-08):** the current verification receipt is
+`bench/receipts/verify-20261108T100623Z.json` (**37/37** courts `pass`, 0 failed,
+0 skipped) after the Stage 1–6 work below; the previous T2 receipt
+`verify-20261108T050823Z.json` (30/30) is retained, and the first Stage 6 run
+`verify-20261108T090639Z.json` (33/37) is retained because it found four real
+defects (a decoder window regression, a KV sample-count floor, an
+orchestration nesting error, and 2,946 fuzz-differential mismatches caused by
+the same window regression). The v1.1.0-era verification receipt was
 `bench/receipts/verify-20261107T155516Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
@@ -6135,3 +6138,75 @@ Tests: `tests/kv_prefix.rs` **12/12**. Docs: `docs/KV-PREFIX.md`,
   `.docker-cache` artifacts were deleted (`target-rust/debug`, `package`), never
   source or receipts, and no claim depends on a deleted artifact.
 * Claims: **617 OK** (`bash scripts/check-claims.sh`); spec drift 42/42.
+
+## Stage S1–S6 — review follow-up (2026-11-08)
+
+Six items from the external review, each measured in the Docker court.
+
+### S1 — GC byte accounting is correct and reconciled
+
+`GcReport::deleted_bytes` mixed data-blob bytes with advisory index-segment
+bytes, so the trajectory court's pinned-snapshot phase (0 data blobs deleted)
+reported **3,466,466,150 B**. The field is now data-only; `deleted_index_bytes`
+and `deleted_total_bytes` are separate, in Rust and Go. Corrected on the same
+fixture: pinned **0 B** data / 3,466,466,150 B index; unpinned **150,596 B**
+(data tree delta, exact) / 3,466,891,299 B index. `tests/gc_accounting.rs` 3/3.
+The corrected split also exposes a real 3.47 GB index directory for a 74 MB
+data tree (per-commit full-state WFX2 segments); this is reported, not fixed.
+See `bench/RESULTS-gc-accounting.md`.
+
+### S2 — write cost, tile-touch accounting, mode-18 gate
+
+The objective is now
+`physical + lambda_read*decode(reads_per_write) + lambda_write*encode`.
+`lambda_write_ns` defaults to `lambda_ns`, so bytes-only plans are unchanged.
+Region reads count the whole tiles a request intersects (`TileGeometry`), not
+logical region bytes. Mode 18's fitted fixed term was a clamped negative
+intercept; the floor is now the measured 96,601 ns small-region bound, and
+mode 18 is gated off automatic selection in both languages
+(`--allow-experimental-modes` or an explicit strategy hint). Access-pattern
+court `access-pattern-20261108T073433Z.json`: whole bytes-only → mode 9; whole
+latency → raw; `region:1-row:once` → raw; `region:1-row:1000` and
+`region:100-row:1000` → mode 17. The model's break-even is **5 reads**; the
+measured break-even is **6.89 reads**. `tests/planner_write_cost.rs` 8/8.
+
+### S3 — stronger candidates
+
+Level-19 ZSTD (planned policy, ≥1 MiB, 20 s CPU budget) and a whole-base
+`zstd-patch` candidate (mode-4 dictionary frame, base-covering window). On the
+cached corpora: Pythia step0→step1 18,763 → **17,923 B** (patch wins 6/76
+tensors), versus a whole-file `zstd --patch-from -12` of 30,265 B; Pythia F32
+base 173,194,756 → **163,872,074 B** (−5.4 %) but still **+15.2 %** versus
+whole-file `zstd -19`; Qwen base → Instruct stays at **541,151,674 B** (the
+patch changes 0 B; mode 11 already wins). Every loss is in
+`bench/RESULTS-compression-candidates.md`.
+
+### S4 — 3FS note unit error
+
+`docs/THREEFS-CONTEXT-PLANE.md` now records the lifecycle ingest as
+**11.2–159.1 s** (148–549 ms/tensor), not 18.2–145.3 ms: the old text was wrong
+by 1,000×. The conclusion is conditional on the unrun deployed-3FS experiment.
+
+### S5 — README repositioning
+
+The opening is now AI-workload-first, with a loss-leading "Demonstrated results"
+block (the 42,211 B family total versus the 30,265 B whole-file patch baseline
+comes first), then the architecture, then the repository table, then status.
+`WeftCodec/README.md` has the new heading.
+
+### S6 — aggregate coverage
+
+`scripts/verify-all.sh` now includes `checkpoint_family_lifecycle`, `trajectory`,
+`write_policy`, `recovery_load`, `kv_capability`, `parallel_checkpoint` and
+`index_trust`. Long courts run reduced configurations that are recorded in their
+own receipts (lifecycle: one family/one configuration/one rep, no S3;
+trajectory: two Pythia steps, eight synthetic steps, no Qwen half; write policy:
+two configurations; KV: the minimum accepted 1,000 samples).
+
+Gates: Rust `cargo test --all-targets` pass; FUSE
+`cargo test --features fuse --all-targets` **673 passed / 0 failed / 2
+pre-existing ignored**; WeftFS-Go `go test -race ./...` all packages pass;
+claims OK; spec drift 42/42; aggregate **37/37**
+(`verify-20261108T100623Z.json`). The first aggregate run
+(`verify-20261108T090639Z.json`, 33/37) is retained because it found the four
+defects listed at the top of this file.
