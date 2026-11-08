@@ -1,13 +1,13 @@
 [
   {
     "id": "verify_receipt_current",
-    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (30/30 courts pass at the T1 hardening revision).",
-    "value": "verify-20261108T031839Z.json",
+    "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (30/30 courts pass, fifth of five consecutive T2 runs).",
+    "value": "verify-20261108T050823Z.json",
     "locations": [
       "docs/STATUS.md",
       "README.md"
     ],
-    "receipt": "bench/receipts/verify-20261108T031839Z.json",
+    "receipt": "bench/receipts/verify-20261108T050823Z.json",
     "kind": "present"
   },
   {
@@ -6483,12 +6483,12 @@
   {
     "id": "kvprefix_receipt_current",
     "claim": "The KV prefix court receipt is cited.",
-    "value": "kv-prefix-20261108T042229Z.json",
+    "value": "kv-prefix-20261108T052500Z.json",
     "locations": [
       "docs/STATUS.md",
       "bench/RESULTS-kv-prefix.md"
     ],
-    "receipt": "bench/receipts/kv-prefix-20261108T042229Z.json",
+    "receipt": "bench/receipts/kv-prefix-20261108T052500Z.json",
     "kind": "present"
   },
   {
@@ -6544,6 +6544,47 @@
       "docs/STATUS.md"
     ],
     "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "t2_five_run_stability",
+    "claim": "Five consecutive 30/30 aggregate runs are published.",
+    "value": "5/5 runs 30/30 pass",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261108T050823Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t2_first_aggregate_failure_retained",
+    "claim": "The pre-fix 28/30 aggregate receipt is retained with its cause.",
+    "value": "verify-20261108T043039Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/verify-20261108T043039Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t2_buck2_gosum_fix",
+    "claim": "The Buck2 adapter module sums were fixed rather than the court skipped.",
+    "value": "go mod tidy",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "kvprefix_superseded_receipt_retained",
+    "claim": "The earlier KV receipt without court metadata is retained but not current.",
+    "value": "kv-prefix-20261108T042229Z.json",
+    "locations": [
+      "docs/STATUS.md",
+      "bench/RESULTS-kv-prefix.md"
+    ],
+    "receipt": "bench/receipts/kv-prefix-20261108T042229Z.json",
     "kind": "present"
   }
 ]

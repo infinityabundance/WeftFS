@@ -5,7 +5,12 @@ implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
 `WeftFS` `238d4e5`, `WeftCodec` `99cb87a`, `WeftCodec-Go` `a0a1ebf`,
 `WeftFS-Go` `dc7cfdb`; the full note with every loss is
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
-and both codec implementations cover every allocated mode 0–18. The current verification receipt is
+and both codec implementations cover every allocated mode 0–18. **T2 update
+(2026-11-08):** the current verification receipt is
+`bench/receipts/verify-20261108T050823Z.json` (**30/30** courts `pass`, 0 failed,
+0 skipped; the fifth of five consecutive 30/30 runs after the T2 writer-lock
+and KV-prefix work — see the two `### T2` sections at the end). The v1.1.0-era
+verification receipt was
 `bench/receipts/verify-20261107T155516Z.json` (30/30 courts `pass`, 0 failed, 0 skipped,
 including the host-only `claims` documentation gate, spec drift, generated-type
 drift, `conformance_manifest`, `conformance_coverage`, quantized cross-decode,
@@ -6064,18 +6069,18 @@ envelope whose principal equals the record tenant and which grants
 with the record. Missing/expired/foreign/partial grants all return the same
 non-disclosing `Unauthorized` text.
 
-**Dedup, measured** (`bench/receipts/kv-prefix-20261108T042229Z.json`; shapes
+**Dedup, measured** (`bench/receipts/kv-prefix-20261108T052500Z.json`; shapes
 BF16, 14 layers, 2 KV heads, head dim 64, 64-token pages = 3,584 B/token):
 
 * one 512-token prefix: 1,835,008 logical B, 112 page objects, 1,931,305
-  physical page-object B, 56.3 ms put;
+  physical page-object B, 55.8 ms put;
 * a 1,024-token child: 3,670,016 logical B, **112 pages reused / 112 new**,
   1,835,008 new B;
 * 100 prefixes over one 512-token system prompt: 286,720,000 logical B →
   **103,219,200 stored B, dedup ratio 0.64**; 6,412 objects /
-  110,569,036 B on disk; 4.24 s;
-* authorized `get` (126–210 pages): p50 **23.7 ms**, p95 36.6 ms, max 36.9 ms;
-* compatibility scan over 101 prefixes: p50 **10.6 ms** (the dominant reuse
+  110,569,036 B on disk; 4.03 s;
+* authorized `get` (126–210 pages): p50 **23.4 ms**, p95 35.9 ms, max 36.3 ms;
+* compatibility scan over 101 prefixes: p50 **10.4 ms** (the dominant reuse
   term; no persisted KV index yet).
 
 **The decision.** `T_reuse = lookup + transfer + decode + placement`;
@@ -6089,6 +6094,10 @@ Qwen-0.5B row is 90 µs/token). Both estimates and every component are in
 recompute**; categories model-mismatch 3, tokenizer 1, attention 1, token-chain
 1, longer-than-request 1.
 
+A first court run, `bench/receipts/kv-prefix-20261108T042229Z.json`, has the
+same measurements but predates the receipt's `court`/`revisions` block; it is
+retained and not cited as current.
+
 **GC.** `kv gc` keeps every page named by a live prefix plus open-handle pins,
 and removes unreferenced KV pages from current state; physical reclamation stays
 with `weftfs gc`. A pinned prefix cannot be replaced or deleted, so its pages are
@@ -6101,3 +6110,28 @@ validating experiment is in `docs/KV-PREFIX.md` §9.
 
 Tests: `tests/kv_prefix.rs` **12/12**. Docs: `docs/KV-PREFIX.md`,
 `bench/RESULTS-kv-prefix.md`. Claims `kvprefix_*` and `ofdlock_*`.
+
+### T2 gates (2026-11-08)
+
+* Rust `cargo test --all-targets`: **616 passed / 0 failed** (604 before T2 + 12
+  KV-prefix tests).
+* FUSE `cargo test --features fuse --all-targets`: **659 passed / 0 failed /
+  2 pre-existing ignored**.
+* `tests/writer_lock.rs` 8/8; `cargo test --test quota -- --test-threads=8`
+  **20/20** (12/15 before the fix); `tests/kv_prefix.rs` 12/12.
+* WeftFS-Go `go test -race -count=1 ./...` all packages pass; `go vet` and
+  `CGO_ENABLED=0 go build` clean; WeftFS-Go `store/lock_inheritance_test.go`
+  5/5.
+* Aggregate `scripts/verify-all.sh` run **five times** after the T2 code and
+  the Buck2-module `go.sum` fix: **5/5 runs 30/30 pass**. Receipts
+  `verify-20261108T043951Z.json`, `…044722Z.json`, `…045418Z.json`,
+  `…050121Z.json`, `…050823Z.json` (the last is the current one, at WeftFS
+  `c88b199`, WeftFS-Go `b475d2d`). The first aggregate attempt
+  `verify-20261108T043039Z.json` is **retained** at 28/30: adding
+  `golang.org/x/sys/unix` to `WeftFS-Go/store` broke the independent
+  `adapters/buck2` module's `go.sum`. `go mod tidy` in that module fixed it and
+  the failing receipt is kept as the evidence.
+* Disk: the host volume reached 100 % during the KV work; only gitignored
+  `.docker-cache` artifacts were deleted (`target-rust/debug`, `package`), never
+  source or receipts, and no claim depends on a deleted artifact.
+* Claims: **617 OK** (`bash scripts/check-claims.sh`); spec drift 42/42.

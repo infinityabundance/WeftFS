@@ -1,0 +1,3261 @@
+=== rust_codec ===
++ exec docker run --rm --init --name weft-rust-court-1598600 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo test --all-targets --quiet'
+
+running 73 tests
+.........................................................................
+test result: ok. 73 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.06s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== rust_store ===
++ exec docker run --rm --init --name weft-rust-court-1599503 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo test --all-targets --quiet'
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4939:8
+     |
+4939 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4946:8
+     |
+4946 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4963:7
+     |
+4963 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4965:4
+     |
+4965 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4998:4
+     |
+4998 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: unused variable: `retained_after_gc`
+   --> examples/overlay_bench.rs:447:9
+    |
+447 |     let retained_after_gc = store
+    |         ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_retained_after_gc`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `fds` is never read
+   --> tests/checkpoint_service.rs:242:5
+    |
+238 | struct Response {
+    |        -------- field in this struct
+...
+242 |     fds: Vec<OwnedFd>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+  --> tests/float_tiled_store.rs:85:9
+   |
+85 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+   |         ----^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `root`
+  --> tests/float_tiled_store.rs:86:9
+   |
+86 |     let root = store.resolve_path("/").unwrap();
+   |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:152:9
+    |
+152 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:226:9
+    |
+226 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:227:9
+    |
+227 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:258:9
+    |
+258 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: variable does not need to be mutable
+   --> tests/planner_float.rs:173:16
+    |
+173 |     let (path, mut store) = temp_store("cost-model");
+    |                ----^^^^^
+    |                |
+    |                help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> examples/azure_court.rs:335:9
+    |
+335 |     let mut observe = |etags: &mut Vec<String>| {
+    |         ----^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `left`
+   --> tests/branching.rs:213:9
+    |
+213 |     let left = store.snapshot_create("left").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_left`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `right`
+   --> tests/branching.rs:215:9
+    |
+215 |     let right = store.snapshot_create("right").unwrap();
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_right`
+
+warning: function `tensor_payloads` is never used
+   --> examples/trajectory_court.rs:135:4
+    |
+135 | fn tensor_payloads(
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `root` is never read
+  --> tests/kv_capability.rs:81:5
+   |
+79 | struct Fixture {
+   |        ------- field in this struct
+80 |     store: Store,
+81 |     root: Hash32,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:102:9
+    |
+102 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:135:9
+    |
+135 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+
+running 82 tests
+..................................................................................
+test result: ok. 82 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 19 tests
+...................
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.37s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.44s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.55s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 15 tests
+...............
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+.
+running 1 test
+
+running 1 test
+.........
+running 1 test
+.
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.57s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 13 tests
+.............
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+............
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 13 tests
+.............
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+
+running 13 tests
+.............
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.70s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+
+running 14 tests
+..............
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.73s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+
+running 19 tests
+...................
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 14 tests
+............
+running 1 test
+..
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 14 tests
+..............
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.12s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 13 tests
+.............
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+........
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== go_codec ===
++ exec docker run --rm --init --name weft-go-court-1602483 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && go test ./...'
+ok  	github.com/infinityabundance/WeftCodec-Go/archive	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/capability	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/cmd/fuzzdiff	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/cmd/verify-ed25519	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/cmd/weftcodec	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/conformance	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/dependency	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/dtype	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/frame	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/context	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/hash	[no test files]
+?   	github.com/infinityabundance/WeftCodec-Go/limits	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/generated	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/modes	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/selector	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/stream	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/tensor	(cached)
+ok  	github.com/infinityabundance/WeftCodec-Go/varint	(cached)
+?   	github.com/infinityabundance/WeftCodec-Go/werrors	[no test files]
+ok  	github.com/infinityabundance/WeftCodec-Go/wcb	(cached)
+=== rust_fuse ===
++ exec docker run --rm --init --name weft-fuse-court-1602887 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo test --features fuse --all-targets -- --test-threads=1'
+warning: variable does not need to be mutable
+   --> examples/azure_court.rs:335:9
+    |
+335 |     let mut observe = |etags: &mut Vec<String>| {
+    |         ----^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "azure_court" test) generated 1 warning (run `cargo fix --example "azure_court" -p weftfs --tests` to apply 1 suggestion)
+warning: field `fds` is never read
+   --> tests/checkpoint_service.rs:242:5
+    |
+238 | struct Response {
+    |        -------- field in this struct
+...
+242 |     fds: Vec<OwnedFd>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "checkpoint_service") generated 1 warning
+warning: field `root` is never read
+  --> tests/kv_capability.rs:81:5
+   |
+79 | struct Fixture {
+   |        ------- field in this struct
+80 |     store: Store,
+81 |     root: Hash32,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "kv_capability") generated 1 warning
+warning: unused variable: `retained_after_gc`
+   --> examples/overlay_bench.rs:447:9
+    |
+447 |     let retained_after_gc = store
+    |         ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_retained_after_gc`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "overlay_bench" test) generated 1 warning (run `cargo fix --example "overlay_bench" -p weftfs --tests` to apply 1 suggestion)
+warning: unused variable: `left`
+   --> tests/branching.rs:213:9
+    |
+213 |     let left = store.snapshot_create("left").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_left`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `right`
+   --> tests/branching.rs:215:9
+    |
+215 |     let right = store.snapshot_create("right").unwrap();
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_right`
+
+warning: `weftfs` (test "branching") generated 2 warnings (run `cargo fix --test "branching" -p weftfs` to apply 2 suggestions)
+warning: variable does not need to be mutable
+   --> tests/planner_float.rs:173:16
+    |
+173 |     let (path, mut store) = temp_store("cost-model");
+    |                ----^^^^^
+    |                |
+    |                help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "planner_float") generated 1 warning (run `cargo fix --test "planner_float" -p weftfs` to apply 1 suggestion)
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:102:9
+    |
+102 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:135:9
+    |
+135 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: `weftfs` (test "mode18_store") generated 2 warnings (run `cargo fix --test "mode18_store" -p weftfs` to apply 2 suggestions)
+warning: variable does not need to be mutable
+  --> tests/float_tiled_store.rs:85:9
+   |
+85 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+   |         ----^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `root`
+  --> tests/float_tiled_store.rs:86:9
+   |
+86 |     let root = store.resolve_path("/").unwrap();
+   |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:152:9
+    |
+152 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:226:9
+    |
+226 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:227:9
+    |
+227 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:258:9
+    |
+258 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: `weftfs` (test "float_tiled_store") generated 6 warnings (run `cargo fix --test "float_tiled_store" -p weftfs` to apply 6 suggestions)
+warning: function `tensor_payloads` is never used
+   --> examples/trajectory_court.rs:135:4
+    |
+135 | fn tensor_payloads(
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "trajectory_court" test) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (.docker-cache/target-rust/debug/deps/weftfs-04fa05cabf3a3fb9)
+
+running 86 tests
+test access::tests::consume_removes_the_counter ... ok
+test access::tests::journal_round_trips_and_ignores_torn_tails ... ok
+test access::tests::pure_consumption_is_persisted_across_reopen ... ok
+test access::tests::snapshot_round_trips_and_rejects_corruption ... ok
+test azure::tests::canonical_query_sorts_and_encodes ... ok
+test azure::tests::config_debug_never_reveals_credentials ... ok
+test azure::tests::container_names_follow_the_service_rules ... ok
+test azure::tests::credentials_must_be_exclusive ... ok
+test azure::tests::rfc1123_dates_are_formatted_for_the_documented_epoch ... ok
+test azure::tests::shared_key_string_to_sign_has_the_documented_field_order ... ok
+test azure::tests::strip_etag_quotes_is_exact ... ok
+test azure::tests::xml_listing_blocks_are_extracted_before_their_names ... ok
+test b64::tests::a_two_hundred_and_fifty_six_bit_key_round_trips ... ok
+test b64::tests::malformed_inputs_are_rejected ... ok
+test b64::tests::standard_round_trips_the_rfc_vectors ... ok
+test b64::tests::url_safe_is_unpadded_and_decodable ... ok
+test calibration::tests::digest_detects_a_modified_row ... ok
+test calibration::tests::record_round_trips_through_json ... ok
+test checkpoint_service::tests::cursor_rejects_trailing_and_truncated ... ok
+test checkpoint_service::tests::error_body_has_class_then_message ... ok
+test checkpoint_service::tests::frame_round_trip_layout ... ok
+test cost_model::tests::declared_matches_the_historical_linear_model ... ok
+test cost_model::tests::estimates_are_monotonic_and_saturating ... ok
+test cost_model::tests::measured_is_not_the_declared_table ... ok
+test fuse::tests::context_names_are_deterministic_and_unique ... ok
+test fuse::tests::context_root_inode_table_has_no_object_root ... ok
+test fuse::tests::escape_is_reversible_and_safe ... ok
+test fuse::tests::inode_mapping_is_stable_and_collision_safe ... ok
+test gcs::json::tests::parses_a_listing_page_with_escapes ... ok
+test gcs::json::tests::parses_numeric_generation_without_rounding ... ok
+test gcs::json::tests::parses_object_metadata ... ok
+test gcs::json::tests::rejects_malformed_and_deep_input ... ok
+test gcs::tests::bucket_validation_rejects_bad_names ... ok
+test gcs::tests::config_debug_never_reveals_the_token ... ok
+test gcs::tests::listing_helper_is_shared_with_the_logical_layout ... ok
+test gcs::tests::lock_record_round_trips_and_legacy_reads_as_fence_zero ... ok
+test gcs::tests::percent_encoding_keeps_one_path_segment ... ok
+test gcs::tests::precondition_parameters_are_the_gcs_spelling ... ok
+test gcs::tests::upload_reply_generation_is_parsed_without_rounding ... ok
+test object_cache::tests::a_new_version_removes_the_old_version ... ok
+test object_cache::tests::a_score_tie_with_zero_value_evicts_the_larger_entry ... ok
+test object_cache::tests::disabled_by_default ... ok
+test object_cache::tests::eviction_is_deterministic_and_prefers_cheap_entries ... ok
+test object_cache::tests::pinned_entry_is_never_evicted_and_admission_is_refused ... ok
+test object_cache::tests::shrinking_the_bound_evicts_down_to_it ... ok
+test packs::tests::entry_round_trip_is_canonical ... ok
+test packs::tests::options_reject_a_member_larger_than_a_pack ... ok
+test packs::tests::root_rejects_a_mismatched_segment_count ... ok
+test packs::tests::segment_index_stays_in_range ... ok
+test packs::tests::segment_rejects_a_flipped_digest ... ok
+test packs::tests::segment_rejects_unordered_entries ... ok
+test receipt_bundle::tests::manifest_round_trips_and_sorts ... ok
+test receipt_bundle::tests::rejects_unsorted_manifest ... ok
+test s3::tests::a_fresh_backend_defaults_to_the_as_returned_form ... ok
+test s3::tests::if_match_forms_encode_etags ... ok
+test s3::tests::lock_record_round_trips_and_parses_legacy_v1 ... ok
+test s3::tests::released_tombstone_records_are_content_addressed ... ok
+test s3::tests::sigv4_encoding_and_dates_are_canonical ... ok
+test s3::tests::xml_values_decode_minio_escapes ... ok
+test service_account::tests::biguint_bytes_and_ordering_round_trip ... ok
+test service_account::tests::der_reader_is_strict ... ok
+test service_account::tests::fixed_width_helpers_are_masked_not_branched ... ok
+test service_account::tests::ladder_matches_square_and_multiply ... ok
+test service_account::tests::montgomery_ct_matches_the_reference_multiplication ... ok
+test service_account::tests::montgomery_multiplication_matches_schoolbook ... ok
+test service_account::tests::n0inv_is_the_negated_inverse ... ok
+test service_account::tests::pem_extraction_accepts_wrapping_and_rejects_garbage ... ok
+test service_account::tests::pow2_mod_matches_known_values ... ok
+test singleflight::tests::byte_bound_degrades_an_oversized_request ... ok
+test singleflight::tests::cancelling_waiter_does_not_cancel_the_leader ... ok
+test singleflight::tests::concurrent_identical_calls_run_once ... ok
+test singleflight::tests::disabled_runs_every_call_independently ... ok
+test singleflight::tests::distinct_keys_are_not_coalesced ... ok
+test singleflight::tests::entry_and_byte_bounds_degrade_instead_of_queueing ... ok
+test singleflight::tests::errors_reach_every_waiter ... ok
+test singleflight::tests::panicking_operation_publishes_an_error ... ok
+test timeparse::tests::invalid_forms_are_rejected ... ok
+test timeparse::tests::rfc3339_epoch_and_offsets ... ok
+test timeparse::tests::unix_nanoseconds_round_trip ... ok
+test writer_fence::tests::fenced_record_round_trips ... ok
+test writer_fence::tests::legacy_tombstone_still_parses ... ok
+test writer_fence::tests::legacy_v1_record_reads_as_fence_zero ... ok
+test writer_fence::tests::legacy_v2_record_reads_with_an_unknown_length ... ok
+test writer_fence::tests::malformed_records_are_rejected ... ok
+test writer_fence::tests::schemas_do_not_parse_across_backends ... ok
+test writer_fence::tests::tombstone_round_trips_and_names_its_predecessor ... ok
+
+test result: ok. 86 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running unittests src/bin/weft-receipt-bundle.rs (.docker-cache/target-rust/debug/deps/weft_receipt_bundle-70180a3764b1d0f3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (.docker-cache/target-rust/debug/deps/weftfs-f52ecb5e5ae2226a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/azure_backend.rs (.docker-cache/target-rust/debug/deps/azure_backend-e7cc31f8485b17d4)
+
+running 19 tests
+test a_hash32_key_path_is_addressed_verbatim ... ok
+test a_literal_dequoted_endpoint_is_negotiated ... ok
+test a_missing_blob_is_not_found_and_transport_errors_are_io ... ok
+test a_stale_etag_accepted_by_the_service_is_refused ... ok
+test a_wrong_account_key_is_unauthorized ... ok
+test create_once_and_compare_and_swap_are_exact ... ok
+test listing_returns_only_the_requested_prefix ... ok
+test live_a_tampered_sas_is_rejected ... ok
+test live_anonymous_is_refused_on_a_private_container ... ok
+test live_conditional_create_and_cas_are_exact ... ok
+test live_listing_and_ranges_are_exact ... ok
+test live_lock_is_released_with_a_conditional_tombstone ... ok
+test live_read_only_sas_refuses_a_writable_open ... ok
+test live_sas_authorizes_blob_data_but_not_container_properties ... ok
+test live_sas_token_authenticates_and_preserves_the_store ... ok
+test live_store_round_trips_and_reopens ... ok
+test sas_and_anonymous_credentials_are_exclusive_forms ... ok
+test store_round_trips_on_azure_with_independent_signature_checks ... ok
+test the_writer_lock_is_released_with_a_conditional_tombstone ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.96s
+
+     Running tests/azure_fencing.rs (.docker-cache/target-rust/debug/deps/azure_fencing-8c3121f63f7c0eb1)
+
+running 9 tests
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/backend.rs (.docker-cache/target-rust/debug/deps/backend-58bc0001a98bed46)
+
+running 4 tests
+test capabilities_fail_closed ... ok
+test crash_proxy_over_object_backend_yields_old_or_new ... ok
+test object_backend_exercises_store_extensions ... ok
+test same_fixture_over_local_and_object_is_byte_identical ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests/bounded_recovery.rs (.docker-cache/target-rust/debug/deps/bounded_recovery-810440bc5b12f70a)
+
+running 3 tests
+test every_generation_corruption_recovers_the_previous_whole_state ... ok
+test replay_is_idempotent_without_corruption ... ok
+test superblock_slot_corruption_falls_back_to_the_other_slot ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/branching.rs (.docker-cache/target-rust/debug/deps/branching-a62fe03575b309a8)
+
+running 9 tests
+test cli_branch_and_merge_surface ... ok
+test cli_context_branch_mounts_and_lists_lineage ... ok
+test context_branch_pins_the_fork_and_records_lineage ... ok
+test go_reads_and_verifies_a_rust_branch ... ok
+test merge_conflicting_path_fails_closed_and_names_the_path ... ok
+test merge_disjoint_branches_unions_paths ... ok
+test merge_identical_path_content_dedupes_cleanly ... ok
+test merge_refuses_to_overwrite_the_live_head ... ok
+test snapshot_branch_pins_the_source_and_later_writes_do_not_move_it ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/calibration.rs (.docker-cache/target-rust/debug/deps/calibration-8b534d5b8cbaa98d)
+
+running 8 tests
+test default_behaviour_is_unchanged_without_a_calibration ... ok
+test digest_is_over_the_canonical_document_not_the_file_whitespace ... ok
+test install_is_ignored_by_store_replay_and_verify ... ok
+test malformed_documents_fail_closed ... ok
+test oversized_documents_are_refused_before_parsing ... ok
+test planner_uses_the_calibration_rows ... ok
+test rebase_prices_a_delta_chain_with_the_calibration_rows ... ok
+test record_round_trips_through_a_file ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running tests/capability_envelope.rs (.docker-cache/target-rust/debug/deps/capability_envelope-5ed49b57e23a1975)
+
+running 6 tests
+test envelope_narrows_posix_and_intersects_explicit_capability ... ok
+test envelope_round_trip_and_store_attachment ... ok
+test reject_matrix_is_typed_and_stable ... ok
+test relation_selector_requires_the_envelope_predicate_grant ... ok
+test revoked_or_expired_envelope_cannot_be_attached_or_used ... ok
+test workspace_grant_alone_does_not_authorize_an_unrelated_root ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/capability_isolation.rs (.docker-cache/target-rust/debug/deps/capability_isolation-a99436169e53a6a7)
+
+running 4 tests
+test deduplicated_shared_content_does_not_leak_tenant_b ... ok
+test revoked_or_expired_envelope_fails_closed_without_hash_revival ... ok
+test tenant_a_cannot_resolve_stat_or_enumerate_tenant_b ... ok
+test work_units_and_budgets_are_independent_of_the_other_tenant ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/capability_nondisclosure.rs (.docker-cache/target-rust/debug/deps/capability_nondisclosure-2ec8e8816c441469)
+
+running 2 tests
+test authorized_views_are_identical_despite_different_hidden_content ... ok
+test work_budget_failures_do_not_disclose_unauthorized_state ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/checkpoint_service.rs (.docker-cache/target-rust/debug/deps/checkpoint_service-cd567350b311ce51)
+
+running 7 tests
+test oversized_frame_terminates_the_service_nonzero ... ok
+test restore_never_mutates_the_store ... ok
+test service_lists_shows_and_restores_into_a_caller_memfd ... ok
+test topology_restore_reports_a_verified_topology_root ... ok
+test typed_errors_keep_the_service_alive ... ok
+test unknown_opcode_is_refused_and_the_service_exits_nonzero ... ok
+test write_checkpoint_from_a_memfd_matches_the_cli_oracle ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests/checkpoint_tiles.rs (.docker-cache/target-rust/debug/deps/checkpoint_tiles-0c76e2944989d8e4)
+
+running 3 tests
+test tiled_checkpoint_rejects_a_non_dividing_tile_shape ... ok
+test tiled_checkpoint_requires_a_tile_shape ... ok
+test tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/checkpoint_topology.rs (.docker-cache/target-rust/debug/deps/checkpoint_topology-3bd54394748ad31e)
+
+running 10 tests
+test cli_checkpoint_restore_is_read_only_unless_imported ... ok
+test cli_checkpoint_write_restore_verify ... ok
+test corrupt_shard_fails_closed ... ok
+test manifest_logical_root_mismatch_fails_closed ... ok
+test missing_shard_fails_closed_naming_tensor_and_shard ... ok
+test non_divisible_split_is_rejected_without_publishing ... ok
+test partial_region_reads_only_intersecting_shards ... ok
+test partial_restore_of_a_two_tensor_container_rebuilds_the_header ... ok
+test single_tensor_restore_of_a_one_tensor_checkpoint_is_byte_exact ... ok
+test topology_matrix_reproduces_the_original_container ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/cli.rs (.docker-cache/target-rust/debug/deps/cli-23000dad55177531)
+
+running 8 tests
+test cli_codec_auto_representation_is_opt_in_and_exact ... ok
+test cli_conformance_store_fixture_is_deterministic ... ok
+test cli_conformance_store_needs_no_store_flag ... ok
+test cli_context_causal_capability_end_to_end ... ok
+test cli_errors_print_normative_class ... ok
+test cli_rejects_unknown_representation_and_bad_min_bytes ... ok
+test cli_verbs_and_query_json_contract ... ok
+test require_one_ambiguity_lists_every_competing_object_id ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/conformance_checkpoint.rs (.docker-cache/target-rust/debug/deps/conformance_checkpoint-0d3b193a9540d32c)
+
+running 1 test
+test checkpoint_identity_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/context.rs (.docker-cache/target-rust/debug/deps/context-8e13bf3477a68fd5)
+
+running 12 tests
+test bytes_only_version_is_byte_identical_and_causal_exact_changes_it ... ok
+test capability_denials_do_not_leak_and_budgets_fail_closed ... ok
+test capability_hash_participates_in_context_root_identity ... ok
+test context_create_resolve_materialize_zero_one_n ... ok
+test corrupted_context_record_fails_closed ... ok
+test duplicate_names_require_explicit_replacement ... ok
+test effective_budget_is_component_wise_minimum ... ok
+test golden_causal_vectors_match_both_languages ... ok
+test identity_mode_rejects_bad_mode_text ... ok
+test materialization_mismatch_leaves_no_output ... ok
+test snapshot_pinning_never_follows_the_live_head ... ok
+test transitive_closure_and_cycle_termination ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/crash_proxy.rs (.docker-cache/target-rust/debug/deps/crash_proxy-1a697ab302ed88a5)
+
+running 3 tests
+test crash_after_superblock_publish_yields_new_state ... ok
+test crash_before_commit_file_keeps_old_state ... ok
+test crash_never_leaves_a_partial_file ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+
+     Running tests/distributed_semantics.rs (.docker-cache/target-rust/debug/deps/distributed_semantics-ed8ed0bb357d754c)
+
+running 12 tests
+test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok
+test content_hash_knowledge_does_not_authorize_retrieval ... ok
+test crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok
+test distributed_group_crash_child ... ok
+test gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok
+test retry_after_commit_file_crash_has_one_visible_state ... ok
+test retry_after_objects_crash_reaches_the_uninterrupted_head ... ok
+test retry_after_published_crash_does_not_create_a_second_state ... ok
+test single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok
+test stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok
+test stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok
+test unreachable_endpoint_fails_closed_without_partial_bytes ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+     Running tests/extent_cow.rs (.docker-cache/target-rust/debug/deps/extent_cow-9cfff7267a16eafc)
+
+running 6 tests
+test chunk_size_comes_from_the_manifest ... ok
+test crash_proxy_on_range_write_is_old_or_new_whole ... ok
+test identical_bytes_add_no_blob ... ok
+test overwrite_one_chunk_reuses_the_other_chunks_verbatim ... ok
+test randomised_range_writes_match_an_in_memory_model ... ok
+test zero_length_write_is_a_no_op ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.67s
+
+     Running tests/fast_open.rs (.docker-cache/target-rust/debug/deps/fast_open-35f736a9f0c9b492)
+
+running 3 tests
+test corrupted_chains_fall_back_to_the_authoritative_full_recovery ... ok
+test fast_open_matches_full_replay_and_reads_a_bounded_window ... ok
+test open_stops_at_the_nearest_checkpoint_and_falls_back_when_it_is_corrupt ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.61s
+
+     Running tests/float_tiled_store.rs (.docker-cache/target-rust/debug/deps/float_tiled_store-15e5634e0ae85bc3)
+
+running 5 tests
+test access_pattern_region_selects_float_tiled_and_whole_selects_mode9 ... ok
+test checkpoint_float_tiled_shards_restore_exactly ... ok
+test default_plan_equals_explicit_whole_pattern ... ok
+test mode17_planner_offers_it_and_bytes_only_prefers_mode9 ... ok
+test mode17_round_trips_and_reads_regions ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/fuse_concurrency.rs (.docker-cache/target-rust/debug/deps/fuse_concurrency-14edd8e7d08d63fa)
+
+running 1 test
+test concurrent_readers_and_one_writer_see_whole_versions ... ignored, kernel 7.3 + fuser 0.15.1 direct-I/O EIO under same-inode read/write; see docs/fuse-status.md
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_context_mount.rs (.docker-cache/target-rust/debug/deps/fuse_context_mount-54b6e4a0e154747e)
+
+running 6 tests
+test at_accepts_rfc3339_and_unix_ns_forms ... ok
+test at_selects_the_latest_commit_at_or_before_and_rejects_before_first ... ok
+test capability_scoped_mount_is_read_only_and_denies_unlisted_roots ... ok
+test context_mount_lists_all_results_and_reads_exact_bytes ... ok
+test mount_failure_is_a_clean_nonzero_exit ... ok
+test three_simultaneous_mounts_serve_different_roots_without_the_writer_lock ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s
+
+     Running tests/fuse_crash.rs (.docker-cache/target-rust/debug/deps/fuse_crash-b6a50e10df3b9ed3)
+
+running 3 tests
+test crash_after_commit_file_keeps_old_state_and_reports_unpublished_tail ... ok
+test crash_after_objects_loses_the_write_and_verifies_clean ... ok
+test crash_after_superblock_write_publishes_new_state ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+     Running tests/fuse_posix.rs (.docker-cache/target-rust/debug/deps/fuse_posix-dd2f3d7d3ac7ea96)
+
+running 12 tests
+test byte_names_are_preserved_and_ordered ... ok
+test exact_id_surface_and_saved_context_views ... ok
+test extent_cow_partial_write_through_mount ... ok
+test lseek_fallocate_and_copy_file_range ... ok
+test mount_codec_auto_writes_v2_codec_manifest ... ok
+test permissions_with_allow_other ... ignored, the fuse court runs with cap-drop=ALL (no CAP_SETUID), so setpriv cannot switch to uid 65534; kernel default_permissions ownership checks need a court with CAP_SETUID
+test posix_basic_matrix ... ok
+test rename_semantics_and_renameat2_flags ... ok
+test snapshot_mount_shows_pinned_bytes_and_is_read_only ... ok
+test sparse_writes_large_files_ranges_and_open_unlinked ... ok
+test statfs_reports_state_derived_counters ... ok
+test xattrs_through_syscalls_and_tools ... ok
+
+test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+     Running tests/fuse_verb_matrix.rs (.docker-cache/target-rust/debug/deps/fuse_verb_matrix-8a70d86c61628d3e)
+
+running 4 tests
+test fallocate_all_modes_and_server_copy ... ok
+test lock_fallback_and_timestamp_surface ... ok
+test mknod_tmpfile_and_entry_flags ... ok
+test mmap_shared_read_write_coherence ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests/fuse_verify_load.rs (.docker-cache/target-rust/debug/deps/fuse_verify_load-3ed6a45c7efa95ae)
+
+running 1 test
+test mount_verify_load_writes_a_receipt_per_tensor_file ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/fuse_writeback.rs (.docker-cache/target-rust/debug/deps/fuse_writeback-b711f32b4cecb122)
+
+running 6 tests
+test explicit_whole_file_identity_is_honoured_on_the_mount ... ok
+test group_commit_makes_a_metadata_storm_visible_and_verifiable ... ok
+test mount_defaults_new_files_to_merkle_identity ... ok
+test write_back_and_group_commit_together_are_consistent ... ok
+test write_back_release_publishes_without_an_explicit_fsync ... ok
+test write_back_serves_buffered_bytes_to_the_writer_and_publishes_on_fsync ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+     Running tests/gcs_backend.rs (.docker-cache/target-rust/debug/deps/gcs_backend-1abe88bf1a7ce5d5)
+
+running 15 tests
+test anonymous_emulator_mode_sends_no_authorization_header ... ok
+test configuration_refuses_an_ambiguous_credential ... ok
+test control_create_is_create_once_and_delete_is_reported ... ok
+test create_once_succeeds_is_idempotent_and_rejects_different_bytes ... ok
+test generation_is_confirmed_by_read_back_when_the_upload_reply_omits_it ... ok
+test listing_round_trips_the_normative_layout ... ok
+test matched_generation_succeeds_and_a_stale_generation_is_busy ... ok
+test missing_object_is_not_found_everywhere ... ok
+test probe_records_create_once_matching_and_stale_rejection ... ok
+test probe_refuses_an_endpoint_that_accepts_a_stale_generation ... ok
+test range_reads_are_exact_and_end_of_object_is_not_an_error ... ok
+test resumable_upload_carries_the_payload_above_the_simple_bound ... ok
+test store_refuses_a_stale_accepting_endpoint_before_publishing ... ok
+test store_round_trip_is_byte_identical_to_local_and_reopens ... ok
+test transport_failure_stays_io_and_is_not_reported_as_corruption ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.47s
+
+     Running tests/gcs_fencing.rs (.docker-cache/target-rust/debug/deps/gcs_fencing-2a3f82131df7a7ef)
+
+running 9 tests
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/group_commit.rs (.docker-cache/target-rust/debug/deps/group_commit-e21e4cf08bae76dd)
+
+running 11 tests
+test abort_group_restores_pre_group_state_exactly ... ok
+test begin_and_commit_group_across_calls_publishes_one_commit ... ok
+test crash_after_group_publish_yields_the_whole_new_generation ... 
+running 1 test
+ok
+test crash_before_group_publish_keeps_the_old_generation ... 
+running 1 test
+
+running 1 test
+ok
+test empty_commit_group_publishes_nothing ... ok
+test failed_group_publishes_nothing_and_restores_state ... ok
+test group_crash_helper ... ok
+test nested_group_is_invalid_argument_and_store_stays_usable ... ok
+test one_group_of_100_creates_matches_100_single_creates ... ok
+test read_only_store_refuses_group ... ok
+test reads_inside_the_group_see_staged_writes ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/index_equivalence.rs (.docker-cache/target-rust/debug/deps/index_equivalence-e8878ec34b29fdd3)
+
+running 1 test
+test indexed_matches_scan_across_random_states ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.50s
+
+     Running tests/index_persistence.rs (.docker-cache/target-rust/debug/deps/index_persistence-3e9c12f1493d38bb)
+
+running 7 tests
+test corrupt_index_rebuilds_and_results_are_unchanged ... ok
+test forged_self_consistent_subset_is_rejected_by_the_commit_attestation ... ok
+test gc_removes_only_unreachable_indexes ... ok
+test persisted_index_loads_on_reopen_without_rebuild ... ok
+test persisted_index_matches_scan_matrix_across_views ... ok
+test read_only_open_never_writes_or_creates_indexes ... ok
+test reopen_after_new_commit_uses_the_new_head_index ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running tests/kv_capability.rs (.docker-cache/target-rust/debug/deps/kv_capability-183be08044184769)
+
+running 13 tests
+test a_content_hash_is_not_a_credential ... ok
+test a_foreign_tenant_grant_is_denied ... ok
+test a_grant_that_does_not_name_the_descriptor_is_denied ... ok
+test a_grant_without_the_tenant_namespace_is_denied ... ok
+test a_page_is_not_readable_without_the_posix_bit_even_with_a_grant ... ok
+test a_revoked_envelope_cannot_be_loaded ... ok
+test a_tampered_descriptor_fails_closed_before_bytes ... ok
+test absence_and_denial_are_indistinguishable ... ok
+test an_absent_envelope_is_denied ... ok
+test an_expired_grant_is_denied_with_the_same_text ... ok
+test authorized_reader_gets_exact_bytes ... ok
+test descriptor_disagreement_after_authorization_is_corrupt ... ok
+test the_stored_blob_is_a_canonical_envelope ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/kv_prefix.rs (.docker-cache/target-rust/debug/deps/kv_prefix-d0c466dd3b1ab541)
+
+running 12 tests
+test decision_reuses_only_when_it_is_cheaper_and_records_both_estimates ... ok
+test every_compatibility_field_fails_closed_to_recompute ... ok
+test full_verify_passes_after_put_parent_extension_and_gc ... ok
+test gc_keeps_live_prefix_pages_and_respects_pins ... ok
+test get_requires_a_matching_capability_and_is_non_disclosing ... ok
+test parent_chain_shares_page_objects_and_stores_only_new_pages ... ok
+test prefixes_survive_reopen_and_are_reusable ... ok
+test put_publishes_one_commit_and_rejects_bad_payloads ... ok
+test record_round_trips_canonically_and_rejects_unknown_keys ... ok
+test replacing_a_prefix_is_a_new_record_and_pinned_is_refused ... ok
+test shipped_prefill_document_matches_the_baked_model ... ok
+test token_chain_binds_the_exact_sequence ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests/load_receipt.rs (.docker-cache/target-rust/debug/deps/load_receipt-ec09823e8edbc3c3)
+
+running 3 tests
+test corrupted_tile_is_refused_and_named ... ok
+test lazy_and_full_receipts_agree_on_a_healthy_store ... ok
+test tampered_receipt_is_rejected ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/merkle_identity.rs (.docker-cache/target-rust/debug/deps/merkle_identity-dc65234abd34c2b2)
+
+running 7 tests
+test edge_sizes_have_the_specified_roots ... ok
+test four_kib_overwrite_of_128_mib_does_not_read_the_whole_file ... ok
+test manifest_path_is_content_address_keyed ... ok
+test reopen_gc_and_verify_preserve_merkle_files ... ok
+test root_is_deterministic_and_chunk_size_is_part_of_the_identity ... ok
+test tampered_chunk_blob_fails_range_read_and_verify_naming_the_index ... ok
+test tampered_manifest_chunk_hash_is_a_root_mismatch ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests/mode18_store.rs (.docker-cache/target-rust/debug/deps/mode18_store-8e4f58c6abf703e7)
+
+running 4 tests
+test bytes_only_default_never_picks_mode18 ... ok
+test cost_model_prices_mode18_from_its_own_measured_row ... ok
+test mode18_round_trips_reads_regions_and_verifies ... ok
+test mode18_stream_count_changes_representation_identity ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/object_cache.rs (.docker-cache/target-rust/debug/deps/object_cache-ec5f16f6cb83d54c)
+
+running 10 tests
+test a_new_version_misses_and_removes_the_old_entry ... ok
+test a_pinned_object_survives_eviction_and_an_unpinned_one_does_not ... ok
+test a_token_cannot_read_a_different_content_root ... ok
+test authorization_is_checked_before_the_lookup ... ok
+test cache_is_disabled_by_default ... ok
+test counters_and_clear_are_honest ... ok
+test eviction_prefers_the_lowest_cost_avoided_per_byte ... ok
+test hits_are_exact_and_counted ... ok
+test single_flight_shares_a_miss_but_the_cache_alone_does_not ... ok
+test tensor_reads_use_the_cache_and_keep_exactness ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/overlay_compact.rs (.docker-cache/target-rust/debug/deps/overlay_compact-44c17da6223dafb3)
+
+running 8 tests
+test a_snapshot_pinned_before_compaction_still_reads_its_version ... ok
+test compaction_clears_the_configured_writer_bounds ... ok
+test compaction_is_old_or_new_under_the_crash_proxy ... ok
+test compaction_of_a_non_overlay_object_is_refused_and_publishes_nothing ... ok
+test compaction_preserves_bytes_and_the_content_root ... ok
+test corruption_is_detected_before_any_publication ... ok
+test gc_after_compaction_without_a_snapshot_collects_the_old_layers ... ok
+test the_cli_compact_verb_reports_the_unchanged_root ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running tests/overlay_fixture.rs (.docker-cache/target-rust/debug/deps/overlay_fixture-a7559d8886881663)
+
+running 1 test
+test rust_reads_the_committed_overlay_fixture_exactly ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/overlay_format.rs (.docker-cache/target-rust/debug/deps/overlay_format-6e4cd582f963a338)
+
+running 6 tests
+test overlay_extent_rejects_bad_grids_and_bounds ... ok
+test overlay_struct_validation_is_enforced_before_encoding ... ok
+test v1_v2_v3_encoding_is_unchanged ... ok
+test v4_accepts_adjacent_non_overlapping_extents ... ok
+test v4_overlay_round_trips_without_a_top_level_chunk_table ... ok
+test v4_parser_rejects_malformed_maps_and_values ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/overlay_read.rs (.docker-cache/target-rust/debug/deps/overlay_read-31ef111cb0831342)
+
+running 9 tests
+test adjacent_non_overlapping_extents_in_one_layer_are_exact ... ok
+test gc_retains_overlay_base_chains_and_collects_unreferenced_chunks ... ok
+test nested_overlays_resolve_in_order_and_keep_old_versions_readable ... ok
+test overlay_chain_depth_is_bounded ... ok
+test overlay_fails_closed_for_broken_base_chains_and_accounting ... ok
+test overlay_format_rejects_are_typed_before_any_chunk_is_read ... ok
+test range_reads_fetch_only_intersecting_chunks ... ok
+test v4_overlay_round_trips_exact_bytes_and_full_read_verifies ... ok
+test verify_resolves_overlay_chains_and_reports_corruption ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/overlay_write.rs (.docker-cache/target-rust/debug/deps/overlay_write-dea98f5313f3b629)
+
+running 13 tests
+test adjacent_writes_coalesce_without_growing_the_chain ... ok
+test aligned_and_misaligned_overwrites_are_exact_and_match_the_canonical_root ... ok
+test append_and_truncate_grow_publish_exact_layers ... ok
+test collapse_and_insert_are_refused_for_an_overlay_object ... ok
+test crash_proxy_over_overlay_publication_yields_old_or_new ... ok
+test gc_collects_an_unreferenced_overlay_layer ... ok
+test overlapping_ranges_in_one_call_are_last_writer_wins ... ok
+test rewriting_identical_bytes_publishes_nothing ... ok
+test snapshots_and_gc_retain_every_overlay_layer ... ok
+test the_configured_byte_bound_refuses_and_names_compaction ... ok
+test the_configured_depth_bound_refuses_and_names_compaction ... ok
+test the_manifest_extent_limit_forces_a_new_layer ... ok
+test zero_range_publishes_an_overlay_layer_and_is_bounded ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+     Running tests/packs.rs (.docker-cache/target-rust/debug/deps/packs-7776482e5def3acd)
+
+running 13 tests
+test backend_kind_refuses_packing_a_weak_plane ... ok
+test catalog_bound_falls_back_to_flat ... ok
+test deterministic_layout_for_a_fixed_pack_size ... ok
+test digest_mismatch_fails_closed ... ok
+test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok
+test large_blobs_bypass_packing_and_remain_flat ... ok
+test missing_catalog_fails_closed ... ok
+test missing_segment_fails_closed ... ok
+test pack_crash_proxy_yields_old_or_new ... ok
+test packed_plane_refuses_a_plane_without_range_reads ... ok
+test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok
+test store_round_trip_verify_and_gc_on_a_packed_plane ... ok
+test truncated_pack_fails_closed ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/parallel_checkpoint.rs (.docker-cache/target-rust/debug/deps/parallel_checkpoint-42d203b498dbd0c4)
+
+running 7 tests
+test a_killed_process_mid_prepare_leaves_no_publication ... ok
+test a_refused_prepare_publishes_nothing_and_gc_reclaims_orphans ... ok
+test blob_worker_can_publish_blobs_but_not_control_state ... ok
+test duplicate_checkpoint_name_fails_closed ... ok
+test every_rank_count_publishes_the_same_head ... ok
+test parallel_and_sequential_publish_identical_state ... ok
+test rank_and_byte_bounds_are_enforced ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.73s
+
+     Running tests/parallel_read.rs (.docker-cache/target-rust/debug/deps/parallel_read-792d29e2dadf843e)
+
+running 9 tests
+test corrupted_object_fails_closed_and_deterministically ... ok
+test determinism_across_twenty_repeats_at_four_threads ... ok
+test empty_input_is_a_no_op ... ok
+test error_policy_is_lowest_failing_index ... ok
+test inflight_bound_holds_and_is_observable ... ok
+test non_tensor_object_reports_the_same_error_on_every_thread_count ... ok
+test oversized_task_runs_alone ... ok
+test thread_count_never_changes_bytes_or_order ... ok
+test tight_bound_and_oversized_mix_terminates ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+     Running tests/planes.rs (.docker-cache/target-rust/debug/deps/planes-a2e3c81e9434cd7b)
+
+running 14 tests
+test commit_plane_without_conditional_update_is_refused ... ok
+test local_blobs_s3_commits_match_the_single_backend_store ... ok
+test local_planes_are_probed_on_a_writable_open ... ok
+test nested_splits_are_refused ... ok
+test object_planes_are_probed_and_declare_conditional_head ... ok
+test plane_keys_route_to_the_named_plane ... ok
+test s3_blobs_local_commits_match_the_single_backend_store ... ok
+test s3_split_crash_proxy_yields_old_or_new ... ok
+test split_crash_proxy_yields_old_or_new ... ok
+test split_local_planes_match_the_single_backend_store ... ok
+test split_publication_uses_one_head_compare_and_swap ... ok
+test split_refuses_a_blob_plane_without_atomic_publish ... ok
+test split_refuses_a_commit_plane_without_conditional_update ... ok
+test split_report_lists_planes_in_store_info ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests/planner_float.rs (.docker-cache/target-rust/debug/deps/planner_float-c04514a68246efaa)
+
+running 4 tests
+test measured_cost_model_is_used_and_lambda_can_flip_the_choice ... ok
+test planner_does_not_select_float_tensor_for_random_data ... ok
+test planner_selects_float_tensor_for_weight_like_bf16 ... ok
+test rebase_rewrites_a_hot_delta_and_is_idempotent ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.01s
+
+     Running tests/planner_sparse.rs (.docker-cache/target-rust/debug/deps/planner_sparse-aefd677c826ab9e5)
+
+running 3 tests
+test cost_model_has_a_sparse_delta_row ... ok
+test dense_change_keeps_mode11_and_is_readable ... ok
+test sparse_change_selects_mode16_and_reads_back_exactly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests/provenance.rs (.docker-cache/target-rust/debug/deps/provenance-53872d69875d749c)
+
+running 19 tests
+test closure_rejects_cycles_and_terminates ... ok
+test closure_walks_transitively_and_respects_the_depth_bound ... ok
+test cost_components_are_summed_for_work_actually_incurred ... ok
+test cost_driven_choice_between_fetch_decode_and_recompute ... ok
+test gc_retains_provenance_and_inputs_until_the_output_is_deleted ... ok
+test input_and_output_order_do_not_change_the_identity ... ok
+test no_eligible_strategy_names_every_reason ... ok
+test output_content_mismatch_is_rejected_without_writing ... ok
+test params_are_bounded ... ok
+test provenance_relation_is_attached_atomically_to_every_output ... ok
+test provenance_survives_reopen ... ok
+test recompute_requires_every_input_to_be_available ... ok
+test recompute_requires_exact_determinism ... ok
+test record_round_trips_byte_for_byte ... ok
+test tie_break_is_cost_then_fetch_decode_recompute_then_name ... ok
+test unsorted_and_duplicate_inputs_are_rejected ... ok
+test verify_full_catches_a_record_that_no_longer_matches_the_object ... ok
+test verify_full_catches_a_tampered_record ... ok
+test verify_full_rejects_a_malformed_relation_target ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/quota.rs (.docker-cache/target-rust/debug/deps/quota-ece7c74410575832)
+
+running 10 tests
+test cli_quota_denial_is_non_disclosing ... ok
+test cli_quota_show_is_limited_to_the_callers_principal ... ok
+test group_commit_denial_rolls_back_the_whole_group ... ok
+test mismatched_record_fails_closed_until_rebuild ... ok
+test over_budget_write_is_refused_and_nothing_is_published ... ok
+test quota_arguments_parse_and_reject_ambiguity ... ok
+test quota_record_round_trips_canonically ... ok
+test reused_content_costs_only_the_new_object_record ... ok
+test tenant_budget_is_attributed_by_the_reserved_attribute ... ok
+test usage_survives_reopen_and_still_denies ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/quota_usage_op.rs (.docker-cache/target-rust/debug/deps/quota_usage_op-af51dc4dbc5440c5)
+
+running 9 tests
+test budget_denial_in_a_group_is_atomic_and_charges_nothing ... ok
+test legacy_record_is_imported_once_and_preserved ... ok
+test migrated_record_that_disagrees_with_committed_usage_fails_closed ... ok
+test tampered_usage_assertion_is_corrupt_on_replay ... ok
+test tenant_and_usage_op_bytes_are_canonical ... ok
+test tenant_usage_is_committed_and_replayed ... ok
+test usage_is_a_committed_op_and_the_quota_file_is_policy_only ... ok
+test usage_is_derived_when_the_head_has_no_assertion ... ok
+test usage_survives_reopen_without_a_per_commit_file_write ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/range_write.rs (.docker-cache/target-rust/debug/deps/range_write-4b292537df9cb14d)
+
+running 6 tests
+test a_current_manifest_cache_is_equivalent_to_a_fresh_read ... ok
+test a_stale_manifest_cache_is_ignored_not_trusted ... ok
+test empty_range_list_publishes_nothing ... ok
+test one_multi_range_write_publishes_one_commit ... ok
+test overlapping_ranges_apply_in_call_order ... ok
+test ranges_match_sequential_writes_byte_for_byte ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/recovery.rs (.docker-cache/target-rust/debug/deps/recovery-3e2b1cf91c4b4a40)
+
+running 11 tests
+test both_slots_zero_fails_closed ... ok
+test checkpoint_survives_reopen_and_corrupt_checkpoint_is_ignored ... ok
+test commit_crc_flip_falls_back ... ok
+test corrupt_manifest_falls_back_and_full_verify_reports ... ok
+test corrupted_superblock_slot_falls_back_to_the_other_slot ... ok
+test missing_chunk_falls_back_and_verify_reports_it ... ok
+test publication_crash_tail_above_superblock_is_not_visible ... ok
+test rejected_generations_are_never_deleted ... ok
+test truncated_commit_file_falls_back ... ok
+test verify_reports_healthy_store_as_ok ... ok
+test writer_after_rejected_generation_does_not_overwrite_it ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/recovery_first.rs (.docker-cache/target-rust/debug/deps/recovery_first-80f84b29f0405c5b)
+
+running 3 tests
+test required_set_is_first_and_the_container_is_exact ... ok
+test unknown_required_tensor_is_a_typed_error ... ok
+test verified_cache_is_reused_and_revalidated ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/representation.rs (.docker-cache/target-rust/debug/deps/representation-9043ca02945ad987)
+
+running 9 tests
+test chunk_decode_counter_observes_only_the_calling_thread ... ok
+test codec_auto_falls_back_to_a_legal_v2_raw_manifest ... ok
+test codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks ... ok
+test codec_store_reopens_and_raw_mode_preserves_v1_reads ... ok
+test delta_uses_a_causal_base_and_beats_an_independent_zstd_frame ... ok
+test dependency_depth_bound_is_enforced ... ok
+test gc_retains_codec_dependencies_of_a_live_dependent ... ok
+test missing_dependency_fails_closed_and_verify_reports_it ... ok
+test raw_mode_writes_the_frozen_v1_manifest_layout ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/restore_pipeline.rs (.docker-cache/target-rust/debug/deps/restore_pipeline-ac70aae2836dc028)
+
+running 14 tests
+test authorized_restore_matches_the_id_restore ... ok
+test byte_identical_output_for_1_2_4_threads ... ok
+test corrupted_tensor_fails_closed_with_a_deterministic_prefix ... ok
+test declaration_errors_do_not_stall_later_reservations ... ok
+test empty_input_writes_nothing ... ok
+test first_error_is_lowest_index_and_writing_stops ... ok
+test kill_mid_write_leaves_only_a_truncated_destination ... 
+running 1 test
+ok
+test order_is_preserved_under_skewed_decode_times ... ok
+test oversized_between_normal_tasks_terminates_and_orders ... ok
+test oversized_tasks_run_one_at_a_time_without_deadlock ... ok
+test restore_does_not_mutate_the_store ... ok
+test restore_pipeline_crash_helper ... ok
+test staging_bound_is_observed_and_enforced ... ok
+test writer_failure_keeps_only_the_successful_prefix ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+     Running tests/s3_backend.rs (.docker-cache/target-rust/debug/deps/s3_backend-0340c1c702eea68c)
+
+running 6 tests
+test capabilities_and_conditional_put_absent_or_idempotent ... ok
+test crash_proxy_over_s3_yields_old_or_new ... ok
+test gc_over_s3_deletes_only_unreachable_objects ... ok
+test local_and_s3_artifacts_are_byte_identical ...      Running tests/s3_fencing.rs (.docker-cache/target-rust/debug/deps/s3_fencing-90e3f7e55ab39d25)
+ok
+test store_round_trip_over_s3 ... ok
+test writer_lock_and_lost_conditional_head_update ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+test a_replaced_lock_record_makes_the_stale_publication_fail_412 ... ok
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+test two_writers_racing_on_release_leave_one_valid_lock ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/service_account.rs (.docker-cache/target-rust/debug/deps/service_account-ae226b5ae7df99bc)
+
+running 14 tests
+test a_short_lived_token_uses_half_its_lifetime_as_the_window ... ok
+test an_inconsistent_key_is_refused ... ok
+test assertion_for_an_empty_scope_is_refused ... ok
+test assertion_has_the_standard_header_and_claim_shape ... ok
+test debug_output_redacts_the_key_assertion_and_token ... ok
+test encrypted_and_non_rsa_keys_are_refused_by_name ... ok
+test gcs_backend_sends_the_service_account_bearer_token ... ok
+test gcs_config_refuses_two_credential_forms_and_loads_one_key_file ... ok
+test malformed_input_never_echoes_key_material ... ok
+test non_service_account_credentials_are_refused_by_name ... ok
+test pkcs8_and_pkcs1_encodings_are_the_same_key ... ok
+test provider_refusals_are_typed_and_do_not_echo_the_assertion ... ok
+test rfc7515_rs256_vector_signs_to_the_published_bytes ... ok
+test token_is_cached_and_refreshed_inside_a_bounded_window ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+     Running tests/shared_mounts.rs (.docker-cache/target-rust/debug/deps/shared_mounts-d1f16f2cf876d346)
+
+running 8 tests
+test mount_many_spec_rejects_unknown_fields_and_duplicates ... ok
+test no_panic_escapes_a_shared_view ... ok
+test shared_capability_scoped_view_cannot_see_an_unauthorized_object ... ok
+test shared_spec_tampering_does_not_start_a_writable_view ... ok
+test shared_view_refuses_write_like_operations_with_erofs ... ok
+test shared_view_thread_count_is_bounded_and_oversized_specs_are_refused ... ok
+test shared_views_match_equivalent_single_mount_daemons ... ok
+test unmounting_one_shared_view_leaves_the_others_serving ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s
+
+     Running tests/signed_bundle.rs (.docker-cache/target-rust/debug/deps/signed_bundle-abfd7d5a7b9ebd51)
+
+running 11 tests
+test manifest_is_deterministic_across_directory_scans ... ok
+test manifest_paths_reject_traversal ... ok
+test missing_signature_fails_when_a_key_is_required ... ok
+test non_canonical_manifest_is_rejected ... ok
+test provenance_show_resolves_bundle_manifest_and_snapshot ... ok
+test sign_verify_round_trip ... ok
+test signature_from_bundle_verifies_self_contained ... ok
+test tampered_file_breaks_file_check_and_signature ... ok
+test unlisted_payload_file_is_rejected ... ok
+test unsigned_bundle_fails_with_public_key_and_says_so_without ... ok
+test wrong_key_is_rejected ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/singleflight.rs (.docker-cache/target-rust/debug/deps/singleflight-de2a8c04d36ce645)
+
+running 9 tests
+test a_cancelled_read_leaves_the_store_usable ... ok
+test a_cancelled_waiter_does_not_cancel_the_leader ... ok
+test a_decode_error_reaches_every_waiter ... ok
+test a_pre_cancelled_token_declines_to_start ... ok
+test byte_bound_degrades_instead_of_reserving_without_limit ... ok
+test concurrent_identical_reads_decode_once ... ok
+test distinct_objects_are_not_coalesced ... ok
+test entry_bound_degrades_to_independent_reads ... ok
+test single_flight_is_off_by_default ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.36s
+
+     Running tests/store_core.rs (.docker-cache/target-rust/debug/deps/store_core-b75df81c882a713c)
+
+running 11 tests
+test authorization_filters_results_counts_and_evidence ... ok
+test conformance_fixture_is_deterministic_and_small ... ok
+test empty_files_and_range_reads ... ok
+test gc_mark_sweep_removes_only_unreachable_blobs ... ok
+test init_create_reopen_roundtrip ... ok
+test overwrite_range_truncate_and_snapshot_reads ... ok
+test relations_cycles_tags_one_hop_and_cardinality ... ok
+test rename_hardlink_unlink_snapshot_and_gc_retention ... ok
+test setattr_and_symlink_metadata ... ok
+test single_writer_lock_and_read_only_open ... ok
+test snapshots_are_stable_and_selectors_follow_the_pin ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/store_extensions.rs (.docker-cache/target-rust/debug/deps/store_extensions-cf42c376659edd0f)
+
+running 11 tests
+test contexts_are_snapshot_scoped_and_round_trip_through_replay ... ok
+test file_range_zero_collapse_and_insert ... ok
+test gc_retains_pinned_content_and_sweeps_it_after_unpin ... ok
+test nlink_and_statfs_counters_derive_from_state ... ok
+test open_handle_pins_keep_unlinked_content_readable ... ok
+test orphan_object_records_left_by_a_crash_are_removed_by_gc_apply ... ok
+test rename_hardlink_identity_and_exchange ... ok
+test rename_replaces_files_and_empty_directories_atomically ... ok
+test rmdir_removes_empty_directories_and_rejects_non_empty ... ok
+test saved_contexts_are_relations_with_canonical_selector_hex ... ok
+test xattrs_are_stored_per_spec_and_survive_reopen ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/streaming.rs (.docker-cache/target-rust/debug/deps/streaming-8a657d58fefef175)
+
+running 7 tests
+test append_zero_bytes_is_a_no_op ... ok
+test codec_auto_streaming_large_uses_v2_raw_manifest ... ok
+test streaming_and_buffered_create_records_match ... ok
+test streaming_append_is_exact_and_one_generation_per_call ... ok
+test streaming_create_512mib_is_bounded_memory_and_exact ... ok
+test streaming_create_boundary_sizes ... ok
+test streaming_create_error_commits_nothing ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.12s
+
+     Running tests/tensor_store.rs (.docker-cache/target-rust/debug/deps/tensor_store-df14829b40eb3f1b)
+
+running 10 tests
+test byte_rewrite_of_a_tensor_object_drops_tensor_identity ... ok
+test missing_dependency_fails_closed_gc_retains_it_and_verify_names_it ... ok
+test mode10_round_trips_exact_bytes_across_layouts ... ok
+test mode11_round_trips_exact_bytes_and_stable_root_across_layouts ... ok
+test planner_bytes_only_chooses_raw_for_incompressible_tensors ... ok
+test planner_bytes_only_chooses_the_smallest_delta_for_a_near_duplicate_pair ... ok
+test planner_latency_weight_switches_to_the_faster_representation ... ok
+test planner_offers_mode15_only_when_a_tile_shape_is_supplied ... ok
+test semantic_planner_chooses_semantic_delta_only_for_a_matching_root ... ok
+test tensor_layout_encoding_is_canonical_and_attributes_are_recorded ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+     Running tests/threefs.rs (.docker-cache/target-rust/debug/deps/threefs-224ead60adb2a02b)
+
+running 13 tests
+test posix_capabilities_are_declared_not_measured_text ... ok
+test posix_transport_is_byte_identical_to_local ... ok
+test store_round_trip_over_usrbio_is_byte_identical_to_local ... ok
+test unsafe_is_confined_to_the_threefs_ffi_module ... ok
+test usrbio_batch_reads_are_exact_and_batched ... ok
+test usrbio_read_into_takes_the_direct_path_inside_the_region ... ok
+test usrbio_refuses_when_the_library_is_absent ... ok
+test usrbio_rejects_unbounded_configuration ... ok
+test usrbio_reports_a_prep_failure_without_leaking_a_registration ... ok
+test usrbio_require_mount_refuses_a_non_3fs_path ... ok
+test usrbio_status_reports_that_the_mount_is_not_3fs ... ok
+test usrbio_survives_partial_completion ... ok
+test usrbio_truncates_at_end_of_object_and_rejects_a_past_end_offset ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/tiled_parallel.rs (.docker-cache/target-rust/debug/deps/tiled_parallel-a70b2193d6556f0c)
+
+running 8 tests
+test auto_tile_derivation_divides_both_extents ... ok
+test auto_tile_derivation_errors_when_nothing_fits ... ok
+test auto_tile_planner_is_deterministic_and_records_the_shape ... ok
+test corrupted_tile_fails_closed_identically_at_every_thread_count ... ok
+test full_object_decode_is_identical_at_1_2_and_4_threads ... ok
+test inflight_bound_is_respected ... ok
+test region_reads_decode_only_intersecting_tiles_at_every_thread_count ... ok
+test repeated_parallel_decode_is_deterministic ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/training_ready.rs (.docker-cache/target-rust/debug/deps/training_ready-cb49e6671c8f6be6)
+
+running 10 tests
+test budget_below_actual_is_refused_before_writing ... ok
+test causal_cycle_terminates ... ok
+test check_mode_writes_nothing ... ok
+test cli_check_materialize_and_verify_out ... ok
+test corrupted_logical_tensor_root_is_refused ... ok
+test happy_path_materializes_and_verifies_a_checkpoint ... ok
+test missing_capability_grant_is_unauthorized ... ok
+test missing_causal_parent_is_named_and_refused ... ok
+test second_run_into_existing_directory_is_refused ... ok
+test tampered_chunk_blob_is_refused_and_creates_no_output ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/transcode.rs (.docker-cache/target-rust/debug/deps/transcode-021c0c7d5e5a4486)
+
+running 7 tests
+test causal_checkpoint_links_matching_tensors ... ok
+test fast_save_never_produces_a_planned_strategy_and_restores_exactly ... ok
+test provenance_round_trips_as_a_canonical_record ... ok
+test transcode_dry_run_and_budgets_write_nothing ... ok
+test transcode_only_rewrites_fast_sources ... ok
+test transcode_republishes_the_same_object_id_and_keeps_the_old_version ... ok
+test write_policy_auto_resolves_from_the_caller_declaration ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/writer_fencing.rs (.docker-cache/target-rust/debug/deps/writer_fencing-3eb35ae9a7d57ad6)
+
+running 4 tests
+test local_writer_lock_still_excludes_a_second_handle ... ok
+test local_writer_refuses_to_publish_after_its_lock_file_is_removed ... ok
+test local_writer_refuses_to_publish_under_a_replaced_lock ... ok
+test object_writer_refuses_to_publish_under_a_replaced_lock ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/writer_lock.rs (.docker-cache/target-rust/debug/deps/writer_lock-a6c92ec624f1d462)
+
+running 8 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s
+
+     Running unittests examples/azure_court.rs (.docker-cache/target-rust/debug/examples/azure_court-38bed677b90cb026)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/backend_bench.rs (.docker-cache/target-rust/debug/examples/backend_bench-af8070be1c82d667)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_ai_corpus.rs (.docker-cache/target-rust/debug/examples/bench_ai_corpus-89022cdb3215fca8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec.rs (.docker-cache/target-rust/debug/examples/bench_codec-b71e83babfb8b1dd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec_ext.rs (.docker-cache/target-rust/debug/examples/bench_codec_ext-c085baaf825f739e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_external_manifest.rs (.docker-cache/target-rust/debug/examples/bench_external_manifest-69e4cdabc3e78a86)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_fs_receipt.rs (.docker-cache/target-rust/debug/examples/bench_fs_receipt-dee5fbf30ffbf9ea)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_parallel_checkpoint.rs (.docker-cache/target-rust/debug/examples/bench_parallel_checkpoint-30bdbdce68de947b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_quota_branch.rs (.docker-cache/target-rust/debug/examples/bench_quota_branch-4360bc161f7fe1d5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_s3_backend.rs (.docker-cache/target-rust/debug/examples/bench_s3_backend-c5819d009cdd0ec8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_store.rs (.docker-cache/target-rust/debug/examples/bench_store-3470a8f1ef298be4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_tensor_tiles.rs (.docker-cache/target-rust/debug/examples/bench_tensor_tiles-57da44a8a62324b5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/cache_bench.rs (.docker-cache/target-rust/debug/examples/cache_bench-dbe78760adeb417d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/calibrate_decode.rs (.docker-cache/target-rust/debug/examples/calibrate_decode-3b5fad7f955fc32f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/capability_bench.rs (.docker-cache/target-rust/debug/examples/capability_bench-c48ccd4e9dfde923)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/codec_cycle_probe.rs (.docker-cache/target-rust/debug/examples/codec_cycle_probe-b61aee4c8fcc6d57)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/context_mount_corpus.rs (.docker-cache/target-rust/debug/examples/context_mount_corpus-2f532c9c89eacbf9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/decode_regions_bench.rs (.docker-cache/target-rust/debug/examples/decode_regions_bench-bc42621f3a6963a1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/distributed_court.rs (.docker-cache/target-rust/debug/examples/distributed_court-8aadfbd1a5376b75)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/extent_cow_bench.rs (.docker-cache/target-rust/debug/examples/extent_cow_bench-da036ad10f1a002c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/family_lifecycle.rs (.docker-cache/target-rust/debug/examples/family_lifecycle-0ce2a0f01c74a550)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gcs_auth_probe.rs (.docker-cache/target-rust/debug/examples/gcs_auth_probe-aa56de04bf6bdd2e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gcs_court.rs (.docker-cache/target-rust/debug/examples/gcs_court-6ff044241a8e8902)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_checkpoint_vector.rs (.docker-cache/target-rust/debug/examples/gen_checkpoint_vector-8c9dc9a9fad41c00)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_overlay_fixture.rs (.docker-cache/target-rust/debug/examples/gen_overlay_fixture-5e112aac67804cd7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/group_commit_bench.rs (.docker-cache/target-rust/debug/examples/group_commit_bench-3cbfc4e595c4ed44)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_bench.rs (.docker-cache/target-rust/debug/examples/index_bench-26b1495afca9a014)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_persist_bench.rs (.docker-cache/target-rust/debug/examples/index_persist_bench-cd1e6b988d76daf4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/kv_capability_bench.rs (.docker-cache/target-rust/debug/examples/kv_capability_bench-64c96058ab80a5b9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/kv_prefix_bench.rs (.docker-cache/target-rust/debug/examples/kv_prefix_bench-8cc1b7aa12e4b6be)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/lock_probe.rs (.docker-cache/target-rust/debug/examples/lock_probe-1a660e3196dfefc2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/merkle_identity_bench.rs (.docker-cache/target-rust/debug/examples/merkle_identity_bench-745e76d73413be5d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/mode18_bench.rs (.docker-cache/target-rust/debug/examples/mode18_bench-0aca0d69c72d420c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/open_bench.rs (.docker-cache/target-rust/debug/examples/open_bench-74de3bf564ff1021)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/overlay_bench.rs (.docker-cache/target-rust/debug/examples/overlay_bench-d8a8db8d0468836b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/packs_bench.rs (.docker-cache/target-rust/debug/examples/packs_bench-7b8401a1596fef59)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/planes_bench.rs (.docker-cache/target-rust/debug/examples/planes_bench-850926c7780d5099)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/provenance_bench.rs (.docker-cache/target-rust/debug/examples/provenance_bench-666e92adec0b057c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/real_model_bench.rs (.docker-cache/target-rust/debug/examples/real_model_bench-5807ab3bce8b869a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/representation_bench.rs (.docker-cache/target-rust/debug/examples/representation_bench-31218f413b44c796)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/rsa_timing.rs (.docker-cache/target-rust/debug/examples/rsa_timing-f4ef35e1fc1a4396)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/s3_compat_matrix.rs (.docker-cache/target-rust/debug/examples/s3_compat_matrix-ed379d363e15f426)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/s3_court_bucket.rs (.docker-cache/target-rust/debug/examples/s3_court_bucket-d724bdd555d49924)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/streaming_bench.rs (.docker-cache/target-rust/debug/examples/streaming_bench-75b6235822d36f3e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/tensor_planner_bench.rs (.docker-cache/target-rust/debug/examples/tensor_planner_bench-8d318458d42416c9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/threefs_bench.rs (.docker-cache/target-rust/debug/examples/threefs_bench-6be5877117efd23e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/trajectory_court.rs (.docker-cache/target-rust/debug/examples/trajectory_court-3fedb9a41e9e6afe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/write_policy_bench.rs (.docker-cache/target-rust/debug/examples/write_policy_bench-c634ed6801cf2a97)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== go_store_and_fuse ===
++ exec docker run --rm --init --name weft-fuse-court-1607064 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo build --release --features fuse --bin weftfs && cd WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && WEFTFS_RUST_BIN=/work/.docker-cache/target-rust/release/weftfs go test -race ./... -count=1'
+    Finished `release` profile [optimized] target(s) in 0.02s
+?   	github.com/infinityabundance/WeftFS-Go/auth	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/indexbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/merklebench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/openbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/tensorbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/resolver	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/cmd/weftfs	41.398s
+ok  	github.com/infinityabundance/WeftFS-Go/fusefs	7.682s
+ok  	github.com/infinityabundance/WeftFS-Go/index	1.004s
+ok  	github.com/infinityabundance/WeftFS-Go/model	1.006s
+?   	github.com/infinityabundance/WeftFS-Go/werr	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/store	121.215s
+=== codec_cross_rust_encode ===
++ exec docker run --rm --init --name weft-rust-court-1608903 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/cross.sh rust-gen'
+rust-gen: wrote 47 frames to /work/.docker-cache/cross/rust
+=== codec_cross_go_all ===
++ exec docker run --rm --init --name weft-go-court-1609333 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/cross.sh go-build && bash hack/cross.sh go-gen && bash hack/cross.sh go-decode'
+go-build: wrote /work/.docker-cache/weftcodec-go
+go-gen: wrote 47 frames to /work/.docker-cache/cross/go
+go-decode: decoded 38 Rust frames (including sharded)
+=== codec_cross_rust_decode ===
++ exec docker run --rm --init --name weft-rust-court-1610246 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/cross.sh rust-decode'
+rust-decode: decoded 38 Go frames (including sharded)
+=== codec_cross_compare ===
++ exec docker run --rm --init --name weft-go-court-1610554 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/cross.sh compare'
+== decode equivalence ==
+PASS rust->go  raw
+PASS go->rust  raw
+PASS rust->go  raw_empty
+PASS go->rust  raw_empty
+PASS rust->go  raw_chunked
+PASS go->rust  raw_chunked
+PASS rust->go  zstd
+PASS go->rust  zstd
+PASS rust->go  reference
+PASS go->rust  reference
+PASS rust->go  delta
+PASS go->rust  delta
+PASS rust->go  dictionary
+PASS go->rust  dictionary
+PASS rust->go  structured
+PASS go->rust  structured
+PASS rust->go  tensor
+PASS go->rust  tensor
+PASS rust->go  tokens
+PASS go->rust  tokens
+PASS rust->go  quantized
+PASS go->rust  quantized
+PASS rust->go  float_tensor
+PASS go->rust  float_tensor
+PASS rust->go  float_tensor_single
+PASS go->rust  float_tensor_single
+PASS rust->go  float_tensor_uniform
+PASS go->rust  float_tensor_uniform
+PASS rust->go  weight_delta_bf16
+PASS go->rust  weight_delta_bf16
+PASS rust->go  weight_delta_fp32
+PASS go->rust  weight_delta_fp32
+PASS rust->go  weight_delta_q8
+PASS go->rust  weight_delta_q8
+PASS rust->go  semantic_delta_bf16
+PASS go->rust  semantic_delta_bf16
+PASS rust->go  semantic_delta_fp32
+PASS go->rust  semantic_delta_fp32
+PASS rust->go  semantic_delta_q8
+PASS go->rust  semantic_delta_q8
+PASS rust->go  kv_cache_p0
+PASS go->rust  kv_cache_p0
+PASS rust->go  kv_cache_p1
+PASS go->rust  kv_cache_p1
+PASS rust->go  activation_c0
+PASS go->rust  activation_c0
+PASS rust->go  activation_c1
+PASS go->rust  activation_c1
+PASS rust->go  tensor_tiled_bf16
+PASS go->rust  tensor_tiled_bf16
+PASS rust->go  tensor_tiled_fp32
+PASS go->rust  tensor_tiled_fp32
+PASS rust->go  float_tiled_bf16
+PASS go->rust  float_tiled_bf16
+PASS rust->go  float_tiled_fp32
+PASS go->rust  float_tiled_fp32
+PASS rust->go  sparse_delta_bf16
+PASS go->rust  sparse_delta_bf16
+PASS rust->go  sparse_delta_q8
+PASS go->rust  sparse_delta_q8
+PASS rust->go  sparse_delta_fp32
+PASS go->rust  sparse_delta_fp32
+== deterministic frame bytes (Go == Rust) ==
+PASS identical raw
+PASS identical raw_empty
+PASS identical raw_chunked
+PASS identical reference
+PASS identical delta
+PASS identical structured
+PASS identical tensor
+PASS identical tokens
+PASS identical quantized
+PASS identical float_tensor
+PASS identical float_tensor_single
+PASS identical float_tensor_uniform
+PASS identical weight_delta_bf16
+PASS identical weight_delta_fp32
+PASS identical weight_delta_q8
+PASS identical kv_cache_p0
+PASS identical kv_cache_p1
+PASS identical activation_c0
+PASS identical activation_c1
+PASS identical tensor_tiled_bf16
+PASS identical tensor_tiled_fp32
+PASS identical float_tiled_bf16
+PASS identical float_tiled_fp32
+PASS identical sparse_delta_bf16
+PASS identical sparse_delta_q8
+PASS identical sparse_delta_fp32
+== TENSOR_SHARDED (mode 10) shard sets ==
+PASS identical tensor_sharded sharded_q8/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q8/shard-0
+PASS identical tensor_sharded sharded_q8/shard-1.wft1
+PASS decode-equivalent tensor_sharded sharded_q8/shard-1
+PASS identical logical root tensor_sharded sharded_q8
+PASS identical tensor_sharded sharded_q4/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-0
+PASS identical tensor_sharded sharded_q4/shard-1.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-1
+PASS identical tensor_sharded sharded_q4/shard-2.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-2
+PASS identical tensor_sharded sharded_q4/shard-3.wft1
+PASS decode-equivalent tensor_sharded sharded_q4/shard-3
+PASS identical logical root tensor_sharded sharded_q4
+PASS identical tensor_sharded sharded_q8_single/shard-0.wft1
+PASS decode-equivalent tensor_sharded sharded_q8_single/shard-0
+PASS identical logical root tensor_sharded sharded_q8_single
+== KV_CACHE (mode 12) / ACTIVATION_STREAM (mode 13) byte identity ==
+YES byte-identical kv_cache_p0
+YES byte-identical kv_cache_p1
+YES byte-identical activation_c0
+YES byte-identical activation_c1
+== SEMANTIC_DELTA (mode 14) byte identity ==
+YES byte-identical semantic_delta_bf16
+YES byte-identical semantic_delta_fp32
+YES byte-identical semantic_delta_q8
+== TENSOR_TILED (mode 15) byte identity ==
+YES byte-identical tensor_tiled_bf16
+YES byte-identical tensor_tiled_fp32
+== FLOAT_TILED (mode 17) byte identity ==
+YES byte-identical float_tiled_bf16
+YES byte-identical float_tiled_fp32
+== SPARSE_DELTA (mode 16) byte identity ==
+YES byte-identical sparse_delta_bf16
+YES byte-identical sparse_delta_q8
+YES byte-identical sparse_delta_fp32
+== zstd/dictionary are decode-equivalence modes ==
+NOTE differing bytes zstd (allowed by spec §12)
+NOTE differing bytes dictionary (allowed by spec §12)
+cross-language gate: all checks passed
+=== spec_drift ===
++ exec docker run --rm --init --name weft-rust-court-1610922 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; bash scripts/check-spec-drift.sh'
+spec drift: OK (42 file comparisons across 3 repos)
+=== claims ===
+claims: OK (613 entries)
+=== conformance_manifest ===
+conformance manifest: OK (355 entries, aggregate 9818b5d3eb1e1f3511bdea2ced99ea9f265189ceca9a726634529ae09407e9ac)
+=== conformance_coverage ===
+conformance manifest: OK (355 entries, aggregate 9818b5d3eb1e1f3511bdea2ced99ea9f265189ceca9a726634529ae09407e9ac)
+conformance coverage: OK (355 entries; modes valid/reject 0:6/20 1:2/6 2:1/2 3:1/9 4:1/2 5:1/5 6:3/8 7:2/6 8:3/8 9:3/14 10:3/8 11:3/8 12:3/8 13:3/8 14:3/6 15:3/8 16:4/14 17:3/8 18:4/12; identity valid wcb:12 selector:22 context:11 tensor:12 checkpoint:1 capability:2)
+=== generated_types ===
++ exec docker run --rm --init --name weft-go-court-1618040 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; GO111MODULE=off go run scripts/gen-types.go -schema spec/schema/identity-v1.schema -rust WeftCodec/src/generated.rs -go WeftCodec-Go/generated/generated.go --check'
+gen-types: OK (schema sha256 3ca1f7df348ec0f507ab7bd5c06e98924cb0af80c97f24fa314580359456f736)
+=== buck2_cas ===
++ exec docker run --rm --init --name weft-go-court-1618313 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd adapters/buck2 && go vet ./... && go test -count=1 ./...'
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.013s
+=== buck2_cas_store ===
++ exec docker run --rm --init --name weft-fuse-court-1618645 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; bash scripts/demo-buck2-cas.sh'
+kind: buck2-cas-store
+timestamp_utc: 20261108T051200Z
+court: fuse
+revisions:
+  WeftFS: c88b1990ff6c3c6e1b33030d19894258dfa8b2a5
+  WeftCodec: 6dd7e13d16de33ed765c462ec14a13f0a6c8c844
+  WeftCodec-Go: 70e47011901db343fc3b7622a565c309b58f093d
+  WeftFS-Go: b475d2db062375d795705b22cc41fc5c30609fc9
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.1-1-cachyos
+image: weft/fuse-court:1 sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157
+== build rust oracle ==
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.042s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261108T051200Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T051200Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T051200Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T051200Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass
+receipt: /work/bench/receipts/buck2-cas-store-correctness-20261108T051200Z.json (41/41)
+raw log: /work/bench/receipts/buck2-cas-store-correctness-20261108T051200Z.log
+=== threefs ===
++ exec docker run --rm --init --name weft-rust-court-1619195 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; bash scripts/threefs_court.sh'
+=== building the USRBIO conformance library ===
+=== tests/threefs.rs ===
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4939:8
+     |
+4939 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4946:8
+     |
+4946 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4963:7
+     |
+4963 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4965:4
+     |
+4965 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4998:4
+     |
+4998 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/threefs.rs (.docker-cache/target-rust/debug/deps/threefs-b08c1c246e19ec04)
+
+running 13 tests
+test posix_capabilities_are_declared_not_measured_text ... ok
+test posix_transport_is_byte_identical_to_local ... ok
+test store_round_trip_over_usrbio_is_byte_identical_to_local ... ok
+test unsafe_is_confined_to_the_threefs_ffi_module ... ok
+test usrbio_batch_reads_are_exact_and_batched ... ok
+test usrbio_read_into_takes_the_direct_path_inside_the_region ... ok
+test usrbio_refuses_when_the_library_is_absent ... ok
+test usrbio_rejects_unbounded_configuration ... ok
+test usrbio_reports_a_prep_failure_without_leaking_a_registration ... ok
+test usrbio_require_mount_refuses_a_non_3fs_path ... ok
+test usrbio_status_reports_that_the_mount_is_not_3fs ... ok
+test usrbio_survives_partial_completion ... ok
+test usrbio_truncates_at_end_of_object_and_rejects_a_past_end_offset ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+=== refusing a shared object that is not the 3FS client ===
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4939:8
+     |
+4939 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4946:8
+     |
+4946 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4963:7
+     |
+4963 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4965:4
+     |
+4965 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4998:4
+     |
+4998 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+UnsupportedVersion: `/work/.docker-cache/threefs/lib/libnot_threefs.so` is missing 3FS USRBIO symbols ["hf3fs_iorcreate4", "hf3fs_iordestroy", "hf3fs_iovcreate", "hf3fs_iovdestroy", "hf3fs_reg_fd", "hf3fs_dereg_fd", "hf3fs_prep_io", "hf3fs_submit_ios", "hf3fs_wait_for_ios", "hf3fs_is_hf3fs", "hf3fs_extract_mount_point"]; it is not the 3FS client library
+threefs_court: ok
+=== agent_memory ===
++ exec docker run --rm --init --name weft-fuse-court-1619464 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; bash scripts/demo-agent-memory.sh'
+===== BUILD =====
+receipt: /work/bench/receipts/agent-memory-20261108T051203Z.json
+NOTE: Timestamps are simulated fixture nanoseconds; no real-time aging or retention claim is made
+NOTE: The bundle is a point-in-time export of the January store; replay runs after the September writes
+
+===== STEP january-store: Create prompt/model/tool/dataset/output and typed lineage edges =====
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 init
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 mkdir /prompts --seed dir-prompts
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 mkdir /models --seed dir-models
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 mkdir /tools --seed dir-tools
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 mkdir /datasets --seed dir-datasets
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 mkdir /outputs --seed dir-outputs
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 create /prompts/task.txt --text Summarize the retained experiment log. Task: summarize.
+ --seed prompt-jan --attr task=summarize --attr model=llama-4 --attr sha256=0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 create /models/llama-4.bin --text llama-4 ver_19 weights marker
+ --seed model-jan --attr task=summarize --attr model=llama-4
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 create /tools/retriever.bin --text retriever v3 tool marker
+ --seed tool-jan --attr task=summarize
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 create /datasets/eval-v1.bin --text eval-v1 dataset marker
+ --seed dataset-jan --attr task=summarize
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 create /outputs/run-001.bin --text agent output run-001: exact retained bytes
+ --seed output-jan --attr task=summarize --attr model=llama-4 --attr sha256=2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 stat /prompts/task.txt
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 stat /models/llama-4.bin
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 stat /tools/retriever.bin
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 stat /datasets/eval-v1.bin
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 stat /outputs/run-001.bin
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate generated_by --object 71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate prompted_by --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate grounded_in --object dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate used_tool --object 075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate derived_from --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 relation list
+CMD[january-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1767225600000000000 snapshot create jan-2026
+----- STEP january-store: pass output=f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 model=71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9 prompt=5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726 tool=075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a dataset=dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e
+
+===== STEP contexts: Context Roots by task, model, time =====
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:task=summarize --selector select attrs.task == "summarize" --snapshot jan-2026
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:model=llama-4 --selector select attrs.model == "llama-4" --snapshot jan-2026
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 context create --name at:2026-01 --selector select true --snapshot jan-2026
+CMD[contexts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 context list
+----- STEP contexts: pass task=90166ec766dbc3eb0c1bc4790568155225f3cec439d575428290451a77ce2d4e model=def5040c138319382f9a7144efa2f9edaf7d951c9ac97c8419918a074c2d9e3f time=7cba451e966ba5cb8d1aaf3e6949396e5f5b0adea3b450f70325b5c778c4d953
+
+===== STEP export: Export the January point-in-time replay bundle =====
+CMD[export]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1767225600000000000 export-bundle --out /work/bench/bundles/agent-memory-7-20261108T051203Z.tar.zst --source-revision WeftFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5
+----- STEP export: pass bundle=cd4f704886e281a3aef6246f7fa2d8493804a66f3521009705b444061132ba23
+
+===== STEP september-store: Write a later run; old snapshot and Context Roots stay pinned =====
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1788220800000000000 create /outputs/run-002.bin --text agent output run-002: later bytes
+ --seed output-sep --attr task=summarize --attr model=llama-4 --attr sha256=55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-002.bin
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --fixed-timestamp-ns 1788220800000000000 snapshot create sep-2026
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 context create --name by:task=summarize@sep --selector select attrs.task == "summarize" --snapshot sep-2026
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 context show by:task=summarize
+CMD[september-store]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 verify --full
+----- STEP september-store: pass sep-output=0b9645a9589b369407c76a6d34c11f10c182cd026ed26c32d15225ad4643faaf sep-context=8c6f00b5ba115a16f35990d0a6453667107f669f9eb5fbba4af3cc2be115c62b
+
+===== STEP months-later-mounts: After simulated months, old mounts and old time root are exact =====
+CMD[months-later-mounts]: rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z -> /mnt/weft-fuse/agent-7-20261108T051203Z-task --context by:task=summarize
+CMD[months-later-mounts]: go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z -> /mnt/weft-fuse/agent-7-20261108T051203Z-model --context by:model=llama-4
+CMD[months-later-mounts]: rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z -> /mnt/weft-fuse/agent-7-20261108T051203Z-time --at 1767225600000000000
+CMD[months-later-mounts]: go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z -> /mnt/weft-fuse/agent-7-20261108T051203Z-sep --at 1788220800000000000
+CMD[months-later-mounts]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-001.bin
+----- STEP months-later-mounts: pass run-001 exact in task/model/time mounts; run-002 absent from January
+
+===== STEP replay-after-months: Replay the January bundle later and verify exact bytes + lineage =====
+CMD[replay-after-months]: bash /work/scripts/replay-bundle.sh --bundle /work/bench/bundles/agent-memory-7-20261108T051203Z.tar.zst --out /work/.docker-cache/f3-demos/agent-memory-replay-7-20261108T051203Z
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261108T051203Z/store --json relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261108T051203Z/store --json context show by:task=summarize
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261108T051203Z/store --json context show by:model=llama-4
+CMD[replay-after-months]: /work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261108T051203Z/store --json context show at:2026-01
+----- STEP replay-after-months: pass exact run-001 sha; 3 Context Roots; 5 lineage edges
+
+===== STEP lineage-check: Every typed edge survives with the same subject and object =====
+CMD[lineage-check]: /work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261108T051203Z --json --fixed-timestamp-ns 1788220800000000000 relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0
+----- STEP lineage-check: pass all five predicates present after the later writes
+summary: pass=7 fail=0 blocked=0 all_pass=true
+receipt: /work/bench/receipts/agent-memory-20261108T051203Z.json
+raw log: /work/bench/receipts/agent-memory-20261108T051203Z.log
+=== ceph_rgw ===
+ceph_court: ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13) squid (stable) at http://10.213.77.10:8080 (image quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723)
+s3_court: MinIO RELEASE.2025-04-22T22-12-26Z sha256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c endpoint=http://weft-s3-minio-1624419:9000 bucket=weft-s3-court-20261108t050823z
++ exec docker run --rm --init --name weft-rust-court-1624751 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://weft-s3-minio-1624419:9000 -e WEFT_S3_BUCKET=weft-s3-court-20261108t050823z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://weft-s3-minio-1624419:9000 -e WEFT_S3_TEST_PREFIX=weft-s3-test-20261108t050823z -e 'WEFT_S3_SERVER_LABEL=MinIO RELEASE.2025-04-22T22-12-26Z' -e WEFT_S3_SERVER_VERSION=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc -e WEFT_S3_CONTAINER_IMAGE_ID=sha256:43f84a0b210f98845ef003912981774c95efe439eaa4b1cb62cf803fd46fc82a -e WEFT_COMPAT_STAMP=20261108T050823Z --network weft-s3-net-1624419 weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo run --quiet --example s3_court_bucket && cargo run --quiet --example s3_compat_matrix -- --out bench/receipts/s3-compat-minio-20261108T050823Z.json'
+s3_court_bucket: bucket weft-s3-court-20261108t050823z ready at http://weft-s3-minio-1624419:9000
+behaviour                          MinIO RELEASE.2025-04-22T22-12-26Z observed
+if-none-match-create-once          supported  create=200 repeat=412 bytes_kept=true
+if-match-conditional-overwrite     supported  matching accepted; stale=412 PreconditionFailed
+range-open-ended                   supported  status=206 bytes=12 content-range=bytes 4-15/16
+range-out-of-range                 supported  past_end=416/InvalidRange at_eof=416/InvalidRange
+head-missing-key                   supported  status=404
+delete-idempotent                  supported  delete=204 delete_again=204
+list-pagination                    supported  pages=3 keys=5 duplicates=0 complete=true
+stale-cas-probe                    supported  winner=200 (form=as-returned) loser=412 winner_bytes_kept=true
+
+8/8 behaviours as the store requires them (MinIO RELEASE.2025-04-22T22-12-26Z)
+s3_compat_matrix: receipt bench/receipts/s3-compat-minio-20261108T050823Z.json
+s3_court: receipt bench/receipts/s3-court-20261108T050823Z.json
++ exec docker run --rm --init --name weft-rust-court-1625092 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.77.10:8080 -e WEFT_S3_BUCKET=weft-ceph-court-20261108t050823z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.77.10:8080 -e WEFT_S3_TEST_PREFIX=weft-ceph-test-20261108t050823z -e 'WEFT_S3_SERVER_LABEL=Ceph RGW 19.2.0' -e WEFT_S3_SERVER_VERSION=19.2.0 -e 'WEFT_S3_SERVER_SHA256=none (container image, not a standalone binary)' -e WEFT_S3_CONTAINER_IMAGE=quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723 -e WEFT_S3_CONTAINER_IMAGE_ID=sha256:637a5761b2549743c465dae594a6a48f86d96e969cb3a3d5193894c1dcb742d5 -e WEFT_COMPAT_STAMP=20261108T050823Z -e WEFT_COMPAT_RECEIPT=bench/receipts/s3-compat-ceph-20261108T050823Z.json --network weft-ceph-net-1621966 weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture && cargo run --quiet --example s3_compat_matrix -- --out bench/receipts/s3-compat-ceph-20261108T050823Z.json'
+s3_court_bucket: bucket weft-ceph-court-20261108t050823z ready at http://10.213.77.10:8080
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4939:8
+     |
+4939 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4946:8
+     |
+4946 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4963:7
+     |
+4963 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4965:4
+     |
+4965 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4998:4
+     |
+4998 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/s3_backend.rs (.docker-cache/target-rust/debug/deps/s3_backend-8ad22f7e36782fba)
+
+running 6 tests
+test capabilities_and_conditional_put_absent_or_idempotent ... ok
+test crash_proxy_over_s3_yields_old_or_new ... ok
+test gc_over_s3_deletes_only_unreachable_objects ... ok
+test local_and_s3_artifacts_are_byte_identical ... ok
+test store_round_trip_over_s3 ... ok
+test writer_lock_and_lost_conditional_head_update ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.70s
+
+     Running tests/s3_fencing.rs (.docker-cache/target-rust/debug/deps/s3_fencing-605f009b41f6269f)
+
+running 11 tests
+test a_replaced_lock_record_makes_the_stale_publication_fail_412 ... ok
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+test two_writers_racing_on_release_leave_one_valid_lock ... release/acquire race 0: acquired after 2 attempt(s)
+release/acquire race 1: acquired after 2 attempt(s)
+release/acquire race 2: acquired after 2 attempt(s)
+release/acquire race 3: acquired after 2 attempt(s)
+release/acquire race 4: acquired after 2 attempt(s)
+release/acquire race 5: acquired after 2 attempt(s)
+release/acquire race 6: acquired after 2 attempt(s)
+release/acquire race 7: acquired after 2 attempt(s)
+release/acquire race 8: acquired after 2 attempt(s)
+release/acquire race 9: acquired after 2 attempt(s)
+release/acquire race 10: acquired after 2 attempt(s)
+release/acquire race 11: acquired after 2 attempt(s)
+release/acquire race 12: acquired after 2 attempt(s)
+release/acquire race 13: acquired after 2 attempt(s)
+release/acquire race 14: acquired after 2 attempt(s)
+release/acquire race 15: acquired after 2 attempt(s)
+release/acquire race 16: acquired after 2 attempt(s)
+release/acquire race 17: acquired after 2 attempt(s)
+release/acquire race 18: acquired after 2 attempt(s)
+release/acquire race 19: acquired after 2 attempt(s)
+ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 96.10s
+
+behaviour                          Ceph RGW 19.2.0 observed
+if-none-match-create-once          supported  create=200 repeat=412 bytes_kept=true
+if-match-conditional-overwrite     supported  accepted only after de-quoting; stale=412 PreconditionFailed
+range-open-ended                   supported  status=206 bytes=12 content-range=bytes 4-15/16
+range-out-of-range                 supported  past_end=416/InvalidRange at_eof=416/InvalidRange
+head-missing-key                   supported  status=404
+delete-idempotent                  supported  delete=204 delete_again=204
+list-pagination                    supported  pages=3 keys=5 duplicates=0 complete=true
+stale-cas-probe                    supported  winner=200 (form=dequoted) loser=412 winner_bytes_kept=true
+
+8/8 behaviours as the store requires them (Ceph RGW 19.2.0)
+s3_compat_matrix: receipt bench/receipts/s3-compat-ceph-20261108T050823Z.json
++ exec docker run --rm --init --name weft-rust-court-1626342 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.77.10:8080 -e WEFT_S3_BUCKET=weft-ceph-court-20261108t050823z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.77.10:8080 -e WEFT_S3_TEST_PREFIX=weft-ceph-test-20261108t050823z -e 'WEFT_S3_SERVER_LABEL=Ceph RGW 19.2.0' -e WEFT_S3_SERVER_VERSION=19.2.0 -e 'WEFT_S3_SERVER_SHA256=none (container image, not a standalone binary)' -e WEFT_S3_CONTAINER_IMAGE=quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723 -e WEFT_S3_CONTAINER_IMAGE_ID=sha256:637a5761b2549743c465dae594a6a48f86d96e969cb3a3d5193894c1dcb742d5 -e WEFT_COMPAT_STAMP=20261108T050823Z -e WEFT_COMPAT_RECEIPT=bench/receipts/s3-compat-ceph-20261108T050823Z.json --network weft-ceph-net-1621966 weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo run --quiet --example s3_compat_matrix -- --compare bench/receipts/s3-compat-minio-20261108T050823Z.json bench/receipts/s3-compat-ceph-20261108T050823Z.json --out bench/receipts/s3-compat-matrix-20261108T050823Z.json'
+behaviour                          MinIO RELEASE.2025-04-22T22-12-26Z Ceph RGW 19.2.0 notes
+if-none-match-create-once          supported    supported    
+if-match-conditional-overwrite     supported    supported    
+range-open-ended                   supported    supported    
+range-out-of-range                 supported    supported    
+head-missing-key                   supported    supported    
+delete-idempotent                  supported    supported    
+list-pagination                    supported    supported    
+stale-cas-probe                    supported    supported    
+s3_compat_matrix: receipt bench/receipts/s3-compat-matrix-20261108T050823Z.json
+ceph_court: receipt bench/receipts/ceph-rgw-20261108T050823Z.json
+ceph_court: comparison bench/receipts/s3-compat-matrix-20261108T050823Z.json
+=== s3_court ===
+s3_court: MinIO RELEASE.2025-04-22T22-12-26Z sha256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c endpoint=http://weft-s3-minio-1626700:9000 bucket=weft-s3-court-20261108t050823z
++ exec docker run --rm --init --name weft-rust-court-1626998 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://weft-s3-minio-1626700:9000 -e WEFT_S3_BUCKET=weft-s3-court-20261108t050823z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://weft-s3-minio-1626700:9000 -e WEFT_S3_TEST_PREFIX=weft-s3-test-20261108t050823z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_VERSION=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc -e WEFT_S3_CONTAINER_IMAGE_ID=sha256:43f84a0b210f98845ef003912981774c95efe439eaa4b1cb62cf803fd46fc82a -e WEFT_COMPAT_STAMP=20261108T050823Z --network weft-s3-net-1626700 weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo run --quiet --example s3_court_bucket && cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture'
+s3_court_bucket: bucket weft-s3-court-20261108t050823z ready at http://weft-s3-minio-1626700:9000
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:4939:8
+     |
+4939 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:4946:8
+     |
+4946 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:4963:7
+     |
+4963 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:4965:4
+     |
+4965 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:4998:4
+     |
+4998 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/s3_backend.rs (.docker-cache/target-rust/debug/deps/s3_backend-8ad22f7e36782fba)
+
+running 6 tests
+test capabilities_and_conditional_put_absent_or_idempotent ... ok
+test crash_proxy_over_s3_yields_old_or_new ... ok
+test gc_over_s3_deletes_only_unreachable_objects ... ok
+test local_and_s3_artifacts_are_byte_identical ... ok
+test store_round_trip_over_s3 ... ok
+test writer_lock_and_lost_conditional_head_update ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+
+     Running tests/s3_fencing.rs (.docker-cache/target-rust/debug/deps/s3_fencing-605f009b41f6269f)
+
+running 11 tests
+test a_replaced_lock_record_makes_the_stale_publication_fail_412 ... ok
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+test two_writers_racing_on_release_leave_one_valid_lock ... release/acquire race 0: acquired after 2 attempt(s)
+release/acquire race 1: acquired after 2 attempt(s)
+release/acquire race 2: acquired after 2 attempt(s)
+release/acquire race 3: acquired after 2 attempt(s)
+release/acquire race 4: acquired after 2 attempt(s)
+release/acquire race 5: acquired after 2 attempt(s)
+release/acquire race 6: acquired after 2 attempt(s)
+release/acquire race 7: acquired after 2 attempt(s)
+release/acquire race 8: acquired after 2 attempt(s)
+release/acquire race 9: acquired after 2 attempt(s)
+release/acquire race 10: acquired after 2 attempt(s)
+release/acquire race 11: acquired after 2 attempt(s)
+release/acquire race 12: acquired after 2 attempt(s)
+release/acquire race 13: acquired after 2 attempt(s)
+release/acquire race 14: acquired after 2 attempt(s)
+release/acquire race 15: acquired after 2 attempt(s)
+release/acquire race 16: acquired after 2 attempt(s)
+release/acquire race 17: acquired after 2 attempt(s)
+release/acquire race 18: acquired after 2 attempt(s)
+release/acquire race 19: acquired after 2 attempt(s)
+ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.73s
+
+s3_court: receipt bench/receipts/s3-court-20261108T050823Z.json
+=== context_cross_rust_gen ===
++ exec docker run --rm --init --name weft-rust-court-1627688 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-gen'
+rust-gen: wrote 4 context cases and one causal case to /work/.docker-cache/context-cross/rust
+=== context_cross_go_gen ===
++ exec docker run --rm --init --name weft-go-court-1627942 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd WeftCodec-Go && bash hack/context-cross.sh go-build && bash hack/context-cross.sh go-gen && bash hack/context-cross.sh go-parse-rust'
+go-build: wrote /work/.docker-cache/weftcodec-go
+go-gen: wrote 4 context cases and one causal case to /work/.docker-cache/context-cross/go
+/work/.docker-cache/weftcodec-go parsed 4 rust descriptors -> go-parsed
+=== context_cross_rust_parse ===
++ exec docker run --rm --init --name weft-rust-court-1628305 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/context-cross.sh rust-parse-go'
+/work/.docker-cache/target-rust/release/weftcodec parsed 4 go descriptors -> rust-parsed
+=== context_cross_compare ===
++ exec docker run --rm --init --name weft-go-court-1628509 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/context-cross.sh compare'
+== ContextRootId equality (id JSON) ==
+PASS id true 53f70ff51a49496af01dc87e7002fa7ef7fe1ab5c192bdb326d0868b1f01a41a
+PASS id filter 04f53b8eb98d9c3603d60f61075ee7f7cdafc08baef95f5ae9d58ad8bf4a5f66
+PASS id escaping b04f7965b473527ee5276eb53f96cf432f38018ecc5d984fb207776050d10f46
+PASS id resolver c76f19307e87ab4c7097b1019f27a698223b20be1d6cacd3fb26607d247a411e
+== authoritative URI equality ==
+PASS uri true
+PASS uri filter
+PASS uri escaping
+PASS uri resolver
+== descriptor equality ==
+PASS descriptor true
+PASS descriptor filter
+PASS descriptor escaping
+PASS descriptor resolver
+== cross parse: Go canonicalizes Rust descriptors ==
+PASS go-parse-rust true
+PASS go-parse-rust filter
+PASS go-parse-rust escaping
+PASS go-parse-rust resolver
+== cross parse: Rust canonicalizes Go descriptors ==
+PASS rust-parse-go true
+PASS rust-parse-go filter
+PASS rust-parse-go escaping
+PASS rust-parse-go resolver
+== causal closure equality ==
+PASS causal 58f09b15991e2de83a8f689327a928d31e3df8c80cf44562293377316b6c92ae
+PASS causal canonical bytes
+context cross-language gate: all checks passed
+=== capability_cross_rust_gen ===
++ exec docker run --rm --init --name weft-rust-court-1628743 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/capability-cross.sh rust-gen'
+rust-gen: wrote canonical id, signature, blob, and 5 rejections to /work/.docker-cache/capability-cross/rust
+=== capability_cross_go_gen ===
++ exec docker run --rm --init --name weft-go-court-1629020 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/capability-cross.sh go-gen'
+go-gen: wrote canonical id, signature, blob, and 5 rejections to /work/.docker-cache/capability-cross/go
+=== capability_cross_rust_verify ===
++ exec docker run --rm --init --name weft-rust-court-1629371 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/capability-cross.sh rust-verify-go'
+rust-verify-go: OK
+=== capability_cross_go_verify ===
++ exec docker run --rm --init --name weft-go-court-1629597 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/capability-cross.sh go-verify-rust'
+go-verify-rust: OK
+=== capability_cross_compare ===
++ exec docker run --rm --init --name weft-go-court-1629820 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && bash hack/capability-cross.sh compare'
+== canonical public key equality ==
+PASS public ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c
+== envelope id and sign input equality ==
+PASS envelope_id 08fb139ac3b14a8c6bcf418e41bf3dcaaed4b95ae7ffc816bf486fc2cc7374cd
+PASS sign_input 607edd3ab9d53b7d3fe84eee05937c42ce355040a1ad601c42e53c7a3f414b66
+== byte-identical signed blob ==
+PASS blob 543 bytes
+== cross verification ==
+PASS rust-verifies-go and go-verifies-rust
+== rejection matrix equality ==
+PASS reject bad_signature BadSignature
+PASS reject wrong_grantee WrongGrantee
+PASS reject expired Expired
+PASS reject revoked Revoked
+PASS reject non_canonical NonCanonical
+capability-cross: OK
+=== fuzz_diff ===
+fuzz-diff: rust court (N=1000000)
++ exec docker run --rm --init --name weft-rust-court-1630058 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec && cargo build --release --quiet --example fuzz_differential && /work/.docker-cache/target-rust/release/examples/fuzz_differential --seeds /work/conformance/fuzz/v1/seeds.txt --n 1000000 > /work/.docker-cache/fuzz/rust.out'
+fuzz-diff: go court (N=1000000)
++ exec docker run --rm --init --name weft-go-court-1630261 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.1-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:ace88700bc27c45294a8d9d808ee163bbe888f35354ef9dea237b362c026f166 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.2 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=c88b1990ff6c3c6e1b33030d19894258dfa8b2a5 -e WEFT_REPO_WEFTFS_GO=b475d2db062375d795705b22cc41fc5c30609fc9 -e WEFT_REPO_WEFTCODEC=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 -e WEFT_REPO_WEFTCODEC_GO=70e47011901db343fc3b7622a565c309b58f093d -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec-Go && go build -o /work/.docker-cache/fuzz/fuzzdiff ./cmd/fuzzdiff && /work/.docker-cache/fuzz/fuzzdiff --seeds /work/conformance/fuzz/v1/seeds.txt --n 1000000 > /work/.docker-cache/fuzz/go.out'
+fuzz-diff: result=pass
+fuzz-diff: corpus_hash=4ed6da22ac497a2494a56d53abda1689eef8a5bcbbed381b64f2c3fecf6e12a5 (match=1)
+fuzz-diff: rust lines=1000000 panics=0 rss=6660KiB ms=1317
+fuzz-diff: go   lines=1000000 panics=0 rss=140728KiB ms=1996
+fuzz-diff: compared=1000000 mismatches=0
+fuzz-diff: rust classes: {"ok":172294,"LimitExceeded":16900,"Corrupt":174899,"UnsupportedMode":9409,"UnsupportedVersion":1699,"DependencyDenied":12313,"DependencyMissing":35987,"NonCanonical":67975,"Malformed":469747,"UnsupportedFeature":12347,"DependencyCycle":12349,"DependencyMismatch":14081}
+fuzz-diff: go   classes: {"ok":172294,"LimitExceeded":16900,"Corrupt":174899,"UnsupportedMode":9409,"UnsupportedVersion":1699,"DependencyDenied":12313,"DependencyMissing":35987,"NonCanonical":67975,"Malformed":469747,"UnsupportedFeature":12347,"DependencyCycle":12349,"DependencyMismatch":14081}
+fuzz-diff: receipt=/mnt/1tb_kingston/WeftFS/bench/receipts/fuzz-diff-20261108T051513Z.json

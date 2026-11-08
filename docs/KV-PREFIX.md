@@ -165,17 +165,17 @@ name are rejected, with no fallback.
 
 ## 7. Measured (court, synthetic)
 
-Receipt `bench/receipts/kv-prefix-20261108T042229Z.json`; analysis in
+Receipt `bench/receipts/kv-prefix-20261108T052500Z.json`; analysis in
 `bench/RESULTS-kv-prefix.md`. Declared shapes: BF16, 14 layers, 2 KV heads, head
 dim 64, 64 tokens/page → 3,584 B/token, 229,376 B/page across layers.
 
 | row | result |
 |---|---|
-| one 512-token prefix | 1,835,008 logical B, 112 page objects, 1,931,305 physical B, 56.3 ms put |
+| one 512-token prefix | 1,835,008 logical B, 112 page objects, 1,931,305 physical B, 55.8 ms put |
 | 1,024-token child | 3,670,016 logical B, **112 reused / 112 new** page objects, 1,835,008 new B |
-| 100 prefixes over one 512-token system prompt | 286,720,000 logical B → **103,219,200 stored B, dedup ratio 0.64**; 6,412 objects / 110,569,036 B on disk; 4.24 s |
-| `get` (authorized, 126–210 pages) | p50 **23.7 ms**, p95 36.6 ms, max 36.9 ms |
-| compatibility scan over 101 prefixes | p50 **10.6 ms**, p95 10.7 ms |
+| 100 prefixes over one 512-token system prompt | 286,720,000 logical B → **103,219,200 stored B, dedup ratio 0.64**; 6,412 objects / 110,569,036 B on disk; 4.03 s |
+| `get` (authorized, 126–210 pages) | p50 **23.4 ms**, p95 35.9 ms, max 36.3 ms |
+| compatibility scan over 101 prefixes | p50 **10.4 ms**, p95 10.5 ms |
 | decisions (13 declared requests) | 6 reuse / 7 recompute; categories: model-mismatch 3, tokenizer 1, attention 1, token-chain 1, longer-than-request 1 |
 
 The scan cost is the dominant reuse term and a real limitation: the lookup
@@ -199,7 +199,7 @@ re-reads and parses every prefix record. See §9.
 
 Residual:
 
-* `kv_prefix_lookup` parses every prefix record (10.6 ms at 101 prefixes). A
+* `kv_prefix_lookup` parses every prefix record (10.4 ms at 101 prefixes). A
   persisted KV index is not implemented.
 * Page-level dedup requires the child's new pages to be supplied by the caller;
   the store does not derive them from a token stream.

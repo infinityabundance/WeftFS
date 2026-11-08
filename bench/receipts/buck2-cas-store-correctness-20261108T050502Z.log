@@ -1,0 +1,29 @@
+kind: buck2-cas-store
+timestamp_utc: 20261108T050502Z
+court: fuse
+revisions:
+  WeftFS: c88b1990ff6c3c6e1b33030d19894258dfa8b2a5
+  WeftCodec: 6dd7e13d16de33ed765c462ec14a13f0a6c8c844
+  WeftCodec-Go: 70e47011901db343fc3b7622a565c309b58f093d
+  WeftFS-Go: b475d2db062375d795705b22cc41fc5c30609fc9
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.1-1-cachyos
+image: weft/fuse-court:1 sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157
+== build rust oracle ==
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.042s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261108T050502Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T050502Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T050502Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T050502Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass
