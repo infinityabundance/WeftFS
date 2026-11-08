@@ -64,6 +64,14 @@ pub const ATTR_TENSOR_TILE_SHAPE: &str = "weft.tensor.tile_shape";
 /// Default byte bound on the semantic-delta candidate search (512 MiB).
 pub const DEFAULT_MAX_SEMANTIC_BYTES: u64 = 512 * 1024 * 1024;
 
+/// Default byte bound on the whole-tensor delta and patch candidates (512 MiB).
+///
+/// Those encoders hold the causal base, a synthetic base frame and the delta
+/// planes at once, so a 593 MiB tensor (Qwen2.5-3B's embedding) needs several
+/// GiB at the current encoder shape. The bound keeps the planner inside the
+/// 3 GiB court; the skipped candidates are named in the plan.
+pub const DEFAULT_MAX_DELTA_BYTES: u64 = 512 * 1024 * 1024;
+
 /// Default bound on the semantic-delta candidate search.
 pub const DEFAULT_TENSOR_MAX_CANDIDATES: usize = 16;
 
@@ -554,6 +562,45 @@ impl TensorLayoutSpec {
         Ok((dtype, shape, spec))
     }
 
+    /// Canonicalise a caller payload, borrowing it when the layout is already
+    /// row-major.
+    ///
+    /// [`Self::canonicalize`] always returns an owned copy. A row-major caller
+    /// already holds the canonical bytes, so copying them doubles the live
+    /// tensor footprint for no benefit; this returns the caller's slice and
+    /// performs the same shape/payload validation. Only non-row-major layouts
+    /// allocate. The produced bytes are identical to [`Self::canonicalize`].
+    pub fn canonicalize_cow<'a>(
+        &self,
+        dtype: TensorElementDtype,
+        shape: &[u64],
+        bytes: &'a [u8],
+    ) -> Result<std::borrow::Cow<'a, [u8]>> {
+        let limits = Limits::default();
+        let physical = self.physical_dtype(dtype)?;
+        let logical_len = weftcodec::tensor::payload_len(
+            weftcodec::tensor::validate_shape(shape, &limits)?,
+            physical,
+        )?;
+        if logical_len != bytes.len() as u64 {
+            return Err(Error::malformed(format!(
+                "tensor payload is {} bytes but {} x {} requires {logical_len}",
+                bytes.len(),
+                dtype.as_str(),
+                shape.len()
+            )));
+        }
+        match &self.layout {
+            TensorLayout::RowMajor => {
+                weftcodec::tensor::check_payload(physical, shape, bytes, &limits)?;
+                Ok(std::borrow::Cow::Borrowed(bytes))
+            }
+            _ => Ok(std::borrow::Cow::Owned(
+                self.canonicalize(dtype, shape, bytes)?,
+            )),
+        }
+    }
+
     /// Reassemble the supplied physical bytes into canonical row-major order.
     pub fn canonicalize(
         &self,
@@ -902,6 +949,12 @@ pub struct TensorPlanOptions {
     /// candidate search. A larger tensor falls back to the other candidates
     /// instead of risking the court's memory limit.
     pub max_semantic_bytes: u64,
+    /// Hard bound on the whole-tensor delta and patch candidates. Those
+    /// encoders need several full-size copies (the causal base, a base frame
+    /// and the delta planes), so a tensor above this bound falls back to the
+    /// other candidates instead of risking the court's memory limit. `0`
+    /// disables the bound. Default 512 MiB.
+    pub max_delta_bytes: u64,
     /// Allow experimental representations to be **automatically** selected.
     /// Default false: mode 18 stays preparable only through an explicit
     /// strategy hint. Mode 18 is frozen and readable; the gate is about
@@ -950,6 +1003,7 @@ impl Default for TensorPlanOptions {
             fast_zstd_level: 1,
             semantic_search: true,
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
+            max_delta_bytes: DEFAULT_MAX_DELTA_BYTES,
             allow_experimental_modes: false,
             zstd19: true,
             zstd19_min_bytes: 1024 * 1024,
@@ -1523,11 +1577,13 @@ impl Store {
     ) -> Result<PreparedTensorObject> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
-        let logical = layout.canonicalize(dtype, shape, bytes)?;
+        // Row-major callers already hold the canonical bytes; borrowing avoids a
+        // second full-tensor copy in the middle of the planner.
+        let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
         let prepared = self.prepare_candidates(
             dtype,
             shape,
-            &logical,
+            logical.as_ref(),
             layout,
             &spec.causal,
             &spec.plan,
@@ -1539,6 +1595,8 @@ impl Store {
                 || spec
                     .strategy_hint
                     .is_some_and(TensorStrategy::is_experimental),
+            spec.strategy_hint,
+            true,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -1547,10 +1605,10 @@ impl Store {
             .ok_or_else(|| Error::invalid_argument("chosen tensor strategy has no artifact"))?;
         let root = match &artifact.tensor {
             Some(tensor) => tensor.logical_root,
-            None => self.logical_root_for_bytes(dtype, shape, &logical, None)?,
+            None => self.logical_root_for_bytes(dtype, shape, logical.as_ref(), None)?,
         };
         let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(dtype, shape, &logical, layout, &artifact)?;
+            self.store_tensor_artifact(dtype, shape, logical.as_ref(), layout, &artifact)?;
         let mut attrs = BTreeMap::new();
         apply_tensor_attrs(
             &mut attrs,
@@ -1611,17 +1669,19 @@ impl Store {
     ) -> Result<TensorPlan> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
-        let logical = layout.canonicalize(dtype, shape, bytes)?;
+        let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
         let prepared = self.prepare_candidates(
             dtype,
             shape,
-            &logical,
+            logical.as_ref(),
             layout,
             causal,
             options,
             options.tile_shape.as_deref(),
             false,
             options.allow_experimental_modes,
+            None,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, None)?;
         let mut runner_up: Option<&PreparedCandidate> = None;
@@ -1680,6 +1740,8 @@ impl Store {
             None,
             true,
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
+            hint,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         Ok(TensorIndependentPlan {
@@ -1746,6 +1808,8 @@ impl Store {
             None,
             true,
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
+            hint,
+            true,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         let plan = TensorIndependentPlan {
@@ -2769,6 +2833,8 @@ impl Store {
                 || spec
                     .strategy_hint
                     .is_some_and(TensorStrategy::is_experimental),
+            spec.strategy_hint,
+            true,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -2815,6 +2881,8 @@ impl Store {
         tile_shape: Option<&[u64]>,
         independent_only: bool,
         allow_experimental: bool,
+        hint: Option<TensorStrategy>,
+        keep_artifacts: bool,
     ) -> Result<Vec<PreparedCandidate>> {
         let limits = Limits::default();
         let size = logical.len() as u64;
@@ -2837,40 +2905,45 @@ impl Store {
         // transcode can republish the object with a smaller representation
         // without touching any manifest or checkpoint record.
         if options.write_policy.is_fast() && !quantized {
-            out.push(PreparedCandidate {
-                candidate: TensorPlanCandidate {
-                    strategy: TensorStrategy::Raw,
-                    applicable: true,
-                    detail: "canonical row-major chunks (fast policy)".to_owned(),
-                    physical_bytes: Some(size),
-                    estimated_decode_ns: Some(options.estimate_ns_at_pattern(
-                        crate::cost_model::CostClass::Raw,
-                        TensorStrategy::Raw,
-                        size,
-                    )),
-                    estimated_encode_ns: Some(
-                        options.estimate_encode_ns(TensorStrategy::Raw, size),
-                    ),
-                    cost: Some(options.price_candidate(
-                        size,
-                        options.estimate_ns_at_pattern(
+            retain_candidate(
+                &mut out,
+                hint,
+                keep_artifacts,
+                PreparedCandidate {
+                    candidate: TensorPlanCandidate {
+                        strategy: TensorStrategy::Raw,
+                        applicable: true,
+                        detail: "canonical row-major chunks (fast policy)".to_owned(),
+                        physical_bytes: Some(size),
+                        estimated_decode_ns: Some(options.estimate_ns_at_pattern(
                             crate::cost_model::CostClass::Raw,
                             TensorStrategy::Raw,
                             size,
+                        )),
+                        estimated_encode_ns: Some(
+                            options.estimate_encode_ns(TensorStrategy::Raw, size),
                         ),
-                        options.estimate_encode_ns(TensorStrategy::Raw, size),
-                    )),
-                    dependency: None,
+                        cost: Some(options.price_candidate(
+                            size,
+                            options.estimate_ns_at_pattern(
+                                crate::cost_model::CostClass::Raw,
+                                TensorStrategy::Raw,
+                                size,
+                            ),
+                            options.estimate_encode_ns(TensorStrategy::Raw, size),
+                        )),
+                        dependency: None,
+                    },
+                    artifact: Some(PreparedArtifact {
+                        kind: RepresentationKind::Raw,
+                        strategy_name: "raw".to_owned(),
+                        frame: None,
+                        dependencies: Vec::new(),
+                        tensor: None,
+                        tile_shape: None,
+                    }),
                 },
-                artifact: Some(PreparedArtifact {
-                    kind: RepresentationKind::Raw,
-                    strategy_name: "raw".to_owned(),
-                    frame: None,
-                    dependencies: Vec::new(),
-                    tensor: None,
-                    tile_shape: None,
-                }),
-            });
+            );
             if options.fast_codec == FastCodec::Zstd {
                 let level = options.fast_zstd_level.clamp(1, 3);
                 let codec_chunk =
@@ -2884,32 +2957,37 @@ impl Store {
                             TensorStrategy::Zstd,
                             size,
                         );
-                        out.push(PreparedCandidate {
-                            candidate: TensorPlanCandidate {
-                                strategy: TensorStrategy::Zstd,
-                                applicable: true,
-                                detail: format!("one ZSTD level-{level} frame (fast policy)"),
-                                physical_bytes: Some(physical),
-                                estimated_decode_ns: Some(estimate),
-                                estimated_encode_ns: Some(
-                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
-                                ),
-                                cost: Some(options.price_candidate(
-                                    physical,
-                                    estimate,
-                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
-                                )),
-                                dependency: None,
+                        retain_candidate(
+                            &mut out,
+                            hint,
+                            keep_artifacts,
+                            PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::Zstd,
+                                    applicable: true,
+                                    detail: format!("one ZSTD level-{level} frame (fast policy)"),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    estimated_encode_ns: Some(
+                                        options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                    ),
+                                    cost: Some(options.price_candidate(
+                                        physical,
+                                        estimate,
+                                        options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                    )),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Codec,
+                                    strategy_name: "zstd".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: None,
+                                    tile_shape: None,
+                                }),
                             },
-                            artifact: Some(PreparedArtifact {
-                                kind: RepresentationKind::Codec,
-                                strategy_name: "zstd".to_owned(),
-                                frame: Some(frame),
-                                dependencies: Vec::new(),
-                                tensor: None,
-                                tile_shape: None,
-                            }),
-                        });
+                        );
                     }
                     Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
                 }
@@ -2918,7 +2996,7 @@ impl Store {
         }
 
         // Raw chunks (v2 kind:"raw").
-        out.push(if quantized {
+        let raw_candidate = if quantized {
             skipped(
                 TensorStrategy::Raw,
                 "q8_0 identity requires the mode-10 scale plane".to_owned(),
@@ -2958,7 +3036,8 @@ impl Store {
                     tile_shape: None,
                 }),
             }
-        });
+        };
+        retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
 
         // Zstandard frame.
         let codec_chunk =
@@ -2982,32 +3061,37 @@ impl Store {
                         TensorStrategy::Zstd,
                         size,
                     );
-                    out.push(PreparedCandidate {
-                        candidate: TensorPlanCandidate {
-                            strategy: TensorStrategy::Zstd,
-                            applicable: true,
-                            detail: "one ZSTD frame".to_owned(),
-                            physical_bytes: Some(physical),
-                            estimated_decode_ns: Some(estimate),
-                            estimated_encode_ns: Some(
-                                options.estimate_encode_ns(TensorStrategy::Zstd, size),
-                            ),
-                            cost: Some(options.price_candidate(
-                                physical,
-                                estimate,
-                                options.estimate_encode_ns(TensorStrategy::Zstd, size),
-                            )),
-                            dependency: None,
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::Zstd,
+                                applicable: true,
+                                detail: "one ZSTD frame".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                )),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: None,
+                                tile_shape: None,
+                            }),
                         },
-                        artifact: Some(PreparedArtifact {
-                            kind: RepresentationKind::Codec,
-                            strategy_name: "zstd".to_owned(),
-                            frame: Some(frame),
-                            dependencies: Vec::new(),
-                            tensor: None,
-                            tile_shape: None,
-                        }),
-                    });
+                    );
                 }
                 Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
             }
@@ -3061,26 +3145,33 @@ impl Store {
                             TensorStrategy::Zstd,
                             size,
                         );
-                        out.push(PreparedCandidate {
-                            candidate: TensorPlanCandidate {
-                                strategy: TensorStrategy::Zstd,
-                                applicable: true,
-                                detail: "one ZSTD level-19 frame".to_owned(),
-                                physical_bytes: Some(physical),
-                                estimated_decode_ns: Some(estimate),
-                                estimated_encode_ns: Some(encode_ns),
-                                cost: Some(options.price_candidate(physical, estimate, encode_ns)),
-                                dependency: None,
+                        retain_candidate(
+                            &mut out,
+                            hint,
+                            keep_artifacts,
+                            PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::Zstd,
+                                    applicable: true,
+                                    detail: "one ZSTD level-19 frame".to_owned(),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    estimated_encode_ns: Some(encode_ns),
+                                    cost: Some(
+                                        options.price_candidate(physical, estimate, encode_ns),
+                                    ),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Codec,
+                                    strategy_name: "zstd".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: None,
+                                    tile_shape: None,
+                                }),
                             },
-                            artifact: Some(PreparedArtifact {
-                                kind: RepresentationKind::Codec,
-                                strategy_name: "zstd".to_owned(),
-                                frame: Some(frame),
-                                dependencies: Vec::new(),
-                                tensor: None,
-                                tile_shape: None,
-                            }),
-                        });
+                        );
                     }
                     Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
                 }
@@ -3126,47 +3217,52 @@ impl Store {
                                 size,
                             );
                             let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
-                            out.push(PreparedCandidate {
-                                candidate: TensorPlanCandidate {
-                                    strategy: TensorStrategy::FloatTensor,
-                                    applicable: true,
-                                    detail: format!(
-                                        "one mode-9 FLOAT_TENSOR frame ({})",
-                                        float_dtype.as_str()
-                                    ),
-                                    physical_bytes: Some(physical),
-                                    estimated_decode_ns: Some(estimate),
-                                    estimated_encode_ns: Some(
-                                        options
-                                            .estimate_encode_ns(TensorStrategy::FloatTensor, size),
-                                    ),
-                                    cost: Some(
-                                        options.price_candidate(
+                            retain_candidate(
+                                &mut out,
+                                hint,
+                                keep_artifacts,
+                                PreparedCandidate {
+                                    candidate: TensorPlanCandidate {
+                                        strategy: TensorStrategy::FloatTensor,
+                                        applicable: true,
+                                        detail: format!(
+                                            "one mode-9 FLOAT_TENSOR frame ({})",
+                                            float_dtype.as_str()
+                                        ),
+                                        physical_bytes: Some(physical),
+                                        estimated_decode_ns: Some(estimate),
+                                        estimated_encode_ns: Some(
+                                            options.estimate_encode_ns(
+                                                TensorStrategy::FloatTensor,
+                                                size,
+                                            ),
+                                        ),
+                                        cost: Some(options.price_candidate(
                                             physical,
                                             estimate,
                                             options.estimate_encode_ns(
                                                 TensorStrategy::FloatTensor,
                                                 size,
                                             ),
-                                        ),
-                                    ),
-                                    dependency: None,
-                                },
-                                artifact: Some(PreparedArtifact {
-                                    kind: RepresentationKind::Tensor,
-                                    strategy_name: "float-tensor".to_owned(),
-                                    frame: Some(frame),
-                                    dependencies: Vec::new(),
-                                    tensor: Some(TensorRepresentation {
-                                        tensor_mode: 9,
-                                        dtype,
-                                        shape: shape.to_vec(),
-                                        logical_root: root,
-                                        layout: layout.to_value(dtype, shape)?,
+                                        )),
+                                        dependency: None,
+                                    },
+                                    artifact: Some(PreparedArtifact {
+                                        kind: RepresentationKind::Tensor,
+                                        strategy_name: "float-tensor".to_owned(),
+                                        frame: Some(frame),
+                                        dependencies: Vec::new(),
+                                        tensor: Some(TensorRepresentation {
+                                            tensor_mode: 9,
+                                            dtype,
+                                            shape: shape.to_vec(),
+                                            logical_root: root,
+                                            layout: layout.to_value(dtype, shape)?,
+                                        }),
+                                        tile_shape: None,
                                     }),
-                                    tile_shape: None,
-                                }),
-                            });
+                                },
+                            );
                         }
                     }
                     Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
@@ -3190,38 +3286,43 @@ impl Store {
                         TensorStrategy::TensorSharded,
                         size,
                     );
-                    out.push(PreparedCandidate {
-                        candidate: TensorPlanCandidate {
-                            strategy: TensorStrategy::TensorSharded,
-                            applicable: true,
-                            detail: "one mode-10 shard (shard_count = 1)".to_owned(),
-                            physical_bytes: Some(physical),
-                            estimated_decode_ns: Some(estimate),
-                            estimated_encode_ns: Some(
-                                options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
-                            ),
-                            cost: Some(options.price_candidate(
-                                physical,
-                                estimate,
-                                options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
-                            )),
-                            dependency: None,
-                        },
-                        artifact: Some(PreparedArtifact {
-                            kind: RepresentationKind::Tensor,
-                            strategy_name: "tensor-sharded".to_owned(),
-                            frame: Some(frame),
-                            dependencies: Vec::new(),
-                            tensor: Some(TensorRepresentation {
-                                tensor_mode: 10,
-                                dtype,
-                                shape: shape.to_vec(),
-                                logical_root: root,
-                                layout: layout.to_value(dtype, shape)?,
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::TensorSharded,
+                                applicable: true,
+                                detail: "one mode-10 shard (shard_count = 1)".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
+                                )),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "tensor-sharded".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 10,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: root,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                                tile_shape: None,
                             }),
-                            tile_shape: None,
-                        }),
-                    });
+                        },
+                    );
                 }
                 Err(err) => out.push(skipped(TensorStrategy::TensorSharded, err.to_string())),
             }
@@ -3265,40 +3366,51 @@ impl Store {
                             size,
                             geometry.as_ref(),
                         );
-                        out.push(PreparedCandidate {
-                            candidate: TensorPlanCandidate {
-                                strategy: TensorStrategy::TensorTiled,
-                                applicable: true,
-                                detail: format!(
-                                    "one mode-15 frame tiled {tile_shape:?} ({origin})"
-                                ),
-                                physical_bytes: Some(physical),
-                                estimated_decode_ns: Some(estimate),
-                                estimated_encode_ns: Some(
-                                    options.estimate_encode_ns(TensorStrategy::TensorTiled, size),
-                                ),
-                                cost: Some(options.price_candidate(
-                                    physical,
-                                    estimate,
-                                    options.estimate_encode_ns(TensorStrategy::TensorTiled, size),
-                                )),
-                                dependency: None,
-                            },
-                            artifact: Some(PreparedArtifact {
-                                kind: RepresentationKind::Tensor,
-                                strategy_name: "tensor-tiled".to_owned(),
-                                frame: Some(frame),
-                                dependencies: Vec::new(),
-                                tensor: Some(TensorRepresentation {
-                                    tensor_mode: 15,
-                                    dtype,
-                                    shape: shape.to_vec(),
-                                    logical_root: root,
-                                    layout: layout.to_value(dtype, shape)?,
+                        retain_candidate(
+                            &mut out,
+                            hint,
+                            keep_artifacts,
+                            PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::TensorTiled,
+                                    applicable: true,
+                                    detail: format!(
+                                        "one mode-15 frame tiled {tile_shape:?} ({origin})"
+                                    ),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    estimated_encode_ns: Some(
+                                        options
+                                            .estimate_encode_ns(TensorStrategy::TensorTiled, size),
+                                    ),
+                                    cost: Some(
+                                        options.price_candidate(
+                                            physical,
+                                            estimate,
+                                            options.estimate_encode_ns(
+                                                TensorStrategy::TensorTiled,
+                                                size,
+                                            ),
+                                        ),
+                                    ),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Tensor,
+                                    strategy_name: "tensor-tiled".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: Some(TensorRepresentation {
+                                        tensor_mode: 15,
+                                        dtype,
+                                        shape: shape.to_vec(),
+                                        logical_root: root,
+                                        layout: layout.to_value(dtype, shape)?,
+                                    }),
+                                    tile_shape: Some(tile_shape),
                                 }),
-                                tile_shape: Some(tile_shape),
-                            }),
-                        });
+                            },
+                        );
                     }
                     Err(err) => out.push(skipped(TensorStrategy::TensorTiled, err.to_string())),
                 }
@@ -3337,7 +3449,11 @@ impl Store {
                                 size,
                                 geometry.as_ref(),
                             );
-                            out.push(PreparedCandidate {
+                            retain_candidate(
+                                &mut out,
+                                hint,
+                                keep_artifacts,
+                                PreparedCandidate {
                                 candidate: TensorPlanCandidate {
                                     strategy: TensorStrategy::FloatTiled,
                                     applicable: true,
@@ -3440,7 +3556,11 @@ impl Store {
                                 size,
                                 geometry.as_ref(),
                             );
-                            out.push(PreparedCandidate {
+                            retain_candidate(
+                                &mut out,
+                                hint,
+                                keep_artifacts,
+                                PreparedCandidate {
                                 candidate: TensorPlanCandidate {
                                     strategy: TensorStrategy::FloatTiledStreams,
                                     applicable: true,
@@ -3502,6 +3622,14 @@ impl Store {
                 TensorStrategy::WeightDelta,
                 "rebase requires an independent representation".to_owned(),
             ));
+        } else if options.max_delta_bytes != 0 && size > options.max_delta_bytes {
+            out.push(skipped(
+                TensorStrategy::WeightDelta,
+                format!(
+                    "delta candidates are bounded to {} bytes; tensor is {size} bytes",
+                    options.max_delta_bytes
+                ),
+            ));
         } else {
             match self.prepare_delta(
                 dtype,
@@ -3518,39 +3646,44 @@ impl Store {
                         TensorStrategy::WeightDelta,
                         size,
                     );
-                    out.push(PreparedCandidate {
-                        candidate: TensorPlanCandidate {
-                            strategy: TensorStrategy::WeightDelta,
-                            applicable: true,
-                            detail: "mode 11 against the causal parent".to_owned(),
-                            physical_bytes: Some(physical),
-                            estimated_decode_ns: Some(estimate),
-                            estimated_encode_ns: Some(
-                                options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
-                            ),
-                            cost: Some(options.price_candidate(
-                                physical,
-                                estimate,
-                                options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
-                            )),
-                            dependency: Some(dependency),
-                        },
-                        artifact: Some(PreparedArtifact {
-                            kind: RepresentationKind::Tensor,
-                            strategy_name: "weight-delta".to_owned(),
-                            frame: Some(frame),
-                            dependencies: vec![dependency],
-                            tensor: Some(TensorRepresentation {
-                                tensor_mode: 11,
-                                dtype,
-                                shape: shape.to_vec(),
-                                logical_root: self
-                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
-                                layout: layout.to_value(dtype, shape)?,
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::WeightDelta,
+                                applicable: true,
+                                detail: "mode 11 against the causal parent".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
+                                )),
+                                dependency: Some(dependency),
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "weight-delta".to_owned(),
+                                frame: Some(frame),
+                                dependencies: vec![dependency],
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 11,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: self
+                                        .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                                tile_shape: None,
                             }),
-                            tile_shape: None,
-                        }),
-                    });
+                        },
+                    );
                 }
                 Ok(None) => out.push(skipped(
                     TensorStrategy::WeightDelta,
@@ -3580,6 +3713,14 @@ impl Store {
                 TensorStrategy::ZstdPatch,
                 "zstd patch disabled (--no-zstd-patch)".to_owned(),
             ));
+        } else if options.max_delta_bytes != 0 && size > options.max_delta_bytes {
+            out.push(skipped(
+                TensorStrategy::ZstdPatch,
+                format!(
+                    "delta candidates are bounded to {} bytes; tensor is {size} bytes",
+                    options.max_delta_bytes
+                ),
+            ));
         } else if size < options.zstd_patch_min_bytes {
             out.push(skipped(
                 TensorStrategy::ZstdPatch,
@@ -3607,7 +3748,11 @@ impl Store {
                             TensorStrategy::ZstdPatch,
                             size,
                         );
-                        out.push(PreparedCandidate {
+                        retain_candidate(
+                            &mut out,
+                            hint,
+                            keep_artifacts,
+                            PreparedCandidate {
                             candidate: TensorPlanCandidate {
                                 strategy: TensorStrategy::ZstdPatch,
                                 applicable: true,
@@ -3649,6 +3794,14 @@ impl Store {
                 TensorStrategy::SparseDelta,
                 "rebase requires an independent representation".to_owned(),
             ));
+        } else if options.max_delta_bytes != 0 && size > options.max_delta_bytes {
+            out.push(skipped(
+                TensorStrategy::SparseDelta,
+                format!(
+                    "delta candidates are bounded to {} bytes; tensor is {size} bytes",
+                    options.max_delta_bytes
+                ),
+            ));
         } else {
             match self.prepare_delta(
                 dtype,
@@ -3665,39 +3818,44 @@ impl Store {
                         TensorStrategy::SparseDelta,
                         size,
                     );
-                    out.push(PreparedCandidate {
-                        candidate: TensorPlanCandidate {
-                            strategy: TensorStrategy::SparseDelta,
-                            applicable: true,
-                            detail: "mode 16 against the causal parent".to_owned(),
-                            physical_bytes: Some(physical),
-                            estimated_decode_ns: Some(estimate),
-                            estimated_encode_ns: Some(
-                                options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
-                            ),
-                            cost: Some(options.price_candidate(
-                                physical,
-                                estimate,
-                                options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
-                            )),
-                            dependency: Some(dependency),
-                        },
-                        artifact: Some(PreparedArtifact {
-                            kind: RepresentationKind::Tensor,
-                            strategy_name: "sparse-delta".to_owned(),
-                            frame: Some(frame),
-                            dependencies: vec![dependency],
-                            tensor: Some(TensorRepresentation {
-                                tensor_mode: 16,
-                                dtype,
-                                shape: shape.to_vec(),
-                                logical_root: self
-                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
-                                layout: layout.to_value(dtype, shape)?,
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::SparseDelta,
+                                applicable: true,
+                                detail: "mode 16 against the causal parent".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
+                                )),
+                                dependency: Some(dependency),
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "sparse-delta".to_owned(),
+                                frame: Some(frame),
+                                dependencies: vec![dependency],
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 16,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: self
+                                        .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                                tile_shape: None,
                             }),
-                            tile_shape: None,
-                        }),
-                    });
+                        },
+                    );
                 }
                 Ok(None) => out.push(skipped(
                     TensorStrategy::SparseDelta,
@@ -3739,41 +3897,46 @@ impl Store {
                         TensorStrategy::SemanticDelta,
                         size,
                     );
-                    out.push(PreparedCandidate {
-                        candidate: TensorPlanCandidate {
-                            strategy: TensorStrategy::SemanticDelta,
-                            applicable: true,
-                            detail: format!(
-                                "mode 14 against a same-semantic-root base (policy {policy})"
-                            ),
-                            physical_bytes: Some(physical),
-                            estimated_decode_ns: Some(estimate),
-                            estimated_encode_ns: Some(
-                                options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
-                            ),
-                            cost: Some(options.price_candidate(
-                                physical,
-                                estimate,
-                                options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
-                            )),
-                            dependency: Some(dependency),
-                        },
-                        artifact: Some(PreparedArtifact {
-                            kind: RepresentationKind::Tensor,
-                            strategy_name: "semantic-delta".to_owned(),
-                            frame: Some(frame),
-                            dependencies: vec![dependency],
-                            tensor: Some(TensorRepresentation {
-                                tensor_mode: 14,
-                                dtype,
-                                shape: shape.to_vec(),
-                                logical_root: self
-                                    .logical_root_for_bytes(dtype, shape, logical, None)?,
-                                layout: layout.to_value(dtype, shape)?,
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::SemanticDelta,
+                                applicable: true,
+                                detail: format!(
+                                    "mode 14 against a same-semantic-root base (policy {policy})"
+                                ),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
+                                )),
+                                dependency: Some(dependency),
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "semantic-delta".to_owned(),
+                                frame: Some(frame),
+                                dependencies: vec![dependency],
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 14,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: self
+                                        .logical_root_for_bytes(dtype, shape, logical, None)?,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                                tile_shape: None,
                             }),
-                            tile_shape: None,
-                        }),
-                    });
+                        },
+                    );
                 }
                 Ok(None) => out.push(skipped(
                     TensorStrategy::SemanticDelta,
@@ -5070,6 +5233,87 @@ fn skipped(strategy: TensorStrategy, detail: String) -> PreparedCandidate {
             dependency: None,
         },
         artifact: None,
+    }
+}
+
+/// Append one planner candidate, retaining at most the encoded frames that can
+/// still be chosen.
+///
+/// The planner has to build (and price) every candidate, but a caller only ever
+/// uses the chosen one. Holding every frame at once peaked at about six
+/// tensor-sized allocations per tensor; this keeps at most two:
+///
+/// * `hint = Some(strategy)` — `choose_candidate` returns the first applicable
+///   candidate with that strategy, so only that candidate keeps its artifact.
+///   A later candidate with the same strategy (zstd-3 and zstd-19 both map to
+///   `TensorStrategy::Zstd`) is dropped.
+/// * `hint = None` — only the running minimum-`cost` candidate keeps its
+///   artifact. A strictly cheaper arrival clears every earlier artifact before
+///   being retained (peak: the previous best plus the new frame); ties keep the
+///   earlier candidate, exactly like `choose_candidate`.
+///
+/// Non-applicable candidates and `keep_artifacts == false` (pricing-only) keep
+/// no frame. Prices, candidate order, tie-breaks and the selected strategy are
+/// unchanged: this only decides which frames stay allocated.
+fn retain_candidate(
+    out: &mut Vec<PreparedCandidate>,
+    hint: Option<TensorStrategy>,
+    keep_artifacts: bool,
+    mut item: PreparedCandidate,
+) {
+    if std::env::var_os("WEFT_TRACE_CANDIDATES").is_some() {
+        let rss = std::fs::read_to_string("/proc/self/status")
+            .ok()
+            .and_then(|status| {
+                status
+                    .lines()
+                    .find(|line| line.starts_with("VmHWM:"))
+                    .and_then(|line| line.split_whitespace().nth(1))
+                    .and_then(|value| value.parse::<u64>().ok())
+            })
+            .unwrap_or(0);
+        eprintln!(
+            "tc: strategy={} applicable={} physical={:?} keep={keep_artifacts} rss_hwm_kib={rss}",
+            item.candidate.strategy.as_str(),
+            item.candidate.applicable,
+            item.candidate.physical_bytes,
+        );
+    }
+    if !keep_artifacts || !item.candidate.applicable {
+        item.artifact = None;
+        out.push(item);
+        return;
+    }
+    match hint {
+        Some(strategy) => {
+            let already_kept = out.iter().any(|existing| {
+                existing.candidate.applicable && existing.candidate.strategy == strategy
+            });
+            if item.candidate.strategy != strategy || already_kept {
+                item.artifact = None;
+            }
+            out.push(item);
+        }
+        None => {
+            let retained_best = out
+                .iter()
+                .filter(|existing| existing.candidate.applicable)
+                .filter_map(|existing| existing.candidate.cost)
+                .min();
+            let cheaper = match (item.candidate.cost, retained_best) {
+                (Some(cost), Some(best)) => cost < best,
+                (Some(_), None) => true,
+                (None, _) => false,
+            };
+            if cheaper {
+                for existing in out.iter_mut() {
+                    existing.artifact = None;
+                }
+            } else {
+                item.artifact = None;
+            }
+            out.push(item);
+        }
     }
 }
 

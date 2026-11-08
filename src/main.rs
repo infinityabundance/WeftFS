@@ -1068,6 +1068,15 @@ enum CheckpointCommand {
         /// Deterministic 32-byte ObjectId seed (64 hex chars) for fixtures.
         #[arg(long = "checkpoint-seed", value_name = "HEX")]
         checkpoint_seed: Option<String>,
+        /// Per-tensor streaming ingest bound in bytes. The writer hashes the
+        /// source in fixed windows and reads one shard at a time; a tensor or
+        /// shard larger than this is refused before anything is published.
+        #[arg(
+            long = "max-ingest-bytes",
+            default_value_t = 1024 * 1024 * 1024,
+            value_name = "BYTES"
+        )]
+        max_ingest_bytes: u64,
     },
     /// Restore a checkpoint, one tensor, or one tensor region.
     ///
@@ -3757,6 +3766,7 @@ fn run_checkpoint(
             prepare_deadline_ms,
             no_fragment_verify,
             checkpoint_seed,
+            max_ingest_bytes,
         } => {
             let started = std::time::Instant::now();
             let source = resolve_checkpoint_source(from_dir.as_deref(), file.as_deref())?;
@@ -3798,6 +3808,7 @@ fn run_checkpoint(
                 causal_checkpoint,
                 semantic_search: !no_semantic,
                 allow_experimental_modes,
+                max_ingest_bytes,
                 deterministic_seed: match checkpoint_seed.as_deref() {
                     None => None,
                     Some(text) => {

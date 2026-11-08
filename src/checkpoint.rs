@@ -143,6 +143,11 @@ pub struct CheckpointWriteOptions {
     /// Allow experimental representations (mode 18) to be auto-selected by the
     /// per-shard planner. Default false.
     pub allow_experimental_modes: bool,
+    /// Per-tensor streaming ingest bound. The writer streams the source tensor
+    /// in fixed windows and reads one shard at a time, so no whole-tensor
+    /// buffer is allocated; a tensor (or one of its shards) larger than this is
+    /// refused before anything is published. Default 1 GiB.
+    pub max_ingest_bytes: u64,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -162,6 +167,7 @@ impl Default for CheckpointWriteOptions {
             semantic_search: true,
             deterministic_seed: None,
             allow_experimental_modes: false,
+            max_ingest_bytes: 1024 * 1024 * 1024,
         }
     }
 }
@@ -1320,23 +1326,48 @@ impl Store {
                         tensor.name, tensor.dtype
                     ))
                 })?;
-                let bytes = file.read_tensor(tensor)?;
-                tc::check_payload(physical, &tensor.shape, &bytes, &limits)?;
+                // The source container must describe exactly the declared
+                // payload; the streaming shard reads rely on it. Same class and
+                // message shape as `weftcodec::tensor::check_payload`.
+                let count = tc::validate_shape(&tensor.shape, &limits)?;
+                let expected_payload = tc::payload_len(count, physical)?;
+                if expected_payload != tensor.byte_len() {
+                    return Err(Error::malformed(format!(
+                        "tensor payload is {} bytes but shape {:?} x {} requires {expected_payload}",
+                        tensor.byte_len(),
+                        tensor.shape,
+                        physical.as_str()
+                    )));
+                }
+                // Whole-tensor identity is streamed in bounded windows: the
+                // source is never materialised. `content_root` and
+                // `logical_root` are byte-identical to the one-shot digests.
+                let (content_root, values_hash) = file.hash_tensor_digests(
+                    tensor,
+                    safetensors::DEFAULT_INGEST_WINDOW_BYTES,
+                    options.max_ingest_bytes,
+                )?;
+                let logical_root = tc::logical_root_from_values_hash(
+                    physical,
+                    &tensor.shape,
+                    values_hash,
+                    &limits,
+                )?;
                 let mut shards = Vec::with_capacity(options.shards as usize);
                 let mut object_names = Vec::with_capacity(options.shards as usize);
                 let mut object_ids = Vec::with_capacity(options.shards as usize);
                 for shard_index in 0..options.shards {
                     let shard_shape =
                         tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
-                    let shard_bytes = tc::shard_bytes(
+                    let shard_bytes = file.read_tensor_shard(
+                        tensor,
                         physical,
-                        &tensor.shape,
                         options.axis,
                         options.shards,
                         shard_index,
-                        &bytes,
-                        &limits,
+                        options.max_ingest_bytes,
                     )?;
+                    tc::check_payload(physical, &shard_shape, &shard_bytes, &limits)?;
                     let object_name = shard_object_name(tensor_index, shard_index);
                     let (store_dtype, store_shape, hint, tile_shape) = checkpoint_shard_transport(
                         dtype,
@@ -1408,15 +1439,14 @@ impl Store {
                     object_names.push(object_name);
                     object_ids.push(id);
                 }
-                let logical_root = tc::logical_root(physical, &tensor.shape, &bytes, &limits)?;
                 tensors.push((
                     CheckpointTensor {
                         name: tensor.name.clone(),
                         dtype: dtype.as_str().to_owned(),
                         shape: tensor.shape.clone(),
                         logical_root,
-                        content_root: identity::content_hash(&bytes),
-                        element_bytes: bytes.len() as u64,
+                        content_root,
+                        element_bytes: tensor.byte_len(),
                         source_offset: tensor.begin,
                         shards,
                     },
@@ -1864,6 +1894,17 @@ impl Store {
                 tensor.name, tensor.dtype
             ))
         })?;
+        // The prepare/commit split re-verifies the whole reassembled tensor in
+        // the committer, so it still materialises one tensor; the bound is
+        // enforced here so the option is never silently ignored on this path.
+        if tensor.byte_len() > options.max_ingest_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "tensor `{}` is {} bytes, above the {}-byte ingest bound (raise --max-ingest-bytes)",
+                tensor.name,
+                tensor.byte_len(),
+                options.max_ingest_bytes
+            )));
+        }
         let bytes = file.read_tensor(tensor)?;
         tc::check_payload(physical, &tensor.shape, &bytes, &limits)?;
         let mut shards = Vec::with_capacity(options.shards as usize);

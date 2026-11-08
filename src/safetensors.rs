@@ -23,6 +23,12 @@ use crate::error::{Error, Result};
 /// Bound on an accepted safetensors JSON header.
 pub const MAX_HEADER_BYTES: u64 = 64 * 1024 * 1024;
 
+/// Default window for [`SafetensorsFile::hash_tensor_digests`].
+///
+/// A streaming digest only needs a fixed buffer, so the window is independent
+/// of the tensor and of the ingest bound.
+pub const DEFAULT_INGEST_WINDOW_BYTES: usize = 8 * 1024 * 1024;
+
 /// One tensor as described by the source header.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SafetensorsTensor {
@@ -305,6 +311,206 @@ impl SafetensorsFile {
             .find(|tensor| tensor.name == name)
             .ok_or_else(|| Error::not_found(format!("no tensor named `{name}` in the container")))
     }
+
+    /// Read `out.len()` bytes at `byte_offset` inside one tensor.
+    ///
+    /// `byte_offset` is relative to the tensor's first byte. The range must fit
+    /// inside the tensor's declared `data_offsets`; a short read is `Io` and
+    /// never a silently zero-filled buffer.
+    pub fn read_tensor_range(
+        &self,
+        tensor: &SafetensorsTensor,
+        byte_offset: u64,
+        out: &mut [u8],
+    ) -> Result<()> {
+        let end = byte_offset
+            .checked_add(out.len() as u64)
+            .ok_or_else(|| Error::limit_exceeded("tensor range offset overflow"))?;
+        if end > tensor.byte_len() {
+            return Err(Error::invalid_argument(format!(
+                "range {byte_offset}..{end} is outside tensor `{}` ({} bytes)",
+                tensor.name,
+                tensor.byte_len()
+            )));
+        }
+        let mut file = File::open(&self.path)
+            .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        file.seek(SeekFrom::Start(
+            self.data_start + tensor.begin + byte_offset,
+        ))
+        .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        if !out.is_empty() {
+            file.read_exact(out)
+                .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        }
+        Ok(())
+    }
+
+    /// Extract one shard's canonical row-major bytes without materialising the
+    /// whole tensor.
+    ///
+    /// The output is byte-for-byte the same as
+    /// [`weftcodec::tensor::shard_bytes`] over the whole tensor: `axis == 0` is
+    /// one contiguous read, any other axis is `product(shape[..axis])`
+    /// contiguous runs of `plane * inner_bytes`, where
+    /// `inner_bytes = product(shape[axis + 1..]) * element_size` and
+    /// `plane = shape[axis] / shards`.
+    ///
+    /// Fails closed with `LimitExceeded` (naming `--max-ingest-bytes` and
+    /// `--shards`) when the shard is larger than `max_bytes`, and with
+    /// `Malformed` when the container's tensor byte length disagrees with the
+    /// declared dtype and shape (the strides would otherwise read a neighbour
+    /// tensor's bytes).
+    pub fn read_tensor_shard(
+        &self,
+        tensor: &SafetensorsTensor,
+        dtype: weftcodec::TensorDtype,
+        axis: u32,
+        shards: u32,
+        index: u32,
+        max_bytes: u64,
+    ) -> Result<Vec<u8>> {
+        let limits = weftcodec::Limits::default();
+        let count = weftcodec::tensor::validate_shape(&tensor.shape, &limits)?;
+        let expected = weftcodec::tensor::payload_len(count, dtype)?;
+        if expected != tensor.byte_len() {
+            return Err(Error::malformed(format!(
+                "tensor payload is {} bytes but shape {:?} x {} requires {expected}",
+                tensor.byte_len(),
+                tensor.shape,
+                dtype.as_str()
+            )));
+        }
+        let shard_shape = weftcodec::tensor::shard_shape(&tensor.shape, axis, shards, index)?;
+        let shard_elements = shard_shape.iter().try_fold(1u64, |acc, dim| {
+            acc.checked_mul(*dim)
+                .ok_or_else(|| Error::limit_exceeded("shard shape overflow"))
+        })?;
+        let shard_len = weftcodec::tensor::payload_len(shard_elements, dtype)?;
+        if shard_len > max_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "shard {index}/{shards} of `{}` is {shard_len} bytes, above the {max_bytes}-byte ingest bound (raise --max-ingest-bytes or --shards)",
+                tensor.name
+            )));
+        }
+        let size = usize::try_from(shard_len)
+            .map_err(|_| Error::limit_exceeded("shard payload does not fit in memory"))?;
+        let esize = dtype.element_size();
+        let axis = axis as usize;
+        let plane = tensor.shape[axis] / u64::from(shards);
+        let inner_elements = tensor.shape[axis + 1..].iter().try_fold(1u64, |acc, dim| {
+            acc.checked_mul(*dim)
+                .ok_or_else(|| Error::limit_exceeded("shard shape overflow"))
+        })?;
+        let inner_bytes = inner_elements
+            .checked_mul(esize)
+            .ok_or_else(|| Error::limit_exceeded("shard stride overflow"))?;
+        let run_bytes = plane
+            .checked_mul(inner_bytes)
+            .ok_or_else(|| Error::limit_exceeded("shard stride overflow"))?;
+        let outer = tensor.shape[..axis].iter().try_fold(1u64, |acc, dim| {
+            acc.checked_mul(*dim)
+                .ok_or_else(|| Error::limit_exceeded("shard shape overflow"))
+        })?;
+        if run_bytes
+            .checked_mul(outer)
+            .ok_or_else(|| Error::limit_exceeded("shard size overflow"))?
+            != shard_len
+        {
+            return Err(Error::corrupt(format!(
+                "shard {index}/{shards} of `{}` does not tile its declared shape",
+                tensor.name
+            )));
+        }
+        let stride_bytes = tensor.shape[axis]
+            .checked_mul(inner_bytes)
+            .ok_or_else(|| Error::limit_exceeded("shard stride overflow"))?;
+        let start_bytes = u64::from(index)
+            .checked_mul(run_bytes)
+            .ok_or_else(|| Error::limit_exceeded("shard offset overflow"))?;
+        let mut out = vec![0u8; size];
+        if size == 0 {
+            return Ok(out);
+        }
+        let mut file = File::open(&self.path)
+            .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        let run = usize::try_from(run_bytes)
+            .map_err(|_| Error::limit_exceeded("shard run does not fit in memory"))?;
+        let mut position = 0usize;
+        for outer_index in 0..outer {
+            let source = outer_index
+                .checked_mul(stride_bytes)
+                .and_then(|offset| offset.checked_add(start_bytes))
+                .ok_or_else(|| Error::limit_exceeded("shard offset overflow"))?;
+            if source
+                .checked_add(run_bytes)
+                .ok_or_else(|| Error::limit_exceeded("shard offset overflow"))?
+                > tensor.byte_len()
+            {
+                return Err(Error::corrupt(format!(
+                    "shard {index}/{shards} of `{}` reads past the tensor",
+                    tensor.name
+                )));
+            }
+            file.seek(SeekFrom::Start(self.data_start + tensor.begin + source))
+                .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+            file.read_exact(&mut out[position..position + run])
+                .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+            position += run;
+        }
+        Ok(out)
+    }
+
+    /// Stream the whole-tensor `ContentId` and canonical `values_hash` digests.
+    ///
+    /// The bytes are fed to both hashers in `window`-sized pieces (a window of
+    /// zero means [`DEFAULT_INGEST_WINDOW_BYTES`]), so no whole-tensor buffer is
+    /// allocated. The digests are the exact ones the one-shot functions produce:
+    /// `identity::content_hash(bytes)` and `weftcodec::tensor::values_hash(bytes)`.
+    ///
+    /// Refuses with `LimitExceeded` when the tensor is larger than `max_bytes`
+    /// (naming `--max-ingest-bytes`), and fails closed on a short read.
+    pub fn hash_tensor_digests(
+        &self,
+        tensor: &SafetensorsTensor,
+        window: usize,
+        max_bytes: u64,
+    ) -> Result<(crate::identity::Hash32, crate::identity::Hash32)> {
+        if tensor.byte_len() > max_bytes {
+            return Err(Error::limit_exceeded(format!(
+                "tensor `{}` is {} bytes, above the {max_bytes}-byte ingest bound (raise --max-ingest-bytes)",
+                tensor.name,
+                tensor.byte_len()
+            )));
+        }
+        let window = if window == 0 {
+            DEFAULT_INGEST_WINDOW_BYTES
+        } else {
+            window
+        };
+        let window = window.min(tensor.byte_len().max(1) as usize).max(1);
+        let mut content = crate::identity::content_hash_hasher();
+        let mut values = weftcodec::tensor::values_hasher();
+        let mut file = File::open(&self.path)
+            .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        file.seek(SeekFrom::Start(self.data_start + tensor.begin))
+            .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        let mut remaining = tensor.byte_len();
+        let mut buffer = vec![0u8; window];
+        while remaining > 0 {
+            let want = usize::try_from(remaining.min(window as u64))
+                .map_err(|_| Error::limit_exceeded("tensor window does not fit in memory"))?;
+            file.read_exact(&mut buffer[..want])
+                .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+            content.update(&buffer[..want]);
+            values.update(&buffer[..want]);
+            remaining -= want as u64;
+        }
+        Ok((
+            crate::identity::finish_content_hash(content),
+            values.finalize(),
+        ))
+    }
 }
 
 /// One tensor to write into a synthesized safetensors container.
@@ -451,4 +657,158 @@ pub fn metadata_pairs(metadata: Option<&Json>) -> BTreeMap<String, String> {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn lcg_bytes(len: usize, seed: u64) -> Vec<u8> {
+        let mut state = seed | 1;
+        let mut out = Vec::with_capacity(len);
+        for _ in 0..len {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            out.push((state >> 33) as u8);
+        }
+        out
+    }
+
+    fn write_container(
+        dtype: &'static str,
+        shape: &[u64],
+        data: &[u8],
+    ) -> (tempfile::TempDir, SafetensorsFile) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("fixture.safetensors");
+        let bytes = encode_file(
+            &[SafetensorsEntry {
+                name: "t",
+                dtype,
+                shape,
+                data,
+            }],
+            None,
+        )
+        .unwrap();
+        std::fs::write(&path, &bytes).unwrap();
+        let file = SafetensorsFile::parse(&path).unwrap();
+        (dir, file)
+    }
+
+    fn element_len(shape: &[u64], dtype: weftcodec::TensorDtype) -> usize {
+        let count = shape.iter().fold(1u64, |acc, dim| acc * dim);
+        usize::try_from(count * dtype.element_size()).unwrap()
+    }
+
+    #[test]
+    fn streamed_shards_match_shard_bytes() {
+        let limits = weftcodec::Limits::default();
+        let cases: [(&'static str, weftcodec::TensorDtype, &[u64]); 4] = [
+            ("bf16", weftcodec::TensorDtype::Bf16, &[8]),
+            ("f32", weftcodec::TensorDtype::F32, &[4, 6]),
+            ("i8", weftcodec::TensorDtype::I8, &[4, 6, 5]),
+            ("f64", weftcodec::TensorDtype::F64, &[2, 3, 2, 2]),
+        ];
+        for (name, dtype, shape) in cases {
+            let data = lcg_bytes(element_len(shape, dtype), 0x51ed);
+            let (_dir, file) = write_container(name, shape, &data);
+            let tensor = file.tensor("t").unwrap();
+            for axis in 0..shape.len() as u32 {
+                for shards in [1u32, 2, 3, 4] {
+                    if shape[axis as usize] % u64::from(shards) != 0 {
+                        continue;
+                    }
+                    for index in 0..shards {
+                        let direct = weftcodec::tensor::shard_bytes(
+                            dtype, shape, axis, shards, index, &data, &limits,
+                        )
+                        .unwrap();
+                        let streamed = file
+                            .read_tensor_shard(tensor, dtype, axis, shards, index, u64::MAX)
+                            .unwrap();
+                        assert_eq!(
+                            streamed, direct,
+                            "{name} {shape:?} axis {axis} shards {shards} index {index}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn streamed_digests_match_one_shot() {
+        let shape: &[u64] = &[5, 7, 3];
+        let dtype = weftcodec::TensorDtype::Bf16;
+        let data = lcg_bytes(element_len(shape, dtype), 0xfeed);
+        let (_dir, file) = write_container("bf16", shape, &data);
+        let tensor = file.tensor("t").unwrap();
+        let expected_content = crate::identity::content_hash(&data);
+        let expected_values = weftcodec::tensor::values_hash(&data);
+        for window in [1usize, 3, 64, 4096, DEFAULT_INGEST_WINDOW_BYTES] {
+            let (content, values) = file.hash_tensor_digests(tensor, window, u64::MAX).unwrap();
+            assert_eq!(content, expected_content, "window {window}");
+            assert_eq!(values, expected_values, "window {window}");
+        }
+        // Window zero selects the default window.
+        let (content, values) = file.hash_tensor_digests(tensor, 0, u64::MAX).unwrap();
+        assert_eq!(content, expected_content);
+        assert_eq!(values, expected_values);
+    }
+
+    #[test]
+    fn range_reads_are_exact_and_bounded() {
+        let shape: &[u64] = &[6, 5];
+        let dtype = weftcodec::TensorDtype::F32;
+        let data = lcg_bytes(element_len(shape, dtype), 0x1234);
+        let (_dir, file) = write_container("f32", shape, &data);
+        let tensor = file.tensor("t").unwrap();
+        let mut out = vec![0u8; 17];
+        file.read_tensor_range(tensor, 3, &mut out).unwrap();
+        assert_eq!(out, data[3..20]);
+        let mut empty = Vec::new();
+        file.read_tensor_range(tensor, data.len() as u64, &mut empty)
+            .unwrap();
+        let err = file
+            .read_tensor_range(tensor, data.len() as u64 - 1, &mut out)
+            .unwrap_err();
+        assert_eq!(err.class(), crate::error::Class::InvalidArgument);
+    }
+
+    #[test]
+    fn ingest_bounds_fail_closed() {
+        let shape: &[u64] = &[4, 4];
+        let dtype = weftcodec::TensorDtype::Bf16;
+        let data = lcg_bytes(element_len(shape, dtype), 0xabcd);
+        let (_dir, file) = write_container("bf16", shape, &data);
+        let tensor = file.tensor("t").unwrap();
+        let whole = data.len() as u64;
+        let err = file.hash_tensor_digests(tensor, 64, whole - 1).unwrap_err();
+        assert_eq!(err.class(), crate::error::Class::LimitExceeded);
+        let shard = file
+            .read_tensor_shard(tensor, dtype, 0, 2, 0, whole / 4)
+            .unwrap_err();
+        assert_eq!(shard.class(), crate::error::Class::LimitExceeded);
+        // The same shard fits at the exact bound.
+        file.read_tensor_shard(tensor, dtype, 0, 2, 0, whole / 2)
+            .unwrap();
+    }
+
+    #[test]
+    fn sha256_of_streamed_digests_still_matches_the_file() {
+        // Guards against a window loop that silently skips or repeats bytes:
+        // the content digest over a huge window must equal the digest over a
+        // 1-byte window for a multi-window tensor.
+        let shape: &[u64] = &[9];
+        let dtype = weftcodec::TensorDtype::I8;
+        let data = lcg_bytes(element_len(shape, dtype), 0x7777);
+        let (_dir, file) = write_container("i8", shape, &data);
+        let tensor = file.tensor("t").unwrap();
+        let (a, va) = file.hash_tensor_digests(tensor, 2, u64::MAX).unwrap();
+        let (b, vb) = file.hash_tensor_digests(tensor, 4096, u64::MAX).unwrap();
+        assert_eq!(a, b);
+        assert_eq!(va, vb);
+    }
 }

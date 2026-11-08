@@ -357,6 +357,114 @@ fn planner_bytes_only_chooses_the_smallest_delta_for_a_near_duplicate_pair() {
 }
 
 #[test]
+fn planner_delta_bound_skips_delta_and_patch_candidates() {
+    let shape = [256u64, 512];
+    let v1 = smooth_tensor(256 * 512 * 2, 0x66);
+    let v2 = nudge_low_mantissa(&v1, 1_000);
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let root = store.resolve_path("/").unwrap();
+    let base = store
+        .write_tensor_file(
+            root,
+            b"bounded-base",
+            "bf16",
+            &shape,
+            &v1,
+            &TensorLayoutSpec::row_major(),
+            None,
+        )
+        .unwrap();
+    let base_version = store.object_meta(base).unwrap().version;
+
+    let bounded = store
+        .plan_tensor(
+            "bf16",
+            &shape,
+            &v2,
+            &TensorLayoutSpec::row_major(),
+            &[base_version],
+            &TensorPlanOptions {
+                max_delta_bytes: 1024,
+                ..TensorPlanOptions::default()
+            },
+        )
+        .unwrap();
+    for strategy in [
+        TensorStrategy::WeightDelta,
+        TensorStrategy::SparseDelta,
+        TensorStrategy::ZstdPatch,
+    ] {
+        let candidate = bounded
+            .candidates
+            .iter()
+            .find(|candidate| candidate.strategy == strategy)
+            .expect("candidate present");
+        assert!(!candidate.applicable, "{strategy:?} must be gated");
+        assert!(
+            candidate.detail.contains("bounded"),
+            "detail names the bound: {}",
+            candidate.detail
+        );
+    }
+
+    // The same tensor with the bound disabled still offers the exact deltas.
+    let unbounded = store
+        .plan_tensor(
+            "bf16",
+            &shape,
+            &v2,
+            &TensorLayoutSpec::row_major(),
+            &[base_version],
+            &TensorPlanOptions {
+                max_delta_bytes: 0,
+                ..TensorPlanOptions::default()
+            },
+        )
+        .unwrap();
+    let weight = unbounded
+        .candidates
+        .iter()
+        .find(|candidate| candidate.strategy == TensorStrategy::WeightDelta)
+        .expect("weight-delta candidate");
+    assert!(weight.applicable);
+}
+
+#[test]
+fn canonicalize_cow_borrows_row_major_and_owns_other_layouts() {
+    let shape = [8u64, 4];
+    let row_major = random_bytes(8 * 4 * 2, 0x77);
+    let row_spec = TensorLayoutSpec::row_major();
+    let borrowed = row_spec
+        .canonicalize_cow(
+            weftfs::representation::TensorElementDtype::Bf16,
+            &shape,
+            &row_major,
+        )
+        .unwrap();
+    assert!(matches!(borrowed, std::borrow::Cow::Borrowed(_)));
+    assert_eq!(borrowed.as_ref(), row_major.as_slice());
+
+    let column_spec = TensorLayoutSpec::column_major();
+    let owned = column_spec
+        .canonicalize_cow(
+            weftfs::representation::TensorElementDtype::Bf16,
+            &shape,
+            &row_major,
+        )
+        .unwrap();
+    assert!(matches!(owned, std::borrow::Cow::Owned(_)));
+    let expected = column_spec
+        .canonicalize(
+            weftfs::representation::TensorElementDtype::Bf16,
+            &shape,
+            &row_major,
+        )
+        .unwrap();
+    assert_eq!(owned.as_ref(), expected.as_slice());
+}
+
+#[test]
 fn planner_bytes_only_chooses_raw_for_incompressible_tensors() {
     let shape = [256u64, 512];
     let bytes = random_bytes(256 * 512 * 2, 0x44);
