@@ -235,10 +235,6 @@ pub const MODE18_MEASURED_CALIBRATION: &str = "weftfs-mode18/decode-calibration/
 /// lower bound, so a small-region estimate can only become more expensive.
 const MODE18_MEASURED: Coefficients = Coefficients::new(96_601, 3_674_824);
 
-/// Note attached to the encode table: only the rows marked measured came from
-/// a court run; the rest are declared.
-const ENCODE_FLOOR_NOTE: &str = "no fitted fixed term may be zero";
-
 /// Estimated mode-18 decode nanoseconds for `decoded_bytes` logical bytes.
 pub fn estimate_streams_ns(decoded_bytes: u64) -> u64 {
     estimate_with(MODE18_MEASURED, decoded_bytes)

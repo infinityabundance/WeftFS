@@ -132,14 +132,23 @@ run_court bench "write_policy" \
 run_court bench "recovery_load" \
   "bash bench/scripts/recovery_load_court.sh"
 
-# Zero-trust KV page reads (reduced sample count; the standalone receipt uses
+# Zero-trust KV page reads. The bench itself refuses fewer than 1,000 samples,
+# so the aggregate uses the minimum accepted count (the standalone receipt uses
 # 2,000).
 run_court rust "kv_capability" \
-  "WEFT_KV_REPS=200 bash bench/scripts/kv_capability_court.sh"
+  "WEFT_KV_REPS=1000 bash bench/scripts/kv_capability_court.sh"
 
-# Prepare/commit checkpoint split at 1/2/4/8 ranks on the real Qwen base.
-run_court bench "parallel_checkpoint" \
-  "bash bench/scripts/parallel_checkpoint_court.sh"
+# Prepare/commit checkpoint split at 1/2/4/8 ranks on the real Qwen base. This
+# script orchestrates its own bench court, so it is invoked directly.
+echo "=== parallel_checkpoint ===" | tee -a "$log"
+if bash bench/scripts/parallel_checkpoint_court.sh >>"$log" 2>&1; then
+  echo "parallel_checkpoint=pass" >> "$results"
+  echo "PASS parallel_checkpoint"
+else
+  echo "parallel_checkpoint=fail" >> "$results"
+  echo "FAIL parallel_checkpoint"
+  status=1
+fi
 
 # Index trust: a forged self-consistent index subset must be rejected by the
 # commit attestation, and a genuine cross-language segment must load without a
