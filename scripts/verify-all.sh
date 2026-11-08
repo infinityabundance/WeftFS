@@ -111,6 +111,12 @@ run_court fuse "buck2_cas_store" \
 run_court rust "threefs" \
   "bash scripts/threefs_court.sh"
 
+# Wall-time budget for one court in this aggregate: 10 minutes. Three courts can
+# exceed it at full size — checkpoint-family lifecycle, trajectory and write
+# policy — so they run reduced configurations here and record exactly what they
+# ran in their own receipts. Their full-size standalone receipts remain the
+# full evidence and are cited in docs/STATUS.md.
+
 # Checkpoint-family lifecycle (reduced for the aggregate: one family, one
 # configuration, one repetition each). The full-size standalone receipt is
 # `bench/receipts/family-lifecycle-*.json` from the default run.

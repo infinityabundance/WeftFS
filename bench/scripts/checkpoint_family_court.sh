@@ -41,6 +41,12 @@ qwen_base="$corpus/Qwen2.5-0.5B.safetensors"
 qwen_instruct="$corpus/Qwen2.5-0.5B-Instruct.safetensors"
 pythia0="$corpus/pythia-70m-step0.safetensors"
 pythia1="$corpus/pythia-70m-step1.safetensors"
+# Large-model family (Stage 1 of the v1.2.0 work). Both files are merged
+# single-container views of the two published shards each; the merge tool
+# verified every tensor byte-for-byte. Override only to point at a differently
+# rooted copy of the same verified files.
+qwen3b_base="${WEFT_FAMILY_QWEN3B_BASE:-$corpus/Qwen2.5-3B.safetensors}"
+qwen3b_instruct="${WEFT_FAMILY_QWEN3B_NEXT:-$corpus/Qwen2.5-3B-Instruct.safetensors}"
 
 mkdir -p "$work" bench/receipts
 : > "$inputs"
@@ -74,6 +80,11 @@ qwen_base_sha=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
 qwen_instruct_sha=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
 pythia0_sha=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
 pythia1_sha=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+# Merged-container sha256 (shard hashes are in the pair manifest and are
+# verified by the merge tool at creation time; the court re-verifies the
+# merged file it actually reads).
+qwen3b_base_sha=52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab
+qwen3b_instruct_sha=54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2
 
 # The values above are copies of the manifest entries; refuse to run if the
 # committed manifests disagree (the manifest is the source of truth).
@@ -95,6 +106,23 @@ verify_sha256 "$qwen_base" "$qwen_base_sha"
 verify_sha256 "$qwen_instruct" "$qwen_instruct_sha"
 verify_sha256 "$pythia0" "$pythia0_sha"
 verify_sha256 "$pythia1" "$pythia1_sha"
+
+# The 3B pair is only verified when that family is selected: it is 12.3 GiB of
+# source weights and must not be hashed by the small-family runs.
+if [[ " $families " == *" qwen3b-finetune "* ]]; then
+  for pair in \
+    "bench/corpora/real-models/qwen2.5-3b-pair.json:$qwen3b_base_sha" \
+    "bench/corpora/real-models/qwen2.5-3b-pair.json:$qwen3b_instruct_sha"; do
+    manifest="${pair%%:*}"
+    digest="${pair##*:}"
+    if ! grep -q "$digest" "$manifest"; then
+      echo "family_lifecycle: manifest $manifest does not contain $digest" >&2
+      exit 1
+    fi
+  done
+  verify_sha256 "$qwen3b_base" "$qwen3b_base_sha"
+  verify_sha256 "$qwen3b_instruct" "$qwen3b_instruct_sha"
+fi
 
 echo "== build =="
 cargo build --release --example family_lifecycle
@@ -261,6 +289,24 @@ for variant in $configs; do
 done
 fi
 
+# --- large real fine-tune (Qwen2.5-3B base -> Instruct) -------------------
+if [[ " $families " == *" qwen3b-finetune "* ]]; then
+family=qwen3b-finetune
+if [[ "${WEFT_FAMILY_SKIP_FAMILY:-0}" != "1" ]]; then
+baselines_for "$family" "$qwen3b_base" "$qwen3b_instruct"
+checkpoint_for "$family" "$qwen3b_base"
+recovery_for "$family" "$qwen3b_base" '*.layers.0.*'
+fi
+for variant in $configs; do
+  case "$variant" in
+    default) run_config "$family" "$variant" "$qwen3b_base" "$qwen3b_instruct" whole 0 ;;
+    region1) run_config "$family" "$variant" "$qwen3b_base" "$qwen3b_instruct" rows:1 1 local "" "--auto-tile-bytes $tile_budget" ;;
+    region100) run_config "$family" "$variant" "$qwen3b_base" "$qwen3b_instruct" rows:100 1 local "" "--auto-tile-bytes $tile_budget" ;;
+    *) echo "family_lifecycle: unknown configuration $variant" >&2; exit 64 ;;
+  esac
+done
+fi
+
 # --- object-store path (reduced, real MinIO on loopback) -------------------
 if [[ "$run_s3" == "1" ]]; then
   minio_bin="$root/.docker-cache/minio/minio"
@@ -308,8 +354,12 @@ if [[ "$run_s3" == "1" ]]; then
 fi
 
 echo "== merge =="
+label="real public weights: Qwen2.5-0.5B base->Instruct (independent fine-tune) and pythia-70m step0->step1 (consecutive training checkpoints)"
+if [[ " $families " == *" qwen3b-finetune "* ]]; then
+  label="real public weights: Qwen2.5-3B base->Qwen2.5-3B-Instruct (independent fine-tune, 434 BF16 tensors per checkpoint, 6,171,877,376 tensor data bytes each; published as two shards each, merged into one container with per-tensor sha256 parity)"
+fi
 WEFT_COURT_COMMAND="scripts/docker-court.sh bench \"cd /work && bash bench/scripts/checkpoint_family_court.sh\"" \
-WEFT_FAMILY_LABEL="real public weights: Qwen2.5-0.5B base->Instruct (independent fine-tune) and pythia-70m step0->step1 (consecutive training checkpoints)" \
+WEFT_FAMILY_LABEL="$label" \
   "$bin" merge --inputs "$inputs" --out "$receipt"
 
 echo "family_lifecycle: receipt $receipt"
