@@ -7,7 +7,7 @@ implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
 and both codec implementations cover every allocated mode 0–18. **Stage S6
 update (2026-11-08):** the current verification receipt is
-`bench/receipts/verify-20261108T100623Z.json` (**37/37** courts `pass`, 0 failed,
+`bench/receipts/verify-20261108T165021Z.json` (**37/37** courts `pass`, 0 failed,
 0 skipped) after the Stage 1–6 work below; the previous T2 receipt
 `verify-20261108T050823Z.json` (30/30) is retained, and the first Stage 6 run
 `verify-20261108T090639Z.json` (33/37) is retained because it found four real
@@ -6207,7 +6207,7 @@ Gates: Rust `cargo test --all-targets` pass; FUSE
 `cargo test --features fuse --all-targets` **673 passed / 0 failed / 2
 pre-existing ignored**; WeftFS-Go `go test -race ./...` all packages pass;
 claims OK; spec drift 42/42; aggregate **37/37**
-(`verify-20261108T100623Z.json`). The first aggregate run
+(`verify-20261108T165021Z.json`). The first aggregate run
 (`verify-20261108T090639Z.json`, 33/37) is retained because it found the four
 defects listed at the top of this file.
 
@@ -6316,3 +6316,128 @@ Gates at `9822d56` / `cffcc1a`: WeftCodec `cargo test --lib` 75 passed; Rust
 `cargo test --all-targets` 128 suites, 640 passed, 0 failed; FUSE
 `cargo test --features fuse --all-targets` 128 suites, 683 passed, 0 failed,
 2 pre-existing ignored; claims OK; spec drift 42/42; conformance manifest OK.
+
+## Subphase S13 — dependency-graph planning (2026-11-08)
+
+Goal: make the parent of each trajectory version a **decision**, not an
+accident. The pythia 9-checkpoint trajectory stored every version as a delta on
+the previous one, so chain depth reached 8 and cold restore grew from 683 ms to
+9.5 s. S13 adds a write-time planner that chooses, for every version, an earlier
+parent or no parent.
+
+### What changed
+
+- `src/plan_graph.rs` (new) is a pure optimizer over a measured
+  `VersionGraph`. The objective is
+  `Σ edge_bytes + λ · reads · Σ chain_decode_ns`, where the chain cost is the
+  sum of the existing measured `src/cost_model.rs` rows, not a new formula.
+  Three solvers:
+  * `dp` — chain/restart dynamic program, state `(version, depth)`, exact over
+    `parent = none | previous`, `O(n · max_depth)`;
+  * `brute-force` — exhaustive oracle over **every** earlier compatible parent,
+    exact `O(n!)`, refused above 12 versions with a typed `LimitExceeded`;
+  * `greedy` — deterministic one-pass over every earlier parent, not claimed
+    optimal.
+  The tie-break is `(objective, fewer dependencies, lower parent index)`,
+  lexicographic in version order; there is no randomness.
+- Hard constraints: `max_depth` (default 8, the frozen
+  `MAX_CODEC_DEPENDENCY_DEPTH`), optional `sla_ns` on the worst cold restore,
+  and optional `storage_budget`. A plan that cannot satisfy the SLA is refused
+  with `LimitExceeded`; a DP optimum over budget falls back to the exact
+  budget-pruned oracle. Nothing degrades silently.
+- `Store::price_parent_graph` prices every earlier parent with the shipped
+  `Store::plan_tensor` (with and without a causal version); `Store::
+  write_parent_graph` writes the chosen graph in version order through the
+  existing `causal_checkpoint` path. **No manifest, frame, commit or
+  representation field changed.**
+- `weftfs plan-parents --versions NAME=FILE,... [--max-depth] [--lambda-ns]
+  [--reads-per-version] [--sla-ms] [--storage-budget] [--solver]
+  [--apply --out DIR] [--scratch DIR]`. The dry run writes probes into a
+  private scratch store, prints per-version edges and predicted bytes/restore,
+  and removes the scratch; `--apply` writes the graph into a new store.
+- `tests/parent_graph.rs` 6/6 (DP == oracle on a chain-or-restart optimum;
+  the oracle's non-adjacent optimum is recorded as the DP's stated limitation;
+  determinism; depth bound for all three solvers and depths 0–8; typed SLA
+  refusal; a store round trip proving every chosen version keeps the same
+  per-tensor `LogicalTensorRoot` and content root as an independent write).
+  `src/plan_graph.rs` unit tests 12/12.
+
+### Measurement
+
+Receipt `bench/receipts/parent-graph-20261108T192017Z.json` (schema
+`weft.s13.parent-graph.v1`) at WeftFS `163a6a2` / WeftCodec `cffcc1a`, default
+bench court (3 GiB / 4 cpus / 1024 pids, `weft/bench-court:1` id
+`sha256:4c6c41fb…`). Corpus: nine pythia-70m checkpoints, 281,715,176 B and 76
+tensors each, every file re-hashed in the court (step 0 `17a077ab…af8e`, step
+1000 `09883f90…ee88`; all nine in the receipt). The independent probe store is
+1,447,239,539 B; pricing all 45 edges took 1,388.8 s.
+
+`lambda_ns` is the smallest integer at which any restart interval beats the
+chain: break-evens 0.008408 / 0.005266 / 0.004714 bytes/ns for k=2/3/4, so the
+court ran at λ=1 (1 GB/s) with a 4 s SLA.
+
+Model prices from the measured graph:
+
+| plan | depth | edge bytes | Σ chain decode | worst restore |
+|---|---:|---:|---:|---:|
+| current chain (`−1,0..7`) | 8 | 647,175,737 | 53,146.7 ms | 11,599.9 ms |
+| restart every 2 | 1 | 1,030,180,485 | 7,594.5 ms | 1,634.8 ms |
+| restart every 3 | 2 | 849,572,567 | 14,712.2 ms | 3,058.6 ms |
+| restart every 4 | 3 | 808,225,589 | 18,983.3 ms | 4,482.4 ms |
+| **DP at λ=1, SLA 4 s** | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
+| DP at λ=0, SLA 4 s | 2 | 849,572,567 | 14,712.2 ms | 3,058.6 ms |
+| brute force at λ=1 | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
+
+Realised stores (actual data bytes, median of 3 restores per version, every
+version exact, `verify --full` 0 problems):
+
+| plan | data bytes | predicted | error | worst restore | Σ restore |
+|---|---:|---:|---:|---:|---:|
+| chain | 647,411,616 | 647,175,737 | +235,879 (+0.036 %) | 9,336.3 ms | 41,218.8 ms |
+| restart-2 | 1,030,285,678 | 1,030,180,485 | +105,193 (+0.010 %) | 2,448.9 ms | 12,583.3 ms |
+| restart-3 | 849,712,592 | 849,572,567 | +140,025 (+0.016 %) | 3,248.2 ms | 16,289.9 ms |
+| restart-4 | 808,373,400 | 808,225,589 | +147,811 (+0.018 %) | 4,650.7 ms | 18,856.6 ms |
+| optimizer λ=1 | 1,447,239,539 | 1,474,646,073 | −27,406,534 (−1.86 %) | 801.5 ms | 7,128.7 ms |
+
+The DP and the exhaustive oracle agree exactly (`dp_matches_brute_force:
+true`). Per-version restore medians and the complete graph (all 45 edge
+prices, coupled-tensor counts) are in the receipt. Analysis:
+`bench/RESULTS-parent-graph.md`; design note: `docs/PARENT-GRAPH.md`.
+
+### Losses and limitations
+
+- **The optimizer does not create restart points for free.** At λ=0 and no SLA
+  the chain is the smallest plan, so the plan is exactly today's behaviour. The
+  4 s SLA is what forces restart-3; λ=1 forces all-independent. The planner
+  chooses the trade only when the caller states a latency objective or SLA.
+- **The SLA is a model SLA.** The cost model over-predicts the chain worst
+  restore by 24.2 % (11.60 s vs 9.34 s) and under-predicts the all-independent
+  worst by 73.7 % (0.211 s vs 0.802 s) because the fixed per-version container /
+  manifest / SHA-256 work is not in the affine table. A 4 s SLA is still met
+  measured, but an SLA between 0.211 s and 0.802 s would be accepted by the
+  model and missed in practice. No measured-latency feedback loop exists yet.
+- The DP's stated space is `parent = none | previous`; the oracle can prefer a
+  non-adjacent parent and the test records that the DP then loses. On the
+  measured pythia matrix the oracle chose adjacent edges only, so DP == oracle
+  there; this is measured, not assumed.
+- The all-independent store is 1.86 % smaller than the sum of the per-version
+  edge prices because identical chunks deduplicate across independent versions.
+  The planner's byte model does not credit that dedup, so it over-prices the
+  restart plan slightly.
+- Pricing is expensive (1,388.8 s for nine versions): every edge re-encodes the
+  full candidate set. This is a write-time planning tool, not a read path.
+- Restores are measured with a warm OS page cache and a fresh read-only handle
+  per repetition; the sum is decode-dominated, but this is not a cold-media
+  claim.
+- Rust only. No Go parity for the planner or the CLI. Single host, synthetic
+  plan evaluation on real public weights, no fleet/cloud claim.
+- A first working-tree run (`parent-graph-20261108T180609Z`, discarded from the
+  repo) exercised the harness but the court script used a stale `weftfs` binary
+  for the CLI phase; the script now always rebuilds the CLI. The cited receipt
+  is the rerun at the committed revision.
+
+Gates at `163a6a2` / `cffcc1a`: Rust `cargo test --all-targets` **658 passed /
+0 failed** (128 suites); FUSE `cargo test --features fuse --all-targets` **701
+passed / 0 failed / 2 pre-existing ignored**; `scripts/check-claims.sh` OK;
+spec drift 42/42; conformance manifest OK; aggregate **37/37**
+(`verify-20261108T165021Z.json`) at the S12 revision `94a4818`.
