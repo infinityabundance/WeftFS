@@ -130,16 +130,32 @@ read latency  = 3FS data fetch + WeftFS decode + context checks
 The context plane is therefore **≈ 0.3 % of a tiled region read** and **≤ 8 % of
 a 64 KiB KV page decode** with a cached grant, and **≈ 4.6×** the local
 decode-only cost of a 1 KiB page. The single most important budget decision is
-consequently *verify a grant once per session, not per page*; with that, the
-context plane cannot be the reason a 3FS deployment misses a latency target,
-and with per-read verification it can be for very small pages.
+consequently *verify a grant once per session, not per page*. Whether that is
+enough to keep the context plane off the critical path of a **deployed** 3FS
+cluster is not established here: the 3FS data-fetch term is unmeasured, and the
+comparison above is local. With per-read verification the plane can dominate a
+very small page; whether it does on a cluster is the unrun experiment in §6.
 
 For a write, the context plane adds codec encode + identity + one commit
-publication. The family court measures 18.2–145.3 ms per full-family ingest
-(76–290 tensors), i.e. tens to hundreds of microseconds per tensor, plus one
-`fsync`-equivalent per commit on the control plane. A 3FS deployment must not
-put the control plane on a latency-critical path: the commit is a small POSIX
-write + `fsync` + `rename` + directory `fsync` against the 3FS metadata service.
+publication. The family lifecycle court measures **11.2–159.1 s per full-family
+ingest** (76 tensors for pythia-70m, 290 for Qwen2.5-0.5B; median of 3 reps per
+configuration, `bench/receipts/family-lifecycle-20261108T053655Z.json`). That is
+**148–549 ms per tensor** (11,216.6 ms / 76 = 147.6 ms; 159,131.2 ms / 290 =
+548.7 ms), not the tens-to-hundreds of microseconds an earlier revision of this
+note claimed: the court records **seconds**, and the earlier text was wrong by a
+factor of 1 000. There is also one `fsync`-equivalent per commit on the control
+plane.
+
+Because that measurement is a local POSIX/SSD store, it says nothing directly
+about a deployed 3FS cluster. A 3FS deployment must not put the control plane on
+a latency-critical path — the commit is a small POSIX write + `fsync` + `rename`
++ directory `fsync` against the 3FS metadata service — but whether the context
+plane *is* responsible for a latency miss on such a cluster is **untested**. The
+experiment in §6 (control-plane `fio` baseline, metadata-service counters,
+per-request latency) is the one that decides it, and until it runs the honest
+statement is conditional: at the measured local rate the context plane is
+unlikely to dominate a multi-second ingest, but no deployed-3FS latency claim is
+made here.
 
 ## 6. The exact experiment that would validate this on a deployed 3FS cluster
 

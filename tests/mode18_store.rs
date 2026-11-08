@@ -104,6 +104,7 @@ fn bytes_only_default_never_picks_mode18() {
     let bytes = smooth_bf16(64, 64, 0x77);
     let options = TensorPlanOptions {
         tile_shape: Some(vec![16, 32]),
+        allow_experimental_modes: true,
         ..TensorPlanOptions::default()
     };
     let plan = store
@@ -139,6 +140,7 @@ fn cost_model_prices_mode18_from_its_own_measured_row() {
         tile_shape: Some(vec![256, 1024]),
         n_streams: Some(4),
         lambda_ns: 1_000,
+        allow_experimental_modes: true,
         access_pattern: AccessPattern::Region {
             region_bytes: 50 * 1024 * 2,
             reads_per_write: 2,
@@ -158,7 +160,10 @@ fn cost_model_prices_mode18_from_its_own_measured_row() {
     // The mode-18 row is measured separately from mode 17's and is slightly
     // more expensive per MiB on this host (single-thread decode), so the
     // planner never chooses it. The candidates still carry the honest row.
-    let expected = weftfs::cost_model::estimate_streams_ns(50 * 1024 * 2) * 2;
+    // Tile accounting: a 50-row read intersects exactly one whole tile of
+    // [256, 1024] bf16 (524,288 canonical bytes), not the 100 KiB logical
+    // region.
+    let expected = weftfs::cost_model::estimate_streams_ns(256 * 1024 * 2) * 2;
     let mut mode18 = None;
     let mut mode17 = None;
     for candidate in &plan.candidates {
@@ -212,4 +217,63 @@ fn mode18_stream_count_changes_representation_identity() {
     // The stream count is part of the tile root and the descriptor, so the
     // two encodings are different content-addressable representations.
     assert_ne!(roots[0], roots[1]);
+}
+
+#[test]
+fn mode18_is_gated_off_by_default_and_selectable_by_name() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), opts()).unwrap();
+    let shape = [64u64, 64];
+    let bytes = smooth_bf16(64, 64, 0x31);
+
+    // Default: the candidate exists but is explicitly not applicable, and the
+    // experimental encoder never runs.
+    let options = TensorPlanOptions {
+        tile_shape: Some(vec![16, 32]),
+        ..TensorPlanOptions::default()
+    };
+    let plan = store
+        .plan_tensor(
+            "bf16",
+            &shape,
+            &bytes,
+            &TensorLayoutSpec::row_major(),
+            &[],
+            &options,
+        )
+        .expect("plan");
+    let candidate = plan
+        .candidates
+        .iter()
+        .find(|c| c.strategy == TensorStrategy::FloatTiledStreams)
+        .expect("mode-18 candidate is reported");
+    assert!(!candidate.applicable, "{candidate:?}");
+    assert!(candidate.detail.contains("experimental"));
+    assert!(candidate.physical_bytes.is_none());
+    assert_ne!(plan.chosen, TensorStrategy::FloatTiledStreams);
+
+    // Naming the strategy is the explicit opt-in and still works.
+    let spec = TensorWriteSpec {
+        strategy_hint: Some(TensorStrategy::FloatTiledStreams),
+        tile_shape: Some(vec![16, 32]),
+        plan: TensorPlanOptions::default(),
+        ..TensorWriteSpec::default()
+    };
+    let root = store.resolve_path("/").unwrap();
+    let id = store
+        .write_tensor_file_with_spec(
+            root,
+            b"named",
+            "bf16",
+            &shape,
+            &bytes,
+            &TensorLayoutSpec::row_major(),
+            &spec,
+        )
+        .expect("explicit mode-18 write");
+    assert_eq!(store.read_tensor(id).unwrap(), bytes);
+    assert_eq!(
+        store.tensor_metadata(id).unwrap().strategy,
+        "float-tiled-streams"
+    );
 }

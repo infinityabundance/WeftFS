@@ -916,10 +916,10 @@ impl Representation {
                             ));
                         }
                     }
-                    "delta" | "reference" => {
+                    "delta" | "reference" | "zstd-patch" => {
                         if dependencies.len() != 1 {
                             return Err(Error::malformed(
-                                "delta/reference representation requires exactly one dependency",
+                                "delta/reference/zstd-patch representation requires exactly one dependency",
                             ));
                         }
                     }

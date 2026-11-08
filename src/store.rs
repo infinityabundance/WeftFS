@@ -25,16 +25,15 @@ use crate::backend::{
 };
 use crate::cost_model::CostClass;
 use crate::error::{Class, Error, Result};
+use crate::format::IndexAttestation;
 use crate::format::{
     encode_commit_file, encode_state, ChunkRef, Commit, ContentIdentity, Manifest, OverlayExtent,
     OverlayRepresentation, Representation, RepresentationKind, SuperblockSlot, FORMAT_CONTENTS,
     SLOT_BYTES, SUPERBLOCK_BYTES,
 };
 use crate::identity::{self, Hash32};
-use crate::format::IndexAttestation;
 use crate::index::{
-    StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, INDEX_STATE_DOMAIN,
-    MAX_INDEX_FILE_BYTES,
+    StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, INDEX_STATE_DOMAIN, MAX_INDEX_FILE_BYTES,
 };
 use crate::object_cache::{
     CacheKey, ObjectCache, ObjectCacheOptions, ObjectCacheStats, MAX_CACHE_ENTRIES,
@@ -360,7 +359,23 @@ pub struct GcReport {
     /// Advisory index files deleted because no retained root names their
     /// commit. Deleting an index never deletes data.
     pub deleted_indexes: Vec<String>,
+    /// Physical bytes of **data blobs** (objects + manifests) actually
+    /// unlinked by this pass. This is the counter that corresponds to the
+    /// store's data tree (`objects/` + `manifests/`): for a flat plane the
+    /// tree shrinks by exactly this many bytes. It deliberately excludes
+    /// advisory index segments (see `deleted_index_bytes`) and packed-plane
+    /// pack reclamation (see `reclaimed_pack_bytes`).
     pub deleted_bytes: u64,
+    /// Physical bytes of advisory index segments unlinked by this pass. An
+    /// index segment is a rebuildable accelerator; its bytes are real on
+    /// disk but are not part of the data tree and must never be presented as
+    /// data reclaimed to an economic planner or dashboard.
+    pub deleted_index_bytes: u64,
+    /// `deleted_bytes + deleted_index_bytes + reclaimed_pack_bytes`: every
+    /// byte this pass unlinked or reclaimed, from any directory. Reported so
+    /// the two components above can be reconciled against one whole-tree
+    /// measurement without ever being conflated again.
+    pub deleted_total_bytes: u64,
     pub retained: u64,
     /// Physical pack objects reclaimed because every member had been deleted
     /// (subphase R11). Zero for a plane without packs.
@@ -1493,9 +1508,7 @@ impl Store {
     /// Read and validate the commit record for `generation`.
     fn read_commit_record(&self, generation: u64) -> Option<(Vec<u8>, crate::format::Commit)> {
         let key = Key::commit(generation);
-        let bytes = self
-            .with_backend(|backend| backend.read_all(&key))
-            .ok()?;
+        let bytes = self.with_backend(|backend| backend.read_all(&key)).ok()?;
         crate::format::decode_commit_file(&bytes).ok()
     }
 
@@ -2976,6 +2989,7 @@ impl Store {
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match rep.strategy.as_str() {
             "zstd" => Mode::Zstd,
+            "zstd-patch" => Mode::Dictionary,
             "delta" => Mode::Delta,
             "reference" => Mode::Reference,
             other => {
@@ -6717,10 +6731,17 @@ impl Store {
             if apply {
                 self.with_backend_mut(|backend| backend.delete(key))?;
                 report.deleted_indexes.push(display);
-                report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
+                report.deleted_index_bytes = report.deleted_index_bytes.saturating_add(*len);
                 self.bump_index_stat(|stats| stats.gc_deleted += 1);
             }
         }
+        // One whole-pass total so every unlinked byte is accounted exactly
+        // once, while the data-only counter above stays comparable with a
+        // walk of `objects/` + `manifests/`.
+        report.deleted_total_bytes = report
+            .deleted_bytes
+            .saturating_add(report.deleted_index_bytes)
+            .saturating_add(report.reclaimed_pack_bytes);
         Ok(report)
     }
 
@@ -9269,8 +9290,8 @@ fn manifest_cost_class(manifest: &Manifest) -> CostClass {
         },
         RepresentationKind::Codec => match rep.strategy.as_str() {
             "zstd" => CostClass::Zstd,
-            // Both codec strategies that name a base decode the base first.
-            "delta" | "reference" => CostClass::WeightDelta,
+            // Codec strategies that name a base read the base first.
+            "delta" | "reference" | "zstd-patch" => CostClass::WeightDelta,
             other => CostClass::parse(other).unwrap_or(CostClass::Zstd),
         },
     }

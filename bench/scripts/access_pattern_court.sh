@@ -53,6 +53,7 @@ plan() {
     --shape "$shape_text" \
     --tile-shape "$tile" \
     --lambda-ns "$lambda" \
+    --lambda-write-ns "$lambda" \
     --access-pattern "$pattern" \
     --json | tee -a "$rows"
 }
@@ -63,19 +64,100 @@ mkdir -p "$work/store"
 "$planner" --store "$work/store" init >/dev/null
 # Bytes-only whole: expect float-tensor (mode 9).
 plan 0 whole
-# Latency-weighted whole: mode 17 is priced with the cheaper tiled decode row.
+# Latency-weighted whole: mode 9 wins because its one-time encode is 3.25x
+# cheaper than mode 17's.
 plan 1 whole
-# 1,000 reads of one 1-row region (1,792 B): expect float-tiled.
-plan 1 "region:1792:1000"
-# The reviewer's case: 1,000 reads of 100 rows (179,200 B).
-plan 1 "region:179200:1000"
-# A single region read: the estimate still picks float-tiled, but the write cost
-# (not in the objective) is 3.3x larger. See RESULTS-mode17.md.
+# One read of one row (1,792 B): the write term blocks the tiled form.
 plan 1 "region:1792:1"
-# 100 reads of the whole tensor: still a tile-representation win in the model.
+# 1,000 reads of one row: the encode is amortised and the tiled form wins.
+plan 1 "region:1792:1000"
+# 1,000 reads of 100 rows (179,200 B).
+plan 1 "region:179200:1000"
+# 100 reads of the whole tensor.
 plan 1 "region:$embedding_bytes:100"
 # Mixed: one write plus 1,000 region reads.
 plan 1 "mixed:0:1792:1000"
+
+analysis="$work/analysis.json"
+python3 - "$rows" "$analysis" <<'PY'
+import json, math, sys
+
+rows_path, out_path = sys.argv[1], sys.argv[2]
+plans = [json.loads(line) for line in open(rows_path) if line.strip()]
+
+def case(pattern):
+    for plan in plans:
+        if plan["access_pattern"] == pattern:
+            return plan
+    return None
+
+def candidate(plan, strategy):
+    for item in plan["candidates"]:
+        if item["strategy"] == strategy and item["applicable"]:
+            return item
+    return None
+
+cases = []
+for plan in plans:
+    cases.append({
+        "access_pattern": plan["access_pattern"],
+        "chosen": plan["chosen"],
+        "chosen_physical_bytes": plan["chosen_physical_bytes"],
+        "chosen_estimated_decode_ns": plan["chosen_estimated_decode_ns"],
+        "chosen_estimated_encode_ns": plan["chosen_estimated_encode_ns"],
+        "chosen_cost": plan["chosen_cost"],
+        "runner_up": plan.get("runner_up"),
+    })
+
+# Break-even from the model:
+#   cost = physical + lambda_read*decode(reads) + lambda_write*encode
+# Solve for the read count where the tiled form beats the single-frame form.
+break_even = None
+region_once = case("region:1792:1")
+if region_once:
+    lambda_write = int(region_once["lambda_write_ns"])
+    mode9 = candidate(region_once, "float-tensor")
+    mode17 = candidate(region_once, "float-tiled")
+    if mode9 and mode17:
+        base9 = mode9["physical_bytes"] + lambda_write * mode9["estimated_encode_ns"]
+        base17 = mode17["physical_bytes"] + lambda_write * mode17["estimated_encode_ns"]
+        per9 = mode9["estimated_decode_ns"]
+        per17 = mode17["estimated_decode_ns"]
+        saving = per9 - per17
+        if saving > 0:
+            reads = math.ceil(max(base17 - base9, 0) / saving)
+            break_even = {
+                "model_break_even_reads": reads,
+                "mode9_base_cost": base9,
+                "mode17_base_cost": base17,
+                "mode9_per_read_ns": per9,
+                "mode17_per_read_ns": per17,
+                "per_read_saving_ns": saving,
+                "source": "weft plan --json at region:1792:1",
+            }
+
+# Measured counterpart from the float-tiled court (store-level write_ms and
+# 1-row region reads). Recorded to say whether the model is in the right
+# neighbourhood; never an input to a decision.
+measured = {
+    "source": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "mode9_encode_ms": 2286.7359669999996,
+    "mode17_encode_ms": 7434.698213,
+    "mode9_region_1_row_ms": 749.257607,
+    "mode17_region_1_row_ms": 2.120317,
+}
+measured["break_even_reads"] = (measured["mode17_encode_ms"] - measured["mode9_encode_ms"]) / (
+    measured["mode9_region_1_row_ms"] - measured["mode17_region_1_row_ms"]
+)
+if break_even:
+    break_even["measured_break_even_reads"] = measured["break_even_reads"]
+    break_even["abs_difference_reads"] = abs(
+        break_even["model_break_even_reads"] - measured["break_even_reads"])
+    break_even["matches_within_two_reads"] = break_even["abs_difference_reads"] <= 2.0
+
+json.dump({"cases": cases, "break_even": break_even, "measured": measured},
+          open(out_path, "w"), indent=2)
+PY
 
 {
   printf '{\n'
@@ -94,7 +176,10 @@ plan 1 "mixed:0:1792:1000"
   printf '    "planner_cost_model": "measured"\n'
   printf '  },\n'
   printf '  "measured_cost_source": "bench/receipts/float-tiled-20261107T042955Z.json",\n'
-  printf '  "plans": [\n'
+  printf '  "write_cost_source": "weftfs-write-cost/v1",\n'
+  printf '  "analysis": '
+  cat "$analysis"
+  printf ',\n  "plans": [\n'
   awk 'BEGIN { first=1 } { if (!first) printf ",\n"; printf "    %s", $0; first=0 } END { printf "\n" }' "$rows"
   printf '  ]\n'
   printf '}\n'

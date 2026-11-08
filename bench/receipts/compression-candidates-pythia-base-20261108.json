@@ -1,0 +1,1655 @@
+{
+  "baselines": {
+    "note": "whole-file zstd CLI baselines; the patch level is 12 because level 19 with a ~988 MB base was OOM-killed at the 3 GiB court in R1/P2",
+    "patch_from_12_whole": 0,
+    "patch_level": 12,
+    "zstd19_base_whole": 142240232,
+    "zstd19_next_whole": 142240232,
+    "zstd_level": 19
+  },
+  "corpus": {
+    "base": ".docker-cache/real-corpus/pythia-70m-step0.safetensors",
+    "base_bytes": 281715176,
+    "next": ".docker-cache/real-corpus/pythia-70m-step0.safetensors",
+    "next_bytes": 281715176
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "court_memory": "3g",
+    "planned_ms": 56343.015349,
+    "weftcodec_revision": "6dd7e13d16de33ed765c462ec14a13f0a6c8c844",
+    "weftfs_revision": "5a92225850edb7e12921dad00a6c6ac8910463ab"
+  },
+  "label": "pythia-step0-base",
+  "non_claims": [
+    "single host, warm page cache",
+    "plan-only totals: no checkpoint was written, so store publication and index bytes are excluded",
+    "the patch candidate's base is a fast-raw store object, not the original checkpoint container",
+    "zstd CLI baselines are independent processes; the in-process candidates use the same zstd library at a different call site"
+  ],
+  "rows": [
+    {
+      "bytes": 103022592,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 63386220
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 63386220
+      },
+      "tensor": "embed_out.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 60001416
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 60001416
+      }
+    },
+    {
+      "bytes": 103022592,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 63389485
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 63389485
+      },
+      "tensor": "gpt_neox.embed_in.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 59970351
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 59970351
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.final_layer_norm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.final_layer_norm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 643897
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 643897
+      },
+      "tensor": "gpt_neox.layers.0.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 610532
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 610532
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1935473
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935473
+      },
+      "tensor": "gpt_neox.layers.0.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1828877
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1828877
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.0.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2575428
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2575428
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2443349
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2443349
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2579712
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2579712
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2422080
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2422080
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.0.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 644453
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 644453
+      },
+      "tensor": "gpt_neox.layers.1.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 610567
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 610567
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1935122
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935122
+      },
+      "tensor": "gpt_neox.layers.1.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1826597
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1826597
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.1.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2575075
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2575075
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2434602
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2434602
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2580785
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2580785
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2446925
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2446925
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.1.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 644189
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 644189
+      },
+      "tensor": "gpt_neox.layers.2.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 605659
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 605659
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1935784
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935784
+      },
+      "tensor": "gpt_neox.layers.2.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1824947
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1824947
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.2.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2573964
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2573964
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2417421
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2417421
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2582948
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2582948
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2446496
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2446496
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.2.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 644350
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 644350
+      },
+      "tensor": "gpt_neox.layers.3.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 615682
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 615682
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1934533
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1934533
+      },
+      "tensor": "gpt_neox.layers.3.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1841894
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1841894
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.3.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2574418
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2574418
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2438782
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2438782
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2580974
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2580974
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2431842
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2431842
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.3.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 644554
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 644554
+      },
+      "tensor": "gpt_neox.layers.4.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 609575
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 609575
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1935879
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935879
+      },
+      "tensor": "gpt_neox.layers.4.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1833877
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1833877
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.4.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2573950
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2573950
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2425428
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2425428
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2581952
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2581952
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2452604
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2452604
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.4.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 643619
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 643619
+      },
+      "tensor": "gpt_neox.layers.5.attention.dense.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 615122
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 615122
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1935373
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935373
+      },
+      "tensor": "gpt_neox.layers.5.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1837859
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1837859
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.5.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2573714
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2573714
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2434264
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2434264
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 2580529
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2580529
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 2436950
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 2436950
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.5.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    }
+  ],
+  "schema": "weft.receipt.compression-candidates.v1",
+  "strategy_counts": {
+    "current": {
+      "zstd": 76
+    },
+    "standalone": {
+      "zstd": 76
+    },
+    "zstd19": {
+      "zstd": 76
+    },
+    "zstd19+patch": {
+      "zstd": 76
+    }
+  },
+  "totals": {
+    "current": 173194756,
+    "delta_causal": 0,
+    "patch_delta": 0,
+    "standalone": 173194756,
+    "tensors": 76,
+    "zstd19": 163872074,
+    "zstd19+patch": 163872074,
+    "zstd19_delta": -9322682
+  }
+}

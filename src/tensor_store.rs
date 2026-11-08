@@ -12,15 +12,19 @@
 //! applicable candidate, prices it as
 //!
 //! ```text
-//! cost = physical_bytes + lambda_ns * estimated_decode_ns
+//! cost = physical_bytes
+//!      + lambda_ns       * estimated_decode_ns   (x reads_per_write)
+//!      + lambda_write_ns * estimated_encode_ns   (one write)
 //! ```
 //!
 //! and picks the minimum (ties keep the fixed candidate order). `lambda_ns`
-//! defaults to `0`, i.e. bytes-only. Estimated decode time is an explicit
-//! integer model, not a measurement; the bench harness measures real restore
-//! time. Only the chosen representation is written; the full cost table is
-//! exposed by `Store::plan_tensor` / `weft plan --json` because the manifest
-//! schema has no field for planner bookkeeping.
+//! defaults to `0`, i.e. bytes-only, and `lambda_write_ns` defaults to
+//! `lambda_ns`, so a bytes-only plan is bit-for-bit the historical plan and a
+//! latency-priced plan pays for its one-time encode. Estimated times are an
+//! explicit integer model, not a measurement; the bench harness measures real
+//! restore time. Only the chosen representation is written; the full cost
+//! table is exposed by `Store::plan_tensor` / `weft plan --json` because the
+//! manifest schema has no field for planner bookkeeping.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -73,6 +77,10 @@ pub enum TensorStrategy {
     Raw,
     /// One WeftCodec ZSTD frame (v2 `kind:"codec"`).
     Zstd,
+    /// One mode-4 `DICTIONARY` frame whose raw-content dictionary is the whole
+    /// causal base and whose window covers it: the `zstd --patch-from`
+    /// analogue. `kind:"codec"` with one dependency.
+    ZstdPatch,
     /// One mode-9 `FLOAT_TENSOR` frame (v2 `kind:"tensor"`).
     FloatTensor,
     /// One mode-10 `TENSOR_SHARDED` frame.
@@ -99,11 +107,47 @@ pub enum TensorStrategy {
 }
 
 impl TensorStrategy {
+    /// Encode-cost class for the write term of the objective.
+    pub fn encode_class(self) -> crate::cost_model::EncodeClass {
+        use crate::cost_model::EncodeClass;
+        match self {
+            TensorStrategy::Raw => EncodeClass::Raw,
+            TensorStrategy::Zstd => EncodeClass::Zstd,
+            // A patch frame is one base read plus one high-level zstd encode;
+            // price it with the measured level-19 rate (conservative).
+            TensorStrategy::ZstdPatch => EncodeClass::Zstd19,
+            TensorStrategy::FloatTensor => EncodeClass::FloatTensor,
+            TensorStrategy::TensorSharded => EncodeClass::TensorSharded,
+            TensorStrategy::TensorTiled => EncodeClass::TensorTiled,
+            TensorStrategy::FloatTiled => EncodeClass::FloatTiled,
+            TensorStrategy::FloatTiledStreams => EncodeClass::FloatTiledStreams,
+            TensorStrategy::WeightDelta => EncodeClass::WeightDelta,
+            TensorStrategy::SparseDelta => EncodeClass::SparseDelta,
+            TensorStrategy::SemanticDelta => EncodeClass::SemanticDelta,
+            // The read-only modes are never produced by this planner; price
+            // them as the closest encode class so the objective stays defined.
+            TensorStrategy::KvCache | TensorStrategy::Activation => EncodeClass::TensorSharded,
+        }
+    }
+
+    /// True for representations that are experimental and therefore never
+    /// auto-selected without an explicit opt-in.
+    ///
+    /// Mode 18 (`FLOAT_TILED_STREAMS`) is frozen and readable, but it lost
+    /// every measured axis (1.5-3.0x slower on small regions, 1.5-26.6 %
+    /// slower at four threads, 0.03-2.41 % larger). It stays selectable by an
+    /// explicit strategy hint and by `allow_experimental_modes`; it is never
+    /// chosen by an automatic plan.
+    pub fn is_experimental(self) -> bool {
+        matches!(self, TensorStrategy::FloatTiledStreams)
+    }
+
     /// Canonical `representation.strategy` spelling.
     pub fn as_str(self) -> &'static str {
         match self {
             TensorStrategy::Raw => "raw",
             TensorStrategy::Zstd => "zstd",
+            TensorStrategy::ZstdPatch => "zstd-patch",
             TensorStrategy::FloatTensor => "float-tensor",
             TensorStrategy::TensorSharded => "tensor-sharded",
             TensorStrategy::TensorTiled => "tensor-tiled",
@@ -122,6 +166,7 @@ impl TensorStrategy {
         match text {
             "raw" => Ok(TensorStrategy::Raw),
             "zstd" => Ok(TensorStrategy::Zstd),
+            "zstd-patch" => Ok(TensorStrategy::ZstdPatch),
             "float-tensor" => Ok(TensorStrategy::FloatTensor),
             "tensor-sharded" => Ok(TensorStrategy::TensorSharded),
             "tensor-tiled" => Ok(TensorStrategy::TensorTiled),
@@ -142,6 +187,7 @@ impl TensorStrategy {
     pub fn frame_mode(self) -> Option<u32> {
         match self {
             TensorStrategy::Raw | TensorStrategy::Zstd => None,
+            TensorStrategy::ZstdPatch => Some(4),
             TensorStrategy::FloatTensor => Some(9),
             TensorStrategy::TensorSharded => Some(10),
             TensorStrategy::TensorTiled => Some(15),
@@ -159,7 +205,8 @@ impl TensorStrategy {
     pub fn uses_dependency(self) -> bool {
         matches!(
             self,
-            TensorStrategy::WeightDelta
+            TensorStrategy::ZstdPatch
+                | TensorStrategy::WeightDelta
                 | TensorStrategy::SparseDelta
                 | TensorStrategy::SemanticDelta
         )
@@ -177,6 +224,9 @@ impl TensorStrategy {
         match self {
             TensorStrategy::Raw => CostClass::Raw,
             TensorStrategy::Zstd => CostClass::Zstd,
+            // A patch frame reads its base and then inflates: price the base
+            // read plus a zstd-class decode.
+            TensorStrategy::ZstdPatch => CostClass::WeightDelta,
             TensorStrategy::FloatTensor => CostClass::FloatTensor,
             TensorStrategy::TensorSharded => CostClass::TensorSharded,
             TensorStrategy::TensorTiled => CostClass::TensorTiled,
@@ -653,6 +703,143 @@ impl AccessPattern {
     }
 }
 
+/// Tile geometry used to count how many whole tiles a read actually touches.
+///
+/// A tile-independent strategy decodes **whole tiles**, not the requested
+/// region bytes: a 1-row read of a `[64, 896]`-tiled `[151936, 896]` tensor
+/// decodes a 114,688-byte tile, and a 1-row read of a `[128, 224]` tile grid
+/// touches four tiles. Pricing the logical region bytes (1,792 B) undercounts
+/// both the decoded bytes and the per-tile fixed cost by orders of magnitude.
+///
+/// The planner only knows a region *size*, not an offset. It therefore prices
+/// the leading row-major prefix of the tensor: `region_bytes` is interpreted as
+/// the first `ceil(region_bytes / row_bytes)` rows (a partial row counts as one
+/// row), which is exact for the row-slice access patterns the court measures
+/// and conservative for every other shape.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TileGeometry {
+    shape: Vec<u64>,
+    tile_shape: Vec<u64>,
+    element_bytes: u64,
+}
+
+impl TileGeometry {
+    /// Build geometry for one candidate tile shape. `None` when the tile shape
+    /// does not have the tensor's rank or has a zero extent.
+    pub fn new(
+        shape: &[u64],
+        tile_shape: &[u64],
+        dtype: TensorElementDtype,
+    ) -> Option<TileGeometry> {
+        if shape.len() != tile_shape.len() || shape.is_empty() {
+            return None;
+        }
+        if shape.contains(&0) || tile_shape.contains(&0) {
+            return None;
+        }
+        Some(TileGeometry {
+            shape: shape.to_vec(),
+            tile_shape: tile_shape.to_vec(),
+            element_bytes: dtype.element_bytes(),
+        })
+    }
+
+    /// Canonical bytes in one full tile.
+    pub fn tile_bytes(&self) -> u64 {
+        self.tile_shape
+            .iter()
+            .try_fold(1u64, |acc, dim| acc.checked_mul(*dim))
+            .and_then(|elements| elements.checked_mul(self.element_bytes))
+            .unwrap_or(u64::MAX)
+    }
+
+    /// Total tiles in the tensor.
+    pub fn total_tiles(&self) -> u64 {
+        self.shape
+            .iter()
+            .zip(self.tile_shape.iter())
+            .try_fold(1u64, |acc, (extent, tile)| {
+                let count = ceil_div(*extent, *tile);
+                acc.checked_mul(count)
+            })
+            .unwrap_or(u64::MAX)
+    }
+
+    /// How many whole tiles a read of `region_bytes` (the leading row-major
+    /// prefix of the tensor) intersects.
+    ///
+    /// The prefix is `ceil(region_bytes / element_bytes)` elements. It covers
+    /// `elements / row_elements` complete rows plus, when there is a remainder,
+    /// a partial final row. The intersected tile box is therefore
+    /// `[0, rows) x [0, columns_or_remainder) x full` and the count is exact
+    /// for that box:
+    ///
+    /// ```text
+    /// tiles = ceil(rows / tile[0]) * ceil(cols / tile[1]) * prod(ceil(shape[i] / tile[i]))
+    /// ```
+    /// A 64-byte read of a `[512, 512]` bf16 tensor tiled `[16, 32]` is 32
+    /// elements: one partial row of 32 columns, i.e. exactly one tile.
+    pub fn tiles_intersected(&self, region_bytes: u64) -> u64 {
+        let rank = self.shape.len();
+        let row_elements = self.shape[1..]
+            .iter()
+            .try_fold(1u64, |acc, dim| acc.checked_mul(*dim));
+        let row_elements = match row_elements {
+            Some(value) if value > 0 => value,
+            _ => return self.total_tiles(),
+        };
+        let elements = ceil_div(region_bytes.max(1), self.element_bytes.max(1));
+        let full_rows = elements / row_elements;
+        let remainder = elements % row_elements;
+
+        let tiles_after_axis = |from: usize| -> u64 {
+            self.shape[from..]
+                .iter()
+                .zip(self.tile_shape[from..].iter())
+                .try_fold(1u64, |acc, (extent, tile)| {
+                    acc.checked_mul(ceil_div(*extent, *tile))
+                })
+                .unwrap_or(u64::MAX)
+        };
+
+        let tiles = if remainder == 0 {
+            // Complete rows only.
+            let rows = full_rows.max(1).min(self.shape[0]);
+            ceil_div(rows, self.tile_shape[0]).saturating_mul(tiles_after_axis(1))
+        } else {
+            // Complete rows plus a partial row whose touched columns are the
+            // remainder; the partial row lives in the next tile row.
+            let rows = full_rows.saturating_add(1).min(self.shape[0]);
+            let columns = remainder.min(self.shape[1]);
+            let per_tile_row = ceil_div(columns, self.tile_shape[1]);
+            let rest = if rank > 2 {
+                self.shape[2..]
+                    .iter()
+                    .zip(self.tile_shape[2..].iter())
+                    .try_fold(1u64, |acc, (extent, tile)| {
+                        acc.checked_mul(ceil_div(*extent, *tile))
+                    })
+                    .unwrap_or(u64::MAX)
+            } else {
+                1
+            };
+            ceil_div(rows, self.tile_shape[0]).saturating_mul(per_tile_row.saturating_mul(rest))
+        };
+
+        if rank == 1 {
+            return ceil_div(elements.max(1).min(self.shape[0]), self.tile_shape[0])
+                .min(self.total_tiles());
+        }
+        tiles.min(self.total_tiles()).max(1)
+    }
+}
+
+/// Ceiling division that is safe at the integer bounds.
+fn ceil_div(value: u64, divisor: u64) -> u64 {
+    debug_assert!(divisor > 0);
+    value / divisor + u64::from(value % divisor != 0)
+}
+
 /// Planner options. The default is bytes-only (`lambda_ns = 0`) with the
 /// host-calibrated decode cost table.
 #[derive(Clone, Debug)]
@@ -660,6 +847,14 @@ pub struct TensorPlanOptions {
     /// Bytes charged per estimated nanosecond of decode time. `0` is
     /// bytes-only.
     pub lambda_ns: u64,
+    /// Bytes charged per estimated nanosecond of **encode** time. Defaults to
+    /// `lambda_ns` ([`TensorPlanOptions::effective_write_lambda`]), so a
+    /// bytes-only plan (both zero) is unchanged and a latency-priced plan pays
+    /// for its one-time encode. Set explicitly with `--lambda-write-ns`.
+    pub lambda_write_ns: u64,
+    /// Whether `lambda_write_ns` was set explicitly. When false the write
+    /// lambda tracks `lambda_ns`.
+    pub lambda_write_ns_set: bool,
     /// Which baked decode-cost table prices candidates. Ignored when
     /// `calibration` is set.
     pub cost_model: crate::cost_model::CostModelKind,
@@ -707,12 +902,37 @@ pub struct TensorPlanOptions {
     /// candidate search. A larger tensor falls back to the other candidates
     /// instead of risking the court's memory limit.
     pub max_semantic_bytes: u64,
+    /// Allow experimental representations to be **automatically** selected.
+    /// Default false: mode 18 stays preparable only through an explicit
+    /// strategy hint. Mode 18 is frozen and readable; the gate is about
+    /// selection, not the wire format.
+    pub allow_experimental_modes: bool,
+    /// Offer a level-19 ZSTD candidate in addition to the level-3 one.
+    /// Level 19 encoding is ~28.5 MiB/s measured; it is only offered by the
+    /// `Planned` policy (never `Fast`/`Auto`-resolved-fast) and only when the
+    /// size threshold and the CPU budget below both hold.
+    pub zstd19: bool,
+    pub zstd19_min_bytes: u64,
+    /// Refuse the level-19 candidate when its estimated encode time exceeds
+    /// this bound. Default 20 s.
+    pub zstd19_cpu_budget_ns: u64,
+    /// Offer the whole-base ZSTD patch candidate (`zstd --patch-from`
+    /// analogue) when a usable causal base exists.
+    pub zstd_patch: bool,
+    /// ZSTD level for the patch candidate. 12 is the level the measured
+    /// baseline uses: level 19 with a ~988 MB base was OOM-killed at the 3 GiB
+    /// court limit.
+    pub zstd_patch_level: i32,
+    pub zstd_patch_min_bytes: u64,
+    pub zstd_patch_cpu_budget_ns: u64,
 }
 
 impl Default for TensorPlanOptions {
     fn default() -> Self {
         TensorPlanOptions {
             lambda_ns: 0,
+            lambda_write_ns: 0,
+            lambda_write_ns_set: false,
             cost_model: crate::cost_model::CostModelKind::default(),
             calibration: None,
             semantic_policy: None,
@@ -730,6 +950,14 @@ impl Default for TensorPlanOptions {
             fast_zstd_level: 1,
             semantic_search: true,
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
+            allow_experimental_modes: false,
+            zstd19: true,
+            zstd19_min_bytes: 1024 * 1024,
+            zstd19_cpu_budget_ns: 20_000_000_000,
+            zstd_patch: true,
+            zstd_patch_level: 12,
+            zstd_patch_min_bytes: 1024 * 1024,
+            zstd_patch_cpu_budget_ns: 20_000_000_000,
         }
     }
 }
@@ -744,34 +972,64 @@ impl TensorPlanOptions {
         }
     }
 
+    /// The write lambda actually applied: the explicit value when set,
+    /// otherwise the decode lambda (so `--lambda-ns 1` prices both).
+    pub fn effective_write_lambda(&self) -> u64 {
+        if self.lambda_write_ns_set {
+            self.lambda_write_ns
+        } else {
+            self.lambda_ns
+        }
+    }
+
+    /// Estimated encode nanoseconds for one whole-tensor encode.
+    pub fn estimate_encode_ns(&self, strategy: TensorStrategy, size: u64) -> u64 {
+        crate::cost_model::estimate_encode_ns(strategy.encode_class(), size)
+    }
+
+    /// Price a candidate: storage once, decode per expected read, encode once.
+    pub fn price_candidate(&self, physical_bytes: u64, decode_ns: u64, encode_ns: u64) -> u128 {
+        u128::from(physical_bytes)
+            + u128::from(self.lambda_ns) * u128::from(decode_ns)
+            + u128::from(self.effective_write_lambda()) * u128::from(encode_ns)
+    }
+
     /// Decode cost at the configured access pattern.
     ///
     /// A tile-independent strategy (mode 15/17) pays only for the fetched
     /// region bytes per region read; every other strategy decodes the whole
-    /// tensor per read. `Whole` is exactly [`Self::estimate_ns`].
+    /// tensor per read. `Whole` is exactly [`Self::estimate_ns`]. Prefer
+    /// [`Self::estimate_ns_at_pattern_for`] for tile candidates so the estimate
+    /// counts whole tiles rather than logical region bytes.
     pub fn estimate_ns_at_pattern(
         &self,
         class: crate::cost_model::CostClass,
         strategy: TensorStrategy,
         size: u64,
     ) -> u64 {
-        // Mode 18 has its own measured row. The persisted calibration schema
-        // has no mode-18 class, so a host calibration keeps pricing mode 18
-        // with the tiled row; the baked default is the measured one.
-        if strategy == TensorStrategy::FloatTiledStreams && self.calibration.is_none() {
-            let full = crate::cost_model::estimate_streams_ns(size);
-            return self.pattern_cost(full, strategy, size, class);
-        }
-        let full = self.estimate_ns(class, size);
-        self.pattern_cost(full, strategy, size, class)
+        self.pattern_cost(class, strategy, size, None)
+    }
+
+    /// Decode cost at the configured pattern, counting the tiles a region read
+    /// actually intersects. `geometry` is required for a tile-independent
+    /// strategy to be priced per tile; without it the historical logical-bytes
+    /// estimate is used (which undercounts tile decodes).
+    pub fn estimate_ns_at_pattern_for(
+        &self,
+        class: crate::cost_model::CostClass,
+        strategy: TensorStrategy,
+        size: u64,
+        geometry: Option<&TileGeometry>,
+    ) -> u64 {
+        self.pattern_cost(class, strategy, size, geometry)
     }
 
     fn pattern_cost(
         &self,
-        full: u64,
+        class: crate::cost_model::CostClass,
         strategy: TensorStrategy,
         size: u64,
-        class: crate::cost_model::CostClass,
+        geometry: Option<&TileGeometry>,
     ) -> u64 {
         let tile_independent = matches!(
             strategy,
@@ -779,19 +1037,32 @@ impl TensorPlanOptions {
                 | TensorStrategy::FloatTiled
                 | TensorStrategy::FloatTiledStreams
         );
-        let estimate = |bytes: u64| {
+        let full = if strategy == TensorStrategy::FloatTiledStreams && self.calibration.is_none() {
+            crate::cost_model::estimate_streams_ns(size)
+        } else {
+            self.estimate_ns(class, size)
+        };
+        // One tile decode. Per-tile fixed cost is charged per tile, which is
+        // what makes a many-tile read more expensive than a tiny logical
+        // region read on a single-frame strategy.
+        let per_tile_cost = |tile_bytes: u64| {
             if strategy == TensorStrategy::FloatTiledStreams && self.calibration.is_none() {
-                crate::cost_model::estimate_streams_ns(bytes)
+                crate::cost_model::estimate_streams_ns(tile_bytes)
             } else {
-                self.estimate_ns(class, bytes)
+                self.estimate_ns(class, tile_bytes)
             }
         };
         let region_cost = |region_bytes: u64| {
-            let fetched = region_bytes.min(size);
-            if tile_independent {
-                estimate(fetched)
-            } else {
-                full
+            if !tile_independent {
+                return full;
+            }
+            match geometry {
+                Some(geometry) => {
+                    let tiles = geometry.tiles_intersected(region_bytes);
+                    per_tile_cost(geometry.tile_bytes()).saturating_mul(tiles)
+                }
+                // No geometry: the historical (undercounting) estimate.
+                None => per_tile_cost(region_bytes.min(size)),
             }
         };
         match self.access_pattern {
@@ -868,6 +1139,9 @@ pub struct TensorPlanCandidate {
     pub detail: String,
     pub physical_bytes: Option<u64>,
     pub estimated_decode_ns: Option<u64>,
+    /// Estimated one-time encode cost (whole tensor), from the write-cost
+    /// table. Charged once for the plan's single write.
+    pub estimated_encode_ns: Option<u64>,
     pub cost: Option<u128>,
     /// Base content root for weight-delta/semantic-delta candidates.
     pub dependency: Option<Hash32>,
@@ -879,10 +1153,12 @@ pub struct TensorPlan {
     pub chosen: TensorStrategy,
     pub chosen_physical_bytes: u64,
     pub chosen_estimated_decode_ns: u64,
+    pub chosen_estimated_encode_ns: u64,
     pub chosen_cost: u128,
     pub runner_up: Option<TensorStrategy>,
     pub runner_up_physical_bytes: Option<u64>,
     pub runner_up_estimated_decode_ns: Option<u64>,
+    pub runner_up_estimated_encode_ns: Option<u64>,
     pub runner_up_cost: Option<u128>,
     pub candidates: Vec<TensorPlanCandidate>,
 }
@@ -948,10 +1224,6 @@ struct PreparedArtifact {
 struct PreparedCandidate {
     candidate: TensorPlanCandidate,
     artifact: Option<PreparedArtifact>,
-}
-
-fn price(physical_bytes: u64, estimated_ns: u64, lambda_ns: u64) -> u128 {
-    u128::from(physical_bytes) + u128::from(lambda_ns) * u128::from(estimated_ns)
 }
 
 /// Project the generic bounded-run counters onto the tile-facing stats type.
@@ -1263,6 +1535,10 @@ impl Store {
                 .as_deref()
                 .or(spec.plan.tile_shape.as_deref()),
             false,
+            spec.plan.allow_experimental_modes
+                || spec
+                    .strategy_hint
+                    .is_some_and(TensorStrategy::is_experimental),
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -1345,6 +1621,7 @@ impl Store {
             options,
             options.tile_shape.as_deref(),
             false,
+            options.allow_experimental_modes,
         )?;
         let chosen = self.choose_candidate(&prepared, None)?;
         let mut runner_up: Option<&PreparedCandidate> = None;
@@ -1368,11 +1645,14 @@ impl Store {
             chosen: chosen.candidate.strategy,
             chosen_physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
             chosen_estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+            chosen_estimated_encode_ns: chosen.candidate.estimated_encode_ns.unwrap_or(0),
             chosen_cost: chosen.candidate.cost.unwrap_or(0),
             runner_up: runner_up.map(|item| item.candidate.strategy),
             runner_up_physical_bytes: runner_up.and_then(|item| item.candidate.physical_bytes),
             runner_up_estimated_decode_ns: runner_up
                 .and_then(|item| item.candidate.estimated_decode_ns),
+            runner_up_estimated_encode_ns: runner_up
+                .and_then(|item| item.candidate.estimated_encode_ns),
             runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
             candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
         })
@@ -1399,6 +1679,7 @@ impl Store {
             options,
             None,
             true,
+            options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         Ok(TensorIndependentPlan {
@@ -1464,6 +1745,7 @@ impl Store {
             options,
             None,
             true,
+            options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         let plan = TensorIndependentPlan {
@@ -2483,6 +2765,10 @@ impl Store {
             &spec.plan,
             None,
             false,
+            spec.plan.allow_experimental_modes
+                || spec
+                    .strategy_hint
+                    .is_some_and(TensorStrategy::is_experimental),
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -2528,6 +2814,7 @@ impl Store {
         options: &TensorPlanOptions,
         tile_shape: Option<&[u64]>,
         independent_only: bool,
+        allow_experimental: bool,
     ) -> Result<Vec<PreparedCandidate>> {
         let limits = Limits::default();
         let size = logical.len() as u64;
@@ -2561,14 +2848,17 @@ impl Store {
                         TensorStrategy::Raw,
                         size,
                     )),
-                    cost: Some(price(
+                    estimated_encode_ns: Some(
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
+                    ),
+                    cost: Some(options.price_candidate(
                         size,
                         options.estimate_ns_at_pattern(
                             crate::cost_model::CostClass::Raw,
                             TensorStrategy::Raw,
                             size,
                         ),
-                        options.lambda_ns,
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
                     )),
                     dependency: None,
                 },
@@ -2601,7 +2891,14 @@ impl Store {
                                 detail: format!("one ZSTD level-{level} frame (fast policy)"),
                                 physical_bytes: Some(physical),
                                 estimated_decode_ns: Some(estimate),
-                                cost: Some(price(physical, estimate, options.lambda_ns)),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                )),
                                 dependency: None,
                             },
                             artifact: Some(PreparedArtifact {
@@ -2638,14 +2935,17 @@ impl Store {
                         TensorStrategy::Raw,
                         size,
                     )),
-                    cost: Some(price(
+                    estimated_encode_ns: Some(
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
+                    ),
+                    cost: Some(options.price_candidate(
                         size,
                         options.estimate_ns_at_pattern(
                             crate::cost_model::CostClass::Raw,
                             TensorStrategy::Raw,
                             size,
                         ),
-                        options.lambda_ns,
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
                     )),
                     dependency: None,
                 },
@@ -2689,7 +2989,14 @@ impl Store {
                             detail: "one ZSTD frame".to_owned(),
                             physical_bytes: Some(physical),
                             estimated_decode_ns: Some(estimate),
-                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            estimated_encode_ns: Some(
+                                options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                            ),
+                            cost: Some(options.price_candidate(
+                                physical,
+                                estimate,
+                                options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                            )),
                             dependency: None,
                         },
                         artifact: Some(PreparedArtifact {
@@ -2703,6 +3010,80 @@ impl Store {
                     });
                 }
                 Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+            }
+        }
+
+        // ZSTD level 19: the same frozen ZSTD mode (level is not part of the
+        // wire identity), encoded once more at a much slower setting. It is
+        // gated three ways so it can never land on a training critical path:
+        // only `Planned` offers it, only at or above the size threshold, and
+        // only when the estimated encode time fits the CPU budget.
+        if quantized {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                "q8_0 identity requires the mode-10 scale plane".to_owned(),
+            ));
+        } else if options.write_policy.is_fast() {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                "zstd-19 is never offered by the fast write policy".to_owned(),
+            ));
+        } else if !options.zstd19 {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                "zstd-19 disabled (--no-zstd19)".to_owned(),
+            ));
+        } else if size < options.zstd19_min_bytes {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                format!(
+                    "zstd-19 skipped: {size} bytes is below the {} byte threshold",
+                    options.zstd19_min_bytes
+                ),
+            ));
+        } else {
+            let encode_ns =
+                crate::cost_model::estimate_encode_ns(crate::cost_model::EncodeClass::Zstd19, size);
+            if encode_ns > options.zstd19_cpu_budget_ns {
+                out.push(skipped(
+                    TensorStrategy::Zstd,
+                    format!(
+                        "zstd-19 skipped: estimated encode {encode_ns} ns exceeds the {} ns CPU budget",
+                        options.zstd19_cpu_budget_ns
+                    ),
+                ));
+            } else {
+                match weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits) {
+                    Ok(frame) => {
+                        let physical = frame.len() as u64;
+                        let estimate = options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::Zstd,
+                            TensorStrategy::Zstd,
+                            size,
+                        );
+                        out.push(PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::Zstd,
+                                applicable: true,
+                                detail: "one ZSTD level-19 frame".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(encode_ns),
+                                cost: Some(options.price_candidate(physical, estimate, encode_ns)),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: None,
+                                tile_shape: None,
+                            }),
+                        });
+                    }
+                    Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+                }
             }
         }
 
@@ -2755,7 +3136,20 @@ impl Store {
                                     ),
                                     physical_bytes: Some(physical),
                                     estimated_decode_ns: Some(estimate),
-                                    cost: Some(price(physical, estimate, options.lambda_ns)),
+                                    estimated_encode_ns: Some(
+                                        options
+                                            .estimate_encode_ns(TensorStrategy::FloatTensor, size),
+                                    ),
+                                    cost: Some(
+                                        options.price_candidate(
+                                            physical,
+                                            estimate,
+                                            options.estimate_encode_ns(
+                                                TensorStrategy::FloatTensor,
+                                                size,
+                                            ),
+                                        ),
+                                    ),
                                     dependency: None,
                                 },
                                 artifact: Some(PreparedArtifact {
@@ -2803,7 +3197,14 @@ impl Store {
                             detail: "one mode-10 shard (shard_count = 1)".to_owned(),
                             physical_bytes: Some(physical),
                             estimated_decode_ns: Some(estimate),
-                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            estimated_encode_ns: Some(
+                                options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
+                            ),
+                            cost: Some(options.price_candidate(
+                                physical,
+                                estimate,
+                                options.estimate_encode_ns(TensorStrategy::TensorSharded, size),
+                            )),
                             dependency: None,
                         },
                         artifact: Some(PreparedArtifact {
@@ -2857,10 +3258,12 @@ impl Store {
                 match self.prepare_mode15(dtype, shape, logical, &tile_shape, &limits) {
                     Ok((frame, root)) => {
                         let physical = frame.len() as u64;
-                        let estimate = options.estimate_ns_at_pattern(
+                        let geometry = TileGeometry::new(shape, &tile_shape, dtype);
+                        let estimate = options.estimate_ns_at_pattern_for(
                             crate::cost_model::CostClass::TensorTiled,
                             TensorStrategy::TensorTiled,
                             size,
+                            geometry.as_ref(),
                         );
                         out.push(PreparedCandidate {
                             candidate: TensorPlanCandidate {
@@ -2871,7 +3274,14 @@ impl Store {
                                 ),
                                 physical_bytes: Some(physical),
                                 estimated_decode_ns: Some(estimate),
-                                cost: Some(price(physical, estimate, options.lambda_ns)),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::TensorTiled, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::TensorTiled, size),
+                                )),
                                 dependency: None,
                             },
                             artifact: Some(PreparedArtifact {
@@ -2920,10 +3330,12 @@ impl Store {
                     match self.prepare_mode17(dtype, shape, logical, &tile_shape, &limits) {
                         Ok((frame, root)) => {
                             let physical = frame.len() as u64;
-                            let estimate = options.estimate_ns_at_pattern(
+                            let geometry = TileGeometry::new(shape, &tile_shape, dtype);
+                            let estimate = options.estimate_ns_at_pattern_for(
                                 crate::cost_model::CostClass::TensorTiled,
                                 TensorStrategy::FloatTiled,
                                 size,
+                                geometry.as_ref(),
                             );
                             out.push(PreparedCandidate {
                                 candidate: TensorPlanCandidate {
@@ -2934,7 +3346,8 @@ impl Store {
                                     ),
                                     physical_bytes: Some(physical),
                                     estimated_decode_ns: Some(estimate),
-                                    cost: Some(price(physical, estimate, options.lambda_ns)),
+                                    estimated_encode_ns: Some(options.estimate_encode_ns(TensorStrategy::FloatTiled, size)),
+                                    cost: Some(options.price_candidate(physical, estimate, options.estimate_encode_ns(TensorStrategy::FloatTiled, size))),
                                     dependency: None,
                                 },
                                 artifact: Some(PreparedArtifact {
@@ -2983,7 +3396,21 @@ impl Store {
         // bytes-only default keeps choosing the strictly smaller
         // representation (mode 18 pays one 256-byte table per exponent
         // stream), while a latency-priced plan can choose it.
-        match tiled {
+        //
+        // EXPERIMENTAL GATE: mode 18 lost every measured axis, so it is never
+        // auto-selected. It is prepared (and therefore selectable) only when
+        // the caller opted in with `allow_experimental_modes` or asked for it
+        // by name. The wire format is frozen and unaffected.
+        let streams_tiled = if allow_experimental {
+            tiled
+        } else {
+            out.push(skipped(
+                TensorStrategy::FloatTiledStreams,
+                "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy".to_owned(),
+            ));
+            None
+        };
+        match streams_tiled {
             Some((tile_shape, origin)) => match float_tensor_dtype(dtype) {
                 Some(float_dtype)
                     if matches!(
@@ -3006,10 +3433,12 @@ impl Store {
                     ) {
                         Ok((frame, root)) => {
                             let physical = frame.len() as u64;
-                            let estimate = options.estimate_ns_at_pattern(
+                            let geometry = TileGeometry::new(shape, &tile_shape, dtype);
+                            let estimate = options.estimate_ns_at_pattern_for(
                                 crate::cost_model::CostClass::TensorTiled,
                                 TensorStrategy::FloatTiledStreams,
                                 size,
+                                geometry.as_ref(),
                             );
                             out.push(PreparedCandidate {
                                 candidate: TensorPlanCandidate {
@@ -3020,7 +3449,8 @@ impl Store {
                                     ),
                                     physical_bytes: Some(physical),
                                     estimated_decode_ns: Some(estimate),
-                                    cost: Some(price(physical, estimate, options.lambda_ns)),
+                                    estimated_encode_ns: Some(options.estimate_encode_ns(TensorStrategy::FloatTiledStreams, size)),
+                                    cost: Some(options.price_candidate(physical, estimate, options.estimate_encode_ns(TensorStrategy::FloatTiledStreams, size))),
                                     dependency: None,
                                 },
                                 artifact: Some(PreparedArtifact {
@@ -3057,7 +3487,7 @@ impl Store {
                 )),
             },
             None => {
-                if options.auto_tile_bytes.is_none() {
+                if allow_experimental && options.auto_tile_bytes.is_none() {
                     out.push(skipped(
                         TensorStrategy::FloatTiledStreams,
                         "no tile shape supplied".to_owned(),
@@ -3095,7 +3525,14 @@ impl Store {
                             detail: "mode 11 against the causal parent".to_owned(),
                             physical_bytes: Some(physical),
                             estimated_decode_ns: Some(estimate),
-                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            estimated_encode_ns: Some(
+                                options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
+                            ),
+                            cost: Some(options.price_candidate(
+                                physical,
+                                estimate,
+                                options.estimate_encode_ns(TensorStrategy::WeightDelta, size),
+                            )),
                             dependency: Some(dependency),
                         },
                         artifact: Some(PreparedArtifact {
@@ -3120,6 +3557,86 @@ impl Store {
                     "no usable causal parent with the same dtype/shape".to_owned(),
                 )),
                 Err(err) => out.push(skipped(TensorStrategy::WeightDelta, err.to_string())),
+            }
+        }
+
+        // ZSTD patch against the causal parent: a mode-4 DICTIONARY frame
+        // whose raw-content dictionary is the whole base and whose window
+        // covers it (`zstd --patch-from` semantics). This is the candidate for
+        // a checkpoint that changes in one region but is dense elsewhere,
+        // where the COPY/INSERT delta (mode 11/16) loses.
+        if independent_only {
+            out.push(skipped(
+                TensorStrategy::ZstdPatch,
+                "rebase requires an independent representation".to_owned(),
+            ));
+        } else if options.write_policy.is_fast() {
+            out.push(skipped(
+                TensorStrategy::ZstdPatch,
+                "the fast write policy never offers a patch candidate".to_owned(),
+            ));
+        } else if !options.zstd_patch {
+            out.push(skipped(
+                TensorStrategy::ZstdPatch,
+                "zstd patch disabled (--no-zstd-patch)".to_owned(),
+            ));
+        } else if size < options.zstd_patch_min_bytes {
+            out.push(skipped(
+                TensorStrategy::ZstdPatch,
+                format!(
+                    "zstd patch skipped: {size} bytes is below the {} byte threshold",
+                    options.zstd_patch_min_bytes
+                ),
+            ));
+        } else {
+            let encode_ns = options.estimate_encode_ns(TensorStrategy::ZstdPatch, size);
+            if encode_ns > options.zstd_patch_cpu_budget_ns {
+                out.push(skipped(
+                    TensorStrategy::ZstdPatch,
+                    format!(
+                        "zstd patch skipped: estimated encode {encode_ns} ns exceeds the {} ns CPU budget",
+                        options.zstd_patch_cpu_budget_ns
+                    ),
+                ));
+            } else {
+                match self.prepare_patch(dtype, shape, logical, causal, &limits, options) {
+                    Ok(Some((frame, dependency))) => {
+                        let physical = frame.len() as u64;
+                        let estimate = options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::WeightDelta,
+                            TensorStrategy::ZstdPatch,
+                            size,
+                        );
+                        out.push(PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::ZstdPatch,
+                                applicable: true,
+                                detail: format!(
+                                    "one zstd level-{} patch frame against the causal parent (window covers the base)",
+                                    options.zstd_patch_level
+                                ),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(encode_ns),
+                                cost: Some(options.price_candidate(physical, estimate, encode_ns)),
+                                dependency: Some(dependency),
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd-patch".to_owned(),
+                                frame: Some(frame),
+                                dependencies: vec![dependency],
+                                tensor: None,
+                                tile_shape: None,
+                            }),
+                        });
+                    }
+                    Ok(None) => out.push(skipped(
+                        TensorStrategy::ZstdPatch,
+                        "no usable causal base with the same dtype/shape".to_owned(),
+                    )),
+                    Err(err) => out.push(skipped(TensorStrategy::ZstdPatch, err.to_string())),
+                }
             }
         }
 
@@ -3155,7 +3672,14 @@ impl Store {
                             detail: "mode 16 against the causal parent".to_owned(),
                             physical_bytes: Some(physical),
                             estimated_decode_ns: Some(estimate),
-                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            estimated_encode_ns: Some(
+                                options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
+                            ),
+                            cost: Some(options.price_candidate(
+                                physical,
+                                estimate,
+                                options.estimate_encode_ns(TensorStrategy::SparseDelta, size),
+                            )),
                             dependency: Some(dependency),
                         },
                         artifact: Some(PreparedArtifact {
@@ -3224,7 +3748,14 @@ impl Store {
                             ),
                             physical_bytes: Some(physical),
                             estimated_decode_ns: Some(estimate),
-                            cost: Some(price(physical, estimate, options.lambda_ns)),
+                            estimated_encode_ns: Some(
+                                options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
+                            ),
+                            cost: Some(options.price_candidate(
+                                physical,
+                                estimate,
+                                options.estimate_encode_ns(TensorStrategy::SemanticDelta, size),
+                            )),
                             dependency: Some(dependency),
                         },
                         artifact: Some(PreparedArtifact {
@@ -3417,6 +3948,31 @@ impl Store {
         } else {
             weftcodec::encode_weight_delta(logical, weight, shape, &base_frame, limits)?
         };
+        Ok(Some((frame, base_root)))
+    }
+
+    /// Encode the whole-tensor patch candidate against the causal base. The
+    /// base must have the same dtype and shape (checked by
+    /// `tensor_causal_base`), and the resulting chain must respect the frozen
+    /// dependency depth bound.
+    fn prepare_patch(
+        &self,
+        dtype: TensorElementDtype,
+        shape: &[u64],
+        logical: &[u8],
+        causal: &[Hash32],
+        limits: &Limits,
+        options: &TensorPlanOptions,
+    ) -> Result<Option<(Vec<u8>, Hash32)>> {
+        let Some((base_root, base_bytes)) = self.tensor_causal_base(dtype, shape, causal)? else {
+            return Ok(None);
+        };
+        let base_depth = self.representation_dep_depth(base_root, &mut Vec::new())?;
+        if base_depth + 1 > MAX_CODEC_DEPENDENCY_DEPTH {
+            return Ok(None);
+        }
+        let frame =
+            weftcodec::modes::encode_patch(logical, &base_bytes, options.zstd_patch_level, limits)?;
         Ok(Some((frame, base_root)))
     }
 
@@ -3672,8 +4228,8 @@ impl Store {
                     representation: Some(Representation {
                         kind: RepresentationKind::Codec,
                         frame: Some(frame_id),
-                        dependencies: Vec::new(),
-                        strategy: "zstd".to_owned(),
+                        dependencies: artifact.dependencies.clone(),
+                        strategy: artifact.strategy_name.clone(),
                         decoded_size: size,
                         tensor: None,
                         overlay: None,
@@ -4509,6 +5065,7 @@ fn skipped(strategy: TensorStrategy, detail: String) -> PreparedCandidate {
             detail,
             physical_bytes: None,
             estimated_decode_ns: None,
+            estimated_encode_ns: None,
             cost: None,
             dependency: None,
         },

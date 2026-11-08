@@ -214,7 +214,30 @@ pub const MEASURED_CALIBRATION: &str = "weftfs-r2/decode-calibration/v1";
 pub const MODE18_MEASURED_CALIBRATION: &str = "weftfs-mode18/decode-calibration/v1";
 
 /// Measured mode-18 row (see [`MODE18_MEASURED_CALIBRATION`]).
-const MODE18_MEASURED: Coefficients = Coefficients::new(0, 3_674_824);
+///
+/// The two-point affine fit at 128 KiB and 16 MiB produced a *negative*
+/// intercept, which was previously clamped to zero. A zero fixed term made a
+/// one-tile region read look free, so a tiny-region plan could select mode 18
+/// even though the mode-18 court measured it 1.5-3.0x slower than mode 17 on
+/// exactly those regions. A fitted fixed term is never allowed to be zero
+/// (see [`ENCODE_FLOOR_NOTE`] and the `every_measured_fixed_term_is_positive`
+/// test); the floor below is the intercept of the measured *small-region*
+/// affine (`region_1_row` and `region_100_rows` medians at tile `[64,896]`,
+/// 114,688 canonical tile bytes each):
+///
+/// ```text
+/// (415,555 - 256,078) ns for one extra 114,688-byte tile  =>  1,457,700 ns/MiB
+/// 256,078 ns - 159,477 ns                                  =>  96,601 ns
+/// ```
+///
+/// The per-MiB term stays the whole-frame measured rate, because the persisted
+/// calibration schema has one rate per class; the fixed term is the measured
+/// lower bound, so a small-region estimate can only become more expensive.
+const MODE18_MEASURED: Coefficients = Coefficients::new(96_601, 3_674_824);
+
+/// Note attached to the encode table: only the rows marked measured came from
+/// a court run; the rest are declared.
+const ENCODE_FLOOR_NOTE: &str = "no fitted fixed term may be zero";
 
 /// Estimated mode-18 decode nanoseconds for `decoded_bytes` logical bytes.
 pub fn estimate_streams_ns(decoded_bytes: u64) -> u64 {
@@ -324,6 +347,163 @@ pub fn table(model: CostModelKind) -> Vec<(CostClass, Coefficients)> {
     rows.to_vec()
 }
 
+// ---------------------------------------------------------------------------
+// Encoder (write) cost
+// ---------------------------------------------------------------------------
+//
+// The access-pattern objective needs a write term: the region planner could
+// otherwise select an expensive-to-encode representation for a single read.
+// These rows price *one whole-tensor encode* (and its store publication), not
+// a region decode. They are deliberately separate from the decode table.
+//
+// Provenance:
+//
+// * `raw` and `zstd` are measured from the T1 write-policy court's fast-path
+//   CPU time (2,470 ms raw and 2,910 ms zstd-3 for a 988,097,824-byte
+//   checkpoint => 2.62 / 3.09 ms per MiB).
+// * `float-tensor` and `float-tiled` are measured from the float-tiled court's
+//   store-level `write_ms` (2,286.7 ms and 7,434.7 ms for 259.656 MiB =>
+//   8.81 / 28.63 ms per MiB). This is the 3.25x write ratio the review cites.
+// * `float-tiled-streams` is *derived*: the mode-18 court measured a 1.3048x
+//   codec-encode ratio over mode 17 (1,522.7 ms vs 1,167.0 ms), applied to
+//   mode 17's measured store-level rate.
+// * The remaining rows are **declared**, not measured: `tensor-sharded` reuses
+//   the float-tensor rate, `tensor-tiled` reuses the float-tiled rate (same
+//   per-tile Huffman encode), and the delta rows are declared as two
+//   float-tensor encodes (one base read plus one encode).
+//
+// A zero fixed term is allowed here because an encode always processes the
+// whole tensor; the zero-fixed hazard is a *region* decode artifact.
+
+/// Identifier for the encode table; recorded in receipts.
+pub const ENCODE_CALIBRATION: &str = "weftfs-write-cost/v1";
+
+/// Whether one encode row was measured, derived, or declared.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EncodeProvenance {
+    Measured,
+    Derived,
+    Declared,
+}
+
+/// Encode classes. These track the planner's strategies rather than the frozen
+/// decode [`CostClass`] set, because modes 17 and 18 have their own measured
+/// encode cost but no decode class of their own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EncodeClass {
+    Raw,
+    Zstd,
+    /// Level-19 (or measured-slow) ZSTD encode. Measured at 28.5 MiB/s by the
+    /// R5 entropy-coder court.
+    Zstd19,
+    FloatTensor,
+    TensorSharded,
+    TensorTiled,
+    FloatTiled,
+    FloatTiledStreams,
+    WeightDelta,
+    SparseDelta,
+    SemanticDelta,
+}
+
+impl EncodeClass {
+    pub const ALL: [EncodeClass; 11] = [
+        EncodeClass::Raw,
+        EncodeClass::Zstd,
+        EncodeClass::Zstd19,
+        EncodeClass::FloatTensor,
+        EncodeClass::TensorSharded,
+        EncodeClass::TensorTiled,
+        EncodeClass::FloatTiled,
+        EncodeClass::FloatTiledStreams,
+        EncodeClass::WeightDelta,
+        EncodeClass::SparseDelta,
+        EncodeClass::SemanticDelta,
+    ];
+
+    pub fn index(self) -> usize {
+        EncodeClass::ALL
+            .iter()
+            .position(|candidate| *candidate == self)
+            .expect("every EncodeClass is listed in EncodeClass::ALL")
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            EncodeClass::Raw => "raw",
+            EncodeClass::Zstd => "zstd",
+            EncodeClass::Zstd19 => "zstd-19",
+            EncodeClass::FloatTensor => "float-tensor",
+            EncodeClass::TensorSharded => "tensor-sharded",
+            EncodeClass::TensorTiled => "tensor-tiled",
+            EncodeClass::FloatTiled => "float-tiled",
+            EncodeClass::FloatTiledStreams => "float-tiled-streams",
+            EncodeClass::WeightDelta => "weight-delta",
+            EncodeClass::SparseDelta => "sparse-delta",
+            EncodeClass::SemanticDelta => "semantic-delta",
+        }
+    }
+}
+
+/// One encode row.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct EncodeRow {
+    pub coefficients: Coefficients,
+    pub provenance: EncodeProvenance,
+}
+
+const fn encode(fixed_ns: u64, ns_per_mib: u64, provenance: EncodeProvenance) -> EncodeRow {
+    EncodeRow {
+        coefficients: Coefficients::new(fixed_ns, ns_per_mib),
+        provenance,
+    }
+}
+
+/// Encode cost rows in [`EncodeClass::ALL`] order.
+const ENCODE: [EncodeRow; 11] = [
+    // raw: measured from the T1 fast-raw checkpoint CPU (2.62 ms/MiB).
+    encode(0, 2_620_000, EncodeProvenance::Measured),
+    // zstd level 3: measured from the T1 fast-zstd-3 checkpoint CPU (3.09 ms/MiB).
+    encode(0, 3_090_000, EncodeProvenance::Measured),
+    // zstd level 19: measured at 28.5 MiB/s by the R5 entropy-coder court.
+    encode(0, 35_087_719, EncodeProvenance::Measured),
+    // float-tensor: measured store write, 2,286.7 ms / 259.656 MiB.
+    encode(0, 8_806_000, EncodeProvenance::Measured),
+    // tensor-sharded: declared reuse of the float-tensor store rate.
+    encode(0, 8_806_000, EncodeProvenance::Declared),
+    // tensor-tiled (mode 15): declared reuse of the float-tiled store rate.
+    encode(0, 28_633_000, EncodeProvenance::Declared),
+    // float-tiled (mode 17): measured store write, 7,434.7 ms / 259.656 MiB.
+    encode(0, 28_633_000, EncodeProvenance::Measured),
+    // float-tiled-streams (mode 18): derived from the measured codec ratio
+    // (1,522.7 ms / 1,167.0 ms = 1.3048x) applied to mode 17's store rate.
+    encode(0, 37_360_000, EncodeProvenance::Derived),
+    // weight-delta: declared 2x float-tensor (base read + encode).
+    encode(0, 17_612_000, EncodeProvenance::Declared),
+    // sparse-delta: declared 2x float-tensor.
+    encode(0, 17_612_000, EncodeProvenance::Declared),
+    // semantic-delta: declared 2x float-tensor.
+    encode(0, 17_612_000, EncodeProvenance::Declared),
+];
+
+/// The encode row for one class.
+pub fn encode_row(class: EncodeClass) -> EncodeRow {
+    ENCODE[class.index()]
+}
+
+/// Estimated encode nanoseconds for one whole-tensor encode of `bytes`.
+pub fn estimate_encode_ns(class: EncodeClass, bytes: u64) -> u64 {
+    estimate_with(encode_row(class).coefficients, bytes)
+}
+
+/// The whole encode table in canonical order (diagnostics and tests).
+pub fn encode_table() -> Vec<(EncodeClass, EncodeRow)> {
+    EncodeClass::ALL
+        .iter()
+        .map(|class| (*class, encode_row(*class)))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -374,5 +554,34 @@ mod tests {
             coefficients(CostClass::FloatTensor, CostModelKind::Measured),
             coefficients(CostClass::FloatTensor, CostModelKind::Declared)
         );
+    }
+
+    #[test]
+    fn every_measured_fixed_term_is_positive() {
+        // A zero (or negative, clamped) fixed term makes a tiny-region estimate
+        // look free. Every measured decode row must carry a real fixed cost.
+        for (class, row) in table(CostModelKind::Measured) {
+            assert!(
+                row.fixed_ns > 0,
+                "{class:?} has a zero fixed term, which is the mode-18 artifact"
+            );
+        }
+        assert!(streams_measured_coefficients().fixed_ns > 0);
+    }
+
+    #[test]
+    fn encode_table_is_shaped_and_ordered() {
+        let rows = encode_table();
+        assert_eq!(rows.len(), EncodeClass::ALL.len());
+        for (index, (class, row)) in rows.iter().enumerate() {
+            assert_eq!(class.index(), index);
+            assert!(row.coefficients.ns_per_mib > 0, "{class:?} has no rate");
+            assert!(estimate_encode_ns(*class, 16 * 1024 * 1024) > 0);
+        }
+        // The 3.25x measured mode-17/mode-9 write ratio is preserved.
+        let float_tensor = encode_row(EncodeClass::FloatTensor).coefficients.ns_per_mib;
+        let float_tiled = encode_row(EncodeClass::FloatTiled).coefficients.ns_per_mib;
+        assert!(float_tiled > float_tensor * 3);
+        assert!(float_tiled < float_tensor * 4);
     }
 }

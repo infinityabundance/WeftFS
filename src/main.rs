@@ -398,6 +398,26 @@ enum Command {
         /// Bytes charged per estimated nanosecond of decode time (0 = bytes only).
         #[arg(long = "lambda-ns", default_value_t = 0)]
         lambda_ns: u64,
+        /// Bytes charged per estimated nanosecond of encode time. Defaults to
+        /// `--lambda-ns`, so one lambda prices both unless overridden.
+        #[arg(long = "lambda-write-ns")]
+        lambda_write_ns: Option<u64>,
+        /// Allow experimental representations (mode 18) to be auto-selected.
+        #[arg(long = "allow-experimental-modes")]
+        allow_experimental_modes: bool,
+        /// Do not offer the ZSTD level-19 candidate.
+        #[arg(long = "no-zstd19")]
+        no_zstd19: bool,
+        /// CPU budget for the level-19 candidate (estimated encode ns).
+        #[arg(long = "zstd19-cpu-budget-ns", default_value_t = 20_000_000_000)]
+        zstd19_cpu_budget_ns: u64,
+        /// Do not offer the whole-base ZSTD patch candidate.
+        #[arg(long = "no-zstd-patch")]
+        no_zstd_patch: bool,
+        /// ZSTD level for the patch candidate (default 12, matching the
+        /// measured `--patch-from` baseline).
+        #[arg(long = "zstd-patch-level", default_value_t = 12)]
+        zstd_patch_level: i32,
         /// `auto` runs the planner; any other value requires that strategy.
         #[arg(long, default_value = "auto")]
         strategy: String,
@@ -467,6 +487,26 @@ enum Command {
         shard_index: u32,
         #[arg(long = "lambda-ns", default_value_t = 0)]
         lambda_ns: u64,
+        /// Bytes charged per estimated nanosecond of encode time. Defaults to
+        /// `--lambda-ns`.
+        #[arg(long = "lambda-write-ns")]
+        lambda_write_ns: Option<u64>,
+        /// Allow experimental representations (mode 18) to be auto-selected.
+        #[arg(long = "allow-experimental-modes")]
+        allow_experimental_modes: bool,
+        /// Do not offer the ZSTD level-19 candidate.
+        #[arg(long = "no-zstd19")]
+        no_zstd19: bool,
+        /// CPU budget for the level-19 candidate (estimated encode ns).
+        #[arg(long = "zstd19-cpu-budget-ns", default_value_t = 20_000_000_000)]
+        zstd19_cpu_budget_ns: u64,
+        /// Do not offer the whole-base ZSTD patch candidate.
+        #[arg(long = "no-zstd-patch")]
+        no_zstd_patch: bool,
+        /// ZSTD level for the patch candidate (default 12, matching the
+        /// measured `--patch-from` baseline).
+        #[arg(long = "zstd-patch-level", default_value_t = 12)]
+        zstd_patch_level: i32,
         #[arg(long)]
         causal: Option<String>,
         #[arg(long = "semantic-policy")]
@@ -1004,6 +1044,10 @@ enum CheckpointCommand {
         /// Do not run the mode-14 semantic-delta candidate search.
         #[arg(long = "no-semantic")]
         no_semantic: bool,
+        /// Allow experimental representations (mode 18) to be auto-selected by
+        /// the per-shard planner.
+        #[arg(long = "allow-experimental-modes")]
+        allow_experimental_modes: bool,
         /// Prepare/commit split: number of blob-writing ranks (1..=64).
         /// Setting it (even to 1) uses the split path; omitting it is the
         /// sequential write.
@@ -2013,6 +2057,12 @@ fn run(cli: Cli) -> Result<()> {
             shards,
             shard_index,
             lambda_ns,
+            lambda_write_ns,
+            allow_experimental_modes,
+            no_zstd19,
+            zstd19_cpu_budget_ns,
+            no_zstd_patch,
+            zstd_patch_level,
             strategy,
             semantic_policy,
             candidates,
@@ -2044,6 +2094,13 @@ fn run(cli: Cli) -> Result<()> {
                     causal,
                     plan: TensorPlanOptions {
                         lambda_ns,
+                        lambda_write_ns: lambda_write_ns.unwrap_or(lambda_ns),
+                        lambda_write_ns_set: lambda_write_ns.is_some(),
+                        allow_experimental_modes,
+                        zstd19: !no_zstd19,
+                        zstd19_cpu_budget_ns,
+                        zstd_patch: !no_zstd_patch,
+                        zstd_patch_level,
                         cost_model: planner_cost_model,
                         calibration: calibration_table.clone(),
                         semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
@@ -2105,6 +2162,12 @@ fn run(cli: Cli) -> Result<()> {
             shards,
             shard_index,
             lambda_ns,
+            lambda_write_ns,
+            allow_experimental_modes,
+            no_zstd19,
+            zstd19_cpu_budget_ns,
+            no_zstd_patch,
+            zstd_patch_level,
             causal,
             semantic_policy,
             candidates,
@@ -2126,6 +2189,13 @@ fn run(cli: Cli) -> Result<()> {
             let plan_access_pattern = AccessPattern::parse(&access_pattern)?;
             let options = TensorPlanOptions {
                 lambda_ns,
+                lambda_write_ns: lambda_write_ns.unwrap_or(lambda_ns),
+                lambda_write_ns_set: lambda_write_ns.is_some(),
+                allow_experimental_modes,
+                zstd19: !no_zstd19,
+                zstd19_cpu_budget_ns,
+                zstd_patch: !no_zstd_patch,
+                zstd_patch_level,
                 cost_model: planner_cost_model,
                 calibration: calibration_table.clone(),
                 semantic_policy: parse_semantic_policy(semantic_policy.as_deref())?,
@@ -2151,6 +2221,7 @@ fn run(cli: Cli) -> Result<()> {
                             "detail": item.detail,
                             "physical_bytes": item.physical_bytes,
                             "estimated_decode_ns": item.estimated_decode_ns,
+                            "estimated_encode_ns": item.estimated_encode_ns,
                             "cost": item.cost.map(|cost| cost.to_string()),
                             "dependency": item.dependency.map(|hash| hash.to_hex()),
                         })
@@ -2160,12 +2231,16 @@ fn run(cli: Cli) -> Result<()> {
                     "chosen": plan.chosen.as_str(),
                     "chosen_physical_bytes": plan.chosen_physical_bytes,
                     "chosen_estimated_decode_ns": plan.chosen_estimated_decode_ns,
+                    "chosen_estimated_encode_ns": plan.chosen_estimated_encode_ns,
                     "chosen_cost": plan.chosen_cost.to_string(),
                     "runner_up": plan.runner_up.map(|strategy| strategy.as_str()),
                     "runner_up_physical_bytes": plan.runner_up_physical_bytes,
                     "runner_up_estimated_decode_ns": plan.runner_up_estimated_decode_ns,
+                    "runner_up_estimated_encode_ns": plan.runner_up_estimated_encode_ns,
                     "runner_up_cost": plan.runner_up_cost.map(|cost| cost.to_string()),
                     "lambda_ns": lambda_ns,
+                    "lambda_write_ns": options.effective_write_lambda(),
+                    "write_cost_calibration": weftfs::cost_model::ENCODE_CALIBRATION,
                     "cost_model": planner_cost_model.as_str(),
                     "access_pattern": plan_access_pattern.as_str(),
                     "candidates": candidates,
@@ -2868,6 +2943,10 @@ fn run(cli: Cli) -> Result<()> {
                     "candidates": report.candidates,
                     "deleted": report.deleted,
                     "deleted_bytes": report.deleted_bytes,
+                    "deleted_index_bytes": report.deleted_index_bytes,
+                    "deleted_total_bytes": report.deleted_total_bytes,
+                    "reclaimed_packs": report.reclaimed_packs,
+                    "reclaimed_pack_bytes": report.reclaimed_pack_bytes,
                     "retained": report.retained,
                     "problems": report.problems,
                 }))
@@ -2878,6 +2957,8 @@ fn run(cli: Cli) -> Result<()> {
                 println!("candidates={}", report.candidates.len());
                 println!("deleted={}", report.deleted.len());
                 println!("deleted_bytes={}", report.deleted_bytes);
+                println!("deleted_index_bytes={}", report.deleted_index_bytes);
+                println!("deleted_total_bytes={}", report.deleted_total_bytes);
                 println!("retained={}", report.retained);
                 for candidate in &report.candidates {
                     println!("candidate={candidate}");
@@ -3669,6 +3750,7 @@ fn run_checkpoint(
             deadline_ms,
             causal_checkpoint,
             no_semantic,
+            allow_experimental_modes,
             ranks,
             max_inflight_bytes,
             per_rank_bytes,
@@ -3715,6 +3797,7 @@ fn run_checkpoint(
                 deadline_ms,
                 causal_checkpoint,
                 semantic_search: !no_semantic,
+                allow_experimental_modes,
                 deterministic_seed: match checkpoint_seed.as_deref() {
                     None => None,
                     Some(text) => {

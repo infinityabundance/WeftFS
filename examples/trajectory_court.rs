@@ -158,11 +158,26 @@ fn tensor_payloads(
 /// so the source SHA-256 is recorded per step.
 fn gen(args: &[String]) -> Result<(), String> {
     let dir = PathBuf::from(arg(args, "--dir").ok_or("gen needs --dir")?);
-    let steps: usize = arg(args, "--steps").unwrap_or("50").parse().map_err(|_| "bad --steps")?;
-    let tensors: usize = arg(args, "--tensors").unwrap_or("64").parse().map_err(|_| "bad --tensors")?;
-    let rows: usize = arg(args, "--rows").unwrap_or("256").parse().map_err(|_| "bad --rows")?;
-    let cols: usize = arg(args, "--cols").unwrap_or("256").parse().map_err(|_| "bad --cols")?;
-    let seed: u64 = arg(args, "--seed").unwrap_or("20261107").parse().map_err(|_| "bad --seed")?;
+    let steps: usize = arg(args, "--steps")
+        .unwrap_or("50")
+        .parse()
+        .map_err(|_| "bad --steps")?;
+    let tensors: usize = arg(args, "--tensors")
+        .unwrap_or("64")
+        .parse()
+        .map_err(|_| "bad --tensors")?;
+    let rows: usize = arg(args, "--rows")
+        .unwrap_or("256")
+        .parse()
+        .map_err(|_| "bad --rows")?;
+    let cols: usize = arg(args, "--cols")
+        .unwrap_or("256")
+        .parse()
+        .map_err(|_| "bad --cols")?;
+    let seed: u64 = arg(args, "--seed")
+        .unwrap_or("20261107")
+        .parse()
+        .map_err(|_| "bad --seed")?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let mut base: Vec<Vec<u16>> = Vec::with_capacity(tensors);
     let mut files = Vec::new();
@@ -211,8 +226,7 @@ fn gen(args: &[String]) -> Result<(), String> {
                 data: bytes,
             });
         }
-        let file = weftfs::safetensors::encode_file(&entries, None)
-            .map_err(|e| e.to_string())?;
+        let file = weftfs::safetensors::encode_file(&entries, None).map_err(|e| e.to_string())?;
         let path = dir.join(format!("step{:03}.safetensors", step + 1));
         fs::write(&path, file).map_err(|e| e.to_string())?;
         files.push(path);
@@ -234,8 +248,11 @@ fn gen(args: &[String]) -> Result<(), String> {
         "steps_arg": list,
     });
     let out = dir.join("gen.json");
-    fs::write(&out, serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
+    fs::write(
+        &out,
+        serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
     println!("gen wrote {}", out.display());
     let _ = state;
     Ok(())
@@ -248,7 +265,10 @@ fn series(args: &[String]) -> Result<(), String> {
         .ok_or("series needs --steps name=FILE,name=FILE,...")?
         .split(',')
         .collect();
-    let shards: u32 = arg(args, "--shards").unwrap_or("1").parse().map_err(|_| "bad --shards")?;
+    let shards: u32 = arg(args, "--shards")
+        .unwrap_or("1")
+        .parse()
+        .map_err(|_| "bad --shards")?;
     let strategy = arg(args, "--strategy").unwrap_or("planned");
     let snapshots = flag(args, "--snapshots");
     let baselines = !flag(args, "--no-baselines");
@@ -435,12 +455,13 @@ fn series(args: &[String]) -> Result<(), String> {
                     if base.len() != current.len() {
                         continue;
                     }
-                    let delta: Vec<u8> =
-                        current.iter().zip(base.iter()).map(|(a, b)| a ^ b).collect();
-                    let tmp = store_path.join(format!(
-                        "xor-{index}-{}.bin",
-                        tensor.name.replace('/', "_")
-                    ));
+                    let delta: Vec<u8> = current
+                        .iter()
+                        .zip(base.iter())
+                        .map(|(a, b)| a ^ b)
+                        .collect();
+                    let tmp = store_path
+                        .join(format!("xor-{index}-{}.bin", tensor.name.replace('/', "_")));
                     fs::write(&tmp, &delta).map_err(|e| e.to_string())?;
                     let (size, level, note) = zstd_adaptive(&tmp, &[]);
                     let _ = fs::remove_file(&tmp);
@@ -457,10 +478,9 @@ fn series(args: &[String]) -> Result<(), String> {
             }
             let (patch_from, patch_level, patch_note) = match &previous_file {
                 None => (Some(0u64), "-19".to_owned(), None),
-                Some(previous) => zstd_adaptive(
-                    &source,
-                    &["--patch-from", &previous.to_string_lossy()],
-                ),
+                Some(previous) => {
+                    zstd_adaptive(&source, &["--patch-from", &previous.to_string_lossy()])
+                }
             };
             baseline_row = json!({
                 "full_zstd19_bytes": full_zstd19,
@@ -523,8 +543,11 @@ fn series(args: &[String]) -> Result<(), String> {
             "range": region_text,
             "steps": rows,
         });
-        fs::write(&out, serde_json::to_string_pretty(&partial).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
+        fs::write(
+            &out,
+            serde_json::to_string_pretty(&partial).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
     }
     let full = store.verify(true).map_err(|e| e.to_string())?;
     let receipt = json!({
@@ -539,8 +562,11 @@ fn series(args: &[String]) -> Result<(), String> {
         "verify_full_problems": full.problems.len(),
         "final_data_bytes": data_bytes(&store_path),
     });
-    fs::write(&out, serde_json::to_string_pretty(&receipt).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
+    fs::write(
+        &out,
+        serde_json::to_string_pretty(&receipt).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
     println!("series wrote {}", out.display());
     Ok(())
 }
@@ -557,11 +583,16 @@ fn remove_tree(store: &mut Store, id: weftfs::Hash32) -> Result<(), weftfs::Erro
             remove_tree(store, child.target)?;
             store.rmdir(id, &child.name)?;
         } else {
-            store
-                .unlink(id, &child.name)
-                .map_err(|e| {
-                    weftfs::Error::new(e.class(), format!("unlink {:?}: {}", String::from_utf8_lossy(&child.name), e.message()))
-                })?;
+            store.unlink(id, &child.name).map_err(|e| {
+                weftfs::Error::new(
+                    e.class(),
+                    format!(
+                        "unlink {:?}: {}",
+                        String::from_utf8_lossy(&child.name),
+                        e.message()
+                    ),
+                )
+            })?;
         }
     }
     Ok(())
@@ -592,16 +623,22 @@ fn gc(args: &[String]) -> Result<(), String> {
             .resolve_path(&format!("/checkpoints/{name}"))
             .map_err(|e| e.to_string())?;
         remove_tree(&mut store, id).map_err(|e| format!("remove {name}: {e}"))?;
-        let root = store.resolve_path("/checkpoints").map_err(|e| e.to_string())?;
+        let root = store
+            .resolve_path("/checkpoints")
+            .map_err(|e| e.to_string())?;
         store
             .rmdir(root, name.as_bytes())
             .map_err(|e| format!("rmdir {name}: {e}"))?;
         unlinked.push(name.clone());
     }
     let before = data_bytes(&store_path);
+    let index_before = dir_bytes(&store_path.join("indexes"));
     let mark = store.gc(false).map_err(|e| e.to_string())?;
     let applied = store.gc(true).map_err(|e| e.to_string())?;
     let after = data_bytes(&store_path);
+    let index_after = dir_bytes(&store_path.join("indexes"));
+    let tree_delta = before.saturating_sub(after);
+    let whole_tree_delta = (before + index_before).saturating_sub(after + index_after);
     let mut restored = Vec::new();
     let exact = store
         .restore_checkpoint(&keep, &CheckpointRestoreOptions::default(), &mut restored)
@@ -615,12 +652,27 @@ fn gc(args: &[String]) -> Result<(), String> {
         "snapshots_pinned": store.snapshot_list().len(),
         "bytes_before_gc": before,
         "bytes_after_gc": after,
+        // The data-tree delta measured by walking objects/ + manifests/.
+        "tree_delta_bytes": tree_delta,
         "retained_union_bytes": mark.retained,
         "marked_manifests": mark.marked_manifests,
         "marked_chunks": mark.marked_chunks,
         "deleted_blobs": applied.deleted.len(),
         "deleted_indexes": applied.deleted_indexes.len(),
+        // `deleted_bytes` is the data-blob counter and must equal the walk.
         "deleted_bytes": applied.deleted_bytes,
+        "deleted_data_bytes": applied.deleted_bytes,
+        "deleted_index_bytes": applied.deleted_index_bytes,
+        "deleted_total_bytes": applied.deleted_total_bytes,
+        "data_reconciled": applied.deleted_bytes == tree_delta,
+        "index_bytes_before_gc": index_before,
+        "index_bytes_after_gc": index_after,
+        "whole_tree_delta_bytes": whole_tree_delta,
+        // A GC pass may publish one commit (orphan-record cleanup) and that
+        // commit writes a fresh index segment, so the whole-tree delta is a
+        // lower bound on `deleted_total_bytes`, not an equality.
+        "total_reconciled_within_written_indexes": applied.deleted_total_bytes
+            >= whole_tree_delta,
         "reclaimed_packs": applied.reclaimed_packs,
         "problems": applied.problems,
         "final_restore_exact": exact,

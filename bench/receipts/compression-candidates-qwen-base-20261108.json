@@ -1,0 +1,6157 @@
+{
+  "baselines": {
+    "note": "whole-file zstd CLI baselines; the patch level is 12 because level 19 with a ~988 MB base was OOM-killed at the 3 GiB court in R1/P2",
+    "patch_from_12_whole": 0,
+    "patch_level": 12,
+    "zstd19_base_whole": 764815908,
+    "zstd19_next_whole": 764815908,
+    "zstd_level": 19
+  },
+  "corpus": {
+    "base": ".docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "base_bytes": 988097824,
+    "next": ".docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "next_bytes": 988097824
+  },
+  "environment": {
+    "court_cpus": "8",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "court_memory": "20g",
+    "planned_ms": 111788.252634,
+    "weftcodec_revision": "6dd7e13d16de33ed765c462ec14a13f0a6c8c844",
+    "weftfs_revision": "5a92225850edb7e12921dad00a6c6ac8910463ab"
+  },
+  "label": "qwen-base",
+  "non_claims": [
+    "single host, warm page cache",
+    "plan-only totals: no checkpoint was written, so store publication and index bytes are excluded",
+    "the patch candidate's base is a fast-raw store object, not the original checkpoint container",
+    "zstd CLI baselines are independent processes; the in-process candidates use the same zstd library at a different call site"
+  ],
+  "rows": [
+    {
+      "bytes": 272269312,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 180623816
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 180623816
+      },
+      "tensor": "model.embed_tokens.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 180623816
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 180623816
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1525
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1525
+      },
+      "tensor": "model.layers.0.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1525
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1525
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797721
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797721
+      },
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797721
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797721
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803386
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803386
+      },
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803386
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803386
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781108
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781108
+      },
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781108
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781108
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1127
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1127
+      },
+      "tensor": "model.layers.0.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1127
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1127
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.0.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157253
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157253
+      },
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157253
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157253
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078014
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078014
+      },
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078014
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078014
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1686
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1686
+      },
+      "tensor": "model.layers.0.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1686
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1686
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1093530
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1093530
+      },
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1093530
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1093530
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.0.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153833
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153833
+      },
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153833
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153833
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1419
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1419
+      },
+      "tensor": "model.layers.1.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1419
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1419
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788817
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788817
+      },
+      "tensor": "model.layers.1.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788817
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788817
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791432
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791432
+      },
+      "tensor": "model.layers.1.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791432
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791432
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781125
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781125
+      },
+      "tensor": "model.layers.1.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781125
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5781125
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1318
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1318
+      },
+      "tensor": "model.layers.1.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1318
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1318
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.1.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154245
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154245
+      },
+      "tensor": "model.layers.1.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154245
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154245
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1074697
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1074697
+      },
+      "tensor": "model.layers.1.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1074697
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1074697
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "tensor": "model.layers.1.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078308
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078308
+      },
+      "tensor": "model.layers.1.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078308
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078308
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.1.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153775
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153775
+      },
+      "tensor": "model.layers.1.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153775
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153775
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1491
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1491
+      },
+      "tensor": "model.layers.10.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1491
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1491
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5833621
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5833621
+      },
+      "tensor": "model.layers.10.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5833621
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5833621
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819949
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819949
+      },
+      "tensor": "model.layers.10.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819949
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819949
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801334
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801334
+      },
+      "tensor": "model.layers.10.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801334
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801334
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "tensor": "model.layers.10.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.10.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154500
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154500
+      },
+      "tensor": "model.layers.10.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154500
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154500
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1085939
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1085939
+      },
+      "tensor": "model.layers.10.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1085939
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1085939
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1649
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1649
+      },
+      "tensor": "model.layers.10.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1649
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1649
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077096
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077096
+      },
+      "tensor": "model.layers.10.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077096
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077096
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.10.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "tensor": "model.layers.10.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1486
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1486
+      },
+      "tensor": "model.layers.11.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1486
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1486
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5831621
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5831621
+      },
+      "tensor": "model.layers.11.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5831621
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5831621
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812104
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812104
+      },
+      "tensor": "model.layers.11.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812104
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812104
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802654
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802654
+      },
+      "tensor": "model.layers.11.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802654
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802654
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1459
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1459
+      },
+      "tensor": "model.layers.11.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1459
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1459
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.11.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157296
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157296
+      },
+      "tensor": "model.layers.11.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157296
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 157296
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1087549
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1087549
+      },
+      "tensor": "model.layers.11.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1087549
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1087549
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1681
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1681
+      },
+      "tensor": "model.layers.11.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1681
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1681
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099353
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099353
+      },
+      "tensor": "model.layers.11.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099353
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099353
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.11.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154551
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154551
+      },
+      "tensor": "model.layers.11.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154551
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154551
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1514
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1514
+      },
+      "tensor": "model.layers.12.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1514
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1514
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826185
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826185
+      },
+      "tensor": "model.layers.12.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826185
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826185
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815500
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815500
+      },
+      "tensor": "model.layers.12.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815500
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815500
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799459
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799459
+      },
+      "tensor": "model.layers.12.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799459
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799459
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1490
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1490
+      },
+      "tensor": "model.layers.12.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1490
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1490
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.12.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154394
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154394
+      },
+      "tensor": "model.layers.12.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154394
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154394
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082740
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082740
+      },
+      "tensor": "model.layers.12.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082740
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082740
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "tensor": "model.layers.12.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077825
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077825
+      },
+      "tensor": "model.layers.12.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077825
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077825
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.12.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153465
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153465
+      },
+      "tensor": "model.layers.12.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153465
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153465
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1487
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1487
+      },
+      "tensor": "model.layers.13.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1487
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1487
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826485
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826485
+      },
+      "tensor": "model.layers.13.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826485
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826485
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5816836
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5816836
+      },
+      "tensor": "model.layers.13.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5816836
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5816836
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5800489
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5800489
+      },
+      "tensor": "model.layers.13.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5800489
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5800489
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1453
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1453
+      },
+      "tensor": "model.layers.13.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1453
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1453
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.13.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155445
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155445
+      },
+      "tensor": "model.layers.13.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155445
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155445
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083612
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083612
+      },
+      "tensor": "model.layers.13.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083612
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083612
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1643
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1643
+      },
+      "tensor": "model.layers.13.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1643
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1643
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1089326
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1089326
+      },
+      "tensor": "model.layers.13.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1089326
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1089326
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.13.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154212
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154212
+      },
+      "tensor": "model.layers.13.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154212
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154212
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1511
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1511
+      },
+      "tensor": "model.layers.14.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1511
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1511
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5825918
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5825918
+      },
+      "tensor": "model.layers.14.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5825918
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5825918
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815450
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815450
+      },
+      "tensor": "model.layers.14.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815450
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5815450
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799079
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799079
+      },
+      "tensor": "model.layers.14.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799079
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799079
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "tensor": "model.layers.14.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.14.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154351
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154351
+      },
+      "tensor": "model.layers.14.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154351
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154351
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081738
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081738
+      },
+      "tensor": "model.layers.14.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081738
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081738
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1651
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1651
+      },
+      "tensor": "model.layers.14.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1651
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1651
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080205
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080205
+      },
+      "tensor": "model.layers.14.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080205
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080205
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.14.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154680
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154680
+      },
+      "tensor": "model.layers.14.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154680
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154680
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1481
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1481
+      },
+      "tensor": "model.layers.15.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1481
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1481
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5834644
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5834644
+      },
+      "tensor": "model.layers.15.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5834644
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5834644
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819544
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819544
+      },
+      "tensor": "model.layers.15.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819544
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5819544
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5805471
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5805471
+      },
+      "tensor": "model.layers.15.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5805471
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5805471
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "tensor": "model.layers.15.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.15.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154733
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154733
+      },
+      "tensor": "model.layers.15.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154733
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154733
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1086066
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1086066
+      },
+      "tensor": "model.layers.15.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1086066
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1086066
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1641
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1641
+      },
+      "tensor": "model.layers.15.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1641
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1641
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078877
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078877
+      },
+      "tensor": "model.layers.15.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078877
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078877
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.15.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153479
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153479
+      },
+      "tensor": "model.layers.15.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153479
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153479
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "tensor": "model.layers.16.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1462
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5808821
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5808821
+      },
+      "tensor": "model.layers.16.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5808821
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5808821
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5822603
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5822603
+      },
+      "tensor": "model.layers.16.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5822603
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5822603
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804043
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804043
+      },
+      "tensor": "model.layers.16.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804043
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804043
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "tensor": "model.layers.16.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.16.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155799
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155799
+      },
+      "tensor": "model.layers.16.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155799
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155799
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082137
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082137
+      },
+      "tensor": "model.layers.16.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082137
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1082137
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "tensor": "model.layers.16.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1103078
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1103078
+      },
+      "tensor": "model.layers.16.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1103078
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1103078
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.16.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156859
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156859
+      },
+      "tensor": "model.layers.16.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156859
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156859
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "tensor": "model.layers.17.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1351
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798419
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798419
+      },
+      "tensor": "model.layers.17.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798419
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798419
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807714
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807714
+      },
+      "tensor": "model.layers.17.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807714
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807714
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789686
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789686
+      },
+      "tensor": "model.layers.17.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789686
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789686
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1384
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1384
+      },
+      "tensor": "model.layers.17.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1384
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1384
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.17.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154429
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154429
+      },
+      "tensor": "model.layers.17.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154429
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154429
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073136
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073136
+      },
+      "tensor": "model.layers.17.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073136
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073136
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1642
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1642
+      },
+      "tensor": "model.layers.17.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1642
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1642
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079910
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079910
+      },
+      "tensor": "model.layers.17.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079910
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079910
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.17.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153921
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153921
+      },
+      "tensor": "model.layers.17.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153921
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153921
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1326
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1326
+      },
+      "tensor": "model.layers.18.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1326
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1326
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797126
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797126
+      },
+      "tensor": "model.layers.18.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797126
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797126
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794706
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794706
+      },
+      "tensor": "model.layers.18.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794706
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794706
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5782427
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5782427
+      },
+      "tensor": "model.layers.18.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5782427
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5782427
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1396
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1396
+      },
+      "tensor": "model.layers.18.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1396
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1396
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.18.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "tensor": "model.layers.18.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154007
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073341
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073341
+      },
+      "tensor": "model.layers.18.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073341
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1073341
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1645
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1645
+      },
+      "tensor": "model.layers.18.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1645
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1645
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078466
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078466
+      },
+      "tensor": "model.layers.18.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078466
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078466
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.18.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154195
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154195
+      },
+      "tensor": "model.layers.18.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154195
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154195
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1345
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1345
+      },
+      "tensor": "model.layers.19.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1345
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1345
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5810808
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5810808
+      },
+      "tensor": "model.layers.19.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5810808
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5810808
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5809051
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5809051
+      },
+      "tensor": "model.layers.19.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5809051
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5809051
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793994
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793994
+      },
+      "tensor": "model.layers.19.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793994
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793994
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1376
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1376
+      },
+      "tensor": "model.layers.19.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1376
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1376
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.19.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153591
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153591
+      },
+      "tensor": "model.layers.19.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153591
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153591
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075351
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075351
+      },
+      "tensor": "model.layers.19.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075351
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075351
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1654
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1654
+      },
+      "tensor": "model.layers.19.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1654
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1654
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080531
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080531
+      },
+      "tensor": "model.layers.19.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080531
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1080531
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.19.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153485
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153485
+      },
+      "tensor": "model.layers.19.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153485
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153485
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1330
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1330
+      },
+      "tensor": "model.layers.2.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1330
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1330
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794068
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794068
+      },
+      "tensor": "model.layers.2.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794068
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5794068
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785588
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785588
+      },
+      "tensor": "model.layers.2.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785588
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785588
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786104
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786104
+      },
+      "tensor": "model.layers.2.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786104
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786104
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1263
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1263
+      },
+      "tensor": "model.layers.2.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1263
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1263
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.2.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154453
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154453
+      },
+      "tensor": "model.layers.2.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154453
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154453
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076015
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076015
+      },
+      "tensor": "model.layers.2.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076015
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076015
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1656
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1656
+      },
+      "tensor": "model.layers.2.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1656
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1656
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083363
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083363
+      },
+      "tensor": "model.layers.2.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083363
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083363
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.2.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154202
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154202
+      },
+      "tensor": "model.layers.2.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154202
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154202
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1395
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1395
+      },
+      "tensor": "model.layers.20.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1395
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1395
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5811750
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5811750
+      },
+      "tensor": "model.layers.20.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5811750
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5811750
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807055
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807055
+      },
+      "tensor": "model.layers.20.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807055
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807055
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5795447
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5795447
+      },
+      "tensor": "model.layers.20.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5795447
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5795447
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1327
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1327
+      },
+      "tensor": "model.layers.20.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1327
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1327
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.20.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155101
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155101
+      },
+      "tensor": "model.layers.20.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155101
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155101
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076354
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076354
+      },
+      "tensor": "model.layers.20.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076354
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076354
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1637
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1637
+      },
+      "tensor": "model.layers.20.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1637
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1637
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1090361
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1090361
+      },
+      "tensor": "model.layers.20.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1090361
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1090361
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.20.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155339
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155339
+      },
+      "tensor": "model.layers.20.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155339
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155339
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1375
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1375
+      },
+      "tensor": "model.layers.21.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1375
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1375
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797638
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797638
+      },
+      "tensor": "model.layers.21.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797638
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5797638
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790886
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790886
+      },
+      "tensor": "model.layers.21.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790886
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790886
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5787372
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5787372
+      },
+      "tensor": "model.layers.21.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5787372
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5787372
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1254
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1254
+      },
+      "tensor": "model.layers.21.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1254
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1254
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.21.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155340
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155340
+      },
+      "tensor": "model.layers.21.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155340
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155340
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075799
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075799
+      },
+      "tensor": "model.layers.21.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075799
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1075799
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1648
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1648
+      },
+      "tensor": "model.layers.21.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1648
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1648
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099461
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099461
+      },
+      "tensor": "model.layers.21.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099461
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1099461
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.21.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155112
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155112
+      },
+      "tensor": "model.layers.21.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155112
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155112
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1343
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1343
+      },
+      "tensor": "model.layers.22.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1343
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1343
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786302
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786302
+      },
+      "tensor": "model.layers.22.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786302
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786302
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788490
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788490
+      },
+      "tensor": "model.layers.22.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788490
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5788490
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786761
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786761
+      },
+      "tensor": "model.layers.22.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786761
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5786761
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1237
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1237
+      },
+      "tensor": "model.layers.22.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1237
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1237
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.22.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155305
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155305
+      },
+      "tensor": "model.layers.22.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155305
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155305
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1068509
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1068509
+      },
+      "tensor": "model.layers.22.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1068509
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1068509
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1647
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1647
+      },
+      "tensor": "model.layers.22.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1647
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1647
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092042
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092042
+      },
+      "tensor": "model.layers.22.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092042
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092042
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.22.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155055
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155055
+      },
+      "tensor": "model.layers.22.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155055
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155055
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1364
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1364
+      },
+      "tensor": "model.layers.23.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1364
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1364
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801145
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801145
+      },
+      "tensor": "model.layers.23.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801145
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5801145
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791401
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791401
+      },
+      "tensor": "model.layers.23.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791401
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791401
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785970
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785970
+      },
+      "tensor": "model.layers.23.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785970
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5785970
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1161
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1161
+      },
+      "tensor": "model.layers.23.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1161
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1161
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.23.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156030
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156030
+      },
+      "tensor": "model.layers.23.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156030
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 156030
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079400
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079400
+      },
+      "tensor": "model.layers.23.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079400
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079400
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1652
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1652
+      },
+      "tensor": "model.layers.23.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1652
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1652
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1094952
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1094952
+      },
+      "tensor": "model.layers.23.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1094952
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1094952
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.23.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154249
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154249
+      },
+      "tensor": "model.layers.23.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154249
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154249
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1369
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1369
+      },
+      "tensor": "model.layers.3.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1369
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1369
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798850
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798850
+      },
+      "tensor": "model.layers.3.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798850
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798850
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791738
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791738
+      },
+      "tensor": "model.layers.3.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791738
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5791738
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789793
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789793
+      },
+      "tensor": "model.layers.3.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789793
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789793
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "tensor": "model.layers.3.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1302
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.3.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155264
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155264
+      },
+      "tensor": "model.layers.3.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155264
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155264
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079053
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079053
+      },
+      "tensor": "model.layers.3.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079053
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079053
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "tensor": "model.layers.3.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1658
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1091883
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1091883
+      },
+      "tensor": "model.layers.3.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1091883
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1091883
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.3.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154060
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154060
+      },
+      "tensor": "model.layers.3.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154060
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154060
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1413
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1413
+      },
+      "tensor": "model.layers.4.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1413
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1413
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807541
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807541
+      },
+      "tensor": "model.layers.4.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807541
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807541
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806724
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806724
+      },
+      "tensor": "model.layers.4.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806724
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806724
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5792485
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5792485
+      },
+      "tensor": "model.layers.4.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5792485
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5792485
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "tensor": "model.layers.4.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.4.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154503
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154503
+      },
+      "tensor": "model.layers.4.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154503
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154503
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079070
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079070
+      },
+      "tensor": "model.layers.4.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079070
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079070
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1646
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1646
+      },
+      "tensor": "model.layers.4.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1646
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1646
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077879
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077879
+      },
+      "tensor": "model.layers.4.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077879
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1077879
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.4.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153595
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153595
+      },
+      "tensor": "model.layers.4.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153595
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153595
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1393
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1393
+      },
+      "tensor": "model.layers.5.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1393
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1393
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806612
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806612
+      },
+      "tensor": "model.layers.5.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806612
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5806612
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807297
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807297
+      },
+      "tensor": "model.layers.5.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807297
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5807297
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789401
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789401
+      },
+      "tensor": "model.layers.5.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789401
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5789401
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1350
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1350
+      },
+      "tensor": "model.layers.5.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1350
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1350
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.5.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154641
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154641
+      },
+      "tensor": "model.layers.5.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154641
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154641
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076660
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076660
+      },
+      "tensor": "model.layers.5.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076660
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1076660
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "tensor": "model.layers.5.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1640
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078202
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078202
+      },
+      "tensor": "model.layers.5.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078202
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078202
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.5.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153637
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153637
+      },
+      "tensor": "model.layers.5.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153637
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153637
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1357
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1357
+      },
+      "tensor": "model.layers.6.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1357
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1357
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804544
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804544
+      },
+      "tensor": "model.layers.6.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804544
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5804544
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798725
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798725
+      },
+      "tensor": "model.layers.6.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798725
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5798725
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790134
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790134
+      },
+      "tensor": "model.layers.6.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790134
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5790134
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1304
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1304
+      },
+      "tensor": "model.layers.6.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1304
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1304
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.6.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154867
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154867
+      },
+      "tensor": "model.layers.6.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154867
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154867
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079460
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079460
+      },
+      "tensor": "model.layers.6.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079460
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079460
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1667
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1667
+      },
+      "tensor": "model.layers.6.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1667
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1667
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081898
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081898
+      },
+      "tensor": "model.layers.6.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081898
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1081898
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.6.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153486
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153486
+      },
+      "tensor": "model.layers.6.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153486
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153486
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "tensor": "model.layers.7.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1316
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812413
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812413
+      },
+      "tensor": "model.layers.7.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812413
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5812413
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799793
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799793
+      },
+      "tensor": "model.layers.7.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799793
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5799793
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793196
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793196
+      },
+      "tensor": "model.layers.7.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793196
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5793196
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1322
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1322
+      },
+      "tensor": "model.layers.7.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1322
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1322
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.7.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154801
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154801
+      },
+      "tensor": "model.layers.7.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154801
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154801
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078474
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078474
+      },
+      "tensor": "model.layers.7.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078474
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078474
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "tensor": "model.layers.7.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1655
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078096
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078096
+      },
+      "tensor": "model.layers.7.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078096
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1078096
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.7.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153635
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153635
+      },
+      "tensor": "model.layers.7.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153635
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153635
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1390
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1390
+      },
+      "tensor": "model.layers.8.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1390
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1390
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5824443
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5824443
+      },
+      "tensor": "model.layers.8.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5824443
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5824443
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5818359
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5818359
+      },
+      "tensor": "model.layers.8.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5818359
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5818359
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802910
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802910
+      },
+      "tensor": "model.layers.8.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802910
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5802910
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "tensor": "model.layers.8.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1372
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.8.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154480
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154480
+      },
+      "tensor": "model.layers.8.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154480
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154480
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083904
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083904
+      },
+      "tensor": "model.layers.8.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083904
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083904
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1657
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1657
+      },
+      "tensor": "model.layers.8.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1657
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1657
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079757
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079757
+      },
+      "tensor": "model.layers.8.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079757
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1079757
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.8.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153944
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153944
+      },
+      "tensor": "model.layers.8.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153944
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 153944
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1470
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1470
+      },
+      "tensor": "model.layers.9.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1470
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1470
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826953
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826953
+      },
+      "tensor": "model.layers.9.mlp.down_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826953
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5826953
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803726
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803726
+      },
+      "tensor": "model.layers.9.mlp.gate_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803726
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5803726
+      }
+    },
+    {
+      "bytes": 8716288,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5796310
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5796310
+      },
+      "tensor": "model.layers.9.mlp.up_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5796310
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 5796310
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1457
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1457
+      },
+      "tensor": "model.layers.9.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1457
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1457
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.9.self_attn.k_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155603
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155603
+      },
+      "tensor": "model.layers.9.self_attn.k_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155603
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 155603
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083495
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083495
+      },
+      "tensor": "model.layers.9.self_attn.o_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083495
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1083495
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1663
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1663
+      },
+      "tensor": "model.layers.9.self_attn.q_proj.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1663
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1663
+      }
+    },
+    {
+      "bytes": 1605632,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092538
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092538
+      },
+      "tensor": "model.layers.9.self_attn.q_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092538
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 1092538
+      }
+    },
+    {
+      "bytes": 256,
+      "current": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "tensor": "model.layers.9.self_attn.v_proj.bias",
+      "zstd19": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      },
+      "zstd19+patch": {
+        "chosen": "raw",
+        "physical_bytes": 256
+      }
+    },
+    {
+      "bytes": 229376,
+      "current": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154748
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154748
+      },
+      "tensor": "model.layers.9.self_attn.v_proj.weight",
+      "zstd19": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154748
+      },
+      "zstd19+patch": {
+        "chosen": "float-tensor",
+        "physical_bytes": 154748
+      }
+    },
+    {
+      "bytes": 1792,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 1165
+      },
+      "dtype": "bf16",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1165
+      },
+      "tensor": "model.norm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 1165
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 1165
+      }
+    }
+  ],
+  "schema": "weft.receipt.compression-candidates.v1",
+  "strategy_counts": {
+    "current": {
+      "float-tensor": 169,
+      "raw": 48,
+      "zstd": 73
+    },
+    "standalone": {
+      "float-tensor": 169,
+      "raw": 48,
+      "zstd": 73
+    },
+    "zstd19": {
+      "float-tensor": 169,
+      "raw": 48,
+      "zstd": 73
+    },
+    "zstd19+patch": {
+      "float-tensor": 169,
+      "raw": 48,
+      "zstd": 73
+    }
+  },
+  "totals": {
+    "current": 657929667,
+    "delta_causal": 0,
+    "patch_delta": 0,
+    "standalone": 657929667,
+    "tensors": 290,
+    "zstd19": 657929667,
+    "zstd19+patch": 657929667,
+    "zstd19_delta": 0
+  }
+}

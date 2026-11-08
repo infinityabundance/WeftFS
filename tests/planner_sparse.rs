@@ -109,6 +109,14 @@ fn sparse_change_selects_mode16_and_reads_back_exactly() {
         .unwrap();
     let base_version = store.object_meta(base_id).unwrap().version;
 
+    // This test targets mode 16 specifically. The ZSTD level-19 and patch
+    // candidates were added later and can win on this input; they have their
+    // own tests in `planner_write_cost.rs`.
+    let legacy = TensorPlanOptions {
+        zstd19: false,
+        zstd_patch: false,
+        ..TensorPlanOptions::default()
+    };
     let plan = store
         .plan_tensor(
             "bf16",
@@ -116,7 +124,7 @@ fn sparse_change_selects_mode16_and_reads_back_exactly() {
             &target_bytes,
             &layout,
             &[base_version],
-            &TensorPlanOptions::default(),
+            &legacy,
         )
         .unwrap();
     let sparse = plan
@@ -148,6 +156,7 @@ fn sparse_change_selects_mode16_and_reads_back_exactly() {
             &layout,
             &TensorWriteSpec {
                 causal: vec![base_version],
+                plan: legacy,
                 ..TensorWriteSpec::default()
             },
         )

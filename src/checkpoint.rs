@@ -140,6 +140,9 @@ pub struct CheckpointWriteOptions {
     /// byte-identical state, which is how the sequential and parallel
     /// (prepare/commit) paths are proven equivalent.
     pub deterministic_seed: Option<[u8; 32]>,
+    /// Allow experimental representations (mode 18) to be auto-selected by the
+    /// per-shard planner. Default false.
+    pub allow_experimental_modes: bool,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -158,6 +161,7 @@ impl Default for CheckpointWriteOptions {
             causal_checkpoint: None,
             semantic_search: true,
             deterministic_seed: None,
+            allow_experimental_modes: false,
         }
     }
 }
@@ -1198,6 +1202,7 @@ fn checkpoint_shard_spec(
             fast_codec: options.fast_codec,
             fast_zstd_level: options.fast_zstd_level,
             semantic_search: options.semantic_search,
+            allow_experimental_modes: options.allow_experimental_modes,
             ..crate::tensor_store::TensorPlanOptions::default()
         },
         ..TensorWriteSpec::default()

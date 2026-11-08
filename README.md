@@ -1,11 +1,68 @@
-# WeftFS
+# WeftFS — Context-Aware Storage for AI Tensors and Checkpoints
 
 [![Release](https://img.shields.io/github/v/release/infinityabundance/WeftFS?label=release)](https://github.com/infinityabundance/WeftFS/releases/tag/v1.1.0)
 
-**Context-addressed storage, with byte-exact reconstruction.**
+**Lossless, verifiable reconstruction of model state across versions, layouts,
+and storage backends.**
 
-WeftFS is a research program building four independent, interoperable
-implementations of one storage architecture:
+WeftFS is storage for the things an AI workload actually rewrites: model
+weights, training checkpoints, and reusable computational state. It stores
+**exact tensor representations**, **checkpoint deltas**, and **independently
+decodable tiles**, and every read is **content-verified** before bytes are
+returned. Its architectural claim is a separation of concerns: *what a
+computational state is* (a typed, content-addressed identity with causal
+lineage) is kept distinct from *how it is physically stored* (raw chunks, one
+frame, independently decodable tiles, a delta against a named base, a patch, or
+an overlay). Changing the storage form never changes the identity.
+
+## Demonstrated results
+
+The honest headline is a loss, so it goes first.
+
+* **A whole-file `zstd --patch-from -12` still beats the shipped checkpoint
+delta on the Pythia fixture.** For pythia-70m step0 → step1 (a 19-byte change
+  in 281.7 MB, 76 tensors) the family-lifecycle court measures **42,211 B** of
+  per-tensor payload, while one whole-file `zstd --patch-from -12` is
+  **30,265 B** — the baseline is **28 % smaller**. The planner now offers an
+  in-process `zstd-patch` candidate (mode-4 dictionary frame with a
+  base-covering window); a plan-only court measures its payload at **17,923 B**,
+  but that total excludes store manifests, commit records, and index segments,
+  so it is **not** a like-for-like win over the 30,265 B whole-file baseline.
+* **Model family:** Qwen2.5-0.5B base → Instruct stores in **1.276 GB**
+  (1.200 GB of tensor data) versus **1.536 GB** for independent per-tensor
+  `zstd -19` — **17 % smaller**, and 3.07 % under ZipNN's 1.317 GB.
+* **Region reads:** a 100-row read of the Qwen embedding takes **749 ms** when
+  the tensor is one mode-9 frame but **2.12 ms** when it is independently
+decodable tiles — 354× faster, because only the intersecting tiles are
+  decoded. The cost is **+0.51 % bytes and a 3.25× write**, which is why the
+  planner only chooses tiles when the access pattern pays the write back.
+
+Every number above has a receipt and a list of what it does not cover; see
+[`bench/RESULTS-v1.md`](bench/RESULTS-v1.md),
+[`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md),
+[`bench/RESULTS-tensor-tiles.md`](bench/RESULTS-tensor-tiles.md), and
+[`bench/RESULTS-compression-candidates.md`](bench/RESULTS-compression-candidates.md).
+No single-host measurement is a fleet, cloud, or power-loss claim.
+
+## Architecture
+
+Four independent implementations share one normative format. WeftFS separates
+the **context plane** (typed relations, Context Roots, causal lineage,
+capabilities, and a WeftQL selector grammar compiled to a canonical AST and a
+`SelectorId`) from the **storage plane** (an OOM-bounded, transactional,
+content-addressed store with snapshots, group commit, GC, crash recovery,
+optional blob/commit plane splits, S3/GCS/Azure and 3FS transports, and a
+POSIX FUSE frontend). The codec separates *identity* from *representation*: a
+tensor's `LogicalTensorRoot` is invariant across raw, zstd, mode-9 float, tiled,
+and delta encodings, so the same state can be re-encoded, rebased, or
+transcoded without invalidating a single reference. Frozen on-disk and wire
+formats are byte-identical across Rust and Go; every claim in this repository
+is backed by a court receipt under hard memory, CPU, and pid limits.
+
+## Repositories
+
+This repository is the program home: it owns the normative specification
+(`spec/`) and exports versioned copies to the subprojects.
 
 | Project | Language | Role |
 |---|---|---|
@@ -13,14 +70,6 @@ implementations of one storage architecture:
 | [`WeftCodec-Go`](WeftCodec-Go/) | Go | Independent codec implementation, cross-decode conformance |
 | [`WeftFS`](.) | Rust | Transactional store + Linux FUSE filesystem |
 | [`WeftFS-Go`](WeftFS-Go/) | Go | Independent store + Linux FUSE filesystem |
-
-The central question is whether **typed, versioned contextual relationships**
-can be a native addressing and reconstruction primitive — distinct from paths,
-content hashes, and object IDs — while retaining exact materialization, durable
-POSIX access, reproducible history, and competitive performance.
-
-This repository is the program home. It owns the normative specification
-(`spec/`) and exports versioned copies to the subprojects.
 
 ## Status
 

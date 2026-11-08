@@ -42,6 +42,9 @@ bin="$CARGO_TARGET_DIR/release/examples/trajectory_court"
 
 # --- corpus ----------------------------------------------------------------
 pythia_steps="${WEFT_TRAJ_PYTHIA_STEPS:-0 1 2 4 8 16 64 512 1000}"
+# The Qwen half re-reads 988 MB per step; the aggregate verification court sets
+# this to 0 and says so in its receipt.
+run_qwen="${WEFT_TRAJ_QWEN:-1}"
 pythia_arg=""
 {
   printf '{"phase":"corpus","pythia":{'
@@ -65,6 +68,11 @@ pythia_arg=""
 } >"$work/phases/corpus.json"
 
 pythia_arg="${pythia_arg%,}"
+
+# Record the configuration in the receipt: the aggregate verification court runs
+# a reduced trajectory, and that must be visible rather than inferred.
+printf '{"phase":"configuration","synthetic_steps":%s,"pythia_steps":"%s","qwen":%s,"snapshots":true,"note":"a reduced run is labelled here; the standalone full-size receipt is the full evidence"}\n' \
+  "$(printf '%s' "$synth_steps")" "$pythia_steps" "$([ "$run_qwen" = "1" ] && echo true || echo false)" >"$work/phases/configuration.json"
 
 # --- synthetic 50-step series ----------------------------------------------
 echo "trajectory: generating a declared synthetic ${synth_steps}-step series"
@@ -97,10 +105,14 @@ echo "trajectory: pythia-70m consecutive steps"
 "$bin" series --store "$work/store-pythia" --out "$work/phases/pythia-series.json" \
   --steps "$pythia_arg" --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:256"
 
+if [[ "$run_qwen" == "1" ]]; then
 echo "trajectory: qwen base -> instruct"
 "$bin" series --store "$work/store-qwen" --out "$work/phases/qwen-series.json" \
   --steps "qwen-base=$corpus/Qwen2.5-0.5B.safetensors,qwen-instruct=$corpus/Qwen2.5-0.5B-Instruct.safetensors" \
   --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:896"
+else
+  echo "trajectory: qwen half skipped (WEFT_TRAJ_QWEN=0)"
+fi
 
 "$bin" assemble --work "$work/phases" --out "$receipt"
 echo "trajectory: receipt=$receipt"

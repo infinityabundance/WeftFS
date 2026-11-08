@@ -111,6 +111,42 @@ run_court fuse "buck2_cas_store" \
 run_court rust "threefs" \
   "bash scripts/threefs_court.sh"
 
+# Checkpoint-family lifecycle (reduced for the aggregate: one family, one
+# configuration, one repetition each). The full-size standalone receipt is
+# `bench/receipts/family-lifecycle-*.json` from the default run.
+run_court bench "checkpoint_family_lifecycle" \
+  "WEFT_FAMILY_FAMILIES=pythia-consecutive WEFT_FAMILY_CONFIGS=default WEFT_FAMILY_INGEST_REPS=1 WEFT_FAMILY_MEASURE_REPS=1 WEFT_FAMILY_TOPOLOGY_REPS=1 WEFT_FAMILY_RECOVERY_REPS=1 WEFT_FAMILY_S3=0 bash bench/scripts/checkpoint_family_court.sh"
+
+# Trajectory (reduced: two pythia steps, eight synthetic steps, no Qwen half).
+# Every reduced knob is recorded in the receipt under phases.configuration.
+run_court bench "trajectory" \
+  "WEFT_TRAJ_QWEN=0 WEFT_TRAJ_SYNTH_STEPS=8 WEFT_TRAJ_PYTHIA_STEPS='0 1' bash bench/scripts/trajectory_court.sh"
+
+# Critical-path write policy and background transcode (two configurations:
+# planned and fast-zstd-1, which bracket the encode-cost range).
+run_court bench "write_policy" \
+  "WEFT_WRITE_POLICY_CONFIGS='planned fast-zstd1' bash bench/scripts/write_policy_court.sh"
+
+# Load receipts (lazy vs full) and recovery-first restore on the 512 MiB
+# synthetic tiled fixture.
+run_court bench "recovery_load" \
+  "bash bench/scripts/recovery_load_court.sh"
+
+# Zero-trust KV page reads (reduced sample count; the standalone receipt uses
+# 2,000).
+run_court rust "kv_capability" \
+  "WEFT_KV_REPS=200 bash bench/scripts/kv_capability_court.sh"
+
+# Prepare/commit checkpoint split at 1/2/4/8 ranks on the real Qwen base.
+run_court bench "parallel_checkpoint" \
+  "bash bench/scripts/parallel_checkpoint_court.sh"
+
+# Index trust: a forged self-consistent index subset must be rejected by the
+# commit attestation, and a genuine cross-language segment must load without a
+# rebuild.
+run_court rust "index_trust" \
+  "cargo test --test index_persistence --test index_equivalence --quiet"
+
 # D2 agent long-term memory with simulated timestamps and a months-later replay.
 run_court fuse "agent_memory" \
   "bash scripts/demo-agent-memory.sh"

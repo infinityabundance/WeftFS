@@ -6586,5 +6586,115 @@
     ],
     "receipt": "bench/receipts/kv-prefix-20261108T042229Z.json",
     "kind": "present"
+  },
+  {
+    "id": "readme_patch_loss",
+    "claim": "README.md states that the whole-file zstd --patch-from -12 baseline (30,265 B) is smaller than the measured family total (42,211 B) on the Pythia pair.",
+    "value": "30,265 B",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/family-lifecycle-20261108T053655Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_patch_family_total",
+    "claim": "README.md cites the 42,211 B family total for pythia-70m step0 -> step1.",
+    "value": "42,211 B",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/family-lifecycle-20261108T053655Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_patch_delta_percent",
+    "claim": "README.md states the baseline is 28 % smaller.",
+    "value": "28 %",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/family-lifecycle-20261108T053655Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_stage3_patch_total",
+    "claim": "README.md cites the plan-only zstd-patch total of 17,923 B and says it excludes store metadata.",
+    "value": "17,923 B",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/compression-candidates-pythia-20261108.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_qwen_family_bytes",
+    "claim": "README.md cites the Qwen family 1.276 GB total and 1.200 GB data-only.",
+    "value": "1.276 GB",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_qwen_family_data",
+    "claim": "README.md cites 1.200 GB of tensor data for the Qwen family.",
+    "value": "1.200 GB",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_independent_zstd19",
+    "claim": "README.md cites 1.536 GB for independent per-tensor zstd -19.",
+    "value": "1.536 GB",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_zippn_compare",
+    "claim": "README.md states 3.07 % under ZipNN.",
+    "value": "3.07 %",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_region_read_ms",
+    "claim": "README.md cites the 749 ms single-frame and 2.12 ms tiled 100-row region reads.",
+    "value": "749 ms",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_region_read_tiled_ms",
+    "claim": "README.md cites 2.12 ms for the tiled 100-row region read.",
+    "value": "2.12 ms",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "readme_tile_cost",
+    "claim": "README.md states the tiled form costs +0.51 % bytes and a 3.25x write.",
+    "value": "+0.51 %",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+    "kind": "present"
   }
 ]

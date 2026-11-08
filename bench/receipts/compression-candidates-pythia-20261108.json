@@ -1,0 +1,1660 @@
+{
+  "baselines": {
+    "note": "whole-file zstd CLI baselines; the patch level is 12 because level 19 with a ~988 MB base was OOM-killed at the 3 GiB court in R1/P2",
+    "patch_from_12_whole": 30265,
+    "patch_level": 12,
+    "zstd19_base_whole": 142240232,
+    "zstd19_next_whole": 142240032,
+    "zstd_level": 19
+  },
+  "corpus": {
+    "base": ".docker-cache/real-corpus/pythia-70m-step0.safetensors",
+    "base_bytes": 281715176,
+    "next": ".docker-cache/real-corpus/pythia-70m-step1.safetensors",
+    "next_bytes": 281715176
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "court_memory": "3g",
+    "planned_ms": 65680.152201,
+    "weftcodec_revision": "6dd7e13d16de33ed765c462ec14a13f0a6c8c844",
+    "weftfs_revision": "5a92225850edb7e12921dad00a6c6ac8910463ab"
+  },
+  "label": "pythia-step0-1",
+  "non_claims": [
+    "single host, warm page cache",
+    "plan-only totals: no checkpoint was written, so store publication and index bytes are excluded",
+    "the patch candidate's base is a fast-raw store object, not the original checkpoint container",
+    "zstd CLI baselines are independent processes; the in-process candidates use the same zstd library at a different call site"
+  ],
+  "rows": [
+    {
+      "bytes": 103022592,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 434
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 63386174
+      },
+      "tensor": "embed_out.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 434
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 434
+      }
+    },
+    {
+      "bytes": 103022592,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 441
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 63389482
+      },
+      "tensor": "gpt_neox.embed_in.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 441
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 441
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.final_layer_norm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.final_layer_norm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.0.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.0.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.0.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2579712
+      },
+      "tensor": "gpt_neox.layers.0.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.0.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.0.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.1.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.1.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.1.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2575076
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 408
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2580783
+      },
+      "tensor": "gpt_neox.layers.1.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 408
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 408
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.1.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.1.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.2.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.2.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.2.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2582947
+      },
+      "tensor": "gpt_neox.layers.2.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.2.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.2.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.3.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.3.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.3.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.3.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.3.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.3.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.4.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 1935880
+      },
+      "tensor": "gpt_neox.layers.4.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.4.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2573951
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.4.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.4.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.4.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.attention.dense.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 1048576,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.5.attention.dense.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "zstd-patch",
+        "physical_bytes": 254
+      }
+    },
+    {
+      "bytes": 6144,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.attention.query_key_value.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 3145728,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.5.attention.query_key_value.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.input_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.5.input_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_4h_to_h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 2573714
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_4h_to_h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 401
+      }
+    },
+    {
+      "bytes": 8192,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_h_to_4h.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 4194304,
+      "current": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "semantic-delta",
+        "physical_bytes": 1547
+      },
+      "tensor": "gpt_neox.layers.5.mlp.dense_h_to_4h.weight",
+      "zstd19": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      },
+      "zstd19+patch": {
+        "chosen": "sparse-delta",
+        "physical_bytes": 394
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "tensor": "gpt_neox.layers.5.post_attention_layernorm.bias",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 167
+      }
+    },
+    {
+      "bytes": 2048,
+      "current": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "dtype": "f32",
+      "standalone": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "tensor": "gpt_neox.layers.5.post_attention_layernorm.weight",
+      "zstd19": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      },
+      "zstd19+patch": {
+        "chosen": "zstd",
+        "physical_bytes": 169
+      }
+    }
+  ],
+  "schema": "weft.receipt.compression-candidates.v1",
+  "strategy_counts": {
+    "current": {
+      "sparse-delta": 26,
+      "zstd": 50
+    },
+    "standalone": {
+      "semantic-delta": 17,
+      "zstd": 59
+    },
+    "zstd19": {
+      "sparse-delta": 26,
+      "zstd": 50
+    },
+    "zstd19+patch": {
+      "sparse-delta": 20,
+      "zstd": 50,
+      "zstd-patch": 6
+    }
+  },
+  "totals": {
+    "current": 18763,
+    "delta_causal": -144193631,
+    "patch_delta": -840,
+    "standalone": 144212394,
+    "tensors": 76,
+    "zstd19": 18763,
+    "zstd19+patch": 17923,
+    "zstd19_delta": 0
+  }
+}
