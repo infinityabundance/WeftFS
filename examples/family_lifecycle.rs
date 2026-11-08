@@ -488,6 +488,66 @@ fn read_tensor_bytes(dataset: &Container, tensor: &TensorHeader) -> Result<Vec<u
     Ok(bytes)
 }
 
+/// Streaming window for every harness read that does not need whole bytes.
+const STREAM_WINDOW: u64 = 4 * 1024 * 1024;
+
+/// Feed one tensor's bytes to `consume` in bounded windows.
+fn for_each_tensor_window(
+    dataset: &Container,
+    tensor: &TensorHeader,
+    mut consume: impl FnMut(&[u8]) -> Result<(), String>,
+) -> Result<(), String> {
+    let mut file =
+        File::open(&dataset.path).map_err(|err| format!("{}: {err}", dataset.path.display()))?;
+    file.seek(SeekFrom::Start(dataset.data_start + tensor.begin))
+        .map_err(|err| format!("{}: {err}", dataset.path.display()))?;
+    let mut remaining = tensor.byte_len();
+    let mut buffer = vec![0u8; STREAM_WINDOW.min(remaining) as usize];
+    while remaining > 0 {
+        let want = STREAM_WINDOW.min(remaining) as usize;
+        file.read_exact(&mut buffer[..want])
+            .map_err(|err| format!("{}: {err}", dataset.path.display()))?;
+        consume(&buffer[..want])?;
+        remaining -= want as u64;
+    }
+    Ok(())
+}
+
+/// Compare two same-length tensors in bounded windows.
+fn tensors_equal(
+    left_dataset: &Container,
+    left: &TensorHeader,
+    right_dataset: &Container,
+    right: &TensorHeader,
+) -> Result<bool, String> {
+    if left.byte_len() != right.byte_len() {
+        return Ok(false);
+    }
+    let mut a = File::open(&left_dataset.path)
+        .map_err(|err| format!("{}: {err}", left_dataset.path.display()))?;
+    let mut b = File::open(&right_dataset.path)
+        .map_err(|err| format!("{}: {err}", right_dataset.path.display()))?;
+    a.seek(SeekFrom::Start(left_dataset.data_start + left.begin))
+        .map_err(|err| format!("{}: {err}", left_dataset.path.display()))?;
+    b.seek(SeekFrom::Start(right_dataset.data_start + right.begin))
+        .map_err(|err| format!("{}: {err}", right_dataset.path.display()))?;
+    let mut remaining = left.byte_len();
+    let mut buf_a = vec![0u8; STREAM_WINDOW.min(remaining) as usize];
+    let mut buf_b = vec![0u8; STREAM_WINDOW.min(remaining) as usize];
+    while remaining > 0 {
+        let want = STREAM_WINDOW.min(remaining) as usize;
+        a.read_exact(&mut buf_a[..want])
+            .map_err(|err| format!("{}: {err}", left_dataset.path.display()))?;
+        b.read_exact(&mut buf_b[..want])
+            .map_err(|err| format!("{}: {err}", right_dataset.path.display()))?;
+        if buf_a[..want] != buf_b[..want] {
+            return Ok(false);
+        }
+        remaining -= want as u64;
+    }
+    Ok(true)
+}
+
 fn present_dtypes(dataset: &Container) -> BTreeMap<String, usize> {
     let mut map = BTreeMap::new();
     for tensor in &dataset.tensors {
@@ -601,6 +661,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
     let subject_bytes = read_tensor_bytes(source_of_subject, subject)?;
     let region_100_expected = slice_region(&subject_bytes, &subject.shape, &region_100)?;
     let region_1_expected = slice_region(&subject_bytes, &subject.shape, &region_1)?;
+    drop(subject_bytes);
 
     // Benchmark scoping only: a small real-weight subset for the GC and crash
     // phases. The library and CLI never limit anything.
@@ -618,7 +679,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 if let Some(other) = next.tensors.iter().find(|other| {
                     other.name == tensor.name && other.byte_len() == tensor.byte_len()
                 }) {
-                    if read_tensor_bytes(&base, tensor)? != read_tensor_bytes(&next, other)? {
+                    if !tensors_equal(&base, tensor, &next, other)? {
                         chosen.push(tensor);
                     }
                 }
@@ -653,7 +714,10 @@ fn ingest(args: &[String]) -> Result<(), String> {
     ] {
         let mut hasher = Sha256::new();
         for tensor in selected {
-            hasher.update(read_tensor_bytes(dataset, tensor)?);
+            for_each_tensor_window(dataset, tensor, |piece| {
+                hasher.update(piece);
+                Ok(())
+            })?;
         }
         concat.insert(label.to_owned(), hex::encode(hasher.finalize()));
     }
@@ -742,6 +806,14 @@ fn ingest(args: &[String]) -> Result<(), String> {
         let mut base_versions: BTreeMap<String, weftfs::Hash32> = BTreeMap::new();
         for tensor in &base_tensors {
             let bytes = read_tensor_bytes(&base, tensor)?;
+            if std::env::var_os("WEFT_FAMILY_PROGRESS").is_some() {
+                eprintln!(
+                    "ingest: base {} bytes={} rss_hwm_kib={}",
+                    tensor.name,
+                    tensor.byte_len(),
+                    peak_rss_kib()
+                );
+            }
             let started = Instant::now();
             let id = store
                 .write_tensor_file_with_spec(
@@ -784,6 +856,14 @@ fn ingest(args: &[String]) -> Result<(), String> {
         let mut next_rows = Vec::new();
         for tensor in &next_tensors {
             let bytes = read_tensor_bytes(&next, tensor)?;
+            if std::env::var_os("WEFT_FAMILY_PROGRESS").is_some() {
+                eprintln!(
+                    "ingest: next {} bytes={} rss_hwm_kib={}",
+                    tensor.name,
+                    tensor.byte_len(),
+                    peak_rss_kib()
+                );
+            }
             let mut tensor_spec = spec.clone();
             if causal_possible {
                 if let Some(version) = base_versions.get(&tensor.name) {
@@ -1030,16 +1110,34 @@ fn tensor_byte_delta(base: &Container, next: &Container, name: &str) -> Result<J
     if base_tensor.byte_len() != next_tensor.byte_len() {
         return Ok(Json::Null);
     }
-    let left = read_tensor_bytes(base, base_tensor)?;
-    let right = read_tensor_bytes(next, next_tensor)?;
-    let changed = left
-        .chunks_exact(4)
-        .zip(right.chunks_exact(4))
-        .filter(|(a, b)| a != b)
-        .count() as u64;
+    let left = base_tensor;
+    let right = next_tensor;
+    let mut a = File::open(&base.path).map_err(|err| format!("{}: {err}", base.path.display()))?;
+    let mut b = File::open(&next.path).map_err(|err| format!("{}: {err}", next.path.display()))?;
+    a.seek(SeekFrom::Start(base.data_start + left.begin))
+        .map_err(|err| format!("{}: {err}", base.path.display()))?;
+    b.seek(SeekFrom::Start(next.data_start + right.begin))
+        .map_err(|err| format!("{}: {err}", next.path.display()))?;
+    let mut remaining = left.byte_len();
+    let mut buf_a = vec![0u8; STREAM_WINDOW.min(remaining) as usize];
+    let mut buf_b = vec![0u8; STREAM_WINDOW.min(remaining) as usize];
+    let mut changed = 0u64;
+    while remaining > 0 {
+        let want = STREAM_WINDOW.min(remaining) as usize;
+        a.read_exact(&mut buf_a[..want])
+            .map_err(|err| format!("{}: {err}", base.path.display()))?;
+        b.read_exact(&mut buf_b[..want])
+            .map_err(|err| format!("{}: {err}", next.path.display()))?;
+        changed += buf_a[..want]
+            .chunks_exact(4)
+            .zip(buf_b[..want].chunks_exact(4))
+            .filter(|(x, y)| x != y)
+            .count() as u64;
+        remaining -= want as u64;
+    }
     Ok(json!({
         "changed_words": changed,
-        "words": left.len() as u64 / 4,
+        "words": left.byte_len() / 4,
     }))
 }
 
@@ -1150,7 +1248,14 @@ fn measure(args: &[String]) -> Result<(), String> {
         &store_path,
         OpenMode::ReadOnly,
         options(65_536, 256),
-        backend_from_with_suffix(args, &if backend_is_remote(args) { remote_suffix(&store_path, 0, 1) } else { String::new() })?,
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
     )
     .map_err(|err| format!("open {}: {err}", store_path.display()))?;
     let open_ms = open_started.elapsed().as_secs_f64() * 1000.0;
@@ -1684,9 +1789,19 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         fs::remove_dir_all(&store_path)
             .map_err(|err| format!("{}: {err}", store_path.display()))?;
     }
-    let mut store =
-        Store::init_with_backend(&store_path, options(65_536, 256), backend_from_with_suffix(args, &if backend_is_remote(args) { remote_suffix(&store_path, 0, 1) } else { String::new() })?)
-            .map_err(|e| e.to_string())?;
+    let mut store = Store::init_with_backend(
+        &store_path,
+        options(65_536, 256),
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
+    )
+    .map_err(|e| e.to_string())?;
     let started = Instant::now();
     let report = store
         .write_checkpoint(
@@ -1748,7 +1863,14 @@ fn topology(args: &[String]) -> Result<(), String> {
         &store_path,
         OpenMode::ReadOnly,
         options(65_536, 256),
-        backend_from_with_suffix(args, &if backend_is_remote(args) { remote_suffix(&store_path, 0, 1) } else { String::new() })?,
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
     )
     .map_err(|err| format!("open {}: {err}", store_path.display()))?;
     let manifest = store
@@ -1902,9 +2024,19 @@ fn crash_child(args: &[String]) -> Result<(), String> {
     // checkpoint's own publication, so `init` and the baseline commit are not
     // mistaken for the measured phases.
     std::env::remove_var("WEFT_CRASH_PHASE");
-    let mut store =
-        Store::init_with_backend(&store_path, options(65_536, 256), backend_from_with_suffix(args, &if backend_is_remote(args) { remote_suffix(&store_path, 0, 1) } else { String::new() })?)
-            .map_err(|e| e.to_string())?;
+    let mut store = Store::init_with_backend(
+        &store_path,
+        options(65_536, 256),
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
+    )
+    .map_err(|e| e.to_string())?;
     // A store that has never published a commit has no superblock slot to
     // recover, so the crash fixture first publishes an ordinary commit.
     let root = store.resolve_path("/").map_err(|e| e.to_string())?;
@@ -2130,7 +2262,14 @@ fn gc(args: &[String]) -> Result<(), String> {
         &store_path,
         OpenMode::ReadWrite,
         options(65_536, 256),
-        backend_from_with_suffix(args, &if backend_is_remote(args) { remote_suffix(&store_path, 0, 1) } else { String::new() })?,
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
     )
     .map_err(|err| format!("open {}: {err}", store_path.display()))?;
     let before = if backend_is_remote(args) {
