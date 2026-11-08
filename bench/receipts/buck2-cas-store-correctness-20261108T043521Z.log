@@ -1,0 +1,15 @@
+kind: buck2-cas-store
+timestamp_utc: 20261108T043521Z
+court: fuse
+revisions:
+  WeftFS: c78cc4f12852b124704681d2cd034088d9a9c23f
+  WeftCodec: 6dd7e13d16de33ed765c462ec14a13f0a6c8c844
+  WeftCodec-Go: 70e47011901db343fc3b7622a565c309b58f093d
+  WeftFS-Go: b475d2db062375d795705b22cc41fc5c30609fc9
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.1-1-cachyos
+image: weft/fuse-court:1 sha256:1a0e1337179d9bcc5c05efd00b94b40b674d9586a344dacb977625a1b3273157
+== build rust oracle ==
+== build adapter ==
+/work/WeftFS-Go/store/lock_linux.go:9:2: missing go.sum entry for module providing package golang.org/x/sys/unix (imported by github.com/infinityabundance/WeftFS-Go/store); to add:
+	go get github.com/infinityabundance/WeftFS-Go/store@v0.0.0

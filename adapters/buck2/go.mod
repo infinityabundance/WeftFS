@@ -15,5 +15,6 @@ replace (
 require (
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
