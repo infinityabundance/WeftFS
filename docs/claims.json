@@ -4383,8 +4383,8 @@
   },
   {
     "id": "r21_rs256_not_constant_time",
-    "claim": "docs/STATUS.md discloses that the RS256 implementation is not constant-time.",
-    "value": "RS256 is not constant-time",
+    "claim": "docs/STATUS.md discloses the current RS256 state (Montgomery ladder + public-exponent fault check + timing smoke test) and the residual non-claim.",
+    "value": "Montgomery ladder",
     "locations": [
       "docs/STATUS.md"
     ],
@@ -6225,6 +6225,36 @@
       "docs/PARALLEL-CHECKPOINT.md"
     ],
     "receipt": "bench/receipts/parallel-checkpoint-s3-20261108T015555Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "rsa_ct_ladder_fault_check",
+    "claim": "docs/STATUS.md states the Montgomery-ladder CRT path and the mandatory public-exponent fault check, and cites the timing receipt.",
+    "value": "rsa-timing-20261108T041500Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/rsa-timing-20261108T041500Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "rsa_ct_not_proven",
+    "claim": "docs/STATUS.md discloses that constant-time execution is not proven and that a formal audit is outstanding.",
+    "value": "Not proven",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "rsa_ct_superseded_single_round",
+    "claim": "The single-round timing receipt with a larger t-statistic is retained and cited.",
+    "value": "rsa-timing-20261108T040000Z.json",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/rsa-timing-20261108T040000Z.json",
     "kind": "present"
   }
 ]

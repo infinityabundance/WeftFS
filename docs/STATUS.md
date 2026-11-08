@@ -4741,11 +4741,30 @@ token supplied out of band.
     `--azure-endpoint`/`--azure-account`/`--azure-key` path applies; Azurite is
     not Azure, and untested differences include service-version acceptance,
     large-block-blob limits, `x-ms-*` header edge cases, and listing paging.
-* **RS256 is not constant-time.** The modular exponentiation is a simple
-  square-and-multiply with conditional multiplies. Signing runs locally with the
-  operator's own key, but a co-located attacker could in principle learn
-  information from timing. A production hardening step is a constant-time
-  bignum implementation (or a vetted dependency); neither is in this tree.
+* **RS256: constant-time arithmetic, audit still outstanding.** The private
+  operation is now a **Montgomery ladder** over the existing fixed-width
+  big-integer code: both CRT half-exponentiations run exactly
+  `modulus.bit_len()` steps with branch-free mask swaps; Montgomery
+  multiplication is fixed-width CIOS with unrolled carry propagation and a
+  borrow-mask conditional subtraction; the `m1 - m2 mod p` recombination is
+  branchless; and the final `h*q + m2` uses fixed-width low-limb loops. A
+  mandatory **fault check** recomputes `sig^e mod n` with the public exponent
+  through a value-independent path and refuses to return a signature that does
+  not reproduce the EMSA-PKCS1-v1_5 encoding (this also covers CRT
+  recombination faults; RSA is multiplicative, so one faulted half can reveal
+  a factor of `n`). The RFC 7515 A.2 vector and all 14 service-account tests
+  still pass byte-for-byte.
+  A `dudect`-style timing smoke test (`bench/receipts/rsa-timing-20261108T041500Z.json`,
+  20,000 signs per class × 3 rounds, randomized interleaving, two message
+  classes with digest prefixes `0000`/`ffff`) measured medians within 0.05 %
+  and worst |Welch t| **4.04** (rounds 2.91 / 4.04 / 3.64). One earlier
+  single-round run measured **6.24** (receipt
+  `rsa-timing-20261108T040000Z.json`, retained): the variation is exactly why
+  this is a smoke test, not a proof. **Residual, not claimed:** no formal
+  side-channel audit, one microarchitecture and one compiler, no
+  cache/branch-predictor/frequency adversary model, and `BigUint::rem` still
+  runs on public message bytes. The Go GCS backend already uses the vetted
+  `crypto/rsa` (`rsa.SignPKCS1v15`); this work is Rust-only.
 * **Azurite data is a tmpfs.** The court proves protocol behaviour, signature
   acceptance, conditional-write safety, and fencing — not media durability,
   replication, zone failure, or physical power loss. `durable_fsync` for both
@@ -5836,3 +5855,31 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
 * Receipts `bench/receipts/parallel-checkpoint-20261108T030000Z.json` and
   `bench/receipts/parallel-checkpoint-s3-20261108T015555Z.json`; tests
   `tests/parallel_checkpoint.rs` 6/6.
+
+### RS256 constant-time ladder + fault check + timing smoke test (`examples/rsa_timing.rs`)
+
+* Both CRT half-exponentiations use a **Montgomery ladder**: exactly
+  `modulus.bit_len()` steps (public width), one squaring + one multiply per
+  step, exponent-bit operand selection by mask-only `cswap`, fixed-width CIOS
+  Montgomery multiplication with unrolled carry propagation and a borrow-mask
+  conditional subtraction, branchless `m1 - m2 mod p`, and fixed-width
+  `h*q + m2`.
+* **Mandatory fault check**: after signing, `sig^e mod n` is recomputed with
+  the public exponent through a value-independent square-and-multiply and must
+  equal the exact EMSA-PKCS1-v1_5 encoding; otherwise signing returns
+  `Corrupt` and nothing is emitted.
+* Equivalence is tested two ways: the ladder/multiplication match the previous
+  square-and-multiply and Montgomery routines over random moduli, bases, and
+  exponents (`src/service_account.rs` unit tests, 9 pass), and every existing
+  service-account test passes unchanged, including the RFC 7515 A.2 vector
+  (`tests/service_account.rs` 14/14).
+* Timing smoke test, 20,000 signs per class × 3 rounds, randomized
+  interleaving, classes = digest prefixes `0000` vs `ffff`: median difference
+  0.05 %, Welch t = 2.91 / 4.04 / 3.64 (worst |t| 4.04, below the conventional
+  4.5 dudect cutoff). One earlier single-round run measured 6.24; that receipt
+  is retained. Receipts `bench/receipts/rsa-timing-20261108T041500Z.json` and
+  `bench/receipts/rsa-timing-20261108T040000Z.json`.
+* **Not proven**: constant-time execution. The test is a smoke test; no formal
+  audit, one microarchitecture/compiler, no cache/branch-predictor/frequency
+  adversary model. `BigUint::rem` still runs on public message bytes. The Go
+  GCS backend uses vetted `crypto/rsa`; this is Rust-only.

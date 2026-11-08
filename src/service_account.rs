@@ -744,6 +744,16 @@ impl RsaPrivateKey {
         debug_assert_eq!(encoded.len(), k);
         let representative = BigUint::from_be_bytes(&encoded);
         let signature = self.crt(&representative)?;
+        // Mandatory fault check: RSA is multiplicative, so a single fault in a
+        // CRT half-exponentiation can turn a valid signature into a factor of
+        // `n`. Recompute with the *public* exponent (cheap, public data) and
+        // refuse anything that does not reproduce the exact EMSA encoding.
+        // This also covers a CRT recombination error.
+        if self.public_pow(&signature) != representative {
+            return Err(Error::corrupt(
+                "RSA signature failed its public-exponent fault check; refusing to return it",
+            ));
+        }
         let bytes = signature.to_be_bytes();
         if bytes.len() > k {
             return Err(Error::invalid_argument(
@@ -755,28 +765,76 @@ impl RsaPrivateKey {
         Ok(out)
     }
 
+    /// CRT exponentiation with a Montgomery ladder in both halves.
+    ///
+    /// Every operation on key material is fixed-width and branch-free:
+    ///
+    /// * both half-exponentiations run exactly `modulus.bit_len()` ladder steps
+    ///   (the modulus width is public), each with two fixed-width Montgomery
+    ///   multiplications;
+    /// * the exponent bit is read at a fixed index and selects operands with an
+    ///   arithmetic mask (`cswap`), never a branch and never an index computed
+    ///   from a secret;
+    /// * `m1 - m2 mod p` uses a branchless borrow mask instead of the previous
+    ///   `if m1 >= m2`;
+    /// * recombination uses fixed-width multiply/add low-limb loops.
+    ///
+    /// Deliverable scope: the *arithmetic* is constant-time in the sequence of
+    /// executed instructions and memory addresses. `BigUint::rem` still runs on
+    /// public message bytes, and the final `to_be_bytes` trims the (published)
+    /// signature. A formal audit of the compiler's code generation, and of
+    /// cache/branch-predictor effects across microarchitectures, is still
+    /// required; see `docs/STATUS.md`.
     fn crt(&self, message: &BigUint) -> Result<BigUint> {
-        let m1 = self.p_mod.pow(&message.rem(&self.p), &self.dp);
-        let m2 = self.q_mod.pow(&message.rem(&self.q), &self.dq);
-        // h = qinv * (m1 - m2) mod p
-        let diff = if m1 >= m2 {
-            m1.sub(&m2)
-        } else {
-            m1.add(&self.p).sub(&m2)
-        };
+        let m1 = self.p_mod.ladder_pow(&message.rem(&self.p), &self.dp);
+        let m2 = self.q_mod.ladder_pow(&message.rem(&self.q), &self.dq);
+
+        // h = qinv * ((m1 - m2) mod p) mod p, with a branchless borrow mask.
+        let kp = self.p_mod.limbs;
+        let a = fixed_width(&m1, kp);
+        let b = fixed_width(&m2, kp);
+        let (difference, borrow) = sub_fixed(&a, &b);
+        let mask = 0u64.wrapping_sub(borrow);
+        let p_limbs = fixed_width(&self.p, kp);
+        let addend: Vec<u64> = p_limbs.iter().map(|limb| limb & mask).collect();
+        let difference = add_fixed(&difference, &addend);
+
+        let diff_mont = self.p_mod.to_mont_ct(&difference);
+        let qinv_mont = self.p_mod.to_mont_ct(&fixed_width(&self.qinv, kp));
         let h = self
             .p_mod
-            .mul(&self.p_mod.to_mont(&diff), &self.p_mod.to_mont(&self.qinv));
-        let h = self.p_mod.from_mont(&h);
-        Ok(m2.add(&h.mul(&self.q)))
+            .from_mont_ct(&self.p_mod.mont_mul_ct(&diff_mont, &qinv_mont));
+
+        // m2 + h*q, fixed-width low-limb arithmetic (`h*q + m2 < n`).
+        let k = self.n_mod.limbs;
+        let product = mul_low(&padded(&h, k), &fixed_width(&self.q, k));
+        let result = add_fixed(&fixed_width(&m2, k), &product);
+        Ok(BigUint::from_fixed(&result))
     }
 
     fn mod_pow(&self, base: &BigUint, exponent: &BigUint) -> BigUint {
         self.n_mod.pow(base, exponent)
     }
 
+    /// `base^e mod n` for the **public** exponent, with a value-independent
+    /// instruction stream: a fixed number of squarings and a mask-selected
+    /// multiply per bit of `e` (whose width is public). Used by the mandatory
+    /// fault check after signing, so the whole signing operation stays
+    /// mask-only in its data-dependent paths (the signature is public, but a
+    /// value-dependent verification would pollute the timing profile).
     fn public_pow(&self, base: &BigUint) -> BigUint {
-        self.n_mod.pow(base, &self.public_exponent)
+        let k = self.n_mod.limbs;
+        let base_mont = self.n_mod.to_mont_ct(&fixed_width(&base.rem(&self.n_mod.n), k));
+        let exponent = fixed_width(&self.public_exponent, k);
+        let mut result = fixed_width(&self.n_mod.r_mod, k);
+        let bits = self.public_exponent.bit_len();
+        for index in (0..bits).rev() {
+            result = self.n_mod.mont_mul_ct(&result, &result);
+            let bit = (exponent[index / 64] >> (index % 64)) & 1;
+            let product = self.n_mod.mont_mul_ct(&result, &base_mont);
+            result = select_masked(bit, &product, &result);
+        }
+        BigUint::from_fixed(&self.n_mod.from_mont_ct(&result))
     }
 }
 
@@ -994,6 +1052,15 @@ impl BigUint {
         }
     }
 
+    /// Build a value from fixed-width little-endian limbs.
+    fn from_fixed(limbs: &[u64]) -> BigUint {
+        let mut value = BigUint {
+            limbs: limbs.to_vec(),
+        };
+        value.trim();
+        value
+    }
+
     fn from_be_bytes(bytes: &[u8]) -> BigUint {
         let mut limbs = Vec::with_capacity((bytes.len() + 7) / 8);
         let mut end = bytes.len();
@@ -1184,6 +1251,11 @@ impl fmt::Debug for BigUint {
 struct Modulus {
     n: BigUint,
     limbs: usize,
+    /// `n` zero-padded to exactly `limbs` 64-bit limbs. Fixed width is what
+    /// makes every loop below independent of the operand values.
+    n_limbs: Vec<u64>,
+    /// Public modulus width in bits. The ladder runs exactly this many steps.
+    bits: usize,
     /// `-n^{-1} mod 2^64`; valid because `n` is odd.
     n0inv: u64,
     /// `R mod n`, R = 2^(64*limbs).
@@ -1200,6 +1272,8 @@ impl Modulus {
         let r2_mod = pow2_mod(limbs * 128, &n);
         let n0inv = montgomery_n0inv(n.limbs[0]);
         Modulus {
+            n_limbs: fixed_width(&n, limbs),
+            bits: n.bit_len(),
             n,
             limbs,
             n0inv,
@@ -1265,8 +1339,96 @@ impl Modulus {
         self.mont_mul(value, &BigUint::from_u64(1))
     }
 
-    fn mul(&self, a_mont: &BigUint, b_mont: &BigUint) -> BigUint {
-        self.mont_mul(a_mont, b_mont)
+    // ---- constant-time fixed-width path ---------------------------------
+
+    /// `a * b * R^{-1} mod n`, constant-time in the operand values.
+    ///
+    /// CIOS over exactly `limbs` limbs: every inner loop runs `limbs` times,
+    /// carry propagation is unrolled to a fixed length, and the final
+    /// conditional subtraction uses a borrow mask instead of a branch. `a` and
+    /// `b` must be zero-padded to `self.limbs` and less than `n`.
+    fn mont_mul_ct(&self, a: &[u64], b: &[u64]) -> Vec<u64> {
+        let k = self.limbs;
+        debug_assert_eq!(a.len(), k);
+        debug_assert_eq!(b.len(), k);
+        let mut t = vec![0u64; k + 2];
+        for i in 0..k {
+            let mut carry: u128 = 0;
+            for j in 0..k {
+                let sum = t[j] as u128 + (a[i] as u128) * (b[j] as u128) + carry;
+                t[j] = sum as u64;
+                carry = sum >> 64;
+            }
+            // Fixed-length carry propagation (no `while carry != 0`).
+            let sum = t[k] as u128 + carry;
+            t[k] = sum as u64;
+            t[k + 1] = (sum >> 64) as u64;
+
+            let m = t[0].wrapping_mul(self.n0inv);
+            let mut carry: u128 = 0;
+            for j in 0..k {
+                let sum = t[j] as u128 + (m as u128) * (self.n_limbs[j] as u128) + carry;
+                t[j] = sum as u64;
+                carry = sum >> 64;
+            }
+            let sum = t[k] as u128 + carry;
+            t[k] = sum as u64;
+            t[k + 1] = t[k + 1].wrapping_add((sum >> 64) as u64);
+
+            // Divide by 2^64 (shift one limb left). Fixed length.
+            for j in 0..=k {
+                t[j] = t[j + 1];
+            }
+            t[k + 1] = 0;
+        }
+        // The post-shift accumulator occupies k+1 limbs: `t[k]` is the carry
+        // out of the low k limbs and must participate in the reduction.
+        let mut result = t[..=k].to_vec();
+        let modulus = padded(&self.n_limbs, k + 1);
+        // `t < 2n` after CIOS, so one conditional subtraction is enough; a
+        // second mask-only subtraction is harmless and keeps the fixed loop
+        // shape if an unusual input ever lands above n.
+        conditional_subtract(&mut result, &modulus);
+        conditional_subtract(&mut result, &modulus);
+        result.truncate(k);
+        result
+    }
+
+    fn to_mont_ct(&self, value: &[u64]) -> Vec<u64> {
+        let r2 = fixed_width(&self.r2_mod, self.limbs);
+        self.mont_mul_ct(value, &r2)
+    }
+
+    fn from_mont_ct(&self, value: &[u64]) -> Vec<u64> {
+        let mut one = vec![0u64; self.limbs];
+        one[0] = 1;
+        self.mont_mul_ct(value, &one)
+    }
+
+    /// `base^exponent mod n` with a Montgomery ladder.
+    ///
+    /// Both the base and the exponent are zero-padded to `self.limbs`; the loop
+    /// runs `self.bits` times regardless of the exponent, and each step performs
+    /// exactly one squaring and one multiplication. The exponent bit selects
+    /// which product goes where through a mask-only swap. The exponent must be
+    /// below the modulus (the RSA CRT exponents `dp < p` and `dq < q` are), so
+    /// iterating the public modulus width covers every exponent bit without
+    /// measuring the secret's bit length.
+    fn ladder_pow(&self, base: &BigUint, exponent: &BigUint) -> BigUint {
+        let k = self.limbs;
+        let base_mont = self.to_mont_ct(&fixed_width(base, k));
+        let exponent = fixed_width(exponent, k);
+        let mut r0 = fixed_width(&self.r_mod, k); // R mod n == 1 in Montgomery form
+        let mut r1 = base_mont;
+        for index in (0..self.bits).rev() {
+            let bit = (exponent[index / 64] >> (index % 64)) & 1;
+            cswap(bit, &mut r0, &mut r1);
+            let product = self.mont_mul_ct(&r0, &r1);
+            r1 = product;
+            r0 = self.mont_mul_ct(&r0, &r0);
+            cswap(bit, &mut r0, &mut r1);
+        }
+        BigUint::from_fixed(&self.from_mont_ct(&r0))
     }
 
     fn pow(&self, base: &BigUint, exponent: &BigUint) -> BigUint {
@@ -1282,6 +1444,102 @@ impl Modulus {
             }
         }
         self.from_mont(&result)
+    }
+}
+
+/// Zero-pad a value to exactly `limbs` 64-bit limbs, so every constant-time
+/// loop below has a value-independent length. A wider value is a programming
+/// error (all callers pass values below their modulus).
+fn fixed_width(value: &BigUint, limbs: usize) -> Vec<u64> {
+    debug_assert!(value.limbs.len() <= limbs, "value wider than its modulus");
+    let mut out = vec![0u64; limbs];
+    for (index, limb) in value.limbs.iter().enumerate().take(limbs) {
+        out[index] = *limb;
+    }
+    out
+}
+
+/// Zero-extend an already-fixed-width limb slice to `width` limbs.
+fn padded(limbs: &[u64], width: usize) -> Vec<u64> {
+    let mut out = vec![0u64; width];
+    for (index, limb) in limbs.iter().enumerate().take(width) {
+        out[index] = *limb;
+    }
+    out
+}
+
+/// Fixed-width subtraction; the returned borrow is `0` or `1`.
+fn sub_fixed(a: &[u64], b: &[u64]) -> (Vec<u64>, u64) {
+    debug_assert_eq!(a.len(), b.len());
+    let mut out = vec![0u64; a.len()];
+    let mut borrow = 0u64;
+    for index in 0..a.len() {
+        let (difference, borrow1) = a[index].overflowing_sub(b[index]);
+        let (difference, borrow2) = difference.overflowing_sub(borrow);
+        out[index] = difference;
+        borrow = u64::from(borrow1) | u64::from(borrow2);
+    }
+    (out, borrow)
+}
+
+/// Fixed-width addition modulo 2^(64*len); the carry out is discarded.
+fn add_fixed(a: &[u64], b: &[u64]) -> Vec<u64> {
+    debug_assert_eq!(a.len(), b.len());
+    let mut out = vec![0u64; a.len()];
+    let mut carry = 0u64;
+    for index in 0..a.len() {
+        let (sum, carry1) = a[index].overflowing_add(b[index]);
+        let (sum, carry2) = sum.overflowing_add(carry);
+        out[index] = sum;
+        carry = u64::from(carry1) | u64::from(carry2);
+    }
+    out
+}
+
+/// Low `len` limbs of `a * b`, fixed loop counts.
+fn mul_low(a: &[u64], b: &[u64]) -> Vec<u64> {
+    debug_assert_eq!(a.len(), b.len());
+    let k = a.len();
+    let mut out = vec![0u64; k];
+    for i in 0..k {
+        let mut carry: u128 = 0;
+        for j in 0..k - i {
+            let index = i + j;
+            let sum = out[index] as u128 + (a[i] as u128) * (b[j] as u128) + carry;
+            out[index] = sum as u64;
+            carry = sum >> 64;
+        }
+    }
+    out
+}
+
+/// If `value >= modulus`, replace it with `value - modulus`; branch-free, with
+/// a mask derived from the subtraction borrow.
+fn conditional_subtract(value: &mut [u64], modulus: &[u64]) {
+    let (difference, borrow) = sub_fixed(value, modulus);
+    let take = (borrow as u64).wrapping_sub(1);
+    for index in 0..value.len() {
+        value[index] = (difference[index] & take) | (value[index] & !take);
+    }
+}
+
+/// Select `if_one` when `bit` is 1 and `if_zero` otherwise, mask-only.
+fn select_masked(bit: u64, if_one: &[u64], if_zero: &[u64]) -> Vec<u64> {
+    debug_assert_eq!(if_one.len(), if_zero.len());
+    let mask = 0u64.wrapping_sub(bit & 1);
+    (0..if_one.len())
+        .map(|index| (if_one[index] & mask) | (if_zero[index] & !mask))
+        .collect()
+}
+
+/// Swap `a` and `b` when `bit` is 1, using only mask arithmetic.
+fn cswap(bit: u64, a: &mut [u64], b: &mut [u64]) {
+    debug_assert_eq!(a.len(), b.len());
+    let mask = 0u64.wrapping_sub(bit & 1);
+    for index in 0..a.len() {
+        let difference = (a[index] ^ b[index]) & mask;
+        a[index] ^= difference;
+        b[index] ^= difference;
     }
 }
 
@@ -1368,6 +1626,113 @@ mod tests {
             expected = expected.mul(&base).rem(&n);
         }
         assert_eq!(got, expected);
+    }
+
+    /// Deterministic pseudo-random bytes (xorshift64*).
+    fn pseudo_random(len: usize, seed: u64) -> Vec<u8> {
+        let mut state = seed | 1;
+        let mut out = Vec::with_capacity(len);
+        while out.len() < len {
+            state ^= state >> 12;
+            state ^= state << 25;
+            state ^= state >> 27;
+            let value = state.wrapping_mul(0x2545_f491_4f6c_dd1d);
+            out.extend_from_slice(&value.to_be_bytes());
+        }
+        out.truncate(len);
+        out
+    }
+
+    #[test]
+    fn montgomery_ct_matches_the_reference_multiplication() {
+        for seed in 1..=8u64 {
+            let mut n_bytes = pseudo_random(24, seed);
+            n_bytes[23] |= 1; // odd (from_be_bytes: last byte is the low byte)
+            let n = BigUint::from_be_bytes(&n_bytes);
+            let modulus = Modulus::new(n.clone());
+            let a = BigUint::from_be_bytes(&pseudo_random(24, seed + 100)).rem(&n);
+            let b = BigUint::from_be_bytes(&pseudo_random(24, seed + 200)).rem(&n);
+            let reference = modulus.mont_mul(
+                &modulus.to_mont(&a),
+                &modulus.to_mont(&b),
+            );
+            let reference = modulus.from_mont(&reference);
+            let ct = modulus.mont_mul_ct(
+                &modulus.to_mont_ct(&fixed_width(&a, modulus.limbs)),
+                &modulus.to_mont_ct(&fixed_width(&b, modulus.limbs)),
+            );
+            let ct = modulus.from_mont_ct(&ct);
+            assert_eq!(BigUint::from_fixed(&ct), reference, "seed {seed}");
+        }
+    }
+
+    #[test]
+    fn ladder_matches_square_and_multiply() {
+        for seed in 1..=6u64 {
+            let mut n_bytes = pseudo_random(24, seed * 7);
+            n_bytes[23] |= 1;
+            let n = BigUint::from_be_bytes(&n_bytes);
+            let modulus = Modulus::new(n.clone());
+            for small in 0..12u64 {
+                let base = BigUint::from_be_bytes(&pseudo_random(24, seed * 31 + small)).rem(&n);
+                let exponent = BigUint::from_u64(small);
+                assert_eq!(
+                    modulus.ladder_pow(&base, &exponent),
+                    modulus.pow(&base, &exponent),
+                    "seed {seed} small exponent {small}"
+                );
+            }
+            // A full-width exponent too.
+            let base = BigUint::from_be_bytes(&pseudo_random(24, seed * 97)).rem(&n);
+            let exponent =
+                BigUint::from_be_bytes(&pseudo_random(24, seed * 193)).rem(&n);
+            assert_eq!(
+                modulus.ladder_pow(&base, &exponent),
+                modulus.pow(&base, &exponent),
+                "seed {seed} wide exponent"
+            );
+        }
+    }
+
+
+
+    #[test]
+    fn fixed_width_helpers_are_masked_not_branched() {
+        let a = BigUint::from_u64(5);
+        let b = BigUint::from_u64(9);
+        let (difference, borrow) = sub_fixed(&fixed_width(&a, 2), &fixed_width(&b, 2));
+        assert_eq!(borrow, 1, "5 - 9 borrows");
+        assert_eq!(
+            add_fixed(&difference, &fixed_width(&b, 2)),
+            fixed_width(&a, 2),
+            "the wrapped difference plus the subtrahend restores the minuend"
+        );
+        let (difference, borrow) = sub_fixed(&fixed_width(&b, 2), &fixed_width(&a, 2));
+        assert_eq!(borrow, 0);
+        assert_eq!(BigUint::from_fixed(&difference), BigUint::from_u64(4));
+
+        let mut value = fixed_width(&BigUint::from_u64(12), 2);
+        conditional_subtract(&mut value, &fixed_width(&BigUint::from_u64(10), 2));
+        assert_eq!(BigUint::from_fixed(&value), BigUint::from_u64(2));
+        let mut value = fixed_width(&BigUint::from_u64(7), 2);
+        conditional_subtract(&mut value, &fixed_width(&BigUint::from_u64(10), 2));
+        assert_eq!(BigUint::from_fixed(&value), BigUint::from_u64(7));
+
+        let mut left = fixed_width(&BigUint::from_u64(0x1111), 1);
+        let mut right = fixed_width(&BigUint::from_u64(0x2222), 1);
+        cswap(0, &mut left, &mut right);
+        assert_eq!(BigUint::from_fixed(&left), BigUint::from_u64(0x1111));
+        cswap(1, &mut left, &mut right);
+        assert_eq!(BigUint::from_fixed(&left), BigUint::from_u64(0x2222));
+        assert_eq!(BigUint::from_fixed(&right), BigUint::from_u64(0x1111));
+
+        assert_eq!(
+            BigUint::from_fixed(&mul_low(
+                &fixed_width(&BigUint::from_u64(3), 2),
+                &fixed_width(&BigUint::from_u64(5), 2)
+            )),
+            BigUint::from_u64(15)
+        );
     }
 
     #[test]

@@ -1,0 +1,39 @@
+{
+  "class_a": {
+    "description": "SHA-256 digest prefix 0000",
+    "mean_ns": 1978110.6126,
+    "median_ns": 1979191.0,
+    "message_len": 26,
+    "variance_ns2": 180688283.2538845
+  },
+  "class_b": {
+    "description": "SHA-256 digest prefix ffff",
+    "mean_ns": 1977313.43645,
+    "median_ns": 1978410.0,
+    "message_len": 26,
+    "variance_ns2": 145962469.5560392
+  },
+  "elapsed_s": 79.110298959,
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "cpus": "4",
+    "kernel": "7.3.1-1-cachyos"
+  },
+  "interleaving": "randomized per pair (xorshift64*), so slow drift cannot mimic a class difference",
+  "non_claims": [
+    "A small |t| is a smoke-test result, not constant-time proof.",
+    "One microarchitecture, one compiler version, one host.",
+    "The test does not model cache/branch-predictor interference, frequency scaling, or a co-located attacker.",
+    "A formal side-channel audit of the emitted instructions and memory access pattern is still required."
+  ],
+  "purpose": "dudect-style timing smoke test; NOT a constant-time proof",
+  "samples_per_class": 20000,
+  "schema": "weft-rsa-timing-v1",
+  "sign_operations": 40000,
+  "threshold": {
+    "meaning": "the conventional dudect cutoff for this sample size; |t| above it is a visible data dependence, below it is not a proof",
+    "value": 4.5
+  },
+  "welch_t": 6.237742792729028
+}

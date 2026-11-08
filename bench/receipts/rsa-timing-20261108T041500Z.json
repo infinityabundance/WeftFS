@@ -1,0 +1,67 @@
+{
+  "class_a": {
+    "description": "SHA-256 digest prefix 0000",
+    "message_len": 26
+  },
+  "class_b": {
+    "description": "SHA-256 digest prefix ffff",
+    "message_len": 26
+  },
+  "environment": {
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:d7c672a45b23a9ba7259f1ac06de9ed4a0a42794752e8fe012384e41cc5b8d03",
+    "cpus": "4",
+    "kernel": "7.3.1-1-cachyos"
+  },
+  "interleaving": "randomized per pair (xorshift64*), so slow drift cannot mimic a class difference",
+  "non_claims": [
+    "A small |t| is a smoke-test result, not constant-time proof.",
+    "One microarchitecture, one compiler version, one host.",
+    "The test does not model cache/branch-predictor interference, frequency scaling, or a co-located attacker.",
+    "A formal side-channel audit of the emitted instructions and memory access pattern is still required."
+  ],
+  "purpose": "dudect-style timing smoke test; NOT a constant-time proof",
+  "rounds": [
+    {
+      "elapsed_s": 79.986303387,
+      "mean_a_ns": 2000109.89395,
+      "mean_b_ns": 1999071.6706,
+      "median_a_ns": 1988453.5,
+      "median_b_ns": 1987437.0,
+      "round": 0,
+      "variance_a_ns2": 1278594191.947194,
+      "variance_b_ns2": 1269555442.6515222,
+      "welch_t": 2.9086624625151107
+    },
+    {
+      "elapsed_s": 78.967146829,
+      "mean_a_ns": 1974720.7291,
+      "mean_b_ns": 1973523.3658,
+      "median_a_ns": 1971066.0,
+      "median_b_ns": 1970159.5,
+      "round": 1,
+      "variance_a_ns2": 1270532656.5617297,
+      "variance_b_ns2": 486614765.36035514,
+      "welch_t": 4.039585834457828
+    },
+    {
+      "elapsed_s": 79.251091027,
+      "mean_a_ns": 1981686.2783,
+      "mean_b_ns": 1980748.27415,
+      "median_a_ns": 1974442.5,
+      "median_b_ns": 1973586.0,
+      "round": 2,
+      "variance_a_ns2": 670443105.5986273,
+      "variance_b_ns2": 659848659.4060614,
+      "welch_t": 3.6370251678138295
+    }
+  ],
+  "samples_per_class": 20000,
+  "schema": "weft-rsa-timing-v1",
+  "sign_operations": 40000,
+  "threshold": {
+    "meaning": "the conventional dudect cutoff for this sample size; |t| above it is a visible data dependence, below it is not a proof",
+    "value": 4.5
+  },
+  "worst_abs_welch_t": 4.039585834457828
+}
