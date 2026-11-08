@@ -1,0 +1,18 @@
+{
+  "schema": "weft.kv.prefill.v1",
+  "label": "declared; not measured against a real inference engine",
+  "defaults": {
+    "prefill_fixed_ns": 2000000,
+    "prefill_ns_per_token": 120000
+  },
+  "models": {
+    "qwen2.5-0.5b@060db649": {
+      "prefill_fixed_ns": 1500000,
+      "prefill_ns_per_token": 90000
+    }
+  },
+  "transfer_ns_per_mib": 250000,
+  "placement_fixed_ns": 50000,
+  "lookup_fixed_ns": 20000,
+  "decode_cost_model": "measured"
+}

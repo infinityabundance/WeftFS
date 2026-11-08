@@ -881,6 +881,13 @@ enum Command {
         #[arg(long = "source-revision")]
         source_revisions: Vec<String>,
     },
+    /// KV prefix cache: canonical prefix records, chain dedup, capability-
+    /// enforced reads, logical GC, and the reuse-vs-recompute decision
+    /// (`docs/KV-PREFIX.md`).
+    Kv {
+        #[command(subcommand)]
+        command: KvCommand,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1282,6 +1289,118 @@ enum ProvenanceCommand {
         target: String,
         #[arg(long, default_value_t = 8)]
         depth: u32,
+    },
+}
+
+#[derive(Subcommand)]
+enum KvCommand {
+    /// Store a KV prefix: mode-12 pages plus one canonical
+    /// `weft.kv.prefix.v1` record, in one commit.
+    Put {
+        /// Prefix name (the lookup key under `/kv/prefixes`).
+        #[arg(long)]
+        name: String,
+        #[arg(long, default_value = "default")]
+        tenant: String,
+        /// Model identity string (exact match is required at lookup).
+        #[arg(long)]
+        model: String,
+        /// Token length of the prefix.
+        #[arg(long)]
+        tokens: u64,
+        /// Deterministic synthetic token sequence seed.
+        #[arg(long = "token-seed", default_value_t = 1)]
+        token_seed: u64,
+        #[arg(long = "page-rows", default_value_t = 64)]
+        page_rows: u64,
+        #[arg(long, default_value_t = 1)]
+        layers: u32,
+        #[arg(long, default_value_t = 1)]
+        heads: u32,
+        #[arg(long = "head-dim", default_value_t = 64)]
+        head_dim: u32,
+        #[arg(long, default_value = "bf16")]
+        dtype: String,
+        /// Declared tokenizer identity string (hashed into the record).
+        #[arg(long, default_value = "declared-tokenizer-v1")]
+        tokenizer: String,
+        /// Declared attention configuration string (default: derived from
+        /// `--heads`, `--head-dim`, `--layers`).
+        #[arg(long)]
+        attention: Option<String>,
+        /// Parent prefix name whose page objects are reused verbatim.
+        #[arg(long)]
+        parent: Option<String>,
+        /// Mark the prefix pinned (it cannot then be replaced or deleted).
+        #[arg(long)]
+        pin: bool,
+        /// Deterministic synthetic page-byte seed.
+        #[arg(long = "payload-seed", default_value_t = 1)]
+        payload_seed: u64,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+    },
+    /// Read a prefix under an authenticated capability.
+    Get {
+        #[arg(long)]
+        name: String,
+        /// Verified capability envelope blob. Without one the read is denied.
+        #[arg(long)]
+        envelope: Option<PathBuf>,
+        #[arg(long)]
+        revocations: Option<PathBuf>,
+        #[arg(long = "now-ns")]
+        now_ns: Option<i64>,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+    },
+    /// List live prefix records (metadata only; not a data path).
+    List {
+        #[arg(long)]
+        tenant: Option<String>,
+    },
+    /// Delete a prefix record. A pinned prefix is refused; pages stay until GC.
+    Delete {
+        #[arg(long)]
+        name: String,
+    },
+    /// Logical KV GC: remove pages no live prefix references.
+    Gc {
+        /// Actually delete; without it the candidate list is reported.
+        #[arg(long)]
+        apply: bool,
+    },
+    /// Price reuse vs recompute against a stored prefix, without reading pages.
+    Plan {
+        #[arg(long, default_value = "default")]
+        tenant: String,
+        #[arg(long)]
+        model: String,
+        #[arg(long)]
+        tokens: u64,
+        #[arg(long = "token-seed", default_value_t = 1)]
+        token_seed: u64,
+        #[arg(long = "page-rows", default_value_t = 64)]
+        page_rows: u64,
+        #[arg(long, default_value_t = 1)]
+        layers: u32,
+        #[arg(long, default_value_t = 1)]
+        heads: u32,
+        #[arg(long = "head-dim", default_value_t = 64)]
+        head_dim: u32,
+        #[arg(long, default_value = "bf16")]
+        dtype: String,
+        #[arg(long, default_value = "declared-tokenizer-v1")]
+        tokenizer: String,
+        #[arg(long)]
+        attention: Option<String>,
+        /// `weft.kv.prefill.v1` document (default: the baked declared model).
+        #[arg(long)]
+        calibration: Option<PathBuf>,
     },
 }
 
@@ -2866,6 +2985,7 @@ fn run(cli: Cli) -> Result<()> {
             groups,
         ),
         Command::Capability { command } => run_capability(&store, json, policy, command),
+        Command::Kv { command } => run_kv(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -5545,6 +5665,343 @@ fn run_causal(
                         println!("closure={entry}");
                     }
                 }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn run_kv(store_path: &PathBuf, json: bool, policy: OpenPolicy, command: KvCommand) -> Result<()> {
+    use weftfs::kv_prefix::{
+        kv_attention_hash, kv_page_bytes, kv_page_len, kv_token_ids, kv_tokenizer_hash,
+        KvPrefillModel, KvPrefixRequest, KvPrefixSpec,
+    };
+
+    let attention_text = |attention: &Option<String>, heads: u32, head_dim: u32, layers: u32| {
+        attention
+            .clone()
+            .unwrap_or_else(|| format!("mha;heads={heads};head_dim={head_dim};layers={layers}"))
+    };
+
+    match command {
+        KvCommand::Put {
+            name,
+            tenant,
+            model,
+            tokens,
+            token_seed,
+            page_rows,
+            layers,
+            heads,
+            head_dim,
+            dtype,
+            tokenizer,
+            attention,
+            parent,
+            pin,
+            payload_seed,
+            uid,
+            gid,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let uid = uid.unwrap_or(0);
+            let gid = gid.unwrap_or(0);
+            let token_ids = kv_token_ids(token_seed, tokens);
+            if token_ids.len() as u64 != tokens {
+                return Err(Error::invalid_argument(
+                    "token length exceeds the prefix bound",
+                ));
+            }
+            let from_page = match &parent {
+                Some(parent_name) => {
+                    let record = store.kv_prefix(parent_name)?;
+                    if record.position_end > tokens {
+                        return Err(Error::invalid_argument("--parent is longer than --tokens"));
+                    }
+                    record.page_count
+                }
+                None => 0,
+            };
+            let page_count = tokens.div_ceil(page_rows);
+            let mut new_pages = Vec::new();
+            for layer in 0..layers {
+                let mut pages = Vec::new();
+                for index in from_page..page_count {
+                    let len =
+                        kv_page_len(index, page_rows, tokens, heads, head_dim, &dtype)? as usize;
+                    pages.push(kv_page_bytes(payload_seed, layer, index, len));
+                }
+                new_pages.push(pages);
+            }
+            let spec = KvPrefixSpec {
+                tenant: tenant.clone(),
+                model: model.clone(),
+                tokenizer_hash: kv_tokenizer_hash(&tokenizer),
+                attention_hash: kv_attention_hash(&attention_text(
+                    &attention, heads, head_dim, layers,
+                )),
+                dtype: dtype.clone(),
+                head_count: heads,
+                head_dim,
+                layer_count: layers,
+                page_rows,
+                pinned: pin,
+            };
+            let seed = weftfs::identity::h("weft/kv/prefix-seed/v1", &payload_seed.to_le_bytes());
+            let write = store.kv_prefix_put_seeded(
+                &name,
+                &spec,
+                &token_ids,
+                parent.as_deref(),
+                &new_pages,
+                uid,
+                gid,
+                seed.as_bytes(),
+            )?;
+            if json {
+                print_json(&json!({
+                    "name": name,
+                    "prefix": write.prefix_id.to_hex(),
+                    "commit": write.commit.to_hex(),
+                    "generation": store.generation(),
+                    "tokens": write.record.position_end,
+                    "page_rows": write.record.page_rows,
+                    "page_count": write.record.page_count,
+                    "layers": write.record.layer_count,
+                    "page_bytes": write.record.page_bytes,
+                    "stored_page_bytes": write.record.stored_page_bytes,
+                    "reused_pages": write.record.reused_pages,
+                    "new_pages": write.new_pages,
+                    "pinned": write.record.pinned,
+                    "parent": write.record.parent.map(|id| id.to_hex()),
+                }))
+            } else {
+                println!("name={name}");
+                println!("prefix={}", write.prefix_id);
+                println!("commit={}", write.commit);
+                println!("tokens={}", write.record.position_end);
+                println!("page_count={}", write.record.page_count);
+                println!("page_bytes={}", write.record.page_bytes);
+                println!("stored_page_bytes={}", write.record.stored_page_bytes);
+                println!("reused_pages={}", write.record.reused_pages);
+                println!("new_pages={}", write.new_pages);
+                Ok(())
+            }
+        }
+        KvCommand::Get {
+            name,
+            envelope,
+            revocations,
+            now_ns,
+            uid,
+            gid,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let now = now_ns.unwrap_or_else(|| store.clock_now_ns());
+            let principal = build_principal(
+                uid.unwrap_or(0),
+                gid.unwrap_or(0),
+                Vec::new(),
+                envelope.as_ref(),
+                revocations.as_ref(),
+                now,
+            )?;
+            let read = store.kv_prefix_get(&name, &principal, now)?;
+            let mut pages = Vec::new();
+            for page in &read.pages {
+                pages.push(json!({
+                    "layer": page.meta.layer,
+                    "page_index": page.meta.page_index,
+                    "seq_start": page.meta.seq_start,
+                    "seq_end": page.meta.seq_end,
+                    "bytes": page.bytes.len(),
+                    "content": weftfs::identity::content_hash(&page.bytes).to_hex(),
+                }));
+            }
+            if json {
+                print_json(&json!({
+                    "name": name,
+                    "prefix": read.record.id()?.to_hex(),
+                    "tokens": read.record.position_end,
+                    "page_count": read.record.page_count,
+                    "page_bytes": read.record.page_bytes,
+                    "pages": pages,
+                }))
+            } else {
+                println!("prefix={}", read.record.id()?);
+                println!("tokens={}", read.record.position_end);
+                println!("pages={}", read.pages.len());
+                for page in &pages {
+                    println!(
+                        "page layer={} index={} seq={}..{} bytes={} content={}",
+                        page["layer"],
+                        page["page_index"],
+                        page["seq_start"],
+                        page["seq_end"],
+                        page["bytes"],
+                        page["content"]
+                    );
+                }
+                Ok(())
+            }
+        }
+        KvCommand::List { tenant } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let entries = store.kv_prefix_list()?;
+            let mut rows = Vec::new();
+            for (entry_name, record) in entries {
+                if let Some(filter) = &tenant {
+                    if &record.tenant != filter {
+                        continue;
+                    }
+                }
+                rows.push(json!({
+                    "name": entry_name,
+                    "prefix": record.id()?.to_hex(),
+                    "tenant": record.tenant,
+                    "model": record.model,
+                    "dtype": record.dtype,
+                    "tokens": record.position_end,
+                    "page_count": record.page_count,
+                    "layers": record.layer_count,
+                    "page_bytes": record.page_bytes,
+                    "stored_page_bytes": record.stored_page_bytes,
+                    "reused_pages": record.reused_pages,
+                    "pinned": record.pinned,
+                    "parent": record.parent.map(|id| id.to_hex()),
+                }));
+            }
+            if json {
+                print_json(&serde_json::Value::Array(rows))
+            } else {
+                for row in &rows {
+                    println!(
+                        "{} model={} tokens={} pages={} bytes={} stored={} reused={} pinned={}",
+                        row["name"],
+                        row["model"],
+                        row["tokens"],
+                        row["page_count"],
+                        row["page_bytes"],
+                        row["stored_page_bytes"],
+                        row["reused_pages"],
+                        row["pinned"]
+                    );
+                }
+                Ok(())
+            }
+        }
+        KvCommand::Delete { name } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            store.kv_prefix_delete(&name)?;
+            if json {
+                print_json(&json!({"deleted": name}))
+            } else {
+                println!("deleted={name}");
+                Ok(())
+            }
+        }
+        KvCommand::Gc { apply } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let report = store.kv_gc(apply)?;
+            if json {
+                print_json(&json!({
+                    "applied": report.applied,
+                    "prefixes": report.prefixes,
+                    "marked_pages": report.marked_pages,
+                    "candidates": report.candidates,
+                    "deleted": report.deleted,
+                    "deleted_bytes": report.deleted_bytes,
+                    "kept_pinned": report.kept_pinned,
+                    "problems": report.problems,
+                }))
+            } else {
+                println!("prefixes={}", report.prefixes);
+                println!("marked_pages={}", report.marked_pages);
+                println!("candidates={}", report.candidates.len());
+                println!("kept_pinned={}", report.kept_pinned);
+                if apply {
+                    println!("deleted={}", report.deleted.len());
+                    println!("deleted_bytes={}", report.deleted_bytes);
+                } else {
+                    for name in &report.candidates {
+                        println!("candidate={name}");
+                    }
+                }
+                for problem in &report.problems {
+                    println!("problem={problem}");
+                }
+                Ok(())
+            }
+        }
+        KvCommand::Plan {
+            tenant,
+            model,
+            tokens,
+            token_seed,
+            page_rows,
+            layers,
+            heads,
+            head_dim,
+            dtype,
+            tokenizer,
+            attention,
+            calibration,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let prefill = match calibration {
+                Some(path) => {
+                    let bytes = fs::read(&path).map_err(|err| {
+                        Error::io(format!("cannot read {}: {err}", path.display()))
+                    })?;
+                    KvPrefillModel::from_json(&bytes)?
+                }
+                None => KvPrefillModel::declared(),
+            };
+            let request = KvPrefixRequest {
+                tenant,
+                model,
+                tokenizer_hash: kv_tokenizer_hash(&tokenizer),
+                attention_hash: kv_attention_hash(&attention_text(
+                    &attention, heads, head_dim, layers,
+                )),
+                dtype,
+                head_count: heads,
+                head_dim,
+                layer_count: layers,
+                page_rows,
+                tokens: kv_token_ids(token_seed, tokens),
+            };
+            let decision = store.kv_decide_reuse(&request, &prefill)?;
+            let value = json!({
+                "reuse": decision.reuse,
+                "reason": decision.reason,
+                "prefix": decision.prefix_id.map(|id| id.to_hex()),
+                "tokens": decision.tokens,
+                "page_bytes": decision.page_bytes,
+                "t_reuse_ns": decision.reuse_total_ns,
+                "t_recompute_ns": decision.recompute_ns,
+                "lookup_ns": decision.lookup_ns,
+                "observed_lookup_ns": decision.observed_lookup_ns,
+                "transfer_ns": decision.transfer_ns,
+                "decode_ns": decision.decode_ns,
+                "placement_ns": decision.placement_ns,
+                "decode_cost_model": decision.decode_cost_model,
+                "scanned": decision.scanned,
+                "model": decision.model_row,
+                "declared_model": prefill.label,
+            });
+            if json {
+                print_json(&value)
+            } else {
+                println!("reuse={}", decision.reuse);
+                println!("reason={}", decision.reason);
+                println!("t_reuse_ns={}", decision.reuse_total_ns);
+                println!("t_recompute_ns={}", decision.recompute_ns);
+                println!("lookup_ns={}", decision.lookup_ns);
+                println!("observed_lookup_ns={}", decision.observed_lookup_ns);
+                println!("transfer_ns={}", decision.transfer_ns);
+                println!("decode_ns={}", decision.decode_ns);
+                println!("placement_ns={}", decision.placement_ns);
                 Ok(())
             }
         }

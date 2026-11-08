@@ -6032,3 +6032,72 @@ mechanism. The POSIX `F_SETLK` row is measured but not used: it fixes `fork`
 inheritance and introduces the "any close drops the lock" hazard.
 
 Docs: `docs/FENCING.md` §9; `docs/PLANES.md` §6; claims `ofdlock_*`.
+
+### T2 — KV prefix cache: storage primitive + declared reuse decision (2026-11-08)
+
+Implemented in Rust. `src/kv_prefix.rs` adds:
+
+* the canonical `weft.kv.prefix.v1` record (20 fixed fields, exact key set,
+  canonical re-encoding, structural checks) under `/kv/prefixes/<name>`;
+* mode-12 pages under `/kv/pages/p-<descriptor-id>-<sha256>` — page names bind
+  descriptor **and** payload, so different bytes can never alias one object;
+* the prefix token-hash chain
+  `root_{i+1} = H("weft/kv/token-chain/v1", root_i || u64le(token_i))`;
+* `kv_prefix_put[_seeded]` (one commit, parent-chain page reuse, page-aligned
+  parents only), `kv_prefix`, `kv_prefix_list`, `kv_prefix_lookup`,
+  `kv_prefix_get`, `kv_prefix_delete`, `kv_gc`, `kv_decide_reuse`;
+* CLI `weftfs kv put|get|list|delete|gc|plan`.
+
+**Compatibility is exact and fails closed.** Tenant, model, tokenizer hash,
+attention-configuration hash, dtype, head count, head dim, layer count, page
+rows, `position_start == 0`, `position_end <= request length`, and the token
+chain at the stored length must all match. There is no nearest match. A miss
+returns `Recompute` with per-candidate reasons (model / tokenizer / attention /
+token-chain / longer-than-request / …); the caller recomputes. 9 mismatched
+fields plus token-chain and length cases are tested
+(`every_compatibility_field_fails_closed_to_recompute`).
+
+**Capability enforcement at get.** `kv_prefix_get` requires an authenticated
+envelope whose principal equals the record tenant and which grants
+`kv.<tenant>`; every page is then read through the existing per-page
+`read_kv_page` (descriptor must be in `roots`), and decoded metadata is compared
+with the record. Missing/expired/foreign/partial grants all return the same
+non-disclosing `Unauthorized` text.
+
+**Dedup, measured** (`bench/receipts/kv-prefix-20261108T042229Z.json`; shapes
+BF16, 14 layers, 2 KV heads, head dim 64, 64-token pages = 3,584 B/token):
+
+* one 512-token prefix: 1,835,008 logical B, 112 page objects, 1,931,305
+  physical page-object B, 56.3 ms put;
+* a 1,024-token child: 3,670,016 logical B, **112 pages reused / 112 new**,
+  1,835,008 new B;
+* 100 prefixes over one 512-token system prompt: 286,720,000 logical B →
+  **103,219,200 stored B, dedup ratio 0.64**; 6,412 objects /
+  110,569,036 B on disk; 4.24 s;
+* authorized `get` (126–210 pages): p50 **23.7 ms**, p95 36.6 ms, max 36.9 ms;
+* compatibility scan over 101 prefixes: p50 **10.6 ms** (the dominant reuse
+  term; no persisted KV index yet).
+
+**The decision.** `T_reuse = lookup + transfer + decode + placement`;
+`T_recompute = prefill_fixed_ns + tokens * prefill_ns_per_token`. Transfer and
+placement are declared in `bench/calibration/kv-prefill-v1.json`
+(`weft.kv.prefill.v1`); decode uses the existing measured `KV_CACHE` row; the
+lookup term is `max(declared, observed scan)`. The prefill model is
+**declared, not measured against an engine** (default 120 µs/token; the
+Qwen-0.5B row is 90 µs/token). Both estimates and every component are in
+`KvReuseDecision` and in `kv plan --json`. 13 declared requests: **6 reuse / 7
+recompute**; categories model-mismatch 3, tokenizer 1, attention 1, token-chain
+1, longer-than-request 1.
+
+**GC.** `kv gc` keeps every page named by a live prefix plus open-handle pins,
+and removes unreferenced KV pages from current state; physical reclamation stays
+with `weftfs gc`. A pinned prefix cannot be replaced or deleted, so its pages are
+always live. Tests cover dry-run/applied counts, pin retention, and
+`verify --full` after put + parent extension + delete + gc.
+
+**Not claimed.** No vLLM/SGLang integration, no TTFT or serving claim, no GPU
+or fleet claim, no real-engine prefill measurement, no Go parity. The exact
+validating experiment is in `docs/KV-PREFIX.md` §9.
+
+Tests: `tests/kv_prefix.rs` **12/12**. Docs: `docs/KV-PREFIX.md`,
+`bench/RESULTS-kv-prefix.md`. Claims `kvprefix_*` and `ofdlock_*`.

@@ -1,0 +1,368 @@
+{
+  "decision": {
+    "categories": {
+      "attention-configuration-hash-mismatch": 1,
+      "longer-than-the-request": 1,
+      "model-mismatch": 3,
+      "reuse": 6,
+      "token-chain-mismatch": 1,
+      "tokenizer-hash-mismatch": 1
+    },
+    "coefficients": {
+      "decode_cost_model": "measured",
+      "defaults": {
+        "prefill_fixed_ns": 2000000,
+        "prefill_ns_per_token": 120000
+      },
+      "lookup_fixed_ns": 20000,
+      "placement_fixed_ns": 50000,
+      "transfer_ns_per_mib": 250000
+    },
+    "model_label": "declared; not measured against a real inference engine",
+    "recompute": 7,
+    "reuse": 6,
+    "rows": [
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-512",
+        "lookup_ns": 11456341,
+        "observed_lookup_ns": 11456341,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 13878849 ns < T_recompute 63440000 ns",
+        "reuse": true,
+        "t_recompute_ns": 63440000,
+        "t_reuse_ns": 13878849,
+        "tokens": 512,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-1024",
+        "lookup_ns": 23844008,
+        "observed_lookup_ns": 23844008,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 26266516 ns < T_recompute 124880000 ns",
+        "reuse": true,
+        "t_recompute_ns": 124880000,
+        "t_reuse_ns": 26266516,
+        "tokens": 1024,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-4096",
+        "lookup_ns": 23771163,
+        "observed_lookup_ns": 23771163,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 26193671 ns < T_recompute 493520000 ns",
+        "reuse": true,
+        "t_recompute_ns": 493520000,
+        "t_reuse_ns": 26193671,
+        "tokens": 4096,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-8192",
+        "lookup_ns": 23770492,
+        "observed_lookup_ns": 23770492,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 26193000 ns < T_recompute 985040000 ns",
+        "reuse": true,
+        "t_recompute_ns": 985040000,
+        "t_reuse_ns": 26193000,
+        "tokens": 8192,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-32768",
+        "lookup_ns": 23949324,
+        "observed_lookup_ns": 23949324,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 26371832 ns < T_recompute 3934160000 ns",
+        "reuse": true,
+        "t_recompute_ns": 3934160000,
+        "t_reuse_ns": 26371832,
+        "tokens": 32768,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 1935008,
+        "label": "compatible-131072",
+        "lookup_ns": 24007092,
+        "observed_lookup_ns": 24007092,
+        "page_bytes": 1835008,
+        "placement_ns": 50000,
+        "reason": "reuse `42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e`: T_reuse 26429600 ns < T_recompute 15730640000 ns",
+        "reuse": true,
+        "t_recompute_ns": 15730640000,
+        "t_reuse_ns": 26429600,
+        "tokens": 131072,
+        "transfer_ns": 437500
+      },
+      {
+        "decode_ns": 0,
+        "label": "model-mismatch-512",
+        "lookup_ns": 10752690,
+        "observed_lookup_ns": 10752690,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`)",
+        "reuse": false,
+        "t_recompute_ns": 63440000,
+        "t_reuse_ns": 10752690,
+        "tokens": 512,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "model-mismatch-4096",
+        "lookup_ns": 10540895,
+        "observed_lookup_ns": 10540895,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`)",
+        "reuse": false,
+        "t_recompute_ns": 493520000,
+        "t_reuse_ns": 10540895,
+        "tokens": 4096,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "model-mismatch-32768",
+        "lookup_ns": 10568186,
+        "observed_lookup_ns": 10568186,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`; model mismatch: stored `synthetic-0.5b` vs requested `other-model`)",
+        "reuse": false,
+        "t_recompute_ns": 3934160000,
+        "t_reuse_ns": 10568186,
+        "tokens": 32768,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "tokenizer-mismatch",
+        "lookup_ns": 10396306,
+        "observed_lookup_ns": 10396306,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch; tokenizer hash mismatch)",
+        "reuse": false,
+        "t_recompute_ns": 63440000,
+        "t_reuse_ns": 10396306,
+        "tokens": 512,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "attention-mismatch",
+        "lookup_ns": 10443022,
+        "observed_lookup_ns": 10443022,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch; attention configuration hash mismatch)",
+        "reuse": false,
+        "t_recompute_ns": 63440000,
+        "t_reuse_ns": 10443022,
+        "tokens": 512,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "token-chain-mismatch",
+        "lookup_ns": 23504556,
+        "observed_lookup_ns": 23504556,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (token-chain mismatch at 576 tokens; token-chain mismatch at 640 tokens; token-chain mismatch at 704 tokens; token-chain mismatch at 768 tokens; token-chain mismatch at 832 tokens; token-chain mismatch at 896 tokens; token-chain mismatch at 960 tokens; token-chain mismatch at 1024 tokens; token-chain mismatch at 576 tokens; token-chain mismatch at 640 tokens; token-chain mismatch at 704 tokens; token-chain mismatch at 768 tokens; token-chain mismatch at 832 tokens; token-chain mismatch at 896 tokens; token-chain mismatch at 960 tokens; token-chain mismatch at 1024 tokens)",
+        "reuse": false,
+        "t_recompute_ns": 247760000,
+        "t_reuse_ns": 23504556,
+        "tokens": 2048,
+        "transfer_ns": 0
+      },
+      {
+        "decode_ns": 0,
+        "label": "shorter-than-prefix",
+        "lookup_ns": 10520487,
+        "observed_lookup_ns": 10520487,
+        "page_bytes": 0,
+        "placement_ns": 0,
+        "reason": "recompute: no compatible prefix (stored prefix is longer than the request (576 > 64); stored prefix is longer than the request (640 > 64); stored prefix is longer than the request (704 > 64); stored prefix is longer than the request (768 > 64); stored prefix is longer than the request (832 > 64); stored prefix is longer than the request (896 > 64); stored prefix is longer than the request (960 > 64); stored prefix is longer than the request (1024 > 64); stored prefix is longer than the request (576 > 64); stored prefix is longer than the request (640 > 64); stored prefix is longer than the request (704 > 64); stored prefix is longer than the request (768 > 64); stored prefix is longer than the request (832 > 64); stored prefix is longer than the request (896 > 64); stored prefix is longer than the request (960 > 64); stored prefix is longer than the request (1024 > 64))",
+        "reuse": false,
+        "t_recompute_ns": 9680000,
+        "t_reuse_ns": 10520487,
+        "tokens": 64,
+        "transfer_ns": 0
+      }
+    ]
+  },
+  "generation": 107,
+  "get": {
+    "distribution": {
+      "max_us": 36944.694,
+      "mean_us": 25499.314,
+      "min_us": 17348.162,
+      "p50_ns": 23729305,
+      "p50_us": 23729.305,
+      "p95_ns": 36626041,
+      "p95_us": 36626.041,
+      "samples": 100
+    },
+    "page_bytes_per_get": 2523136,
+    "probes": [
+      {
+        "page_bytes": 2064384,
+        "pages": 126,
+        "prefix": "pool-000",
+        "tokens": 576
+      },
+      {
+        "page_bytes": 2523136,
+        "pages": 154,
+        "prefix": "pool-010",
+        "tokens": 704
+      },
+      {
+        "page_bytes": 2981888,
+        "pages": 182,
+        "prefix": "pool-020",
+        "tokens": 832
+      },
+      {
+        "page_bytes": 3440640,
+        "pages": 210,
+        "prefix": "pool-030",
+        "tokens": 960
+      },
+      {
+        "page_bytes": 2064384,
+        "pages": 126,
+        "prefix": "pool-040",
+        "tokens": 576
+      },
+      {
+        "page_bytes": 2523136,
+        "pages": 154,
+        "prefix": "pool-050",
+        "tokens": 704
+      },
+      {
+        "page_bytes": 2981888,
+        "pages": 182,
+        "prefix": "pool-060",
+        "tokens": 832
+      },
+      {
+        "page_bytes": 3440640,
+        "pages": 210,
+        "prefix": "pool-070",
+        "tokens": 960
+      },
+      {
+        "page_bytes": 2064384,
+        "pages": 126,
+        "prefix": "pool-080",
+        "tokens": 576
+      },
+      {
+        "page_bytes": 2523136,
+        "pages": 154,
+        "prefix": "pool-090",
+        "tokens": 704
+      }
+    ]
+  },
+  "label": "storage-side KV prefix primitive; no inference engine in the court",
+  "lookup": {
+    "max_us": 11416.557,
+    "mean_us": 10639.143,
+    "min_us": 10373.093,
+    "p50_ns": 10629750,
+    "p50_us": 10629.75,
+    "p95_ns": 10718987,
+    "p95_us": 10718.987,
+    "samples": 50
+  },
+  "non_claims": [
+    "no vLLM or SGLang integration; no inference engine ran in this court",
+    "no time-to-first-token or wall-clock serving claim",
+    "synthetic page bytes and declared prefill coefficients",
+    "one host, one court, warm cache",
+    "get latency is storage + capability verification + decode, not engine placement"
+  ],
+  "peak_rss_kib": 101400,
+  "schema": "weft.kv.prefix.bench.v1",
+  "shapes": {
+    "bytes_per_page_all_layers": 229376,
+    "bytes_per_token": 3584,
+    "dtype": "bf16",
+    "head_dim": 64,
+    "kv_heads": 2,
+    "layers": 14,
+    "model": "synthetic-0.5b",
+    "note": "Qwen2.5-0.5B GQA geometry, synthetic page bytes",
+    "page_rows": 64
+  },
+  "sizes": [
+    {
+      "layers": 14,
+      "logical_bytes_per_page": 229376,
+      "logical_bytes_per_token": 3584,
+      "logical_page_bytes": 1835008,
+      "page_object_bytes": 1931305,
+      "page_objects": 112,
+      "pages_per_layer": 8,
+      "prefix": "42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e",
+      "put_wall_ms": 56.101,
+      "row": "one-prefix",
+      "stored_page_bytes": 1835008,
+      "tokens": 512
+    },
+    {
+      "delta_page_objects": 112,
+      "logical_page_bytes": 3670016,
+      "new_pages": 112,
+      "page_object_bytes": 3862675,
+      "page_objects": 224,
+      "pages_per_layer": 16,
+      "parent": "42d5a0e7cf1f3c60242550720c2b67bde6cb952732fc1d056bb195d52ee4ce9e",
+      "prefix": "020277ed897a9a175ac98e1b763c28fa5927d2425cd0d712f96f60f54797d091",
+      "put_wall_ms": 56.221,
+      "reused_pages": 112,
+      "row": "parent-child",
+      "stored_page_bytes": 1835008,
+      "tokens": 1024
+    },
+    {
+      "continuation_tokens_max": 512,
+      "continuation_tokens_min": 64,
+      "dedup_ratio": 0.64,
+      "logical_bytes_all_prefixes": 286720000,
+      "page_object_bytes_on_disk": 110569036,
+      "page_objects_on_disk": 6412,
+      "pool_wall_ms": 4271.663,
+      "prefixes": 100,
+      "row": "system-prompt-pool",
+      "stored_page_bytes_all_prefixes": 103219200,
+      "system_prompt_page_bytes": 1835008,
+      "system_prompt_tokens": 512
+    }
+  ],
+  "store_dir": "/mnt/weft-bench/kv-prefix-bench-64",
+  "validation_experiment": "Load the same prefix objects from a real engine's KV cache (vLLM or SGLang) with an identical tokenizer and attention configuration, place them, and compare TTFT against a recompute of the same prompt; this court does not do that.",
+  "verify_full": {
+    "note": "the separate verification gate runs `weftfs verify --full` on this store",
+    "run": false
+  },
+  "wall_ms": 7839.822
+}

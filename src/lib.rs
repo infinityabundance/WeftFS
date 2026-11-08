@@ -50,6 +50,7 @@ pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
 pub mod kv_capability;
+pub mod kv_prefix;
 pub mod load_receipt;
 pub mod object_cache;
 pub mod packs;
