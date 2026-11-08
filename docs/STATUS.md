@@ -5911,3 +5911,33 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
 * Residual: an attacker who can rewrite the commit record is a different threat
   class (no signed/anchor-authenticated commit chain yet); the index stays
   advisory, so a forged segment costs at most a rebuild.
+
+### T1 hardening gates (this revision)
+
+* Rust `cargo test --all-targets`: **595 passed / 0 failed** across 120 test
+  binaries (the pre-existing `tests/quota.rs::usage_survives_reopen_and_still_denies`
+  writer-lock flake appeared once and passed 8/8 standalone and on rerun; no
+  test was changed or skipped).
+* FUSE `cargo test --features fuse --all-targets`: **638 passed / 0 failed /
+  2 pre-existing ignored** across 120 binaries.
+* WeftFS-Go `go test -race -count=1 ./...` (fuse court): all packages pass
+  (store 118.5 s, cmd 41.5 s, fusefs 9.2 s, index, model); `go vet` and
+  `CGO_ENABLED=0 go build` clean; `gofmt -l` empty.
+* WeftCodec-Go `go test -race -count=1 ./...`: all packages pass (spec mirror
+  only changed there).
+* Claims: **590 OK** (`bash scripts/check-claims.sh`); spec drift 42/42 across
+  three mirrors.
+* `scripts/verify-all.sh`: **30/30 pass, 0 failed, 0 skipped**
+  (`bench/receipts/verify-20261108T023732Z.json`) at WeftFS `4f1187e`,
+  WeftCodec `6dd7e13`, WeftCodec-Go `70e4701`, WeftFS-Go `4b0254f`.
+
+Stage receipts: `parallel-checkpoint-20261108T030000Z.json` (local) and
+`parallel-checkpoint-s3-20261108T015555Z.json` (MinIO subset);
+`rsa-timing-20261108T041500Z.json` (and the retained single-round
+`rsa-timing-20261108T040000Z.json`). The new courts are standalone and are not
+yet added to `verify-all.sh`.
+
+Residual for this revision: the parallel checkpoint path is Rust-only (Go has
+no checkpoint writer); constant-time execution is not formally audited; an
+attacker who can rewrite the commit record is outside the index-attestation
+threat model; no multi-writer, fleet, RAPL, GPU, or physical power-loss claim.
