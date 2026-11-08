@@ -151,8 +151,8 @@ detail.
   query after a 10k reopen 16.85 -> 7.75 ms). At v1.0.0 Go had no GCS/Azure
   backend and no `calibrate --install`; v1.1.0 adds GCS and install (Azure
   remains absent).
-- **Verification:** `verify-20261108T023732Z.json` is **30/30 courts pass** at
-  WeftFS `4f1187e`, WeftCodec `6dd7e13`, WeftCodec-Go `70e4701`, WeftFS-Go
+- **Verification:** `verify-20261108T031839Z.json` is **30/30 courts pass** at
+  WeftFS `bc5c35d`, WeftCodec `6dd7e13`, WeftCodec-Go `70e4701`, WeftFS-Go
   `4b0254f`. The aggregate is unchanged in shape from v0.9.0 (including
   `ceph_rgw`, `s3_court`, `threefs`, and `fuzz_diff`); writer-fence tests run
   inside `s3_court`/`ceph_rgw`. Standalone courts are cited separately:

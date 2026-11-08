@@ -5925,7 +5925,7 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
   also spawns the CLI, so under parallel test threads another test's fork can
   briefly hold this test's `LOCK` fd. It is a test-harness/fork artifact, not a
   store bug; no test was changed or skipped.
-* FUSE `cargo test --features fuse --all-targets`: **638 passed / 0 failed /
+* FUSE `cargo test --features fuse --all-targets`: **639 passed / 0 failed /
   2 pre-existing ignored** across 120 binaries.
 * WeftFS-Go `go test -race -count=1 ./...` (fuse court): all packages pass
   (store 118.5 s, cmd 41.5 s, fusefs 9.2 s, index, model); `go vet` and
@@ -5935,8 +5935,14 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
 * Claims: **590 OK** (`bash scripts/check-claims.sh`); spec drift 42/42 across
   three mirrors.
 * `scripts/verify-all.sh`: **30/30 pass, 0 failed, 0 skipped**
-  (`bench/receipts/verify-20261108T023732Z.json`) at WeftFS `4f1187e`,
-  WeftCodec `6dd7e13`, WeftCodec-Go `70e4701`, WeftFS-Go `4b0254f`.
+  (`bench/receipts/verify-20261108T031839Z.json`) at WeftFS `bc5c35d`,
+  WeftCodec `6dd7e13`, WeftCodec-Go `70e4701`, WeftFS-Go `4b0254f`. Retained
+  failing aggregates at the same code (`025347Z`, `030406Z`, `031121Z`) are
+  the lock flake below; a direct probe (2,000 init/drop/reopen cycles while
+  another thread repeatedly spawns `/bin/true`) reproduced it **269/2,000**,
+  which pins the cause: `flock(2)` is held by the forked-but-not-yet-exec'd
+  child until `exec`. Fixing it needs OFD locks with a mixed-version
+  compatibility story, which is **not** done here.
 
 Stage receipts: `parallel-checkpoint-20261108T030000Z.json` (local) and
 `parallel-checkpoint-s3-20261108T015555Z.json` (MinIO subset);
