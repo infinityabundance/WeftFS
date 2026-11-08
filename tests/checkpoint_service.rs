@@ -91,6 +91,7 @@ fn fixture(dir: &Path) -> PathBuf {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap();
@@ -369,7 +370,7 @@ fn service_lists_shows_and_restores_into_a_caller_memfd() {
     send_frame(&service.stream, OP_INFO, 1, &[], &[]);
     let info = expect_ok(&recv_frame(&service.stream).unwrap(), 1);
     let mut cursor = Reader::new(&info);
-    assert_eq!(cursor.u32(), 1, "protocol version");
+    assert_eq!(cursor.u32(), 2, "protocol version");
     assert_eq!(cursor.u32(), 1 << 20, "frame bound");
     assert_eq!(cursor.u64(), 4 << 30, "tensor bound");
     assert_eq!(cursor.u64(), 2, "generation");
@@ -600,6 +601,11 @@ fn write_checkpoint_from_a_memfd_matches_the_cli_oracle() {
     body.extend_from_slice(&0u32.to_le_bytes()); // axis
     put_str(&mut body, "zstd");
     body.extend_from_slice(&0u32.to_le_bytes()); // no tile shape
+    body.push(0); // planned
+    body.push(1); // zstd fast codec (unused by planned)
+    body.extend_from_slice(&1u32.to_le_bytes()); // fast zstd level
+    body.push(0); // flags
+    body.push(0); // no deadline
     send_frame(&service.stream, OP_WRITE, 21, &body, &[staged.as_raw_fd()]);
     let response = expect_ok(&recv_frame(&service.stream).unwrap(), 21);
     let mut cursor = Reader::new(&response);

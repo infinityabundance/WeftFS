@@ -57,6 +57,9 @@ pub const ATTR_TENSOR_STRATEGY: &str = "weft.tensor.strategy";
 /// as an array of u64. Absent for every non-tiled representation.
 pub const ATTR_TENSOR_TILE_SHAPE: &str = "weft.tensor.tile_shape";
 
+/// Default byte bound on the semantic-delta candidate search (512 MiB).
+pub const DEFAULT_MAX_SEMANTIC_BYTES: u64 = 512 * 1024 * 1024;
+
 /// Default bound on the semantic-delta candidate search.
 pub const DEFAULT_TENSOR_MAX_CANDIDATES: usize = 16;
 
@@ -194,6 +197,111 @@ impl TensorStrategy {
             TensorStrategy::Activation => CostClass::Activation,
         }
     }
+}
+
+/// Codec used on the training critical path when the write policy is fast.
+///
+/// Only these two representations are ever built by a `Fast` write: both are
+/// linear passes over the tensor bytes. The expensive planned candidates
+/// (modes 9/10/15/16/17/18 and the delta family) are never encoded during the
+/// save; a background transcode pass converts them afterwards.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FastCodec {
+    /// Canonical raw chunks (no entropy coding at all).
+    Raw,
+    /// One ZSTD frame at [`TensorPlanOptions::fast_zstd_level`].
+    Zstd,
+}
+
+impl FastCodec {
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "raw" => Ok(FastCodec::Raw),
+            "zstd" => Ok(FastCodec::Zstd),
+            other => Err(Error::invalid_argument(format!(
+                "--fast-codec must be `raw` or `zstd` (got `{other}`)"
+            ))),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            FastCodec::Raw => "raw",
+            FastCodec::Zstd => "zstd",
+        }
+    }
+}
+
+/// Where a write sits relative to the training critical path.
+///
+/// `Auto` is the only policy that inspects the caller's declaration: a write
+/// marked `on_critical_path`, or given a deadline, takes the fast path; every
+/// other write keeps the full planned behaviour. `Fast` and `Planned` are
+/// unconditional.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WritePolicy {
+    /// Never run an expensive candidate during the write.
+    Fast,
+    /// Today's behaviour: encode and price every applicable candidate.
+    Planned,
+    /// Fast when the caller declares a critical path or a deadline.
+    Auto {
+        on_critical_path: bool,
+        deadline_ms: Option<u64>,
+    },
+}
+
+impl WritePolicy {
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "fast" => Ok(WritePolicy::Fast),
+            "planned" => Ok(WritePolicy::Planned),
+            "auto" => Ok(WritePolicy::Auto {
+                on_critical_path: false,
+                deadline_ms: None,
+            }),
+            other => Err(Error::invalid_argument(format!(
+                "--write-policy must be `fast`, `planned`, or `auto` (got `{other}`)"
+            ))),
+        }
+    }
+
+    /// Resolve `Auto` against the caller's declaration.
+    pub fn resolved(self) -> ResolvedWritePolicy {
+        match self {
+            WritePolicy::Fast => ResolvedWritePolicy::Fast,
+            WritePolicy::Planned => ResolvedWritePolicy::Planned,
+            WritePolicy::Auto {
+                on_critical_path,
+                deadline_ms,
+            } => {
+                if on_critical_path || deadline_ms.is_some() {
+                    ResolvedWritePolicy::Fast
+                } else {
+                    ResolvedWritePolicy::Planned
+                }
+            }
+        }
+    }
+
+    pub fn is_fast(self) -> bool {
+        self.resolved() == ResolvedWritePolicy::Fast
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            WritePolicy::Fast => "fast",
+            WritePolicy::Planned => "planned",
+            WritePolicy::Auto { .. } => "auto",
+        }
+    }
+}
+
+/// The policy after `Auto` has been resolved.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ResolvedWritePolicy {
+    Fast,
+    Planned,
 }
 
 /// A validated physical layout declaration for one tensor write.
@@ -583,6 +691,22 @@ pub struct TensorPlanOptions {
     /// `FLOAT_TILED_STREAMS_DEFAULT` (4). Mode 18 is offered only when a tile
     /// shape (or `auto_tile_bytes`) is supplied, like modes 15 and 17.
     pub n_streams: Option<u64>,
+    /// Critical-path policy for this write. `Fast` restricts the candidate set
+    /// to a linear-pass representation (raw or a fast ZSTD frame) and never
+    /// runs a planned candidate encode; `Planned` is the historical behaviour.
+    pub write_policy: WritePolicy,
+    /// Representation a `Fast` write builds.
+    pub fast_codec: FastCodec,
+    /// ZSTD level used by `FastCodec::Zstd` (clamped to 1..=3).
+    pub fast_zstd_level: i32,
+    /// Offer the mode-14 semantic-delta candidate. The candidate search may
+    /// decode several live tensors; disable it when a caller only cares about
+    /// the causal weight/sparse deltas.
+    pub semantic_search: bool,
+    /// Hard bound on `candidate_tensors * tensor_bytes` for the semantic
+    /// candidate search. A larger tensor falls back to the other candidates
+    /// instead of risking the court's memory limit.
+    pub max_semantic_bytes: u64,
 }
 
 impl Default for TensorPlanOptions {
@@ -598,6 +722,14 @@ impl Default for TensorPlanOptions {
             auto_tile_bytes: None,
             access_pattern: AccessPattern::Whole,
             n_streams: None,
+            write_policy: WritePolicy::Planned,
+            // Measured on the 0.5B court: one level-1 ZSTD frame is the
+            // cheapest critical-path codec (raw chunking is ~7x slower because
+            // it publishes 15k chunk blobs).
+            fast_codec: FastCodec::Zstd,
+            fast_zstd_level: 1,
+            semantic_search: true,
+            max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
         }
     }
 }
@@ -741,6 +873,15 @@ pub struct TensorRebase {
     pub new_content: Hash32,
     pub old_strategy: String,
     pub plan: TensorIndependentPlan,
+}
+
+/// Result of the one-pass rebase decision used by the transcode worker.
+#[derive(Clone, Debug)]
+pub struct TensorRebaseDecision {
+    /// The priced standalone plan (always present).
+    pub plan: TensorIndependentPlan,
+    /// The publication, or `None` when the plan did not clear the savings bar.
+    pub rebase: Option<TensorRebase>,
 }
 
 /// Tensor identity recovered from an object record.
@@ -1166,6 +1307,30 @@ impl Store {
         options: &TensorPlanOptions,
         hint: Option<TensorStrategy>,
     ) -> Result<TensorRebase> {
+        self.rebase_tensor_object_decided(id, options, hint, None, 0)
+            .map(|decision| {
+                decision
+                    .rebase
+                    .expect("an unconditional rebase always publishes")
+            })
+    }
+
+    /// Republish a tensor object with its planned independent representation,
+    /// but only when the plan saves at least `min_saved_percent` of
+    /// `old_physical_bytes`.
+    ///
+    /// This is the one-pass form the background transcode worker uses: the
+    /// candidate set is encoded **once**, the decision is made from the priced
+    /// plan, and a rejected plan costs no publication. `None` for
+    /// `old_physical_bytes` means "always publish" (the historical rebase).
+    pub fn rebase_tensor_object_decided(
+        &mut self,
+        id: Hash32,
+        options: &TensorPlanOptions,
+        hint: Option<TensorStrategy>,
+        old_physical_bytes: Option<u64>,
+        min_saved_percent: u8,
+    ) -> Result<TensorRebaseDecision> {
         self.require_writable()?;
         let meta = self.tensor_metadata(id)?;
         let old = self.object_meta(id)?;
@@ -1186,6 +1351,26 @@ impl Store {
             true,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
+        let plan = TensorIndependentPlan {
+            chosen: chosen.candidate.strategy,
+            physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+            estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+            cost: chosen.candidate.cost.unwrap_or(0),
+            candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+        };
+        if let Some(old_physical) = old_physical_bytes {
+            let new_physical = plan.physical_bytes;
+            if new_physical >= old_physical {
+                return Ok(TensorRebaseDecision { plan, rebase: None });
+            }
+            let saved = old_physical - new_physical;
+            if min_saved_percent > 0
+                && saved.saturating_mul(100)
+                    < old_physical.saturating_mul(u64::from(min_saved_percent))
+            {
+                return Ok(TensorRebaseDecision { plan, rebase: None });
+            }
+        }
         let artifact = chosen
             .artifact
             .clone()
@@ -1218,19 +1403,22 @@ impl Store {
             attrs,
         )?;
         let new_content = self.object_meta(id)?.content;
-        Ok(TensorRebase {
-            old_version: old.version,
-            new_version,
-            old_content,
-            new_content,
-            old_strategy: meta.strategy,
-            plan: TensorIndependentPlan {
-                chosen: chosen.candidate.strategy,
-                physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
-                estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
-                cost: chosen.candidate.cost.unwrap_or(0),
-                candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
-            },
+        Ok(TensorRebaseDecision {
+            plan,
+            rebase: Some(TensorRebase {
+                old_version: old.version,
+                new_version,
+                old_content,
+                new_content,
+                old_strategy: meta.strategy,
+                plan: TensorIndependentPlan {
+                    chosen: chosen.candidate.strategy,
+                    physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+                    estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+                    cost: chosen.candidate.cost.unwrap_or(0),
+                    candidates: Vec::new(),
+                },
+            }),
         })
     }
 
@@ -1593,8 +1781,13 @@ impl Store {
                     .ok_or_else(|| Error::limit_exceeded("tile offset overflows"))?;
                 let stored =
                     self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len))?;
-                weftcodec::decode_tiled_tile(meta.dtype, entry, &stored, &limits)
-                    .map_err(Error::from)
+                weftcodec::decode_tiled_tile(meta.dtype, entry, &stored, &limits).map_err(|err| {
+                    let err = Error::from(err);
+                    Error::new(
+                        err.class(),
+                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                    )
+                })
             },
             |tile| tile.len(),
         )?;
@@ -1739,8 +1932,13 @@ impl Store {
                     .ok_or_else(|| Error::limit_exceeded("float tile offset overflows"))?;
                 let stored =
                     self.with_backend(|backend| backend.read(&key, offset, entry.compressed_len))?;
-                weftcodec::decode_float_tile(meta.dtype, entry, &stored, &limits)
-                    .map_err(Error::from)
+                weftcodec::decode_float_tile(meta.dtype, entry, &stored, &limits).map_err(|err| {
+                    let err = Error::from(err);
+                    Error::new(
+                        err.class(),
+                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                    )
+                })
             },
             |tile| tile.len(),
         )?;
@@ -1893,7 +2091,13 @@ impl Store {
                     &limits,
                     1,
                 )
-                .map_err(Error::from)
+                .map_err(|err| {
+                    let err = Error::from(err);
+                    Error::new(
+                        err.class(),
+                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                    )
+                })
             },
             |tile| tile.len(),
         )?;
@@ -2208,6 +2412,83 @@ impl Store {
             ));
         }
         let quantized = dtype == TensorElementDtype::Q8_0;
+
+        // Critical-path fast path: build at most one linear-pass representation
+        // and return without encoding a single planned candidate. Nothing here
+        // calls a mode encoder, so a save pays only the chunker or one ZSTD
+        // frame. The logical identity is unchanged, so a later background
+        // transcode can republish the object with a smaller representation
+        // without touching any manifest or checkpoint record.
+        if options.write_policy.is_fast() && !quantized {
+            out.push(PreparedCandidate {
+                candidate: TensorPlanCandidate {
+                    strategy: TensorStrategy::Raw,
+                    applicable: true,
+                    detail: "canonical row-major chunks (fast policy)".to_owned(),
+                    physical_bytes: Some(size),
+                    estimated_decode_ns: Some(options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::Raw,
+                        TensorStrategy::Raw,
+                        size,
+                    )),
+                    cost: Some(price(
+                        size,
+                        options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::Raw,
+                            TensorStrategy::Raw,
+                            size,
+                        ),
+                        options.lambda_ns,
+                    )),
+                    dependency: None,
+                },
+                artifact: Some(PreparedArtifact {
+                    kind: RepresentationKind::Raw,
+                    strategy_name: "raw".to_owned(),
+                    frame: None,
+                    dependencies: Vec::new(),
+                    tensor: None,
+                    tile_shape: None,
+                }),
+            });
+            if options.fast_codec == FastCodec::Zstd {
+                let level = options.fast_zstd_level.clamp(1, 3);
+                let codec_chunk =
+                    crate::representation::codec_chunk_size(self.options().chunk_size.max(1))
+                        as usize;
+                match weftcodec::modes::encode_zstd(logical, level, Some(codec_chunk), &limits) {
+                    Ok(frame) => {
+                        let physical = frame.len() as u64;
+                        let estimate = options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::Zstd,
+                            TensorStrategy::Zstd,
+                            size,
+                        );
+                        out.push(PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::Zstd,
+                                applicable: true,
+                                detail: format!("one ZSTD level-{level} frame (fast policy)"),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                cost: Some(price(physical, estimate, options.lambda_ns)),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: None,
+                                tile_shape: None,
+                            }),
+                        });
+                    }
+                    Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+                }
+            }
+            return Ok(out);
+        }
 
         // Raw chunks (v2 kind:"raw").
         out.push(if quantized {
@@ -2772,11 +3053,28 @@ impl Store {
             }
         }
 
-        // Mode 14 semantic-delta against a same-semantic-root candidate.
+        // Mode 14 semantic-delta against a same-semantic-root candidate. The
+        // search may decode `max_candidates` live tensors, so it is bounded:
+        // a tensor large enough to exceed the byte bound falls back to the
+        // other candidates rather than risking an unbounded allocation.
         if independent_only {
             out.push(skipped(
                 TensorStrategy::SemanticDelta,
                 "rebase requires an independent representation".to_owned(),
+            ));
+        } else if !options.semantic_search {
+            out.push(skipped(
+                TensorStrategy::SemanticDelta,
+                "semantic search disabled by the write policy".to_owned(),
+            ));
+        } else if size.saturating_mul(options.max_candidates as u64) > options.max_semantic_bytes {
+            out.push(skipped(
+                TensorStrategy::SemanticDelta,
+                format!(
+                    "semantic search would touch at most {} bytes (bound {}); skipping",
+                    size.saturating_mul(options.max_candidates as u64),
+                    options.max_semantic_bytes
+                ),
             ));
         } else {
             match self.prepare_semantic(dtype, shape, logical, options, &limits) {

@@ -85,6 +85,7 @@ fn write_eight_way(store: &mut Store, source: &Path) -> weftfs::checkpoint::Chec
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap()
@@ -284,6 +285,7 @@ fn partial_restore_of_a_two_tensor_container_rebuilds_the_header() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap();
@@ -475,6 +477,7 @@ fn non_divisible_split_is_rejected_without_publishing() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap_err();

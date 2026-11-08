@@ -86,6 +86,7 @@ fn write_checkpoint(store: &mut Store, dir: &Path) -> (String, usize) {
                 filters: Vec::new(),
                 strategy: weftfs::checkpoint::ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap();

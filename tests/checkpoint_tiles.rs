@@ -96,6 +96,7 @@ fn tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorTiled,
                 tile_shape: Some(vec![4, 8, 16]),
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap();
@@ -125,6 +126,7 @@ fn tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles() {
             filters: Vec::new(),
             strategy: ShardStrategy::TensorSharded,
             tile_shape: None,
+            ..CheckpointWriteOptions::default()
         },
     )
     .unwrap();
@@ -193,6 +195,7 @@ fn tiled_checkpoint_rejects_a_non_dividing_tile_shape() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorTiled,
                 tile_shape: Some(vec![3, 8, 16]),
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap_err();
@@ -215,6 +218,7 @@ fn tiled_checkpoint_requires_a_tile_shape() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::TensorTiled,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap_err();

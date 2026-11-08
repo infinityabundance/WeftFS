@@ -43,7 +43,7 @@ use crate::store::{OpenMode, Options, Store};
 mod ancillary;
 
 /// Protocol version carried by the `INFO` response.
-pub const PROTOCOL_VERSION: u32 = 1;
+pub const PROTOCOL_VERSION: u32 = 2;
 /// Largest accepted control frame (header + body) in either direction.
 pub const MAX_FRAME_BYTES: usize = 1 << 20;
 /// Default bound on one restored tensor / one staged container.
@@ -545,6 +545,46 @@ impl Service {
             for _ in 0..rank {
                 tile_shape.push(cursor.u64()?);
             }
+            // Protocol v2 appends the critical-path write policy. A v1 body
+            // (no trailing bytes) keeps the historical planned behaviour.
+            let mut write_policy = crate::tensor_store::WritePolicy::Planned;
+            let mut fast_codec = crate::tensor_store::FastCodec::Zstd;
+            let mut fast_zstd_level = 1i32;
+            let mut on_critical_path = false;
+            let mut deadline_ms = None;
+            if cursor.remaining() >= 8 {
+                let policy = cursor.u8()?;
+                let codec = cursor.u8()?;
+                fast_zstd_level = cursor.u32()? as i32;
+                let flags = cursor.u8()?;
+                on_critical_path = flags & 1 != 0;
+                let has_deadline = cursor.u8()?;
+                if has_deadline == 1 {
+                    deadline_ms = Some(cursor.u64()?);
+                }
+                fast_codec = match codec {
+                    0 => crate::tensor_store::FastCodec::Raw,
+                    1 => crate::tensor_store::FastCodec::Zstd,
+                    other => {
+                        return Err(Error::malformed(format!(
+                            "unknown fast codec {other}"
+                        )))
+                    }
+                };
+                write_policy = match policy {
+                    0 => crate::tensor_store::WritePolicy::Planned,
+                    1 => crate::tensor_store::WritePolicy::Fast,
+                    2 => crate::tensor_store::WritePolicy::Auto {
+                        on_critical_path,
+                        deadline_ms,
+                    },
+                    other => {
+                        return Err(Error::malformed(format!(
+                            "unknown write policy {other}"
+                        )))
+                    }
+                };
+            }
             cursor.finish()?;
             Ok((
                 name,
@@ -558,6 +598,12 @@ impl Service {
                     } else {
                         Some(tile_shape)
                     },
+                    write_policy,
+                    fast_codec,
+                    fast_zstd_level,
+                    on_critical_path,
+                    deadline_ms,
+                    ..CheckpointWriteOptions::default()
                 },
             ))
         })();
@@ -1027,6 +1073,10 @@ impl<'a> Cursor<'a> {
         let bytes = self.take(len)?;
         String::from_utf8(bytes.to_vec())
             .map_err(|_| Error::malformed("request string is not UTF-8"))
+    }
+
+    fn remaining(&self) -> usize {
+        self.bytes.len() - self.at
     }
 
     fn finish(&self) -> Result<()> {

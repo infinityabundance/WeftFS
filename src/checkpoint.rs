@@ -36,7 +36,9 @@ use crate::representation::TensorElementDtype;
 use crate::safetensors::{self, SafetensorsFile, SafetensorsTensor};
 use crate::state::{ObjectKind, State};
 use crate::store::Store;
-use crate::tensor_store::{TensorLayoutSpec, TensorStrategy, TensorWriteSpec};
+use crate::tensor_store::{
+    FastCodec, TensorLayoutSpec, TensorStrategy, TensorWriteSpec, WritePolicy,
+};
 use crate::wcb_util as wu;
 
 /// Canonical checkpoint manifest schema.
@@ -62,6 +64,9 @@ pub enum ShardStrategy {
     TensorTiled,
     /// Mode 17 `FLOAT_TILED`: per-tile mode-9 plane split.
     FloatTiled,
+    /// Let the tensor planner choose per shard (raw, zstd, mode 9/15/17/18,
+    /// or a weight/sparse delta when a causal checkpoint is supplied).
+    Planned,
     /// One ZSTD frame per shard (exact fallback).
     Zstd,
     /// Raw chunks per shard (exact fallback).
@@ -74,10 +79,11 @@ impl ShardStrategy {
             "tensor-sharded" => Ok(ShardStrategy::TensorSharded),
             "tensor-tiled" => Ok(ShardStrategy::TensorTiled),
             "float-tiled" => Ok(ShardStrategy::FloatTiled),
+            "planned" => Ok(ShardStrategy::Planned),
             "zstd" => Ok(ShardStrategy::Zstd),
             "raw" => Ok(ShardStrategy::Raw),
             other => Err(Error::invalid_argument(format!(
-                "--shard-strategy must be `tensor-sharded`, `tensor-tiled`, `float-tiled`, `zstd`, or `raw` (got `{other}`)"
+                "--shard-strategy must be `tensor-sharded`, `tensor-tiled`, `float-tiled`, `planned`, `zstd`, or `raw` (got `{other}`)"
             ))),
         }
     }
@@ -87,6 +93,7 @@ impl ShardStrategy {
             ShardStrategy::TensorSharded => "tensor-sharded",
             ShardStrategy::TensorTiled => "tensor-tiled",
             ShardStrategy::FloatTiled => "float-tiled",
+            ShardStrategy::Planned => "planned",
             ShardStrategy::Zstd => "zstd",
             ShardStrategy::Raw => "raw",
         }
@@ -103,6 +110,28 @@ pub struct CheckpointWriteOptions {
     pub strategy: ShardStrategy,
     /// Tile extents for `ShardStrategy::TensorTiled` (mode 15).
     pub tile_shape: Option<Vec<u64>>,
+    /// Critical-path write policy. `Fast` stores every shard with the fast
+    /// codec below and never runs a planned candidate encode; `Planned` is the
+    /// historical shard-strategy behaviour; `Auto` resolves against
+    /// `on_critical_path` / `deadline_ms`.
+    pub write_policy: WritePolicy,
+    /// Representation a `Fast` write builds for each shard.
+    pub fast_codec: FastCodec,
+    /// ZSTD level used by `FastCodec::Zstd` (clamped to 1..=3).
+    pub fast_zstd_level: i32,
+    /// Caller declaration for `WritePolicy::Auto`: this save is on the training
+    /// critical path.
+    pub on_critical_path: bool,
+    /// Caller declaration for `WritePolicy::Auto`: the caller has this many
+    /// milliseconds before it needs the save to return.
+    pub deadline_ms: Option<u64>,
+    /// Optional previous checkpoint in the same store. Tensors with the same
+    /// name, dtype and shape offer that checkpoint's matching shard version as
+    /// a causal parent, so the planner can price a weight-delta against it.
+    pub causal_checkpoint: Option<String>,
+    /// Offer the mode-14 semantic-delta candidate (see
+    /// `TensorPlanOptions::semantic_search`).
+    pub semantic_search: bool,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -113,6 +142,43 @@ impl Default for CheckpointWriteOptions {
             filters: Vec::new(),
             strategy: ShardStrategy::TensorSharded,
             tile_shape: None,
+            write_policy: WritePolicy::Planned,
+            fast_codec: FastCodec::Zstd,
+            fast_zstd_level: 1,
+            on_critical_path: false,
+            deadline_ms: None,
+            causal_checkpoint: None,
+            semantic_search: true,
+        }
+    }
+}
+
+impl CheckpointWriteOptions {
+    /// The policy after resolving `Auto`.
+    pub fn resolved_policy(&self) -> WritePolicy {
+        match self.write_policy {
+            WritePolicy::Auto { .. } => WritePolicy::Auto {
+                on_critical_path: self.on_critical_path,
+                deadline_ms: self.deadline_ms,
+            },
+            other => other,
+        }
+    }
+
+    /// True when this save takes the fast path.
+    pub fn is_fast(&self) -> bool {
+        self.resolved_policy().is_fast()
+    }
+
+    /// Strategy actually used for a shard under the resolved policy.
+    pub fn effective_strategy(&self) -> ShardStrategy {
+        if self.is_fast() {
+            match self.fast_codec {
+                FastCodec::Raw => ShardStrategy::Raw,
+                FastCodec::Zstd => ShardStrategy::Zstd,
+            }
+        } else {
+            self.strategy
         }
     }
 }
@@ -834,6 +900,8 @@ impl Store {
             )));
         }
         let complete = selected.len() == file.tensors.len();
+        let effective_strategy = options.effective_strategy();
+        let fast = options.is_fast();
 
         // Validate every split before writing anything, so a non-divisible
         // shape never leaves half a checkpoint on disk.
@@ -865,7 +933,7 @@ impl Store {
                     ),
                 ));
             }
-            if options.strategy == ShardStrategy::TensorTiled {
+            if effective_strategy == ShardStrategy::TensorTiled {
                 let tile = options.tile_shape.as_ref().ok_or_else(|| {
                     Error::invalid_argument(
                         "--shard-strategy tensor-tiled requires --tile-shape A,B,...",
@@ -893,6 +961,33 @@ impl Store {
         let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
         let name_owned = name.to_owned();
         let options = options.clone();
+        // Resolve the optional causal checkpoint's matching shard versions
+        // before the group. A tensor is only linked when the dtype, shape and
+        // shard layout agree; otherwise it is written independently.
+        let mut causal_versions: BTreeMap<String, Vec<Hash32>> = BTreeMap::new();
+        if let Some(previous) = options.causal_checkpoint.as_deref() {
+            let previous_manifest = self.load_checkpoint(previous)?;
+            for tensor in &previous_manifest.tensors {
+                let mut versions = Vec::with_capacity(tensor.shards.len());
+                let mut usable = tensor.shards.len() == options.shards as usize;
+                for shard in &tensor.shards {
+                    if shard.axis != options.axis || shard.shards != options.shards {
+                        usable = false;
+                        break;
+                    }
+                    match self.object_meta(shard.object_id) {
+                        Ok(record) => versions.push(record.version),
+                        Err(_) => {
+                            usable = false;
+                            break;
+                        }
+                    }
+                }
+                if usable {
+                    causal_versions.insert(tensor.name.clone(), versions);
+                }
+            }
+        }
         let (report, head) = self.group(|store| {
             let checkpoints = ensure_dir(store, State::ROOT_ID, CHECKPOINT_ROOT.as_bytes())?;
             let dir = store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?;
@@ -924,7 +1019,7 @@ impl Store {
                         &limits,
                     )?;
                     let object_name = shard_object_name(tensor_index, shard_index);
-                    let (store_dtype, store_shape, hint, tile_shape) = match options.strategy {
+                    let (store_dtype, store_shape, hint, tile_shape) = match effective_strategy {
                         // A q8_0 object treats every payload byte as a
                         // quantized word, so the mode-10 round trip is exact.
                         // The transport shape doubles the last logical
@@ -933,7 +1028,7 @@ impl Store {
                         ShardStrategy::TensorSharded => (
                             "q8_0".to_owned(),
                             byte_shape(&shard_shape, physical.element_size())?,
-                            TensorStrategy::TensorSharded,
+                            Some(TensorStrategy::TensorSharded),
                             None,
                         ),
                         // Mode 15 carries the shard under its real dtype and
@@ -948,7 +1043,7 @@ impl Store {
                             (
                                 dtype.as_str().to_owned(),
                                 shard_shape.clone(),
-                                TensorStrategy::TensorTiled,
+                                Some(TensorStrategy::TensorTiled),
                                 Some(tile),
                             )
                         }
@@ -962,26 +1057,49 @@ impl Store {
                             (
                                 dtype.as_str().to_owned(),
                                 shard_shape.clone(),
-                                TensorStrategy::FloatTiled,
+                                Some(TensorStrategy::FloatTiled),
                                 Some(tile),
                             )
                         }
+                        ShardStrategy::Planned => (
+                            dtype.as_str().to_owned(),
+                            shard_shape.clone(),
+                            None,
+                            None,
+                        ),
                         ShardStrategy::Zstd => (
                             dtype.as_str().to_owned(),
                             shard_shape.clone(),
-                            TensorStrategy::Zstd,
+                            Some(TensorStrategy::Zstd),
                             None,
                         ),
                         ShardStrategy::Raw => (
                             dtype.as_str().to_owned(),
                             shard_shape.clone(),
-                            TensorStrategy::Raw,
+                            Some(TensorStrategy::Raw),
                             None,
                         ),
                     };
                     let spec = TensorWriteSpec {
-                        strategy_hint: Some(hint),
+                        strategy_hint: hint,
                         tile_shape,
+                        causal: causal_versions
+                            .get(&tensor.name)
+                            .and_then(|versions| versions.get(shard_index as usize))
+                            .filter(|_| !fast)
+                            .map(|version| vec![*version])
+                            .unwrap_or_default(),
+                        plan: crate::tensor_store::TensorPlanOptions {
+                            write_policy: if fast {
+                                WritePolicy::Fast
+                            } else {
+                                WritePolicy::Planned
+                            },
+                            fast_codec: options.fast_codec,
+                            fast_zstd_level: options.fast_zstd_level,
+                            semantic_search: options.semantic_search,
+                            ..crate::tensor_store::TensorPlanOptions::default()
+                        },
                         ..TensorWriteSpec::default()
                     };
                     let id = store
@@ -995,7 +1113,7 @@ impl Store {
                             &spec,
                         )
                         .map_err(|err| {
-                            let hint = match options.strategy {
+                            let hint = match effective_strategy {
                                 ShardStrategy::TensorSharded => {
                                     " (mode 10 needs a shard byte length divisible by 16; \
                                      choose --shard-strategy zstd otherwise)"
@@ -1324,7 +1442,7 @@ impl Store {
         options: &CheckpointRestoreOptions,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
-        self.restore_checkpoint_inner(None, None, name, options, writer)
+        self.restore_checkpoint_inner(None, None, name, options, false, writer)
     }
 
     /// Restore a checkpoint as it exists at a pinned snapshot.
@@ -1340,7 +1458,7 @@ impl Store {
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         let state = self.state_at(snapshot)?;
-        self.restore_checkpoint_inner(Some(&state), Some(snapshot), name, options, writer)
+        self.restore_checkpoint_inner(Some(&state), Some(snapshot), name, options, false, writer)
     }
 
     fn restore_checkpoint_inner<W: Write>(
@@ -1349,6 +1467,7 @@ impl Store {
         snapshot: Option<Hash32>,
         name: &str,
         options: &CheckpointRestoreOptions,
+        lazy_tiles: bool,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         if options.region.is_some() && options.tensor.is_none() {
@@ -1428,6 +1547,7 @@ impl Store {
                 &limits,
                 state,
                 snapshot,
+                lazy_tiles,
             )?;
             writer
                 .write_all(&restored.bytes)
@@ -1540,6 +1660,7 @@ impl Store {
             &limits,
             state.as_ref(),
             snapshot,
+            false,
         )?;
         let report = RestoredTensor {
             name: tensor.name.clone(),
@@ -1585,6 +1706,158 @@ impl Store {
         Ok((out, report))
     }
 
+    /// Restore a complete checkpoint and emit a `weft.load.receipt.v1` record.
+    ///
+    /// The bytes are produced into `writer` only after the loader has decided
+    /// the tensor is verified: a corrupt tile makes the restore fail before
+    /// that tensor's bytes reach the writer. The receipt's set roots are
+    /// computed from the produced bytes and from the manifest; a mismatch is a
+    /// typed `Corrupt` error naming the tensor.
+    ///
+    /// `verification = Lazy` verifies the per-unit roots the format provides
+    /// (tile roots for modes 15/17/18, shard roots for the checkpoint
+    /// topology). `Full` additionally re-reads every stored shard through the
+    /// verifying object path and re-checks its whole-content BLAKE3.
+    pub fn restore_checkpoint_with_load_receipt<W: Write>(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        load: &crate::load_receipt::LoadReceiptOptions,
+        writer: &mut W,
+    ) -> Result<(CheckpointRestoreReport, crate::load_receipt::LoadReceipt)> {
+        use crate::load_receipt::{LoadReceipt, LoadReceiptTensor, LoadVerification};
+
+        if options.tensor.is_some() || options.region.is_some() {
+            return Err(Error::invalid_argument(
+                "a load receipt requires a complete checkpoint restore (no --tensor/--range)",
+            ));
+        }
+        let started = std::time::Instant::now();
+        let manifest = self.load_checkpoint(name)?;
+        let manifest_root = manifest.root()?;
+        let limits = Limits::default();
+
+        // Restore into a private buffer so no unverified byte reaches the
+        // caller's writer.
+        let mut container = Vec::new();
+        let lazy_tiles = load.verification == LoadVerification::Lazy;
+        let report =
+            self.restore_checkpoint_inner(None, None, name, options, lazy_tiles, &mut container)?;
+        writer
+            .write_all(&container)
+            .map_err(|err| Error::io(format!("load receipt output: {err}")))?;
+
+        // The restore wrote the header followed by the tensors in
+        // `source_offset` order.
+        let payload_bytes: u64 = report.tensors.iter().map(|tensor| tensor.bytes).sum();
+        if payload_bytes > container.len() as u64 {
+            return Err(Error::corrupt(
+                "restored container is shorter than its tensor payloads",
+            ));
+        }
+        let payload_start = container.len() as u64 - payload_bytes;
+        let mut cursor = payload_start as usize;
+        let mut rows = Vec::with_capacity(report.tensors.len());
+        for tensor in &report.tensors {
+            let end = cursor
+                .checked_add(tensor.bytes as usize)
+                .ok_or_else(|| Error::limit_exceeded("load receipt cursor overflows usize"))?;
+            let slice = container.get(cursor..end).ok_or_else(|| {
+                Error::corrupt("load receipt payload range is outside the container")
+            })?;
+            cursor = end;
+            let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+            let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+                Error::unsupported_version(format!(
+                    "load receipt tensor `{}` has no physical dtype",
+                    tensor.name
+                ))
+            })?;
+            let loaded_root = tc::logical_root(physical, &tensor.full_shape, slice, &limits)
+                .map_err(|err| {
+                    let err = Error::from(err);
+                    Error::new(
+                        err.class(),
+                        format!(
+                            "load receipt tensor `{}`: loaded bytes have no logical root: {}",
+                            tensor.name,
+                            err.message()
+                        ),
+                    )
+                })?;
+            if loaded_root != tensor.full_logical_root {
+                return Err(Error::corrupt(format!(
+                    "load receipt tensor `{}`: loaded root {loaded_root} does not match the \
+                     checkpoint's attested root {}",
+                    tensor.name, tensor.full_logical_root
+                )));
+            }
+            rows.push(LoadReceiptTensor {
+                name: tensor.name.clone(),
+                dtype: tensor.dtype.clone(),
+                shape: tensor.full_shape.clone(),
+                attested_root: tensor.full_logical_root,
+                loaded_root,
+                content_root: tensor.restored_content_root,
+                sha256: tensor.sha256,
+                bytes: tensor.bytes,
+                units_verified: tensor.units_touched,
+            });
+        }
+
+        if load.verification == LoadVerification::Full {
+            for tensor in &manifest.tensors {
+                for shard in &tensor.shards {
+                    let bytes = self
+                        .read_object_uncounted(shard.object_id)
+                        .map_err(|err| context(&tensor.name, shard, err))?;
+                    if identity::content_hash(&bytes) != shard.content_root {
+                        return Err(context(
+                            &tensor.name,
+                            shard,
+                            Error::corrupt(
+                                "full load verification: whole-shard content hash mismatch",
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
+
+        let attested = LoadReceipt::roster_root(
+            &rows
+                .iter()
+                .map(|row| (row.name.clone(), row.attested_root))
+                .collect::<Vec<_>>(),
+        )?;
+        let loaded = LoadReceipt::roster_root(
+            &rows
+                .iter()
+                .map(|row| (row.name.clone(), row.loaded_root))
+                .collect::<Vec<_>>(),
+        )?;
+        if attested != loaded {
+            return Err(Error::corrupt(
+                "load receipt set root does not match the attested set root",
+            ));
+        }
+        let receipt = LoadReceipt {
+            checkpoint: name.to_owned(),
+            manifest_root,
+            replica: load.replica.clone(),
+            verification: load.verification,
+            tensors: rows,
+            loaded_set_root: loaded,
+            attested_set_root: attested,
+            bytes_produced: report.file_bytes,
+            units_verified: report.units_touched,
+            wall_ms: started.elapsed().as_millis() as u64,
+            exact_source_file: report.exact_source_file,
+            file_sha256: report.file_sha256,
+        };
+        Ok((report, receipt))
+    }
+
     fn restore_tensor(
         &self,
         checkpoint: &str,
@@ -1594,6 +1867,7 @@ impl Store {
         limits: &Limits,
         state: Option<&State>,
         snapshot: Option<Hash32>,
+        lazy_tiles: bool,
     ) -> Result<RestoredBytes> {
         let dtype = TensorElementDtype::parse(&tensor.dtype)?;
         let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
@@ -1609,8 +1883,11 @@ impl Store {
                 shards.sort_by_key(|shard| shard.index);
                 let mut payloads = Vec::with_capacity(shards.len());
                 let mut verified = 0usize;
+                let mut units_touched = 0u64;
                 for shard in &shards {
-                    let bytes = self.read_shard(checkpoint, tensor, shard, state, snapshot)?;
+                    let (bytes, units) =
+                        self.read_shard(checkpoint, tensor, shard, state, snapshot, lazy_tiles)?;
+                    units_touched += units;
                     if bytes.len() as u64 != shard.byte_len {
                         return Err(context(
                             &tensor.name,
@@ -1708,7 +1985,7 @@ impl Store {
                     bytes,
                     shape: tensor.shape.clone(),
                     shards_read: verified,
-                    units_touched: verified as u64,
+                    units_touched: units_touched.max(verified as u64),
                     full_root_verified: true,
                     shard_roots_verified: true,
                     restored_content_root: content_root,
@@ -1826,19 +2103,43 @@ impl Store {
         shard: &CheckpointShard,
         state: Option<&State>,
         snapshot: Option<Hash32>,
-    ) -> Result<Vec<u8>> {
+        lazy_tiles: bool,
+    ) -> Result<(Vec<u8>, u64)> {
         let id = self.verify_shard_entry(checkpoint, tensor, shard, state, snapshot)?;
-        match state {
+        // Lazy verification: a mode-15/17/18 object is read through the range
+        // path, which verifies every tile root but deliberately does not
+        // re-hash the whole frame. Every other representation has no
+        // independent unit, so it takes the whole-object verifying read.
+        if lazy_tiles {
+            let meta = match state {
+                Some(state) => self.tensor_metadata_at(state, id),
+                None => self.tensor_metadata(id),
+            }
+            .map_err(|err| context(&tensor.name, shard, err))?;
+            if matches!(
+                meta.strategy.as_str(),
+                "tensor-tiled" | "float-tiled" | "float-tiled-streams"
+            ) {
+                let shape = meta.shape.clone();
+                let region = Region::new(vec![0u64; shape.len()], shape);
+                let read = self
+                    .read_tensor_region(id, &region)
+                    .map_err(|err| context(&tensor.name, shard, err))?;
+                return Ok((read.bytes, read.units_touched));
+            }
+        }
+        let bytes = match state {
             Some(state) => {
                 self.tensor_metadata_at(state, id)
                     .map_err(|err| context(&tensor.name, shard, err))?;
                 self.read_object_at(snapshot, id)
-                    .map_err(|err| context(&tensor.name, shard, err))
+                    .map_err(|err| context(&tensor.name, shard, err))?
             }
             None => self
                 .read_tensor(id)
-                .map_err(|err| context(&tensor.name, shard, err)),
-        }
+                .map_err(|err| context(&tensor.name, shard, err))?,
+        };
+        Ok((bytes, 1))
     }
 
     fn verify_shard_entry(

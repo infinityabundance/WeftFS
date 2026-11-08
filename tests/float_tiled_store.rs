@@ -282,6 +282,7 @@ fn checkpoint_float_tiled_shards_restore_exactly() {
                 filters: Vec::new(),
                 strategy: ShardStrategy::FloatTiled,
                 tile_shape: Some(vec![16, 32]),
+                ..CheckpointWriteOptions::default()
             },
         )
         .expect("checkpoint write");

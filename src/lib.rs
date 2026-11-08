@@ -48,6 +48,7 @@ pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
 pub mod kv_capability;
+pub mod load_receipt;
 pub mod object_cache;
 pub mod packs;
 pub mod parallel;
@@ -57,6 +58,7 @@ pub mod quota;
 pub mod rebase;
 pub mod receipt_bundle;
 pub mod recovery;
+pub mod recovery_first;
 pub mod representation;
 pub mod restore_pipeline;
 pub mod s3;
@@ -69,6 +71,7 @@ pub mod tensor_store;
 pub mod threefs;
 pub mod timeparse;
 pub mod training_ready;
+pub mod transcode;
 pub mod wcb_util;
 pub mod writer_fence;
 
@@ -91,6 +94,10 @@ pub use cost_model::{CostClass, CostModelKind, CostTable};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;
+pub use load_receipt::{
+    LoadReceipt, LoadReceiptOptions, LoadReceiptTensor, LoadVerification, LOAD_RECEIPT_SCHEMA,
+    LOAD_SET_DOMAIN,
+};
 pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStats};
 pub use packs::{PackOptions, PackReclaim, PackStats, PackedBlobPlane};
 pub use parallel::{
@@ -109,6 +116,7 @@ pub use provenance::{
 pub use rebase::{
     RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
 };
+pub use recovery_first::{CachedTensor, RecoveryFirstOptions, RecoveryFirstReport, RECOVERY_CACHE_SCHEMA};
 pub use restore_pipeline::{run_ordered_pipeline, RestorePipelineOptions, RestorePipelineStats};
 pub use s3::{S3Backend, S3Config};
 pub use singleflight::{
@@ -120,12 +128,16 @@ pub use store::{
     SavedContext, SetAttr, StatFs, Store, VerifyReport,
 };
 pub use tensor_store::{
-    StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec, TensorPlan, TensorPlanCandidate,
-    TensorPlanOptions, TensorRebase, TensorStrategy, TensorWriteSpec,
+    FastCodec, ResolvedWritePolicy, StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec,
+    TensorPlan, TensorPlanCandidate, TensorPlanOptions, TensorRebase, TensorRebaseDecision,
+    TensorStrategy, TensorWriteSpec, WritePolicy,
 };
 pub use training_ready::{
     verify_training_ready_output, PreconditionReport, TrainingReadyCheckpoint, TrainingReadyCost,
     TrainingReadyFile, TrainingReadyOptions, TrainingReadyReport, TrainingReadyTensor,
     TrainingReadyVerification,
+};
+pub use transcode::{
+    TranscodeCandidate, TranscodeOptions, TranscodeOutcome, TranscodeReport, TranscodeSkip,
 };
 pub use writer_fence::PublishedLock;

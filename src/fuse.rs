@@ -48,7 +48,8 @@ use weftcodec::Limits;
 use crate::auth::{self, Principal};
 use crate::context::CapabilityContext;
 use crate::error::{Class, Error, Result};
-use crate::identity::Hash32;
+use crate::identity::{self, Hash32};
+use crate::load_receipt::{LoadReceipt, LoadReceiptTensor, LoadVerification};
 use crate::state::{validate_name_bytes, ObjectKind, ObjectRecord, State};
 use crate::store::{ManifestCache, OpenMode, Store, MAX_FILE_BYTES, MAX_XATTR_VALUE_BYTES};
 
@@ -122,6 +123,11 @@ pub struct MountOptions {
     /// Batch successive independent mutations into one durable commit within
     /// [`GROUP_COMMIT_WINDOW`].
     pub group_commit: bool,
+    /// Verify every tensor file through the load path on `open` and write a
+    /// `weft.load.receipt.v1` record per file.
+    pub verify_load: bool,
+    /// Directory that receives the per-file load receipts.
+    pub load_receipt_dir: Option<PathBuf>,
 }
 
 /// A resolved Context Root used as the mount root.
@@ -452,6 +458,8 @@ pub struct WeftFuse {
     context: Option<ContextMount>,
     write_back: bool,
     group_commit: bool,
+    verify_load: bool,
+    load_receipt_dir: Option<PathBuf>,
     /// Open group-commit session; `None` while no group is buffering.
     group: Arc<Mutex<Option<GroupSession>>>,
     group_stop: Arc<AtomicBool>,
@@ -511,6 +519,8 @@ impl WeftFuse {
             context: options.context.clone(),
             write_back: options.write_back && !options.read_only,
             group_commit: options.group_commit && !options.read_only,
+            verify_load: options.verify_load,
+            load_receipt_dir: options.load_receipt_dir.clone(),
             group,
             group_stop,
             group_thread,
@@ -1474,6 +1484,8 @@ impl SharedMount {
         store: Store,
         views: Vec<SharedViewSpec>,
         allow_other: bool,
+        verify_load: bool,
+        load_receipt_dir: Option<PathBuf>,
     ) -> Result<SharedMount> {
         if views.is_empty() {
             return Err(Error::invalid_argument(
@@ -1512,6 +1524,8 @@ impl SharedMount {
                 context: view.context,
                 write_back: false,
                 group_commit: false,
+                verify_load,
+                load_receipt_dir: load_receipt_dir.clone(),
             };
             let fuse = WeftFuse::new_shared(Arc::clone(&store), &options);
             match fuser::spawn_mount2(
@@ -1588,8 +1602,14 @@ impl SharedMount {
 
 /// Serve `views` from one shared `Store` until SIGINT/SIGTERM or until every
 /// view has been unmounted externally.
-pub fn run_shared(store: Store, views: Vec<SharedViewSpec>, allow_other: bool) -> Result<()> {
-    let mount = SharedMount::start(store, views, allow_other)?;
+pub fn run_shared(
+    store: Store,
+    views: Vec<SharedViewSpec>,
+    allow_other: bool,
+    verify_load: bool,
+    load_receipt_dir: Option<PathBuf>,
+) -> Result<()> {
+    let mount = SharedMount::start(store, views, allow_other, verify_load, load_receipt_dir)?;
     let stop = Arc::new(AtomicBool::new(false));
     {
         let stop = Arc::clone(&stop);
@@ -1626,6 +1646,70 @@ fn session_mount_options(allow_other: bool, read_only: bool) -> Vec<MountOption>
     });
     mount_options
 }
+
+/// `--verify-load`: read one tensor object through the verifying path,
+/// recompute its logical root, and write the per-file receipt. Returns the
+/// typed error so `open` can fail the handle with `EIO`.
+fn verify_load_file(store: &Store, id: Hash32, receipt_dir: &Path) -> Result<()> {
+    let meta = match store.tensor_metadata(id) {
+        Ok(meta) => meta,
+        // Not a tensor file: nothing to attest beyond the ordinary
+        // content-hash-verified read.
+        Err(_) => return Ok(()),
+    };
+    let physical = meta
+        .dtype
+        .physical_tensor_dtype()
+        .ok_or_else(|| Error::unsupported_version("tensor has no physical dtype"))?;
+    let bytes = store.read_tensor(id)?;
+    let limits = Limits::default();
+    let loaded_root = weftcodec::tensor::logical_root(physical, &meta.shape, &bytes, &limits)
+        .map_err(Error::from)?;
+    if loaded_root != meta.logical_root {
+        return Err(Error::corrupt(format!(
+            "load verification for object {id}: loaded root {loaded_root} does not match \
+             the attested root {}",
+            meta.logical_root
+        )));
+    }
+    let row = LoadReceiptTensor {
+        name: id.to_hex(),
+        dtype: meta.dtype.as_str().to_owned(),
+        shape: meta.shape.clone(),
+        attested_root: meta.logical_root,
+        loaded_root,
+        content_root: identity::content_hash(&bytes),
+        sha256: crate::safetensors::sha256(&bytes),
+        bytes: bytes.len() as u64,
+        units_verified: 1,
+    };
+    let set_root = LoadReceipt::roster_root(&[(row.name.clone(), row.loaded_root)])?;
+    let receipt = LoadReceipt {
+        checkpoint: String::new(),
+        manifest_root: Hash32::ZERO,
+        replica: "fuse".to_owned(),
+        verification: LoadVerification::Lazy,
+        bytes_produced: row.bytes,
+        units_verified: row.units_verified,
+        wall_ms: 0,
+        exact_source_file: true,
+        file_sha256: row.sha256,
+        loaded_set_root: set_root,
+        attested_set_root: set_root,
+        tensors: vec![row],
+    };
+    std::fs::create_dir_all(receipt_dir)
+        .map_err(|err| Error::io(format!("{}: {err}", receipt_dir.display())))?;
+    let path = receipt_dir.join(format!("{}.wcb", id.to_hex()));
+    let encoded = receipt.encode()?;
+    let tmp = path.with_extension("tmp");
+    std::fs::write(&tmp, &encoded)
+        .map_err(|err| Error::io(format!("{}: {err}", tmp.display())))?;
+    std::fs::rename(&tmp, &path)
+        .map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
+    Ok(())
+}
+
 
 impl Filesystem for WeftFuse {
     fn init(
@@ -2240,6 +2324,17 @@ impl Filesystem for WeftFuse {
             }
             (record.content, record.size, record.kind)
         };
+        if self.verify_load {
+            if let Some(dir) = &self.load_receipt_dir {
+                let store = self.store.read();
+                if let Some(id) = object_id {
+                    if let Err(err) = verify_load_file(&store, id, dir) {
+                        eprintln!("weftfs: --verify-load refused {id}: {err}");
+                        return reply.error(errno(&err));
+                    }
+                }
+            }
+        }
         if flags & O_TRUNC != 0 && !read_only_surface {
             // Unreachable for a read-only view (write intent was refused above),
             // so this branch always has an exclusive handle.

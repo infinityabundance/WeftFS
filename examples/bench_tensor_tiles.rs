@@ -168,6 +168,7 @@ fn main() {
                 filters: vec![tensor.clone()],
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .expect("write m10");
@@ -183,6 +184,7 @@ fn main() {
                 filters: vec![tensor.clone()],
                 strategy: ShardStrategy::TensorTiled,
                 tile_shape: Some(tile_shape.clone()),
+                ..CheckpointWriteOptions::default()
             },
         )
         .expect("write tiled");

@@ -743,6 +743,40 @@ enum Command {
         #[arg(long = "max-objects", default_value_t = 100_000)]
         max_objects: usize,
     },
+    /// Background transcode: rewrite fast-written tensors to their planned
+    /// representation in a bounded, exclusive pass.
+    Transcode {
+        /// Store path or 64-hex ObjectId to scan (inclusive).
+        #[arg(long, default_value = "/")]
+        root: String,
+        /// Price the plan and report it without writing anything.
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+        /// Maximum live objects examined.
+        #[arg(long = "max-objects", default_value_t = 100_000)]
+        max_objects: usize,
+        /// Maximum logical bytes read by the pass.
+        #[arg(long = "max-bytes", default_value_t = u64::MAX)]
+        max_bytes: u64,
+        /// Maximum wall time in milliseconds (0 disables the wall bound).
+        #[arg(long = "max-millis", default_value_t = 0)]
+        max_millis: u64,
+        /// Minimum percentage of the current physical bytes a rewrite must save.
+        #[arg(long = "min-saved-percent", default_value_t = 1)]
+        min_saved_percent: u8,
+        /// Force a standalone planned strategy: raw, zstd, float-tensor, ...
+        #[arg(long)]
+        strategy: Option<String>,
+        /// Read the republished version back and compare the logical bytes.
+        #[arg(long = "no-verify-after")]
+        no_verify_after: bool,
+        /// Test hook: abort the process after N durable publications.
+        #[arg(long = "crash-after", value_name = "N")]
+        crash_after: Option<usize>,
+        /// Test hook: abort the process just before publishing candidate N.
+        #[arg(long = "crash-before", value_name = "N")]
+        crash_before: Option<usize>,
+    },
     /// Measure and record this host's decode cost table, and report its
     /// divergence from the baked table. Reuses the shipped measurement code.
     Calibrate {
@@ -778,6 +812,13 @@ enum Command {
         /// Allow users other than the mounting user.
         #[arg(long = "allow-other")]
         allow_other: bool,
+        /// Verify every tensor file through the load path on open and write a
+        /// `weft.load.receipt.v1` receipt per file.
+        #[arg(long = "verify-load")]
+        verify_load: bool,
+        /// Directory for the per-file load receipts (requires --verify-load).
+        #[arg(long = "load-receipt-dir", value_name = "DIR")]
+        load_receipt_dir: Option<PathBuf>,
         /// Mount a named snapshot (or commit hex) read-only.
         #[arg(long)]
         snapshot: Option<String>,
@@ -813,6 +854,13 @@ enum Command {
         /// Allow users other than the mounting user.
         #[arg(long = "allow-other")]
         allow_other: bool,
+        /// Verify every tensor file through the load path on open and write a
+        /// `weft.load.receipt.v1` receipt per file.
+        #[arg(long = "verify-load")]
+        verify_load: bool,
+        /// Directory for the per-file load receipts (requires --verify-load).
+        #[arg(long = "load-receipt-dir", value_name = "DIR")]
+        load_receipt_dir: Option<PathBuf>,
     },
     /// Build the deterministic handoff fixture.
     ConformanceStore {
@@ -925,6 +973,30 @@ enum CheckpointCommand {
         /// Tile extents for mode 15/17 (`A,B,...`). Implies tensor-tiled shards.
         #[arg(long = "tile-shape", value_name = "A,B,...")]
         tile_shape: Option<String>,
+        /// Critical-path write policy: `fast` stores raw/fast-ZSTD shards and
+        /// never runs a planned candidate encode; `planned` is the historical
+        /// behaviour; `auto` is fast when --critical-path or --deadline-ms is set.
+        #[arg(long = "write-policy", default_value = "planned")]
+        write_policy: String,
+        /// Representation for a fast write: `raw` or `zstd`.
+        #[arg(long = "fast-codec", default_value = "zstd")]
+        fast_codec: String,
+        /// ZSTD level for `--fast-codec zstd` (1..=3).
+        #[arg(long = "fast-zstd-level", default_value_t = 1)]
+        fast_zstd_level: i32,
+        /// Declare this save to be on the training critical path (`auto` policy).
+        #[arg(long = "critical-path")]
+        critical_path: bool,
+        /// Declare a caller deadline in milliseconds (`auto` policy).
+        #[arg(long = "deadline-ms", value_name = "MS")]
+        deadline_ms: Option<u64>,
+        /// Previous checkpoint in this store; matching tensors offer its shard
+        /// versions as causal parents (enables weight-delta).
+        #[arg(long = "causal-checkpoint", value_name = "NAME")]
+        causal_checkpoint: Option<String>,
+        /// Do not run the mode-14 semantic-delta candidate search.
+        #[arg(long = "no-semantic")]
+        no_semantic: bool,
     },
     /// Restore a checkpoint, one tensor, or one tensor region.
     ///
@@ -968,6 +1040,28 @@ enum CheckpointCommand {
         /// Host spool file used while assembling (default: a temp file).
         #[arg(long, value_name = "FILE")]
         spool: Option<PathBuf>,
+        /// Write a canonical `weft.load.receipt.v1` record here after the bytes
+        /// are produced and verified (requires a complete restore).
+        #[arg(long = "load-receipt", value_name = "FILE")]
+        load_receipt: Option<PathBuf>,
+        /// Load verification depth for `--load-receipt`: `lazy` verifies the
+        /// per-unit roots the format provides; `full` additionally re-reads
+        /// every stored shard and re-checks its whole-content hash.
+        #[arg(long = "verify-load", value_name = "lazy|full", default_value = "lazy")]
+        verify_load: String,
+        /// Replica label recorded in the load receipt.
+        #[arg(long, default_value = "local")]
+        replica: String,
+        /// Restore this required set first (one tensor name per line; `#`
+        /// comments allowed), then the rest of the checkpoint.
+        #[arg(long = "first-needed", value_name = "FILE")]
+        first_needed: Option<PathBuf>,
+        /// Host directory holding verified required tensors across restarts.
+        #[arg(long = "first-cache", value_name = "DIR")]
+        first_cache: Option<PathBuf>,
+        /// Test hook: abort after the required set is verified and cached.
+        #[arg(long = "abort-after-first")]
+        abort_after_first: bool,
     },
     /// List checkpoints.
     List,
@@ -2890,6 +2984,134 @@ fn run(cli: Cli) -> Result<()> {
                 Ok(())
             }
         }
+        Command::Transcode {
+            root,
+            dry_run,
+            max_objects,
+            max_bytes,
+            max_millis,
+            min_saved_percent,
+            strategy,
+            no_verify_after,
+            crash_after,
+            crash_before,
+        } => {
+            let mode = if dry_run {
+                OpenMode::ReadOnly
+            } else {
+                OpenMode::ReadWrite
+            };
+            let mut store = open_store(&store, mode, policy)?;
+            let root_id = if root.len() == 64 && root.bytes().all(|b| b.is_ascii_hexdigit()) {
+                weftfs::Hash32::from_hex(&root)
+                    .map_err(|err| Error::invalid_argument(format!("bad --root id: {err}")))?
+            } else {
+                store.resolve_path(&root)?
+            };
+            let options = weftfs::transcode::TranscodeOptions {
+                max_objects,
+                max_bytes,
+                max_millis,
+                min_saved_percent,
+                dry_run,
+                strategy_hint: match strategy.as_deref() {
+                    None => None,
+                    Some(text) => match parse_tensor_strategy(text)? {
+                        None => None,
+                        Some(hint) => {
+                            if !hint.is_independent() {
+                                return Err(Error::invalid_argument(format!(
+                                    "transcode requires a standalone strategy; `{}` carries a \
+                                     dependency and cannot be the transcode target",
+                                    hint.as_str()
+                                )));
+                            }
+                            Some(hint)
+                        }
+                    },
+                },
+                cost_model: planner_cost_model,
+                calibration: calibration_table.clone(),
+                verify_after: !no_verify_after,
+                crash_after_publishes: crash_after,
+                crash_before_publish: crash_before,
+                ..weftfs::transcode::TranscodeOptions::default()
+            };
+            let report = store.transcode(root_id, &options)?;
+            if json {
+                print_json(&json!({
+                    "root": report.root.to_hex(),
+                    "dry_run": report.dry_run,
+                    "scanned": report.scanned,
+                    "truncated": report.truncated,
+                    "stopped_reason": report.stopped_reason,
+                    "bytes_read": report.bytes_read,
+                    "elapsed_ms": report.elapsed_ms,
+                    "candidates": report.candidates.iter().map(|item| json!({
+                        "object": item.object.to_hex(),
+                        "path": item.path,
+                        "from_strategy": item.from_strategy,
+                        "to_strategy": item.to_strategy.as_str(),
+                        "logical_bytes": item.logical_bytes,
+                        "old_physical_bytes": item.old_physical_bytes,
+                        "new_physical_bytes": item.new_physical_bytes,
+                        "saved_bytes": item.old_physical_bytes.saturating_sub(item.new_physical_bytes),
+                        "estimated_decode_ns": item.estimated_decode_ns,
+                        "candidates": item.candidates.iter().map(|(name, bytes, ns)| {
+                            json!({"strategy": name, "physical_bytes": bytes, "estimated_decode_ns": ns})
+                        }).collect::<Vec<_>>(),
+                    })).collect::<Vec<_>>(),
+                    "skipped": report.skipped.iter().map(|item| json!({
+                        "object": item.object.to_hex(),
+                        "path": item.path,
+                        "reason": item.reason,
+                    })).collect::<Vec<_>>(),
+                    "applied": report.applied.iter().map(|item| json!({
+                        "object": item.object.to_hex(),
+                        "path": item.path,
+                        "old_version": item.old_version.to_hex(),
+                        "new_version": item.new_version.to_hex(),
+                        "content": item.content.to_hex(),
+                        "from_strategy": item.from_strategy,
+                        "to_strategy": item.to_strategy.as_str(),
+                        "old_physical_bytes": item.old_physical_bytes,
+                        "new_physical_bytes": item.new_physical_bytes,
+                        "verified": item.verified,
+                        "provenance_id": item.provenance_id.to_hex(),
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                println!(
+                    "scanned={} candidates={} applied={} bytes_read={} elapsed_ms={:.1}",
+                    report.scanned,
+                    report.candidates.len(),
+                    report.applied.len(),
+                    report.bytes_read,
+                    report.elapsed_ms,
+                );
+                for item in &report.candidates {
+                    println!(
+                        "transcode {} {} {}->{} {}->{} bytes",
+                        item.object,
+                        item.path,
+                        item.from_strategy,
+                        item.to_strategy.as_str(),
+                        item.old_physical_bytes,
+                        item.new_physical_bytes,
+                    );
+                }
+                for item in &report.skipped {
+                    println!("skip {} {} reason={}", item.object, item.path, item.reason);
+                }
+                for item in &report.applied {
+                    println!(
+                        "applied {} {} version={} verified={} provenance={}",
+                        item.object, item.path, item.new_version, item.verified, item.provenance_id,
+                    );
+                }
+                Ok(())
+            }
+        }
         Command::Calibrate {
             out,
             from,
@@ -3049,7 +3271,14 @@ fn run(cli: Cli) -> Result<()> {
             capability_file,
             write_back,
             group_commit,
+            verify_load,
+            load_receipt_dir,
         } => {
+            if verify_load && load_receipt_dir.is_none() {
+                return Err(Error::invalid_argument(
+                    "--verify-load requires --load-receipt-dir DIR",
+                ));
+            }
             // v1 does not daemonize: the process always stays in the foreground
             // so SIGINT/SIGTERM can trigger a clean unmount.
             let _ = foreground;
@@ -3154,11 +3383,18 @@ fn run(cli: Cli) -> Result<()> {
                     context: context_mount,
                     write_back,
                     group_commit,
+                    verify_load,
+                    load_receipt_dir,
                 },
             )
         }
         #[cfg(feature = "fuse")]
-        Command::MountMany { spec, allow_other } => {
+        Command::MountMany {
+            spec,
+            allow_other,
+            verify_load,
+            load_receipt_dir,
+        } => {
             let spec = read_mount_spec(&spec)?;
             if spec.views.len() > weftfs::fuse::MAX_SHARED_VIEWS {
                 return Err(Error::limit_exceeded(format!(
@@ -3242,7 +3478,13 @@ fn run(cli: Cli) -> Result<()> {
                     capability,
                 });
             }
-            weftfs::fuse::run_shared(store, views, allow_other)
+            weftfs::fuse::run_shared(
+                store,
+                views,
+                allow_other,
+                verify_load,
+                load_receipt_dir,
+            )
         }
         Command::ConformanceStore {
             out,
@@ -3278,6 +3520,13 @@ fn run_checkpoint(
             tensor_filters,
             shard_strategy,
             tile_shape,
+            write_policy,
+            fast_codec,
+            fast_zstd_level,
+            critical_path,
+            deadline_ms,
+            causal_checkpoint,
+            no_semantic,
         } => {
             let started = std::time::Instant::now();
             let source = resolve_checkpoint_source(from_dir.as_deref(), file.as_deref())?;
@@ -3311,6 +3560,13 @@ fn run_checkpoint(
                 filters: tensor_filters,
                 strategy,
                 tile_shape,
+                write_policy: weftfs::tensor_store::WritePolicy::parse(&write_policy)?,
+                fast_codec: weftfs::tensor_store::FastCodec::parse(&fast_codec)?,
+                fast_zstd_level,
+                on_critical_path: critical_path,
+                deadline_ms,
+                causal_checkpoint,
+                semantic_search: !no_semantic,
             };
             let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
             let report = store.write_checkpoint(&name, &source, &options)?;
@@ -3329,6 +3585,16 @@ fn run_checkpoint(
                     "shards": options.shards,
                     "axis": options.axis,
                     "shard_strategy": options.strategy.as_str(),
+                    "write_policy": options.write_policy.as_str(),
+                    "write_policy_resolved": match options.resolved_policy() {
+                        weftfs::tensor_store::WritePolicy::Fast => "fast",
+                        weftfs::tensor_store::WritePolicy::Planned => "planned",
+                        weftfs::tensor_store::WritePolicy::Auto { .. } => "auto",
+                    },
+                    "effective_shard_strategy": options.effective_strategy().as_str(),
+                    "fast_codec": options.fast_codec.as_str(),
+                    "fast_zstd_level": options.fast_zstd_level,
+                    "causal_checkpoint": options.causal_checkpoint,
                     "tile_shape": options.tile_shape,
                     "total_element_bytes": report.total_element_bytes,
                     "shard_objects": report.shard_objects,
@@ -3369,8 +3635,23 @@ fn run_checkpoint(
             block_shape,
             host_out,
             spool,
+            load_receipt,
+            verify_load,
+            replica,
+            first_needed,
+            first_cache,
+            abort_after_first,
         } => {
             let started = std::time::Instant::now();
+            let load_options = weftfs::load_receipt::LoadReceiptOptions {
+                replica: replica.clone(),
+                verification: weftfs::load_receipt::LoadVerification::parse(&verify_load)?,
+            };
+            if load_receipt.is_some() && (tensor.is_some() || range.is_some()) {
+                return Err(Error::invalid_argument(
+                    "--load-receipt requires a complete checkpoint restore (no --tensor/--range)",
+                ));
+            }
             let restore_topology =
                 build_restore_topology(topology, axis, layout.as_deref(), block_shape.as_deref())?;
             let region = match range.as_deref() {
@@ -3410,131 +3691,251 @@ fn run_checkpoint(
                         .map_err(|err| Error::io(format!("{}: {err}", parent.display())))?;
                 }
             }
-            let report = {
+            let mut emitted_receipt: Option<weftfs::load_receipt::LoadReceipt> = None;
+            if let Some(first_needed_path) = &first_needed {
+                if import {
+                    return Err(Error::invalid_argument(
+                        "--first-needed cannot be combined with --import",
+                    ));
+                }
+                if tensor.is_some() || range.is_some() || load_receipt.is_some() {
+                    return Err(Error::invalid_argument(
+                        "--first-needed takes a complete restore (no --tensor/--range/--load-receipt)",
+                    ));
+                }
+                let required = parse_first_needed(first_needed_path)?;
                 let store = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
-                let file = fs::File::create(&spool_path)
+                let cache_dir = first_cache.clone();
+                let mut file = fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(&spool_path)
                     .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
-                let mut writer = std::io::BufWriter::new(file);
-                let outcome = store.restore_checkpoint(&name, &options, &mut writer);
-                match outcome {
-                    Ok(report) => {
-                        writer
-                            .flush()
-                            .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
-                        drop(writer);
-                        report
-                    }
+                let outcome = store.restore_checkpoint_recovery_first(
+                    &name,
+                    &options,
+                    &weftfs::recovery_first::RecoveryFirstOptions {
+                        required,
+                        cache_dir,
+                        abort_after_required: abort_after_first,
+                    },
+                    &mut file,
+                );
+                let report = match outcome {
+                    Ok(report) => report,
                     Err(err) => {
-                        drop(writer);
+                        drop(file);
                         let _ = fs::remove_file(&spool_path);
                         return Err(err);
                     }
+                };
+                drop(file);
+                if host_out.is_none() {
+                    let _ = fs::remove_file(&spool_path);
                 }
-            };
-            // Importing writes the restored container into the store namespace
-            // and is opt-in: a plain restore only reads the store and writes the
-            // host file.
-            let imported = if import {
-                let out_dir = out.as_deref().unwrap_or_default();
-                let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
-                let parent = ensure_store_dir(&mut store, out_dir)?;
-                let file_name = out_name
-                    .clone()
-                    .unwrap_or_else(|| format!("{name}.safetensors"));
-                let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
-                let mut attrs = BTreeMap::new();
-                attrs.insert(
-                    "weft.checkpoint.name".to_owned(),
-                    Value::Str(report.name.clone()),
-                );
-                attrs.insert(
-                    "weft.checkpoint.manifest_root".to_owned(),
-                    wu::hash_value(report.manifest_root),
-                );
-                attrs.insert(
-                    "weft.checkpoint.file_sha256".to_owned(),
-                    Value::Bytes(report.file_sha256.to_vec()),
-                );
-                if let Some(source) = report.source_sha256 {
-                    attrs.insert(
-                        "weft.checkpoint.source_sha256".to_owned(),
-                        Value::Bytes(source.to_vec()),
+                if json {
+                    print_json(&json!({
+                        "checkpoint": report.checkpoint,
+                        "manifest_root": report.manifest_root.to_hex(),
+                        "file_sha256": hex::encode(report.file_sha256),
+                        "exact_source_file": report.exact_source_file,
+                        "file_bytes": report.file_bytes,
+                        "required_order": report.required_order.iter().map(|(name, depth)| {
+                            json!({"name": name, "dependency_depth": depth})
+                        }).collect::<Vec<_>>(),
+                        "cached_required": report.cached_required.iter().map(|item| json!({
+                            "name": item.name,
+                            "bytes": item.bytes,
+                            "logical_root": item.logical_root.to_hex(),
+                        })).collect::<Vec<_>>(),
+                        "time_to_first_usable_ms": report.time_to_first_usable_ms,
+                        "time_to_complete_ms": report.time_to_complete_ms,
+                        "bytes_fetched_before_first_usable": report.bytes_fetched_before_first_usable,
+                        "bytes_fetched_total": report.bytes_fetched_total,
+                        "store_reads_before_first_usable": report.store_reads_before_first_usable,
+                        "tensors": report.tensors.iter().map(|tensor| json!({
+                            "name": tensor.name,
+                            "bytes": tensor.bytes,
+                            "full_root_verified": tensor.full_root_verified,
+                            "sha256": hex::encode(tensor.sha256),
+                        })).collect::<Vec<_>>(),
+                        "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                        "peak_rss_kib": peak_rss_kib(),
+                    }))
+                } else {
+                    println!("checkpoint={}", report.checkpoint);
+                    println!("manifest_root={}", report.manifest_root);
+                    println!("exact_source_file={}", report.exact_source_file);
+                    println!(
+                        "time_to_first_usable_ms={:.3}",
+                        report.time_to_first_usable_ms
                     );
+                    println!("time_to_complete_ms={:.3}", report.time_to_complete_ms);
+                    println!(
+                        "bytes_fetched_before_first_usable={}",
+                        report.bytes_fetched_before_first_usable
+                    );
+                    println!("bytes_fetched_total={}", report.bytes_fetched_total);
+                    println!("cached_required={}", report.cached_required.len());
+                    Ok(())
                 }
-                attrs.insert(
-                    "weft.checkpoint.exact".to_owned(),
-                    Value::Bool(report.exact_source_file),
-                );
-                let input = fs::File::open(&spool_path)
-                    .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
-                let object_id = store.create_file_streaming(
-                    parent,
-                    file_name.as_bytes(),
-                    std::io::BufReader::new(input),
-                    0o644,
-                    uid,
-                    gid,
-                    attrs,
-                )?;
-                let store_path_out = format!("{}/{}", out_dir.trim_end_matches('/'), file_name);
-                Some((object_id, store.generation(), store_path_out))
             } else {
-                None
-            };
-            if host_out.is_none() {
-                let _ = fs::remove_file(&spool_path);
-            }
-            if json {
-                print_json(&json!({
-                    "checkpoint": report.name,
-                    "manifest_root": report.manifest_root.to_hex(),
-                    "file_sha256": hex::encode(report.file_sha256),
-                    "source_sha256": report.source_sha256.map(hex::encode),
-                    "exact_source_file": report.exact_source_file,
-                    "header_reproduced": report.header_reproduced,
-                    "file_bytes": report.file_bytes,
-                    "imported": import,
-                    "object_id": imported.as_ref().map(|(id, _, _)| id.to_hex()),
-                    "generation": imported.as_ref().map(|(_, generation, _)| *generation),
-                    "store_path": imported.as_ref().map(|(_, _, path)| path.clone()),
-                    "host_out": host_out.as_ref().map(|path| path.display().to_string()),
-                    "shards_read": report.shards_read,
-                    "units_touched": report.units_touched,
-                    "store_bytes_read": report.store_bytes_read,
-                    "store_reads": report.store_reads,
-                    "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
-                    "peak_rss_kib": peak_rss_kib(),
-                    "tensors": report.tensors.iter().map(|tensor| json!({
-                        "name": tensor.name,
-                        "dtype": tensor.dtype,
-                        "shape": tensor.shape,
-                        "full_shape": tensor.full_shape,
-                        "full_logical_root": tensor.full_logical_root.to_hex(),
-                        "restored_content_root": tensor.restored_content_root.to_hex(),
-                        "bytes": tensor.bytes,
-                        "shards_read": tensor.shards_read,
-                        "units_touched": tensor.units_touched,
-                        "full_root_verified": tensor.full_root_verified,
-                        "shard_roots_verified": tensor.shard_roots_verified,
-                        "topology_root": tensor.topology_root.map(|root| root.to_hex()),
-                        "sha256": hex::encode(tensor.sha256),
-                    })).collect::<Vec<_>>(),
-                }))
-            } else {
-                println!("checkpoint={}", report.name);
-                println!("file_sha256={}", hex::encode(report.file_sha256));
-                println!("exact_source_file={}", report.exact_source_file);
-                println!("file_bytes={}", report.file_bytes);
-                println!("imported={import}");
-                if let Some((object_id, generation, store_path_out)) = &imported {
-                    println!("object_id={object_id}");
-                    println!("generation={generation}");
-                    println!("store_path={store_path_out}");
+                let report = {
+                    let store = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
+                    let file = fs::File::create(&spool_path)
+                        .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+                    let mut writer = std::io::BufWriter::new(file);
+                    let outcome = match &load_receipt {
+                        Some(path) => store
+                            .restore_checkpoint_with_load_receipt(
+                                &name,
+                                &options,
+                                &load_options,
+                                &mut writer,
+                            )
+                            .and_then(|(report, receipt)| {
+                                let bytes = receipt.encode()?;
+                                fs::write(path, &bytes).map_err(|err| {
+                                    Error::io(format!("{}: {err}", path.display()))
+                                })?;
+                                emitted_receipt = Some(receipt);
+                                Ok(report)
+                            }),
+                        None => store.restore_checkpoint(&name, &options, &mut writer),
+                    };
+                    match outcome {
+                        Ok(report) => {
+                            writer.flush().map_err(|err| {
+                                Error::io(format!("{}: {err}", spool_path.display()))
+                            })?;
+                            drop(writer);
+                            report
+                        }
+                        Err(err) => {
+                            drop(writer);
+                            let _ = fs::remove_file(&spool_path);
+                            return Err(err);
+                        }
+                    }
+                };
+                // Importing writes the restored container into the store namespace
+                // and is opt-in: a plain restore only reads the store and writes the
+                // host file.
+                let imported = if import {
+                    let out_dir = out.as_deref().unwrap_or_default();
+                    let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+                    let parent = ensure_store_dir(&mut store, out_dir)?;
+                    let file_name = out_name
+                        .clone()
+                        .unwrap_or_else(|| format!("{name}.safetensors"));
+                    let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
+                    let mut attrs = BTreeMap::new();
+                    attrs.insert(
+                        "weft.checkpoint.name".to_owned(),
+                        Value::Str(report.name.clone()),
+                    );
+                    attrs.insert(
+                        "weft.checkpoint.manifest_root".to_owned(),
+                        wu::hash_value(report.manifest_root),
+                    );
+                    attrs.insert(
+                        "weft.checkpoint.file_sha256".to_owned(),
+                        Value::Bytes(report.file_sha256.to_vec()),
+                    );
+                    if let Some(source) = report.source_sha256 {
+                        attrs.insert(
+                            "weft.checkpoint.source_sha256".to_owned(),
+                            Value::Bytes(source.to_vec()),
+                        );
+                    }
+                    attrs.insert(
+                        "weft.checkpoint.exact".to_owned(),
+                        Value::Bool(report.exact_source_file),
+                    );
+                    let input = fs::File::open(&spool_path)
+                        .map_err(|err| Error::io(format!("{}: {err}", spool_path.display())))?;
+                    let object_id = store.create_file_streaming(
+                        parent,
+                        file_name.as_bytes(),
+                        std::io::BufReader::new(input),
+                        0o644,
+                        uid,
+                        gid,
+                        attrs,
+                    )?;
+                    let store_path_out = format!("{}/{}", out_dir.trim_end_matches('/'), file_name);
+                    Some((object_id, store.generation(), store_path_out))
+                } else {
+                    None
+                };
+                if host_out.is_none() {
+                    let _ = fs::remove_file(&spool_path);
                 }
-                println!("shards_read={}", report.shards_read);
-                println!("units_touched={}", report.units_touched);
-                println!("store_bytes_read={}", report.store_bytes_read);
-                Ok(())
+                if json {
+                    print_json(&json!({
+                        "checkpoint": report.name,
+                        "manifest_root": report.manifest_root.to_hex(),
+                        "file_sha256": hex::encode(report.file_sha256),
+                        "source_sha256": report.source_sha256.map(hex::encode),
+                        "exact_source_file": report.exact_source_file,
+                        "header_reproduced": report.header_reproduced,
+                        "file_bytes": report.file_bytes,
+                        "imported": import,
+                        "object_id": imported.as_ref().map(|(id, _, _)| id.to_hex()),
+                        "generation": imported.as_ref().map(|(_, generation, _)| *generation),
+                        "store_path": imported.as_ref().map(|(_, _, path)| path.clone()),
+                        "host_out": host_out.as_ref().map(|path| path.display().to_string()),
+                        "shards_read": report.shards_read,
+                        "units_touched": report.units_touched,
+                        "store_bytes_read": report.store_bytes_read,
+                        "store_reads": report.store_reads,
+                        "load_receipt": emitted_receipt.as_ref().map(|receipt| {
+                            let mut fields = serde_json::Map::new();
+                            for (key, value) in receipt.to_json_fields() {
+                                fields.insert(key, value);
+                            }
+                            fields.insert(
+                                "receipt_root".to_owned(),
+                                json!(receipt.root().map(|root| root.to_hex()).unwrap_or_default()),
+                            );
+                            serde_json::Value::Object(fields)
+                        }),
+                        "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                        "peak_rss_kib": peak_rss_kib(),
+                        "tensors": report.tensors.iter().map(|tensor| json!({
+                            "name": tensor.name,
+                            "dtype": tensor.dtype,
+                            "shape": tensor.shape,
+                            "full_shape": tensor.full_shape,
+                            "full_logical_root": tensor.full_logical_root.to_hex(),
+                            "restored_content_root": tensor.restored_content_root.to_hex(),
+                            "bytes": tensor.bytes,
+                            "shards_read": tensor.shards_read,
+                            "units_touched": tensor.units_touched,
+                            "full_root_verified": tensor.full_root_verified,
+                            "shard_roots_verified": tensor.shard_roots_verified,
+                            "topology_root": tensor.topology_root.map(|root| root.to_hex()),
+                            "sha256": hex::encode(tensor.sha256),
+                        })).collect::<Vec<_>>(),
+                    }))
+                } else {
+                    println!("checkpoint={}", report.name);
+                    println!("file_sha256={}", hex::encode(report.file_sha256));
+                    println!("exact_source_file={}", report.exact_source_file);
+                    println!("file_bytes={}", report.file_bytes);
+                    println!("imported={import}");
+                    if let Some((object_id, generation, store_path_out)) = &imported {
+                        println!("object_id={object_id}");
+                        println!("generation={generation}");
+                        println!("store_path={store_path_out}");
+                    }
+                    println!("shards_read={}", report.shards_read);
+                    println!("units_touched={}", report.units_touched);
+                    println!("store_bytes_read={}", report.store_bytes_read);
+                    Ok(())
+                }
             }
         }
         CheckpointCommand::List => {
@@ -3935,6 +4336,30 @@ fn parse_causal_entries(spec: Option<&str>) -> Result<Vec<Hash32>> {
         Some(text) if text.trim().is_empty() => Ok(Vec::new()),
         Some(text) => parse_hash_list(text),
     }
+}
+
+/// Parse a `--first-needed` file: one tensor name per line, `#` comments,
+/// blank lines ignored, duplicates collapsed.
+fn parse_first_needed(path: &Path) -> Result<Vec<String>> {
+    let text =
+        fs::read_to_string(path).map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
+    let mut names: Vec<String> = Vec::new();
+    for line in text.lines() {
+        let line = line.split('#').next().unwrap_or("").trim();
+        if line.is_empty() {
+            continue;
+        }
+        if !names.iter().any(|name| name == line) {
+            names.push(line.to_owned());
+        }
+    }
+    if names.is_empty() {
+        return Err(Error::invalid_argument(format!(
+            "{}: --first-needed lists no tensor names",
+            path.display()
+        )));
+    }
+    Ok(names)
 }
 
 fn parse_u64_list(text: &str, flag: &str) -> Result<Vec<u64>> {

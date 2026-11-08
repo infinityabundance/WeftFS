@@ -1698,6 +1698,7 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
                 filters: filters.clone(),
                 strategy,
                 tile_shape: tile_shape.clone(),
+                ..CheckpointWriteOptions::default()
             },
         )
         .map_err(|err| format!("checkpoint write: {err}"))?;
@@ -1929,6 +1930,7 @@ fn crash_child(args: &[String]) -> Result<(), String> {
                 filters,
                 strategy: ShardStrategy::TensorSharded,
                 tile_shape: None,
+                ..CheckpointWriteOptions::default()
             },
         )
         .map_err(|err| format!("checkpoint write: {err}"))?;

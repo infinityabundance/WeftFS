@@ -552,6 +552,16 @@ class _Storage:
             "--host-out",
             os.fspath(host_out),
         ]
+        receipt = os.environ.get("WEFT_LOAD_RECEIPT")
+        if receipt:
+            args += [
+                "--load-receipt",
+                receipt,
+                "--verify-load",
+                os.environ.get("WEFT_VERIFY_LOAD", "lazy"),
+                "--replica",
+                os.environ.get("WEFT_REPLICA", "local"),
+            ]
         if import_restored:
             out_dir = "/dcp-reads/%s" % uuid.uuid4().hex
             args += ["--import", "--out", out_dir]

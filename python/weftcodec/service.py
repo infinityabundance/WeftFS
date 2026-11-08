@@ -31,7 +31,7 @@ import subprocess
 import threading
 import time
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 MAX_FRAME_BYTES = 1 << 20
 DEFAULT_MAX_TENSOR_BYTES = 4 << 30
 MAX_FILE_BYTES = 16 << 20
@@ -790,8 +790,30 @@ class CheckpointService:
         axis=0,
         strategy="zstd",
         tile_shape=None,
+        write_policy=None,
+        fast_codec=None,
+        fast_zstd_level=None,
+        critical_path=False,
+        deadline_ms=None,
     ):
-        """Publish one checkpoint from a caller-supplied safetensors container."""
+        """Publish one checkpoint from a caller-supplied safetensors container.
+
+        ``write_policy`` is ``planned``, ``fast``, or ``auto``. ``None`` reads
+        ``$WEFT_WRITE_POLICY`` (default ``planned``), so a training job can set
+        the critical-path policy for every save without changing its code.
+        """
+        if write_policy is None:
+            write_policy = os.environ.get("WEFT_WRITE_POLICY", "planned")
+        if fast_codec is None:
+            fast_codec = os.environ.get("WEFT_FAST_CODEC", "zstd")
+        if fast_zstd_level is None:
+            fast_zstd_level = int(os.environ.get("WEFT_FAST_ZSTD_LEVEL", "1"))
+        policy_codes = {"planned": 0, "fast": 1, "auto": 2}
+        if write_policy not in policy_codes:
+            raise ValueError("write_policy must be planned, fast, or auto")
+        codec_codes = {"raw": 0, "zstd": 1}
+        if fast_codec not in codec_codes:
+            raise ValueError("fast_codec must be raw or zstd")
         view = memoryview(container)
         fd = self._allocate_memfd(len(view), "weft-container")
         try:
@@ -807,6 +829,16 @@ class CheckpointService:
             body += _u32(len(shape))
             for dim in shape:
                 body += _u64(dim)
+            body += bytes((policy_codes[write_policy],))
+            body += bytes((codec_codes[fast_codec],))
+            body += _u32(int(fast_zstd_level))
+            flags = 1 if critical_path else 0
+            body += bytes((flags,))
+            if deadline_ms is None:
+                body += bytes((0,))
+            else:
+                body += bytes((1,))
+                body += _u64(int(deadline_ms))
             response = self._call(OP_WRITE_CHECKPOINT, bytes(body), fd=fd)
             report = WriteReport(response)
             self.stats["writes"] += 1
