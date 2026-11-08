@@ -354,10 +354,26 @@ if [[ "$run_s3" == "1" ]]; then
 fi
 
 echo "== merge =="
-label="real public weights: Qwen2.5-0.5B base->Instruct (independent fine-tune) and pythia-70m step0->step1 (consecutive training checkpoints)"
-if [[ " $families " == *" qwen3b-finetune "* ]]; then
-  label="real public weights: Qwen2.5-3B base->Qwen2.5-3B-Instruct (independent fine-tune, 434 BF16 tensors per checkpoint, 6,171,877,376 tensor data bytes each; published as two shards each, merged into one container with per-tensor sha256 parity)"
-fi
+# Build the label from the families that actually ran: a reduced aggregate run
+# must not claim a family it skipped.
+label=""
+case " $families " in
+  *" pythia-consecutive "*) label="pythia-70m step0->step1 (consecutive training checkpoints)" ;;
+esac
+case " $families " in
+  *" qwen-finetune "*)
+    [[ -n "$label" ]] && label="$label and "
+    label="${label}Qwen2.5-0.5B base->Instruct (independent fine-tune)"
+    ;;
+esac
+case " $families " in
+  *" qwen3b-finetune "*)
+    [[ -n "$label" ]] && label="$label and "
+    label="${label}Qwen2.5-3B base->Qwen2.5-3B-Instruct (independent fine-tune, 434 BF16 tensors per checkpoint, 6,171,877,376 tensor data bytes each; published as two shards each, merged into one container with per-tensor sha256 parity)"
+    ;;
+esac
+[[ -z "$label" ]] && label="no family selected"
+label="real public weights: $label (configurations: $configs; ingest reps: $reps)"
 WEFT_COURT_COMMAND="scripts/docker-court.sh bench \"cd /work && bash bench/scripts/checkpoint_family_court.sh\"" \
 WEFT_FAMILY_LABEL="$label" \
   "$bin" merge --inputs "$inputs" --out "$receipt"
