@@ -1,0 +1,37 @@
+kind: buck2-cas-store
+timestamp_utc: 20261108T091313Z
+court: fuse
+revisions:
+  WeftFS: e722127f8fcbeea063e898c36a843443b6c56e15
+  WeftCodec: 7c6c9701e63f3c6df5cfa9f3f7435a857e69b997
+  WeftCodec-Go: 0db665ea4c6b1d69d1d1640801ed475848d361f1
+  WeftFS-Go: 6d58137ca888c0b10d01f2fd93f3af00d544e5f6
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.3-1-cachyos
+image: weft/fuse-court:1 sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e
+== build rust oracle ==
+warning: constant `ENCODE_FLOOR_NOTE` is never used
+   --> src/cost_model.rs:240:7
+    |
+240 | const ENCODE_FLOOR_NOTE: &str = "no fitted fixed term may be zero";
+    |       ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.041s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261108T091313Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T091313Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T091313Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261108T091313Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass
