@@ -28,6 +28,9 @@
 #   scripts/s3_court.sh --matrix   # the R16 compatibility matrix only: the
 #                                  # eight behaviours "S3-compatible" servers
 #                                  # differ on, measured against MinIO
+#   scripts/s3_court.sh --parallel # the prepare/commit checkpoint court on
+#                                  # MinIO: N ranks publish immutable blobs,
+#                                  # one committer publishes the commit
 #
 # Every container has the same hard limits as `scripts/docker-court.sh`:
 # memory 3g, swap 3g, pids 1024, cpus 4, bounded tmpfs, no-new-privileges,
@@ -51,6 +54,7 @@ planes=0
 packs=0
 distributed=0
 matrix=0
+parallel=0
 for arg in "$@"; do
   case "$arg" in
     --bench) bench=1 ;;
@@ -59,6 +63,7 @@ for arg in "$@"; do
     --packs) packs=1 ;;
     --distributed) distributed=1 ;;
     --matrix) matrix=1 ;;
+    --parallel) parallel=1 ;;
     -h|--help)
       sed -n '2,35p' "$0"
       exit 0
@@ -246,7 +251,20 @@ overlay_receipt=""
 planes_receipt=""
 packs_receipt=""
 matrix_receipt=""
-if [[ "$matrix" == 1 ]]; then
+parallel_receipt=""
+if [[ "$parallel" == 1 ]]; then
+  # Prepare/commit checkpoint court on MinIO. The harness derives one bucket
+  # per rank configuration, so the runs never share control state, and a
+  # tensor subset keeps the court's 1 GiB tmpfs data directory bounded.
+  parallel_receipt="bench/receipts/parallel-checkpoint-s3-${stamp}.json"
+  scripts/docker-court.sh bench \
+    "cd /work && cargo run --release --quiet --example s3_court_bucket && \
+       cargo run --release --quiet --example bench_parallel_checkpoint -- \
+         --s3 --fast --reps 3 --filter 'model.layers.0.*' \
+         --model /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors \
+         --work /work/.docker-cache/bench-parallel-s3 \
+         --out ${parallel_receipt} --stamp ${stamp}"
+elif [[ "$matrix" == 1 ]]; then
   # R16: the compatibility matrix alone. Same MinIO, same hard limits, same
   # bucket prefixing as the backend court; this receipt is what the Ceph RGW
   # court compares its own matrix against.
@@ -320,10 +338,10 @@ cat > "$court_receipt" <<JSON
     "host_port": $host_port
   },
   "tests": {
-    "command": "$(if [[ "$matrix" == 1 ]]; then echo "cargo run --example s3_compat_matrix -- --out $matrix_receipt"; elif [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture"; fi)",
+    "command": "$(if [[ "$parallel" == 1 ]]; then echo "cargo run --example bench_parallel_checkpoint -- --s3"; elif [[ "$matrix" == 1 ]]; then echo "cargo run --example s3_compat_matrix -- --out $matrix_receipt"; elif [[ "$planes" == 1 ]]; then echo "bash bench/scripts/planes_court.sh"; elif [[ "$packs" == 1 ]]; then echo "bash bench/scripts/packs_court.sh"; elif [[ "$overlay" == 1 ]]; then echo "bash bench/scripts/overlay_court.sh --s3"; else echo "cargo test --test s3_backend --test s3_fencing -- --test-threads=1 --nocapture"; fi)",
     "bucket_prefix": "$WEFT_S3_TEST_PREFIX"
   },
-  "benchmark": $(if [[ "$matrix" == 1 && -n "$matrix_receipt" ]]; then echo "\"$matrix_receipt\""; elif [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$packs" == 1 && -n "$packs_receipt" ]]; then echo "\"$packs_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
+  "benchmark": $(if [[ "$parallel" == 1 && -n "$parallel_receipt" ]]; then echo "\"$parallel_receipt\""; elif [[ "$matrix" == 1 && -n "$matrix_receipt" ]]; then echo "\"$matrix_receipt\""; elif [[ "$planes" == 1 && -n "$planes_receipt" ]]; then echo "\"$planes_receipt\""; elif [[ "$packs" == 1 && -n "$packs_receipt" ]]; then echo "\"$packs_receipt\""; elif [[ "$overlay" == 1 && -n "$overlay_receipt" ]]; then echo "\"$overlay_receipt\""; elif [[ "$bench" == 1 ]]; then echo "\"$receipt\""; else echo "null"; fi),
   "label": "Single-node MinIO on localhost in the OOM-protected Docker court with a tmpfs data directory. Not a cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }
 JSON

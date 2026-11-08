@@ -825,6 +825,41 @@ pub struct TensorWriteSpec {
     pub tile_shape: Option<Vec<u64>>,
 }
 
+/// One tensor object whose immutable blobs are already durable but which no
+/// commit has referenced yet.
+///
+/// This is the *prepare* half of the prepare/commit split used by
+/// `Store::write_checkpoint_parallel`: a worker (its own handle, its own
+/// backend, read-only control state) writes the content-addressed blobs and
+/// returns this fragment; exactly one committer validates the fragments and
+/// publishes every state op in a single commit. Blob publication is
+/// create-once, so it needs no ordering and no coordination: two workers can
+/// never disagree about the bytes behind a hash, and a worker that dies leaves
+/// only unreferenced blobs that GC reclaims.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PreparedTensorObject {
+    /// ObjectId seed chosen by the preparer (deterministic when the caller
+    /// supplied a checkpoint seed).
+    pub seed: [u8; 32],
+    pub manifest_id: Hash32,
+    /// `H("weft/chunk/v1", logical_bytes)`.
+    pub content_root: Hash32,
+    pub size: u64,
+    /// `LogicalTensorRoot` of the stored (canonicalised) tensor bytes.
+    pub logical_root: Hash32,
+    /// Reserved `weft.tensor.*` attributes for the object record.
+    pub attrs: BTreeMap<String, Value>,
+    /// Stored manifest dtype spelling (for diagnostics and re-validation).
+    pub dtype: String,
+    /// Stored shape (for diagnostics and re-validation).
+    pub shape: Vec<u64>,
+    /// Chosen representation strategy name.
+    pub strategy: String,
+    /// Causal parent version ids recorded with the object record (checkpoint
+    /// causal parents). Copied into the commit op by the committer.
+    pub causal: Vec<Hash32>,
+}
+
 /// One priced planner candidate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TensorPlanCandidate {
@@ -1151,10 +1186,69 @@ impl Store {
         layout: &TensorLayoutSpec,
         spec: &TensorWriteSpec,
     ) -> Result<Hash32> {
+        let seed = identity::os_random_32()?;
+        self.write_tensor_file_with_spec_seeded(
+            parent, name, dtype, shape, bytes, layout, spec, &seed,
+        )
+    }
+
+    /// [`Store::write_tensor_file_with_spec`] with an explicit ObjectId seed.
+    /// A checkpoint writer derives the seed from its checkpoint seed so the
+    /// sequential and the parallel (prepare/commit) paths can be proven to
+    /// publish byte-identical state.
+    #[allow(clippy::too_many_arguments)]
+    pub fn write_tensor_file_with_spec_seeded(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<Hash32> {
         self.require_writable()?;
         self.require_dir(parent)?;
         crate::state::validate_name_bytes(name)?;
         self.require_free_name(parent, name)?;
+        let prepared =
+            self.prepare_tensor_object_with_spec_seeded(dtype, shape, bytes, layout, spec, seed)?;
+        self.commit_prepared_tensor_object(parent, name, &prepared, 0o644)
+    }
+
+    /// Prepare one tensor object: run the planner and publish every immutable
+    /// blob, but publish **no** state ops.
+    ///
+    /// This is the `&self` half of the write path. It never consults or mutates
+    /// control state beyond reads (a causal base is read through the caller's
+    /// handle), and every blob it writes is content-addressed and create-once,
+    /// so N handles may prepare the same store concurrently. The caller must
+    /// use [`Store::commit_prepared_tensor_object`] (or install the fragment
+    /// itself) to make the object visible; until then GC may reclaim the blobs.
+    pub fn prepare_tensor_object_with_spec(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+    ) -> Result<PreparedTensorObject> {
+        let seed = identity::os_random_32()?;
+        self.prepare_tensor_object_with_spec_seeded(dtype, shape, bytes, layout, spec, &seed)
+    }
+
+    /// [`Store::prepare_tensor_object_with_spec`] with an explicit ObjectId
+    /// seed.
+    pub fn prepare_tensor_object_with_spec_seeded(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<PreparedTensorObject> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize(dtype, shape, bytes)?;
@@ -1191,20 +1285,41 @@ impl Store {
             artifact.strategy_name.as_str(),
             artifact.tile_shape.as_deref(),
         )?;
-        let seed = identity::os_random_32()?;
+        Ok(PreparedTensorObject {
+            seed: *seed,
+            manifest_id,
+            content_root: content_hash,
+            size,
+            logical_root: root,
+            attrs,
+            dtype: dtype.as_str().to_owned(),
+            shape: shape.to_vec(),
+            strategy: artifact.strategy_name.clone(),
+            causal: spec.causal.clone(),
+        })
+    }
+
+    /// Publish the state ops for one prepared tensor object.
+    pub fn commit_prepared_tensor_object(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        prepared: &PreparedTensorObject,
+        mode: u64,
+    ) -> Result<Hash32> {
         let (owner_uid, owner_gid) = (self.options().owner_uid, self.options().owner_gid);
         self.commit_created_file(
             parent,
             name,
-            &seed,
-            manifest_id,
-            content_hash,
-            size,
-            0o644,
+            &prepared.seed,
+            prepared.manifest_id,
+            prepared.content_root,
+            prepared.size,
+            mode,
             owner_uid,
             owner_gid,
-            attrs,
-            &spec.causal,
+            prepared.attrs.clone(),
+            &prepared.causal,
         )
     }
 
@@ -1785,7 +1900,12 @@ impl Store {
                     let err = Error::from(err);
                     Error::new(
                         err.class(),
-                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                        format!(
+                            "tile {} (offset {}): {}",
+                            index,
+                            entry.offset,
+                            err.message()
+                        ),
                     )
                 })
             },
@@ -1936,7 +2056,12 @@ impl Store {
                     let err = Error::from(err);
                     Error::new(
                         err.class(),
-                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                        format!(
+                            "tile {} (offset {}): {}",
+                            index,
+                            entry.offset,
+                            err.message()
+                        ),
                     )
                 })
             },
@@ -2095,7 +2220,12 @@ impl Store {
                     let err = Error::from(err);
                     Error::new(
                         err.class(),
-                        format!("tile {} (offset {}): {}", index, entry.offset, err.message()),
+                        format!(
+                            "tile {} (offset {}): {}",
+                            index,
+                            entry.offset,
+                            err.message()
+                        ),
                     )
                 })
             },

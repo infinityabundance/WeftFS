@@ -997,6 +997,26 @@ enum CheckpointCommand {
         /// Do not run the mode-14 semantic-delta candidate search.
         #[arg(long = "no-semantic")]
         no_semantic: bool,
+        /// Prepare/commit split: number of blob-writing ranks (1..=64).
+        /// Setting it (even to 1) uses the split path; omitting it is the
+        /// sequential write.
+        #[arg(long, value_name = "N")]
+        ranks: Option<usize>,
+        /// Bound on bytes reserved by in-flight prepare tasks.
+        #[arg(long = "max-inflight-bytes", value_name = "BYTES")]
+        max_inflight_bytes: Option<u64>,
+        /// Cumulative decoded-byte budget for one rank.
+        #[arg(long = "per-rank-bytes", value_name = "BYTES")]
+        per_rank_bytes: Option<u64>,
+        /// Wall-clock deadline for the prepare phase (split path only).
+        #[arg(long = "prepare-deadline-ms", value_name = "MS")]
+        prepare_deadline_ms: Option<u64>,
+        /// Skip the committer's re-read/re-hash of prepared fragments.
+        #[arg(long = "no-fragment-verify")]
+        no_fragment_verify: bool,
+        /// Deterministic 32-byte ObjectId seed (64 hex chars) for fixtures.
+        #[arg(long = "checkpoint-seed", value_name = "HEX")]
+        checkpoint_seed: Option<String>,
     },
     /// Restore a checkpoint, one tensor, or one tensor region.
     ///
@@ -3478,13 +3498,7 @@ fn run(cli: Cli) -> Result<()> {
                     capability,
                 });
             }
-            weftfs::fuse::run_shared(
-                store,
-                views,
-                allow_other,
-                verify_load,
-                load_receipt_dir,
-            )
+            weftfs::fuse::run_shared(store, views, allow_other, verify_load, load_receipt_dir)
         }
         Command::ConformanceStore {
             out,
@@ -3527,6 +3541,12 @@ fn run_checkpoint(
             deadline_ms,
             causal_checkpoint,
             no_semantic,
+            ranks,
+            max_inflight_bytes,
+            per_rank_bytes,
+            prepare_deadline_ms,
+            no_fragment_verify,
+            checkpoint_seed,
         } => {
             let started = std::time::Instant::now();
             let source = resolve_checkpoint_source(from_dir.as_deref(), file.as_deref())?;
@@ -3567,9 +3587,43 @@ fn run_checkpoint(
                 deadline_ms,
                 causal_checkpoint,
                 semantic_search: !no_semantic,
+                deterministic_seed: match checkpoint_seed.as_deref() {
+                    None => None,
+                    Some(text) => {
+                        let bytes = hex::decode(text).map_err(|err| {
+                            Error::invalid_argument(format!(
+                                "--checkpoint-seed must be 64 hex characters: {err}"
+                            ))
+                        })?;
+                        let array: [u8; 32] = bytes.try_into().map_err(|_| {
+                            Error::invalid_argument(
+                                "--checkpoint-seed must be exactly 32 bytes (64 hex characters)",
+                            )
+                        })?;
+                        Some(array)
+                    }
+                },
             };
+            let parallel = ranks.map(|ranks| {
+                let mut options = weftfs::checkpoint::ParallelCheckpointOptions::default();
+                options.ranks = ranks;
+                if let Some(bytes) = max_inflight_bytes {
+                    options.max_in_flight_bytes = bytes;
+                }
+                if let Some(bytes) = per_rank_bytes {
+                    options.per_rank_bytes = bytes;
+                }
+                options.deadline_ms = prepare_deadline_ms;
+                options.verify_fragments = !no_fragment_verify;
+                options
+            });
             let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
-            let report = store.write_checkpoint(&name, &source, &options)?;
+            let report = match &parallel {
+                Some(parallel) => {
+                    store.write_checkpoint_parallel(&name, &source, &options, parallel)?
+                }
+                None => store.write_checkpoint(&name, &source, &options)?,
+            };
             if json {
                 print_json(&json!({
                     "checkpoint": report.name,
@@ -3598,6 +3652,8 @@ fn run_checkpoint(
                     "tile_shape": options.tile_shape,
                     "total_element_bytes": report.total_element_bytes,
                     "shard_objects": report.shard_objects,
+                    "prepare_ranks": parallel.as_ref().map(|options| options.ranks),
+                    "verify_fragments": parallel.as_ref().map(|options| options.verify_fragments),
                     "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
                     "peak_rss_kib": peak_rss_kib(),
                     "tensors": report.tensors.iter().map(|tensor| json!({

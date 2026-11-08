@@ -2088,6 +2088,30 @@ impl Store {
         self.with_backend(|backend| recovery::read_manifest_via(backend, id))
     }
 
+    /// Decode and verify a manifest's whole logical content through this
+    /// handle's backend. Used by the checkpoint committer to re-derive what a
+    /// prepare worker claims it published; the worker's word is never trusted.
+    pub(crate) fn read_manifest_verified(
+        &self,
+        manifest_id: Hash32,
+        content_root: Hash32,
+        size: u64,
+    ) -> Result<Vec<u8>> {
+        let manifest = self.manifest_of(manifest_id)?;
+        if manifest.size != size {
+            return Err(Error::corrupt(format!(
+                "manifest {manifest_id} declares {} bytes, not {size}",
+                manifest.size
+            )));
+        }
+        if manifest.content_hash != content_root {
+            return Err(Error::corrupt(format!(
+                "manifest {manifest_id} content root disagrees with the expected root"
+            )));
+        }
+        self.read_manifest_bytes(&manifest, content_root, 0, size, true)
+    }
+
     fn read_manifest_bytes(
         &self,
         manifest: &Manifest,

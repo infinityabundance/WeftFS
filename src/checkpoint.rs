@@ -24,6 +24,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write;
 use std::path::Path;
+use std::sync::{Condvar, Mutex};
+use std::time::{Duration, Instant};
 
 use sha2::{Digest, Sha256};
 use weftcodec::tensor::{self as tc, PhysicalTensor, Region};
@@ -35,7 +37,7 @@ use crate::identity::{self, Hash32};
 use crate::representation::TensorElementDtype;
 use crate::safetensors::{self, SafetensorsFile, SafetensorsTensor};
 use crate::state::{ObjectKind, State};
-use crate::store::Store;
+use crate::store::{OpenMode, Store};
 use crate::tensor_store::{
     FastCodec, TensorLayoutSpec, TensorStrategy, TensorWriteSpec, WritePolicy,
 };
@@ -132,6 +134,12 @@ pub struct CheckpointWriteOptions {
     /// Offer the mode-14 semantic-delta candidate (see
     /// `TensorPlanOptions::semantic_search`).
     pub semantic_search: bool,
+    /// Deterministic ObjectId seed for the checkpoint directory, the manifest
+    /// file, and every shard object. `None` (the default) uses OS randomness,
+    /// exactly as before. Setting it makes two writes of the same input publish
+    /// byte-identical state, which is how the sequential and parallel
+    /// (prepare/commit) paths are proven equivalent.
+    pub deterministic_seed: Option<[u8; 32]>,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -149,6 +157,7 @@ impl Default for CheckpointWriteOptions {
             deadline_ms: None,
             causal_checkpoint: None,
             semantic_search: true,
+            deterministic_seed: None,
         }
     }
 }
@@ -181,6 +190,140 @@ impl CheckpointWriteOptions {
             self.strategy
         }
     }
+}
+
+/// Hard bound on worker ranks for one prepare/commit checkpoint write.
+pub const MAX_PARALLEL_RANKS: usize = 64;
+/// Default bound on bytes reserved by in-flight prepare tasks.
+pub const DEFAULT_MAX_IN_FLIGHT_BYTES: u64 = 1 << 30;
+/// Default cumulative byte budget for one rank.
+pub const DEFAULT_PER_RANK_BYTES: u64 = 1 << 29;
+
+/// Bounds for [`Store::write_checkpoint_parallel`].
+///
+/// The split is deliberately small: N worker handles publish immutable blobs,
+/// one committer publishes the single commit. There is no consensus protocol,
+/// no second writer, and no change to the writer lock, the lease, the fence,
+/// the superblock, or the commit file format.
+#[derive(Clone, Debug)]
+pub struct ParallelCheckpointOptions {
+    /// Worker ranks. `1` still exercises the prepare/commit split.
+    pub ranks: usize,
+    /// Total bytes that may be held in flight by preparing workers.
+    pub max_in_flight_bytes: u64,
+    /// Cumulative decoded-bytes budget for one rank.
+    pub per_rank_bytes: u64,
+    /// Wall-clock deadline for the prepare phase. A rank that would start work
+    /// past it fails with `Cancelled`; nothing is published.
+    pub deadline_ms: Option<u64>,
+    /// Re-read and re-hash every prepared shard on the committer (default on).
+    /// Turning it off is a deliberate performance choice, never a correctness
+    /// claim about untrusted workers.
+    pub verify_fragments: bool,
+}
+
+impl Default for ParallelCheckpointOptions {
+    fn default() -> Self {
+        ParallelCheckpointOptions {
+            ranks: 1,
+            max_in_flight_bytes: DEFAULT_MAX_IN_FLIGHT_BYTES,
+            per_rank_bytes: DEFAULT_PER_RANK_BYTES,
+            deadline_ms: None,
+            verify_fragments: true,
+        }
+    }
+}
+
+impl ParallelCheckpointOptions {
+    fn validate(&self) -> Result<()> {
+        if self.ranks == 0 {
+            return Err(Error::invalid_argument("--ranks must be at least 1"));
+        }
+        if self.ranks > MAX_PARALLEL_RANKS {
+            return Err(Error::limit_exceeded(format!(
+                "--ranks {} exceeds the {MAX_PARALLEL_RANKS}-rank bound",
+                self.ranks
+            )));
+        }
+        if self.max_in_flight_bytes == 0 || self.per_rank_bytes == 0 {
+            return Err(Error::invalid_argument(
+                "the in-flight and per-rank byte bounds must be nonzero",
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// Bounded in-flight byte accounting between prepare tasks.
+struct ParallelBudget {
+    limit: u64,
+    state: Mutex<u64>,
+    condvar: Condvar,
+}
+
+impl ParallelBudget {
+    fn new(limit: u64) -> ParallelBudget {
+        ParallelBudget {
+            limit,
+            state: Mutex::new(0),
+            condvar: Condvar::new(),
+        }
+    }
+
+    /// Reserve `need` bytes, or less when one task alone already exceeds the
+    /// bound (an oversized task always runs, alone, exactly like
+    /// `parallel::read_tensors_bounded`).
+    fn reserve(&self, need: u64, deadline: Option<Instant>) -> Result<u64> {
+        let want = need.min(self.limit);
+        let mut held = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        while *held != 0 && *held + want > self.limit {
+            match deadline {
+                Some(limit) => {
+                    let now = Instant::now();
+                    if now >= limit {
+                        return Err(Error::cancelled(
+                            "checkpoint prepare deadline reached while waiting for an in-flight byte slot",
+                        ));
+                    }
+                    let (guard, _) = self
+                        .condvar
+                        .wait_timeout(held, limit - now)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    held = guard;
+                }
+                None => {
+                    held = self
+                        .condvar
+                        .wait(held)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                }
+            }
+        }
+        *held += want;
+        Ok(want)
+    }
+
+    fn release(&self, reserved: u64) {
+        let mut held = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *held = held.saturating_sub(reserved);
+        drop(held);
+        self.condvar.notify_all();
+    }
+}
+
+/// One tensor prepared by a worker and awaiting the committer.
+#[derive(Clone, Debug)]
+struct PreparedCheckpointTensor {
+    tensor_index: usize,
+    tensor: CheckpointTensor,
+    object_names: Vec<String>,
+    prepared: Vec<crate::tensor_store::PreparedTensorObject>,
 }
 
 /// One stored shard.
@@ -259,6 +402,12 @@ pub struct CheckpointWriteReport {
     pub complete: bool,
     pub source_sha256: Sha256Digest,
     pub source_file_bytes: u64,
+    /// Wall time of the prepare phase (parallel path only).
+    pub prepare_ms: Option<f64>,
+    /// Wall time the committer spent re-reading and re-hashing fragments.
+    pub validate_ms: Option<f64>,
+    /// Wall time of the single commit (group open through publication).
+    pub commit_ms: Option<f64>,
 }
 
 /// Physical arrangement a restore verifies the bytes against.
@@ -802,7 +951,13 @@ fn validate_tile_shape(shape: &[u64], tile_shape: &[u64]) -> Result<()> {
     Ok(())
 }
 
-fn ensure_dir(store: &mut Store, parent: Hash32, name: &[u8]) -> Result<Hash32> {
+/// [`ensure_dir`] with a deterministic ObjectId seed for the new directory.
+fn ensure_dir_seeded(
+    store: &mut Store,
+    parent: Hash32,
+    name: &[u8],
+    seed: Option<&[u8; 32]>,
+) -> Result<Hash32> {
     match store.lookup(parent, name) {
         Ok(id) => {
             store.require_dir(id)?;
@@ -810,7 +965,10 @@ fn ensure_dir(store: &mut Store, parent: Hash32, name: &[u8]) -> Result<Hash32> 
         }
         Err(err) if err.class() == Class::NotFound => {
             let (uid, gid) = (store.options().owner_uid, store.options().owner_gid);
-            store.mkdir(parent, name, 0o755, uid, gid)
+            match seed {
+                Some(seed) => store.mkdir_seeded(parent, name, 0o755, uid, gid, seed),
+                None => store.mkdir(parent, name, 0o755, uid, gid),
+            }
         }
         Err(err) => Err(err),
     }
@@ -849,6 +1007,217 @@ fn selected_by_filters(name: &str, filters: &[String]) -> bool {
         return true;
     }
     filters.iter().any(|pattern| glob_match(pattern, name))
+}
+
+/// Domain for every deterministic checkpoint ObjectId seed.
+const CHECKPOINT_SEED_DOMAIN: &str = "weft/checkpoint/seed/v1";
+
+/// Deterministic ObjectId seeds derived from one checkpoint seed.
+///
+/// The derivation is a pure function of the base seed and the shard's
+/// (tensor name, index), so the sequential writer and the prepare/commit
+/// writer choose exactly the same ObjectIds (and therefore publish the same
+/// commit bytes) for the same input.
+struct CheckpointSeeds {
+    base: [u8; 32],
+    checkpoints: [u8; 32],
+    dir: [u8; 32],
+    manifest: [u8; 32],
+}
+
+impl CheckpointSeeds {
+    fn new(base: &[u8; 32]) -> CheckpointSeeds {
+        CheckpointSeeds {
+            base: *base,
+            checkpoints: derive_seed(base, b"checkpoints"),
+            dir: derive_seed(base, b"dir"),
+            manifest: derive_seed(base, b"manifest"),
+        }
+    }
+
+    fn shard(&self, tensor: &str, shard_index: u32) -> [u8; 32] {
+        let mut what = Vec::with_capacity(tensor.len() + 5);
+        what.extend_from_slice(b"shard");
+        what.extend_from_slice(&(tensor.len() as u32).to_le_bytes());
+        what.extend_from_slice(tensor.as_bytes());
+        what.extend_from_slice(&shard_index.to_le_bytes());
+        derive_seed(&self.base, &what)
+    }
+}
+
+fn derive_seed(base: &[u8; 32], what: &[u8]) -> [u8; 32] {
+    let mut input = Vec::with_capacity(base.len() + what.len());
+    input.extend_from_slice(base);
+    input.extend_from_slice(what);
+    *identity::h(CHECKPOINT_SEED_DOMAIN, &input).as_bytes()
+}
+
+/// Validate every tensor's split and tile shape before anything is written, so
+/// a non-divisible shape never leaves half a checkpoint on disk.
+fn validate_checkpoint_layout(
+    selected: &[&SafetensorsTensor],
+    options: &CheckpointWriteOptions,
+    effective_strategy: ShardStrategy,
+) -> Result<()> {
+    let limits = Limits::default();
+    for tensor in selected {
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor `{}` dtype `{}` has no physical layout",
+                tensor.name, tensor.dtype
+            ))
+        })?;
+        tc::validate_shape(&tensor.shape, &limits)?;
+        tc::payload_len(
+            tensor.shape.iter().try_fold(1u64, |acc, dim| {
+                acc.checked_mul(*dim)
+                    .ok_or_else(|| Error::limit_exceeded("tensor shape overflow"))
+            })?,
+            physical,
+        )?;
+        if let Err(err) = tc::shard_shape(&tensor.shape, options.axis, options.shards, 0) {
+            let err = Error::from(err);
+            return Err(Error::new(
+                err.class(),
+                format!(
+                    "tensor `{}` shape {:?} cannot be split {}-way on axis {} \
+                     (no silent padding): {}",
+                    tensor.name, tensor.shape, options.shards, options.axis, err
+                ),
+            ));
+        }
+        if matches!(
+            effective_strategy,
+            ShardStrategy::TensorTiled | ShardStrategy::FloatTiled
+        ) {
+            let tile = options.tile_shape.as_ref().ok_or_else(|| {
+                Error::invalid_argument(format!(
+                    "--shard-strategy {} requires --tile-shape A,B,...",
+                    effective_strategy.as_str()
+                ))
+            })?;
+            for shard_index in 0..options.shards {
+                let shard_shape =
+                    tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
+                validate_tile_shape(&shard_shape, tile).map_err(|err| {
+                    Error::new(
+                        err.class(),
+                        format!(
+                            "tensor `{}` shard shape {:?} cannot be tiled {:?}: {}",
+                            tensor.name,
+                            shard_shape,
+                            tile,
+                            err.message()
+                        ),
+                    )
+                })?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The stored dtype/shape/strategy hint for one shard under a strategy.
+fn checkpoint_shard_transport(
+    dtype: TensorElementDtype,
+    shard_shape: &[u64],
+    physical: weftcodec::TensorDtype,
+    options: &CheckpointWriteOptions,
+    effective_strategy: ShardStrategy,
+) -> Result<(String, Vec<u64>, Option<TensorStrategy>, Option<Vec<u64>>)> {
+    Ok(match effective_strategy {
+        // A q8_0 object treats every payload byte as a quantized word, so the
+        // mode-10 round trip is exact. The transport shape doubles the last
+        // logical dimension by the element size, keeping the payload's
+        // row-major byte order addressable.
+        ShardStrategy::TensorSharded => (
+            "q8_0".to_owned(),
+            byte_shape(shard_shape, physical.element_size())?,
+            Some(TensorStrategy::TensorSharded),
+            None,
+        ),
+        // Mode 15/17 carry the shard under its real dtype and shape; tile
+        // coordinates are logical coordinates.
+        ShardStrategy::TensorTiled | ShardStrategy::FloatTiled => {
+            let tile = options.tile_shape.clone().ok_or_else(|| {
+                Error::invalid_argument(format!(
+                    "{} checkpoint shards require --tile-shape",
+                    effective_strategy.as_str()
+                ))
+            })?;
+            validate_tile_shape(shard_shape, &tile)?;
+            let hint = if effective_strategy == ShardStrategy::TensorTiled {
+                TensorStrategy::TensorTiled
+            } else {
+                TensorStrategy::FloatTiled
+            };
+            (
+                dtype.as_str().to_owned(),
+                shard_shape.to_vec(),
+                Some(hint),
+                Some(tile),
+            )
+        }
+        ShardStrategy::Planned => (dtype.as_str().to_owned(), shard_shape.to_vec(), None, None),
+        ShardStrategy::Zstd => (
+            dtype.as_str().to_owned(),
+            shard_shape.to_vec(),
+            Some(TensorStrategy::Zstd),
+            None,
+        ),
+        ShardStrategy::Raw => (
+            dtype.as_str().to_owned(),
+            shard_shape.to_vec(),
+            Some(TensorStrategy::Raw),
+            None,
+        ),
+    })
+}
+
+fn checkpoint_shard_spec(
+    hint: Option<TensorStrategy>,
+    tile_shape: Option<Vec<u64>>,
+    causal: Option<Hash32>,
+    fast: bool,
+    options: &CheckpointWriteOptions,
+) -> TensorWriteSpec {
+    TensorWriteSpec {
+        strategy_hint: hint,
+        tile_shape,
+        causal: causal
+            .filter(|_| !fast)
+            .map(|version| vec![version])
+            .unwrap_or_default(),
+        plan: crate::tensor_store::TensorPlanOptions {
+            write_policy: if fast {
+                WritePolicy::Fast
+            } else {
+                WritePolicy::Planned
+            },
+            fast_codec: options.fast_codec,
+            fast_zstd_level: options.fast_zstd_level,
+            semantic_search: options.semantic_search,
+            ..crate::tensor_store::TensorPlanOptions::default()
+        },
+        ..TensorWriteSpec::default()
+    }
+}
+
+fn checkpoint_strategy_hint(strategy: ShardStrategy) -> &'static str {
+    match strategy {
+        ShardStrategy::TensorSharded => {
+            " (mode 10 needs a shard byte length divisible by 16; \
+             choose --shard-strategy zstd otherwise)"
+        }
+        ShardStrategy::TensorTiled => {
+            " (mode 15 needs a tile shape that divides every shard extent)"
+        }
+        ShardStrategy::FloatTiled => {
+            " (mode 17 needs a tile shape that divides every shard extent)"
+        }
+        _ => "",
+    }
 }
 
 fn context(tensor: &str, shard: &CheckpointShard, err: Error) -> Error {
@@ -905,58 +1274,8 @@ impl Store {
 
         // Validate every split before writing anything, so a non-divisible
         // shape never leaves half a checkpoint on disk.
+        validate_checkpoint_layout(&selected, options, effective_strategy)?;
         let limits = Limits::default();
-        for tensor in &selected {
-            let dtype = TensorElementDtype::parse(&tensor.dtype)?;
-            let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
-                Error::unsupported_version(format!(
-                    "tensor `{}` dtype `{}` has no physical layout",
-                    tensor.name, tensor.dtype
-                ))
-            })?;
-            tc::validate_shape(&tensor.shape, &limits)?;
-            tc::payload_len(
-                tensor.shape.iter().try_fold(1u64, |acc, dim| {
-                    acc.checked_mul(*dim)
-                        .ok_or_else(|| Error::limit_exceeded("tensor shape overflow"))
-                })?,
-                physical,
-            )?;
-            if let Err(err) = tc::shard_shape(&tensor.shape, options.axis, options.shards, 0) {
-                let err = Error::from(err);
-                return Err(Error::new(
-                    err.class(),
-                    format!(
-                        "tensor `{}` shape {:?} cannot be split {}-way on axis {} \
-                         (no silent padding): {}",
-                        tensor.name, tensor.shape, options.shards, options.axis, err
-                    ),
-                ));
-            }
-            if effective_strategy == ShardStrategy::TensorTiled {
-                let tile = options.tile_shape.as_ref().ok_or_else(|| {
-                    Error::invalid_argument(
-                        "--shard-strategy tensor-tiled requires --tile-shape A,B,...",
-                    )
-                })?;
-                for shard_index in 0..options.shards {
-                    let shard_shape =
-                        tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
-                    validate_tile_shape(&shard_shape, tile).map_err(|err| {
-                        Error::new(
-                            err.class(),
-                            format!(
-                                "tensor `{}` shard shape {:?} cannot be tiled {:?}: {}",
-                                tensor.name,
-                                shard_shape,
-                                tile,
-                                err.message()
-                            ),
-                        )
-                    })?;
-                }
-            }
-        }
 
         let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
         let name_owned = name.to_owned();
@@ -964,33 +1283,28 @@ impl Store {
         // Resolve the optional causal checkpoint's matching shard versions
         // before the group. A tensor is only linked when the dtype, shape and
         // shard layout agree; otherwise it is written independently.
-        let mut causal_versions: BTreeMap<String, Vec<Hash32>> = BTreeMap::new();
-        if let Some(previous) = options.causal_checkpoint.as_deref() {
-            let previous_manifest = self.load_checkpoint(previous)?;
-            for tensor in &previous_manifest.tensors {
-                let mut versions = Vec::with_capacity(tensor.shards.len());
-                let mut usable = tensor.shards.len() == options.shards as usize;
-                for shard in &tensor.shards {
-                    if shard.axis != options.axis || shard.shards != options.shards {
-                        usable = false;
-                        break;
-                    }
-                    match self.object_meta(shard.object_id) {
-                        Ok(record) => versions.push(record.version),
-                        Err(_) => {
-                            usable = false;
-                            break;
-                        }
-                    }
-                }
-                if usable {
-                    causal_versions.insert(tensor.name.clone(), versions);
-                }
-            }
-        }
+        let causal_versions = self.resolve_causal_versions(&options)?;
+        let seeds = options
+            .deterministic_seed
+            .map(|base| CheckpointSeeds::new(&base));
         let (report, head) = self.group(|store| {
-            let checkpoints = ensure_dir(store, State::ROOT_ID, CHECKPOINT_ROOT.as_bytes())?;
-            let dir = store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?;
+            let checkpoints = ensure_dir_seeded(
+                store,
+                State::ROOT_ID,
+                CHECKPOINT_ROOT.as_bytes(),
+                seeds.as_ref().map(|seeds| &seeds.checkpoints),
+            )?;
+            let dir = match seeds.as_ref() {
+                Some(seeds) => store.mkdir_seeded(
+                    checkpoints,
+                    name_owned.as_bytes(),
+                    0o755,
+                    uid,
+                    gid,
+                    &seeds.dir,
+                )?,
+                None => store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?,
+            };
             let mut tensors = Vec::with_capacity(selected.len());
             let mut shard_objects = 0usize;
             for (tensor_index, tensor) in selected.iter().enumerate() {
@@ -1019,91 +1333,25 @@ impl Store {
                         &limits,
                     )?;
                     let object_name = shard_object_name(tensor_index, shard_index);
-                    let (store_dtype, store_shape, hint, tile_shape) = match effective_strategy {
-                        // A q8_0 object treats every payload byte as a
-                        // quantized word, so the mode-10 round trip is exact.
-                        // The transport shape doubles the last logical
-                        // dimension by the element size, keeping the payload's
-                        // row-major byte order addressable.
-                        ShardStrategy::TensorSharded => (
-                            "q8_0".to_owned(),
-                            byte_shape(&shard_shape, physical.element_size())?,
-                            Some(TensorStrategy::TensorSharded),
-                            None,
-                        ),
-                        // Mode 15 carries the shard under its real dtype and
-                        // shape; tile coordinates are logical coordinates.
-                        ShardStrategy::TensorTiled => {
-                            let tile = options.tile_shape.clone().ok_or_else(|| {
-                                Error::invalid_argument(
-                                    "tensor-tiled checkpoint shards require --tile-shape",
-                                )
-                            })?;
-                            validate_tile_shape(&shard_shape, &tile)?;
-                            (
-                                dtype.as_str().to_owned(),
-                                shard_shape.clone(),
-                                Some(TensorStrategy::TensorTiled),
-                                Some(tile),
-                            )
-                        }
-                        ShardStrategy::FloatTiled => {
-                            let tile = options.tile_shape.clone().ok_or_else(|| {
-                                Error::invalid_argument(
-                                    "float-tiled checkpoint shards require --tile-shape",
-                                )
-                            })?;
-                            validate_tile_shape(&shard_shape, &tile)?;
-                            (
-                                dtype.as_str().to_owned(),
-                                shard_shape.clone(),
-                                Some(TensorStrategy::FloatTiled),
-                                Some(tile),
-                            )
-                        }
-                        ShardStrategy::Planned => (
-                            dtype.as_str().to_owned(),
-                            shard_shape.clone(),
-                            None,
-                            None,
-                        ),
-                        ShardStrategy::Zstd => (
-                            dtype.as_str().to_owned(),
-                            shard_shape.clone(),
-                            Some(TensorStrategy::Zstd),
-                            None,
-                        ),
-                        ShardStrategy::Raw => (
-                            dtype.as_str().to_owned(),
-                            shard_shape.clone(),
-                            Some(TensorStrategy::Raw),
-                            None,
-                        ),
-                    };
-                    let spec = TensorWriteSpec {
-                        strategy_hint: hint,
+                    let (store_dtype, store_shape, hint, tile_shape) = checkpoint_shard_transport(
+                        dtype,
+                        &shard_shape,
+                        physical,
+                        &options,
+                        effective_strategy,
+                    )?;
+                    let spec = checkpoint_shard_spec(
+                        hint,
                         tile_shape,
-                        causal: causal_versions
+                        causal_versions
                             .get(&tensor.name)
                             .and_then(|versions| versions.get(shard_index as usize))
-                            .filter(|_| !fast)
-                            .map(|version| vec![*version])
-                            .unwrap_or_default(),
-                        plan: crate::tensor_store::TensorPlanOptions {
-                            write_policy: if fast {
-                                WritePolicy::Fast
-                            } else {
-                                WritePolicy::Planned
-                            },
-                            fast_codec: options.fast_codec,
-                            fast_zstd_level: options.fast_zstd_level,
-                            semantic_search: options.semantic_search,
-                            ..crate::tensor_store::TensorPlanOptions::default()
-                        },
-                        ..TensorWriteSpec::default()
-                    };
-                    let id = store
-                        .write_tensor_file_with_spec(
+                            .copied(),
+                        fast,
+                        &options,
+                    );
+                    let id = match seeds.as_ref() {
+                        Some(seeds) => store.write_tensor_file_with_spec_seeded(
                             dir,
                             object_name.as_bytes(),
                             &store_dtype,
@@ -1111,32 +1359,31 @@ impl Store {
                             &shard_bytes,
                             &TensorLayoutSpec::row_major(),
                             &spec,
+                            &seeds.shard(&tensor.name, shard_index),
+                        ),
+                        None => store.write_tensor_file_with_spec(
+                            dir,
+                            object_name.as_bytes(),
+                            &store_dtype,
+                            &store_shape,
+                            &shard_bytes,
+                            &TensorLayoutSpec::row_major(),
+                            &spec,
+                        ),
+                    }
+                    .map_err(|err| {
+                        let hint = checkpoint_strategy_hint(effective_strategy);
+                        Error::new(
+                            err.class(),
+                            format!(
+                                "checkpoint tensor `{}` shard {}/{}: {}{hint}",
+                                tensor.name,
+                                shard_index,
+                                options.shards,
+                                err.message()
+                            ),
                         )
-                        .map_err(|err| {
-                            let hint = match effective_strategy {
-                                ShardStrategy::TensorSharded => {
-                                    " (mode 10 needs a shard byte length divisible by 16; \
-                                     choose --shard-strategy zstd otherwise)"
-                                }
-                                ShardStrategy::TensorTiled => {
-                                    " (mode 15 needs a tile shape that divides every shard extent)"
-                                }
-                                ShardStrategy::FloatTiled => {
-                                    " (mode 17 needs a tile shape that divides every shard extent)"
-                                }
-                                _ => "",
-                            };
-                            Error::new(
-                                err.class(),
-                                format!(
-                                    "checkpoint tensor `{}` shard {}/{}: {}{hint}",
-                                    tensor.name,
-                                    shard_index,
-                                    options.shards,
-                                    err.message()
-                                ),
-                            )
-                        })?;
+                    })?;
                     shard_objects += 1;
                     shards.push(CheckpointShard {
                         axis: options.axis,
@@ -1204,15 +1451,27 @@ impl Store {
                 "weft.checkpoint.id".to_owned(),
                 wu::hash_value(manifest_root),
             );
-            let manifest_id = store.create_file(
-                dir,
-                CHECKPOINT_MANIFEST_NAME.as_bytes(),
-                &manifest_bytes,
-                0o644,
-                uid,
-                gid,
-                attrs,
-            )?;
+            let manifest_id = match seeds.as_ref() {
+                Some(seeds) => store.create_file_seeded(
+                    dir,
+                    CHECKPOINT_MANIFEST_NAME.as_bytes(),
+                    &manifest_bytes,
+                    0o644,
+                    uid,
+                    gid,
+                    attrs,
+                    &seeds.manifest,
+                )?,
+                None => store.create_file(
+                    dir,
+                    CHECKPOINT_MANIFEST_NAME.as_bytes(),
+                    &manifest_bytes,
+                    0o644,
+                    uid,
+                    gid,
+                    attrs,
+                )?,
+            };
             let written = tensors
                 .into_iter()
                 .map(|(tensor, object_names, object_ids)| WrittenTensor {
@@ -1239,11 +1498,554 @@ impl Store {
                 complete,
                 source_sha256: file.sha256,
                 source_file_bytes: file.file_bytes,
+                prepare_ms: None,
+                validate_ms: None,
+                commit_ms: None,
             })
         })?;
         let mut report = report;
         report.head = head;
         Ok(report)
+    }
+
+    /// Resolve the matching shard versions of an optional causal checkpoint.
+    fn resolve_causal_versions(
+        &self,
+        options: &CheckpointWriteOptions,
+    ) -> Result<BTreeMap<String, Vec<Hash32>>> {
+        let mut causal_versions: BTreeMap<String, Vec<Hash32>> = BTreeMap::new();
+        let Some(previous) = options.causal_checkpoint.as_deref() else {
+            return Ok(causal_versions);
+        };
+        let previous_manifest = self.load_checkpoint(previous)?;
+        for tensor in &previous_manifest.tensors {
+            let mut versions = Vec::with_capacity(tensor.shards.len());
+            let mut usable = tensor.shards.len() == options.shards as usize;
+            for shard in &tensor.shards {
+                if shard.axis != options.axis || shard.shards != options.shards {
+                    usable = false;
+                    break;
+                }
+                match self.object_meta(shard.object_id) {
+                    Ok(record) => versions.push(record.version),
+                    Err(_) => {
+                        usable = false;
+                        break;
+                    }
+                }
+            }
+            if usable {
+                causal_versions.insert(tensor.name.clone(), versions);
+            }
+        }
+        Ok(causal_versions)
+    }
+
+    /// Write a checkpoint with a **prepare / commit split**: `ranks` workers
+    /// publish immutable, content-addressed blob sets in parallel and return
+    /// manifest fragments; exactly one committer validates every fragment and
+    /// publishes all state ops in a single commit.
+    ///
+    /// The single-writer proof is untouched. Workers hold read-only handles and
+    /// only ever call create-once blob publication (`put_if_absent` / an
+    /// invariant-preserving `put_atomic` on an immutable key); no second
+    /// process touches the superblock, a commit record, the writer lock, or the
+    /// lease. The committer is the same handle that already owns them.
+    ///
+    /// Failure semantics: a worker that dies (error or panic) leaves only
+    /// unreferenced blobs, which GC reclaims; the committer never publishes a
+    /// partial set and the error names the tensor and shard. A shard name that
+    /// already exists with different bytes fails closed (`Exists`/`Corrupt`),
+    /// exactly as the sequential path does.
+    pub fn write_checkpoint_parallel(
+        &mut self,
+        name: &str,
+        source: &Path,
+        options: &CheckpointWriteOptions,
+        parallel: &ParallelCheckpointOptions,
+    ) -> Result<CheckpointWriteReport> {
+        crate::state::validate_name_bytes(name.as_bytes())?;
+        if options.shards == 0 {
+            return Err(Error::invalid_argument("--shards must be at least 1"));
+        }
+        parallel.validate()?;
+        let file = SafetensorsFile::parse(source)?;
+        if file.tensors.is_empty() {
+            return Err(Error::invalid_argument(format!(
+                "{}: the container has no tensors",
+                source.display()
+            )));
+        }
+        let selected: Vec<&SafetensorsTensor> = file
+            .tensors
+            .iter()
+            .filter(|tensor| selected_by_filters(&tensor.name, &options.filters))
+            .collect();
+        if selected.is_empty() {
+            return Err(Error::not_found(format!(
+                "no tensor in {} matches the requested filters {:?}",
+                source.display(),
+                options.filters
+            )));
+        }
+        let complete = selected.len() == file.tensors.len();
+        let effective_strategy = options.effective_strategy();
+        let fast = options.is_fast();
+        validate_checkpoint_layout(&selected, options, effective_strategy)?;
+        let causal_versions = self.resolve_causal_versions(options)?;
+        let seeds = options
+            .deterministic_seed
+            .map(|base| CheckpointSeeds::new(&base));
+        let deadline = parallel
+            .deadline_ms
+            .map(|ms| Instant::now() + Duration::from_millis(ms));
+
+        // ---- prepare (N workers, one task = one tensor) --------------------
+        // A task is one tensor rather than one shard because the tensor-level
+        // LogicalTensorRoot spans all of its shards; the worker that holds the
+        // tensor bytes is the only one that can compute it. Every blob a worker
+        // writes is content-addressed, so task order and rank assignment are
+        // irrelevant.
+        let in_flight = ParallelBudget::new(parallel.max_in_flight_bytes);
+        let prepare_started = Instant::now();
+        let prepared: Vec<PreparedCheckpointTensor> = std::thread::scope(|scope| {
+            let mut handles = Vec::with_capacity(parallel.ranks);
+            for rank in 0..parallel.ranks {
+                let file = &file;
+                let selected = &selected;
+                let options = options.clone();
+                let causal_versions = &causal_versions;
+                let seeds = seeds.as_ref();
+                let in_flight = &in_flight;
+                let root = self.root().to_path_buf();
+                let store_options = self.options().clone();
+                let backend_kind = self.backend_kind().clone();
+                let per_rank_bytes = parallel.per_rank_bytes;
+                let ranks = parallel.ranks;
+                let deadline = deadline;
+                handles.push(scope.spawn(move || -> Result<Vec<PreparedCheckpointTensor>> {
+                    // One isolated handle per rank: its own backend instance and
+                    // its own replayed read-only state. Control-state
+                    // publication is refused by `require_writable`; immutable
+                    // blob publication is the only write this handle performs.
+                    let worker = Store::open_with_options_and_backend(
+                        &root,
+                        OpenMode::ReadOnly,
+                        store_options,
+                        backend_kind,
+                    )?;
+                    let mut out = Vec::new();
+                    let mut rank_bytes: u64 = 0;
+                    for (tensor_index, tensor) in selected.iter().enumerate() {
+                        if tensor_index % ranks != rank {
+                            continue;
+                        }
+                        if let Some(limit) = deadline {
+                            if Instant::now() >= limit {
+                                return Err(Error::cancelled(format!(
+                                    "checkpoint prepare deadline ({:?}) reached before tensor `{}`",
+                                    parallel.deadline_ms.unwrap_or(0),
+                                    tensor.name
+                                )));
+                            }
+                        }
+                        let need = tensor.byte_len();
+                        rank_bytes = rank_bytes.checked_add(need).ok_or_else(|| {
+                            Error::limit_exceeded("per-rank byte accounting overflow")
+                        })?;
+                        if rank_bytes > per_rank_bytes {
+                            return Err(Error::limit_exceeded(format!(
+                                "rank {rank} would prepare {rank_bytes} bytes, above its {per_rank_bytes}-byte budget"
+                            )));
+                        }
+                        let reserved = in_flight.reserve(need, deadline)?;
+                        let fragment = worker.prepare_checkpoint_tensor(
+                            file,
+                            tensor,
+                            tensor_index,
+                            &options,
+                            effective_strategy,
+                            fast,
+                            causal_versions,
+                            seeds,
+                            deadline,
+                        );
+                        in_flight.release(reserved);
+                        out.push(fragment?);
+                    }
+                    Ok(out)
+                }));
+            }
+            let mut all = Vec::with_capacity(selected.len());
+            for handle in handles {
+                match handle.join() {
+                    Ok(Ok(items)) => all.extend(items),
+                    Ok(Err(err)) => return Err(err),
+                    Err(_) => {
+                        return Err(Error::cancelled(
+                            "a checkpoint prepare worker panicked; nothing was published",
+                        ))
+                    }
+                }
+            }
+            all.sort_by_key(|item| item.tensor_index);
+            Ok(all)
+        })?;
+
+        let prepare_ms = prepare_started.elapsed().as_secs_f64() * 1000.0;
+
+        // ---- validate every fragment (the single committer) ----------------
+        let validate_started = Instant::now();
+        if parallel.verify_fragments {
+            for fragment in &prepared {
+                self.verify_prepared_checkpoint_tensor(fragment)?;
+            }
+        }
+        let validate_ms = validate_started.elapsed().as_secs_f64() * 1000.0;
+
+        // ---- commit (one publication) --------------------------------------
+        let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
+        let name_owned = name.to_owned();
+        let options = options.clone();
+        let commit_started = Instant::now();
+        let (report, head) = self.group(|store| {
+            let checkpoints = ensure_dir_seeded(
+                store,
+                State::ROOT_ID,
+                CHECKPOINT_ROOT.as_bytes(),
+                seeds.as_ref().map(|seeds| &seeds.checkpoints),
+            )?;
+            let dir = match seeds.as_ref() {
+                Some(seeds) => store.mkdir_seeded(
+                    checkpoints,
+                    name_owned.as_bytes(),
+                    0o755,
+                    uid,
+                    gid,
+                    &seeds.dir,
+                )?,
+                None => store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?,
+            };
+            let mut tensors = Vec::with_capacity(prepared.len());
+            let mut shard_objects = 0usize;
+            for fragment in &prepared {
+                let mut object_ids = Vec::with_capacity(fragment.prepared.len());
+                for (object_name, shard) in
+                    fragment.object_names.iter().zip(fragment.prepared.iter())
+                {
+                    let id = store.commit_prepared_tensor_object(
+                        dir,
+                        object_name.as_bytes(),
+                        shard,
+                        0o644,
+                    )?;
+                    object_ids.push(id);
+                    shard_objects += 1;
+                }
+                tensors.push((
+                    fragment.tensor.clone(),
+                    fragment.object_names.clone(),
+                    object_ids,
+                ));
+            }
+            let total_element_bytes = tensors
+                .iter()
+                .map(|(tensor, _, _)| tensor.element_bytes)
+                .sum::<u64>();
+            let manifest = CheckpointManifest {
+                name: name_owned.clone(),
+                container: CHECKPOINT_CONTAINER.to_owned(),
+                complete,
+                element_bytes: total_element_bytes,
+                source_header: Some(file.header_bytes.clone()),
+                source_file_bytes: Some(file.file_bytes),
+                source_sha256: Some(file.sha256),
+                tensors: {
+                    let mut sorted: Vec<CheckpointTensor> = tensors
+                        .iter()
+                        .map(|(tensor, _, _)| tensor.clone())
+                        .collect();
+                    sorted.sort_by(|a, b| a.name.cmp(&b.name));
+                    sorted
+                },
+            };
+            let manifest_bytes = manifest.canonical_bytes()?;
+            let manifest_root = manifest.root()?;
+            let mut attrs = BTreeMap::new();
+            attrs.insert(
+                "weft.checkpoint.schema".to_owned(),
+                Value::Str(CHECKPOINT_SCHEMA.to_owned()),
+            );
+            attrs.insert(
+                "weft.checkpoint.id".to_owned(),
+                wu::hash_value(manifest_root),
+            );
+            let manifest_id = match seeds.as_ref() {
+                Some(seeds) => store.create_file_seeded(
+                    dir,
+                    CHECKPOINT_MANIFEST_NAME.as_bytes(),
+                    &manifest_bytes,
+                    0o644,
+                    uid,
+                    gid,
+                    attrs,
+                    &seeds.manifest,
+                )?,
+                None => store.create_file(
+                    dir,
+                    CHECKPOINT_MANIFEST_NAME.as_bytes(),
+                    &manifest_bytes,
+                    0o644,
+                    uid,
+                    gid,
+                    attrs,
+                )?,
+            };
+            let written = tensors
+                .into_iter()
+                .map(|(tensor, object_names, object_ids)| WrittenTensor {
+                    name: tensor.name,
+                    dtype: tensor.dtype,
+                    shape: tensor.shape,
+                    logical_root: tensor.logical_root,
+                    element_bytes: tensor.element_bytes,
+                    axis: options.axis,
+                    shards: options.shards,
+                    object_names,
+                    object_ids,
+                })
+                .collect::<Vec<_>>();
+            Ok(CheckpointWriteReport {
+                name: name_owned.clone(),
+                checkpoint_id: dir,
+                head: Hash32::ZERO,
+                manifest_id,
+                manifest_root,
+                tensors: written,
+                total_element_bytes,
+                shard_objects,
+                complete,
+                source_sha256: file.sha256,
+                source_file_bytes: file.file_bytes,
+                prepare_ms: Some(prepare_ms),
+                validate_ms: Some(validate_ms),
+                commit_ms: Some(0.0),
+            })
+        })?;
+        let commit_ms = commit_started.elapsed().as_secs_f64() * 1000.0;
+        let mut report = report;
+        report.head = head;
+        report.commit_ms = Some(commit_ms);
+        Ok(report)
+    }
+
+    /// Prepare one tensor (all of its shards) from a worker handle: publish
+    /// immutable blobs and return the manifest fragment. No state op is
+    /// published; the caller owns the single commit.
+    #[allow(clippy::too_many_arguments)]
+    fn prepare_checkpoint_tensor(
+        &self,
+        file: &SafetensorsFile,
+        tensor: &SafetensorsTensor,
+        tensor_index: usize,
+        options: &CheckpointWriteOptions,
+        effective_strategy: ShardStrategy,
+        fast: bool,
+        causal_versions: &BTreeMap<String, Vec<Hash32>>,
+        seeds: Option<&CheckpointSeeds>,
+        deadline: Option<Instant>,
+    ) -> Result<PreparedCheckpointTensor> {
+        let limits = Limits::default();
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor `{}` dtype `{}` has no physical layout",
+                tensor.name, tensor.dtype
+            ))
+        })?;
+        let bytes = file.read_tensor(tensor)?;
+        tc::check_payload(physical, &tensor.shape, &bytes, &limits)?;
+        let mut shards = Vec::with_capacity(options.shards as usize);
+        let mut object_names = Vec::with_capacity(options.shards as usize);
+        let mut prepared = Vec::with_capacity(options.shards as usize);
+        for shard_index in 0..options.shards {
+            if let Some(limit) = deadline {
+                if Instant::now() >= limit {
+                    return Err(Error::cancelled(format!(
+                        "checkpoint prepare deadline reached at tensor `{}` shard {}/{} (nothing was published)",
+                        tensor.name, shard_index, options.shards
+                    )));
+                }
+            }
+            let shard_shape =
+                tc::shard_shape(&tensor.shape, options.axis, options.shards, shard_index)?;
+            let shard_bytes = tc::shard_bytes(
+                physical,
+                &tensor.shape,
+                options.axis,
+                options.shards,
+                shard_index,
+                &bytes,
+                &limits,
+            )?;
+            let object_name = shard_object_name(tensor_index, shard_index);
+            let (store_dtype, store_shape, hint, tile_shape) = checkpoint_shard_transport(
+                dtype,
+                &shard_shape,
+                physical,
+                options,
+                effective_strategy,
+            )?;
+            let spec = checkpoint_shard_spec(
+                hint,
+                tile_shape,
+                causal_versions
+                    .get(&tensor.name)
+                    .and_then(|versions| versions.get(shard_index as usize))
+                    .copied(),
+                fast,
+                options,
+            );
+            let object = self
+                .prepare_tensor_object_with_spec_seeded(
+                    &store_dtype,
+                    &store_shape,
+                    &shard_bytes,
+                    &TensorLayoutSpec::row_major(),
+                    &spec,
+                    &match seeds {
+                        Some(seeds) => seeds.shard(&tensor.name, shard_index),
+                        None => identity::os_random_32()?,
+                    },
+                )
+                .map_err(|err| {
+                    let hint = checkpoint_strategy_hint(effective_strategy);
+                    Error::new(
+                        err.class(),
+                        format!(
+                            "checkpoint tensor `{}` shard {}/{}: {}{hint}",
+                            tensor.name,
+                            shard_index,
+                            options.shards,
+                            err.message()
+                        ),
+                    )
+                })?;
+            shards.push(CheckpointShard {
+                axis: options.axis,
+                shards: options.shards,
+                index: shard_index,
+                object_name: object_name.clone(),
+                object_id: identity::object_id_from_seed(&object.seed),
+                content_root: object.content_root,
+                // The checkpoint manifest records the *logical* shard root under
+                // the tensor's own dtype, exactly as the sequential path does;
+                // a q8_0 byte transport is a storage detail.
+                logical_root: tc::logical_root(physical, &shard_shape, &shard_bytes, &limits)?,
+                byte_len: object.size,
+            });
+            object_names.push(object_name);
+            prepared.push(object);
+            // Court hook: pause after a shard's blobs are durable and before the
+            // next one, so an external kill can prove "worker died before any
+            // publication -> nothing visible, GC reclaims the orphans". Inert
+            // unless `WEFT_CHECKPOINT_PREPARE_PAUSE_MS` is set.
+            if let Ok(text) = std::env::var("WEFT_CHECKPOINT_PREPARE_PAUSE_MS") {
+                if let Ok(ms) = text.parse::<u64>() {
+                    std::thread::sleep(Duration::from_millis(ms));
+                }
+            }
+        }
+        let logical_root = tc::logical_root(physical, &tensor.shape, &bytes, &limits)?;
+        let tensor = CheckpointTensor {
+            name: tensor.name.clone(),
+            dtype: dtype.as_str().to_owned(),
+            shape: tensor.shape.clone(),
+            logical_root,
+            content_root: identity::content_hash(&bytes),
+            element_bytes: bytes.len() as u64,
+            source_offset: tensor.begin,
+            shards,
+        };
+        Ok(PreparedCheckpointTensor {
+            tensor_index,
+            tensor,
+            object_names,
+            prepared,
+        })
+    }
+
+    /// Re-read every prepared shard through the *committer's* backend and
+    /// prove it decodes to the exact bytes, content root, and logical root the
+    /// fragment claims. A worker's claims are never trusted.
+    fn verify_prepared_checkpoint_tensor(&self, fragment: &PreparedCheckpointTensor) -> Result<()> {
+        let limits = Limits::default();
+        let dtype = TensorElementDtype::parse(&fragment.tensor.dtype)?;
+        let mut tensor_bytes = Vec::with_capacity(
+            usize::try_from(fragment.tensor.element_bytes)
+                .map_err(|_| Error::limit_exceeded("tensor does not fit in memory"))?,
+        );
+        for (shard, prepared) in fragment.tensor.shards.iter().zip(fragment.prepared.iter()) {
+            let bytes = self
+                .read_manifest_verified(prepared.manifest_id, prepared.content_root, prepared.size)
+                .map_err(|err| {
+                    Error::new(
+                        err.class(),
+                        format!(
+                            "prepared shard `{}` (tensor `{}`): {}",
+                            shard.object_name, fragment.tensor.name, err
+                        ),
+                    )
+                })?;
+            if identity::content_hash(&bytes) != prepared.content_root {
+                return Err(Error::corrupt(format!(
+                    "prepared shard `{}` bytes do not match their content root",
+                    shard.object_name
+                )));
+            }
+            let physical = dtype
+                .physical_tensor_dtype()
+                .ok_or_else(|| Error::unsupported_version("tensor dtype has no logical root"))?;
+            let shard_shape = tc::shard_shape(
+                &fragment.tensor.shape,
+                shard.axis,
+                shard.shards,
+                shard.index,
+            )?;
+            let logical = tc::logical_root(physical, &shard_shape, &bytes, &limits)?;
+            if logical != shard.logical_root {
+                return Err(Error::corrupt(format!(
+                    "prepared shard `{}` logical root disagrees with its bytes",
+                    shard.object_name
+                )));
+            }
+            tensor_bytes.extend_from_slice(&bytes);
+        }
+        if tensor_bytes.len() as u64 != fragment.tensor.element_bytes {
+            return Err(Error::corrupt(format!(
+                "prepared tensor `{}` reassembles to {} bytes, not {}",
+                fragment.tensor.name,
+                tensor_bytes.len(),
+                fragment.tensor.element_bytes
+            )));
+        }
+        if identity::content_hash(&tensor_bytes) != fragment.tensor.content_root {
+            return Err(Error::corrupt(format!(
+                "prepared tensor `{}` reassembled content root mismatch",
+                fragment.tensor.name
+            )));
+        }
+        let physical = dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("tensor dtype has no logical root"))?;
+        let logical = tc::logical_root(physical, &fragment.tensor.shape, &tensor_bytes, &limits)?;
+        if logical != fragment.tensor.logical_root {
+            return Err(Error::corrupt(format!(
+                "prepared tensor `{}` logical root disagrees with its bytes",
+                fragment.tensor.name
+            )));
+        }
+        Ok(())
     }
 
     /// Load and validate one checkpoint manifest.

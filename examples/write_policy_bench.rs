@@ -227,6 +227,7 @@ fn save(args: &[String]) -> Result<(), String> {
                 deadline_ms: None,
                 causal_checkpoint: arg(args, "--causal-checkpoint").map(str::to_owned),
                 semantic_search: !flag(args, "--no-semantic"),
+                ..CheckpointWriteOptions::default()
             },
         )
         .map_err(|err| err.to_string())?;

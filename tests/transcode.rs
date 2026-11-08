@@ -124,6 +124,7 @@ fn write_fast(
                 deadline_ms: None,
                 causal_checkpoint: None,
                 semantic_search: true,
+                ..CheckpointWriteOptions::default()
             },
         )
         .unwrap()

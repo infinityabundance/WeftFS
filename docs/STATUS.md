@@ -5801,3 +5801,38 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
   synthetic series; the synthetic curve loses to the XOR baseline.
 * No physical power-loss court for transcode (process abort only); no
   multi-writer, fleet, RAPL, or GPU claim.
+
+### Prepare/commit checkpoint writes: N blob writers, one committer (`docs/PARALLEL-CHECKPOINT.md`)
+
+* `Store::write_checkpoint_parallel` splits the checkpoint write into a
+  **prepare** phase (N worker handles publish immutable content-addressed blobs
+  and return manifest fragments) and **one commit** (a single committer
+  re-verifies every fragment against its own backend, then publishes one group
+  commit). A prepare task is one tensor, because the tensor-level
+  `LogicalTensorRoot` spans its shards.
+* The single-writer proof is untouched and that is the point: workers hold
+  read-only handles and only call create-once blob publication; they never
+  touch the superblock, a commit record, the writer lock, the lease, the fence,
+  or the pack catalog. No multi-writer consensus exists or is needed.
+* Failure semantics: a worker error or panic publishes nothing and names the
+  tensor/shard; the next `gc --apply` reclaims the orphans; a killed writer
+  process mid-prepare leaves only the previous whole generation (proved with a
+  real `SIGKILL`); a duplicate checkpoint name is `Exists`; a blob whose bytes
+  disagree with its key is `Corrupt`.
+* Bounds: `--ranks` (hard cap 64), `--max-inflight-bytes` (1 GiB),
+  `--per-rank-bytes` (512 MiB), `--prepare-deadline-ms`; the committer's
+  fragment re-verification is on by default (`--no-fragment-verify` disables).
+* `CheckpointWriteOptions::deterministic_seed` / `--checkpoint-seed` makes the
+  sequential and split paths publish identical bytes for the same input.
+  Local court (Qwen2.5-0.5B, 8 shards, 5 reps, 4 vCPU): best prepare
+  13.18/11.34/6.18/3.39 s at 1/2/4/8 ranks (3.89× at 8 vs 1); best wall
+  14.91/13.09/7.92/5.13 s; commit 63–65 ms; verify 1.25 s; peak RSS
+  394→508 MiB; every configuration stored 775,692,888 B with head
+  `64f685d8341098bf…`. MinIO subset court: prepare 176.2/110.2/60.5/53.5 ms,
+  commit ~4.0 ms, identical head `844648f4694936b7…`.
+* Losses: single runs are bimodal because of the host page cache (medians
+  published); 8 ranks on 4 vCPUs is worse than 4 in the median; RSS grows with
+  ranks; the S3 phase is a tensor subset on a 1 GiB tmpfs; Rust only.
+* Receipts `bench/receipts/parallel-checkpoint-20261108T030000Z.json` and
+  `bench/receipts/parallel-checkpoint-s3-20261108T015555Z.json`; tests
+  `tests/parallel_checkpoint.rs` 6/6.
