@@ -330,3 +330,55 @@ fn a_killed_process_mid_prepare_leaves_no_publication() {
 fn hex_32(bytes: [u8; 32]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
+
+#[test]
+fn blob_worker_can_publish_blobs_but_not_control_state() {
+    use weftfs::backend::BackendKind;
+    use weftfs::tensor_store::{TensorLayoutSpec, TensorWriteSpec};
+
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    drop(Store::init(&path, opts()).unwrap());
+
+    let bytes = random_bytes(8 * 8 * 2, 0x1234);
+    let layout = TensorLayoutSpec::row_major();
+    let spec = TensorWriteSpec::default();
+
+    // A plain read-only handle may not publish a blob: read-only means
+    // read-only, and the read path never needs this.
+    let read_only = Store::open_with_options(&path, OpenMode::ReadOnly, opts()).unwrap();
+    let err = read_only
+        .prepare_tensor_object_with_spec("bf16", &[8, 8], &bytes, &layout, &spec)
+        .unwrap_err();
+    assert_eq!(
+        err.class(),
+        weftfs::error::Class::ReadOnly,
+        "unexpected error: {err}"
+    );
+
+    // A blob worker may publish the immutable blobs ...
+    let mut worker = Store::open_blob_worker(&path, opts(), BackendKind::Local).unwrap();
+    let prepared = worker
+        .prepare_tensor_object_with_spec("bf16", &[8, 8], &bytes, &layout, &spec)
+        .unwrap();
+    assert_ne!(prepared.manifest_id, weftfs::identity::Hash32::ZERO);
+
+    // ... but it still cannot publish control state.
+    let err = worker
+        .create_file(
+            weftfs::identity::Hash32::ZERO,
+            b"nope",
+            b"x",
+            0o644,
+            0,
+            0,
+            Default::default(),
+        )
+        .unwrap_err();
+    assert_eq!(
+        err.class(),
+        weftfs::error::Class::ReadOnly,
+        "unexpected error: {err}"
+    );
+    assert_eq!(worker.generation(), 1);
+}

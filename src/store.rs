@@ -595,6 +595,10 @@ pub struct Store {
     /// closure that already holds the guard.
     backend: Mutex<Box<dyn StorageBackend + Send>>,
     backend_kind: BackendKind,
+    /// True only for a handle created by [`Store::open_blob_worker`]. Such a
+    /// handle may publish immutable content-addressed blobs but still cannot
+    /// publish control state, because `require_writable` checks `mode`.
+    blob_worker: bool,
     state: State,
     head: Hash32,
     generation: u64,
@@ -850,6 +854,7 @@ impl Store {
             options,
             backend: Mutex::new(backend),
             backend_kind,
+            blob_worker: false,
             state: State::default(),
             head: Hash32::ZERO,
             generation: 0,
@@ -995,6 +1000,7 @@ impl Store {
             options: Options::default(),
             backend: Mutex::new(backend),
             backend_kind,
+            blob_worker: false,
             state: recovery.state,
             head: recovery.head,
             generation: recovery.generation,
@@ -1037,6 +1043,24 @@ impl Store {
         options: Options,
     ) -> Result<Store> {
         Self::open_with_options_and_backend(path, mode, options, BackendKind::Local)
+    }
+
+    /// Open an isolated **blob worker** handle: a read-only store handle that
+    /// may also publish immutable, content-addressed blobs.
+    ///
+    /// This is the capability the parallel checkpoint writer gives each worker
+    /// rank. Control-state publication stays refused (`require_writable` checks
+    /// the mode), so the single-writer/lease/fence proof is untouched; all a
+    /// worker can do is create-once blob publication on an immutable key.
+    pub fn open_blob_worker(
+        path: impl AsRef<Path>,
+        options: Options,
+        backend_kind: BackendKind,
+    ) -> Result<Store> {
+        let mut store =
+            Self::open_with_options_and_backend(path, OpenMode::ReadOnly, options, backend_kind)?;
+        store.blob_worker = true;
+        Ok(store)
     }
 
     /// Open with explicit runtime options and backend.
@@ -8959,6 +8983,11 @@ impl Store {
     /// fully written and fsynced temporary object all-or-nothing under its
     /// content key. An existing blob is verified, never overwritten.
     pub(crate) fn store_blob(&self, kind: BlobKind, domain: &str, bytes: &[u8]) -> Result<Hash32> {
+        if self.mode != OpenMode::ReadWrite && !self.blob_worker {
+            return Err(Error::read_only(
+                "this handle may not publish blobs; use a writable store or a blob worker",
+            ));
+        }
         let hash = identity::h(domain, bytes);
         let key = match kind {
             BlobKind::Object => Key::object(hash),

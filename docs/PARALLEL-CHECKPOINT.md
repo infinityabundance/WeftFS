@@ -26,10 +26,14 @@ single-writer protocol are untouched.
 * A **prepare task is one tensor**, all of its shards. The tensor-level
   `LogicalTensorRoot` spans every shard, so only the worker holding the tensor
   bytes can compute it. Tasks are statically assigned (`tensor_index % ranks`).
-* Each worker opens **its own read-only store handle** (`Store::open_with_options_and_backend`,
-  `OpenMode::ReadOnly`): its own backend instance and its own replayed state, so
-  it can read causal base versions. It writes only **immutable, content-addressed
-  blobs** through `Store::prepare_tensor_object_with_spec_seeded`
+* Each worker opens **its own blob-worker handle** (`Store::open_blob_worker`):
+  a read-only handle with one extra capability — publishing immutable,
+  content-addressed blobs. It has its own backend instance and its own replayed
+  state, so it can read causal base versions. `Store::store_blob` refuses on a
+  plain read-only handle; only a writable handle or a blob worker may publish,
+  and a worker still cannot publish control state (`create_file` etc. return
+  `ReadOnly`). It writes only **immutable, content-addressed blobs** through
+  `Store::prepare_tensor_object_with_spec_seeded`
   (`put_if_absent`; on the local backend an existing blob is verified, never
   overwritten). Blob publication needs no ordering, no coordination and no
   agreement, because the key *is* the digest.

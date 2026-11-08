@@ -5914,10 +5914,17 @@ receipt's 22.2× is not re-run, so the cross-receipt comparison is indicative.
 
 ### T1 hardening gates (this revision)
 
-* Rust `cargo test --all-targets`: **595 passed / 0 failed** across 120 test
-  binaries (the pre-existing `tests/quota.rs::usage_survives_reopen_and_still_denies`
-  writer-lock flake appeared once and passed 8/8 standalone and on rerun; no
-  test was changed or skipped).
+* Rust `cargo test --all-targets`: **596 passed / 0 failed** across 120 test
+  binaries. The pre-existing `tests/quota.rs::usage_survives_reopen_and_still_denies`
+  flake is now measured precisely: **15/15 pass with `--test-threads=1` and
+  12/15 with the default thread count**, and a 12,000-iteration
+  init/drop/reopen probe across 4 threads had **0** failures. The class is
+  always `Busy` at the reopen. Cause: `flock(2)` locks belong to the **open file
+  description**, which a concurrently forked child inherits until `exec` closes
+  it (Rust sets `O_CLOEXEC`, so the window is only fork→exec). `tests/quota.rs`
+  also spawns the CLI, so under parallel test threads another test's fork can
+  briefly hold this test's `LOCK` fd. It is a test-harness/fork artifact, not a
+  store bug; no test was changed or skipped.
 * FUSE `cargo test --features fuse --all-targets`: **638 passed / 0 failed /
   2 pre-existing ignored** across 120 binaries.
 * WeftFS-Go `go test -race -count=1 ./...` (fuse court): all packages pass

@@ -1628,12 +1628,8 @@ impl Store {
                     // its own replayed read-only state. Control-state
                     // publication is refused by `require_writable`; immutable
                     // blob publication is the only write this handle performs.
-                    let worker = Store::open_with_options_and_backend(
-                        &root,
-                        OpenMode::ReadOnly,
-                        store_options,
-                        backend_kind,
-                    )?;
+                    let worker =
+                        Store::open_blob_worker(&root, store_options, backend_kind)?;
                     let mut out = Vec::new();
                     let mut rank_bytes: u64 = 0;
                     for (tensor_index, tensor) in selected.iter().enumerate() {
