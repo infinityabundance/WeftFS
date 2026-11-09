@@ -21,9 +21,14 @@ pip install "dist/weftcodec-1.2.0-py3-none-any.whl[orbax]"
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI publication requires an API token we do not have.** The wheel is built
-> in the Docker court and attached to the GitHub release; it is not published to
-> PyPI.
+> **PyPI.** `weftcodec 1.2.0` is published on PyPI:
+> <https://pypi.org/project/weftcodec/1.2.0/>. The wheel and sdist are built in
+> the Docker court with `scripts/publish-pypi.sh`, and the same artifacts are
+> attached to the GitHub release.
+>
+> ```sh
+> pip install weftcodec==1.2.0
+> ```
 
 ## Usage
 
