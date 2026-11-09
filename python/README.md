@@ -11,11 +11,11 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-0.9.0-py3-none-any.whl
+pip install dist/weftcodec-1.2.0-py3-none-any.whl
 # with the optional dataset extra
-pip install "dist/weftcodec-0.9.0-py3-none-any.whl[torch]"
+pip install "dist/weftcodec-1.2.0-py3-none-any.whl[torch]"
 # with the optional JAX/Orbax adapter extra
-pip install "dist/weftcodec-0.9.0-py3-none-any.whl[orbax]"
+pip install "dist/weftcodec-1.2.0-py3-none-any.whl[orbax]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
