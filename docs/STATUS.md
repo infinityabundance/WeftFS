@@ -6956,7 +6956,7 @@ measurements and every loss are in
   (`NoBlindOverwrite` violation, last-writer-wins) and
   `WeftMultiWriterGcBuggy.tla` marking only from the head
   (`GcNeverReclaimsReachable` violation, GC reclaims a live prepared
-  transaction's blob). Receipt `bench/receipts/tla-20261109T140116Z.json`
+  transaction's blob). Receipt `bench/receipts/tla-20261109T174959Z.json`
   (5 models: 2 `pass`, 3 `expected-violation`).
 * **Rust MW2.** `src/mw2.rs` and `Store::{begin_transaction`,
   prepare_content, prepare_transaction, execute_transaction,
@@ -7038,14 +7038,14 @@ optimistic publishers; there is no physical power loss, no fleet, and no MW3.
   pre-existing ignored**.
 * Go: `gofmt -l`, `go vet`, `CGO_ENABLED=0 go build`, and
   `go test -race -count=1 ./...` clean in the fuse court.
-* Mixed court: `bench/receipts/multiwriter-court-20261109T150402Z.json`
+* Mixed court: `bench/receipts/multiwriter-court-20261109T175012Z.json`
   (160/160 disjoint, 1/80 contended winner, 16 verifiers, `verify --full`).
-* Failure court: `bench/receipts/multiwriter-failure-20261109T150414Z.json`
+* Failure court: `bench/receipts/multiwriter-failure-20261109T175014Z.json`
   (8 process faults, replay, delayed writer, quota race).
 * Benchmark: `bench/receipts/bench-multiwriter-20261109T150423Z.json` and
   `.log`; retained superseded run `…144401Z`; retained failures
   `…144140Z`, `…144235Z`, `…144320Z`, `…144333Z`, `…144351Z.log`.
-* TLA+: `bench/receipts/tla-20261109T140116Z.json`.
+* TLA+: `bench/receipts/tla-20261109T174959Z.json`.
 * Aggregate: `bench/receipts/verify-20261109T165707Z.json` (**41/41** courts
   `pass`, 0 failed, 0 skipped) at WeftFS `a3256af`; the earlier 41/41 run
   `verify-20261109T160406Z.json` (at `257f31a`, before the spec-wording commit)

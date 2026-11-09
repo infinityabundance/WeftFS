@@ -6,10 +6,15 @@ Receipts (all measured at WeftFS `b0bcbc5`, WeftFS-Go `f46b351`):
   (14 rows: local disjoint N=1..32, local contention N=1..32, mixed N=8,
   MinIO N=4) and its `.log`;
 * mixed-language correctness court
-  `bench/receipts/multiwriter-court-20261109T150402Z.json`;
-* failure court `bench/receipts/multiwriter-failure-20261109T150414Z.json`;
-* TLA+ court `bench/receipts/tla-20261109T140116Z.json` (models unchanged
-  after R4; not rerun for this report).
+  `bench/receipts/multiwriter-court-20261109T175012Z.json`;
+* failure court `bench/receipts/multiwriter-failure-20261109T175014Z.json`;
+* TLA+ court `bench/receipts/tla-20261109T174959Z.json` (the same five models
+  and results as `tla-20261109T140116Z.json`, rerun by the final aggregate).
+
+The earlier all-pass court receipts `multiwriter-court-20261109T150402Z.json`,
+`multiwriter-failure-20261109T150414Z.json`, and `tla-20261109T140116Z.json`
+are retained; the stamps above are the final-aggregate reruns at WeftFS
+`a3256af`.
 
 The earlier benchmark `bench-multiwriter-20261109T144401Z.json` (WeftFS
 `f2cda44`) is **retained but superseded**: it measured the same protocol with
@@ -97,7 +102,7 @@ Deterministic parity (the same one-transaction store in both languages):
 head, manifest, content root, object id, entry id, and version are identical;
 `commits/2.commit` and the full 8 KiB `superblock` image are **byte-identical**;
 each language reads the other's store with the same content hash. Receipt
-`multiwriter-court-20261109T150402Z.json` (160/160 disjoint transactions,
+`multiwriter-court-20261109T175012Z.json` (160/160 disjoint transactions,
 1 winner out of 80 contended requests, 16 verifiers, history check
 `generation >= genesis + committed`).
 
@@ -119,7 +124,7 @@ same-backend N=1 baseline was measured; neither is inferred.
 
 ## 5. Failure and adversarial histories
 
-Receipt `multiwriter-failure-20261109T150414Z.json` (process-fault proxy, not
+Receipt `multiwriter-failure-20261109T175014Z.json` (process-fault proxy, not
 physical power loss). Each language was killed at four points; a fresh process
 reopened the store, ran `verify --full`, looked the transaction up, retried it
 when the answer was `unknown`, and read the name.
