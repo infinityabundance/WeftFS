@@ -527,6 +527,44 @@ def capability(binary, vector, work):
     return ok(record.get("envelope_id"), sha256(canonical))
 
 
+def transport_container(binary, vector, work):
+    path = os.path.join(work, "container.wftt")
+    write_hex(path, vector["container_hex"])
+    code, _stdout, stderr = run([binary, "transport", "verify", "--input", path])
+    expected = vector.get("expect_error")
+    if expected:
+        if code == 0:
+            return err("Accepted")
+        cls = class_from(stderr)
+        if cls is None:
+            raise AdapterFailure("no error class in stderr: %s" % stderr.strip())
+        return err(cls)
+    if code != 0:
+        cls = class_from(stderr)
+        if cls is None:
+            raise AdapterFailure("no error class in stderr: %s" % stderr.strip())
+        return err(cls)
+    # Independent parse of the header/table: the adapter does not trust the
+    # CLI for the values it reports.
+    raw = bytes.fromhex(vector["container_hex"])
+    if len(raw) < 4096 or raw[0:4] != b"WFTT":
+        raise AdapterFailure("transport container header is not WFTT")
+    count = int.from_bytes(raw[12:16], "little")
+    table_end = 4096 + count * 56
+    if table_end > len(raw):
+        raise AdapterFailure("transport section table is truncated")
+    payload = bytearray()
+    for index in range(count):
+        at = 4096 + index * 56
+        offset = int.from_bytes(raw[at : at + 8], "little")
+        length = int.from_bytes(raw[at + 8 : at + 16], "little")
+        end = offset + length
+        if end > len(raw):
+            raise AdapterFailure("transport section %d is out of bounds" % index)
+        payload.extend(raw[offset:end])
+    return ok(raw[32:64].hex(), sha256(bytes(payload)))
+
+
 def frame_vector(binary, vector, work):
     subkind = vector.get("_subkind")
     if subkind == "adversarial":
@@ -585,6 +623,8 @@ def dispatch(binary, vector, work):
         raise Skip("tensor subkind %r has no adapter" % subkind)
     if kind == "capability":
         return capability(binary, vector, work)
+    if kind == "transport":
+        return transport_container(binary, vector, work)
     raise Skip("kind %r has no adapter" % kind)
 
 
@@ -624,6 +664,7 @@ def annotate(path, vector):
         "semantic-root": ("tensor", "semantic_root"),
         "capability": ("capability", None),
         "checkpoint": ("checkpoint", None),
+        "transport": ("transport", None),
         "store": ("store", None),
         "fuzz": ("fuzz", None),
     }

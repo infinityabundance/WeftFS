@@ -81,6 +81,7 @@ CODEC_DIRS = {
     "tensor": ("tensor", None, None, "tensor"),
     "semantic-root": ("tensor", "semantic_root", None, "semantic_root"),
     "capability": ("capability", None, None, "capability"),
+    "transport": ("transport", None, None, "transport"),
 }
 
 IDENTITY_KINDS = {
@@ -442,6 +443,36 @@ def expectation_capability(vector):
     return ok(vector.get("envelope_id"), decode_sha(vector.get("canonical_hex"))), None
 
 
+def expectation_transport(vector):
+    if vector.get("expect_error"):
+        return error(vector["expect_error"]), None
+    raw = bytes.fromhex(vector["container_hex"])
+    if len(raw) < 4096:
+        raise SystemExit("transport vector %r is shorter than its header" % vector.get("name"))
+    if raw[0:4] != b"WFTT":
+        raise SystemExit("transport vector %r has bad magic" % vector.get("name"))
+    count = struct.unpack_from("<I", raw, 12)[0]
+    table_end = 4096 + count * 56
+    if table_end > len(raw):
+        raise SystemExit("transport vector %r has a truncated table" % vector.get("name"))
+    payload = bytearray()
+    for index in range(count):
+        at = 4096 + index * 56
+        offset = struct.unpack_from("<Q", raw, at)[0]
+        length = struct.unpack_from("<Q", raw, at + 8)[0]
+        end = offset + length
+        if end > len(raw):
+            raise SystemExit("transport vector %r section %d is out of bounds"
+                             % (vector.get("name"), index))
+        payload.extend(raw[offset:end])
+    declared = raw[32:64].hex()
+    computed = hash_domain("weft/transport/v1", bytes(payload)).hex()
+    if declared != computed:
+        raise SystemExit("BLAKE3 self-check failed for %s: recorded %s computed %s"
+                         % (vector.get("name"), declared, computed))
+    return ok(declared, sha256(bytes(payload))), None
+
+
 def expectation_checkpoint(vector):
     if "expect_error" in vector:
         return error(vector["expect_error"]), None
@@ -467,6 +498,7 @@ EXPECTATIONS = {
     "engram": expectation_engram,
     "capability": expectation_capability,
     "checkpoint": expectation_checkpoint,
+    "transport": expectation_transport,
 }
 
 

@@ -1,5 +1,5 @@
 {
-  "aggregate_sha256": "150115b466ad4d012819dd0ab430e9954590c6163e4f7253a6f2d8190cd55a24",
+  "aggregate_sha256": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
@@ -10,6 +10,7 @@
     "selector": 22,
     "store": 1,
     "tensor": 38,
+    "transport": 22,
     "wcb": 20
   },
   "description": "Deterministic enumeration of every conformance vector. Paths are relative to the program home. `content_root` is the BLAKE3 domain-separated identity recorded by the vector (for WCB, H(\"weft/structured/v1\", canonical bytes)); `decoded_sha256` is SHA-256 over the exact decoded byte string the vector records. Null means the format does not define that value for the kind.",
@@ -173,13 +174,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
-      "aggregate_sha256_from": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
-      "aggregate_sha256_to": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
-      "common_files": 391,
+      "aggregate_sha256_common": "aa3abcad1f73573990b64ee8d0397265627f1221b37c05a726a2b324c32b50c9",
+      "aggregate_sha256_from": "aa3abcad1f73573990b64ee8d0397265627f1221b37c05a726a2b324c32b50c9",
+      "aggregate_sha256_to": "aa3abcad1f73573990b64ee8d0397265627f1221b37c05a726a2b324c32b50c9",
+      "common_files": 413,
       "differing": [],
-      "files_from": 391,
-      "files_to": 391,
+      "files_from": 413,
+      "files_to": 413,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -598,7 +599,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 398,
+  "vector_count": 420,
   "vectors": [
     {
       "expect": {
@@ -6214,6 +6215,280 @@
       "sha256": "7319d0bfb2ef6fa7596923366f6a5b0a7129a91b42be1dc0af176bfbdf363a0d",
       "subkind": "tensor_shards",
       "vector_name": "402_shards_f32_4x3x2_axis1"
+    },
+    {
+      "expect": {
+        "content_root": "5ab37050c4b9b671cb7f8fd9bc8ceca2ba96159d7d4c9ef581d280091ccb2d5f",
+        "decoded_sha256": "72bf14cfb747935ee35cc23f3ef4aebe77ff19396686046e1c83a7cee64c558b",
+        "ok": true
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/001_align512_single.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/001_align512_single.json",
+      "sha256": "8d4250f09357df0bb762d7e5ae0cb198d7a156c12d7c2bcbcd0fe0fdde2e1d86",
+      "vector_name": "001_align512_single"
+    },
+    {
+      "expect": {
+        "content_root": "5ab37050c4b9b671cb7f8fd9bc8ceca2ba96159d7d4c9ef581d280091ccb2d5f",
+        "decoded_sha256": "72bf14cfb747935ee35cc23f3ef4aebe77ff19396686046e1c83a7cee64c558b",
+        "ok": true
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/002_align4096_single.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/002_align4096_single.json",
+      "sha256": "b210d29ef94408977d97621f6d8d9b5f8dbc781ebe715c86c99856cfc9355e47",
+      "vector_name": "002_align4096_single"
+    },
+    {
+      "expect": {
+        "content_root": "5ab37050c4b9b671cb7f8fd9bc8ceca2ba96159d7d4c9ef581d280091ccb2d5f",
+        "decoded_sha256": "72bf14cfb747935ee35cc23f3ef4aebe77ff19396686046e1c83a7cee64c558b",
+        "ok": true
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/003_align65536_single.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/003_align65536_single.json",
+      "sha256": "261f2f6c3641b61f8e3150d76dfe65f435f095526917082cc4363f042d334452",
+      "vector_name": "003_align65536_single"
+    },
+    {
+      "expect": {
+        "content_root": "c2e74eca7f120b552689bc069bc28bc7976e1911e7e307fcd36a0558903c3114",
+        "decoded_sha256": "d882b715996fcdfebb64f7f8f6ff05e5319c57a34b21e076922b10d4c9455029",
+        "ok": true
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/004_align4096_eight_sections.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/004_align4096_eight_sections.json",
+      "sha256": "8603eb375eb83cd9bfd9cc47c403cb20950ec60d52e1caba938f786a64a716ae",
+      "vector_name": "004_align4096_eight_sections"
+    },
+    {
+      "expect": {
+        "content_root": "1ff84971c84e7c76c67acdf0d7c59ccf0b3b57eb9d6f617a9f06aff52d8318c8",
+        "decoded_sha256": "b82d3a77ffd816585ffdfdc669435ced05fc3e30bb717ae32e4d51ae91e77b19",
+        "ok": true
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/005_align512_two_roles.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/005_align512_two_roles.json",
+      "sha256": "67b374496a19222bf9f200044a64cbe1a10e42982837c302c43182364ae35248",
+      "vector_name": "005_align512_two_roles"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/010_bad_magic.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/010_bad_magic.json",
+      "sha256": "e3f9c77f1ed59cc948a6bdb36c1e918691eff825a4ace5b850b4b8cf06ffeaa7",
+      "vector_name": "010_bad_magic"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedVersion"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/011_bad_version.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/011_bad_version.json",
+      "sha256": "8619957df4f558746d8b57471fd64b6940a2b7f3f65dccdc3c1b9bd4c7a43fcb",
+      "vector_name": "011_bad_version"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/012_nonzero_flags.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/012_nonzero_flags.json",
+      "sha256": "55328e393cbb294601f3700d2cd904edc5453fe20cdbb168298a78fc29ec2ea2",
+      "vector_name": "012_nonzero_flags"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/013_zero_sections.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/013_zero_sections.json",
+      "sha256": "4fe91e8b48194c1c9530a1943e8accdf6cf7bad8b7ff53b54dd7c906e8c3a92a",
+      "vector_name": "013_zero_sections"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/014_wrong_table_offset.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/014_wrong_table_offset.json",
+      "sha256": "a4020b7f165802e4245326d91624e244df92d02bcbe280e6da1c4e00970ff623",
+      "vector_name": "014_wrong_table_offset"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/015_misaligned_offset.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/015_misaligned_offset.json",
+      "sha256": "07552dfc7c88e62d8b645037fddc6ccf0cbf3d8dcd8594ce2609d5c0d2db12da",
+      "vector_name": "015_misaligned_offset"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/016_overlapping_sections.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/016_overlapping_sections.json",
+      "sha256": "61a66127fcadd6672f74e9df7bbd00182be7522fa7aa58ddd74a7e4443c3c746",
+      "vector_name": "016_overlapping_sections"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/017_out_of_bounds_section.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/017_out_of_bounds_section.json",
+      "sha256": "f6da52a19ef5fd50f11f50fba1c4a1d9fef16f243561a35f5bec3113717f24dd",
+      "vector_name": "017_out_of_bounds_section"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/018_duplicate_offsets.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/018_duplicate_offsets.json",
+      "sha256": "ef4ae2762126c97b6199c11ae68fe19474eeeba7465e79fad78047151c522138",
+      "vector_name": "018_duplicate_offsets"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/019_table_count_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/019_table_count_mismatch.json",
+      "sha256": "444d097c038d7a512237af149829dd98250e5fbf60c5291e2c87864de36eb0d2",
+      "vector_name": "019_table_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/020_padding_not_zero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/020_padding_not_zero.json",
+      "sha256": "a0a77b60ed1480781331fe165262ce69714f4e69e44479afed90b450d7aa5120",
+      "vector_name": "020_padding_not_zero"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/021_wrong_section_root.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/021_wrong_section_root.json",
+      "sha256": "bfb03889432cfedf1a3229cbb9b0d1222613637f8eaa60a7de6b94a065892eaf",
+      "vector_name": "021_wrong_section_root"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/022_truncated_container.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/022_truncated_container.json",
+      "sha256": "859cc934ee27d391534030bff79e7c29a30dd679907f08629071d478868c0310",
+      "vector_name": "022_truncated_container"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/023_mode_mismatch.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/023_mode_mismatch.json",
+      "sha256": "e2a986defda50921eec3c4685d73254667270fae34ec1db3b12a05bfd7ea77b0",
+      "vector_name": "023_mode_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/024_disallowed_alignment.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/024_disallowed_alignment.json",
+      "sha256": "01025ec217b87bf926f4c99ca8dca69d621b940299b9122990fad9717d44eee9",
+      "vector_name": "024_disallowed_alignment"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/025_unknown_role.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/025_unknown_role.json",
+      "sha256": "775a33f4622272e6e2ad15ebc0a980167c3a2e82886b05b274b19b350a10185a",
+      "vector_name": "025_unknown_role"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "transport",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/transport/026_header_reserved_nonzero.json"
+      ],
+      "path": "WeftCodec/conformance/v1/transport/026_header_reserved_nonzero.json",
+      "sha256": "042c95297fef869ac2f549ce22bab9a3aa1fed73e987ccbb5c5f9a0ea9a7991d",
+      "vector_name": "026_header_reserved_nonzero"
     },
     {
       "expect": {
