@@ -1,0 +1,245 @@
+{
+  "all_checks_pass": true,
+  "baselines": {
+    "mode15_tiled": {
+      "contiguous_bytes": 16777216,
+      "contiguous_ms": 37.196985000000005,
+      "contiguous_tiles_touched": 4,
+      "encode_ms": 545.507071,
+      "frame_bytes": 108741170,
+      "full_decode_ms": 603.231041,
+      "single_group_bytes": 4194304,
+      "single_group_ms": 9.402326,
+      "single_group_tiles_touched": 1,
+      "span_bytes": 260046848,
+      "span_ms": 572.21831,
+      "span_tiles_touched": 62,
+      "tile_shape": [
+        2048,
+        1024
+      ]
+    },
+    "raw_pread": {
+      "encode_ms": 43.153264,
+      "file_bytes": 268435456,
+      "four_groups_bytes": 16777216,
+      "four_groups_ms": 2.6843660000000003,
+      "single_group_bytes": 4194304,
+      "single_group_ms": 0.414463
+    },
+    "zstd": {
+      "encode_ms": 51.705595,
+      "frame_bytes": 4236607,
+      "full_decode_ms": 57.007363,
+      "single_group_bytes": 4194304,
+      "single_group_note": "must decode the whole frame; the reported full decode covers it"
+    }
+  },
+  "checks": [
+    {
+      "detail": "268435456 bytes, blake3 9d764eb0d8192dda8214729dec63f2ff7df3f7c0fe0f42655804524b31914faf",
+      "name": "engram_full_decode_exact",
+      "pass": true
+    },
+    {
+      "detail": "64 group roots recomputed",
+      "name": "engram_per_group_roots",
+      "pass": true
+    },
+    {
+      "detail": "group 16, 1698934 stored bytes",
+      "name": "single_group_exact",
+      "pass": true
+    },
+    {
+      "detail": "decoded 1, touched [16]",
+      "name": "single_group_decode_counter",
+      "pass": true
+    },
+    {
+      "detail": "6795996 stored bytes",
+      "name": "four_groups_exact",
+      "pass": true
+    },
+    {
+      "detail": "decoded 4, touched [1, 21, 42, 63]",
+      "name": "four_groups_decode_counter",
+      "pass": true
+    },
+    {
+      "detail": "decoded 4, touched [1, 2, 3, 4]",
+      "name": "contiguous_four_exact",
+      "pass": true
+    },
+    {
+      "detail": "decoded 8, touched [0, 1, 2, 3, 4, 5, 6, 7]",
+      "name": "sequential_groups_exact",
+      "pass": true
+    },
+    {
+      "detail": "decoded 8, groups [14, 17, 19, 20, 21, 36, 40, 52]",
+      "name": "random_groups_exact",
+      "pass": true
+    },
+    {
+      "detail": "changed [1, 21, 42, 63]; new payload 16779264 bytes; old version unchanged",
+      "name": "incremental_update_exact",
+      "pass": true
+    },
+    {
+      "detail": "4194304 bytes",
+      "name": "raw_pread_single_exact",
+      "pass": true
+    },
+    {
+      "detail": "16777216 bytes",
+      "name": "raw_pread_four_exact",
+      "pass": true
+    },
+    {
+      "detail": "frame 4236607 bytes",
+      "name": "zstd_full_decode_exact",
+      "pass": true
+    },
+    {
+      "detail": "frame 108741170 bytes",
+      "name": "tiled_full_decode_exact",
+      "pass": true
+    },
+    {
+      "detail": "tiles touched 1",
+      "name": "tiled_single_region_exact",
+      "pass": true
+    },
+    {
+      "detail": "tiles touched 4",
+      "name": "tiled_contiguous_four_exact",
+      "pass": true
+    },
+    {
+      "detail": "tiles touched 62",
+      "name": "tiled_span_region_exact",
+      "pass": true
+    }
+  ],
+  "conclusion": "Mode 20 is exact on every path. It wins single-group and small-group reads because only touched groups are read and decoded; it pays per-group Huffman table overhead, so a whole-table decode may be larger/slower than one zstd frame. See bench/RESULTS-engram.md for every loss.",
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "in_court": "1",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "engram": {
+    "contiguous_four": {
+      "bytes": 16777216,
+      "groups": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "groups_decoded": 4,
+      "read_ms": 37.725410000000004,
+      "stored_payload_bytes_read": 6795886
+    },
+    "descriptor_root": "24ada561322202739b8fc1e5a11057ec166170fc16842d67861e96dd256d1cbb",
+    "encode_ms": 499.843325,
+    "four_groups": {
+      "bytes": 16777216,
+      "groups": [
+        1,
+        21,
+        42,
+        63
+      ],
+      "groups_decoded": 4,
+      "read_ms": 37.828342,
+      "stored_payload_bytes_read": 6795996
+    },
+    "frame_bytes": 108743984,
+    "full_decode_bytes": 268435456,
+    "full_decode_ms": 616.205599,
+    "payload_bytes": 108733075,
+    "random_eight": {
+      "bytes": 33554432,
+      "groups": [
+        14,
+        17,
+        19,
+        20,
+        21,
+        36,
+        40,
+        52
+      ],
+      "groups_decoded": 8,
+      "read_ms": 74.68329,
+      "stored_payload_bytes_read": 13591667
+    },
+    "region_read_verification": "per-group roots are verified; the whole-frame trailer, payload_hash and whole-table content_hash are NOT checked on a partial read",
+    "sequential_eight": {
+      "bytes": 33554432,
+      "groups": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "groups_decoded": 8,
+      "read_ms": 75.58227600000001,
+      "stored_payload_bytes_read": 13591723
+    },
+    "single_group": {
+      "bytes": 4194304,
+      "group": 16,
+      "groups_decoded": 1,
+      "read_ms": 9.149163999999999,
+      "sha256": "2e2cb8dd29cd80c10e35b961b184ce9960149e2c6b85f4a0c939d3df0be0edcb",
+      "stored_payload_bytes_read": 1698934
+    }
+  },
+  "fixture": {
+    "active_row_fraction": 0.015625,
+    "active_rows": 2048,
+    "dim": 1024,
+    "element_dtype": "bf16",
+    "generator": "xorshift64* active rows (row % 64 == 0), other rows repeat one template row",
+    "group_rows": 2048,
+    "groups": 64,
+    "logical_bytes": 268435456,
+    "rows": 131072,
+    "table_blake3": "9d764eb0d8192dda8214729dec63f2ff7df3f7c0fe0f42655804524b31914faf",
+    "table_sha256": "aebff6f09c7f6ce9d69ab2cf4c9283af6e08857d51ae9931d79a16406f2d9369"
+  },
+  "generated_at_unix_ns": 1794266970246191976,
+  "incremental": {
+    "changed_groups": [
+      1,
+      21,
+      42,
+      63
+    ],
+    "decode_ms": 2302.838506,
+    "encode_ms": 62.67531399999999,
+    "frame_bytes": 16790298,
+    "full_rewrite_encode_ms": 499.71954400000004,
+    "full_rewrite_frame_bytes": 118727256,
+    "old_version_unchanged": true,
+    "payload_bytes": 16779264
+  },
+  "mode": 20,
+  "mode_name": "engram_shard",
+  "revisions": {
+    "weftcodec": "37bb199d21914411fa2cf7a52a3647e6a97d380b",
+    "weftcodec_go": "9f49b0b2c192771b60938832e3c5ab1109450942",
+    "weftfs": "5d6321755b3f383a15d84affe37ecc5c14d96ebe",
+    "weftfs_go": "281e2688292b3cbf4d6d3b3a7efb20fed187fb89"
+  },
+  "schema": "weft.engram.v1",
+  "wall_ms": 7128.87259
+}

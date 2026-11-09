@@ -7291,3 +7291,138 @@ once unreachable it is ordered last and reclaimed.
   result.
 * Claims, spec drift, and the conformance manifest are checked in the R6 docs
   commit.
+
+## R7 — mode 20 `ENGRAM_SHARD`: region-addressable, incrementally updateable row groups
+
+Normative spec: `spec/WEFT-ENGRAM.md` (`weft.ai.engram_shard.v1`, mode 20).
+The reserved-mode reject moved to 21; `017_unknown_mode_reserved20` and the
+kv-prov `112_reserved_mode_20` vector are retained as superseded. The spec is
+exported to `WeftCodec/spec`, `WeftCodec-Go/spec`, and `WeftFS-Go/spec`.
+
+### Wire format
+
+Frame: domain 0, mode 20, no chunk table, `body = u32le(descriptor_len) ||
+WCB(descriptor) || stored_payload`. Descriptor key set (exactly):
+`schema`, `hash_function`, `vocab_size`, `table_shape`, `element_dtype`,
+`precision`, `row_group_edges`, `group_count`, `groups`, `payload_len`,
+`payload_hash`. Each group entry has exactly `index`, `row_start`, `row_end`,
+`storage`, `offset`, `compressed_len`, `group_root`, `supersedes`,
+`dependency`. `precision` has `storage_dtype` plus an optional `quantization`
+block; only `scheme = "none"` with `lossless = true` is accepted, and any other
+scheme is `UnsupportedFeature`.
+
+A group is split into byte planes, each coded independently with the frozen
+`huffman-canonical-v1` coder (the mode-15 coder). Its identity is
+`H("weft/engram/group/v1", WCB({group_index, row_start, row_end, dtype,
+precision, values_hash}))`; the descriptor identity is
+`H("weft/engram/v1", WCB(descriptor))`. A group may be `storage:"reference"` to
+an earlier artifact's group root; the frame's dependency table names that
+artifact and a caller-supplied resolver must produce the exact group bytes.
+Supersession edges are acyclic and must resolve to a known group root or the
+decode is `Corrupt`.
+
+### Codec surface and vectors
+
+Rust `weftcodec::engram` (`encode_engram`, `encode_engram_with_dependencies`,
+`decode_engram`, `decode_engram_without_dependencies`, `parse_engram`,
+`engram_metadata`, `decode_engram_group`, `read_engram_groups`,
+`read_engram_groups_with`, `read_engram_region`, `read_engram_region_with`,
+`engram_group_root`, `engram_region_groups`). Go `modes` has the same decode and
+region surface plus `EncodeEngram` / `EncodeEngramWithDependencies`. CLI
+`--mode engram-shard --dtype D --shape ROWS,DIM --group-edges A,B,...
+--hash-function ngram-{sha256,blake3}-v1 --vocab-size N`.
+
+`conformance/v1/engram/`: **6 valid** (`001` bf16 one group, `002` fp16 four
+groups, `003` fp32 two groups, `004` empty supersession, `005` two-group
+supersession chain, `006` region subset) and **14 rejects** (`101` edges not
+increasing, `102` last edge != rows, `103` group count mismatch, `104` group
+root mismatch, `105` truncated payload, `106` payload-hash mismatch, `107`
+supersession cycle, `108` supersession missing, `109` incompatible supersession,
+`110` unknown hash function, `111` unknown precision, `112` reserved mode 21,
+`113` non-canonical descriptor, `114` reference missing). Byte-identical in
+both codec repos. The cross gate prints `PASS rust->go engram_bf16`,
+`PASS go->rust engram_bf16`, `PASS rust->go engram_fp32`,
+`PASS go->rust engram_fp32`, `YES byte-identical engram_bf16`,
+`YES byte-identical engram_fp32`, and `cross-language gate: all checks passed`.
+
+### Store integration
+
+Rust `TensorStrategy::EngramShard` is offered only when the caller supplies
+`TensorPlanOptions.engram` (`EngramWriteSpec` with the edge list, hash
+function, vocabulary size and optional precision); it is never auto-selected.
+Full reads, row-region reads (only intersecting groups; Rust issues per-group
+backend range reads), and `Store::update_engram_groups` are implemented.
+`update_engram_groups` writes only the changed groups, emits the unchanged
+groups as references to the previous artifact, records that artifact as the
+representation dependency, and publishes a new version without rewriting the
+old one. `tests/engram_store.rs` proves the exact full read, a one-group region,
+a three-group region, the incremental update, the snapshot-visible old version,
+and the reference-only payload.
+
+Go (`WeftFS-Go`) reads, verifies and region-reads Rust-written mode-20 objects:
+`store/tensor_read.go` resolves dependency frames and decodes mode 20;
+`Store.ReadTensorRegion` decodes only the groups intersecting the region.
+**Go has no mode-20 writer**; that is stated rather than implied.
+
+### Court
+
+`examples/engram_court.rs` + `scripts/engram_court.sh`; receipt
+`bench/receipts/engram-20261109T232921Z.json` (`weft.engram.v1`), 17/17 checks
+pass, run at WeftFS `5d63217`, WeftFS-Go `281e268`, WeftCodec `37bb199`,
+WeftCodec-Go `9f49b0b`. Fixture: 131,072 × 1,024 bf16 (256 MiB), 64 groups of
+2,048 rows; a deterministic xorshift64* generator makes `row % 64 == 0` active
+(1.5625 %) and repeats a template row otherwise. Full results and every loss
+are in `bench/RESULTS-engram.md`.
+
+Headline numbers (one run, bench court, 3 GiB / 4 CPUs): mode-20 encode
+499.8 ms / 108.74 MB frame; full decode 616.2 ms; single group 9.15 ms /
+1.70 MB stored read / 1 group decoded; four non-contiguous groups 37.8 ms;
+four contiguous groups 37.7 ms; sequential eight 75.6 ms; random eight 74.7 ms.
+Baselines: raw `pread` one group 0.414 ms, four groups 2.68 ms; one ZSTD-3
+frame 4.24 MB, full decode 57.0 ms; mode-15 tiles 108.74 MB, full decode
+603.2 ms, single region 9.40 ms, contiguous four 37.2 ms. Incremental update of
+4/64 groups: 62.7 ms / 16.79 MB vs full rewrite 499.7 ms / 118.73 MB
+(7.97× / 7.07×), but incremental decode is 2.30 s vs 616 ms.
+
+Untouched-group counter evidence: one group decodes 1; four non-contiguous 4;
+four contiguous 4; sequential eight 8; random eight 8. The thread-local counter
+equals the touched-set length on every read, so untouched groups are not
+decoded.
+
+Published losses: whole-table size 25.7× and decode 10.8× worse than one ZSTD
+frame; single-group 22.1× slower than raw `pread`; four-group reads lose to raw
+`pread`; contiguous four is 1.4 % slower than mode 15; single-group is
+effectively tied with mode 15 (9.15 vs 9.40 ms, within noise); incremental
+decode is 3.74× slower; per-group Huffman table overhead; partial reads do not
+verify the trailer/payload hash/content hash; sequential and random reads are
+not differentiated in memory; the Go store region read reads the whole frame
+blob; the fixture is synthetic. No cache, fleet, or power-loss claim.
+
+### Gates
+
+* WeftCodec `cargo test --all-targets`: pass (including the new `tests/engram.rs`
+  4/4 and the reserved-mode update).
+* WeftCodec-Go `go test ./...`: pass (including `conformance` engram replay
+  6 valid / 14 rejects, generic dispatch, and the kv-prov superseded skip);
+  `gofmt`/`go vet`/CGO-disabled build clean.
+* Rust `cargo test --all-targets`: 709 passed / 0 failed across 144 suites
+  (new `tests/engram_store.rs` 1/1).
+* FUSE suite: 752 passed / 0 failed / 2 pre-existing ignored across 144 suites.
+* WeftFS-Go `go test -race ./...`: all packages pass, including the mode-20
+  handoff against the committed Rust fixture; `gofmt -l` empty, `go vet` and
+  `CGO_ENABLED=0 go build` clean.
+* Claims 767/767, spec drift 54/54, conformance manifest 398 entries (aggregate
+  `150115b4…d55a24`), coverage mode 20 `6/14`.
+* Fixed a latent `tests/kv_provenance.rs` flake found by the first R7 full run:
+  the helper passed two grant roots unsorted, and `CapabilityScope::new`
+  canonicalizes, so ~half of runs got `NonCanonical`. The helper now sorts and
+  deduplicates, matching `tests/kv_prefix.rs`; 40/40 repeated runs pass.
+
+### Residual
+
+Mode 20 loses whole-table size/decode to ZSTD and single/four-group time to raw
+`pread` on this fixture. The Go store has no writer and reads the frame blob
+whole for a region. The incremental decode re-resolves referenced groups.
+`supersedes` is provenance, not a compaction mechanism. No per-group
+calibration row was added to the planner (mode 20 is opt-in and priced with the
+mode-15 coefficient). No physical power loss, fleet, or cache claim.
