@@ -1,0 +1,120 @@
+== multiwriter benchmark ==
+kernel: Linux d2cdd5ace6ea 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/bench-court:1 (sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559)
+limits: memory=3g cpus=4 pids=1024
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5503:8
+     |
+5503 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5510:8
+     |
+5510 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5527:7
+     |
+5527 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5529:4
+     |
+5529 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5562:4
+     |
+5562 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+== local disjoint ==
+{"attempts": 60, "backend": "local", "backend_reads": 192, "backend_writes": 424, "bytes_read": 1006061, "bytes_written": 337561, "committed": 60, "conflicts": 0, "count_per_writer": 60, "cpu_sys_ms": 0, "cpu_user_ms": 10, "distribution": "disjoint", "errors": [], "generation": 61, "language": "rust", "latency_samples": 60, "max_ms": 0.285682, "n": 1, "p50_ms": 0.17717, "p95_ms": 0.211835, "p99_ms": 0.278189, "process_failures": 0, "processes": 1, "requested": 60, "retry_amplification": 1.0, "rss_sum_kib": 11096, "throughput_tx_s": 4000.0, "verify_full": true, "wall_ms": 15}
+{"attempts": 126, "backend": "local", "backend_reads": 457, "backend_writes": 847, "bytes_read": 2112913, "bytes_written": 675029, "committed": 120, "conflicts": 0, "count_per_writer": 60, "cpu_sys_ms": 0, "cpu_user_ms": 20, "distribution": "disjoint", "errors": [], "generation": 121, "language": "rust", "latency_samples": 120, "max_ms": 17.631696, "n": 2, "p50_ms": 0.199041, "p95_ms": 0.243454, "p99_ms": 0.326368, "process_failures": 0, "processes": 2, "requested": 120, "retry_amplification": 1.05, "rss_sum_kib": 22712, "throughput_tx_s": 3529.411764705882, "verify_full": true, "wall_ms": 34}
+{"attempts": 263, "backend": "local", "backend_reads": 1178, "backend_writes": 1693, "bytes_read": 4513119, "bytes_written": 1350530, "committed": 240, "conflicts": 0, "count_per_writer": 60, "cpu_sys_ms": 0, "cpu_user_ms": 80, "distribution": "disjoint", "errors": [], "generation": 241, "language": "rust", "latency_samples": 240, "max_ms": 92.521682, "n": 4, "p50_ms": 0.251729, "p95_ms": 0.392592, "p99_ms": 17.311479, "process_failures": 0, "processes": 4, "requested": 240, "retry_amplification": 1.0958333333333334, "rss_sum_kib": 45792, "throughput_tx_s": 2086.9565217391305, "verify_full": true, "wall_ms": 115}
+{"attempts": 550, "backend": "local", "backend_reads": 3371, "backend_writes": 3385, "bytes_read": 9995650, "bytes_written": 2701594, "committed": 480, "conflicts": 0, "count_per_writer": 60, "cpu_sys_ms": 0, "cpu_user_ms": 290, "distribution": "disjoint", "errors": [], "generation": 481, "language": "rust", "latency_samples": 480, "max_ms": 256.065772, "n": 8, "p50_ms": 0.314156, "p95_ms": 0.456491, "p99_ms": 60.637049, "process_failures": 0, "processes": 8, "requested": 480, "retry_amplification": 1.1458333333333333, "rss_sum_kib": 93680, "throughput_tx_s": 1672.473867595819, "verify_full": true, "wall_ms": 287}
+{"attempts": 406, "backend": "local", "backend_reads": 4610, "backend_writes": 1732, "bytes_read": 7766966, "bytes_written": 1355542, "committed": 240, "conflicts": 0, "count_per_writer": 15, "cpu_sys_ms": 0, "cpu_user_ms": 220, "distribution": "disjoint", "errors": [], "generation": 242, "language": "rust", "latency_samples": 240, "max_ms": 331.444681, "n": 16, "p50_ms": 0.261908, "p95_ms": 20.397471, "p99_ms": 277.30889, "process_failures": 0, "processes": 16, "requested": 240, "retry_amplification": 1.6916666666666667, "rss_sum_kib": 182772, "throughput_tx_s": 705.8823529411765, "verify_full": true, "wall_ms": 340}
+{"attempts": 573, "backend": "local", "backend_reads": 13717, "backend_writes": 1665, "bytes_read": 13345995, "bytes_written": 1266719, "committed": 224, "conflicts": 0, "count_per_writer": 7, "cpu_sys_ms": 0, "cpu_user_ms": 610, "distribution": "disjoint", "errors": [], "generation": 227, "language": "rust", "latency_samples": 224, "max_ms": 400.984275, "n": 32, "p50_ms": 0.292064, "p95_ms": 191.237131, "p99_ms": 345.887654, "process_failures": 0, "processes": 32, "requested": 224, "retry_amplification": 2.5580357142857144, "rss_sum_kib": 370296, "throughput_tx_s": 549.0196078431372, "verify_full": true, "wall_ms": 408}
+== local high contention ==
+{"attempts": 1, "backend": "local", "backend_reads": 24, "backend_writes": 38, "bytes_read": 100566, "bytes_written": 9313, "committed": 1, "conflicts": 9, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 10, "max_ms": 0.232163, "n": 1, "p50_ms": 0.039944, "p95_ms": 0.232163, "p99_ms": 0.232163, "process_failures": 0, "processes": 1, "requested": 10, "retry_amplification": 1.0, "rss_sum_kib": 11068, "throughput_tx_s": 500.0, "verify_full": true, "wall_ms": 2}
+{"attempts": 1, "backend": "local", "backend_reads": 57, "backend_writes": 71, "bytes_read": 213322, "bytes_written": 13291, "committed": 1, "conflicts": 19, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 20, "max_ms": 0.727196, "n": 2, "p50_ms": 0.039133, "p95_ms": 0.211324, "p99_ms": 0.727196, "process_failures": 0, "processes": 2, "requested": 20, "retry_amplification": 1.0, "rss_sum_kib": 21932, "throughput_tx_s": 333.3333333333333, "verify_full": true, "wall_ms": 3}
+{"attempts": 1, "backend": "local", "backend_reads": 108, "backend_writes": 137, "bytes_read": 401039, "bytes_written": 21247, "committed": 1, "conflicts": 39, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 40, "max_ms": 0.689605, "n": 4, "p50_ms": 0.040225, "p95_ms": 0.173764, "p99_ms": 0.689605, "process_failures": 0, "processes": 4, "requested": 40, "retry_amplification": 1.0, "rss_sum_kib": 43848, "throughput_tx_s": 333.3333333333333, "verify_full": true, "wall_ms": 3}
+{"attempts": 1, "backend": "local", "backend_reads": 222, "backend_writes": 269, "bytes_read": 795433, "bytes_written": 37159, "committed": 1, "conflicts": 79, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 80, "max_ms": 1.003271, "n": 8, "p50_ms": 0.045815, "p95_ms": 0.165278, "p99_ms": 0.685959, "process_failures": 0, "processes": 8, "requested": 80, "retry_amplification": 1.0, "rss_sum_kib": 87428, "throughput_tx_s": 250.0, "verify_full": true, "wall_ms": 4}
+{"attempts": 1, "backend": "local", "backend_reads": 443, "backend_writes": 533, "bytes_read": 1564836, "bytes_written": 69043, "committed": 1, "conflicts": 159, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 160, "max_ms": 1.222348, "n": 16, "p50_ms": 0.087503, "p95_ms": 0.270084, "p99_ms": 0.999483, "process_failures": 0, "processes": 16, "requested": 160, "retry_amplification": 1.0, "rss_sum_kib": 175576, "throughput_tx_s": 200.0, "verify_full": true, "wall_ms": 5}
+{"attempts": 1, "backend": "local", "backend_reads": 867, "backend_writes": 1061, "bytes_read": 3047012, "bytes_written": 132851, "committed": 1, "conflicts": 319, "count_per_writer": 10, "cpu_sys_ms": 0, "cpu_user_ms": 0, "distribution": "hot", "errors": [], "generation": 2, "language": "rust", "latency_samples": 320, "max_ms": 1.467695, "n": 32, "p50_ms": 0.097502, "p95_ms": 1.084221, "p99_ms": 1.397004, "process_failures": 0, "processes": 32, "requested": 320, "retry_amplification": 1.0, "rss_sum_kib": 349256, "throughput_tx_s": 90.90909090909092, "verify_full": true, "wall_ms": 11}
+== mixed-language disjoint (N=8) ==
+{"attempts": 289, "backend": "local", "backend_reads": 1197, "backend_writes": 854, "bytes_read": 2746023, "bytes_written": 676642, "committed": 240, "conflicts": 0, "count_per_writer": 30, "cpu_sys_ms": 0, "cpu_user_ms": 50, "distribution": "disjoint", "errors": [], "generation": 242, "language": "mixed", "latency_samples": 120, "max_ms": 94.3174, "n": 8, "p50_ms": 0.259012, "p95_ms": 0.318474, "p99_ms": 65.545218, "process_failures": 0, "processes": 8, "requested": 240, "retry_amplification": 1.2041666666666666, "rss_sum_kib": 45732, "throughput_tx_s": 1804.5112781954886, "verify_full": true, "wall_ms": 133}
+== MinIO disjoint (N=4) ==
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+  File "<stdin>", line 3, in <listcomp>
+  File "/usr/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

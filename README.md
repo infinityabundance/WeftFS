@@ -70,6 +70,19 @@ is backed by a court receipt under hard memory, CPU, and pid limits. The Rust
 and Go filesystems are reference filesystems implementing this architecture,
 not data-plane competitors.
 
+**Writer capability, honestly stated.** The default is **MW1** — many
+producers, one committer. **MW2** — independent committers publishing against
+one shared authoritative head with typed conflicts, bounded retries, and
+linearizable head publication — is implemented and opt-in
+(`--writer-mode optimistic`) for the explicit transaction API on `local`/`object`/`3fs`/`s3`
+in Rust and on `local`/`object` in Go. FUSE file mutations and generic
+checkpoint publication remain MW1. **MW3** — distributed scalable publication
+with conflict domains — is not implemented and not claimed. The normative
+contract is [`spec/WEFT-MULTIWRITER.md`](spec/WEFT-MULTIWRITER.md); the design,
+backend tradeoffs, and every loss are in
+[`docs/MULTIWRITER-ARCHITECTURE.md`](docs/MULTIWRITER-ARCHITECTURE.md) and
+[`bench/RESULTS-multiwriter.md`](bench/RESULTS-multiwriter.md).
+
 ## Integration status
 
 The category names the **strongest executed evidence**, not the design intent.

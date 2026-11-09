@@ -1,0 +1,128 @@
+{
+  "binaries": {
+    "go_example_sha256": "5f9759f39d0472bc8087dec03f4f66f32c90fc972cc7d930b02bb82c4a64ee4a",
+    "rust_example_sha256": "e3dbf1d5fbbb42b8346f159292296fe7ea55875a3eede326e092382e7d50c64d"
+  },
+  "contended": {
+    "committed": 1,
+    "conflict_rate": 0.9875,
+    "conflicts": 79,
+    "errors": [],
+    "operations": 80,
+    "processes": 8
+  },
+  "contended_generation": 2,
+  "cross_read": {
+    "go_reads_rust": {
+      "content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "len": 11,
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true
+    },
+    "ok": true,
+    "rust_reads_go": {
+      "content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "len": 11,
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true
+    }
+  },
+  "disjoint": {
+    "attempts": 207,
+    "committed": 160,
+    "conflicts": 0,
+    "errors": [],
+    "expected": 160,
+    "processes": 8,
+    "retry_amplification": 1.29375
+  },
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/multiwriter-court-20261109T150402Z.log",
+    "log_sha256": "44143ab8a7614c784d27cfb4c90187a74943c5efd1e557e6f4ea503a9255980d"
+  },
+  "failures": 0,
+  "generated_at": "2026-11-09T15:04:09Z",
+  "history_check": {
+    "contended_generation": 2,
+    "expected_contended_generation": 2,
+    "expected_mixed_generation": 161,
+    "mixed_generation": 163,
+    "note": "finite history check, not a linearizability proof",
+    "ok": true
+  },
+  "hot_read": {
+    "go": {
+      "content_hash": "a594524ee7e347a9d04a977e0ad34a547854e86d7cd801d68b088af15b6e2138",
+      "len": 4,
+      "object_id": "fe75a236857ab9726d7884d235f4d50e8e7a1a15a536978a0a93ab790bf31752",
+      "ok": true
+    },
+    "ok": true,
+    "rust": {
+      "content_hash": "a594524ee7e347a9d04a977e0ad34a547854e86d7cd801d68b088af15b6e2138",
+      "len": 4,
+      "object_id": "fe75a236857ab9726d7884d235f4d50e8e7a1a15a536978a0a93ab790bf31752",
+      "ok": true
+    }
+  },
+  "mixed_generation": 163,
+  "parity": {
+    "different": {},
+    "equal": true,
+    "go": {
+      "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+      "head": "3de5dfc5919178d3688ec03d4d11eaec26414496041b32aeb1a5941df18f47f9",
+      "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "size": 11,
+      "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+    },
+    "rust": {
+      "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+      "head": "3de5dfc5919178d3688ec03d4d11eaec26414496041b32aeb1a5941df18f47f9",
+      "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "size": 11,
+      "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+    }
+  },
+  "parity_commit_file": "same",
+  "parity_superblock": "same",
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "f46b351fc32bf4da614c2c3526ff0fa468700335"
+    }
+  ],
+  "result": "pass",
+  "run": {
+    "duration_ms": 7000,
+    "finished_at": "2026-11-09T15:04:09Z",
+    "started_at": "2026-11-09T15:04:02Z"
+  },
+  "rust_cli_verify_full": true,
+  "schema": "weftfs.multiwriter.court/1",
+  "scope": {
+    "checked": "one local store, mixed Rust/Go processes, deterministic parity, finite history",
+    "not_checked": "physical power loss, distributed/fleet operation, linearizability proof, MW3"
+  },
+  "verification": {
+    "bad": [],
+    "failed": 0,
+    "verifiers": 16
+  }
+}

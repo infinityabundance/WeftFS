@@ -111,7 +111,7 @@ receipt `bench/receipts/parallel-checkpoint-20261108T033000Z.json`.
 ### MW1 — many producers, one committer
 
 **Status: today's implementation is MW1 — many producers, one committer. This
-is the highest level WeftFS reaches.**
+is the default writer level and the level of every pre-R4 surface.**
 
 N prepare workers publish immutable fragments. Exactly one committer owns the
 writer lock and the existing lease/fence, re-verifies every fragment against
@@ -141,14 +141,37 @@ Scope limits that matter to a storage engineer:
 
 ### MW2 — independent committers
 
-**Status: not implemented. Not claimed.**
+**Status: implemented and opt-in; not the default.** Open a store with
+`--writer-mode optimistic` and route logical publishes through the explicit
+transaction API (`begin_transaction` / `prepare_transaction` /
+`execute_transaction`). Two or more independent processes may then prepare and
+publish against one shared head. The normative contract is
+[`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md).
 
-There is no protocol by which two processes may independently publish commits
-to the same store and resolve conflicts. The fenced lease decides **which
-single writer is allowed**, not how two writers agree. A second writer is
-refused `Busy`; a suspended writer is fenced after takeover. There is no
-multi-committer merge, no conflict resolution, and no independent-committer
-test.
+The publication primitive is one conditional head update
+(`compare_exchange_head` or the backend's native conditional write). A lost
+race is retried against the new head after conflict validation, or rejected
+with a typed `Conflict` naming the class. There is no last-writer-wins path, no
+quorum, and no leader.
+
+Guaranteed: linearizable publication of the **authoritative head sequence**,
+and atomic visibility of each successfully committed transaction. Not
+guaranteed: serializability of arbitrary multi-object reads, snapshot isolation
+across a workload, or a distributed multi-node protocol.
+
+Scope in R4:
+
+* Rust: `local`, `object`, `3fs`, and `s3` (MinIO court). `gcs` and `azure`
+  are refused for optimistic mode with `UnsupportedVersion`.
+* Go: `local` and `object` only (`WeftFS-Go/store/mw2.go`).
+* FUSE file mutations and generic checkpoint publication remain MW1.
+* Evidence: `tests/multiwriter.rs` (12), `WeftFS-Go/store/mw2_test.go`, the
+  mixed Rust/Go court `bench/receipts/multiwriter-court-20261109T150402Z.json`,
+  the failure court `bench/receipts/multiwriter-failure-20261109T150414Z.json`,
+  and the benchmark `bench/receipts/bench-multiwriter-20261109T150423Z.json`.
+* Every loss is listed in [`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwriter.md).
+  The headline loss is scaling: efficiency 0.44 at N=2 and 0.0050 at N=32 on
+  the local backend, because there is still exactly one publication point.
 
 ### MW3 — distributed scalable publication
 
@@ -181,9 +204,11 @@ Two consequences deserve to be stated plainly:
 
 1. **A conditional write is not a distributed transaction.** The fenced `LOCK`
    v3 record makes head publication one conditional write on the control
-   plane. It does not make two writers safe, and it does not make the data
-   plane transactional. A lost network reply is the usual at-least-once
-   ambiguity.
+   plane. It does not make two writers safe by itself, and it does not make the
+   data plane transactional. A lost network reply is the usual at-least-once
+   ambiguity. R4's opt-in MW2 transaction protocol (§4) builds on the same
+   conditional primitive and defines exactly which concurrent histories are
+   safe; the fencing lease remains the MW1 mechanism.
 2. **The data plane keeps its own strengths.** If a backend provides
    replication, erasure coding, RDMA, client caching, or GPU-direct I/O,
    WeftFS uses it through the backend's client and does not reimplement,
@@ -252,11 +277,14 @@ executable specification usable; it is not the integration mechanism.
 * **No live AWS, Google Cloud, or Azure run.** No credential or bucket was
   available. MinIO and Ceph RGW are real S3-compatible servers; `fake-gcs-server`
   and Azurite are emulators.
-* **No MW2 or MW3 claim.** Today's implementation is MW1: many producers, one
-  committer. There is no independent-committer protocol and no distributed
-  scalable publication.
-* **No multi-writer, multi-node, or fleet operation.** Writers are exclusive by
-  design; distributed courts are one host and one server process.
+* **No MW3 claim.** MW3 (distributed scalable publication, conflict domains,
+  multi-node ordering) is not implemented. MW2 is opt-in and bounded to the
+  transaction API on the backends listed in §4; it is not a distributed
+  consensus protocol.
+* **No distributed multi-writer, multi-node, or fleet operation.** MW2 is
+  independent processes against **one** store on one host (or one MinIO/Ceph
+  endpoint); MW1 writers remain exclusive by design. Distributed courts are one
+  host and one server process.
 * **No media power-loss or host-cache-loss claim.** Crash courts are
   process-fault proxies. Durability is the backend's `fsync` or provider
   acknowledgement.

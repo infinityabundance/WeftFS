@@ -157,8 +157,13 @@ Properties:
   *cache* is concerned: the record (publication point) and the superblock
   (cache). Only the cache write follows the publication; it is conditional,
   monotonic, and never trusted.
-* **Not a multi-writer protocol.** Writers are exclusive by design. There is no
-  quorum, no leader election, and no lease renewal by a third party.
+* **This lease is not a multi-writer protocol.** Writers are exclusive by
+  design. There is no quorum, no leader election, and no lease renewal by a
+  third party. Subphase R4 adds a **separate, opt-in MW2 transaction protocol**
+  that does not use this lease: it publishes the superblock with a conditional
+  write and returns typed conflicts ([`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md)).
+  Everything in this document still describes MW1 only, and MW2 is not a
+  distributed consensus protocol.
 * **Not a media/power-loss claim.** An endpoint that acknowledges a write and
   then loses it is outside the protocol; the courts use process-fault proxies
   and one device-model court, labelled as such.

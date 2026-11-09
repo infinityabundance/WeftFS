@@ -253,12 +253,17 @@ single-backend store.
 
 ## 6. What is not claimed
 
-* No distributed, multi-writer, or fleet claim: one store is one writer at a
-  time. Locally that writer is enforced by an exclusive `LOCK` lock
+* No distributed or fleet claim. The **default** is MW1: one store is one
+  writer at a time. Locally that writer is enforced by an exclusive `LOCK` lock
   (`F_OFD_SETLK` plus a compatibility `flock(2)`; see
   [`docs/FENCING.md`](FENCING.md) §9); on an object-store commit plane it is
   enforced by a **fenced lease with a conditional compare-and-swap** (see the
-  same document). Neither form is a multi-writer protocol.
+  same document). Neither form is a multi-writer protocol. Subphase R4 adds an
+  opt-in **MW2** transaction protocol on the same conditional-head primitive:
+  independent processes publish against one shared head with typed conflicts
+  and bounded retries ([`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md)).
+  MW2 is not a multi-node protocol, adds no conflict domains, and makes no
+  scaling claim.
 * No physical media power loss: the crash court is a process-fault proxy and
   the split court inherits that limit.
 * No S3-as-a-database claim: the S3 commit plane is a working shape used to

@@ -6922,3 +6922,134 @@ published run per cell plus the retained repeats; no live AWS/GCS/Azure; no
 execution; no physical media or power-loss claim; no multi-writer or fleet
 claim; MinIO restart between configurations; the reduced aggregate configuration
 is not a performance claim.
+
+---
+
+## Subphase R4 — multi-writer (2026-11-09)
+
+**Declared level: MW1 is the default; MW2 is implemented and opt-in; MW3 is not
+implemented and not claimed.** The normative contract is
+[`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md). The design and
+backend tradeoffs are in
+[`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md); the frozen
+method is [`bench/CONTRACTS-multiwriter.md`](../bench/CONTRACTS-multiwriter.md);
+measurements and every loss are in
+[`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwriter.md).
+
+### What was built
+
+* **Specification.** MW0-MW3 capability levels; per-operation consistency
+  contract; transaction lifecycle (`prepared`, `committed`, `visible`,
+  `durable`, `aborted`, `outcome_unknown`); conflict table with no
+  last-writer-wins path; transaction-id idempotency and the op-digest proof;
+  the durability boundary of an acknowledgement.
+* **Executable model.** `verification/tla/WeftMultiWriter.tla` (2 committers,
+  2 keys, MaxGen=2, MaxAttempts=1): 2,690,909 states generated, 268,641
+  distinct, depth 20; `TypeOK`, `HeadWellFormed`, `NoPartial`, `NoLostAck`,
+  `NoBlindOverwrite`, `CommittedBlobsDurable`, `LivePreparedDurable`,
+  `ReaderIsAPrefix`, `GcNeverReclaimsReachable`, and `CommitOrderIsStable`
+  pass. Two deliberate flaws produce counterexamples:
+  `WeftMultiWriterBuggy.tla` without the observed version check
+  (`NoBlindOverwrite` violation, last-writer-wins) and
+  `WeftMultiWriterGcBuggy.tla` marking only from the head
+  (`GcNeverReclaimsReachable` violation, GC reclaims a live prepared
+  transaction's blob). Receipt `bench/receipts/tla-20261109T140116Z.json`
+  (5 models: 2 `pass`, 3 `expected-violation`).
+* **Rust MW2.** `src/mw2.rs` and `Store::{begin_transaction`,
+  prepare_content, prepare_transaction, execute_transaction,
+  transaction_outcome, refresh_to_head}`; conditional head publication through
+  `CommitPlane` for `local`/`object`/`3fs`/`s3`; one conditional `PUT If-Match`
+  on S3; `--writer-mode single|optimistic` (default `single`). The single-writer
+  path and every pre-R4 test are unchanged.
+* **Go parity.** `WeftFS-Go/store/mw2.go` and `cmd/mw2writer` implement the same
+  protocol on `local`/`object`. Deterministic stores are byte-identical:
+  `commits/2.commit` and the 8 KiB `superblock` image match, and each language
+  reads the other's store.
+* **Failure court.** Both languages killed after the prepared record, before
+  the head write, after the head write, and after the acknowledgement. Every
+  reopened store is whole; initial outcome is `unknown` except after the
+  acknowledgement; the retry resolves it; the name is absent or exact, never
+  wrong.
+* **Benchmark.** 14 rows: local disjoint N=1..32, local high contention
+  N=1..32, mixed Rust/Go N=8, MinIO N=4.
+
+### Conflict classes and outcomes
+
+`NameExists`, `ObjectExists`, `ObjectChanged`, `EntryChanged`,
+`RelationConflict`, `SnapshotConflict`, `TipChanged` -> typed `Conflict`, no
+publication. `QuotaExceeded` -> `BudgetExceeded`. `CapabilityDenied` ->
+`Unauthorized`. `TransactionIdReused` -> `Conflict`. `GenerationCollision` ->
+`Busy` -> retry. `ParentAdvanced` -> retry, then re-validate. A create uses
+`put_entry_create`/`put_object_create`; a replace requires the observed version.
+There is no last-writer-wins path.
+
+### Local disjoint scaling (receipt `bench-multiwriter-20261109T150423Z`)
+
+| N | committed | tx/s | efficiency | p50 ms | p99 ms | retry amp | reads/commit |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 60/60 | 4,000.0 | 1.000 | 0.180 | 0.228 | 1.000 | 3.2 |
+| 2 | 120/120 | 3,529.4 | 0.441 | 0.199 | 0.263 | 1.050 | 3.8 |
+| 4 | 240/240 | 2,105.3 | 0.132 | 0.240 | 17.390 | 1.096 | 4.9 |
+| 8 | 480/480 | 1,672.5 | 0.052 | 0.323 | 60.377 | 1.146 | 7.0 |
+| 16 | 240/240 | 652.2 | 0.0102 | 0.256 | 303.030 | 1.700 | 39.5 |
+| 32 | 224/224 | 638.2 | 0.0050 | 0.278 | 287.300 | 2.446 | 50.7 |
+
+High contention: 1 winner at every N; conflict rate 0.90 (N=1) to 0.997
+(N=32); no last-writer-wins. Mixed N=8: 240/240, 1,558.4 tx/s, retry 1.221,
+all 16 cross-language verifiers pass. MinIO N=4: 40/40, 212.8 tx/s, p50
+5.294 ms, p99 86.147 ms, retry 1.650, `verify --full` ok.
+
+### Defects found and fixed during R4
+
+* **Retry-state pollution.** The optimistic loop assigned the candidate state
+  before publication and did not restore it after a lost race, so a retry
+  evaluated quota, preconditions, and authorization against a state containing
+  its own unpublished ops. Fixed by restoring the last published base; the
+  regression test `a_lost_publication_race_does_not_pollute_the_retry_state`
+  fails when the restore is removed (verified by temporarily disabling it).
+* **Ambiguous head write.** A non-`Busy` failure of the conditional head write
+  used to delete the commit record. The write may have landed, so deleting it
+  could destroy a published commit. Deletion is now limited to a definitive
+  `Busy`; an ambiguous record is left for outcome lookup and `verify`. This is
+  reasoned, not fault-injection-tested (no I/O fault injector exists).
+* **S3 commit-file collision.** A create-once `Exists` on `commits/<g>.commit`
+  is now `Busy` (retry) instead of a fatal `Exists`; the retained failing
+  receipt is `bench-multiwriter-20261109T144320Z.json`.
+
+### Every loss
+
+Scaling efficiency falls to 0.0050 at N=32; p99 rises to 287 ms; retry
+amplification reaches 2.45 and 50.7 backend reads per commit; RSS is about
+11 MiB per idle writer at N=32; a hot name is unproductive by design; MinIO is
+9.9x slower than local at N=4; there is no validate/publish split, logical
+bytes exclude canonical records, CPU is USER_HZ ticks (not energy), Go exposes
+no backend counters, the run is a single repetition on 4 vCPUs with up to 19 %
+spread against the retained earlier run; GCS/Azure are refused for optimistic
+mode; Go has no S3 MW2, no FUSE MW2, and no generic checkpoint transaction;
+FUSE and checkpoint publication remain MW1; GC is not run concurrently with
+optimistic publishers; there is no physical power loss, no fleet, and no MW3.
+
+### Gates and receipts
+
+* Rust + FUSE in the fuse court: **136 suites, 733 passed, 0 failed, 2
+  pre-existing ignored**.
+* Go: `gofmt -l`, `go vet`, `CGO_ENABLED=0 go build`, and
+  `go test -race -count=1 ./...` clean in the fuse court.
+* Mixed court: `bench/receipts/multiwriter-court-20261109T150402Z.json`
+  (160/160 disjoint, 1/80 contended winner, 16 verifiers, `verify --full`).
+* Failure court: `bench/receipts/multiwriter-failure-20261109T150414Z.json`
+  (8 process faults, replay, delayed writer, quota race).
+* Benchmark: `bench/receipts/bench-multiwriter-20261109T150423Z.json` and
+  `.log`; retained superseded run `…144401Z`; retained failures
+  `…144140Z`, `…144235Z`, `…144320Z`, `…144333Z`, `…144351Z.log`.
+* TLA+: `bench/receipts/tla-20261109T140116Z.json`.
+* Code revisions: WeftFS `b0bcbc5`, WeftFS-Go `f46b351`.
+
+### What remains for MW3
+
+Conflict domains or sharded heads so independent transactions stop contending
+on one publication point; a shared multi-writer daemon instead of one process
+per writer; a coordinated multi-writer GC protocol; a multi-node court with a
+real consensus substrate and a fleet throughput claim; a publication path that
+does not re-read the chain on every retry; Go parity for S3/GCS/Azure MW2; and
+MW2 for FUSE file mutations and generic checkpoint publication.

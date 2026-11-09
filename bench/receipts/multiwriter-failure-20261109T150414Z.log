@@ -1,0 +1,107 @@
+== multiwriter failure court ==
+kernel: Linux e50e4bdce8a7 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5503:8
+     |
+5503 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5510:8
+     |
+5510 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5527:7
+     |
+5527 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5529:4
+     |
+5529 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5562:4
+     |
+5562 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+== process faults ==
+rust mw2_prepared: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_before_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_ack: exit=134 initial=committed final=committed name_present=true verify=true generation=2
+go mw2_prepared: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_before_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_ack: exit=137 initial=committed final=committed name_present=true verify=true generation=2
+== idempotent replay ==
+replay: {"first": {"attempts": 1, "backend_reads": 15, "backend_writes": 11, "bytes_read": 26838, "bytes_written": 5929, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11004, "writer": "w"}, "generation_first": 2, "generation_second": 2, "ok": true, "second": {"attempts": 0, "backend_reads": 21, "backend_writes": 3, "bytes_read": 12559, "bytes_written": 218, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 10592, "writer": "w"}}
+
+== delayed writer ==
+delayed: {"delayed": {"attempts": 0, "backend_reads": 15, "backend_writes": 7, "bytes_read": 19993, "bytes_written": 686, "committed": 0, "conflicts": 1, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 400, "errors": [], "logical_bytes": 0, "ok": true, "peak_rss_kib": 10472, "writer": "a"}, "ok": true, "winner": {"attempts": 1, "backend_reads": 17, "backend_writes": 10, "bytes_read": 27024, "bytes_written": 5836, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 10860, "writer": "b"}}
+
+{"receipt": "bench/receipts/multiwriter-failure-20261109T150414Z.json", "result": "pass", "failures": 0}
+receipt: bench/receipts/multiwriter-failure-20261109T150414Z.json
+9ce5949aedc1eb5501ba625e598677d4361f7290196fbf37e01ebc4c637b548c  bench/receipts/multiwriter-failure-20261109T150414Z.json
+1ff0c70066ab8e89edd65195b566d40b20c00f000d6d92d4b83a736c78edacac  bench/receipts/multiwriter-failure-20261109T150414Z.log

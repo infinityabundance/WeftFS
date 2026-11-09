@@ -1,0 +1,200 @@
+{
+  "delayed_writer": {
+    "delayed": {
+      "attempts": 0,
+      "backend_reads": 15,
+      "backend_writes": 7,
+      "bytes_read": 19993,
+      "bytes_written": 686,
+      "committed": 0,
+      "conflicts": 1,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "elapsed_ms": 400,
+      "errors": [],
+      "logical_bytes": 0,
+      "ok": true,
+      "peak_rss_kib": 10472,
+      "writer": "a"
+    },
+    "ok": true,
+    "winner": {
+      "attempts": 1,
+      "backend_reads": 17,
+      "backend_writes": 10,
+      "bytes_read": 27024,
+      "bytes_written": 5836,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "elapsed_ms": 0,
+      "errors": [],
+      "logical_bytes": 3,
+      "ok": true,
+      "peak_rss_kib": 10860,
+      "writer": "b"
+    }
+  },
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/multiwriter-failure-20261109T150414Z.log",
+    "log_sha256": "f88fa7111868abaced4cea75e8eff6ad365b5ede4c58baee2def833847267a19"
+  },
+  "failures": 0,
+  "generated_at": "2026-11-09T15:04:15Z",
+  "idempotent_replay": {
+    "first": {
+      "attempts": 1,
+      "backend_reads": 15,
+      "backend_writes": 11,
+      "bytes_read": 26838,
+      "bytes_written": 5929,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "elapsed_ms": 0,
+      "errors": [],
+      "logical_bytes": 3,
+      "ok": true,
+      "peak_rss_kib": 11004,
+      "writer": "w"
+    },
+    "generation_first": 2,
+    "generation_second": 2,
+    "ok": true,
+    "second": {
+      "attempts": 0,
+      "backend_reads": 21,
+      "backend_writes": 3,
+      "bytes_read": 12559,
+      "bytes_written": 218,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "elapsed_ms": 0,
+      "errors": [],
+      "logical_bytes": 3,
+      "ok": true,
+      "peak_rss_kib": 10592,
+      "writer": "w"
+    }
+  },
+  "in_process_tests": {
+    "capability_revoke": "tests/multiwriter.rs an_authorization_change_that_wins_the_race_denies_publication; WeftFS-Go TestMW2AuthRaceDeniesPublication",
+    "gc_prepared_pins": "tests/multiwriter.rs gc_racing_a_prepared_transaction_retains_its_manifest; WeftFS-Go TestMW2GCKeepsPreparedPins",
+    "quota_race": "tests/multiwriter.rs a_quota_race_at_the_limit_rejects_the_loser; WeftFS-Go TestMW2QuotaRaceAtLimitRejectsLoser"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "f46b351fc32bf4da614c2c3526ff0fa468700335"
+    }
+  ],
+  "result": "pass",
+  "run": {
+    "duration_ms": 1000,
+    "finished_at": "2026-11-09T15:04:15Z",
+    "started_at": "2026-11-09T15:04:14Z"
+  },
+  "schema": "weftfs.multiwriter.failure/1",
+  "scope": {
+    "checked": "process-fault proxy at four publication stages, reopened state, outcome lookup, replay, delayed writer",
+    "not_checked": "physical power loss, host page-cache loss, distributed/fleet operation, linearizability proof"
+  },
+  "stages": [
+    {
+      "exit": 134,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "rust",
+      "name_present": true,
+      "stage": "mw2_prepared",
+      "verify_full": true
+    },
+    {
+      "exit": 134,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "rust",
+      "name_present": true,
+      "stage": "mw2_before_head",
+      "verify_full": true
+    },
+    {
+      "exit": 134,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "rust",
+      "name_present": true,
+      "stage": "mw2_after_head",
+      "verify_full": true
+    },
+    {
+      "exit": 134,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "committed",
+      "language": "rust",
+      "name_present": true,
+      "stage": "mw2_after_ack",
+      "verify_full": true
+    },
+    {
+      "exit": 137,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "go",
+      "name_present": true,
+      "stage": "mw2_prepared",
+      "verify_full": true
+    },
+    {
+      "exit": 137,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "go",
+      "name_present": true,
+      "stage": "mw2_before_head",
+      "verify_full": true
+    },
+    {
+      "exit": 137,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "unknown",
+      "language": "go",
+      "name_present": true,
+      "stage": "mw2_after_head",
+      "verify_full": true
+    },
+    {
+      "exit": 137,
+      "final_outcome": "committed",
+      "generation": 2,
+      "initial_outcome": "committed",
+      "language": "go",
+      "name_present": true,
+      "stage": "mw2_after_ack",
+      "verify_full": true
+    }
+  ]
+}
