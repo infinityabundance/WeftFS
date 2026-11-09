@@ -2930,14 +2930,14 @@
   },
   {
     "id": "r9_go_no_v4_writer",
-    "claim": "Docs state Go has no v4 writer (read/verify/GC only).",
+    "claim": "The stale sentence that Go has no v4 writer is absent from current status docs; R20 added the Go v4 writer and compaction.",
     "value": "Go has no v4 writer",
     "locations": [
       "docs/STATUS.md",
       "docs/store-status.md"
     ],
     "receipt": null,
-    "kind": "present"
+    "kind": "absent"
   },
   {
     "id": "r9_overlay_compaction_root",
@@ -6668,13 +6668,14 @@
   },
   {
     "id": "readme_region_read_ms",
-    "claim": "README.md cites the 749 ms single-frame and 2.12 ms tiled 100-row region reads.",
-    "value": "749 ms",
+    "claim": "README.md cites the 749.3 ms one-row single-frame and 2.12 ms tiled region reads from the mode-17 receipt.",
+    "value": "749.3 ms",
     "locations": [
       "README.md"
     ],
     "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
-    "kind": "present"
+    "kind": "present",
+    "line": 138
   },
   {
     "id": "readme_region_read_tiled_ms",
@@ -7230,5 +7231,226 @@
     ],
     "receipt": "bench/receipts/release-artifacts-20261109T124325Z.json",
     "kind": "present"
+  },
+  {
+    "id": "readme_reference_filesystem_positioning",
+    "claim": "README.md first screen calls the Rust and Go filesystems reference filesystems and an executable specification.",
+    "value": "reference filesystems",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 12
+  },
+  {
+    "id": "readme_no_data_plane_competition",
+    "claim": "README.md first screen says the reference filesystems are not intended to compete with mature distributed filesystem data planes.",
+    "value": "not intended to replace or compete with",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 16
+  },
+  {
+    "id": "readme_integration_real_backend",
+    "claim": "README.md integration matrix uses the category implemented and tested on a real backend for local POSIX, MinIO S3, and Ceph RGW.",
+    "value": "implemented and tested on a real backend",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/s3-court-20261109T112958Z.json",
+    "kind": "present",
+    "line": 81
+  },
+  {
+    "id": "readme_integration_emulator",
+    "claim": "README.md integration matrix uses the category emulator-tested for fake-gcs-server and Azurite.",
+    "value": "emulator-tested",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/gcs-court-20261107T034113Z.json",
+    "kind": "present",
+    "line": 84
+  },
+  {
+    "id": "readme_integration_abi_only",
+    "claim": "README.md integration matrix uses the category ABI/conformance-tested only for 3FS.",
+    "value": "ABI/conformance-tested only",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/threefs-20261107T020623Z.json",
+    "kind": "present",
+    "line": 86
+  },
+  {
+    "id": "readme_integration_prototype",
+    "claim": "README.md integration matrix uses the category prototype for the Buck2 CAS adapter.",
+    "value": "prototype",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/buck2-cas-store-correctness-20261109T113544Z.json",
+    "kind": "present",
+    "line": 87
+  },
+  {
+    "id": "readme_integration_designed_not_executed",
+    "claim": "README.md integration matrix uses the category designed but not executed for DAOS, Lustre, BeeGFS, CephFS, JuiceFS, IBM Storage Scale, WEKA, VAST, and AIStore.",
+    "value": "designed but not executed",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 88
+  },
+  {
+    "id": "readme_integration_inaccessible",
+    "claim": "README.md integration matrix uses the category inaccessible for live AWS, GCS, and Azure.",
+    "value": "inaccessible",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 89
+  },
+  {
+    "id": "readme_threefs_not_deployed",
+    "claim": "README.md marks 3FS as ABI/conformance-tested only and states it is not a deployed cluster.",
+    "value": "Not a deployed cluster",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": "bench/receipts/threefs-20261107T020623Z.json",
+    "kind": "present",
+    "line": 86
+  },
+  {
+    "id": "readme_augmentation_doc_link",
+    "claim": "README.md links the AI storage augmentation architecture document.",
+    "value": "AI-STORAGE-AUGMENTATION.md",
+    "locations": [
+      "README.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 88
+  },
+  {
+    "id": "ai_augmentation_mw1_current",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md states today's implementation is MW1, many producers and one committer.",
+    "value": "today's implementation is MW1",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": "bench/receipts/parallel-checkpoint-20261108T033000Z.json",
+    "kind": "present",
+    "line": 113
+  },
+  {
+    "id": "ai_augmentation_mw2_not_implemented",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md states there is no protocol for two independent committers (MW2).",
+    "value": "There is no protocol by which two processes may independently publish commits",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 146
+  },
+  {
+    "id": "ai_augmentation_mw3_not_implemented",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md states there is no consensus or multi-node commit protocol (MW3).",
+    "value": "There is no consensus protocol, no multi-node commit protocol",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 157
+  },
+  {
+    "id": "ai_augmentation_no_fuse_on_fuse",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md explains integration without a FUSE-on-FUSE layer.",
+    "value": "FUSE-on-FUSE",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 192
+  },
+  {
+    "id": "ai_augmentation_no_data_plane_competition",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md explicitly disclaims data-plane competition and backend-owned features.",
+    "value": "No data-plane competition",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 245
+  },
+  {
+    "id": "ai_augmentation_go_s3_gcs_current",
+    "claim": "docs/AI-STORAGE-AUGMENTATION.md records that Go has S3 and GCS backends and no Azure backend.",
+    "value": "Go has S3 and GCS",
+    "locations": [
+      "docs/AI-STORAGE-AUGMENTATION.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 269
+  },
+  {
+    "id": "threefs_abi_shim_statement",
+    "claim": "docs/THREEFS.md and docs/THREEFS-CONTEXT-PLANE.md call the shipped 3FS court an ABI-compatible shim.",
+    "value": "ABI-compatible shim",
+    "locations": [
+      "docs/THREEFS.md",
+      "docs/THREEFS-CONTEXT-PLANE.md"
+    ],
+    "receipt": "bench/receipts/threefs-20261107T020623Z.json",
+    "kind": "present",
+    "line": 4
+  },
+  {
+    "id": "threefs_deployed_latency_conditional",
+    "claim": "docs/THREEFS-CONTEXT-PLANE.md conditions deployed-cluster latency conclusions on the unrun experiment in section 6.",
+    "value": "unrun experiment in §6",
+    "locations": [
+      "docs/THREEFS-CONTEXT-PLANE.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 11
+  },
+  {
+    "id": "go_v4_writer_current",
+    "claim": "docs/store-status.md records the Go v4 overlay writer and compaction with cross-language byte-equality tests.",
+    "value": "TestOverlayWriterMatchesRustByteForByte",
+    "locations": [
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 648
+  },
+  {
+    "id": "go_v2_codecauto_handoff",
+    "claim": "docs/store-status.md records that Go reads a Rust codec-auto v2 store in the cross-language test.",
+    "value": "representation_handoff_test.go",
+    "locations": [
+      "docs/store-status.md"
+    ],
+    "receipt": null,
+    "kind": "present",
+    "line": 445
   }
 ]

@@ -1,12 +1,14 @@
 # 3FS context plane
 
-**Status:** design note.
+**Status:** design note, R2 (2026-11-09).
 No experiment in this document was run against a 3FS deployment.
-The only 3FS code that has executed is the USRBIO ABI conformance
-court described in `docs/THREEFS.md` (a shim over POSIX `pread`/`pwrite`). Every
+The only 3FS code that has executed is the **ABI-compatible shim** described in
+`docs/THREEFS.md` (a conformance implementation over POSIX `pread`/`pwrite`
+that reports `hf3fs_is_hf3fs = 0`). It is **not a deployed cluster**. Every
 number below is either a measured *WeftFS* number with the local backend (cited
 to its receipt) or an explicitly modelled budget; where a number is a model it
-says so.
+says so. Any latency conclusion about a deployed 3FS is **conditional on the
+unrun experiment in §6**.
 
 ## 1. One-sentence layering statement
 
@@ -33,7 +35,7 @@ says so.
 │  authorization  POSIX + ACL + authenticated capability envelopes      │
 │  provenance     weft.provenance.v1 receipts, recovery planner        │
 │  context        Context Roots (selector + snapshot + causal closure)  │
-│  representation codec modes 0–17, tensor tiles, KV pages, deltas     │
+│  representation codec modes 0–18, tensor tiles, KV pages, deltas     │
 │  retention      mark/sweep GC, pins, compaction                      │
 └───────────────┬──────────────────────────────────────────────────────┘
                 │ BlobPlane (get/get_range/put_if_absent/delete)

@@ -1,5 +1,15 @@
 # 3FS transports (R22)
 
+> **Status, R2 (2026-11-09).** The only 3FS code that has executed is the
+> **ABI-compatible shim** in `bench/threefs/hf3fs_shim.c`, loaded with
+> `dlopen`. It is *not* a 3FS deployment: it reports `hf3fs_is_hf3fs = 0`, has
+> no RDMA and no kernel bypass, and performs a `pread` per request inside
+> `wait_for_ios`. No deployed-cluster latency, throughput, durability,
+> multi-node, or fleet claim is made. Any conclusion about a deployed 3FS is
+> conditional on the experiment in
+> [`docs/THREEFS-CONTEXT-PLANE.md`](THREEFS-CONTEXT-PLANE.md) §6, which has not
+> been run.
+
 WeftFS addresses DeepSeek's [3FS](https://github.com/deepseek-ai/3FS) through
 two transports that share one on-disk layout. The bytes, the commit protocol,
 and the recovery rules are identical; only the data-plane syscall shape changes.
@@ -111,7 +121,8 @@ The shim is **not 3FS**: it reports `hf3fs_is_hf3fs = 0`, has no RDMA and no
 kernel bypass, and performs a `pread` per request inside `wait_for_ios`. It
 therefore cannot demonstrate the transport's advantage. What it does establish
 is that the ABI transcription is correct and that the adapter's batching,
-completion handling, registration lifetime, and error paths are right.
+completion handling, registration lifetime, and error paths are right. The
+shipped court is an **ABI-compatible shim**, not a deployed cluster.
 
 One environment fact worth recording: the court's `/tmp` is a Docker tmpfs
 mounted `noexec`, so `dlopen` on a shared object there fails with *"failed to map
@@ -121,7 +132,8 @@ which is an executable bind mount.
 ## Measured (receipt `threefs-20261106T232643Z.json`)
 
 Single host, rust court (3 GiB, 4 CPUs, pids 1024), synthetic fixtures, warm
-page cache, 5 repetitions per phase.
+page cache, 5 repetitions per phase, against the **ABI shim, not a 3FS
+cluster**.
 
 | Phase | Result |
 |---|---|

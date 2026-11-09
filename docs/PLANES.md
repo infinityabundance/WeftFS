@@ -88,6 +88,14 @@ verify, and recovery have one implementation of each physical operation. The
 GCS backend's stale-generation probe and court are described in
 [`bench/RESULTS-gcs.md`](../bench/RESULTS-gcs.md).
 
+Since R20/R25/R26 the Go reference store implements the same plane split
+(`WeftFS-Go/store/planes.go`), including the local/object layouts and the S3 and
+GCS blob/commit planes (`store/s3blob.go`, `store/s3commit.go`,
+`store/gcsblob.go`, `store/gcscommit.go`). Capabilities are measured on writable
+open with the same probes, and cross-language tests reproduce one head and
+manifest in all four layouts. Go has no Azure backend. The Rust
+`AzureBackend` (`src/azure.rs`) follows the same contract over Azure Blob REST.
+
 ## 2. Key routing
 
 `CompositeBackend` (in `src/backend.rs`) routes by `Key::kind()`:

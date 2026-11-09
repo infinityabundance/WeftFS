@@ -440,21 +440,27 @@ references it. `verify --full` decodes and re-hashes every codec representation
 and names the object, manifest, and frame on failure.
 
 The Go store implements the same v2 parser and writer for `weft.manifest.v2`
-(fail closed with its unknown-schema/unsupported-version class). The Rust→Go
-handoff court therefore still uses the default `Raw` path (`--representation raw`)
-and continues to compare byte-identical v1 fixtures; the Go store does not
-understand stores written by `--representation codec-auto`. The v2 path is not
-part of the frozen v1 format and is not claimed compatible or interoperable.
+(fail closed with its unknown-schema/unsupported-version class), and the
+cross-language tests build a Rust `--representation codec-auto` store and read
+it in Go (`WeftFS-Go/store/representation_handoff_test.go`,
+`WeftFS-Go/store/tensor_handoff_test.go`). The default handoff court still
+compares the frozen raw v1 fixture. The v2 path is not part of the frozen v1
+format; the two implementations read each other's v2 objects, but their zstd
+frame bytes are not claimed identical.
 
 ---
 
 ## 2b. Tensor representations and the per-object planner (B1)
 
-**Status: implemented in Rust only; the Go store rejects `kind:"tensor"` with
-its usual unknown-schema/unsupported-version class.** A tensor object uses the
+**Status: implemented in Rust and Go at the store level. The Go store parses
+and writes `kind:"tensor"`, runs its own planner (`PlanTensor`,
+`WriteTensorFileWithSpec`), and reads the full strategy vocabulary in
+`WeftFS-Go/store/tensor.go` (raw, zstd, modes 9–18, including the read-only KV,
+activation, and semantic-delta strategies). It still has no `weft.checkpoint.v1`
+writer.** A tensor object uses the
 v2 `kind:"tensor"` representation described in `spec/WEFT-MODEL.md` §2.3.1:
-`frame`, `tensor_mode` (10/11/12/13/14), `dtype`, `shape`, `logical_root`,
-canonical `layout`, `dependencies` (base content roots for 11/14), `strategy`,
+`frame`, `tensor_mode` (9/10/11/12/13/14/16/17/18), `dtype`, `shape`, `logical_root`,
+canonical `layout`, `dependencies` (base content roots for 11/14/16), `strategy`,
 and `decoded_size`. The store owns the tensor vocabulary:
 
 - **One object per tensor, one frame.** A multi-shard declaration
@@ -634,10 +640,14 @@ readable by both implementations again and snapshots pinned to the old chain
 remain exact. A non-overlay object is refused with
 `UnsupportedRepresentation`. CLI: `weftfs compact <path>`.
 
-Go: `weft-model` parses v4, and the Go store reads, range-reads, verifies, GCs,
-and charges quota for an overlay object. Go has no v4 writer and no
-compaction; a range write to an overlay object returns `InvalidArgument`.
-There is no Go write parity to claim.
+Go: `weft-model` parses v4, and the Go store implements the same writer and
+compaction, the range/truncate/zero/-read/verify/GC/quota paths, and the same
+refusals (shrinking truncate, `collapse_range`, `insert_range`). A fixed clock
+and seed produce the same overlay manifest id, the same 605 bytes, and the same
+published head in both languages; each language extends and compacts the
+other's store and re-verifies it (`TestOverlayWriterMatchesRustByteForByte`,
+`TestOverlayGoExtendsRustStore`, `TestOverlayGoCompactsRustStore`,
+`TestOverlayRustCompactsGoStore`). There is no streaming overlay writer.
 
 Measured (`bench/RESULTS-overlay.md`, receipts
 `bench/receipts/overlay-20261106T103115Z.json` local and

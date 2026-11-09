@@ -1,19 +1,123 @@
-# WeftFS — Context-Aware Storage for AI Tensors and Checkpoints
+# WeftFS
 
 [![Release](https://img.shields.io/github/v/release/infinityabundance/WeftFS?label=release)](https://github.com/infinityabundance/WeftFS/releases/tag/v1.2.0)
 
-**Lossless, verifiable reconstruction of model state across versions, layouts,
-and storage backends.**
+**Context and lossless reconstruction for AI storage infrastructure.**
 
-WeftFS is storage for the things an AI workload actually rewrites: model
-weights, training checkpoints, and reusable computational state. It stores
-**exact tensor representations**, **checkpoint deltas**, and **independently
-decodable tiles**, and every read is **content-verified** before bytes are
-returned. Its architectural claim is a separation of concerns: *what a
-computational state is* (a typed, content-addressed identity with causal
-lineage) is kept distinct from *how it is physically stored* (raw chunks, one
-frame, independently decodable tiles, a delta against a named base, a patch, or
-an overlay). Changing the storage form never changes the identity.
+WeftFS develops a portable context-addressing and reconstruction protocol,
+together with WeftCodec, a lossless tensor-aware codec. The architecture is
+intended to augment high-performance storage systems used for AI training,
+inference, checkpointing and model lifecycle management.
+
+The included Rust and Go filesystems are **reference filesystems** — research
+reference implementations that serve as an executable specification of the
+protocol. They demonstrate transactional and reconstruction semantics, support
+independent conformance testing, and preserve a reproducible record of the
+architecture's development. They are not intended to replace or compete with
+the data-plane performance of mature distributed filesystems.
+
+The intended deployment architecture combines WeftFS's contextual identity,
+reconstruction and provenance machinery with established storage engines such
+as DeepSeek 3FS, DAOS, Lustre, BeeGFS, CephFS and JuiceFS, through
+backend-specific integration layers that preserve the underlying system's
+strengths.
+
+WeftFS is concerned with which data is selected, how it is related,
+represented, reconstructed, verified and reused. The underlying storage system
+remains responsible for delivering bytes efficiently, consistently and durably
+according to its own capabilities.
+
+The research objective is to determine whether this combination can reduce
+storage consumption, data movement, repeated computation and recovery cost — or
+provide stronger contextual guarantees — without unacceptable overhead on the
+underlying storage system. Integration maturity and measured results are
+documented separately; compatibility with an interface does not imply that a
+native deployment has been benchmarked.
+
+## Architecture at a glance
+
+```mermaid
+flowchart TD
+    A["AI consumers<br/>training restarts · agent sessions · evaluation · inference · CI caches"]
+    B["WeftFS context protocol<br/>identity · selection · lineage · policy<br/>provenance · verification · recovery"]
+    C["WeftCodec<br/>exact tensors · tiles · deltas · KV pages"]
+    D["Backend integration<br/>BlobPlane · CommitPlane"]
+    E["Established storage<br/>3FS · DAOS · Lustre · CephFS · S3 · GCS · Azure · local"]
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+```
+
+The protocol and the codec run in the client, in a checkpoint adapter, or in a
+backend-specific integration layer. They do **not** own replication, erasure
+coding, placement, RDMA, scheduling, caching, or GPU-direct I/O; the storage
+system owns those. The `BlobPlane`/`CommitPlane` contract is the complete
+interface between WeftFS and a data plane.
+
+Four independent implementations share one normative format. WeftFS separates
+the **context plane** (typed relations, Context Roots, causal lineage,
+capabilities, and a WeftQL selector grammar compiled to a canonical AST and a
+`SelectorId`) from the **storage plane** (an OOM-bounded, transactional,
+content-addressed store with snapshots, group commit, GC, crash recovery,
+optional blob/commit plane splits, S3/GCS/Azure and 3FS transports, and a
+POSIX FUSE frontend). The codec separates *identity* from *representation*: a
+tensor's `LogicalTensorRoot` is invariant across raw, zstd, mode-9 float, tiled,
+and delta encodings, so the same state can be re-encoded, rebased, or
+transcoded without invalidating a single reference. Frozen on-disk and wire
+formats are byte-identical across Rust and Go; every claim in this repository
+is backed by a court receipt under hard memory, CPU, and pid limits. The Rust
+and Go filesystems are reference filesystems implementing this architecture,
+not data-plane competitors.
+
+## Integration status
+
+The category names the **strongest executed evidence**, not the design intent.
+An interface existing, or an emulator being API-compatible, does not upgrade a
+row.
+
+| Integration | Status | Evidence and scope |
+|---|---|---|
+| Local POSIX backend | *implemented and tested on a real backend* | Default `--backend local`; byte-identical fixtures, crash proxy, and recovery courts. Receipts `backend-20261104T232908Z.json`, `crash-torture-20261104T104233Z.json`. |
+| MinIO S3 | *implemented and tested on a real backend* | A real MinIO server (single node, tmpfs data): S3 backend and fenced-writer suites. Receipt `s3-court-20261109T112958Z.json`. |
+| Ceph RGW 19.2.0 | *implemented and tested on a real backend* | Independent S3 implementation: backend and fenced-writer suites. Receipt `ceph-rgw-20261109T112958Z.json`. |
+| `fake-gcs-server` v1.56.1 | *emulator-tested* | GCS JSON API backend, generation preconditions, fenced writer. Receipt `gcs-court-20261107T034113Z.json`. Not Google Cloud Storage. |
+| Azurite 3.35.0 | *emulator-tested* | Azure Blob backend, SharedKey/SAS, fenced writer. Receipt `azure-20261107T034219Z.json`. Not Azure. |
+| 3FS | *ABI/conformance-tested only* | USRBIO ABI court over `bench/threefs/hf3fs_shim.c`, loaded with `dlopen`; the shim reports `hf3fs_is_hf3fs = 0`. **Not a deployed cluster.** Receipt `threefs-20261107T020623Z.json`. |
+| Buck2 CAS adapter | *prototype* | Store-backed action cache; correctness court 41/41. Not a Buck2 plugin and no REAPI/worker claim. Receipt `buck2-cas-store-correctness-20261109T113544Z.json`. |
+| DAOS, Lustre, BeeGFS, CephFS, JuiceFS, IBM Storage Scale, WEKA, VAST, AIStore | *designed but not executed* | No adapter, no court, no deployment. The integration contract is in [`docs/AI-STORAGE-AUGMENTATION.md`](docs/AI-STORAGE-AUGMENTATION.md). |
+| Live AWS S3, Google Cloud Storage, Azure Blob | *inaccessible* | No credential or bucket was available; only MinIO, Ceph RGW, `fake-gcs-server`, and Azurite were exercised. |
+
+These categories are deliberately narrow. “Implemented and tested on a real
+backend” means a real server process ran in a court, not a live cloud account;
+MinIO and Ceph RGW are real S3-compatible servers, but neither is AWS. The
+contract, the writer-capability levels (MW0–MW3), and the complete list of
+non-claims are in [`docs/AI-STORAGE-AUGMENTATION.md`](docs/AI-STORAGE-AUGMENTATION.md).
+
+## What is measured
+
+| Question | Result from a receipt | Where |
+|---|---|---|
+| Does reconstruction reduce stored bytes? | Qwen2.5-0.5B base → Instruct family: **1,276,128,956 B** versus **1,535,945,154 B** for independent per-tensor `zstd -19` (**17 % smaller**); **3.07 %** under ZipNN's 1,316,518,229 B; tensor data alone **1,199,958,505 B**. | `planner-float-20261106T035316Z.json`, [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md) |
+| Does independent tiling make region reads cheap? | Qwen embedding one-row read: **749.26 ms** as one mode-9 frame → **2.12 ms** with tiles (**353×**), at **+0.51 %** physical bytes; a 100-row read falls from **777.08 ms** to **2.30 ms** (**337×**). | `float-tiled-20261107T042955Z.json`, [`bench/RESULTS-mode17.md`](bench/RESULTS-mode17.md) |
+| What exactness and recovery evidence exists? | **37/37** verification courts pass at the v1.2.0 tree; **355** conformance vectors; **100,000/100,000** crash iterations with **0** partial states. | `verify-20261109T112958Z.json`, `conformance/manifest.json`, `crash-torture-20261104T104233Z.json` |
+
+Every number above has a receipt, a `bench/RESULTS-*` analysis, and a list of
+what it does not cover. The release-wide summary, including every loss and
+every non-claim, is [`docs/RELEASE-v1.2.0.md`](docs/RELEASE-v1.2.0.md). No
+single-host measurement is a fleet, cloud, or power-loss claim.
+
+## Repositories
+
+This repository is the program home: it owns the normative specification
+(`spec/`) and exports versioned copies to the subprojects.
+
+| Project | Language | Role |
+|---|---|---|
+| [`WeftCodec`](WeftCodec/) | Rust | Lossless context-conditioned codec, normative format |
+| [`WeftCodec-Go`](WeftCodec-Go/) | Go | Independent codec implementation, cross-decode conformance |
+| [`WeftFS`](.) | Rust | Reference filesystem: transactional store + Linux FUSE frontend |
+| [`WeftFS-Go`](WeftFS-Go/) | Go | Reference filesystem: independent store + Linux FUSE frontend |
 
 ## Demonstrated results
 
@@ -31,11 +135,12 @@ delta on the Pythia fixture.** For pythia-70m step0 → step1 (a 19-byte change
 * **Model family:** Qwen2.5-0.5B base → Instruct stores in **1.276 GB**
   (1.200 GB of tensor data) versus **1.536 GB** for independent per-tensor
   `zstd -19` — **17 % smaller**, and 3.07 % under ZipNN's 1.317 GB.
-* **Region reads:** a 100-row read of the Qwen embedding takes **749 ms** when
-  the tensor is one mode-9 frame but **2.12 ms** when it is independently
-decodable tiles — 354× faster, because only the intersecting tiles are
-  decoded. The cost is **+0.51 % bytes and a 3.25× write**, which is why the
-  planner only chooses tiles when the access pattern pays the write back.
+* **Region reads:** a one-row read of the Qwen embedding takes **749.3 ms** as
+  one mode-9 frame but **2.12 ms** as independently decodable tiles — **353×**
+  faster, because only the intersecting tiles are decoded; a 100-row read falls
+  from **777.1 ms** to **2.30 ms** (**337×**). The cost is **+0.51 % bytes and a
+  3.25× write**, which is why the planner only chooses tiles when the access
+  pattern pays the write back.
 
 Every number above has a receipt and a list of what it does not cover; see
 [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md),
@@ -44,37 +149,12 @@ Every number above has a receipt and a list of what it does not cover; see
 [`bench/RESULTS-compression-candidates.md`](bench/RESULTS-compression-candidates.md).
 No single-host measurement is a fleet, cloud, or power-loss claim.
 
-## Architecture
-
-Four independent implementations share one normative format. WeftFS separates
-the **context plane** (typed relations, Context Roots, causal lineage,
-capabilities, and a WeftQL selector grammar compiled to a canonical AST and a
-`SelectorId`) from the **storage plane** (an OOM-bounded, transactional,
-content-addressed store with snapshots, group commit, GC, crash recovery,
-optional blob/commit plane splits, S3/GCS/Azure and 3FS transports, and a
-POSIX FUSE frontend). The codec separates *identity* from *representation*: a
-tensor's `LogicalTensorRoot` is invariant across raw, zstd, mode-9 float, tiled,
-and delta encodings, so the same state can be re-encoded, rebased, or
-transcoded without invalidating a single reference. Frozen on-disk and wire
-formats are byte-identical across Rust and Go; every claim in this repository
-is backed by a court receipt under hard memory, CPU, and pid limits.
-
-## Repositories
-
-This repository is the program home: it owns the normative specification
-(`spec/`) and exports versioned copies to the subprojects.
-
-| Project | Language | Role |
-|---|---|---|
-| [`WeftCodec`](WeftCodec/) | Rust | Lossless context-conditioned codec, normative format |
-| [`WeftCodec-Go`](WeftCodec-Go/) | Go | Independent codec implementation, cross-decode conformance |
-| [`WeftFS`](.) | Rust | Transactional store + Linux FUSE filesystem |
-| [`WeftFS-Go`](WeftFS-Go/) | Go | Independent store + Linux FUSE filesystem |
-
 ## Status
 
 Status is deliberately blunt. Nothing is claimed beyond what has been built and
-tested in the Docker court.
+tested in the Docker court. The phase table records the reference
+implementation's development; it is not a product roadmap or a competitor
+comparison.
 
 | Phase | Deliverable | Status |
 |---|---|---|
@@ -226,6 +306,11 @@ detail.
   (no token).
 
 ## What's new in v0.9.0
+
+This is a historical release note. Several Go gaps named here (v4
+writer/compaction, the pack plane, split planes, `calibrate`) were closed in
+R20–R27; the current truth is the Status table above and
+[`docs/AI-STORAGE-AUGMENTATION.md`](docs/AI-STORAGE-AUGMENTATION.md).
 
 Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEASE-v0.9.0.md).
 
@@ -448,7 +533,7 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
 2. **No invented evidence.** Every performance, reliability, or compatibility
    claim carries a command, environment, fixture, and raw output.
 3. **Independent implementations.** Go never calls Rust. The two codecs share a
-   format, not code. The two filesystems share an on-disk format, not code.
+   format, not code. The two reference filesystems share an on-disk format, not code.
 4. **Bounded resources.** Decoders enforce depth, byte, count, and work limits.
    Containers enforce hard memory/swap/pids/CPU limits.
 5. **Identity separation.** A selector is a query, not an object. A hash is not
@@ -722,8 +807,8 @@ docker/        Minimal court images
 conformance/   Generated manifest + frozen store/checkpoint/fuzz fixtures
 WeftCodec/     Rust codec (canonical vectors under WeftCodec/conformance/v1)
 WeftCodec-Go/  Go codec
-WeftFS-Go/     Go filesystem
-src/, crates/  Rust filesystem implementation
+WeftFS-Go/     Go reference filesystem
+src/, crates/  Rust reference filesystem
 tests/         POSIX, crash, snapshot, graph, interop courts
 security/      Threat model and audit notes
 bench/         Contracts, corpora manifests, scripts, receipts
