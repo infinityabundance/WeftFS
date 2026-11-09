@@ -23,7 +23,10 @@ the design, backend tradeoffs and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and
 [`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwriter.md). FUSE file
 mutations and generic checkpoint publication remain MW1. The full R4 entry
-with measured tables is at the end of this document.
+with measured tables is at the end of this document. The R4 aggregate is
+`bench/receipts/verify-20261109T160406Z.json` (**41/41** courts `pass`, 0
+failed, 0 skipped) at WeftFS `257f31a`; it now includes `tla`,
+`multiwriter`, and `multiwriter_failure`.
 
 **Stage S6 update (2026-11-08):** the current verification receipt is
 `bench/receipts/verify-20261108T165021Z.json` (**37/37** courts `pass`, 0 failed,
@@ -7043,7 +7046,11 @@ optimistic publishers; there is no physical power loss, no fleet, and no MW3.
   `.log`; retained superseded run `…144401Z`; retained failures
   `…144140Z`, `…144235Z`, `…144320Z`, `…144333Z`, `…144351Z.log`.
 * TLA+: `bench/receipts/tla-20261109T140116Z.json`.
-* Code revisions: WeftFS `b0bcbc5`, WeftFS-Go `f46b351`.
+* Aggregate: `bench/receipts/verify-20261109T160406Z.json` (**41/41** courts
+  `pass`, 0 failed, 0 skipped) at WeftFS `257f31a`; the earlier 38/38 run
+  `verify-20261109T150758Z.json` is retained.
+* Code revisions: WeftFS `b0bcbc5` (protocol, courts, benchmark), WeftFS-Go
+  `f46b351`; aggregate at `257f31a`.
 
 ### What remains for MW3
 
