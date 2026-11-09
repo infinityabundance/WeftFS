@@ -6499,6 +6499,11 @@ samples; court 3 GiB / 4 cpus / 1024 pids, `weft/bench-court:1` id
   λ × SLA sweep, per-version prediction error, chain-hop diagnostics, and the
   `floor_prediction_within_10_percent` / `no_accepted_plan_misses_its_sla`
   checks. Receipt schema `weft.s13b.parent-graph.v2`.
+- The persisted `weft.calibration.v1` document is **unchanged**: it still has
+  exactly ten decode rows and no new field, so an existing v1 document loads
+  byte-for-byte. The restore overhead is a separate documented constant, and a
+  plan records `restore_overhead_calibration` (or `none`) so a reader can see
+  which model the prediction used.
 - `bench/scripts/s13b_restore_floor_court.sh` (calibration court) and
   `bench/scripts/parent_graph_court.sh` (7 reps + sweep).
 - `tests/parent_graph_restore_floor.rs` 6/6: the baked constants equal the
