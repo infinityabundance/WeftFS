@@ -1303,25 +1303,6 @@ impl RetentionRequest {
     }
 }
 
-/// Persist a binding blob for tests and fixtures without going through a store.
-#[cfg(test)]
-pub(crate) fn encode_binding_blob(binding: &RetentionBinding) -> Result<(Hash32, Vec<u8>)> {
-    let bytes = binding.encode()?;
-    Ok((binding.id()?, bytes))
-}
-
-/// Read a binding blob written by another implementation and verify its id.
-#[cfg(test)]
-pub(crate) fn decode_binding_blob(id: Hash32, bytes: &[u8]) -> Result<RetentionBinding> {
-    let binding = RetentionBinding::decode(bytes)?;
-    if binding.id()? != id {
-        return Err(Error::corrupt(format!(
-            "retention blob {id} does not re-encode to its own identity"
-        )));
-    }
-    Ok(binding)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
