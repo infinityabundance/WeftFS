@@ -257,6 +257,21 @@ else
   status=1
 fi
 
+# R4 bounded multi-committer model: five TLC runs (the corrected MW2 model and
+# the two deliberate flaws). The script self-dispatches into the TLA court and
+# bounds each run with TLA_TIMEOUT_SECS (default 600).
+run_orchestrated_court tla tla bash scripts/run_tla.sh
+
+# R4 MW2 correctness: mixed Rust/Go independent committers on one store
+# (deterministic parity, disjoint and contended histories, cross-language
+# verifiers, finite history check).
+run_orchestrated_court multiwriter multiwriter_court bash scripts/multiwriter_court.sh
+
+# R4 MW2 failure court: process faults at four publication stages in both
+# languages, reopen + verify, outcome lookup, idempotent replay, delayed writer.
+run_orchestrated_court multiwriter_failure multiwriter_failure_court \
+  bash scripts/multiwriter_failure_court.sh
+
 # Aggregate counts. Recounted from the results file so the receipt can never
 # disagree with the per-court entries it prints below.
 total="$(grep -c . "$results" || true)"
