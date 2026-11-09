@@ -1,0 +1,173 @@
+{
+  "alignment_invariant": {
+    "all_offsets_multiples_of_declared_alignment": true,
+    "off_by_one_offset_class": "Malformed"
+  },
+  "all_checks": true,
+  "checks": {
+    "container_verifies": true,
+    "corpus_sha256": true,
+    "deterministic_container": true,
+    "full_section_root_verified": true,
+    "mode17_exact": true,
+    "mode20_exact": true,
+    "mode20_section_root_verified": true,
+    "off_by_one_offset_rejected": true,
+    "offsets_aligned": true,
+    "single_section_bytes_below_container": true,
+    "single_section_root_verified": true,
+    "slice_aligned": true,
+    "slice_not_section_root": true,
+    "tile_root_verified": true
+  },
+  "checks_passed": 14,
+  "checks_total": 14,
+  "corpus": {
+    "bytes": 8716288,
+    "dtype": "bf16",
+    "path": ".docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+    "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "shape": [
+      896,
+      4864
+    ],
+    "tensor": "model.layers.0.mlp.down_proj.weight"
+  },
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "elapsed_ms": 1003.7489079999999,
+  "frames": {
+    "main_container_bytes": 11902976,
+    "main_container_sha256": "2c52f1cf6d779d52cec0c1a913a39f3de03af96141e6338af8d4235715eae182",
+    "main_sections": 8,
+    "mode17_bytes": 6019594,
+    "mode20_bytes": 5846747,
+    "small_section_bytes": 834
+  },
+  "label": "single-host layout court; warm cache; not a transport, DMA, GPU, RDMA, or deployed-3FS claim",
+  "losses": [
+    "a container never reduces bytes: it adds a 4096-byte header, 56 bytes per section, and alignment padding",
+    "at 65536 alignment the small-frame case pays up to 64 KiB per section; the receipt publishes the exact percentage",
+    "a single-section reader cannot verify the container-level payload_hash; that is a whole-container property",
+    "a sub-section slice cannot be verified against the section root; only the enclosed frame's per-tile or per-group roots apply",
+    "alignment is necessary but not sufficient for zero-copy: this court materialises owned buffers and does not demonstrate DMA, GPU memory, RDMA, or a deployed 3FS cluster"
+  ],
+  "overhead": {
+    "real_frames": [
+      {
+        "alignment": 512,
+        "container_bytes": 11874816,
+        "frames_bytes": 11867175,
+        "overhead_bytes": 7641,
+        "overhead_percent": 0.06438769125760764
+      },
+      {
+        "alignment": 4096,
+        "container_bytes": 11902976,
+        "frames_bytes": 11867175,
+        "overhead_bytes": 35801,
+        "overhead_percent": 0.30168089709640245
+      },
+      {
+        "alignment": 65536,
+        "container_bytes": 12386304,
+        "frames_bytes": 11867175,
+        "overhead_bytes": 519129,
+        "overhead_percent": 4.37449519367499
+      }
+    ],
+    "small_frames": [
+      {
+        "alignment": 512,
+        "container_bytes": 7680,
+        "frames_bytes": 834,
+        "overhead_bytes": 6846,
+        "overhead_percent": 820.863309352518
+      },
+      {
+        "alignment": 4096,
+        "container_bytes": 32768,
+        "frames_bytes": 834,
+        "overhead_bytes": 31934,
+        "overhead_percent": 3829.0167865707435
+      },
+      {
+        "alignment": 65536,
+        "container_bytes": 458752,
+        "frames_bytes": 834,
+        "overhead_bytes": 457918,
+        "overhead_percent": 54906.23501199041
+      }
+    ]
+  },
+  "parse": [
+    {
+      "container_bytes": 12288,
+      "header_table_ns_per_section": 541.0,
+      "header_table_us_p50": 0.541,
+      "parse_metadata_us_p50": 2.134,
+      "sections": 1
+    },
+    {
+      "container_bytes": 40960,
+      "header_table_ns_per_section": 68.875,
+      "header_table_us_p50": 0.551,
+      "parse_metadata_us_p50": 7.715,
+      "sections": 8
+    },
+    {
+      "container_bytes": 270336,
+      "header_table_ns_per_section": 10.640625,
+      "header_table_us_p50": 0.681,
+      "parse_metadata_us_p50": 52.327000000000005,
+      "sections": 64
+    }
+  ],
+  "revision": {
+    "weftcodec": "d17d058c815f0a14bf396e24cc501b3f48ee0692",
+    "weftcodec_go": "c828e1684db1b9f0defef195f99d26bf059c2d6d",
+    "weftfs": "9d52de4361fde634b592286954074f1cd3a41268"
+  },
+  "schema": "weft.transport.v1",
+  "single_section_fetch": {
+    "bytes_section_only": 6019594,
+    "bytes_single_section_path": 6024138,
+    "bytes_whole_container": 11902976,
+    "header_table_section_read_ms_p50": 0.31157100000000004,
+    "length": 6019594,
+    "offset": 8192,
+    "section": 0,
+    "section_read_ms_p50": 0.317853,
+    "section_read_ratio_percent": 50.572176235590156,
+    "section_sha256": "67c489aec01bbf346cdf639618fea0e999eabc8f12b4768ea56cf75ac1ed9fcd",
+    "single_path_ratio_percent": 50.6103515625,
+    "whole_container_read_bytes": 11902976
+  },
+  "stamp": "20261109T234518Z",
+  "subsection_slice": {
+    "covering_tiles": [
+      0
+    ],
+    "full_section_root": "fda56dddc8aabdaf4203de0bba54591ca489c8595b58290e916d0957794aaefb",
+    "full_section_verify_ms": 14.900266,
+    "mode20_section_root": "fda56dddc8aabdaf4203de0bba54591ca489c8595b58290e916d0957794aaefb",
+    "note": "the section root covers the whole enclosed frame; a sub-section slice is verifiable only through the mode-17 per-tile roots (or mode-20 per-group roots). v1 does not nest one frame's bytes inside another frame's stored payload, so the mode-17 and mode-20 frames are sibling sections in one container.",
+    "section": 0,
+    "slice_aligned_to_4096": true,
+    "slice_is_not_independently_rooted": true,
+    "slice_length": 4096,
+    "slice_not_equal_to_section_root": true,
+    "slice_offset": 94208,
+    "slice_sha256": "abfff280d26e99f15d8f5c0b0eb9d6d1759d90420b6b9c32a515df859a03a12f",
+    "tile_index": 0,
+    "tile_length": 11147,
+    "tile_offset_in_section": 87813,
+    "tile_root": "73129b638bb6bae1f60a96267d0db503f223122d002f163450e35554b977b422",
+    "tile_root_verified": true
+  }
+}

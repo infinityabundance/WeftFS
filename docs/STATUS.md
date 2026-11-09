@@ -7426,3 +7426,119 @@ whole for a region. The incremental decode re-resolves referenced groups.
 `supersedes` is provenance, not a compaction mechanism. No per-group
 calibration row was added to the planner (mode 20 is opt-in and priced with the
 mode-15 coefficient). No physical power loss, fleet, or cache claim.
+
+## R8 — transport-aligned container `weft.transport.v1` (2026-11-09)
+
+This R8 is the transport-layout subphase; the earlier 2026-11-06 "R8" section
+above is the reconstruction single-flight/cache subphase and is unrelated.
+
+The 3FS court still proves an ABI-compatible `dlopen` shim, not a deployed
+cluster. This subphase adds the one thing that can be stated honestly without
+hardware: a **transport-aligned container** whose section can be fetched with
+one aligned range read, plus proof of the alignment/parse properties and the
+exact byte cost.
+
+### Spec and wire layout
+
+[`spec/WEFT-TRANSPORT.md`](../spec/WEFT-TRANSPORT.md) (`weft.transport.v1`) is
+an additive envelope around complete, unmodified WFT1 frames. Enclosed bytes,
+mode numbers, and content roots are unchanged.
+
+* Fixed **4096-byte header**: magic `WFTT`, major/minor 1.0, flags (0 in v1),
+  `section_count` (1..=4096), `section_table_offset` (4096), `total_len`,
+  `payload_hash = H("weft/transport/v1", enclosed frames)`, reserved zero.
+* **56-byte section entry**: `offset`, `length`, `alignment`
+  (512, 4096, or 65536), mode byte, role byte, reserved zero, and the enclosed frame's
+  `content_hash` as `root`.
+* Every offset is a multiple of its declared alignment. Every section is
+  padded outside its frame with zeros; padding is not hashed.
+* Reader classes: overlap, out-of-bounds, misalignment, duplicate offsets,
+  bad table count, non-zero padding, disallowed alignment and unknown role are
+  `Malformed`; a wrong section root or mode is `Corrupt`.
+* A reader may fetch one section without touching the others. A single-section
+  reader verifies the section root, never the container-level `payload_hash`.
+  A sub-section slice is not independently rooted; the enclosed mode-15/17/18
+  per-tile roots or mode-20 per-group roots are what apply.
+
+Non-claims are normative in the spec: this is a **layout, not a transport**;
+no DMA, GPU memory, RDMA, kernel-bypass, or deployed-3FS claim is made, and
+alignment alone does not make a decoder zero-copy.
+
+### Implementation
+
+* Rust: `weftcodec::transport` (`create`, `read_header`,
+  `read_section_table`, `parse_metadata`, `verify`, `verify_payload`,
+  `fetch_section`, `verify_section_bytes`), CLI
+  `transport create|inspect|verify|read-section`.
+* Go: `WeftCodec-Go/transport` with the same surface, plus
+  `hash.DomainHasher` for the container digest. CLI parity in
+  `cmd/weftcodec`.
+* Conformance: `conformance/v1/transport/` — **5 valid, 17 reject**, mirrored
+  byte-identically in both codec repos. Rust adapter 22/22 pass, Go adapter
+  22/22 pass.
+* Cross gate: `YES byte-identical transport_4096` and `transport_512`, with
+  `PASS rust verifies go`, `PASS go verifies rust`, and
+  `PASS single-section fetch` for both.
+
+### Measured (`bench/receipts/transport-20261109T234518Z.json`)
+
+One host, bench court (3 GiB / 4 CPUs / pids 1024), warm cache, one real
+Qwen2.5-0.5B-Instruct tensor (`model.layers.0.mlp.down_proj.weight`, bf16
+`[896, 4864]`, 8,716,288 B; corpus SHA-256
+`fdf756fa…88fb7fe`). Mode-17 frame 6,019,594 B, mode-20 frame 5,846,747 B,
+six small frames 834 B, container 11,902,976 B.
+
+Header+table parse (p50): **0.541 / 0.551 / 0.681 µs** at 1 / 8 / 64 sections
+(541.0 / 68.9 / 10.6 ns per entry); full metadata parse also reports
+**2.134 / 7.715 / 52.327 µs**.
+
+Single-section fetch of the 6,019,594-byte mode-17 section: **0.318 ms**
+section only, **0.312 ms** for header+table+section (within noise); 6,024,138
+bytes versus 11,902,976 for the whole container (**50.61 %**).
+
+Padding overhead, 11,867,175 B of real frames: **0.064 % / 0.302 % / 4.374 %**
+at 512 / 4096 / 65536. Small-frame set (834 B): **820.9 % / 3,829.0 % /
+54,906.2 %** — 64 KiB alignment is expensive for small frames and is published
+as such.
+
+A 4 KiB-aligned slice at container offset 94,208 was fetched with one range
+read; hashing it does not equal the section root, as specified. The enclosing
+tile (index 0, 11,147 B, root `73129b63…77b422`) verified through
+`decode_float_tile` after an exact range read, and the full section verified,
+decoded, and matched the source (14.90 ms). The mode-20 sibling section also
+verified and decoded exactly. The mode-17 and mode-20 frames share content root
+`fda56ddd…94aaefb` because they encode the same plaintext; content identity is
+representation-independent. Incrementing a section offset by one byte is
+rejected `Malformed`, which is the alignment regression test.
+
+### Losses
+
+Containers never reduce bytes (4 KiB header, 56 B/section, padding up to 64 KiB
+per section). The court materialises owned buffers and proves no zero-copy path.
+A single-section reader cannot verify `payload_hash`; a sub-section slice
+cannot be verified against the section root. The parse/fetch numbers are warm-cache,
+single-host medians, not a throughput claim. No 3FS deployment, DMA, GPU, RDMA,
+or fleet claim. The README 3FS row stays **ABI/conformance-tested only**.
+
+### 3FS documentation
+
+[`docs/THREEFS-CONTEXT-PLANE.md`](THREEFS-CONTEXT-PLANE.md) §8 records what the
+container would let a USRBIO integration do (one aligned read per section,
+destinations inside a registered region, batched independent sections), what
+remains unproven (registration, rings, completion handling, DMA), and the
+five measurements a deployed-3FS experiment would have to make.
+
+### Gates at this change
+
+* WeftCodec `cargo test --all-targets`: **267 passed / 0 failed** across 41
+  suites (includes the new `transport` unit tests).
+* WeftCodec-Go: `gofmt -l` empty, `go vet ./...` and `CGO_ENABLED=0 go build
+  ./...` clean, `go test -race -count=1 ./...` all packages pass (including
+  `transport` and the 22-vector `conformance` replay).
+* Rust `cargo test --all-targets`: **709 passed / 0 failed** across 145 suites.
+* FUSE `cargo test --features fuse --all-targets`: **752 passed / 0 failed / 2
+  pre-existing ignored** across 145 suites.
+* Claims **782/782**, spec drift **57/57**, conformance manifest **420 entries**
+  (aggregate `6287b817…8dfbe8`), coverage OK including `transport`
+  5 valid / 17 reject.
+

@@ -311,7 +311,11 @@ performs the dependency and chunk field checks from steps 13–14.
    `plaintext_hash`/`content_hash`.
 3. For each reject, assert the exact class, not the message.
 4. Replay `structured`, `selectors`, `context`, `causal`, `tensor`,
-   `capability`, and `checkpoint` vectors according to their kinds.
+   `capability`, `checkpoint`, and `transport` vectors according to their kinds.
+   A `transport` vector is a `weft.transport.v1` container, not a frame: validate
+   the 4096-byte header and 56-byte section entries, verify each section's
+   enclosed frame root and mode, and reject non-zero padding (see
+   [`../spec/WEFT-TRANSPORT.md`](../spec/WEFT-TRANSPORT.md)).
 5. Run the third-party runner against your adapter:
 
 ```sh

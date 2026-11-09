@@ -221,3 +221,66 @@ be made.
 The design therefore keeps 3FS exactly where it is strongest — a fast, replicated
 byte store and a POSIX namespace — and pays a small, measured, fixed cost per
 artifact for the context the cluster cannot express.
+
+## 8. What a transport-aligned container would let a USRBIO integration do (R8)
+
+`spec/WEFT-TRANSPORT.md` defines `weft.transport.v1`, an additive envelope that
+places complete, unmodified frames at offsets a consumer can name with an
+alignment (512, 4096, or 65536 bytes). Nothing in the format is a 3FS feature;
+it exists because the USRBIO data plane is buffer-oriented and a section that
+starts on a declared boundary can be requested as one aligned range.
+
+### What it would let an integration do
+
+* **Issue exactly one aligned read per section.** A consumer reads the 4 KiB
+  header, reads `section_count * 56` table bytes, selects an entry, and issues
+  one range read `[offset, offset + length)` for that frame. The court measures
+  this path: 6,024,138 bytes read instead of the container's 11,902,976, with
+  the section-only and header+table+section medians within noise at 6 MB.
+* **Place the destination inside a registered region.** The section bounds are
+  known before the read, so a USRBIO request can target a slice of the shared
+  region without a staging buffer. This repository's transport plumbing already
+  has the needed boundary (`BlobPlane::read_into` /
+  `StorageBackend::read_into` for single ranges and `read_ranges` for batching),
+  and the `Usrbio` adapter can copy straight into a region slice.
+* **Batch independent sections.** Each section is an independent range; a
+  consumer can submit several at once. This is the same `read_ranges` boundary
+  the shim court already exercises.
+
+### What remains unproven
+
+* **Registration.** Registering a shared region, and keeping immutable
+  descriptors registered across requests, is not exercised by the transport
+  court. The shim court registers once per read, which is a conformance
+  harness, not a production policy.
+* **Rings.** Ring creation, depth, prioritisation, and the read/write split are
+  outside the envelope. The envelope decides *which* byte ranges to request,
+  not how they are submitted.
+* **Completion handling.** Reaping completions, mapping CQEs back to sections,
+  and retrying a failed submission are unchanged adapter work and are not
+  measured here.
+* **DMA / kernel bypass / RDMA.** The court materialises owned buffers on a
+  local filesystem. Alignment is necessary for many zero-copy paths but is not
+  evidence that any of them occurred.
+* **A deployed cluster.** No 3FS deployment was run.
+
+### What a deployed-3FS experiment would have to measure
+
+1. The header/table/section request shape against a real mount, with a
+   steady-state registration policy (register once per handle, not per read).
+2. Whether the 3FS client accepts an aligned request into a registered region
+   without an intermediate copy, and the per-request latency and bytes for
+   one-section versus whole-container reads.
+3. Batched submission of independent sections and completion reaping, with the
+   same byte-identity checks the shim court already performs.
+4. The same store round trip, reopen, `verify --full`, crash/fault matrix, and
+   fenced-writer scenarios as §6, with the transport container as the object
+   layout rather than the local filesystem layout.
+5. Whether the control plane (commit + superblock) remains serviceable when the
+   data plane is issuing aligned section reads.
+
+Until those run, the honest statement is: **the container is a measured
+layout** (parse cost, one-section byte cost, padding overhead, per-tile root
+behaviour), and the 3FS row in the README remains **ABI/conformance-tested
+only**.
+

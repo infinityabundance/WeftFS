@@ -66,6 +66,7 @@ vectors.
 | activation-stream (13) | `null` (no aggregate CLI identity) |
 | capability | `EnvelopeId` |
 | checkpoint | `H("weft/checkpoint/manifest/v1", canonical bytes)` |
+| transport | the container's `payload_hash` (`H("weft/transport/v1", enclosed frames)`); `decoded_sha256` is over the concatenated enclosed frame bytes |
 
 `decoded_sha256` is SHA-256 over the exact byte string the vector records as the
 decoded result (`plaintext_hex`, `target_hex`, `values_hex`, canonical record
@@ -74,8 +75,8 @@ define a single decoded byte string for that kind.
 
 The top-level `aggregate_sha256` is SHA-256 over sorted
 `"<sha256>  <path>\n"` lines of every entry that is not the `store` or `fuzz`
-fixture. The current manifest has 295 entries and aggregate
-`3c981f03fca856c0632ec48d5be166a1ae6513f87b393f934f3555482c2c0bda`. The
+fixture. The current manifest has 420 entries and aggregate
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`. The
 `mirrors` array records cross-repository byte identity and aggregates; see §4.
 
 ### Generate and check
@@ -229,6 +230,11 @@ Committed reference results (current manifest aggregate
 | Go `weftcodec` | 246 | 0 | 92 |
 | Python `weftcodec` | 229 | 0 | 109 |
 
+The transport family (`transport/`, 22 files: 5 valid, 17 reject) is
+executed by both the Rust and Go reference adapters (22/22 pass each). The
+Python adapter reports those vectors as explicit skips because the Python
+reader has no `weft.transport.v1` parser.
+
 The Python replay is 229 pass, 0 fail, 126 skip. No mode 0–18 vector is skipped by the Python adapter: it imports the package
 directly and executes codec frames, adversarial decode vectors, shard sets,
 delta bases (including frame-source cycles), KV pages, activation chunks, tiled
@@ -277,8 +283,8 @@ records:
 - `aggregate_sha256_common` (the value to quote for the shared corpus),
 - `only_from` / `only_to` / `differing`.
 
-Current shared corpus: 331 files, aggregate
-`e552d132d946428f24482f46921f4fd72e77320aed7909bf9ba4b530e9df7466`.
+Current shared corpus: 413 files, aggregate
+`aa3abcad1f73573990b64ee8d0397265627f1221b37c05a726a2b324c32b50c9`.
 The store fixture (`conformance/store/v1` ↔
 `WeftFS-Go/conformance/store/v1`) shares 25 data files with common aggregate
 `d3ceef9e14518fd99fd7f9c05dde6e677bc500cd892d440da8a5cec7e68a2d4f`; the Go
@@ -296,7 +302,7 @@ scripts/check-conformance-coverage.sh
 Fail-closed checks:
 
 1. `conformance/manifest.json` is current (`gen-conformance-manifest.sh --check`).
-2. Every frame mode 0–18 has at least one valid vector **and** at least one
+2. Every frame mode 0–20 has at least one valid vector **and** at least one
    reject vector.
 3. Every identity record kind (`wcb`, `selector`, `context`, `tensor`,
    `checkpoint`, `capability`) has at least one valid vector.
@@ -329,6 +335,10 @@ mode  valid/reject
 14    3/6
 15    3/8
 16    4/14
+17    3/8
+18    4/12
+19    8/12
+20    6/14
 ```
 
 Identity kinds: WCB 12 valid, selector 22, context 11, tensor 12,
