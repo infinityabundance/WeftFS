@@ -176,7 +176,7 @@ fn run() -> Result<(), String> {
             "description": "deterministic sliding-window (volatile) + multi-hour session (ephemeral) reuse model; not a serving-workload measurement",
             "volatile_pages": VOLATILE_PAGES,
             "ephemeral_pages": EPHEMERAL_PAGES,
-            "ticks": TICKS,
+            "ticks": tick_count(),
             "tick_seconds": TICK_NS / 1_000_000_000,
             "simulated_seconds": (TICKS as i64) * (TICK_NS / 1_000_000_000),
             "rates": {
@@ -457,7 +457,7 @@ fn run_policy(work: &Path, rate: Rate, policy: Policy, mode: ClassMode) -> Resul
     let mut hits = 0u64;
     let mut misses = 0u64;
 
-    for tick in 0..TICKS {
+    for tick in 0..tick_count() {
         let now = BASE_NS + (tick as i64) * TICK_NS;
         let volatile_hot = hot_set(tick, rate);
         store
@@ -555,31 +555,47 @@ fn run_policy(work: &Path, rate: Rate, policy: Policy, mode: ClassMode) -> Resul
                 if retained > BUDGET_BYTES {
                     let mut all: Vec<usize> = cache.keys().copied().collect();
                     all.sort_by_key(|index| cache[index].last_tick);
+                    let mut projected = retained;
                     for index in all {
-                        if retained <= BUDGET_BYTES {
+                        if projected <= BUDGET_BYTES {
                             break;
                         }
                         if !selected.contains(&index) {
+                            projected = projected.saturating_sub(cache[&index].size);
                             selected.push(index);
                         }
                     }
                 }
+                let mut victims: Vec<usize> = Vec::new();
                 for index in selected {
                     let expired = now - cache[&index].issued_ns >= ttl_ns;
                     if retained <= BUDGET_BYTES && !expired {
                         continue;
                     }
-                    if let Some(entry) = cache.remove(&index) {
-                        if protected.contains(&entry.descriptor_root) {
-                            unsafe_reclaims += 1;
-                            unsafe_bytes += entry.size;
-                        }
-                        retained = retained.saturating_sub(entry.size);
-                        reclaimed += entry.size;
-                        if let Some(name) = entry.object_name {
-                            release_object(&mut store, pages_dir, &name)?;
-                        }
+                    if !victims.contains(&index) {
+                        victims.push(index);
                     }
+                }
+                if !victims.is_empty() {
+                    store
+                        .group(|s| {
+                            for index in &victims {
+                                if let Some(entry) = cache.remove(index) {
+                                    if protected.contains(&entry.descriptor_root) {
+                                        unsafe_reclaims += 1;
+                                        unsafe_bytes += entry.size;
+                                    }
+                                    retained = retained.saturating_sub(entry.size);
+                                    reclaimed += entry.size;
+                                    if let Some(name) = entry.object_name {
+                                        release_object(s, pages_dir, &name)
+                                            .map_err(weftfs::Error::io)?;
+                                    }
+                                }
+                            }
+                            Ok(())
+                        })
+                        .map_err(|err| format!("evict: {err}"))?;
                 }
                 store.gc(true).map_err(|err| format!("gc: {err}"))?;
             }
@@ -670,7 +686,9 @@ fn run_policy(work: &Path, rate: Rate, policy: Policy, mode: ClassMode) -> Resul
     } else {
         outcome.hits as f64 / outcome.requests as f64
     };
-    let _ = fs::remove_dir_all(&dir);
+    if !keep_runs() {
+        let _ = fs::remove_dir_all(&dir);
+    }
     Ok(json!({
         "policy": policy.label(),
         "rate": rate.label(),
@@ -699,6 +717,20 @@ fn run_policy(work: &Path, rate: Rate, policy: Policy, mode: ClassMode) -> Resul
         },
         "verify_problems": outcome.verify_problems,
     }))
+}
+
+fn tick_count() -> usize {
+    std::env::var("WEFT_RETENTION_TICKS")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(TICKS)
+}
+
+fn keep_runs() -> bool {
+    std::env::var("WEFT_RETENTION_KEEP_RUNS")
+        .map(|value| value == "1")
+        .unwrap_or(false)
 }
 
 fn class_for(mode: ClassMode, ephemeral: bool) -> RetentionClass {

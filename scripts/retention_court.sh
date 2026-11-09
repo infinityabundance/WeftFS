@@ -44,10 +44,14 @@ mkdir -p bench/receipts
 chmod a+rwX bench/receipts 2>/dev/null || true
 
 echo "retention_court: bench court, stamp=$stamp" >&2
+keep_arg=""
+if [[ "$keep" == "1" ]]; then
+  keep_arg="--keep"
+fi
 scripts/docker-court.sh bench \
   "cd /work && cargo run --release --quiet --example retention_court -- \
      --out /work/$receipt \
-     --work /work/.docker-cache/retention-court-$stamp" 2>&1 | tee "$log"
+     --work /work/.docker-cache/retention-court-$stamp $keep_arg" 2>&1 | tee "$log"
 
 if [[ ! -s "$receipt" ]]; then
   echo "retention_court: no receipt at $receipt" >&2
