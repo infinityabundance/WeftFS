@@ -128,6 +128,10 @@ fn main() {
                 .unwrap_or(10);
             let prefix = arg(&args, "--prefix").unwrap_or_else(|| writer.clone());
             let hot = arg(&args, "--hot");
+            let explicit_tx = arg(&args, "--tx-id");
+            let pause_ms: u64 = arg(&args, "--pause-before-execute-ms")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(0);
             let mut store = Store::open_with_options(
                 &store_path,
                 OpenMode::ReadWrite,
@@ -169,15 +173,21 @@ fn main() {
                     name: name.as_bytes().to_vec(),
                     target: object_id,
                 };
-                let tx_id = identity::h("weft/tx/id/v1", format!("{writer}:{index}").as_bytes())
-                    .to_hex()[..32]
-                    .to_owned();
+                let tx_id = match (&explicit_tx, count) {
+                    (Some(id), 1) => id.clone(),
+                    _ => identity::h("weft/tx/id/v1", format!("{writer}:{index}").as_bytes())
+                        .to_hex()[..32]
+                        .to_owned(),
+                };
                 let mut tx = store.begin_transaction(tx_id).expect("begin");
                 {
                     let state = store.current_state();
                     tx.put_object_create(record.clone()).expect("put object");
                     tx.put_entry_create(entry.clone()).expect("put entry");
                     tx.set_tip(state, object_id, version).expect("tip");
+                }
+                if pause_ms > 0 {
+                    std::thread::sleep(std::time::Duration::from_millis(pause_ms));
                 }
                 let options = TransactionOptions {
                     max_attempts: 64,
@@ -217,6 +227,25 @@ fn main() {
                     "errors": errors,
                     "elapsed_ms": started.elapsed().as_millis() as u64,
                 })
+            );
+        }
+        "outcome" => {
+            let tx_id = arg(&args, "--tx-id").expect("--tx-id");
+            let mut store =
+                Store::open_with_options(&store_path, OpenMode::ReadWrite, options(WriterMode::Optimistic, now))
+                    .expect("open optimistic");
+            let lookup = store.transaction_outcome(&tx_id).expect("lookup");
+            let (state, commit) = match lookup {
+                weftfs::mw2::OutcomeLookup::Committed(outcome) => {
+                    ("committed", Some(hex(outcome.commit)))
+                }
+                weftfs::mw2::OutcomeLookup::Unknown => ("unknown", None),
+                weftfs::mw2::OutcomeLookup::Absent => ("absent", None),
+            };
+            let _ = &mut store;
+            println!(
+                "{}",
+                serde_json::json!({"ok": true, "state": state, "commit": commit})
             );
         }
         "verify" => {

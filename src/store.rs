@@ -5955,6 +5955,7 @@ impl Store {
         }
 
         self.write_tx_record(tx, crate::mw2::TxRecordState::Prepared, None)?;
+        crash_point("mw2_prepared");
 
         let mut attempts: u32 = 0;
         loop {
@@ -5994,6 +5995,7 @@ impl Store {
                         self.record_quota_after_commit(plan);
                     }
                     self.write_tx_record(tx, crate::mw2::TxRecordState::Committed, Some(hash))?;
+                    crash_point("mw2_after_ack");
                     return Ok(crate::mw2::TransactionOutcome {
                         id: tx.id.as_str().to_owned(),
                         commit: hash,
@@ -6077,24 +6079,32 @@ impl Store {
         commit: Option<Hash32>,
     ) -> Result<()> {
         let digest = tx.digest()?;
-        if let Some(existing) = self.read_tx_record(tx.id.as_str())? {
-            if existing.digest != digest {
+        let existing = self.read_tx_record(tx.id.as_str())?;
+        if let Some(record) = &existing {
+            if record.digest != digest {
                 return Err(Error::new(
                     Class::Conflict,
                     "transaction id was reused with a different op set",
                 ));
             }
             if state == crate::mw2::TxRecordState::Prepared
-                && existing.state == crate::mw2::TxRecordState::Committed
+                && record.state == crate::mw2::TxRecordState::Committed
             {
                 return Ok(());
             }
         }
+        // The parent generation belongs to the first attempt, not to a later
+        // retry (a retry binds to a newer head). Outcome lookup and the
+        // transaction digest are independent of it.
+        let parent_generation = existing
+            .as_ref()
+            .map(|record| record.parent_generation)
+            .unwrap_or(tx.base_generation);
         let record = crate::mw2::TxRecord {
             id: tx.id.as_str().to_owned(),
             state,
             digest,
-            parent_generation: tx.base_generation,
+            parent_generation,
             commit,
             updated_ns: self.now_ns(),
             pins: tx.pins.clone(),
@@ -8635,6 +8645,7 @@ impl Store {
             // the conditional writes are native.
             backend.begin_publication()?;
             let attempt = (|| -> Result<bool> {
+                crash_point("mw2_before_head");
                 if backend.exists(&key)? {
                     return Err(Error::busy(format!(
                         "commit generation {} already exists; retry against the new head",
@@ -8650,7 +8661,10 @@ impl Store {
                     commit.timestamp_ns,
                     &slot_bytes,
                 ) {
-                    Ok(()) => Ok(true),
+                    Ok(()) => {
+                        crash_point("mw2_after_head");
+                        Ok(true)
+                    }
                     Err(err) if err.class() == Class::Busy => {
                         // The head moved. The record is unreferenced; remove it
                         // so a later generation is not blocked by an orphan.

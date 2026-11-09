@@ -382,3 +382,35 @@ fn the_seeded_transaction_id_and_policy_are_inspectable() {
         OutcomeLookup::Absent
     ));
 }
+
+#[test]
+fn a_quota_race_at_the_limit_rejects_the_loser() {
+    use weftfs::quota::{QuotaBudget, QuotaPrincipal};
+
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().to_path_buf();
+    let budget = QuotaBudget {
+        principal: QuotaPrincipal::Posix { uid: 0, gid: 0 },
+        max_new_bytes: u64::MAX,
+        max_objects: 1,
+    };
+    {
+        let mut opts = options(WriterMode::Single);
+        opts.quotas = vec![budget];
+        let store = Store::init(&path, opts).unwrap();
+        drop(store);
+    }
+    let mut a = open(&path);
+    let mut b = open(&path);
+    let plan_a = plan_file(&a, State::ROOT_ID, b"qa", b"one", b"seed-qa");
+    let plan_b = plan_file(&a, State::ROOT_ID, b"qb", b"two", b"seed-qb");
+    let tx_a = stage(&a, "0000000000000000000000000000009a", &plan_a);
+    let tx_b = stage(&b, "0000000000000000000000000000009b", &plan_b);
+    a.execute_transaction(&tx_a, &TransactionOptions::default())
+        .unwrap();
+    let err = b
+        .execute_transaction(&tx_b, &TransactionOptions::default())
+        .unwrap_err();
+    assert_eq!(err.class(), Class::BudgetExceeded, "{err}");
+    assert_eq!(b.generation(), a.generation(), "a denied transaction publishes nothing");
+}

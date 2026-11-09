@@ -388,9 +388,11 @@ impl Transaction {
     /// The deterministic op digest a retry uses to discover an outcome.
     pub fn digest(&self) -> Result<Hash32> {
         let ops = self.ops.iter().map(Op::to_value).collect::<Vec<_>>();
+        // The digest covers the logical transaction (id + op set), never the
+        // attempt's observed parent: a retry from a newer head must resolve to
+        // the same outcome.
         let value = wu::map([
             ("id", Value::Str(self.id.as_str().to_owned())),
-            ("parent_generation", Value::U64(self.base_generation)),
             ("ops", Value::Array(ops)),
         ]);
         let bytes = wu::encode(&value)?;
