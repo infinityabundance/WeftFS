@@ -1,9 +1,15 @@
-# Implementation status — 2026-11-07 (v1.1.0)
+# Implementation status — 2026-11-09 (v1.2.0)
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. **v1.1.0 is released**: tags are
-`WeftFS` `238d4e5`, `WeftCodec` `99cb87a`, `WeftCodec-Go` `a0a1ebf`,
-`WeftFS-Go` `dc7cfdb`; the full note with every loss is
+implemented, tested, ignored, and not done. **v1.2.0 is released**: tags are
+`WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
+`WeftFS-Go` `6d58137`; the full note with every loss, including the published
+850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
+release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
+(**37/37** courts `pass`, 0 failed, 0 skipped) at WeftFS `135a382`, WeftCodec
+`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. The v1.1.0-era state
+below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
+`99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
 and both codec implementations cover every allocated mode 0–18. **Stage S6
 update (2026-11-08):** the current verification receipt is
@@ -6590,3 +6596,71 @@ OK**; `scripts/gen-conformance-manifest.sh --check` **355 entries OK**;
 `verify-all` run was made for S13b; the S13 aggregate
 (`verify-20261108T165021Z.json`, 37/37 at `94a4818`) predates this change and
 is **not** cited for it.
+
+## R1 — v1.2.0 release (2026-11-09)
+
+Release note: [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). Artifact receipt:
+`bench/receipts/release-artifacts-20261109T124325Z.json`.
+
+### Verification at the release tree
+
+`bench/receipts/verify-20261109T112958Z.json`: **37/37 courts pass, 0 failed,
+0 skipped**, at WeftFS `135a382`, WeftCodec `d95fa78`, WeftCodec-Go `0db665e`,
+WeftFS-Go `6d58137`. The parent tag is one evidence-only commit later
+(`122d86e` adds the receipt and its per-court receipts). The codec cross gate
+is 105 `PASS` / 14 `YES byte-identical`; conformance manifest/coverage pass at
+355 entries. The prior aggregate `verify-20261108T165021Z.json` (37/37 at
+`94a4818`) predates S12/S13b and is not cited for them. An earlier run at
+`20261109T103921Z` was aborted at `parallel_checkpoint` and produced **no
+receipt**; its partial artifacts are not cited.
+
+### Published artifacts
+
+* **Tags** (annotated, not GPG-signed): `WeftFS` `v1.2.0` -> `122d86e`,
+  `WeftCodec` -> `d95fa78`, `WeftCodec-Go` -> `0db665e`, `WeftFS-Go` ->
+  `6d58137`. `staging == main` in all four repos at the tagged revisions.
+* **crates.io** (`scripts/publish-crates.sh`, weftcodec first): `weftcodec`
+  1.2.0 checksum
+  `77a95cd4fd9aeb2888a3f6dd175a96748cb04b221f274496e9b59f18640e3d92`
+  (created 2026-11-09T12:38:45Z) and `weftfs` 1.2.0 checksum
+  `4b7312b14cf3264216335a2718e39c6a5982e2f64184058f8b430a465cf6e909`
+  (12:39:05Z); both `yanked: false`. Read back from the crates.io API.
+* **PyPI**: `weftcodec 1.2.0` is live. Wheel 92,913 B sha256
+  `699b25fd7f6aef36f98f5baf31a130ef1c816a00ca3c93ac4c324667266b9bbb`; sdist
+  114,324 B sha256
+  `50678df7ebb559fa3ec632520822ff2c88155788fcf17e54ec5c817388f6dff0`; both
+  `yanked: false`. The upload token was deleted after use and was not reused.
+* **GHCR**: all four tag workflows completed `success` (runs 42618667115,
+  42618672142, 42618675687, 42618679797). Observed index digests:
+  `weftfs` `sha256:1505110d…b6eada`, `weftcodec` `sha256:affee3a6…52ce4f`,
+  `weftcodec-go` `sha256:bc4de382…2723c6`, `weftfs-go` `sha256:56aa4559…f489c`.
+  Each config blob's `org.opencontainers.image.source` names its own
+  repository and its `revision` label is the tagged commit. Builds are not
+  bit-reproducible; these are observed digests, not a reproducibility claim.
+* **GitHub releases**: created in all four repositories; the parent release
+  carries the wheel and sdist, and both assets read back with the digests
+  above.
+
+### Unverified or imperfect
+
+* **PyPI metadata is stale.** The published 1.2.0 long description was built
+  before the post-upload `python/README.md` correction: it still says “PyPI
+  publication requires an API token we do not have” and its mode table ends at
+  mode 16. The files were not rebuilt or re-uploaded, per the release
+  instruction. The wheel/sdist digests are correct.
+* **No live cloud run.** No AWS, Azure, or Google credential/bucket was used;
+  the cloud evidence remains MinIO, Ceph RGW, Azurite, and
+  `fake-gcs-server`.
+* **GHCR tags are not bit-reproducible** and the image digests are not pinned
+  in the release note as reproducible identities.
+* **S13b's 850 ms SLA is accepted and missed** (measured 886.5 ms). The court's
+  `no_accepted_plan_misses_its_sla` and
+  `floor_prediction_within_10_percent` checks are both false.
+* **Still not done**: physical media power loss, host page-cache loss, RAPL
+  energy, GPU/TPU execution, live cloud services, Go Azure, constant-time
+  crypto/capability proof, writable FUSE over objects, multi-writer/fleet
+  operation, Go parity for S12 streaming ingest / S13 parent-graph planning /
+  S13b restore overhead, and the 3.47 GB index amplification (reported, not
+  fixed).
+* The release-note, README and claims commits are **after** the tag; they
+  change no source, wire, or on-disk byte.
