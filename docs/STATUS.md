@@ -11,8 +11,21 @@ release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
 below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
 `99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
-and both codec implementations cover every allocated mode 0–18. **Stage S6
-update (2026-11-08):** the current verification receipt is
+and both codec implementations cover every allocated mode 0–18.
+
+**Subphase R4 (multi-writer) status, 2026-11-09:** the default writer level is
+still **MW1 — many producers, one committer**. The pre-R4 claim that MW2 and MW3
+are absent is now split: a bounded, opt-in **MW2** transaction protocol exists
+for the explicit transaction API on `local`/`object` (Rust and Go) and on
+`s3` (Rust, MinIO court); **MW3 is not implemented and not claimed.** The
+normative contract is [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md);
+the design, backend tradeoffs and every loss are in
+[`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and
+[`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwriter.md). FUSE file
+mutations and generic checkpoint publication remain MW1. The full R4 entry
+with measured tables is at the end of this document.
+
+**Stage S6 update (2026-11-08):** the current verification receipt is
 `bench/receipts/verify-20261108T165021Z.json` (**37/37** courts `pass`, 0 failed,
 0 skipped) after the Stage 1–6 work below; the previous T2 receipt
 `verify-20261108T050823Z.json` (30/30) is retained, and the first Stage 6 run
