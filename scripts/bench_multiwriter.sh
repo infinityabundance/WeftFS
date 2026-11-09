@@ -145,7 +145,9 @@ errors = [e for r in rows for e in r.get("errors", [])]
 stats = {"language": language, "distribution": distribution, "n": int(n),
          "count_per_writer": int(count), "requested": int(n) * int(count),
          "processes": len(rows), "process_failures": int(failed),
-         "committed": committed, "conflicts": conflicts, "attempts": attempts,
+         "committed": committed, "conflicts": conflicts,
+         "aborted": sum(r.get("aborted", 0) for r in rows),
+         "attempts": attempts,
          "logical_bytes": sum(r.get("logical_bytes", 0) for r in rows),
          "errors": errors, "wall_ms": int(wall_ms),
          "throughput_tx_s": (committed / (int(wall_ms) / 1000.0)) if int(wall_ms) else 0.0,
@@ -176,6 +178,28 @@ stats["p50_ms"] = pick(values, 0.50)
 stats["p95_ms"] = pick(values, 0.95)
 stats["p99_ms"] = pick(values, 0.99)
 stats["max_ms"] = (values[-1] / 1e6) if values else 0.0
+# Per-writer percentiles: the receipt carries every writer's own p50/p95/p99,
+# and the row carries the min/median/max across writers. The merged values
+# above are not a substitute for per-writer behaviour.
+per_writer = []
+for path in sorted(glob.glob(os.path.join(latency_dir, "*.lat"))):
+    with open(path) as handle:
+        own = sorted(int(line) for line in handle if line.strip())
+    per_writer.append({
+        "writer": os.path.basename(path)[:-4],
+        "samples": len(own),
+        "p50_ms": pick(own, 0.50),
+        "p95_ms": pick(own, 0.95),
+        "p99_ms": pick(own, 0.99),
+    })
+stats["per_writer"] = per_writer
+for q in ("p50_ms", "p95_ms", "p99_ms"):
+    column = sorted(row[q] for row in per_writer if row["samples"])
+    if column:
+        middle = column[min(len(column) - 1, int(round(0.5 * (len(column) - 1))))]
+        stats["writer_" + q + "_min"] = column[0]
+        stats["writer_" + q + "_median"] = middle
+        stats["writer_" + q + "_max"] = column[-1]
 prepares = []
 for path in glob.glob(os.path.join(latency_dir, "*.prep")):
     with open(path) as handle:

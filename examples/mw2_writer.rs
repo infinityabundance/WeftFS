@@ -225,6 +225,7 @@ fn main() {
                 .and_then(|path| std::fs::File::create(path).ok());
             let mut committed = 0u64;
             let mut conflicts = 0u64;
+            let mut aborted = 0u64;
             let mut attempts = 0u64;
             let mut logical_bytes = 0u64;
             let mut errors = Vec::new();
@@ -307,6 +308,12 @@ fn main() {
                     Err(err) if err.class() == weftfs::error::Class::Conflict => {
                         conflicts += 1;
                     }
+                    Err(err) if err.class() == weftfs::error::Class::Busy => {
+                        // The outer retry budget was exhausted; the outcome is
+                        // unknown and must be resolved by transaction id.
+                        aborted += 1;
+                        errors.push(err.to_string());
+                    }
                     Err(err) => errors.push(err.to_string()),
                 }
             }
@@ -319,6 +326,7 @@ fn main() {
                     "writer": writer,
                     "committed": committed,
                     "conflicts": conflicts,
+                    "aborted": aborted,
                     "attempts": attempts,
                     "logical_bytes": logical_bytes,
                     "errors": errors,
