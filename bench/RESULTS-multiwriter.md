@@ -1,6 +1,7 @@
 # Multi-writer results (R4)
 
-Receipts (all measured at WeftFS `b0bcbc5`/`288e2a8`, WeftFS-Go `f46b351`/`1b2e1cc`):
+Receipts (benchmark at WeftFS `288e2a8`; correctness courts at WeftFS `a3256af`;
+all at WeftFS-Go `1b2e1cc`):
 
 * benchmark `bench/receipts/bench-multiwriter-20261109T175227Z.json`
   (14 rows: local disjoint N=1..32, local contention N=1..32, mixed N=8,
