@@ -6986,21 +6986,24 @@ publication. `QuotaExceeded` -> `BudgetExceeded`. `CapabilityDenied` ->
 `put_entry_create`/`put_object_create`; a replace requires the observed version.
 There is no last-writer-wins path.
 
-### Local disjoint scaling (receipt `bench-multiwriter-20261109T150423Z`)
+### Local disjoint scaling (receipt `bench-multiwriter-20261109T175227Z`)
 
 | N | committed | tx/s | efficiency | p50 ms | p99 ms | retry amp | reads/commit |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 60/60 | 4,000.0 | 1.000 | 0.180 | 0.228 | 1.000 | 3.2 |
-| 2 | 120/120 | 3,529.4 | 0.441 | 0.199 | 0.263 | 1.050 | 3.8 |
-| 4 | 240/240 | 2,105.3 | 0.132 | 0.240 | 17.390 | 1.096 | 4.9 |
-| 8 | 480/480 | 1,672.5 | 0.052 | 0.323 | 60.377 | 1.146 | 7.0 |
-| 16 | 240/240 | 652.2 | 0.0102 | 0.256 | 303.030 | 1.700 | 39.5 |
-| 32 | 224/224 | 638.2 | 0.0050 | 0.278 | 287.300 | 2.446 | 50.7 |
+| 1 | 60/60 | 4,000.0 | 1.0000 | 0.182 | 0.224 | 1.000 | 3.2 |
+| 2 | 120/120 | 3,333.3 | 0.4167 | 0.211 | 0.468 | 1.050 | 3.8 |
+| 4 | 240/240 | 2,105.3 | 0.1316 | 0.242 | 17.350 | 1.096 | 4.9 |
+| 8 | 480/480 | 1,672.5 | 0.0523 | 0.327 | 60.835 | 1.146 | 7.0 |
+| 16 | 240/240 | 710.1 | 0.0111 | 0.263 | 272.478 | 1.683 | 13.1 |
+| 32 | 224/224 | 580.3 | 0.0045 | 0.285 | 302.229 | 2.549 | 31.4 |
 
 High contention: 1 winner at every N; conflict rate 0.90 (N=1) to 0.997
-(N=32); no last-writer-wins. Mixed N=8: 240/240, 1,558.4 tx/s, retry 1.221,
-all 16 cross-language verifiers pass. MinIO N=4: 40/40, 212.8 tx/s, p50
-5.294 ms, p99 86.147 ms, retry 1.650, `verify --full` ok.
+(N=32); no last-writer-wins. Mixed N=8: 240/240, 1,804.5 tx/s, retry 1.212,
+all 16 cross-language verifiers pass. MinIO N=4: 40/40, 224.7 tx/s, p50
+4.638 ms, p99 64.074 ms, retry 1.275, `verify --full` ok. Per-writer p50/p95/p99
+are in the receipt and in `bench/RESULTS-multiwriter.md`; at N=32 the per-writer
+p99 ranges 1.36-377 ms (median 139 ms), so the tail is not shared evenly.
+`aborted` was 0 in every row.
 
 ### Defects found and fixed during R4
 
@@ -7021,10 +7024,10 @@ all 16 cross-language verifiers pass. MinIO N=4: 40/40, 212.8 tx/s, p50
 
 ### Every loss
 
-Scaling efficiency falls to 0.0050 at N=32; p99 rises to 287 ms; retry
-amplification reaches 2.45 and 50.7 backend reads per commit; RSS is about
-11 MiB per idle writer at N=32; a hot name is unproductive by design; MinIO is
-9.9x slower than local at N=4; there is no validate/publish split, logical
+Scaling efficiency falls to 0.0045 at N=32; p99 rises to 302 ms; retry
+amplification reaches 2.55 and 31.4 backend reads per commit; RSS is about
+11.0 MiB per idle writer at N=32; a hot name is unproductive by design; MinIO
+is 9.4x slower than local at N=4; there is no validate/publish split, logical
 bytes exclude canonical records, CPU is USER_HZ ticks (not energy), Go exposes
 no backend counters, the run is a single repetition on 4 vCPUs with up to 19 %
 spread against the retained earlier run; GCS/Azure are refused for optimistic
@@ -7042,8 +7045,8 @@ optimistic publishers; there is no physical power loss, no fleet, and no MW3.
   (160/160 disjoint, 1/80 contended winner, 16 verifiers, `verify --full`).
 * Failure court: `bench/receipts/multiwriter-failure-20261109T175014Z.json`
   (8 process faults, replay, delayed writer, quota race).
-* Benchmark: `bench/receipts/bench-multiwriter-20261109T150423Z.json` and
-  `.log`; retained superseded run `…144401Z`; retained failures
+* Benchmark: `bench/receipts/bench-multiwriter-20261109T175227Z.json` and
+  `.log`; retained superseded runs `…150423Z` and `…144401Z`; retained failures
   `…144140Z`, `…144235Z`, `…144320Z`, `…144333Z`, `…144351Z.log`.
 * TLA+: `bench/receipts/tla-20261109T174959Z.json`.
 * Aggregate: `bench/receipts/verify-20261109T165707Z.json` (**41/41** courts
