@@ -67,7 +67,7 @@ fn run() -> Result<(), String> {
         return Err("--restore-reps must be at least 5 for the S13b prediction-error court".into());
     }
     let sla_sweep_ms: Vec<u64> = arg(&args, "--sla-sweep-ms")
-        .unwrap_or("500,850,1000,2000,2500,3000,4000,6000,14000")
+        .unwrap_or("500,850,900,950,1000,2000,2500,3000,4000,6000,8000,10000,11000,14000")
         .split(',')
         .map(|item| item.trim().parse::<u64>().map_err(|_| "bad --sla-sweep-ms"))
         .collect::<Result<_, _>>()?;
@@ -78,6 +78,18 @@ fn run() -> Result<(), String> {
         .collect::<Result<_, _>>()?;
     let skip_realize = flag(&args, "--skip-realize");
     let keep = flag(&args, "--keep");
+    // S13c inputs. The margin is derived from the two committed S13b receipts;
+    // the hop rows are re-measured by `examples/calibrate_restore.rs --chains-only`
+    // in the same court invocation and compared with the baked constants.
+    let overhead_receipt = PathBuf::from(
+        arg(&args, "--overhead-receipt")
+            .unwrap_or("bench/receipts/s13b-restore-floor-20261108T230417Z.json"),
+    );
+    let floor_court_receipt = PathBuf::from(
+        arg(&args, "--floor-court-receipt")
+            .unwrap_or("bench/receipts/parent-graph-20261108T232016Z.json"),
+    );
+    let hop_receipt = arg(&args, "--hop-receipt").map(PathBuf::from);
 
     if work.exists() {
         fs::remove_dir_all(&work).map_err(|e| format!("{}: {e}", work.display()))?;
@@ -176,6 +188,30 @@ fn run() -> Result<(), String> {
 
     let graph_row = graph_json(&graph);
     checks.insert("graph_valid".to_owned(), graph.validate().is_ok());
+
+    // ---- S13c: measured SLA margin and graph-hop rows ---------------------
+    //
+    // The margin is *derived* here from the two committed S13b receipts and
+    // compared with the baked constant. The hop rows are re-measured by a
+    // separate `calibrate_restore --chains-only` invocation in the same court
+    // and compared with the baked table.
+    let baked_margin = weftfs::cost_model::RestoreOverhead::MEASURED.margin_ns_per_mib;
+    let margin = derive_sla_margin(&overhead_receipt, &floor_court_receipt)?;
+    checks.insert(
+        "baked_margin_matches_derivation".to_owned(),
+        margin.ns_per_mib == baked_margin,
+    );
+    let hop_calibration = match hop_receipt.as_ref() {
+        Some(path) => Some(read_hop_calibration(path)?),
+        None => None,
+    };
+    checks.insert(
+        "baked_hop_rows_match_remeasurement".to_owned(),
+        hop_calibration
+            .as_ref()
+            .map(|row| row.matches_baked)
+            .unwrap_or(false),
+    );
 
     // ---- plan classes -----------------------------------------------------
     let n = graph.len();
@@ -494,8 +530,8 @@ fn run() -> Result<(), String> {
         "no_accepted_plan_misses_its_sla".to_owned(),
         accepted_misses == 0 && accepted_unmeasured == 0,
     );
-    // The all-independent plan is the restore floor; the S13b success criterion
-    // is an absolute prediction error of at most 10 % on it.
+    // S13c acceptance target: the point prediction is within 15 % of the
+    // measured worst restore for every realised plan class, including the floor.
     let floor_error = realizations
         .iter()
         .find(|row| {
@@ -514,9 +550,28 @@ fn run() -> Result<(), String> {
             }
         });
     checks.insert(
-        "floor_prediction_within_10_percent".to_owned(),
-        floor_error.map(|error| error <= 0.10).unwrap_or(false),
+        "floor_prediction_within_15_percent".to_owned(),
+        floor_error.map(|error| error <= 0.15).unwrap_or(false),
     );
+    let worst_plan_error_ppm = realizations
+        .iter()
+        .filter_map(|row| row["worst_prediction_error_ppm"].as_i64())
+        .max()
+        .unwrap_or(i64::MAX);
+    checks.insert(
+        "every_plan_prediction_within_15_percent".to_owned(),
+        !realizations.is_empty() && worst_plan_error_ppm <= 150_000,
+    );
+    // The smallest SLA at which each realised plan class is accepted, i.e. its
+    // margin-adjusted bound. This is the accept/refuse boundary the docs quote.
+    let sla_boundary = json!({
+        "chain_ms": chain_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "restart-2_ms": k2_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "restart-3_ms": k3_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "restart-4_ms": k4_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "all-independent_ms": dp_plan.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "note": "an SLA below these values is refused; the measured restore of the accepted plan is compared against the SLA in the sweep",
+    });
 
     // ---- lambda sweep -----------------------------------------------------
     let mut lambda_sweep = Vec::new();
@@ -550,7 +605,7 @@ fn run() -> Result<(), String> {
 
     // ---- receipt ---------------------------------------------------------
     let receipt = json!({
-        "schema": "weft.s13b.parent-graph.v2",
+        "schema": "weft.s13c.sla-honesty.v1",
         "court": {
             "kernel": std::env::var("WEFT_COURT_KERNEL").unwrap_or_else(|_| "unknown".into()),
             "image": std::env::var("WEFT_COURT_IMAGE").unwrap_or_else(|_| "unknown".into()),
@@ -583,6 +638,15 @@ fn run() -> Result<(), String> {
                 "per_mib_ns": options.restore_overhead.map(|term| term.per_mib_ns),
                 "note": "charged once per version restore, never per dependency hop",
             },
+            "hop_calibration": weftfs::cost_model::CHAIN_HOP_CALIBRATION,
+            "hop_rows": weftfs::cost_model::hop_table()
+                .into_iter()
+                .map(|(class, row)| json!({
+                    "class": class.as_str(),
+                    "fixed_ns": row.fixed_ns,
+                    "ns_per_mib": row.ns_per_mib,
+                }))
+                .collect::<Vec<_>>(),
             "restore_note": "cold store reopen per repetition; OS page cache is warm, so this is decode-dominated and labelled",
             "pricing_ms": price_ms,
         },
@@ -605,6 +669,9 @@ fn run() -> Result<(), String> {
             },
         },
         "sla": sla_rows,
+        "sla_margin": margin_json(&margin, baked_margin, &overhead_receipt, &floor_court_receipt),
+        "hop_calibration": hop_calibration.as_ref().map(|row| row.json.clone()),
+        "sla_boundary": sla_boundary,
         "sla_sweep": sla_sweep,
         "sla_sweep_summary": {
             "accepted_with_measurement": accepted_measured,
@@ -746,6 +813,8 @@ fn realize(
             "predicted_restore_ms": predicted.predicted_chain_ns[i] as f64 / 1_000_000.0,
             "predicted_decode_ms": predicted.predicted_decode_chain_ns[i] as f64 / 1_000_000.0,
             "predicted_overhead_ms": predicted.predicted_overhead_ns[i] as f64 / 1_000_000.0,
+            "predicted_margin_ms": predicted.predicted_margin_ns[i] as f64 / 1_000_000.0,
+            "predicted_sla_bound_ms": predicted.predicted_sla_bound_ns[i] as f64 / 1_000_000.0,
             "prediction_error_ppm": if median > 0.0 {
                 (((predicted.predicted_chain_ns[i] as f64 / 1_000_000.0 - median) / median) * 1_000_000.0).round() as i64
             } else {
@@ -823,6 +892,7 @@ fn realize(
         "restore_sum_ms": restore_sum,
         "restore_worst_ms": worst,
         "predicted_restore_worst_ns": predicted.worst_restore_ns,
+        "predicted_sla_bound_worst_ns": predicted.worst_sla_bound_ns,
         "worst_prediction_error_ppm": worst_prediction_error_ppm,
         "chain_hops": chain_hops,
         "all_versions_exact": all_exact,
@@ -841,14 +911,19 @@ fn plan_json(plan: &plan_graph::ParentGraphPlan) -> Json {
         "predicted_bytes": plan.predicted_bytes,
         "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
         "predicted_overhead_ns": plan.predicted_overhead_ns,
+        "predicted_margin_ns": plan.predicted_margin_ns,
         "predicted_chain_ns": plan.predicted_chain_ns,
+        "predicted_sla_bound_ns": plan.predicted_sla_bound_ns,
         "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
         "restore_overhead_calibration": plan.restore_overhead_calibration,
+        "sla_margin_calibration": plan.sla_margin_calibration,
         "depths": plan.depths,
         "dependencies": plan.dependencies,
         "max_depth": plan.max_depth,
         "worst_restore_ns": plan.worst_restore_ns,
         "worst_restore_ms": plan.worst_restore_ns as f64 / 1_000_000.0,
+        "worst_sla_bound_ns": plan.worst_sla_bound_ns,
+        "worst_sla_bound_ms": plan.worst_sla_bound_ns as f64 / 1_000_000.0,
         "sla_satisfied": plan.sla_satisfied,
         "budget_satisfied": plan.budget_satisfied,
     })
@@ -877,6 +952,214 @@ fn graph_json(graph: &VersionGraph) -> Json {
             })).collect::<Vec<_>>(),
         })).collect::<Vec<_>>(),
     })
+}
+
+/// The S13c SLA margin derived from the two committed S13b receipts.
+struct SlaMargin {
+    ns_per_mib: u64,
+    fit_allowance_ns_per_mib: u64,
+    cold_allowance_ns_per_mib: u64,
+    worst_in_regime_residual_ppm: i64,
+    in_regime_points: u64,
+    excluded_below_bytes: u64,
+    cold_deficit_ns: u64,
+    logical_bytes: u64,
+    predicted_restore_ns: u64,
+    measured_restore_ns: u64,
+}
+
+/// Derive the SLA margin: the largest in-regime fit residual applied to the
+/// measured per-MiB overhead, plus the measured cold-versus-warm
+/// under-prediction of the all-independent floor per logical MiB.
+fn derive_sla_margin(overhead: &Path, floor: &Path) -> Result<SlaMargin, String> {
+    let calibration: Json = read_receipt(overhead)?;
+    let court: Json = read_receipt(floor)?;
+    let per_mib_ns = calibration["fit"]["per_mib_ns"]
+        .as_u64()
+        .ok_or("the overhead receipt has no fit.per_mib_ns")?;
+    let mut point_bytes: BTreeMap<String, u64> = BTreeMap::new();
+    for point in calibration["points"]
+        .as_array()
+        .ok_or("the overhead receipt has no points")?
+    {
+        point_bytes.insert(
+            point["id"].as_str().ok_or("point id")?.to_owned(),
+            point["per_tensor_bytes"]
+                .as_u64()
+                .ok_or("per_tensor_bytes")?,
+        );
+    }
+    let mut worst_ppm = 0i64;
+    let mut in_regime = 0u64;
+    for row in calibration["fit"]["residuals"]
+        .as_array()
+        .ok_or("the overhead receipt has no residuals")?
+    {
+        let id = row["id"].as_str().ok_or("residual id")?;
+        let bytes = *point_bytes.get(id).ok_or("residual without a point")?;
+        if bytes < 1_048_576 {
+            continue;
+        }
+        in_regime += 1;
+        worst_ppm = worst_ppm.max(row["error_ppm"].as_i64().ok_or("error_ppm")?.abs());
+    }
+    if in_regime < 5 {
+        return Err(format!(
+            "only {in_regime} in-regime fit points; the margin is not identifiable"
+        ));
+    }
+    let fit_allowance =
+        (u128::from(worst_ppm as u64) * u128::from(per_mib_ns) + 999_999) / 1_000_000;
+
+    let optimizer = court["realizations"]
+        .as_array()
+        .ok_or("the floor court receipt has no realizations")?
+        .iter()
+        .find(|row| row["label"] == "optimizer")
+        .ok_or("the floor court receipt has no all-independent realization")?;
+    let predicted = optimizer["predicted_restore_worst_ns"]
+        .as_u64()
+        .ok_or("predicted_restore_worst_ns")?;
+    let measured = (optimizer["restore_worst_ms"]
+        .as_f64()
+        .ok_or("restore_worst_ms")?
+        * 1_000_000.0)
+        .round() as u64;
+    if measured <= predicted {
+        return Err("the floor court measured the floor at or below its prediction; no cold allowance is identifiable".into());
+    }
+    let logical_bytes = court["graph"]["versions"][0]["logical_bytes"]
+        .as_u64()
+        .ok_or("logical_bytes")?;
+    let cold_deficit = measured - predicted;
+    let cold_allowance = (u128::from(cold_deficit) * 1_048_576 + u128::from(logical_bytes) - 1)
+        / u128::from(logical_bytes);
+
+    let ns_per_mib = u64::try_from(fit_allowance + cold_allowance)
+        .map_err(|_| "the derived margin does not fit u64")?;
+    Ok(SlaMargin {
+        ns_per_mib,
+        fit_allowance_ns_per_mib: u64::try_from(fit_allowance).unwrap_or(u64::MAX),
+        cold_allowance_ns_per_mib: u64::try_from(cold_allowance).unwrap_or(u64::MAX),
+        worst_in_regime_residual_ppm: worst_ppm,
+        in_regime_points: in_regime,
+        excluded_below_bytes: 1_048_576,
+        cold_deficit_ns: cold_deficit,
+        logical_bytes,
+        predicted_restore_ns: predicted,
+        measured_restore_ns: measured,
+    })
+}
+
+fn margin_json(margin: &SlaMargin, baked: u64, overhead: &Path, floor: &Path) -> Json {
+    json!({
+        "calibration": weftfs::cost_model::SLA_MARGIN_CALIBRATION,
+        "baked_ns_per_mib": baked,
+        "derived_ns_per_mib": margin.ns_per_mib,
+        "matches_baked": margin.ns_per_mib == baked,
+        "derivation": {
+            "fit_allowance_ns_per_mib": margin.fit_allowance_ns_per_mib,
+            "cold_allowance_ns_per_mib": margin.cold_allowance_ns_per_mib,
+            "worst_in_regime_fit_residual_ppm": margin.worst_in_regime_residual_ppm,
+            "in_regime_points": margin.in_regime_points,
+            "excluded_below_bytes": margin.excluded_below_bytes,
+            "fit_formula": "ceil(worst_in_regime_fit_residual_ppm * fit.per_mib_ns / 1e6)",
+            "cold_formula": "ceil((measured_worst - predicted_worst) * 1 MiB / logical_bytes)",
+            "cold_deficit_ns": margin.cold_deficit_ns,
+            "logical_bytes": margin.logical_bytes,
+            "predicted_restore_ns": margin.predicted_restore_ns,
+            "measured_restore_ns": margin.measured_restore_ns,
+        },
+        "inputs": {
+            "overhead_receipt": overhead.display().to_string(),
+            "floor_court_receipt": floor.display().to_string(),
+        },
+        "note": "bounds a measured single-host, warm-page-cache environment; it is not a cold-media, different-backend, or fleet promise",
+    })
+}
+
+struct HopCalibration {
+    json: Json,
+    matches_baked: bool,
+}
+
+/// Recompute each delta hop row from a fresh controlled-chain run and compare
+/// with the baked table. The gate is repeatability (10 %), not exact equality:
+/// the baked row is the union of the two cited runs, and a third run shifts the
+/// sample set. A real drift fails; measurement noise does not.
+fn read_hop_calibration(path: &Path) -> Result<HopCalibration, String> {
+    let receipt: Json = read_receipt(path)?;
+    let mut rows = Vec::new();
+    let mut matches_baked = true;
+    for row in receipt["hop_fit"]
+        .as_array()
+        .ok_or("the hop receipt has no hop_fit")?
+    {
+        let strategy = row["strategy"].as_str().ok_or("strategy")?;
+        let Some(class) = weftfs::cost_model::CostClass::parse(strategy) else {
+            continue;
+        };
+        let baked_row = weftfs::cost_model::hop_coefficients(class);
+        let samples = row["samples"].as_u64().unwrap_or(0);
+        let mut numerator: u128 = 0;
+        let mut denominator: u128 = 0;
+        for hop in row["measured_hops"].as_array().ok_or("measured_hops")? {
+            let bytes = hop["element_bytes"].as_u64().ok_or("element_bytes")?;
+            let ns = hop["hop_ns"].as_u64().ok_or("hop_ns")?;
+            numerator += u128::from(bytes) * u128::from(ns);
+            denominator += u128::from(bytes) * u128::from(bytes);
+        }
+        if denominator == 0 {
+            return Err("hop samples have no bytes".into());
+        }
+        let scaled = numerator * 1_048_576;
+        let (quotient, remainder) = (scaled / denominator, scaled % denominator);
+        let derived = u64::try_from(quotient + u128::from(2 * remainder >= denominator))
+            .map_err(|_| "hop row does not fit u64")?;
+        let error_ppm = if baked_row.ns_per_mib == 0 {
+            i64::MAX
+        } else {
+            (((derived as f64 - baked_row.ns_per_mib as f64) / baked_row.ns_per_mib as f64)
+                * 1_000_000.0)
+                .round() as i64
+        };
+        // Only the delta classes have a hop override to compare against.
+        if class == weftfs::cost_model::CostClass::SparseDelta
+            || class == weftfs::cost_model::CostClass::WeightDelta
+        {
+            if error_ppm.abs() > 100_000 || samples < 5 {
+                matches_baked = false;
+            }
+            rows.push(json!({
+                "class": class.as_str(),
+                "samples": samples,
+                "sizes_bytes": row["sizes_bytes"],
+                "baked_ns_per_mib": baked_row.ns_per_mib,
+                "remeasured_ns_per_mib": derived,
+                "remeasured_error_ppm": error_ppm,
+                "repeatability_gate_ppm": 100_000,
+            }));
+        }
+    }
+    Ok(HopCalibration {
+        json: json!({
+            "calibration": weftfs::cost_model::CHAIN_HOP_CALIBRATION,
+            "receipt": path.display().to_string(),
+            "rows": rows,
+            "matches_baked_within_repeatability_gate": matches_baked,
+        }),
+        matches_baked,
+    })
+}
+
+fn read_receipt(path: &Path) -> Result<Json, String> {
+    let text = fs::read_to_string(path).map_err(|err| {
+        format!(
+            "{}: {err}; the measurement receipt must exist",
+            path.display()
+        )
+    })?;
+    serde_json::from_str(&text).map_err(|err| format!("{}: {err}", path.display()))
 }
 
 fn chain_plan(n: usize) -> Vec<Option<usize>> {

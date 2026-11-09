@@ -36,7 +36,7 @@ if [[ "$reps" -lt 5 ]]; then
   echo "parent_graph: WEFT_PARENT_GRAPH_REPS must be at least 5 (got $reps)" >&2
   exit 1
 fi
-sla_sweep="${WEFT_PARENT_GRAPH_SLA_SWEEP_MS:-500,850,1000,2000,2500,3000,4000,6000,14000}"
+sla_sweep="${WEFT_PARENT_GRAPH_SLA_SWEEP_MS:-500,850,900,950,1000,2000,2500,3000,4000,6000,8000,10000,11000,14000}"
 mkdir -p bench/receipts "$work"
 exec > >(tee "$log") 2>&1
 
@@ -50,6 +50,9 @@ echo "parent_graph: building release harness"
 cargo build --release --example parent_graph_court >/dev/null 2>&1
 bin="$CARGO_TARGET_DIR/release/examples/parent_graph_court"
 cli="$CARGO_TARGET_DIR/release/weftfs"
+echo "parent_graph: building the hop calibration harness"
+cargo build --release --example calibrate_restore >/dev/null 2>&1
+hop_bin="$CARGO_TARGET_DIR/release/examples/calibrate_restore"
 # Always rebuild the CLI: a stale binary from an earlier revision would silently
 # exercise the wrong command surface.
 echo "parent_graph: building the CLI"
@@ -74,6 +77,20 @@ if [[ -n "${WEFT_PARENT_GRAPH_LAMBDA_NS:-}" ]]; then
 fi
 
 echo "parent_graph: running the measured experiment"
+# S13c: re-measure the controlled dependency chain in this same court and hand
+# the result to the graph court. The graph court derives the SLA margin from the
+# committed S13b receipts and compares both with the baked constants.
+hop_receipt="$work/hop.json"
+echo "parent_graph: measuring the controlled hop chains"
+"$hop_bin" \
+  --out "$hop_receipt" \
+  --work "$work/hop" \
+  --chains-only \
+  --chain-sizes-mib "${WEFT_PARENT_GRAPH_HOP_SIZES_MIB:-4,8,16}" \
+  --chain-depth 8 \
+  --reps "$reps" \
+  --sweep-dtype f32
+
 "$bin" \
   --corpus "$corpus" \
   --work "$work/work" \
@@ -83,6 +100,7 @@ echo "parent_graph: running the measured experiment"
   --sla-ms "$sla_ms" \
   --sla-sweep-ms "$sla_sweep" \
   --restore-reps "$reps" \
+  --hop-receipt "$hop_receipt" \
   "${lambda_args[@]}"
 
 # The CLI is a separate surface from the library the harness calls. Exercise it
@@ -126,6 +144,14 @@ for label in ("chain", "restart-2", "restart-3", "restart-4", "dp", "brute_force
         % (label, plan["predicted_bytes"], plan["worst_restore_ns"], plan["max_depth"], plan["parents"])
     )
 print("parent_graph: dp==brute:", d["checks"].get("dp_matches_brute_force"))
+print("parent_graph: checks", json.dumps(d["checks"], sort_keys=True))
+margin = d.get("sla_margin") or {}
+print("parent_graph: sla_margin baked=%s derived=%s match=%s"
+      % (margin.get("baked_ns_per_mib"), margin.get("derived_ns_per_mib"), margin.get("matches_baked")))
+print("parent_graph: sla_boundary", json.dumps(d.get("sla_boundary"), sort_keys=True))
+for row in (d.get("hop_calibration") or {}).get("rows", []):
+    print("parent_graph: hop %-13s baked=%d remeasured=%d error_ppm=%d samples=%d"
+          % (row["class"], row["baked_ns_per_mib"], row["remeasured_ns_per_mib"], row["remeasured_error_ppm"], row["samples"]))
 for row in d["realizations"]:
     print(
         "parent_graph: realized %-20s data=%d predicted=%d worst_restore_ms=%.1f exact=%s verify_ok=%s"
@@ -139,3 +165,11 @@ for row in d["realizations"]:
         )
     )
 PY
+
+# The realised stores are large (about 6 GiB for nine versions) and are fully
+# derivable from the receipt. Remove them on success; a failed run stops above
+# and keeps them for diagnosis.
+if [[ "${WEFT_PARENT_GRAPH_KEEP_WORK:-0}" != "1" ]]; then
+  echo "parent_graph: removing the work tree (WEFT_PARENT_GRAPH_KEEP_WORK=1 keeps it)"
+  rm -rf "$work"
+fi

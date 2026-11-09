@@ -124,6 +124,10 @@ fn arg<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
         .map(String::as_str)
 }
 
+fn flag(args: &[String], name: &str) -> bool {
+    args.iter().any(|item| item == name)
+}
+
 fn u64_list(text: &str) -> Result<Vec<u64>, String> {
     text.split(',')
         .map(|item| {
@@ -159,10 +163,24 @@ fn run() -> Result<(), String> {
         .unwrap_or("8")
         .parse()
         .map_err(|_| "--chain-tensor-mib must be an integer")?;
+    // S13c: measure the controlled chain at more than one tensor size so the
+    // per-hop row has an identifiable affine shape (fixed term and per-MiB
+    // slope) instead of one point with a borrowed intercept.
+    let chain_sizes_mib: Vec<u64> = match arg(&args, "--chain-sizes-mib") {
+        Some(text) => u64_list(text)?,
+        None => vec![chain_tensor_mib],
+    };
+    if chain_sizes_mib.is_empty() {
+        return Err("--chain-sizes-mib must name at least one size".into());
+    }
     let chain_depth: u64 = arg(&args, "--chain-depth")
         .unwrap_or("8")
         .parse()
         .map_err(|_| "--chain-depth must be an integer")?;
+    // A chains-only invocation measures the hop sweep and nothing else. It is
+    // the cheap way to (re)derive the graph hop rows without repeating the
+    // whole restore-floor sweep.
+    let chains_only = flag(&args, "--chains-only");
     let mut real_containers: Vec<PathBuf> = Vec::new();
     for (index, item) in args.iter().enumerate() {
         if item == "--real-container" {
@@ -200,6 +218,15 @@ fn run() -> Result<(), String> {
         }
     };
     let sweep_dtype = PayloadDtype::parse(arg(&args, "--sweep-dtype").unwrap_or("bf16"))?;
+
+    // A chains-only run keeps the hop sweep and skips the expensive restore-floor
+    // sweep, the real container and the trajectory. Nothing measured by the
+    // skipped phases is claimed by the resulting receipt.
+    let (counts, sizes, real_containers, real_corpus) = if chains_only {
+        (Vec::new(), Vec::new(), Vec::new(), None)
+    } else {
+        (counts, sizes, real_containers, real_corpus)
+    };
 
     if work.exists() {
         fs::remove_dir_all(&work).map_err(|err| format!("{}: {err}", work.display()))?;
@@ -339,84 +366,125 @@ fn run() -> Result<(), String> {
         }
     }
 
-    // ---- controlled dependency chain (hypothesis 3) ------------------------
-    let chain_sparse = measure_chain(
-        &work,
-        "chain-sparse",
-        chain_tensor_mib,
-        chain_depth,
-        ChangeKind::Sparse,
-        sweep_dtype,
-        reps,
-    )?;
-    let chain_dense = measure_chain(
-        &work,
-        "chain-dense",
-        chain_tensor_mib,
-        chain_depth,
-        ChangeKind::Dense,
-        sweep_dtype,
-        reps,
-    )?;
+    // ---- controlled dependency chain (S13b hypothesis 3, S13c hop rows) ----
+    // One chain per (change kind, tensor size). Two change kinds force the
+    // planner's sparse-delta and weight-delta representations; several sizes
+    // make the per-hop fixed term and per-MiB slope identifiable.
+    let mut chain_sweep: Vec<Json> = Vec::new();
+    for size_mib in &chain_sizes_mib {
+        let sparse = measure_chain(
+            &work,
+            &format!("chain-sparse-{size_mib}mib"),
+            *size_mib,
+            chain_depth,
+            ChangeKind::Sparse,
+            sweep_dtype,
+            reps,
+        )?;
+        let dense = measure_chain(
+            &work,
+            &format!("chain-dense-{size_mib}mib"),
+            *size_mib,
+            chain_depth,
+            ChangeKind::Dense,
+            sweep_dtype,
+            reps,
+        )?;
+        chain_sweep.push(json!({"tensor_mib": size_mib, "sparse": sparse, "dense": dense}));
+    }
+    let hop_fit = fit_hops(&chain_sweep);
+    let first = chain_sweep.first().cloned().unwrap_or(Json::Null);
+    let chain_sparse = first["sparse"].clone();
+    let chain_dense = first["dense"].clone();
 
     // ---- checks ------------------------------------------------------------
     checks.insert(
-        "points_complete".into(),
-        points.iter().all(|point| {
-            point
-                .get("restore_median_ns")
+        "hop_samples_at_least_five_per_class".into(),
+        hop_fit
+            .as_array()
+            .map(|rows| {
+                rows.iter()
+                    .all(|row| row.get("samples").and_then(Json::as_u64).unwrap_or(0) >= 5)
+            })
+            .unwrap_or(false),
+    );
+    checks.insert(
+        "hop_sizes_at_least_two_per_class".into(),
+        hop_fit
+            .as_array()
+            .map(|rows| {
+                rows.iter().all(|row| {
+                    row.get("sizes_bytes")
+                        .and_then(Json::as_array)
+                        .map(|sizes| sizes.len() >= 2)
+                        .unwrap_or(false)
+                })
+            })
+            .unwrap_or(false),
+    );
+    if !chains_only {
+        checks.insert(
+            "points_complete".into(),
+            points.iter().all(|point| {
+                point
+                    .get("restore_median_ns")
+                    .and_then(Json::as_u64)
+                    .unwrap_or(0)
+                    > 0
+            }),
+        );
+        checks.insert(
+            "every_point_exact".into(),
+            points
+                .iter()
+                .chain(real_points.iter())
+                .all(|point| point.get("exact_source_file").and_then(Json::as_bool) == Some(true)),
+        );
+        checks.insert(
+            "fit_samples_at_least_five".into(),
+            fit.as_ref()
+                .and_then(|fit| fit.get("samples"))
                 .and_then(Json::as_u64)
                 .unwrap_or(0)
-                > 0
-        }),
-    );
-    checks.insert(
-        "every_point_exact".into(),
-        points
-            .iter()
-            .chain(real_points.iter())
-            .all(|point| point.get("exact_source_file").and_then(Json::as_bool) == Some(true)),
-    );
-    checks.insert(
-        "fit_samples_at_least_five".into(),
-        fit.as_ref()
-            .and_then(|fit| fit.get("samples"))
-            .and_then(Json::as_u64)
-            .unwrap_or(0)
-            >= 5,
-    );
-    checks.insert(
-        "fit_terms_non_negative".into(),
-        fit.as_ref().is_some_and(|fit| {
-            fit.get("per_version_ns")
-                .and_then(Json::as_u64)
-                .unwrap_or(1)
-                > 0
-                && fit.get("per_tensor_ns").and_then(Json::as_u64).is_some()
-                && fit.get("per_mib_ns").and_then(Json::as_u64).unwrap_or(0) > 0
-        }),
-    );
-    checks.insert(
-        "trajectory_exact".into(),
-        !trajectory_rows.is_empty()
-            && trajectory_rows
-                .iter()
-                .all(|row| row.get("exact_source_file").and_then(Json::as_bool) == Some(true)),
-    );
-    checks.insert(
-        "trajectory_floor_error_within_10_percent".into(),
-        !trajectory_validation.is_empty()
-            && trajectory_validation.iter().all(|row| {
-                row.get("restore_error_ppm")
-                    .and_then(Json::as_i64)
-                    .map(|ppm| ppm.abs() <= 100_000)
-                    .unwrap_or(false)
+                >= 5,
+        );
+        checks.insert(
+            "fit_terms_non_negative".into(),
+            fit.as_ref().is_some_and(|fit| {
+                fit.get("per_version_ns")
+                    .and_then(Json::as_u64)
+                    .unwrap_or(1)
+                    > 0
+                    && fit.get("per_tensor_ns").and_then(Json::as_u64).is_some()
+                    && fit.get("per_mib_ns").and_then(Json::as_u64).unwrap_or(0) > 0
             }),
-    );
+        );
+        checks.insert(
+            "trajectory_exact".into(),
+            !trajectory_rows.is_empty()
+                && trajectory_rows
+                    .iter()
+                    .all(|row| row.get("exact_source_file").and_then(Json::as_bool) == Some(true)),
+        );
+        checks.insert(
+            "trajectory_floor_error_within_10_percent".into(),
+            !trajectory_validation.is_empty()
+                && trajectory_validation.iter().all(|row| {
+                    row.get("restore_error_ppm")
+                        .and_then(Json::as_i64)
+                        .map(|ppm| ppm.abs() <= 100_000)
+                        .unwrap_or(false)
+                }),
+        );
+    }
 
     let receipt = json!({
-        "schema": "weft.s13b.restore-floor.v1",
-        "label": "whole-checkpoint restore overhead; single-host bench court, synthetic weight-like BF16, warm OS page cache",
+        "schema": if chains_only { "weft.s13c.chain-hop.v1" } else { "weft.s13b.restore-floor.v1" },
+        "label": if chains_only {
+            "controlled dependency-chain hop cost at several tensor sizes; single-host bench court, synthetic weight-like payload, warm OS page cache"
+        } else {
+            "whole-checkpoint restore overhead; single-host bench court, synthetic weight-like BF16, warm OS page cache"
+        },
         "court": {
             "kernel": std::env::var("WEFT_COURT_KERNEL").unwrap_or_else(|_| "unknown".into()),
             "image": std::env::var("WEFT_COURT_IMAGE").unwrap_or_else(|_| "unknown".into()),
@@ -441,7 +509,9 @@ fn run() -> Result<(), String> {
             "object_mib": sizes,
             "size_count": size_count,
             "chain_tensor_mib": chain_tensor_mib,
+            "chain_sizes_mib": chain_sizes_mib,
             "chain_depth": chain_depth,
+            "chains_only": chains_only,
             "real_strategy": real_strategy.as_str(),
             "sweep_strategy": sweep_strategy.as_str(),
             "real_corpus": real_corpus.as_ref().map(|dir| dir.display().to_string()),
@@ -467,6 +537,8 @@ fn run() -> Result<(), String> {
             "sparse": chain_sparse,
             "dense": chain_dense,
         },
+        "chain_sweep": chain_sweep,
+        "hop_fit": hop_fit,
         "checks": checks,
     });
     if let Some(parent) = out.parent() {
@@ -892,6 +964,113 @@ fn solve3(mut a: [[f64; 3]; 3], mut b: [f64; 3]) -> Option<[f64; 3]> {
         }
     }
     Some(b)
+}
+
+/// Fit the per-hop decode rows from the controlled dependency chains.
+///
+/// One sample is one hop increment: `restore(version i) - restore(version i-1)`,
+/// i.e. the cost of decoding version `i`'s frame against an already-decoded
+/// base. The increment cancels both the per-version restore overhead and every
+/// per-tensor cost that both versions pay, so the row has **no fixed term**:
+/// its only identifiable parameter is the per-MiB rate. The baked row is the
+/// least-squares line through the origin over every sample of that class.
+///
+/// The coefficient of determination is not the point here — reproducibility is,
+/// so the raw `(bytes, ns)` pairs are recorded and the through-origin rate over
+/// two independent runs is compared in the court.
+fn fit_hops(chains: &[Json]) -> Json {
+    let mut samples: std::collections::BTreeMap<String, Vec<(u64, u64)>> = Default::default();
+    for chain in chains {
+        for kind in ["sparse", "dense"] {
+            let hops = chain[kind]["hops"].as_array().cloned().unwrap_or_default();
+            for hop in hops {
+                let Some(ns) = hop["measured_hop_delta_ns"].as_u64() else {
+                    continue;
+                };
+                let Some(bytes) = hop["element_bytes"].as_u64() else {
+                    continue;
+                };
+                if bytes == 0 {
+                    continue;
+                }
+                let strategy = hop["strategy"].as_str().unwrap_or("unknown").to_owned();
+                samples.entry(strategy).or_default().push((bytes, ns));
+            }
+        }
+    }
+    let rows: Vec<Json> = samples
+        .into_iter()
+        .map(|(strategy, samples)| {
+            // Least squares through the origin: ns_per_mib = sum(b*ns) / sum(b^2).
+            let numerator: f64 = samples
+                .iter()
+                .map(|(bytes, ns)| *bytes as f64 * *ns as f64)
+                .sum();
+            let denominator: f64 = samples
+                .iter()
+                .map(|(bytes, _)| *bytes as f64 * *bytes as f64)
+                .sum();
+            let per_mib = if denominator > 0.0 {
+                ((numerator / denominator) * MIB_F).round().max(0.0) as u64
+            } else {
+                0
+            };
+            // Least squares with a free intercept, recorded for comparison only.
+            let n = samples.len() as f64;
+            let mean_x = samples.iter().map(|(b, _)| *b as f64).sum::<f64>() / n;
+            let mean_y = samples.iter().map(|(_, ns)| *ns as f64).sum::<f64>() / n;
+            let mut sxx = 0.0;
+            let mut sxy = 0.0;
+            for (bytes, ns) in &samples {
+                let dx = *bytes as f64 - mean_x;
+                sxx += dx * dx;
+                sxy += dx * (*ns as f64 - mean_y);
+            }
+            let slope = if sxx > 0.0 { sxy / sxx } else { 0.0 };
+            let fit_fixed = (mean_y - slope * mean_x).max(0.0).round() as u64;
+            let fit_per_mib = (slope * MIB_F).round().max(0.0) as u64;
+            let errors: Vec<i64> = samples
+                .iter()
+                .map(|(bytes, ns)| {
+                    let predicted = hop_ns(0, per_mib, *bytes) as f64;
+                    if predicted <= 0.0 {
+                        0
+                    } else {
+                        (((predicted - *ns as f64) / predicted) * 1_000_000.0).round() as i64
+                    }
+                })
+                .collect();
+            let mut sizes: Vec<u64> = samples.iter().map(|(b, _)| *b).collect();
+            sizes.sort_unstable();
+            sizes.dedup();
+            let measured_hops: Vec<Json> = samples
+                .iter()
+                .map(|(bytes, ns)| json!({"element_bytes": bytes, "hop_ns": ns}))
+                .collect();
+            json!({
+                "strategy": strategy,
+                "samples": samples.len() as u64,
+                "sizes_bytes": sizes,
+                "measured_hops": measured_hops,
+                "fixed_ns": 0,
+                "ns_per_mib": per_mib,
+                "max_under_prediction_ppm": errors.iter().copied().min().unwrap_or(0),
+                "max_over_prediction_ppm": errors.iter().copied().max().unwrap_or(0),
+                "least_squares_with_intercept": {
+                    "fixed_ns": fit_fixed,
+                    "ns_per_mib": fit_per_mib,
+                },
+            })
+        })
+        .collect();
+    Json::Array(rows)
+}
+
+fn hop_ns(fixed_ns: u64, ns_per_mib: u64, bytes: u64) -> u64 {
+    let scaled = (u128::from(bytes) * u128::from(ns_per_mib)) / 1_048_576u128;
+    u64::try_from(scaled)
+        .unwrap_or(u64::MAX)
+        .saturating_add(fixed_ns)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

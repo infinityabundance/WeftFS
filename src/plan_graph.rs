@@ -63,7 +63,7 @@
 //! comparison is lexicographic in version order and "no parent" sorts before
 //! every parent index.
 
-use crate::cost_model::{RestoreOverhead, RESTORE_OVERHEAD_CALIBRATION};
+use crate::cost_model::{RestoreOverhead, RESTORE_OVERHEAD_CALIBRATION, SLA_MARGIN_CALIBRATION};
 use crate::error::{Class, Error, Result};
 
 /// Schema string for a serialized version graph.
@@ -221,6 +221,11 @@ pub struct PlanOptions {
     /// `Default` is `Some(RestoreOverhead::MEASURED)`. `None` means the caller
     /// has no measured term; a plan that then claims an SLA is refused with a
     /// typed `InvalidArgument` instead of treating the missing work as free.
+    ///
+    /// When an SLA is claimed, the plan's measured **SLA margin**
+    /// (`RestoreOverhead::margin_ns_per_mib`) is added to the prediction before
+    /// the comparison. The margin is not optional: a model whose margin is zero
+    /// is a diagnostic, not an SLA model, and is refused.
     pub restore_overhead: Option<RestoreOverhead>,
 }
 
@@ -252,6 +257,16 @@ impl PlanOptions {
                 "reads_per_version must be at least 1",
             ));
         }
+        if self.sla_ns.is_some() {
+            if let Some(term) = self.restore_overhead {
+                if term.margin_ns_per_mib == 0 {
+                    return Err(Error::invalid_argument(
+                        "an SLA claim requires a measured SLA margin; this restore-overhead \
+                         model has margin_ns_per_mib = 0 (see SLA_MARGIN_CALIBRATION)",
+                    ));
+                }
+            }
+        }
         Ok(())
     }
 }
@@ -277,11 +292,20 @@ pub struct ParentGraphPlan {
     pub predicted_chain_ns: Vec<u64>,
     /// The measured restore overhead charged to each version.
     pub predicted_overhead_ns: Vec<u64>,
+    /// The measured SLA margin charged to each version (see
+    /// [`SLA_MARGIN_CALIBRATION`]). Charged only to the SLA bound below, never
+    /// to the objective or the point prediction.
+    pub predicted_margin_ns: Vec<u64>,
+    /// `predicted_chain_ns[i] + predicted_margin_ns[i]`: the bound the SLA is
+    /// compared against.
+    pub predicted_sla_bound_ns: Vec<u64>,
     /// The overhead model the prediction used, or `None` when the caller
     /// supplied no model (then no SLA may be claimed).
     pub restore_overhead: Option<RestoreOverhead>,
     /// The measured-overhead calibration the baked term came from.
     pub restore_overhead_calibration: &'static str,
+    /// The measured SLA-margin calibration the baked term came from.
+    pub sla_margin_calibration: &'static str,
     /// `reads_per_version * sum(chain_ns)`.
     pub predicted_total_decode_ns: u128,
     /// Chain depth per version (`0` = independent).
@@ -290,9 +314,14 @@ pub struct ParentGraphPlan {
     pub dependencies: u32,
     /// Deepest chain in the plan.
     pub max_depth: u32,
-    /// Worst-case cold restore (`max(predicted_chain_ns)`).
+    /// Worst-case cold restore (`max(predicted_chain_ns)`). This is the point
+    /// prediction; the SLA is compared against [`Self::worst_sla_bound_ns`].
     pub worst_restore_ns: u64,
-    /// True when the plan satisfies the SLA (also true when none was given).
+    /// Worst-case restore **bound** (`max(predicted_sla_bound_ns)`), i.e. the
+    /// point prediction plus the measured margin.
+    pub worst_sla_bound_ns: u64,
+    /// True when the plan's worst restore bound satisfies the SLA (also true
+    /// when none was given).
     pub sla_satisfied: bool,
     /// True when the plan satisfies the storage budget.
     pub budget_satisfied: bool,
@@ -347,6 +376,8 @@ pub fn evaluate(
     let mut decode_chain_ns = vec![0u64; parents.len()];
     let mut chain_ns = vec![0u64; parents.len()];
     let mut overhead_ns = vec![0u64; parents.len()];
+    let mut margin_ns = vec![0u64; parents.len()];
+    let mut sla_bound_ns = vec![0u64; parents.len()];
     let mut depths = vec![0u32; parents.len()];
     let mut bytes: u128 = 0;
     let mut decode_weighted: u128 = 0;
@@ -387,6 +418,18 @@ pub fn evaluate(
         chain_ns[i] = decode_chain
             .checked_add(overhead)
             .ok_or_else(|| Error::limit_exceeded("chain restore nanoseconds overflow u64"))?;
+        // The SLA margin is charged once per version restore, alongside the
+        // overhead and never to a hop. It bounds the measured under-prediction
+        // of the *whole* restore in the environment the plan is made for, so it
+        // is applied only to the SLA comparison below.
+        let margin = options
+            .restore_overhead
+            .map(|term| term.estimate_margin_ns(graph.versions[i].logical_bytes))
+            .unwrap_or(0);
+        margin_ns[i] = margin;
+        sla_bound_ns[i] = chain_ns[i]
+            .checked_add(margin)
+            .ok_or_else(|| Error::limit_exceeded("SLA restore bound overflow u64"))?;
         depths[i] = depth;
         dependencies += u32::from(parent.is_some());
         bytes = bytes
@@ -406,10 +449,11 @@ pub fn evaluate(
         .checked_add(decode_weighted)
         .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?;
     let worst_restore_ns = chain_ns.iter().copied().max().unwrap_or(0);
+    let worst_sla_bound_ns = sla_bound_ns.iter().copied().max().unwrap_or(0);
     let max_depth = depths.iter().copied().max().unwrap_or(0);
     let sla_satisfied = options
         .sla_ns
-        .map(|sla| worst_restore_ns <= sla)
+        .map(|sla| worst_sla_bound_ns <= sla)
         .unwrap_or(true);
     let budget_satisfied = options
         .storage_budget
@@ -426,13 +470,17 @@ pub fn evaluate(
         predicted_decode_chain_ns: decode_chain_ns,
         predicted_chain_ns: chain_ns,
         predicted_overhead_ns: overhead_ns,
+        predicted_margin_ns: margin_ns,
+        predicted_sla_bound_ns: sla_bound_ns,
         restore_overhead: options.restore_overhead,
         restore_overhead_calibration: RESTORE_OVERHEAD_CALIBRATION,
+        sla_margin_calibration: SLA_MARGIN_CALIBRATION,
         predicted_total_decode_ns,
         depths,
         dependencies,
         max_depth,
         worst_restore_ns,
+        worst_sla_bound_ns,
         sla_satisfied,
         budget_satisfied,
     })
@@ -455,8 +503,9 @@ fn version_overhead_ns(graph: &VersionGraph, options: &PlanOptions, i: usize) ->
         .unwrap_or(0)
 }
 
-/// Decode chain plus the version's own restore overhead: the quantity an SLA
-/// bounds. The solvers must prune on this, not on the raw decode chain.
+/// Decode chain plus the version's own restore overhead: the point prediction
+/// an SLA is stated against. The solvers must prune on [`sla_bound_ns`], not on
+/// this, so a plan that only fits without the measured margin is never chosen.
 fn restore_chain_ns(
     graph: &VersionGraph,
     options: &PlanOptions,
@@ -464,6 +513,27 @@ fn restore_chain_ns(
     decode_chain_ns: u64,
 ) -> u64 {
     decode_chain_ns.saturating_add(version_overhead_ns(graph, options, i))
+}
+
+/// The measured SLA margin charged to version `i` (see
+/// [`SLA_MARGIN_CALIBRATION`]).
+fn version_margin_ns(graph: &VersionGraph, options: &PlanOptions, i: usize) -> u64 {
+    options
+        .restore_overhead
+        .map(|term| term.estimate_margin_ns(graph.versions[i].logical_bytes))
+        .unwrap_or(0)
+}
+
+/// The quantity an SLA actually bounds: the point prediction plus the measured
+/// margin. Every solver prunes and `check_constraints` compares on this value.
+fn sla_bound_ns(
+    graph: &VersionGraph,
+    options: &PlanOptions,
+    i: usize,
+    decode_chain_ns: u64,
+) -> u64 {
+    restore_chain_ns(graph, options, i, decode_chain_ns)
+        .saturating_add(version_margin_ns(graph, options, i))
 }
 
 /// Result of a solver before constraint finalisation.
@@ -493,12 +563,17 @@ fn better(a: &Candidate, b: &Candidate) -> bool {
 
 fn check_constraints(plan: &ParentGraphPlan, options: &PlanOptions) -> Result<()> {
     if let Some(sla) = options.sla_ns {
-        if plan.worst_restore_ns > sla {
+        if plan.worst_sla_bound_ns > sla {
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!(
-                    "no plan satisfies the {} ns restore SLA; the best predicted worst-case restore is {} ns",
-                    sla, plan.worst_restore_ns
+                    "no plan satisfies the {} ns restore SLA; the best predicted worst-case restore is {} ns plus a {} ns measured SLA margin (point prediction {} ns; calibration {}), bound {} ns",
+                    sla,
+                    plan.worst_restore_ns,
+                    plan.worst_sla_bound_ns - plan.worst_restore_ns,
+                    plan.worst_restore_ns,
+                    SLA_MARGIN_CALIBRATION,
+                    plan.worst_sla_bound_ns
                 ),
             ));
         }
@@ -591,13 +666,14 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
     // Version 0 can only be independent.
     let v0 = &graph.versions[0];
     if let Some(sla) = options.sla_ns {
-        if restore_chain_ns(graph, options, 0, v0.independent.decode_ns) > sla {
+        if sla_bound_ns(graph, options, 0, v0.independent.decode_ns) > sla {
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!(
-                    "no plan satisfies the {} ns restore SLA; version 0 alone needs {} ns",
+                    "no plan satisfies the {} ns restore SLA; version 0 alone needs {} ns plus a {} ns measured SLA margin",
                     sla,
-                    restore_chain_ns(graph, options, 0, v0.independent.decode_ns)
+                    restore_chain_ns(graph, options, 0, v0.independent.decode_ns),
+                    version_margin_ns(graph, options, 0)
                 ),
             ));
         }
@@ -625,7 +701,7 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
         // already breaks the SLA no prefix can use it.
         let restart_fits = options
             .sla_ns
-            .map(|sla| restore_chain_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .map(|sla| sla_bound_ns(graph, options, i, version.independent.decode_ns) <= sla)
             .unwrap_or(true);
         for state in states[i - 1].iter().flatten() {
             if !restart_fits {
@@ -665,7 +741,7 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
                     })?;
                     if options
                         .sla_ns
-                        .map(|sla| restore_chain_ns(graph, options, i, chain) > sla)
+                        .map(|sla| sla_bound_ns(graph, options, i, chain) > sla)
                         .unwrap_or(false)
                     {
                         continue;
@@ -778,7 +854,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
                 continue;
             }
             if let Some(sla) = options.sla_ns {
-                if restore_chain_ns(graph, options, i, chain) > sla {
+                if sla_bound_ns(graph, options, i, chain) > sla {
                     continue;
                 }
             }
@@ -865,7 +941,7 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
         // Restart.
         if options
             .sla_ns
-            .map(|sla| restore_chain_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .map(|sla| sla_bound_ns(graph, options, i, version.independent.decode_ns) <= sla)
             .unwrap_or(true)
         {
             consider(None, version.independent, version.independent.decode_ns, 0);
@@ -881,7 +957,7 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
                 let chain = chain_ns[j].saturating_add(edge.decode_ns);
                 if options
                     .sla_ns
-                    .map(|sla| restore_chain_ns(graph, options, i, chain) > sla)
+                    .map(|sla| sla_bound_ns(graph, options, i, chain) > sla)
                     .unwrap_or(false)
                 {
                     continue;
@@ -918,6 +994,12 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
 pub struct PriceOptions {
     /// Per-tensor planner options. The checkpoint writer's `Planned` strategy
     /// uses the same candidate set with no strategy hint.
+    ///
+    /// The planner options choose **which** representation each tensor uses; the
+    /// per-hop decode price for that chosen representation comes from
+    /// [`hop_decode_ns`], not from `TensorPlanOptions`'s decode table. A host
+    /// calibration in `plan.calibration` therefore still prices write-time
+    /// candidate choice, but does not re-price graph hops.
     pub plan: crate::tensor_store::TensorPlanOptions,
     /// Hard bound on the number of tensors per version (fail closed).
     pub max_tensors: usize,
@@ -935,6 +1017,23 @@ impl Default for PriceOptions {
             shards: 1,
         }
     }
+}
+
+/// Decode price of one graph edge's chosen representation.
+///
+/// The store knows the chosen representation at plan time, so the graph prices
+/// each edge with **that** representation's measured hop row
+/// ([`crate::cost_model::hop_estimate_ns`]) instead of the write-time decode
+/// row. The two tables are deliberately different: the write table drives
+/// candidate selection and correcting it would flip stored representations,
+/// while the hop table exists only to price chains. Mode 18
+/// (`FLOAT_TILED_STREAMS`) keeps its own measured decode row because the
+/// persisted calibration class set has no mode-18 class.
+pub fn hop_decode_ns(strategy: crate::tensor_store::TensorStrategy, decoded_bytes: u64) -> u64 {
+    if strategy == crate::tensor_store::TensorStrategy::FloatTiledStreams {
+        return crate::cost_model::estimate_streams_ns(decoded_bytes);
+    }
+    crate::cost_model::hop_estimate_ns(strategy.cost_class(), decoded_bytes)
 }
 
 /// Append the store-facing planner. Kept in this module so the pure optimizer
@@ -1054,7 +1153,7 @@ impl crate::store::Store {
                     .saturating_add(price.chosen_physical_bytes);
                 independent.decode_ns = independent
                     .decode_ns
-                    .saturating_add(price.chosen_estimated_decode_ns);
+                    .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
                 independent.total_tensors += 1;
 
                 for j in 0..i {
@@ -1088,12 +1187,12 @@ impl crate::store::Store {
                     sum.bytes = sum.bytes.saturating_add(price.chosen_physical_bytes);
                     sum.decode_ns = sum
                         .decode_ns
-                        .saturating_add(price.chosen_estimated_decode_ns);
+                        .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
                     sum.total_tensors += 1;
                     if is_delta_strategy(price.chosen) && !causal.is_empty() {
                         sum.coupled_ns = sum
                             .coupled_ns
-                            .saturating_add(price.chosen_estimated_decode_ns);
+                            .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
                         sum.coupled_tensors += 1;
                         edge_compatible[j] = true;
                     }
@@ -1393,6 +1492,7 @@ mod tests {
             per_version_ns: 0,
             per_tensor_ns: 0,
             per_mib_ns: 100_000_000,
+            margin_ns_per_mib: 1,
         };
         let options = PlanOptions {
             sla_ns: Some(50_000),

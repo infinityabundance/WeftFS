@@ -4612,7 +4612,9 @@ fn run_plan_parents(
                 "predicted_bytes": plan.predicted_bytes,
                 "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
                 "predicted_overhead_ns": plan.predicted_overhead_ns,
+                "predicted_margin_ns": plan.predicted_margin_ns,
                 "predicted_chain_ns": plan.predicted_chain_ns,
+                "predicted_sla_bound_ns": plan.predicted_sla_bound_ns,
                 "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
                 "restore_overhead": plan.restore_overhead.map(|term| json!({
                     "calibration": plan.restore_overhead_calibration,
@@ -4620,10 +4622,15 @@ fn run_plan_parents(
                     "per_tensor_ns": term.per_tensor_ns,
                     "per_mib_ns": term.per_mib_ns,
                 })),
+                "sla_margin": {
+                    "calibration": plan.sla_margin_calibration,
+                    "ns_per_mib": plan.restore_overhead.map(|term| term.margin_ns_per_mib),
+                },
                 "depth": plan.depths,
                 "dependencies": plan.dependencies,
                 "max_depth": plan.max_depth,
                 "worst_restore_ns": plan.worst_restore_ns,
+                "worst_sla_bound_ns": plan.worst_sla_bound_ns,
                 "objective": plan.objective.to_string(),
                 "sla_satisfied": plan.sla_satisfied,
                 "budget_satisfied": plan.budget_satisfied,
@@ -4633,12 +4640,14 @@ fn run_plan_parents(
                 "objective": p.objective.to_string(),
                 "predicted_bytes": p.predicted_bytes,
                 "worst_restore_ns": p.worst_restore_ns,
+                "worst_sla_bound_ns": p.worst_sla_bound_ns,
             })),
             "brute_force": brute_plan.as_ref().map(|p| json!({
                 "parents": p.parent_indices(),
                 "objective": p.objective.to_string(),
                 "predicted_bytes": p.predicted_bytes,
                 "worst_restore_ns": p.worst_restore_ns,
+                "worst_sla_bound_ns": p.worst_sla_bound_ns,
             })),
             "applied_checkpoints": reports.iter().map(|report| json!({
                 "name": report.name,
@@ -4677,13 +4686,16 @@ fn run_plan_parents(
             plan.predicted_total_decode_ns
         );
         println!("worst_restore_ns={}", plan.worst_restore_ns);
+        println!("worst_sla_bound_ns={}", plan.worst_sla_bound_ns);
         match plan.restore_overhead {
             Some(term) => println!(
-                "restore_overhead per_version_ns={} per_tensor_ns={} per_mib_ns={} calibration={}",
+                "restore_overhead per_version_ns={} per_tensor_ns={} per_mib_ns={} calibration={} sla_margin_ns_per_mib={} sla_margin_calibration={}",
                 term.per_version_ns,
                 term.per_tensor_ns,
                 term.per_mib_ns,
-                plan.restore_overhead_calibration
+                plan.restore_overhead_calibration,
+                term.margin_ns_per_mib,
+                plan.sla_margin_calibration
             ),
             None => println!("restore_overhead=none"),
         }
@@ -4694,20 +4706,22 @@ fn run_plan_parents(
         println!("budget_satisfied={}", plan.budget_satisfied);
         if let Some(dp) = &dp_plan {
             println!(
-                "dp_parents={:?} dp_objective={} dp_bytes={} dp_worst_restore_ns={}",
+                "dp_parents={:?} dp_objective={} dp_bytes={} dp_worst_restore_ns={} dp_worst_sla_bound_ns={}",
                 dp.parent_indices(),
                 dp.objective,
                 dp.predicted_bytes,
-                dp.worst_restore_ns
+                dp.worst_restore_ns,
+                dp.worst_sla_bound_ns
             );
         }
         if let Some(brute) = &brute_plan {
             println!(
-                "brute_parents={:?} brute_objective={} brute_bytes={} brute_worst_restore_ns={}",
+                "brute_parents={:?} brute_objective={} brute_bytes={} brute_worst_restore_ns={} brute_worst_sla_bound_ns={}",
                 brute.parent_indices(),
                 brute.objective,
                 brute.predicted_bytes,
-                brute.worst_restore_ns
+                brute.worst_restore_ns,
+                brute.worst_sla_bound_ns
             );
         }
         if apply {

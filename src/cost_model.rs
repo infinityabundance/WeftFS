@@ -236,24 +236,43 @@ pub const RESTORE_OVERHEAD_CALIBRATION: &str = "weftfs-s13b/restore-overhead/v1"
 /// pythia-70m checkpoints validate at 778-793 ms against a 781.6 ms prediction
 /// (-1.5 %..+0.4 %); the per-tensor term is 29,205 ns; the per-version term is
 /// 13,285 ns, the measured manifest read of a one-tensor checkpoint. The
-/// residue does **not** scale with object count for tensors of 1 MiB or more
+/// The residue does **not** scale with object count for tensors of 1 MiB or more
 /// (one 64 MiB tensor and sixty-four 1 MiB tensors measure within 7 % of each
 /// other at the same total), so hypothesis 1 of S13b is refuted in that range;
 /// the per-tensor term is the small-object fixed work that appears below
 /// roughly 256 KiB.
+///
+/// S13c adds [`Self::margin_ns_per_mib`], the **measured SLA margin**. It is
+/// derived, not tuned: 390,622 ns/MiB is the measured worst under-prediction of
+/// the all-independent floor in the nine-checkpoint court (predicted 781.6 ms,
+/// cold-measured 886.5 ms over 281,706,496 logical bytes) and 227,136 ns/MiB is
+/// 10.74 % — the largest absolute fitted residual over the 22 calibration
+/// points at tensor sizes of 1 MiB or more — applied to `per_mib_ns`. The
+/// sub-256-KiB fit artifact is excluded because hypothesis 1 above refutes a
+/// per-object term in that regime and every parent-graph tensor is MiB-scale.
+/// The margin bounds a *measured local, warm-page-cache* environment; see
+/// `docs/PARENT-GRAPH.md` for what it cannot promise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RestoreOverhead {
     pub per_version_ns: u64,
     pub per_tensor_ns: u64,
     pub per_mib_ns: u64,
+    /// Additive per-logical-MiB SLA safety margin (see
+    /// [`SLA_MARGIN_CALIBRATION`]). Charged only when checking an SLA, never to
+    /// the objective or the reported point prediction.
+    pub margin_ns_per_mib: u64,
 }
 
 impl RestoreOverhead {
-    /// The baked measured term. See [`RESTORE_OVERHEAD_CALIBRATION`].
+    /// The baked measured term. See [`RESTORE_OVERHEAD_CALIBRATION`] and
+    /// [`SLA_MARGIN_CALIBRATION`].
     pub const MEASURED: RestoreOverhead = RestoreOverhead {
         per_version_ns: 13_285,
         per_tensor_ns: 29_205,
         per_mib_ns: 2_114_993,
+        // 390,622 (measured cold-versus-warm under-prediction per logical MiB)
+        // + 227,136 (10.74 % fit-residual allowance on the per-MiB overhead).
+        margin_ns_per_mib: 617_758,
     };
 
     /// The zero term. Never use it for an SLA claim; it exists so a caller can
@@ -262,6 +281,7 @@ impl RestoreOverhead {
         per_version_ns: 0,
         per_tensor_ns: 0,
         per_mib_ns: 0,
+        margin_ns_per_mib: 0,
     };
 
     /// Estimated restore overhead in nanoseconds. Integer arithmetic only.
@@ -272,11 +292,84 @@ impl RestoreOverhead {
             .saturating_add(scaled);
         u64::try_from(total).unwrap_or(u64::MAX)
     }
+
+    /// The SLA safety margin for a version of `logical_bytes`. Integer
+    /// arithmetic only, and the same order of operations as [`Self::estimate_ns`].
+    pub fn estimate_margin_ns(&self, logical_bytes: u64) -> u64 {
+        let scaled =
+            (u128::from(logical_bytes) * u128::from(self.margin_ns_per_mib)) / 1_048_576u128;
+        u64::try_from(scaled).unwrap_or(u64::MAX)
+    }
 }
 
 /// The baked measured restore overhead for `tensors` and `logical_bytes`.
 pub fn restore_overhead_ns(tensors: u64, logical_bytes: u64) -> u64 {
     RestoreOverhead::MEASURED.estimate_ns(tensors, logical_bytes)
+}
+
+// ---------------------------------------------------------------------------
+// S13c: measured SLA margin and graph-hop decode rows
+// ---------------------------------------------------------------------------
+
+/// Identifier for the S13c measured SLA safety margin.
+///
+/// The margin is an additive per-logical-MiB term charged to the SLA check of a
+/// parent-graph plan. It bounds the measured under-prediction of a restore in
+/// the environment the plan is made for; it is not a fudge factor and it does
+/// not alter the point prediction or the objective.
+pub const SLA_MARGIN_CALIBRATION: &str = "weftfs-s13c/sla-margin/v1";
+
+/// Identifier for the S13c graph-hop decode rows.
+pub const CHAIN_HOP_CALIBRATION: &str = "weftfs-s13c/chain-hop/v1";
+
+/// Measured per-hop decode rows, used **only** by the parent-graph planner.
+///
+/// A graph edge is decoded against an already-reconstructed base, so its cost
+/// is the *increment* of one more frame on the chain. The S13b court measured
+/// that the affine rows in [`MEASURED`] over-price those increments: `raw`,
+/// `zstd`, `float-tensor` and the tiled rows are fitted on single-object reads
+/// (base included), while `SPARSE_DELTA` reuses the `WEIGHT_DELTA` row and
+/// `ZSTD_PATCH` reuses it too. The chain was therefore predicted 31.7 % high.
+///
+/// These rows are the controlled-chain measurement (`examples/calibrate_restore
+/// .rs --chains-only --chain-sizes-mib 4,8,16`, 24 samples per class per run,
+/// two independent runs unioned to 48 samples per class at 4/8/16 MiB, F32),
+/// least-squares through the origin. They have **no fixed term**: the hop
+/// increment cancels the per-version restore overhead and every per-tensor cost
+/// that both versions pay, so only the per-MiB rate is identifiable.
+///
+/// Deliberately a separate table from [`MEASURED`]: `TensorPlanOptions` still
+/// prices write-time candidates with the decode table, so this correction can
+/// never change which representation the writer stores. Only the parent-graph
+/// planner's edge pricing uses it. See `docs/PARENT-GRAPH.md`.
+const HOP_MEASURED: [(CostClass, Coefficients); 2] = [
+    (CostClass::WeightDelta, Coefficients::new(0, 4_690_851)),
+    (CostClass::SparseDelta, Coefficients::new(0, 2_071_283)),
+];
+
+/// The graph-hop row for `class`: a measured hop override when one exists,
+/// otherwise the [`CostModelKind::Measured`] decode row unchanged.
+pub fn hop_coefficients(class: CostClass) -> Coefficients {
+    if let Some((_, row)) = HOP_MEASURED
+        .iter()
+        .find(|(candidate, _)| *candidate == class)
+    {
+        return *row;
+    }
+    coefficients(class, CostModelKind::Measured)
+}
+
+/// Estimated graph-hop decode nanoseconds for `decoded_bytes`.
+pub fn hop_estimate_ns(class: CostClass, decoded_bytes: u64) -> u64 {
+    estimate_with(hop_coefficients(class), decoded_bytes)
+}
+
+/// Every graph-hop row in canonical class order, for the CLI and receipts.
+pub fn hop_table() -> Vec<(CostClass, Coefficients)> {
+    CostClass::ALL
+        .iter()
+        .map(|class| (*class, hop_coefficients(*class)))
+        .collect()
 }
 
 /// Measured mode-18 `FLOAT_TILED_STREAMS` decode row.
