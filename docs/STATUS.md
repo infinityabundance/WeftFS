@@ -7064,3 +7064,107 @@ per writer; a coordinated multi-writer GC protocol; a multi-node court with a
 real consensus substrate and a fleet throughput claim; a publication path that
 does not re-read the chain on every retry; Go parity for S3/GCS/Azure MW2; and
 MW2 for FUSE file mutations and generic checkpoint publication.
+
+## Subphase R5 — provenance-bound KV caches (2026-11-09)
+
+**Goal.** Mode 12 `KV_CACHE` binds a page's bytes and geometry but not the model
+weights, adapters, tokenizer, attention configuration, positional treatment,
+layout, or sharing domain that produced it. Provenance lived only in store
+metadata, so a consumer resolving by content hash alone could reuse an
+incompatible prefix silently. R5 makes that structurally impossible at the byte
+level: the provenance dimensions are inside the frame descriptor and the page
+identity is a hash over them.
+
+### What was added
+
+* **`spec/WEFT-KV-PROVENANCE.md`** (normative, exported to all three mirrors):
+  the ordered dimension registry, the exact descriptor key set, the
+  cross-checks against the frozen page, the sharing-domain salt's purpose and
+  non-claims, the validation order, and the store/capability scope.
+* **Mode 19 `KV_CACHE_PROV`** (`weft.ai.kv_prov.v1`) in Rust `weftcodec::kv_prov`
+  and Go `modes`. The payload is the mode-12 payload verbatim; the only wire
+  difference is the descriptor envelope. Identity:
+  `descriptor_root = H("weft/kv/prov/v1", WCB(descriptor))`. Mode 12 is
+  byte-identical; the reserved reject moved to mode 20 with `017_unknown_mode_reserved19`
+  retained and superseded.
+* **20 conformance vectors** in `conformance/v1/kv-prov/` (8 valid, 12 reject),
+  byte-identical in both codec repositories, replayed by both test suites.
+* **Adversarial court** `tests/kv_provenance.rs` (Rust store + codec) and
+  `WeftCodec-Go/conformance/kv_prov_test.go` (codec cases).
+* **Store/capability path** (`src/kv_capability.rs`): `write_kv_prov_page`,
+  `read_kv_prov_page`, `kv_prov_descriptor`, `kv_page_mode`. The capability
+  descriptor `weft.kv.prov_capability.v1` adds `provenance_root` to the mode-12
+  fields, so a grant that names its id names the provenance as well as the page.
+  The uniform denial text and the authorization-before-decode ordering are
+  unchanged.
+* **Bench** `examples/kv_provenance_bench.rs` and
+  `bench/RESULTS-kv-provenance.md`.
+
+### Collision and fail-closed results
+
+Receipt `bench/receipts/kv-provenance-court-20261109T182414Z.json` (5/5 tests,
+raw log beside it). Two frames with byte-identical 4,096-byte payloads and the
+same payload hash (`a126fc3d…7246c9`) but different adapter roots have different
+roots (`ba5ec110…5d7f5f` vs `ef7309ea…24618e`); cross-resolving either under the
+other's root returns `Unauthorized` with **0 bytes emitted**, while the matching
+scope returns 4,096 bytes. Salt `b0…`/`b1…` changes the root and nothing else.
+`{A,B}` and `{B,A}` are one frame; `{A}` differs. A tampered dimension root is
+`Malformed`; a swapped payload is `Corrupt`.
+
+Store scope (one 4,096-byte page, capability grants listed by `roots`):
+
+| scope named by the capability | emitted bytes | class |
+|---|---:|---|
+| provenance descriptor id | 4096 | `ok` |
+| plain mode-12 descriptor id | 0 | `Unauthorized` |
+| ContentId + ObjectId | 0 | `Unauthorized` |
+| another page's provenance descriptor | 0 | `Unauthorized` |
+| no envelope | 0 | `Unauthorized` |
+| mode-19 object through the mode-12 reader | 0 | `Corrupt` |
+| mode-12 object through the provenance reader | 0 | `Corrupt` |
+
+A raw `read_object` returns 5,509 bytes that start with `WFT1` and are not the
+plaintext, so a content-hash fetch yields a frame, never a decode.
+
+### Cost
+
+Receipts `bench/receipts/kv-provenance-20261109T181406Z.json` (cited) and
+`…181706Z.json` (repeat). BF16, 4×64 heads, two adapters, one extension, 40 reps.
+
+| page | mode-12 frame | mode-19 frame | descriptor | overhead |
+|---:|---:|---:|---:|---:|
+| 1 KiB | 1,858 B | 2,501 B | 909 B | +643 B (+34.61 %) |
+| 64 KiB | 66,422 B | 67,066 B | 914 B | +644 B (+0.97 %) |
+
+p50 encode 266.9 → 276.1 µs (1 KiB) and 508.2 → 541.8 µs (64 KiB); p50 decode
+11.1 → 28.5 µs and 159.0 → 182.2 µs; descriptor validation alone 16.9 / 19.0 µs;
+authorized store read 35.0 → 53.0 µs and 280.5 → 301.8 µs. Repeat run within
+noise (decode 11.2 → 28.4 and 159.2 → 179.4 µs). Peak RSS 5,948 KiB.
+
+### Every loss
+
+Small pages pay a large relative cost (+34.61 % bytes; decode more than
+doubles) because descriptor validation is a fixed ~17-19 µs. The salt changes
+identifiers only: it does not hide timing, sizes, access patterns, or existence,
+and anyone who can read the frame sees it. A caller that holds the raw bytes and
+bypasses the store can still call the codec directly; the guarantee is about the
+store API. No Go store parity (the KV capability surface is Rust-only). No CLI
+verb for provenance-bound KV writes. No serving integration, no
+time-to-first-token claim, synthetic pages, one host, warm cache. Not added to
+`verify-all`; the court is a normal test and the bench is run manually.
+
+### Gates
+
+* WeftCodec `cargo test --all-targets`: all suites pass; new `tests/kv_prov.rs`
+  9/9.
+* WeftCodec-Go `gofmt -l` empty, `go vet`, `CGO_ENABLED=0 go build`,
+  `go test -race -count=1 ./...`: all pass; new conformance replay 20/20.
+* WeftFS `cargo test --all-targets`: **695 passed, 0 failed, 0 ignored**.
+* FUSE court `cargo test --features fuse --all-targets`: **738 passed, 0 failed,
+  2 pre-existing ignored**.
+* Cross gate: `PASS rust->go kv_prov_p0`, `PASS go->rust kv_prov_p0`,
+  `PASS identical kv_prov_p0`, `YES byte-identical kv_prov_p0`, all checks
+  passed.
+* Conformance manifest 376 entries (aggregate `9fb69ebf…a91177`), coverage
+  mode 19 `8/12`; Rust and Go adapters 222 pass / 0 fail / 33 skip (frame kind).
+* Spec drift 48/48.

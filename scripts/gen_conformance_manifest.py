@@ -55,6 +55,7 @@ MODE_NAMES = {
     16: "sparse_delta",
     17: "float_tiled",
     18: "float_tiled_streams",
+    19: "kv_cache_prov",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -64,6 +65,7 @@ CODEC_DIRS = {
     "sharded": ("frame", "sharded", 10, "sharded"),
     "weight-delta": ("frame", "weight_delta", 11, "weight_delta"),
     "kv-cache": ("frame", "kv_cache", 12, "kv_cache"),
+    "kv-prov": ("frame", "kv_prov", 19, "kv_prov"),
     "activation-stream": ("frame", "activation_stream", 13, "activation_stream"),
     "semantic-delta": ("frame", "semantic_delta", 14, "semantic_delta"),
     "tensor-tiled": ("frame", "tensor_tiled", 15, "frame"),
@@ -401,6 +403,14 @@ def expectation_kv_cache(vector):
     return ok(None, sha256(elements)), None
 
 
+def expectation_kv_prov(vector):
+    if "expect_error" in vector:
+        return error(vector["expect_error"]), None
+    pages = sorted(vector.get("pages", []), key=lambda page: page["page_index"])
+    elements = b"".join(bytes.fromhex(page.get("elements_hex", "")) for page in pages)
+    return ok(vector.get("descriptor_root"), sha256(elements)), None
+
+
 def expectation_activation_stream(vector):
     if "expect_error" in vector:
         return error(vector["expect_error"]), None
@@ -439,6 +449,7 @@ EXPECTATIONS = {
     "semantic_delta": expectation_semantic_delta,
     "sparse_delta": expectation_sparse_delta,
     "kv_cache": expectation_kv_cache,
+    "kv_prov": expectation_kv_prov,
     "activation_stream": expectation_activation_stream,
     "capability": expectation_capability,
     "checkpoint": expectation_checkpoint,

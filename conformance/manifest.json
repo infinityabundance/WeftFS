@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "9818b5d3eb1e1f3511bdea2ced99ea9f265189ceca9a726634529ae09407e9ac",
+  "aggregate_sha256": "9fb69ebfba3f5b7b1d22c843bec0a064a3b43665c391b90cfe4f36be58a91177",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 234,
+    "frame": 255,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
-      "aggregate_sha256_from": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
-      "aggregate_sha256_to": "437ae31a1e523dc643543848244bde7407811ff85127546ea2b6e5302b01d59c",
-      "common_files": 348,
+      "aggregate_sha256_common": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
+      "aggregate_sha256_from": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
+      "aggregate_sha256_to": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
+      "common_files": 369,
       "differing": [],
-      "files_from": 348,
-      "files_to": 348,
+      "files_from": 369,
+      "files_to": 369,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -414,10 +414,29 @@
       ]
     },
     "19": {
-      "error": 1,
-      "valid": 0,
+      "error": 12,
+      "valid": 8,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json"
+        "WeftCodec/conformance/v1/kv-prov/001_bf16_single_layer.json",
+        "WeftCodec/conformance/v1/kv-prov/002_fp16_adapter_set.json",
+        "WeftCodec/conformance/v1/kv-prov/003_fp32_multi_layer.json",
+        "WeftCodec/conformance/v1/kv-prov/004_empty_adapter_set.json",
+        "WeftCodec/conformance/v1/kv-prov/005_tenant_salt_a.json",
+        "WeftCodec/conformance/v1/kv-prov/006_tenant_salt_b.json",
+        "WeftCodec/conformance/v1/kv-prov/007_extension_dimension.json",
+        "WeftCodec/conformance/v1/kv-prov/008_two_pages.json",
+        "WeftCodec/conformance/v1/kv-prov/101_missing_salt.json",
+        "WeftCodec/conformance/v1/kv-prov/102_unknown_dimension.json",
+        "WeftCodec/conformance/v1/kv-prov/103_duplicate_dimension.json",
+        "WeftCodec/conformance/v1/kv-prov/104_unsorted_extensions.json",
+        "WeftCodec/conformance/v1/kv-prov/105_adapter_root_mismatch.json",
+        "WeftCodec/conformance/v1/kv-prov/106_tokenizer_mismatch.json",
+        "WeftCodec/conformance/v1/kv-prov/107_attention_mismatch.json",
+        "WeftCodec/conformance/v1/kv-prov/108_layout_mismatch.json",
+        "WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json",
+        "WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json",
+        "WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json",
+        "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json"
       ]
     },
     "2": {
@@ -427,6 +446,13 @@
         "WeftCodec/conformance/v1/adversarial/009_dependency_cycle_frame_source.json",
         "WeftCodec/conformance/v1/adversarial/011_dependency_count_limit.json",
         "WeftCodec/conformance/v1/codec/009_reference_equal.json"
+      ]
+    },
+    "20": {
+      "error": 1,
+      "valid": 0,
+      "vectors": [
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json"
       ]
     },
     "255": {
@@ -546,7 +572,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 355,
+  "vector_count": 376,
   "vectors": [
     {
       "expect": {
@@ -1919,13 +1945,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved19.json"
       ],
       "mode": 19,
-      "mode_name": null,
+      "mode_name": "kv_cache_prov",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json",
-      "sha256": "b0e265cf81336db31b935c28d7e204a1052af42feb6f3266cddb77717054ba3a",
+      "sha256": "c6bb72a511f9418930069a293ede5295c0b3e4ee91b520a278fd2a7dc5a40141",
+      "superseded_by": "017_unknown_mode_reserved20",
       "supersedes": [
         "017_unknown_mode_reserved18"
       ],
       "vector_name": "017_unknown_mode_reserved19"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved20.json"
+      ],
+      "mode": 20,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json",
+      "sha256": "aaf1a6f78002f20100922441cc3db00727a97828d850e267c4e1abbbf03c882b",
+      "supersedes": [
+        "017_unknown_mode_reserved19"
+      ],
+      "vector_name": "017_unknown_mode_reserved20"
     },
     {
       "expect": {
@@ -3648,6 +3692,322 @@
       "sha256": "949da83c0fdac9d0f7e5df24d9fc0765a889a772956db4c1fffcf32c9ce1a38d",
       "subkind": "kv_cache",
       "vector_name": "108_payload_len_mismatch"
+    },
+    {
+      "expect": {
+        "content_root": "13ae8e46f36d3b722dfebbe410f72bb34df4d07dfc798dbb082c567ea0fec3e0",
+        "decoded_sha256": "30b8c20b73ecb3d14ae00a47d1a2a840040c68c86ac4e24c41c912448af76733",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/001_bf16_single_layer.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/001_bf16_single_layer.json",
+      "sha256": "7d17ee6ac65b60ed57e283a74c2b001db4930f16c07c98d07bad50ea84645d9a",
+      "subkind": "kv_prov",
+      "vector_name": "001_bf16_single_layer"
+    },
+    {
+      "expect": {
+        "content_root": "913fa1ae28dd1d6e12ce953c9426be0eb71a44d719c2cb49bfa0161dcd9fd9c2",
+        "decoded_sha256": "7ef3f013baca6f5d3b9fd2500cdfaf459c88a690a89c989fecc3d1a107bb4ea7",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/002_fp16_adapter_set.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/002_fp16_adapter_set.json",
+      "sha256": "22d5b3404cd70a5536e698294944fd306964b414e1a36e8c603afeee0c5ba4f3",
+      "subkind": "kv_prov",
+      "vector_name": "002_fp16_adapter_set"
+    },
+    {
+      "expect": {
+        "content_root": "f531e36b20fec963bca98e517074b5fbfba893825aa924bfd0ceec603b27f11f",
+        "decoded_sha256": "c26828929f2ce881fbec99d7289a0e10b0ac0634f8e0d6edd9273fb55b43b8cc",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/003_fp32_multi_layer.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/003_fp32_multi_layer.json",
+      "sha256": "81e298732d0359b76548b8f0b4c936fcd26bd06807c848b7875bc13cd6567031",
+      "subkind": "kv_prov",
+      "vector_name": "003_fp32_multi_layer"
+    },
+    {
+      "expect": {
+        "content_root": "30fb597c561643e6cfaee179da9303719fc8227c237233d0ec3e1022f5be4866",
+        "decoded_sha256": "e629051e05660ca2c8e75d87b1ef0a996dcaaf80d8556f7a2206fc4399b609da",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/004_empty_adapter_set.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/004_empty_adapter_set.json",
+      "sha256": "bcb8738e5b6d5a7b70b238b3446ac86fc8861039dc7b592a519ddc7b7fef8e54",
+      "subkind": "kv_prov",
+      "vector_name": "004_empty_adapter_set"
+    },
+    {
+      "expect": {
+        "content_root": "a11552a3d68fc72a03d507bd1db3024e6c4afd23ef86e45b0ade3199e0b1b327",
+        "decoded_sha256": "26201fadc79d271ba05d110e3a5ca3553a33c36eca27c4ec60b93bbd013ce3ee",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/005_tenant_salt_a.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/005_tenant_salt_a.json",
+      "sha256": "71f12b45e265a4d89c4abb72d14a9199c79123fdb6f3003da358a567de57544d",
+      "subkind": "kv_prov",
+      "vector_name": "005_tenant_salt_a"
+    },
+    {
+      "expect": {
+        "content_root": "ed45bd635cb4714144f05817e07a5d1e9de6a79e3a50c9a3a6c171cbe7c8729c",
+        "decoded_sha256": "26201fadc79d271ba05d110e3a5ca3553a33c36eca27c4ec60b93bbd013ce3ee",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/006_tenant_salt_b.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/006_tenant_salt_b.json",
+      "sha256": "bd409c7a6b578e4c781df7de40df8df13352c63f90dfef5a88f2d06bba4e37af",
+      "subkind": "kv_prov",
+      "vector_name": "006_tenant_salt_b"
+    },
+    {
+      "expect": {
+        "content_root": "c1c8eb8722b30ab582e81f2d2e6dd6ae0bb3d6cb400ba4000eb2768123cfe7d6",
+        "decoded_sha256": "e629051e05660ca2c8e75d87b1ef0a996dcaaf80d8556f7a2206fc4399b609da",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/007_extension_dimension.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/007_extension_dimension.json",
+      "sha256": "6a20cdbd4ae4007e6715d9dccd597395953bd46e3f3c109d46a59ec25cda6f01",
+      "subkind": "kv_prov",
+      "vector_name": "007_extension_dimension"
+    },
+    {
+      "expect": {
+        "content_root": "48441368028524d95fc5562ea684f70142bc1ec9577632ba7ac6f18b254c2e0d",
+        "decoded_sha256": "6fd7f4c9cd70638d86fd3b5d83fd5c0bb8a94369fad37d254e0e0c9ac1cee211",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/008_two_pages.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/008_two_pages.json",
+      "sha256": "5b4483056aa8b5172c1d12d462b4fed368fdcd78df7adf6c6dbe5bde9805d649",
+      "subkind": "kv_prov",
+      "vector_name": "008_two_pages"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/101_missing_salt.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/101_missing_salt.json",
+      "sha256": "7184c0ed1bfbe35cf33c9aaf245b3e3c996bfae94a379fd66023093c8962e685",
+      "subkind": "kv_prov",
+      "vector_name": "101_missing_salt"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/102_unknown_dimension.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/102_unknown_dimension.json",
+      "sha256": "adbe1b3d7fbf0da76297d8550c0b7f8c54641f4aeca0138d9a233bdd506004e9",
+      "subkind": "kv_prov",
+      "vector_name": "102_unknown_dimension"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/103_duplicate_dimension.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/103_duplicate_dimension.json",
+      "sha256": "eb2b1cd5b72e4b1b614087ed6047cea4c5bdffc37179b44003279e64e71e6d0c",
+      "subkind": "kv_prov",
+      "vector_name": "103_duplicate_dimension"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/104_unsorted_extensions.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/104_unsorted_extensions.json",
+      "sha256": "7c77aa409f9a0b45a17ec28cc07e3c1be4dfc77c64c16c5e4a94102a28306d5f",
+      "subkind": "kv_prov",
+      "vector_name": "104_unsorted_extensions"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/105_adapter_root_mismatch.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/105_adapter_root_mismatch.json",
+      "sha256": "692e9427a4b9f8d95fba5f5aa988b754491ab46b2b4de81ae1e7337f9661495b",
+      "subkind": "kv_prov",
+      "vector_name": "105_adapter_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/106_tokenizer_mismatch.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/106_tokenizer_mismatch.json",
+      "sha256": "67aa5c51fe24119f1adbf370d27c786d86f34d01e3c4e0558d52afaaa435c9c8",
+      "subkind": "kv_prov",
+      "vector_name": "106_tokenizer_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/107_attention_mismatch.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/107_attention_mismatch.json",
+      "sha256": "16906acc728ce4f42b4ce09c6a196a96aa3ea4f83bb06b62cdc30a806c7edeba",
+      "subkind": "kv_prov",
+      "vector_name": "107_attention_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/108_layout_mismatch.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/108_layout_mismatch.json",
+      "sha256": "536d261016c98b799d5530fc3885aee66a4d84d5faac20ed9c46bb45cd93047d",
+      "subkind": "kv_prov",
+      "vector_name": "108_layout_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/109_payload_truncated.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json",
+      "sha256": "57acf964b7e079fc9dd1f4636a728a23e0ad37fdbb28828278ece6137220d02e",
+      "subkind": "kv_prov",
+      "vector_name": "109_payload_truncated"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/110_payload_hash_mismatch.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json",
+      "sha256": "e074139bf2de1e48d97ba0db2c4d9d1c1566cb4880cc6b631b01d9ea2cda9cea",
+      "subkind": "kv_prov",
+      "vector_name": "110_payload_hash_mismatch"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/111_descriptor_non_canonical.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json",
+      "sha256": "86a2d090e6c7188cdb49861b6cf7ee66d9502d36e2e40712b68ac9996185eefb",
+      "subkind": "kv_prov",
+      "vector_name": "111_descriptor_non_canonical"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/112_reserved_mode_20.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json",
+      "sha256": "08e99463dd5084eac39682ab10a243b713c0e3917152f1eaccedba28e655a4bb",
+      "subkind": "kv_prov",
+      "vector_name": "112_reserved_mode_20"
     },
     {
       "expect": {

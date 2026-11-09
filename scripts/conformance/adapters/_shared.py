@@ -305,6 +305,36 @@ def kv_cache(binary, vector, work):
     return ok(None, digest)
 
 
+def inspect_provenance_root(binary, frame_hex, work):
+    path = os.path.join(work, "inspect.wft1")
+    write_hex(path, frame_hex)
+    code, stdout, stderr = run([binary, "inspect", path, "--json"])
+    if code != 0:
+        cls = class_from(stderr)
+        if cls is None:
+            raise AdapterFailure("inspect failed: %s" % stderr.strip())
+        raise AdapterFailure("inspect rejected a valid frame as %s" % cls)
+    record = json.loads(stdout)
+    root = record.get("provenance_root")
+    if not isinstance(root, str):
+        raise AdapterFailure("inspect reported no provenance_root")
+    return root
+
+
+def kv_prov(binary, vector, work):
+    if vector.get("expect_error"):
+        return decode_frame(binary, vector, work, vector["frame_hex"])
+    pages = vector.get("pages")
+    if not pages:
+        raise Skip("kv-prov vector has no pages")
+    failure, digest = decode_many_frames(binary, pages, work, "page_index")
+    if failure is not None:
+        return failure
+    ordered = sorted(pages, key=lambda page: page["page_index"])
+    root = inspect_provenance_root(binary, ordered[0]["frame_hex"], work)
+    return ok(root, digest)
+
+
 def activation_stream(binary, vector, work):
     if vector.get("expect_error"):
         return decode_frame(binary, vector, work, vector["frame_hex"])
@@ -522,6 +552,8 @@ def frame_vector(binary, vector, work):
         return sharded(binary, vector, work)
     if subkind == "kv_cache":
         return kv_cache(binary, vector, work)
+    if subkind == "kv_prov":
+        return kv_prov(binary, vector, work)
     if subkind == "activation_stream":
         return activation_stream(binary, vector, work)
     return decode_frame(binary, vector, work, vector["frame_hex"])
@@ -578,6 +610,7 @@ def annotate(path, vector):
         "sharded": ("frame", "sharded"),
         "weight-delta": ("frame", "weight_delta"),
         "kv-cache": ("frame", "kv_cache"),
+        "kv-prov": ("frame", "kv_prov"),
         "activation-stream": ("frame", "activation_stream"),
         "semantic-delta": ("frame", "semantic_delta"),
         "sparse-delta": ("frame", "sparse_delta"),
