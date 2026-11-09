@@ -74,9 +74,12 @@ Changed, and nothing else:
 - `Cargo.lock` and `WeftCodec/Cargo.lock`: the `weftfs`/`weftcodec` package
   entries only.
 - `python/pyproject.toml` and `python/README.md`: `1.2.0`.
-- `WeftFS-Go/store/rebase.go`: `storeVersion` follows the release, the tool
-  version recorded inside generated rebase provenance. Rust uses
-  `env!("CARGO_PKG_VERSION")`, so the two agree.
+
+One version string was **not** bumped: `WeftFS-Go/store/rebase.go` still has
+`const storeVersion = "1.1.0"`. A Go-generated rebase provenance record at
+v1.2.0 therefore names the 1.1.0 tool version. This is a metadata
+inconsistency, not a format change; no Go test or court depends on the value.
+Rust uses `env!("CARGO_PKG_VERSION")` and records `1.2.0`.
 
 **No frozen wire or on-disk byte changed.** Proof at the bumped tree:
 
