@@ -6,6 +6,9 @@ This directory contains independent kinds of evidence for WeftFS v1:
 |---|---|---|---|
 | `tla/WeftCommit.tla` + `tla/WeftCommit.cfg` | bounded TLC model checking | the **abstract** commit/recovery state machine has the listed invariants for the checked constants | that the Rust or Go implementation refines the model |
 | `tla/WeftCommitBuggy.tla` | deliberately flawed model | TLC finds a concrete counterexample for a plausible recovery defect | that the shipped code has (or lacks) any other defect |
+| `tla/WeftMultiWriter.tla` + `tla/WeftMultiWriter.cfg` | bounded TLC model checking | the **abstract** MW2 multi-committer protocol (conditional head publication, conflict validation, retry, crash/recovery, readers, GC) has the listed invariants for the checked constants | that the Rust or Go implementation refines the model, or linearizability of a production run |
+| `tla/WeftMultiWriterBuggy.tla` | deliberately flawed MW2 model | removing the observed-version check produces a concrete `NoBlindOverwrite` counterexample (last-writer-wins) | that every other conflict path is covered |
+| `tla/WeftMultiWriterGcBuggy.tla` | deliberately flawed GC model | GC that marks only from the head and ignores a live prepared transaction produces a concrete `GcNeverReclaimsReachable` counterexample | that the shipped GC has no other defect |
 | `scripts/powerloss_court.sh` | QEMU VM power-cut proxy | the shipped Rust + Go stores recover the same exact whole state after a guest power cut at a random point in the write loop | physical media/device power loss, host page-cache loss, or an fsync that lies |
 | `scripts/blkdebug_court.sh` | block-layer lying-disk model | dm-flakey silent write drop loses acknowledged commits while both implementations still recover one exact whole state; dm-flakey write EIO fails closed; QEMU snapshot total write drop recovers the base | physical media power loss, a selective real-disk write-drop, or a flush-error model below a mounted ext4 |
 | `scripts/hostcache_probe.sh` | host page-cache probe | the unprivileged court cannot write `/proc/sys/vm/drop_caches`; a per-file `fadvise(DONTNEED)` works | host page-cache loss or any global cache drop |
@@ -109,6 +112,41 @@ Evidence: `tests/signed_bundle.rs` (11 tests), the Go cross-check
 ---
 
 ## 1. TLA+ model checking
+
+### 1.0 Multi-writer (MW2) model — subphase R4
+
+`tla/WeftMultiWriter.tla` models the protocol specified in
+[`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md): two or more
+independent committers prepare immutable blobs, observe the head and the
+versions of their own keys, and publish with a conditional head update. A
+loser of the head race may retry only when every key it writes still has the
+version it observed; otherwise it aborts with a conflict. The model includes:
+
+* disjoint transactions (different key sets) that both publish;
+* overlapping transactions where the second observes the first and aborts;
+* a bounded retry budget (`MaxAttempts`);
+* a torn commit entry (invisible), a crash after the head publication but
+  before the acknowledgement, and recovery;
+* snapshot readers that select a published head;
+* GC that reclaims blobs while a transaction is prepared.
+
+Constants used by the committed receipt: `Committers={"c1","c2"}`,
+`Keys={"k1","k2"}`, `MaxGen=2`, `MaxAttempts=1`. The corrected model checks
+`TypeOK`, `HeadWellFormed`, `NoPartial`, `NoLostAck`, `NoBlindOverwrite`,
+`CommittedBlobsDurable`, `LivePreparedDurable`, `ReaderIsAPrefix`,
+`GcNeverReclaimsReachable`, and `CommitOrderIsStable`.
+
+| model | states generated | distinct | depth | result |
+|---|---|---|---|---|
+| `WeftMultiWriter` | 2,690,909 | 268,641 | 20 | pass, no error |
+| `WeftMultiWriterBuggy` (no conflict validation) | 578 | 227 | 6 | expected `NoBlindOverwrite` violation |
+| `WeftMultiWriterGcBuggy` (GC ignores prepared) | 14 | 9 | 3 | expected `GcNeverReclaimsReachable` violation |
+
+The two counterexamples are preserved in the committed receipt and log; the
+receipt records the violated invariant and the trace. `scripts/run_tla.sh`
+runs all five models with `TLA_TIMEOUT_SECS` (default 600 per model); a timeout
+is a failure. A pass is a bounded state-space check, not a refinement proof and
+not a linearizability proof of a production history.
 
 ### 1.1 Abstraction mapping
 

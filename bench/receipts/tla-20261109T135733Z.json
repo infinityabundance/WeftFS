@@ -1,0 +1,141 @@
+{
+  "schema": "weftfs.tla.receipt/1",
+  "generated_at": "2026-11-09T13:57:34Z",
+  "run": {
+    "started_at": "2026-11-09T13:57:33Z",
+    "finished_at": "2026-11-09T13:57:34Z",
+    "duration_ms": 1000
+  },
+  "environment": {
+    "court": "weft/tla-court:1",
+    "image_id": "sha256:de042d3c478deec6579b3182ff8dc49e450e4119b20245938c8f8d6c3d6f7916",
+    "kernel": "Linux ec4feb1a990e 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 x86_64 x86_64 GNU/Linux",
+    "java": "Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC",
+    "tla_version": "v1.7.4",
+    "tla2tools_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "3bb9ff8cb8d10b5acc3c993a392364e330337102"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "ec447ba1377647b6a5f18e1bc64d984cc9052522"
+    }
+  ],
+  "models": {
+    "corrected": {
+      "module": "WeftCommit",
+      "spec": "verification/tla/WeftCommit.tla",
+      "config": "verification/tla/WeftCommit.cfg",
+      "constants": {
+        "MaxGen": 8
+      },
+      "invariants": [
+        "TypeOK",
+        "NoPartial",
+        "HighestValid",
+        "NoLostDependency",
+        "Durability",
+        "ReturnedObjectsDurable",
+        "ReplayIdempotent"
+      ],
+      "result": "pass",
+      "states_generated": 615,
+      "distinct_states_found": 591,
+      "search_depth": 68,
+      "output_tail": "Semantic processing of module WeftCommit\nStarting... (2026-11-09 13:57:33)\nComputing initial states...\nFinished computing initial states: 1 distinct state generated at 2026-11-09 13:57:33.\nModel checking completed. No error has been found.\n  Estimates of the probability that TLC did not check all reachable states\n  because two distinct states had the same fingerprint:\n  calculated (optimistic):  val = 7.7E-16\n615 states generated, 591 distinct states found, 0 states left on queue.\nThe depth of the complete state graph search is 68.\nThe average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).\nFinished in 00s at (2026-11-09 13:57:33)"
+    },
+    "flawed": {
+      "module": "WeftCommitBuggy",
+      "spec": "verification/tla/WeftCommitBuggy.tla",
+      "config": "verification/tla/WeftCommitBuggy.cfg",
+      "constants": {
+        "MaxGen": 3
+      },
+      "injection": "recovery trusts the highest commit file, ignoring superblock visibility and CRC",
+      "result": "expected-violation",
+      "violated_invariant": "NoPartial",
+      "states_generated": 32,
+      "distinct_states_found": 29,
+      "search_depth": 9,
+      "counterexample": "Error: The behavior up to this point is:\nState 1: <Initial predicate>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objects\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objectsSynced\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>\n/\\ phase = \"commitWritten\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"torn\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}"
+    },
+    "multiwriter_corrected": {
+      "module": "WeftMultiWriter",
+      "spec": "verification/tla/WeftMultiWriter.tla",
+      "config": "verification/tla/WeftMultiWriter.cfg",
+      "constants": {
+        "MaxGen": 3
+      },
+      "invariants": [
+        "TypeOK",
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "result": "fail",
+      "states_generated": 0,
+      "distinct_states_found": 0,
+      "search_depth": 0,
+      "output_tail": "Unknown operator: `c'.\n\n\nline 318, col 36 to line 318, col 36 of module WeftMultiWriter\n\nUnknown operator: `g'.\n\n\n\nStarting... (2026-11-09 13:57:34)\nError: Parsing or semantic analysis failed.\nFinished in 00s at (2026-11-09 13:57:34)"
+    },
+    "multiwriter_flawed_conflict": {
+      "module": "WeftMultiWriterBuggy",
+      "spec": "verification/tla/WeftMultiWriterBuggy.tla",
+      "config": "verification/tla/WeftMultiWriterBuggy.cfg",
+      "constants": {
+        "MaxGen": 2
+      },
+      "injection": "publication and rebase omit the observed-version check (last-writer-wins)",
+      "result": "unexpected-pass",
+      "violated_invariant": "",
+      "states_generated": 0,
+      "distinct_states_found": 0,
+      "search_depth": 0,
+      "counterexample": ""
+    },
+    "multiwriter_flawed_gc": {
+      "module": "WeftMultiWriterGcBuggy",
+      "spec": "verification/tla/WeftMultiWriterGcBuggy.tla",
+      "config": "verification/tla/WeftMultiWriterGcBuggy.cfg",
+      "constants": {
+        "MaxGen": 2
+      },
+      "injection": "GC marks only from the head and ignores a live prepared transaction",
+      "result": "unexpected-pass",
+      "violated_invariant": "",
+      "states_generated": 0,
+      "distinct_states_found": 0,
+      "search_depth": 0,
+      "counterexample": ""
+    }
+  },
+  "evidence": {
+    "log": "bench/receipts/tla-20261109T135733Z.log",
+    "log_sha256": "88842ce7c5023f2d357e9fc5cfe1fb1957f6d7c40cd312496bcad477e44b0f42"
+  },
+  "commands": {
+    "court": "scripts/docker-court.sh tla \"bash scripts/run_tla.sh\"",
+    "corrected": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommit.cfg WeftCommit",
+    "flawed": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommitBuggy.cfg WeftCommitBuggy",
+    "multiwriter_corrected": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriter.cfg WeftMultiWriter",
+    "multiwriter_flawed_conflict": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterBuggy.cfg WeftMultiWriterBuggy",
+    "multiwriter_flawed_gc": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterGcBuggy.cfg WeftMultiWriterGcBuggy"
+  },
+  "scope": {
+    "model_checked": "bounded TLC run of the abstract state machine only; each run is bounded by TLA_TIMEOUT_SECS",
+    "not_checked": "Rust/Go code refinement, checkpoints, capabilities, physical media, linearizability of a finite run"
+  }
+}

@@ -1,0 +1,312 @@
+== TLA court ==
+kernel: Linux ec4feb1a990e 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 x86_64 x86_64 GNU/Linux
+image: weft/tla-court:1 (sha256:de042d3c478deec6579b3182ff8dc49e450e4119b20245938c8f8d6c3d6f7916)
+limits: memory=3g swap=3g cpus=4 pids=1024
+java: Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+tla2tools: v1.7.4 sha256=936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+== TLC WeftCommit ==
+== TLC WeftCommitBuggy ==
+== TLC WeftMultiWriter ==
+== TLC WeftMultiWriterBuggy ==
+== TLC WeftMultiWriterGcBuggy ==
+===== WeftCommit (corrected) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 45 and seed 1866665828972887364 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 55] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.VrBbjj/WeftCommit.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommit
+Starting... (2026-11-09 13:57:33)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-09 13:57:33.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.7E-16
+615 states generated, 591 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 68.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-09 13:57:33)
+
+===== WeftCommitBuggy (deliberately flawed) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 1 and seed -7660340524025080784 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 89] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.VrBbjj/WeftCommitBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommitBuggy
+Starting... (2026-11-09 13:57:33)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-09 13:57:33.
+Error: Invariant NoPartial is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>
+/\ phase = "objects"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>
+/\ phase = "objectsSynced"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>
+/\ phase = "commitWritten"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 6: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 2
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 7: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 1
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 8: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+State 9: <ReplayStep line 216, col 3 to line 225, col 76 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 2
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = TRUE
+/\ applied = {<<1, 1>>}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+32 states generated, 29 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-09 13:57:33)
+
+===== WeftMultiWriter (corrected) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 107 and seed 560816222557807859 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 123] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.VrBbjj/WeftMultiWriter.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriter
+Semantic errors:
+
+*** Errors: 2
+
+line 84, col 37 to line 84, col 37 of module WeftMultiWriter
+
+Unknown operator: `c'.
+
+
+line 318, col 36 to line 318, col 36 of module WeftMultiWriter
+
+Unknown operator: `g'.
+
+
+
+Starting... (2026-11-09 13:57:34)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-11-09 13:57:34)
+
+===== WeftMultiWriterBuggy (deliberately flawed: no conflict validation) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 28 and seed -8940421507315990069 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 147] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.VrBbjj/WeftMultiWriterBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterBuggy
+Semantic errors:
+
+*** Errors: 2
+
+line 64, col 37 to line 64, col 37 of module WeftMultiWriterBuggy
+
+Unknown operator: `c'.
+
+
+line 291, col 36 to line 291, col 36 of module WeftMultiWriterBuggy
+
+Unknown operator: `g'.
+
+
+
+Starting... (2026-11-09 13:57:34)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-11-09 13:57:34)
+
+===== WeftMultiWriterGcBuggy (deliberately flawed: GC ignores prepared txns) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 7 and seed -6920366399523220749 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 171] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.VrBbjj/WeftMultiWriterGcBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterGcBuggy
+Semantic errors:
+
+*** Errors: 2
+
+line 63, col 37 to line 63, col 37 of module WeftMultiWriterGcBuggy
+
+Unknown operator: `c'.
+
+
+line 298, col 36 to line 298, col 36 of module WeftMultiWriterGcBuggy
+
+Unknown operator: `g'.
+
+
+
+Starting... (2026-11-09 13:57:34)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-11-09 13:57:34)

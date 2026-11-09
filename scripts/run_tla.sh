@@ -7,9 +7,15 @@
 # Court usage:
 #   scripts/docker-court.sh tla "bash scripts/run_tla.sh"
 #
-# Runs two models in one court:
-#   1. verification/tla/WeftCommit.tla      corrected model, all invariants
-#   2. verification/tla/WeftCommitBuggy.tla deliberately flawed recovery
+# Runs five models in one court:
+#   1. verification/tla/WeftCommit.tla          corrected single-committer model
+#   2. verification/tla/WeftCommitBuggy.tla     deliberately flawed recovery
+#   3. verification/tla/WeftMultiWriter.tla     corrected MW2 model
+#   4. verification/tla/WeftMultiWriterBuggy.tla   missing conflict validation
+#   5. verification/tla/WeftMultiWriterGcBuggy.tla GC ignores prepared txns
+#
+# Each TLC run is bounded by TLA_TIMEOUT_SECS (default 600). A timeout is a
+# failure, never a pass.
 #
 # Writes only under bench/receipts/ (the court cannot write other repo paths
 # without CAP_DAC_OVERRIDE):
@@ -58,7 +64,7 @@ run_model() {
   set +e
   (
     cd "$work"
-    java -jar "$jar" -workers 1 -metadir "$meta/$module" \
+    timeout "${TLA_TIMEOUT_SECS:-600}" java -jar "$jar" -workers 1 -metadir "$meta/$module" \
       -config "$cfg" "$module"
   ) >"$out" 2>&1
   echo $? >"$out.status"
@@ -67,13 +73,25 @@ run_model() {
 
 fixed_log="$work/fixed.tlc"
 buggy_log="$work/buggy.tlc"
+mw_log="$work/mw.tlc"
+mw_buggy_log="$work/mw-buggy.tlc"
+mw_gc_log="$work/mw-gc.tlc"
 echo "== TLC WeftCommit ==" | tee -a "$log"
 run_model WeftCommit WeftCommit.cfg "$fixed_log"
 echo "== TLC WeftCommitBuggy ==" | tee -a "$log"
 run_model WeftCommitBuggy WeftCommitBuggy.cfg "$buggy_log"
+echo "== TLC WeftMultiWriter ==" | tee -a "$log"
+run_model WeftMultiWriter WeftMultiWriter.cfg "$mw_log"
+echo "== TLC WeftMultiWriterBuggy ==" | tee -a "$log"
+run_model WeftMultiWriterBuggy WeftMultiWriterBuggy.cfg "$mw_buggy_log"
+echo "== TLC WeftMultiWriterGcBuggy ==" | tee -a "$log"
+run_model WeftMultiWriterGcBuggy WeftMultiWriterGcBuggy.cfg "$mw_gc_log"
 
 fixed_status="$(cat "$fixed_log.status")"
 buggy_status="$(cat "$buggy_log.status")"
+mw_status="$(cat "$mw_log.status")"
+mw_buggy_status="$(cat "$mw_buggy_log.status")"
+mw_gc_status="$(cat "$mw_gc_log.status")"
 
 num() { grep -oE "$1" "$2" | grep -oE '[0-9]+' | tail -n 1 || true; }
 
@@ -83,9 +101,21 @@ fixed_depth="$(num 'depth of the complete state graph search is [0-9]+' "$fixed_
 buggy_states="$(num '[0-9]+ states generated' "$buggy_log")"
 buggy_distinct="$(num '[0-9]+ distinct states found' "$buggy_log")"
 buggy_depth="$(num 'depth of the complete state graph search is [0-9]+' "$buggy_log")"
+mw_states="$(num '[0-9]+ states generated' "$mw_log")"
+mw_distinct="$(num '[0-9]+ distinct states found' "$mw_log")"
+mw_depth="$(num 'depth of the complete state graph search is [0-9]+' "$mw_log")"
+mw_buggy_states="$(num '[0-9]+ states generated' "$mw_buggy_log")"
+mw_buggy_distinct="$(num '[0-9]+ distinct states found' "$mw_buggy_log")"
+mw_buggy_depth="$(num 'depth of the complete state graph search is [0-9]+' "$mw_buggy_log")"
+mw_gc_states="$(num '[0-9]+ states generated' "$mw_gc_log")"
+mw_gc_distinct="$(num '[0-9]+ distinct states found' "$mw_gc_log")"
+mw_gc_depth="$(num 'depth of the complete state graph search is [0-9]+' "$mw_gc_log")"
 
 fixed_maxgen="$(sed -n 's/^CONSTANT MaxGen = //p' verification/tla/WeftCommit.cfg)"
 buggy_maxgen="$(sed -n 's/^CONSTANT MaxGen = //p' verification/tla/WeftCommitBuggy.cfg)"
+mw_maxgen="$(sed -n 's/^  MaxGen = //p' verification/tla/WeftMultiWriter.cfg)"
+mw_buggy_maxgen="$(sed -n 's/^  MaxGen = //p' verification/tla/WeftMultiWriterBuggy.cfg)"
+mw_gc_maxgen="$(sed -n 's/^  MaxGen = //p' verification/tla/WeftMultiWriterGcBuggy.cfg)"
 
 fixed_result="fail"
 if [[ "$fixed_status" == "0" ]] && grep -q 'No error has been found' "$fixed_log"; then
@@ -99,10 +129,32 @@ if grep -q 'is violated' "$buggy_log"; then
   violated="$(sed -n 's/.*Invariant \([A-Za-z0-9_]*\) is violated.*/\1/p' "$buggy_log" | head -n 1)"
 fi
 
+mw_result="fail"
+if [[ "$mw_status" == "0" ]] && grep -q 'No error has been found' "$mw_log"; then
+  mw_result="pass"
+fi
+
+mw_buggy_result="unexpected-pass"
+mw_violated=""
+if grep -q 'is violated' "$mw_buggy_log"; then
+  mw_buggy_result="expected-violation"
+  mw_violated="$(sed -n 's/.*Invariant \([A-Za-z0-9_]*\) is violated.*/\1/p' "$mw_buggy_log" | head -n 1)"
+fi
+
+mw_gc_result="unexpected-pass"
+mw_gc_violated=""
+if grep -q 'is violated' "$mw_gc_log"; then
+  mw_gc_result="expected-violation"
+  mw_gc_violated="$(sed -n 's/.*Invariant \([A-Za-z0-9_]*\) is violated.*/\1/p' "$mw_gc_log" | head -n 1)"
+fi
+
 # The counterexample trace is preserved verbatim in the committed log. Also
 # place it in the receipt for easy consumption.
 trace="$(sed -n '/The behavior up to this point is:/,$p' "$buggy_log" | head -n 80)"
+mw_trace="$(sed -n '/The behavior up to this point is:/,$p' "$mw_buggy_log" | head -n 120)"
+mw_gc_trace="$(sed -n '/The behavior up to this point is:/,$p' "$mw_gc_log" | head -n 120)"
 fixed_tail="$(tail -n 12 "$fixed_log")"
+mw_tail="$(tail -n 12 "$mw_log")"
 
 {
   echo "===== WeftCommit (corrected) ====="
@@ -110,6 +162,15 @@ fixed_tail="$(tail -n 12 "$fixed_log")"
   echo
   echo "===== WeftCommitBuggy (deliberately flawed) ====="
   cat "$buggy_log"
+  echo
+  echo "===== WeftMultiWriter (corrected) ====="
+  cat "$mw_log"
+  echo
+  echo "===== WeftMultiWriterBuggy (deliberately flawed: no conflict validation) ====="
+  cat "$mw_buggy_log"
+  echo
+  echo "===== WeftMultiWriterGcBuggy (deliberately flawed: GC ignores prepared txns) ====="
+  cat "$mw_gc_log"
 } >>"$log"
 
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -150,6 +211,26 @@ jq -n \
   --argjson buggy_states "${buggy_states:-0}" \
   --argjson buggy_distinct "${buggy_distinct:-0}" \
   --argjson buggy_depth "${buggy_depth:-0}" \
+  --argjson mw_states "${mw_states:-0}" \
+  --argjson mw_distinct "${mw_distinct:-0}" \
+  --argjson mw_depth "${mw_depth:-0}" \
+  --argjson mw_buggy_states "${mw_buggy_states:-0}" \
+  --argjson mw_buggy_distinct "${mw_buggy_distinct:-0}" \
+  --argjson mw_buggy_depth "${mw_buggy_depth:-0}" \
+  --argjson mw_gc_states "${mw_gc_states:-0}" \
+  --argjson mw_gc_distinct "${mw_gc_distinct:-0}" \
+  --argjson mw_gc_depth "${mw_gc_depth:-0}" \
+  --arg mw_result "$mw_result" \
+  --arg mw_buggy_result "$mw_buggy_result" \
+  --arg mw_violated "$mw_violated" \
+  --arg mw_gc_result "$mw_gc_result" \
+  --arg mw_gc_violated "$mw_gc_violated" \
+  --arg mw_tail "$mw_tail" \
+  --arg mw_trace "$mw_trace" \
+  --arg mw_gc_trace "$mw_gc_trace" \
+  --argjson mw_maxgen "${mw_maxgen:-0}" \
+  --argjson mw_buggy_maxgen "${mw_buggy_maxgen:-0}" \
+  --argjson mw_gc_maxgen "${mw_gc_maxgen:-0}" \
   '{
     schema: $schema,
     generated_at: $generated_at,
@@ -183,17 +264,50 @@ jq -n \
         states_generated: $buggy_states, distinct_states_found: $buggy_distinct,
         search_depth: $buggy_depth,
         counterexample: $trace
+      },
+      multiwriter_corrected: {
+        module: "WeftMultiWriter", spec: "verification/tla/WeftMultiWriter.tla",
+        config: "verification/tla/WeftMultiWriter.cfg",
+        constants: {MaxGen: $mw_maxgen},
+        invariants: ["TypeOK","HeadWellFormed","NoPartial","NoLostAck",
+                     "NoBlindOverwrite","CommittedBlobsDurable",
+                     "LivePreparedDurable","ReaderIsAPrefix",
+                     "GcNeverReclaimsReachable","CommitOrderIsStable"],
+        result: $mw_result,
+        states_generated: $mw_states, distinct_states_found: $mw_distinct,
+        search_depth: $mw_depth, output_tail: $mw_tail
+      },
+      multiwriter_flawed_conflict: {
+        module: "WeftMultiWriterBuggy", spec: "verification/tla/WeftMultiWriterBuggy.tla",
+        config: "verification/tla/WeftMultiWriterBuggy.cfg",
+        constants: {MaxGen: $mw_buggy_maxgen},
+        injection: "publication and rebase omit the observed-version check (last-writer-wins)",
+        result: $mw_buggy_result, violated_invariant: $mw_violated,
+        states_generated: $mw_buggy_states, distinct_states_found: $mw_buggy_distinct,
+        search_depth: $mw_buggy_depth, counterexample: $mw_trace
+      },
+      multiwriter_flawed_gc: {
+        module: "WeftMultiWriterGcBuggy", spec: "verification/tla/WeftMultiWriterGcBuggy.tla",
+        config: "verification/tla/WeftMultiWriterGcBuggy.cfg",
+        constants: {MaxGen: $mw_gc_maxgen},
+        injection: "GC marks only from the head and ignores a live prepared transaction",
+        result: $mw_gc_result, violated_invariant: $mw_gc_violated,
+        states_generated: $mw_gc_states, distinct_states_found: $mw_gc_distinct,
+        search_depth: $mw_gc_depth, counterexample: $mw_gc_trace
       }
     },
     evidence: {log: $log, log_sha256: $log_sha},
     commands: {
       court: "scripts/docker-court.sh tla \"bash scripts/run_tla.sh\"",
       corrected: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommit.cfg WeftCommit",
-      flawed: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommitBuggy.cfg WeftCommitBuggy"
+      flawed: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommitBuggy.cfg WeftCommitBuggy",
+      multiwriter_corrected: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriter.cfg WeftMultiWriter",
+      multiwriter_flawed_conflict: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterBuggy.cfg WeftMultiWriterBuggy",
+      multiwriter_flawed_gc: "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterGcBuggy.cfg WeftMultiWriterGcBuggy"
     },
     scope: {
-      model_checked: "bounded TLC run of the abstract state machine only",
-      not_checked: "Rust/Go code refinement, checkpoints, GC, capabilities, physical media"
+      model_checked: "bounded TLC run of the abstract state machine only; each run is bounded by TLA_TIMEOUT_SECS",
+      not_checked: "Rust/Go code refinement, checkpoints, capabilities, physical media, linearizability of a finite run"
     }
   }' >"$receipt"
 
@@ -202,7 +316,10 @@ echo "tla receipt: $receipt"
 echo "raw log: $log"
 sha256sum "$receipt" "$log"
 
-if [[ "$fixed_result" != "pass" || "$buggy_result" != "expected-violation" ]]; then
-  echo "TLA court FAILED (corrected=$fixed_result buggy=$buggy_result)" >&2
+if [[ "$fixed_result" != "pass" || "$buggy_result" != "expected-violation" \
+      || "$mw_result" != "pass" \
+      || "$mw_buggy_result" != "expected-violation" \
+      || "$mw_gc_result" != "expected-violation" ]]; then
+  echo "TLA court FAILED (commit=$fixed_result/$buggy_result mw=$mw_result/$mw_buggy_result gc=$mw_gc_result)" >&2
   exit 1
 fi
