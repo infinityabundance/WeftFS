@@ -187,6 +187,11 @@ pub struct Options {
     /// and no index segment: a segment without an attestation is never trusted,
     /// so it exists only to reproduce the frozen v1 fixture bytes.
     pub attest_indexes: bool,
+    /// MW2 writer policy. `Single` (the default) is MW1: an exclusive writer
+    /// holds `LOCK` and no concurrent committer is admitted. `Optimistic`
+    /// publishes through a conditional head compare-and-swap and is implemented
+    /// for the explicit transaction API only. See `spec/WEFT-MULTIWRITER.md`.
+    pub writer_mode: crate::mw2::WriterMode,
 }
 
 impl Default for Options {
@@ -211,6 +216,7 @@ impl Default for Options {
             cache_bytes: 0,
             cache_entries: MAX_CACHE_ENTRIES,
             attest_indexes: true,
+            writer_mode: crate::mw2::WriterMode::Single,
         }
     }
 }
@@ -815,6 +821,13 @@ impl Store {
         backend_kind: BackendKind,
     ) -> Result<Store> {
         validate_options(&options)?;
+        if options.writer_mode == crate::mw2::WriterMode::Optimistic {
+            return Err(Error::invalid_argument(
+                "initialize the store in single mode, then reopen it with --writer-mode \
+                 optimistic; the writer-mode policy record is created by the first optimistic \
+                 writable open",
+            ));
+        }
         // A split is refused by *plane*, with a message that names the plane
         // that cannot honour the contract, before the generic capability gate.
         backend_kind.require_plane_contract()?;
@@ -910,7 +923,13 @@ impl Store {
 
     /// Open an existing store with the normative local backend.
     pub fn open(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
-        Self::open_impl(path, mode, false, BackendKind::Local)
+        Self::open_impl_mode(
+            path,
+            mode,
+            false,
+            BackendKind::Local,
+            crate::mw2::WriterMode::Single,
+        )
     }
 
     /// Open an existing store on an explicit backend.
@@ -919,21 +938,34 @@ impl Store {
         mode: OpenMode,
         backend_kind: BackendKind,
     ) -> Result<Store> {
-        Self::open_impl(path, mode, false, backend_kind)
+        Self::open_impl_mode(
+            path,
+            mode,
+            false,
+            backend_kind,
+            crate::mw2::WriterMode::Single,
+        )
     }
 
     /// Benchmark-only: open through the original full commit-directory scan so
     /// the fast path's cost can be measured against it.
     #[doc(hidden)]
     pub fn open_full_scan_for_bench(path: impl AsRef<Path>, mode: OpenMode) -> Result<Store> {
-        Self::open_impl(path, mode, true, BackendKind::Local)
+        Self::open_impl_mode(
+            path,
+            mode,
+            true,
+            BackendKind::Local,
+            crate::mw2::WriterMode::Single,
+        )
     }
 
-    fn open_impl(
+    fn open_impl_mode(
         path: impl AsRef<Path>,
         mode: OpenMode,
         full_scan: bool,
         backend_kind: BackendKind,
+        writer_mode: crate::mw2::WriterMode,
     ) -> Result<Store> {
         let root = path.as_ref().to_path_buf();
         if mode == OpenMode::ReadWrite {
@@ -965,9 +997,16 @@ impl Store {
             )));
         }
         if mode == OpenMode::ReadWrite {
-            backend.acquire_writer_lock()?;
-            backend.ensure_layout()?;
-            backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
+            if writer_mode == crate::mw2::WriterMode::Optimistic {
+                // MW2: no exclusive writer. The publication lock is taken for
+                // the short publication critical section only.
+                backend.ensure_layout()?;
+                backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
+            } else {
+                backend.acquire_writer_lock()?;
+                backend.ensure_layout()?;
+                backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
+            }
         }
         // A read-only open never writes, so it never probes. A writable open
         // proves both planes before it is trusted with a commit.
@@ -990,8 +1029,9 @@ impl Store {
         };
         // A writable open repairs the superblock cache from the writer lock
         // record: the record is the publication point, the cache is a cache.
-        // A repair failure is not fatal (recovery already used the record).
-        if mode == OpenMode::ReadWrite {
+        // An optimistic store never writes that record, so recovery must treat
+        // the superblock as authoritative (see `mw2::WriterMode::policy`).
+        if mode == OpenMode::ReadWrite && writer_mode == crate::mw2::WriterMode::Single {
             if let Ok(Some(attested)) = backend.attested_head() {
                 if attested.generation != 0 && attested.commit_len != 0 {
                     let _ = backend.refresh_head_cache(
@@ -1047,6 +1087,10 @@ impl Store {
             overlay_tables: Mutex::new(OverlayTableCache::default()),
         };
         store.load_quota_record();
+        if mode == OpenMode::ReadWrite {
+            store.ensure_writer_policy(writer_mode)?;
+        }
+        store.options.writer_mode = writer_mode;
         Ok(store)
     }
 
@@ -1086,13 +1130,66 @@ impl Store {
         backend_kind: BackendKind,
     ) -> Result<Store> {
         validate_options(&options)?;
-        let mut store = Self::open_impl(path, mode, false, backend_kind)?;
+        let mut store = Self::open_impl_mode(path, mode, false, backend_kind, options.writer_mode)?;
         if !options.quotas.is_empty() {
             store.install_quota_policy(options.quotas.clone())?;
         }
         store.options = options;
         store.apply_read_layer_options();
         Ok(store)
+    }
+
+    /// Confirm or create the writer-mode policy record.
+    ///
+    /// An absent record means `single`, and a single-mode open never writes one
+    /// (frozen fixtures stay byte-identical). The first optimistic open creates
+    /// it create-once. A mode mismatch is refused `UnsupportedVersion`: mixing
+    /// an exclusive writer with optimistic committers on one store is not a
+    /// supported configuration.
+    fn ensure_writer_policy(&mut self, mode: crate::mw2::WriterMode) -> Result<()> {
+        let key = Key::writers();
+        let existing = self.with_backend(|backend| -> Result<Option<Vec<u8>>> {
+            match backend.read_all(&key) {
+                Ok(bytes) => Ok(Some(bytes)),
+                Err(err) if err.class() == Class::NotFound => Ok(None),
+                Err(err) => Err(err),
+            }
+        })?;
+        if let Some(bytes) = existing {
+            let stored = crate::mw2::decode_writers_mode(&bytes)?;
+            if stored != mode {
+                return Err(Error::unsupported_version(format!(
+                    "store writer mode is `{}`; this handle requested `{}`. Writer modes are \
+                     not mixed. Use --writer-mode {} or a separate store.",
+                    stored.as_str(),
+                    mode.as_str(),
+                    stored.as_str()
+                )));
+            }
+            return Ok(());
+        }
+        if mode == crate::mw2::WriterMode::Single {
+            return Ok(());
+        }
+        let bytes = crate::mw2::encode_writers_record(
+            mode,
+            concat!("weftfs ", env!("CARGO_PKG_VERSION")),
+            self.now_ns(),
+        )?;
+        match self.with_backend_mut(|backend| backend.put_atomic(&key, &bytes)) {
+            Ok(()) => Ok(()),
+            Err(err) if err.class() == Class::Exists => {
+                let stored = self.with_backend(|backend| backend.read_all(&key))?;
+                if crate::mw2::decode_writers_mode(&stored)? == mode {
+                    Ok(())
+                } else {
+                    Err(Error::unsupported_version(
+                        "a concurrent open created a different writer-mode policy record",
+                    ))
+                }
+            }
+            Err(err) => Err(err),
+        }
     }
 
     /// Re-derive the R8 read layers from `self.options`.
@@ -5722,6 +5819,411 @@ impl Store {
         self.group_depth != 0
     }
 
+    // ---- MW2 transactions ------------------------------------------------
+
+    /// Begin an MW2 transaction against the head this handle has selected.
+    ///
+    /// Only an optimistic store accepts this; the default single-writer store
+    /// keeps its existing mutation API. The transaction records the base head
+    /// and every pre-image as the caller adds ops, so a rebase can decide the
+    /// conflict table without re-reading the caller's intent.
+    pub fn begin_transaction(&self, id: impl Into<String>) -> Result<crate::mw2::Transaction> {
+        if self.mode != OpenMode::ReadWrite {
+            return Err(Error::read_only(
+                "store is opened read-only; a transaction cannot publish",
+            ));
+        }
+        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+            return Err(Error::invalid_argument(
+                "transactions require --writer-mode optimistic; the default single-writer \
+                 store keeps its exclusive committer",
+            ));
+        }
+        Ok(crate::mw2::Transaction {
+            id: crate::mw2::TransactionId::new(id)?,
+            base_head: self.head,
+            base_generation: self.generation,
+            ops: Vec::new(),
+            preconditions: Vec::new(),
+            auth: Vec::new(),
+            pins: Vec::new(),
+        })
+    }
+
+    /// Store content-addressed bytes and return `(manifest id, content hash,
+    /// size)` without publishing a commit. This is the prepare half of an MW2
+    /// transaction: the caller builds an `ObjectRecord` whose `content` is the
+    /// returned manifest id and publishes it through the transaction.
+    ///
+    /// Every blob is create-once and immutable, so preparing concurrently is
+    /// always safe. An unreferenced manifest is garbage for GC.
+    pub fn prepare_content(&self, bytes: &[u8]) -> Result<(Hash32, Hash32, u64)> {
+        self.require_writable()?;
+        self.store_content_bytes(
+            bytes,
+            self.options.chunk_size,
+            None,
+            self.options.representation == RepresentationMode::CodecAuto,
+            self.options.content_identity,
+        )
+    }
+
+    /// Write the prepared record for a transaction without publishing.
+    ///
+    /// The record is what pins the transaction's manifests for GC and what a
+    /// later `transaction_outcome` lookup reads. It is not a commit and is not
+    /// visible to readers.
+    pub fn prepare_transaction(&mut self, tx: &crate::mw2::Transaction) -> Result<()> {
+        self.require_writable()?;
+        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+            return Err(Error::invalid_argument(
+                "preparing a transaction requires --writer-mode optimistic",
+            ));
+        }
+        self.write_tx_record(tx, crate::mw2::TxRecordState::Prepared, None)
+    }
+
+    /// Publish one transaction with a bounded optimistic loop.
+    ///
+    /// Each attempt revalidates every precondition and authorization check
+    /// against the current head, applies the ops to a candidate state, and
+    /// publishes the commit with a conditional head compare-and-swap. A lost
+    /// race retries only when the conflict table proves the ops still apply;
+    /// otherwise the typed conflict is returned. The retry budget is hard.
+    pub fn execute_transaction(
+        &mut self,
+        tx: &crate::mw2::Transaction,
+        options: &crate::mw2::TransactionOptions,
+    ) -> Result<crate::mw2::TransactionOutcome> {
+        self.require_writable()?;
+        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+            return Err(Error::invalid_argument(
+                "transactions require --writer-mode optimistic",
+            ));
+        }
+        if tx.ops.is_empty() {
+            return Err(Error::invalid_argument("transaction has no ops"));
+        }
+        if tx.ops.len() > options.max_ops {
+            return Err(Error::limit_exceeded(format!(
+                "transaction has {} ops, above the {}-op bound",
+                tx.ops.len(),
+                options.max_ops
+            )));
+        }
+
+        // Outcome lookup is the first thing a retry does. It is also what a
+        // caller must do after an ambiguous timeout.
+        match self.transaction_outcome(tx.id.as_str())? {
+            crate::mw2::OutcomeLookup::Committed(outcome) => {
+                let digest = tx.digest()?;
+                if let Some(record) = self.read_tx_record(tx.id.as_str())? {
+                    if record.digest != digest {
+                        return Err(Error::new(
+                            Class::Conflict,
+                            "transaction id was reused with a different op set",
+                        ));
+                    }
+                }
+                return Ok(outcome);
+            }
+            crate::mw2::OutcomeLookup::Unknown => {
+                // A previous attempt may have published and lost its
+                // acknowledgement. Find it by the canonical op digest before
+                // re-applying anything; this is what makes an ambiguous retry
+                // safe for delete ops as well as creates.
+                if let Some(record) = self.read_tx_record(tx.id.as_str())? {
+                    if let Some((commit, generation)) =
+                        self.find_tx_commit(tx, record.parent_generation, options.outcome_window)?
+                    {
+                        self.write_tx_record(
+                            tx,
+                            crate::mw2::TxRecordState::Committed,
+                            Some(commit),
+                        )?;
+                        return Ok(crate::mw2::TransactionOutcome {
+                            id: tx.id.as_str().to_owned(),
+                            commit,
+                            generation,
+                            attempts: 0,
+                            idempotent: true,
+                        });
+                    }
+                }
+            }
+            crate::mw2::OutcomeLookup::Absent => {}
+        }
+
+        self.write_tx_record(tx, crate::mw2::TxRecordState::Prepared, None)?;
+
+        let mut attempts: u32 = 0;
+        loop {
+            attempts = attempts.saturating_add(1);
+            let plane = self.with_backend(|backend| backend.load_published_head())?;
+            if attempts > 1 || plane != Some((self.generation, self.head)) {
+                self.reload_from_plane()?;
+            }
+
+            crate::mw2::validate_preconditions(&self.state, tx)?;
+            for check in &tx.auth {
+                self.authorize_read_in(&self.state, check.object, &check.principal, self.now_ns())?;
+            }
+
+            let generation = self
+                .generation
+                .checked_add(1)
+                .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+            let mut candidate = self.state.clone();
+            candidate.apply_ops(&tx.ops)?;
+            candidate.generation = generation;
+
+            let pre = self.quota_pre_map_live(&tx.ops);
+            let mut ops = tx.ops.clone();
+            let quota = self.quota_preflight(&ops, &pre)?;
+            if let Some(plan) = &quota {
+                ops.push(Self::quota_usage_op(plan));
+            }
+
+            self.state = candidate;
+            self.next_generation = generation
+                .checked_add(1)
+                .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+            match self.try_publish_staged(generation, ops, false) {
+                Ok(hash) => {
+                    if let Some(plan) = quota {
+                        self.record_quota_after_commit(plan);
+                    }
+                    self.write_tx_record(tx, crate::mw2::TxRecordState::Committed, Some(hash))?;
+                    return Ok(crate::mw2::TransactionOutcome {
+                        id: tx.id.as_str().to_owned(),
+                        commit: hash,
+                        generation,
+                        attempts,
+                        idempotent: false,
+                    });
+                }
+                Err(err) if err.class() == Class::Busy => {
+                    let forced =
+                        options.fail_after_attempts > 0 && attempts >= options.fail_after_attempts;
+                    if attempts >= options.max_attempts || forced {
+                        self.reload_from_plane()?;
+                        return Err(Error::busy(
+                            format!(
+                            "transaction {} exhausted its {attempts}-attempt budget; outcome is ",
+                            tx.id.as_str()
+                        ) + "unknown (resolve it by transaction id)",
+                        ));
+                    }
+                    std::thread::sleep(options.backoff(attempts));
+                }
+                Err(err) => {
+                    self.reload_from_plane()?;
+                    return Err(err);
+                }
+            }
+        }
+    }
+
+    /// Look a transaction id up without publishing.
+    ///
+    /// A `committed` record whose commit is still an ancestor of the selected
+    /// head is returned. A `prepared` record whose op digest appears in a commit
+    /// within the bounded window is repaired and returned. Otherwise the answer
+    /// is `Unknown`: neither success nor failure.
+    pub fn transaction_outcome(&self, id: &str) -> Result<crate::mw2::OutcomeLookup> {
+        let Some(record) = self.read_tx_record(id)? else {
+            return Ok(crate::mw2::OutcomeLookup::Absent);
+        };
+        if record.id != id {
+            return Err(Error::corrupt(
+                "transaction record id does not match its key",
+            ));
+        }
+        if record.state == crate::mw2::TxRecordState::Committed {
+            let commit = record.commit.ok_or_else(|| {
+                Error::corrupt("a committed transaction record has no commit hash")
+            })?;
+            if self.commit_in_chain(&record, commit, crate::mw2::DEFAULT_OUTCOME_WINDOW)? {
+                return Ok(crate::mw2::OutcomeLookup::Committed(
+                    crate::mw2::TransactionOutcome {
+                        id: id.to_owned(),
+                        commit,
+                        generation: record
+                            .parent_generation
+                            .checked_add(1)
+                            .unwrap_or(self.generation),
+                        attempts: 0,
+                        idempotent: true,
+                    },
+                ));
+            }
+            return Ok(crate::mw2::OutcomeLookup::Unknown);
+        }
+        Ok(crate::mw2::OutcomeLookup::Unknown)
+    }
+
+    fn read_tx_record(&self, id: &str) -> Result<Option<crate::mw2::TxRecord>> {
+        match self.with_backend(|backend| backend.read_all(&Key::tx(id))) {
+            Ok(bytes) => Ok(Some(crate::mw2::decode_tx_record(&bytes)?)),
+            Err(err) if err.class() == Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn write_tx_record(
+        &mut self,
+        tx: &crate::mw2::Transaction,
+        state: crate::mw2::TxRecordState,
+        commit: Option<Hash32>,
+    ) -> Result<()> {
+        let digest = tx.digest()?;
+        if let Some(existing) = self.read_tx_record(tx.id.as_str())? {
+            if existing.digest != digest {
+                return Err(Error::new(
+                    Class::Conflict,
+                    "transaction id was reused with a different op set",
+                ));
+            }
+            if state == crate::mw2::TxRecordState::Prepared
+                && existing.state == crate::mw2::TxRecordState::Committed
+            {
+                return Ok(());
+            }
+        }
+        let record = crate::mw2::TxRecord {
+            id: tx.id.as_str().to_owned(),
+            state,
+            digest,
+            parent_generation: tx.base_generation,
+            commit,
+            updated_ns: self.now_ns(),
+            pins: tx.pins.clone(),
+        };
+        let bytes = crate::mw2::encode_tx_record(&record)?;
+        let key = Key::tx(tx.id.as_str());
+        let result = match state {
+            crate::mw2::TxRecordState::Prepared => {
+                self.with_backend_mut(|backend| backend.put_atomic(&key, &bytes))
+            }
+            crate::mw2::TxRecordState::Committed => {
+                self.with_backend_mut(|backend| backend.put_replace(&key, &bytes))
+            }
+        };
+        match result {
+            Ok(()) => Ok(()),
+            // A concurrent writer created the same prepared record first. It
+            // must carry the same digest or `execute_transaction` refuses.
+            Err(err)
+                if state == crate::mw2::TxRecordState::Prepared && err.class() == Class::Exists =>
+            {
+                match self.read_tx_record(tx.id.as_str())? {
+                    Some(existing) if existing.digest == digest => Ok(()),
+                    _ => Err(Error::new(
+                        Class::Conflict,
+                        "transaction id was reused with a different op set",
+                    )),
+                }
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Find a published commit whose op sequence (ignoring the trailing quota
+    /// accounting op) equals this transaction's ops, within the bounded window.
+    fn find_tx_commit(
+        &self,
+        tx: &crate::mw2::Transaction,
+        parent_generation: u64,
+        window: u64,
+    ) -> Result<Option<(Hash32, u64)>> {
+        if self.generation == 0 {
+            return Ok(None);
+        }
+        let floor = parent_generation
+            .saturating_add(1)
+            .max(self.generation.saturating_sub(window));
+        let mut generation = self.generation;
+        while generation >= floor {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &Key::commit(generation), Some(generation))
+            })?;
+            let mut ops = loaded.commit.ops.as_slice();
+            // The publisher appends the quota accounting op; it is not part of
+            // the caller's op set.
+            if matches!(ops.last(), Some(Op::SetQuotaUsage(_))) {
+                ops = &ops[..ops.len() - 1];
+            }
+            if crate::mw2::same_ops(ops, &tx.ops) {
+                return Ok(Some((loaded.hash, generation)));
+            }
+            if generation == 1 {
+                break;
+            }
+            generation -= 1;
+        }
+        Ok(None)
+    }
+
+    fn commit_in_chain(
+        &self,
+        record: &crate::mw2::TxRecord,
+        commit: Hash32,
+        window: u64,
+    ) -> Result<bool> {
+        if self.generation == 0 {
+            return Ok(false);
+        }
+        let target_generation = record
+            .parent_generation
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("transaction generation overflow"))?;
+        if target_generation > self.generation {
+            return Ok(false);
+        }
+        let floor = self.generation.saturating_sub(window);
+        if target_generation < floor {
+            return Ok(false);
+        }
+        let mut generation = self.generation;
+        let mut hash = self.head;
+        while generation >= target_generation {
+            if generation == target_generation {
+                return Ok(hash == commit);
+            }
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &Key::commit(generation), Some(generation))
+            })?;
+            match loaded.commit.parent {
+                Some(parent) => hash = parent,
+                None => return Ok(false),
+            }
+            if generation == 1 {
+                break;
+            }
+            generation -= 1;
+        }
+        Ok(false)
+    }
+
+    /// Re-select the published head and replay its bounded commit chain.
+    fn reload_from_plane(&mut self) -> Result<()> {
+        let recovery = self.with_backend(|backend| recovery::recover_for_write_via(backend))?;
+        self.state = recovery.state;
+        self.head = recovery.head;
+        self.generation = recovery.generation;
+        self.next_generation = recovery
+            .generation
+            .max(recovery.highest_file_generation)
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        self.rejected = recovery.rejected;
+        self.notes.extend(recovery.notes);
+        self.blob_index.clear();
+        self.blob_index_ready = false;
+        self.load_quota_record();
+        Ok(())
+    }
+
     // ---- selector resolution --------------------------------------------
 
     /// Evaluate a selector against the authorized universe of a snapshot.
@@ -6601,6 +7103,46 @@ impl Store {
         let mut marked_manifests: BTreeSet<Hash32> = BTreeSet::new();
         let mut marked_chunks: BTreeSet<Hash32> = BTreeSet::new();
 
+        // MW2: a live prepared transaction pins the manifests its ops name.
+        // Without this a concurrent sweep could reclaim a blob the eventual
+        // commit references (the TLA+ GC-flaw counterexample models exactly
+        // this). Expired records are abandoned and may be removed on apply.
+        // A corrupt record fails the whole pass closed rather than hiding a
+        // pin.
+        let tx_grace_ns = self.options.gc_grace_secs.saturating_mul(1_000_000_000);
+        let tx_keys =
+            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Tx)))?;
+        if tx_keys.len() > 4096 {
+            return Err(Error::limit_exceeded(format!(
+                "{} prepared transaction records exceed the 4096-record GC bound",
+                tx_keys.len()
+            )));
+        }
+        let now_ns = self.now_ns();
+        let mut expired_tx: Vec<Key> = Vec::new();
+        let mut seen_pin = BTreeSet::new();
+        for key in tx_keys {
+            let bytes = self.with_backend(|backend| backend.read_all(&key))?;
+            let record = crate::mw2::decode_tx_record(&bytes)?;
+            let age_ns =
+                u64::try_from(now_ns.saturating_sub(record.updated_ns)).unwrap_or(u64::MAX);
+            if record.state == crate::mw2::TxRecordState::Prepared && age_ns <= tx_grace_ns {
+                for pin in &record.pins {
+                    mark_manifest_tree(
+                        self,
+                        *pin,
+                        &mut marked_manifests,
+                        &mut marked_chunks,
+                        &mut report.problems,
+                        0,
+                        &mut seen_pin,
+                    );
+                }
+            } else {
+                expired_tx.push(key);
+            }
+        }
+
         mark_state(
             self,
             &self.state,
@@ -6708,6 +7250,15 @@ impl Store {
             report.reclaimed_packs = reclaim.deleted_packs;
             report.reclaimed_pack_bytes = reclaim.deleted_pack_bytes;
             report.reclaimed_catalog_segments = reclaim.deleted_catalog_segments;
+        }
+
+        // Remove expired transaction discovery records once the data sweep has
+        // run. A committed record is only a discovery aid; a prepared record
+        // past the grace is abandoned.
+        if apply {
+            for key in expired_tx {
+                let _ = self.with_backend_mut(|backend| backend.delete(&key));
+            }
         }
 
         // Advisory index segments are retained only for commits named by a
@@ -7929,6 +8480,14 @@ impl Store {
         Ok(hash)
     }
 
+    /// Publish one commit through the configured writer mode.
+    fn publish_commit(&self, commit: &Commit) -> Result<Hash32> {
+        match self.options.writer_mode {
+            crate::mw2::WriterMode::Single => self.publish_commit_single(commit),
+            crate::mw2::WriterMode::Optimistic => self.publish_commit_optimistic(commit),
+        }
+    }
+
     /// Write the commit file, fsync it and its directory, publish the
     /// superblock slot, then fsync the store root.
     ///
@@ -7938,7 +8497,7 @@ impl Store {
     /// gated on `atomic_publish` and `durable_fsync`; a backend that cannot
     /// publish the head conditionally is refused for a writable open rather
     /// than downgraded.
-    fn publish_commit(&self, commit: &Commit) -> Result<Hash32> {
+    fn publish_commit_single(&self, commit: &Commit) -> Result<Hash32> {
         let wcb = commit.encode()?;
         let hash = identity::commit_id(&wcb);
         let file_bytes = encode_commit_file(&wcb)?;
@@ -8033,6 +8592,97 @@ impl Store {
 
         crash_point("after_superblock_write");
 
+        self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
+        Ok(hash)
+    }
+
+    /// MW2 publication: create-once commit record plus a conditional head
+    /// compare-and-swap, with no exclusive writer lease.
+    ///
+    /// The caller has already staged every blob and verified it. The expected
+    /// head is the one this handle observed (`self.head`/`self.generation`). A
+    /// lost race is `Busy`; the transaction loop reloads the new head, validates
+    /// the conflict table, and retries within its budget. A commit record we
+    /// published but could not make visible is deleted, because no head names
+    /// it; if the delete fails the record stays as an unreferenced file and
+    /// `verify` reports it, which is the honest outcome.
+    fn publish_commit_optimistic(&self, commit: &Commit) -> Result<Hash32> {
+        let wcb = commit.encode()?;
+        let hash = identity::commit_id(&wcb);
+        let file_bytes = encode_commit_file(&wcb)?;
+        let key = Key::commit(commit.generation);
+        let expected = HeadExpectation {
+            generation: self.generation,
+            commit: self.head,
+        };
+        let slot = SuperblockSlot {
+            generation: commit.generation,
+            commit: hash,
+            commit_len: wcb.len() as u64,
+            timestamp_ns: commit.timestamp_ns,
+        };
+        let slot_bytes = slot.encode();
+
+        let published = self.with_backend_mut(|backend| -> Result<bool> {
+            let capabilities = backend.capabilities();
+            capabilities.require_atomic_publish("commit publication")?;
+            capabilities.require_durable_fsync("commit publication")?;
+            capabilities.require_conditional_head("commit publication")?;
+            backend.flush_buffered_blobs()?;
+            // The short publication critical section. On a POSIX plane this
+            // makes the create-once check and the head compare-and-swap atomic
+            // across processes; on an object-store plane it is a no-op because
+            // the conditional writes are native.
+            backend.begin_publication()?;
+            let attempt = (|| -> Result<bool> {
+                if backend.exists(&key)? {
+                    return Err(Error::busy(format!(
+                        "commit generation {} already exists; retry against the new head",
+                        commit.generation
+                    )));
+                }
+                backend.put_atomic(&key, &file_bytes)?;
+                match backend.publish_head_conditional(
+                    expected,
+                    commit.generation,
+                    hash,
+                    wcb.len() as u64,
+                    commit.timestamp_ns,
+                    &slot_bytes,
+                ) {
+                    Ok(()) => Ok(true),
+                    Err(err) if err.class() == Class::Busy => {
+                        // The head moved. The record is unreferenced; remove it
+                        // so a later generation is not blocked by an orphan.
+                        let _ = backend.delete(&key);
+                        Err(err)
+                    }
+                    Err(err) => {
+                        let _ = backend.delete(&key);
+                        Err(err)
+                    }
+                }
+            })();
+            let ended = backend.end_publication();
+            match attempt {
+                Ok(value) => {
+                    ended?;
+                    Ok(value)
+                }
+                Err(err) => {
+                    // A failure to release the publication lock must not hide
+                    // the publication error; the guard is dropped with the
+                    // backend, which unlocks explicitly.
+                    let _ = ended;
+                    Err(err)
+                }
+            }
+        })?;
+        if !published {
+            return Err(Error::busy(
+                "optimistic publication did not publish the head",
+            ));
+        }
         self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
         Ok(hash)
     }

@@ -101,6 +101,18 @@ struct Cli {
         default_value = "local"
     )]
     backend: String,
+    /// Writer mode: `single` (MW1 — many producers, one committer; the default)
+    /// or `optimistic` (MW2 — independent committers publishing against one
+    /// shared head with a conditional compare-and-swap). See
+    /// `spec/WEFT-MULTIWRITER.md`. MW2 is opt-in and applies to the transaction
+    /// API; it is not the default and is not used by FUSE file mutations.
+    #[arg(
+        long = "writer-mode",
+        global = true,
+        value_name = "single|optimistic",
+        default_value = "single"
+    )]
+    writer_mode: String,
     /// Optional blob plane for a split store: immutable chunks, manifests, and
     /// indexes live here while commit/control state stays on `--commit-backend`.
     /// Omitted means "same as --backend", i.e. the historical single backend.
@@ -1605,6 +1617,7 @@ struct OpenPolicy {
     single_flight_max_bytes: u64,
     cache_bytes: u64,
     cache_entries: usize,
+    writer_mode: weftfs::mw2::WriterMode,
 }
 
 impl OpenPolicy {
@@ -1629,6 +1642,7 @@ impl OpenPolicy {
             single_flight_max_bytes: self.single_flight_max_bytes,
             cache_bytes: self.cache_bytes,
             cache_entries: self.cache_entries,
+            writer_mode: self.writer_mode,
             ..Options::default()
         }
     }
@@ -1792,6 +1806,7 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation,
         backend,
+        writer_mode,
         blob_backend,
         commit_backend,
         blob_root,
@@ -1875,6 +1890,7 @@ fn run(cli: Cli) -> Result<()> {
     let policy = OpenPolicy {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
+        writer_mode: weftfs::mw2::WriterMode::parse(&writer_mode)?,
         content_identity: parse_content_identity(
             content_identity.as_deref().unwrap_or("whole-file"),
         )?,

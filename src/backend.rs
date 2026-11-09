@@ -97,6 +97,10 @@ pub enum KeyKind {
     /// `pack-catalog.root`: the mutable catalog root control record. Always on
     /// the commit plane and replaced by compare-and-swap.
     PackCatalogRoot,
+    /// `txs/<id>`: an MW2 transaction outcome/discovery record. Commit plane.
+    Tx,
+    /// `writers`: the MW2 writer-mode policy record. Commit plane.
+    Writers,
 }
 
 impl KeyKind {
@@ -121,6 +125,8 @@ impl KeyKind {
             KeyKind::Pack => "pack",
             KeyKind::PackCatalog => "pack-catalog",
             KeyKind::PackCatalogRoot => "pack-catalog-root",
+            KeyKind::Tx => "tx",
+            KeyKind::Writers => "writers",
         }
     }
 }
@@ -172,6 +178,12 @@ pub enum Key {
     },
     /// The catalog root control record (subphase R11).
     PackCatalogRoot,
+    /// One MW2 transaction record (subphase R4).
+    Tx {
+        id: String,
+    },
+    /// The MW2 writer-mode policy record (subphase R4).
+    Writers,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -255,6 +267,14 @@ impl Key {
         Key::PackCatalogRoot
     }
 
+    pub fn tx(id: impl Into<String>) -> Key {
+        Key::Tx { id: id.into() }
+    }
+
+    pub fn writers() -> Key {
+        Key::Writers
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -278,6 +298,8 @@ impl Key {
             Key::Pack { .. } => KeyKind::Pack,
             Key::PackCatalog { .. } => KeyKind::PackCatalog,
             Key::PackCatalogRoot => KeyKind::PackCatalogRoot,
+            Key::Tx { .. } => KeyKind::Tx,
+            Key::Writers => KeyKind::Writers,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -310,6 +332,7 @@ impl Key {
             | Key::Pack { .. }
             | Key::PackCatalog { .. }
             | Key::PackCatalogRoot => None,
+            Key::Tx { id } => Some(id),
             Key::SnapshotRef { name } | Key::Tag { name } | Key::Tmp { name } => Some(name),
             Key::Other { name, .. } => Some(name),
             _ => None,
@@ -352,6 +375,8 @@ impl Key {
                 format!("pack-catalog/{}/{hex}", &hex[0..2])
             }
             Key::PackCatalogRoot => "pack-catalog.root".to_owned(),
+            Key::Tx { id } => format!("txs/{id}"),
+            Key::Writers => "writers".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -374,6 +399,7 @@ pub(crate) fn list_prefix_path(kind: KeyKind) -> Option<&'static str> {
         KeyKind::Access => Some("access/"),
         KeyKind::Pack => Some("packs/"),
         KeyKind::PackCatalog => Some("pack-catalog/"),
+        KeyKind::Tx => Some("txs/"),
         _ => None,
     }
 }
@@ -405,6 +431,7 @@ pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> 
             }
             Some(Key::index(commit))
         }
+        KeyKind::Tx => Some(Key::tx(relative.to_owned())),
         KeyKind::Commit => {
             let stem = relative.strip_suffix(".commit")?;
             if stem.is_empty() || !stem.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -1100,6 +1127,23 @@ pub trait StorageBackend: Send {
     /// backend until it is dropped.
     fn acquire_writer_lock(&mut self) -> Result<()>;
 
+    /// Enter the short MW2 publication critical section.
+    ///
+    /// A POSIX-shaped plane that implements compare-and-swap as
+    /// read-then-replace must serialise the two calls across processes; it
+    /// takes an OFD lock on `LOCK.publish`. An object-store plane whose
+    /// conditional write is native does nothing. The critical section covers
+    /// only the commit-record check, the commit-record publish, and the head
+    /// compare-and-swap; encode, hashing, and blob publication run outside it.
+    fn begin_publication(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Leave the MW2 publication critical section. Always safe to call.
+    fn end_publication(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Prove this handle may still publish, renewing a provider lease when one
     /// is due, and fail closed when it may not.
     ///
@@ -1244,6 +1288,19 @@ pub trait StorageBackend: Send {
         self.put_replace(key, bytes)
     }
 
+    /// The published head as `(generation, commit)`, or `None` for an
+    /// all-zero superblock. Reads and CRC-checks both slots; a corrupt higher
+    /// slot is not a head.
+    fn load_published_head(&self) -> Result<Option<(u64, Hash32)>> {
+        let image = self.read_all(&Key::superblock())?;
+        let slots = crate::format::decode_superblock(&image)?;
+        Ok(slots
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation)
+            .map(|slot| (slot.generation, slot.commit)))
+    }
+
     /// Publish the superblock slot for `generation` iff the published head is
     /// still `expected`.
     ///
@@ -1262,6 +1319,49 @@ pub trait StorageBackend: Send {
         slot_bytes: &[u8],
     ) -> Result<()> {
         let _ = (expected, generation, commit, commit_len, timestamp_ns);
+        self.write_at(&Key::superblock(), offset, slot_bytes)
+    }
+
+    /// Publish the head iff the plane still reports `expected` as the head.
+    ///
+    /// The MW2 optimistic path calls this instead of [`Self::publish_head`].
+    /// The default reads the two-slot image, checks generation and commit, and
+    /// only then writes the new slot; a POSIX plane must hold
+    /// [`Self::begin_publication`] so the read-check-write is atomic across
+    /// processes. A lost race is `Busy` and never a silent overwrite.
+    fn publish_head_conditional(
+        &mut self,
+        expected: HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+        slot_bytes: &[u8],
+    ) -> Result<()> {
+        let image = self.read_all(&Key::superblock())?;
+        let current = crate::format::decode_superblock(&image)?
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation);
+        let matches = match (&current, expected.is_none()) {
+            (None, true) => true,
+            (Some(slot), false) => {
+                slot.generation == expected.generation && slot.commit == expected.commit
+            }
+            _ => false,
+        };
+        if !matches {
+            return Err(Error::busy(format!(
+                "head publication refused: expected generation {} commit {}, observed {}",
+                expected.generation,
+                expected.commit.to_hex(),
+                current
+                    .as_ref()
+                    .map(|slot| format!("generation {}", slot.generation))
+                    .unwrap_or_else(|| "no head".to_owned())
+            )));
+        }
+        let offset = (generation % 2) * crate::format::SLOT_BYTES as u64;
         self.write_at(&Key::superblock(), offset, slot_bytes)
     }
 
@@ -1293,6 +1393,9 @@ pub struct LocalBackend {
     root: PathBuf,
     capabilities: Capabilities,
     lock: Option<WriterLock>,
+    /// Short MW2 publication lock (`LOCK.publish`), held only across the
+    /// commit-record check and the head compare-and-swap.
+    publish_lock: Option<WriterLock>,
     stats: AtomicStats,
     /// Receipt label. `"local"` for the normative backend, `"3fs"` for a 3FS
     /// transport, so a receipt never reports one as the other.
@@ -1314,6 +1417,7 @@ impl LocalBackend {
             root: root.into(),
             capabilities,
             lock: None,
+            publish_lock: None,
             stats: AtomicStats::default(),
             label: "local",
             usrbio: None,
@@ -1335,6 +1439,7 @@ impl LocalBackend {
             root: root.into(),
             capabilities,
             lock: None,
+            publish_lock: None,
             stats: AtomicStats::default(),
             label: "3fs",
             usrbio,
@@ -1408,6 +1513,8 @@ impl LocalBackend {
                 self.root.join("pack-catalog").join(&hex[0..2]).join(hex)
             }
             Key::PackCatalogRoot => self.root.join("pack-catalog.root"),
+            Key::Tx { id } => self.root.join("txs").join(id),
+            Key::Writers => self.root.join("writers"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -1428,6 +1535,8 @@ impl LocalBackend {
             KeyKind::Pack => Some(self.root.join("packs")),
             KeyKind::PackCatalog => Some(self.root.join("pack-catalog")),
             KeyKind::PackCatalogRoot => Some(self.root.clone()),
+            KeyKind::Tx => Some(self.root.join("txs")),
+            KeyKind::Writers => Some(self.root.clone()),
             _ => None,
         }
     }
@@ -1930,6 +2039,23 @@ impl StorageBackend for LocalBackend {
         Ok(())
     }
 
+    fn begin_publication(&mut self) -> Result<()> {
+        if self.publish_lock.is_some() {
+            return Err(Error::invalid_argument(
+                "publication critical section is already open on this backend",
+            ));
+        }
+        let lock = WriterLock::acquire_creating(&self.root.join("LOCK.publish"))?;
+        self.publish_lock = Some(lock);
+        Ok(())
+    }
+
+    fn end_publication(&mut self) -> Result<()> {
+        // Dropping the lock unlocks explicitly and then closes the descriptor.
+        self.publish_lock = None;
+        Ok(())
+    }
+
     fn verify_write_lease(&mut self) -> Result<()> {
         verify_lockfile_identity(
             &self.root.join("LOCK"),
@@ -1994,6 +2120,7 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
         KeyKind::SnapshotRef => Some(Key::snapshot_ref(name)),
         KeyKind::Tag => Some(Key::tag(name)),
         KeyKind::Tmp => Some(Key::tmp(name)),
+        KeyKind::Tx => Some(Key::tx(name)),
         KeyKind::Quota => {
             if name == "quota" {
                 Some(Key::quota())
@@ -2054,6 +2181,7 @@ pub struct ObjectBackend {
     root: PathBuf,
     capabilities: std::sync::Mutex<Capabilities>,
     lock: Option<WriterLock>,
+    publish_lock: Option<WriterLock>,
     stats: AtomicStats,
     link_supported: std::sync::Mutex<Option<bool>>,
     diagnostics: std::sync::Mutex<Vec<String>>,
@@ -2065,6 +2193,7 @@ impl ObjectBackend {
             root: root.into(),
             capabilities: std::sync::Mutex::new(Capabilities::immutable_object()),
             lock: None,
+            publish_lock: None,
             stats: AtomicStats::default(),
             link_supported: std::sync::Mutex::new(None),
             diagnostics: std::sync::Mutex::new(Vec::new()),
@@ -2084,6 +2213,8 @@ impl ObjectBackend {
             Key::Tag { name } => format!("t-{name}"),
             Key::Quota => "q-quota".to_owned(),
             Key::QuotaMigrated => "q-quota.migrated".to_owned(),
+            Key::Tx { id } => format!("x-{id}"),
+            Key::Writers => "w-writers".to_owned(),
             Key::AccessCounts => "a-counts.v1".to_owned(),
             Key::AccessJournal => "a-journal.v1".to_owned(),
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
@@ -2600,6 +2731,24 @@ impl StorageBackend for ObjectBackend {
         let path = self.root.join("objects").join("00").join("LOCK");
         let lock = WriterLock::acquire(&path)?;
         self.lock = Some(lock);
+        Ok(())
+    }
+
+    fn begin_publication(&mut self) -> Result<()> {
+        if self.publish_lock.is_some() {
+            return Err(Error::invalid_argument(
+                "publication critical section is already open on this backend",
+            ));
+        }
+        let lock = WriterLock::acquire_creating(
+            &self.root.join("objects").join("00").join("LOCK.publish"),
+        )?;
+        self.publish_lock = Some(lock);
+        Ok(())
+    }
+
+    fn end_publication(&mut self) -> Result<()> {
+        self.publish_lock = None;
         Ok(())
     }
 

@@ -139,6 +139,45 @@ impl WriterLock {
         }
     }
 
+    /// Acquire the exclusive writer lock on `path`, creating an empty lock
+    /// file when it is absent.
+    ///
+    /// This is used only by the MW2 publication lock (`LOCK.publish`), which is
+    /// created lazily by an optimistic store. The single-writer `LOCK` is never
+    /// created implicitly; an absent `LOCK` means the store layout is damaged.
+    pub fn acquire_creating(path: &Path) -> Result<WriterLock> {
+        if !path.exists() {
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).map_err(|err| {
+                    Error::io(format!("cannot create {}: {err}", parent.display()))
+                })?;
+            }
+            match OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o644)
+                .custom_flags(libc::O_CLOEXEC)
+                .open(path)
+            {
+                Ok(file) => {
+                    file.sync_all().map_err(|err| {
+                        Error::io(format!("cannot fsync {}: {err}", path.display()))
+                    })?;
+                }
+                // Another optimistic publisher created it first; the lock is
+                // still acquired below, which is the operation that matters.
+                Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(err) => {
+                    return Err(Error::io(format!(
+                        "cannot create {}: {err}",
+                        path.display()
+                    )))
+                }
+            }
+        }
+        WriterLock::acquire(path)
+    }
+
     /// Acquire with a caller-chosen mechanism. Used by the fallback court so
     /// the `flock`-only path is exercised on a kernel that supports OFD. It is
     /// not the shipped acquisition path; the store always calls

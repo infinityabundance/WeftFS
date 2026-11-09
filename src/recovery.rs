@@ -808,39 +808,46 @@ fn recover_inner_via(
     // that is ahead of the record means a pre-v3 writer published after the
     // record was upgraded; refusing is the only honest answer, because
     // accepting either head could lose a publication.
-    if let Some(attested) = backend.attested_head()? {
-        if attested.generation != 0 {
-            if let Some(existing) = slot_hashes.get(&attested.generation) {
-                if *existing != attested.commit {
-                    return Err(Error::corrupt(format!(
-                        "the writer lock record attests generation {} commit {} but the \
+    //
+    // An optimistic (MW2) store never uses the exclusive lease; its superblock
+    // is the authoritative publication point. The writer-mode policy record
+    // says which contract applies. A malformed policy record fails closed.
+    let writer_mode = crate::mw2::WriterMode::policy(backend)?;
+    if writer_mode != Some(crate::mw2::WriterMode::Optimistic) {
+        if let Some(attested) = backend.attested_head()? {
+            if attested.generation != 0 {
+                if let Some(existing) = slot_hashes.get(&attested.generation) {
+                    if *existing != attested.commit {
+                        return Err(Error::corrupt(format!(
+                            "the writer lock record attests generation {} commit {} but the \
                          superblock slot names {}; the record and the cache disagree",
-                        attested.generation, attested.commit, existing
-                    )));
+                            attested.generation, attested.commit, existing
+                        )));
+                    }
                 }
-            }
-            if attested.generation > max_visible {
-                notes.push(format!(
-                    "recovered head generation {} from the writer lock record; the superblock \
+                if attested.generation > max_visible {
+                    notes.push(format!(
+                        "recovered head generation {} from the writer lock record; the superblock \
                      cache named generation {max_visible}",
-                    attested.generation
-                ));
-                max_visible = attested.generation;
-                slot_hashes.insert(attested.generation, attested.commit);
-                valid_slots.push(SuperblockSlot {
-                    generation: attested.generation,
-                    commit: attested.commit,
-                    commit_len: attested.commit_len,
-                    timestamp_ns: 0,
-                });
-            } else if attested.generation < max_visible {
-                return Err(Error::unsupported_version(format!(
-                    "the superblock cache names generation {max_visible} but the writer lock \
+                        attested.generation
+                    ));
+                    max_visible = attested.generation;
+                    slot_hashes.insert(attested.generation, attested.commit);
+                    valid_slots.push(SuperblockSlot {
+                        generation: attested.generation,
+                        commit: attested.commit,
+                        commit_len: attested.commit_len,
+                        timestamp_ns: 0,
+                    });
+                } else if attested.generation < max_visible {
+                    return Err(Error::unsupported_version(format!(
+                        "the superblock cache names generation {max_visible} but the writer lock \
                      record attests generation {}; this store was written by a pre-v3 writer \
                      after the lock record was upgraded. Upgrade every writer before opening it \
                      again.",
-                    attested.generation
-                )));
+                        attested.generation
+                    )));
+                }
             }
         }
     }
