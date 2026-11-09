@@ -63,6 +63,7 @@
 //! comparison is lexicographic in version order and "no parent" sorts before
 //! every parent index.
 
+use crate::cost_model::{RestoreOverhead, RESTORE_OVERHEAD_CALIBRATION};
 use crate::error::{Class, Error, Result};
 
 /// Schema string for a serialized version graph.
@@ -215,6 +216,12 @@ pub struct PlanOptions {
     pub solver: Solver,
     /// Exhaustive-oracle limit (`Default` is [`DEFAULT_BRUTEFORCE_LIMIT`]).
     pub brute_force_limit: usize,
+    /// Measured whole-checkpoint restore overhead added once per version.
+    ///
+    /// `Default` is `Some(RestoreOverhead::MEASURED)`. `None` means the caller
+    /// has no measured term; a plan that then claims an SLA is refused with a
+    /// typed `InvalidArgument` instead of treating the missing work as free.
+    pub restore_overhead: Option<RestoreOverhead>,
 }
 
 impl Default for PlanOptions {
@@ -227,6 +234,7 @@ impl Default for PlanOptions {
             storage_budget: None,
             solver: Solver::Dp,
             brute_force_limit: DEFAULT_BRUTEFORCE_LIMIT,
+            restore_overhead: Some(RestoreOverhead::MEASURED),
         }
     }
 }
@@ -259,9 +267,21 @@ pub struct ParentGraphPlan {
     pub objective: u128,
     /// Sum of edge bytes.
     pub predicted_bytes: u64,
-    /// Chain decode nanoseconds per version (`index i` = restore cost of `i`
-    /// including every ancestor frame).
+    /// Chain decode nanoseconds per version (`index i` = decode cost of `i`
+    /// including every ancestor frame). This is the pure decode sum; the
+    /// restore prediction below adds the measured restore overhead.
+    pub predicted_decode_chain_ns: Vec<u64>,
+    /// Whole-restore nanoseconds per version: `predicted_decode_chain_ns[i]`
+    /// plus the version's measured restore overhead, added **once** (never per
+    /// dependency hop).
     pub predicted_chain_ns: Vec<u64>,
+    /// The measured restore overhead charged to each version.
+    pub predicted_overhead_ns: Vec<u64>,
+    /// The overhead model the prediction used, or `None` when the caller
+    /// supplied no model (then no SLA may be claimed).
+    pub restore_overhead: Option<RestoreOverhead>,
+    /// The measured-overhead calibration the baked term came from.
+    pub restore_overhead_calibration: &'static str,
     /// `reads_per_version * sum(chain_ns)`.
     pub predicted_total_decode_ns: u128,
     /// Chain depth per version (`0` = independent).
@@ -314,14 +334,26 @@ pub fn evaluate(
             graph.len()
         )));
     }
+    // An SLA is a claim about wall time. Without a measured restore-overhead
+    // model the prediction is known to omit the container/manifest/hash work,
+    // so the claim would be optimistic. Refuse instead of assuming it is zero.
+    if options.sla_ns.is_some() && options.restore_overhead.is_none() {
+        return Err(Error::invalid_argument(
+            "an SLA claim requires a measured restore-overhead model; set \
+             PlanOptions::restore_overhead (or drop the SLA). Treating the \
+             whole-checkpoint restore work as zero is the S13 defect",
+        ));
+    }
+    let mut decode_chain_ns = vec![0u64; parents.len()];
     let mut chain_ns = vec![0u64; parents.len()];
+    let mut overhead_ns = vec![0u64; parents.len()];
     let mut depths = vec![0u32; parents.len()];
     let mut bytes: u128 = 0;
     let mut decode_weighted: u128 = 0;
     let mut dependencies = 0u32;
     for (i, parent) in parents.iter().copied().enumerate() {
         let edge = graph.edge(i, parent)?;
-        let (chain, depth) = match parent {
+        let (decode_chain, depth) = match parent {
             None => (edge.decode_ns, 0u32),
             Some(j) => {
                 if depths[j] >= options.max_depth {
@@ -330,13 +362,31 @@ pub fn evaluate(
                         options.max_depth
                     )));
                 }
-                let chain = chain_ns[j].checked_add(edge.decode_ns).ok_or_else(|| {
-                    Error::limit_exceeded("chain decode nanoseconds overflow u64")
-                })?;
+                let chain = decode_chain_ns[j]
+                    .checked_add(edge.decode_ns)
+                    .ok_or_else(|| {
+                        Error::limit_exceeded("chain decode nanoseconds overflow u64")
+                    })?;
                 (chain, depths[j] + 1)
             }
         };
-        chain_ns[i] = chain;
+        decode_chain_ns[i] = decode_chain;
+        // The restore overhead is charged once per version restore, never once
+        // per dependency hop: a deeper chain decodes one more frame, which the
+        // decode rows already price.
+        let overhead = options
+            .restore_overhead
+            .map(|term| {
+                term.estimate_ns(
+                    u64::from(graph.versions[i].independent.total_tensors),
+                    graph.versions[i].logical_bytes,
+                )
+            })
+            .unwrap_or(0);
+        overhead_ns[i] = overhead;
+        chain_ns[i] = decode_chain
+            .checked_add(overhead)
+            .ok_or_else(|| Error::limit_exceeded("chain restore nanoseconds overflow u64"))?;
         depths[i] = depth;
         dependencies += u32::from(parent.is_some());
         bytes = bytes
@@ -344,7 +394,7 @@ pub fn evaluate(
             .ok_or_else(|| Error::limit_exceeded("edge byte total overflow u128"))?;
         let weighted = u128::from(options.lambda_read_ns)
             .checked_mul(u128::from(options.reads_per_version))
-            .and_then(|factor| factor.checked_mul(u128::from(chain)))
+            .and_then(|factor| factor.checked_mul(u128::from(chain_ns[i])))
             .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?;
         decode_weighted = decode_weighted
             .checked_add(weighted)
@@ -373,7 +423,11 @@ pub fn evaluate(
         parents: parents.to_vec(),
         objective,
         predicted_bytes,
+        predicted_decode_chain_ns: decode_chain_ns,
         predicted_chain_ns: chain_ns,
+        predicted_overhead_ns: overhead_ns,
+        restore_overhead: options.restore_overhead,
+        restore_overhead_calibration: RESTORE_OVERHEAD_CALIBRATION,
         predicted_total_decode_ns,
         depths,
         dependencies,
@@ -382,6 +436,34 @@ pub fn evaluate(
         sla_satisfied,
         budget_satisfied,
     })
+}
+
+/// The measured restore overhead charged to version `i`.
+///
+/// It depends only on the version (tensor count and logical bytes), never on
+/// the chosen parent, so every planner state for version `i` pays it once.
+fn version_overhead_ns(graph: &VersionGraph, options: &PlanOptions, i: usize) -> u64 {
+    let version = &graph.versions[i];
+    options
+        .restore_overhead
+        .map(|term| {
+            term.estimate_ns(
+                u64::from(version.independent.total_tensors),
+                version.logical_bytes,
+            )
+        })
+        .unwrap_or(0)
+}
+
+/// Decode chain plus the version's own restore overhead: the quantity an SLA
+/// bounds. The solvers must prune on this, not on the raw decode chain.
+fn restore_chain_ns(
+    graph: &VersionGraph,
+    options: &PlanOptions,
+    i: usize,
+    decode_chain_ns: u64,
+) -> u64 {
+    decode_chain_ns.saturating_add(version_overhead_ns(graph, options, i))
 }
 
 /// Result of a solver before constraint finalisation.
@@ -509,12 +591,13 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
     // Version 0 can only be independent.
     let v0 = &graph.versions[0];
     if let Some(sla) = options.sla_ns {
-        if v0.independent.decode_ns > sla {
+        if restore_chain_ns(graph, options, 0, v0.independent.decode_ns) > sla {
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!(
                     "no plan satisfies the {} ns restore SLA; version 0 alone needs {} ns",
-                    sla, v0.independent.decode_ns
+                    sla,
+                    restore_chain_ns(graph, options, 0, v0.independent.decode_ns)
                 ),
             ));
         }
@@ -538,7 +621,16 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
         let restart_term = u128::from(version.independent.bytes)
             .checked_add(decode_term(options, version.independent.decode_ns))
             .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?;
+        // A restart of version `i` is itself a restore; if its own overhead
+        // already breaks the SLA no prefix can use it.
+        let restart_fits = options
+            .sla_ns
+            .map(|sla| restore_chain_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .unwrap_or(true);
         for state in states[i - 1].iter().flatten() {
+            if !restart_fits {
+                break;
+            }
             let mut parents = state.parents.clone();
             parents.push(None);
             let candidate = Candidate {
@@ -571,7 +663,11 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
                     let chain = state.chain_ns.checked_add(edge.decode_ns).ok_or_else(|| {
                         Error::limit_exceeded("chain decode nanoseconds overflow u64")
                     })?;
-                    if options.sla_ns.map(|sla| chain > sla).unwrap_or(false) {
+                    if options
+                        .sla_ns
+                        .map(|sla| restore_chain_ns(graph, options, i, chain) > sla)
+                        .unwrap_or(false)
+                    {
                         continue;
                     }
                     let mut parents = state.parents.clone();
@@ -682,7 +778,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
                 continue;
             }
             if let Some(sla) = options.sla_ns {
-                if chain > sla {
+                if restore_chain_ns(graph, options, i, chain) > sla {
                     continue;
                 }
             }
@@ -767,7 +863,13 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
             }
         };
         // Restart.
-        consider(None, version.independent, version.independent.decode_ns, 0);
+        if options
+            .sla_ns
+            .map(|sla| restore_chain_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .unwrap_or(true)
+        {
+            consider(None, version.independent, version.independent.decode_ns, 0);
+        }
         if options.max_depth >= 1 {
             for j in 0..i {
                 let Some(edge) = version.edges[j] else {
@@ -777,7 +879,11 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
                     continue;
                 }
                 let chain = chain_ns[j].saturating_add(edge.decode_ns);
-                if options.sla_ns.map(|sla| chain > sla).unwrap_or(false) {
+                if options
+                    .sla_ns
+                    .map(|sla| restore_chain_ns(graph, options, i, chain) > sla)
+                    .unwrap_or(false)
+                {
                     continue;
                 }
                 consider(Some(j), edge, chain, depths[j] + 1);
@@ -1230,6 +1336,81 @@ mod tests {
         let err = optimize(&graph, &options).unwrap_err();
         assert_eq!(err.class(), Class::LimitExceeded);
         assert!(err.message().contains("SLA"));
+    }
+
+    #[test]
+    fn restore_overhead_is_charged_once_per_version() {
+        let graph = graph_from(&[
+            (&[], edge(100, 10)),
+            (&[Some(edge(20, 8))], edge(90, 9)),
+            (&[Some(edge(20, 8)), Some(edge(20, 8))], edge(90, 9)),
+        ]);
+        let options = PlanOptions::default();
+        let term = options
+            .restore_overhead
+            .expect("the default must be measured");
+        let plan = evaluate(&graph, &[None, Some(0), Some(1)], &options).unwrap();
+        for (i, version) in graph.versions.iter().enumerate() {
+            let expected = term.estimate_ns(
+                u64::from(version.independent.total_tensors),
+                version.logical_bytes,
+            );
+            assert_eq!(plan.predicted_overhead_ns[i], expected);
+            assert_eq!(
+                plan.predicted_chain_ns[i],
+                plan.predicted_decode_chain_ns[i] + expected
+            );
+        }
+        // The overhead does not grow with chain depth: version 2's overhead is
+        // its own version term, not two hops' worth.
+        assert_eq!(plan.predicted_overhead_ns[2], plan.predicted_overhead_ns[0]);
+        assert_eq!(plan.restore_overhead, Some(term));
+        assert_eq!(
+            plan.restore_overhead_calibration,
+            RESTORE_OVERHEAD_CALIBRATION
+        );
+    }
+
+    #[test]
+    fn an_sla_claim_without_a_measured_overhead_is_refused() {
+        let graph = graph_from(&[(&[], edge(100, 10)), (&[Some(edge(20, 5))], edge(90, 9))]);
+        let options = PlanOptions {
+            sla_ns: Some(1_000_000_000),
+            restore_overhead: None,
+            ..PlanOptions::default()
+        };
+        let err = optimize(&graph, &options).unwrap_err();
+        assert_eq!(err.class(), Class::InvalidArgument);
+        assert!(err.message().contains("restore-overhead"));
+    }
+
+    #[test]
+    fn the_sla_uses_the_corrected_restore_not_the_raw_decode_rows() {
+        // The raw decode rows fit comfortably under the SLA; the measured
+        // restore overhead does not. The corrected model must refuse.
+        let graph = graph_from(&[(&[], edge(100, 10)), (&[Some(edge(20, 8))], edge(90, 9))]);
+        let measured = RestoreOverhead {
+            per_version_ns: 0,
+            per_tensor_ns: 0,
+            per_mib_ns: 100_000_000,
+        };
+        let options = PlanOptions {
+            sla_ns: Some(50_000),
+            restore_overhead: Some(measured),
+            ..PlanOptions::default()
+        };
+        let err = optimize(&graph, &options).unwrap_err();
+        assert_eq!(err.class(), Class::LimitExceeded);
+        assert!(err.message().contains("SLA"));
+        // The same graph with the overhead switched off (and no SLA) would
+        // have claimed 18 ns.
+        let raw = PlanOptions {
+            sla_ns: None,
+            restore_overhead: None,
+            ..PlanOptions::default()
+        };
+        let plan = evaluate(&graph, &[None, Some(0)], &raw).unwrap();
+        assert!(plan.worst_restore_ns < 50_000);
     }
 
     #[test]

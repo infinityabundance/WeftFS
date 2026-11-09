@@ -646,6 +646,11 @@ enum Command {
         /// Worst-case cold-restore bound for any version, in milliseconds.
         #[arg(long = "sla-ms", value_name = "MS")]
         sla_ms: Option<u64>,
+        /// Whole-checkpoint restore-overhead model: `measured` (the S13b
+        /// calibration, the default) or `none` (diagnostic only; an SLA with
+        /// `none` is refused because the prediction would be optimistic).
+        #[arg(long = "restore-overhead", default_value = "measured")]
+        restore_overhead: String,
         /// Maximum predicted total edge bytes.
         #[arg(long = "storage-budget", value_name = "BYTES")]
         storage_budget: Option<u64>,
@@ -3074,6 +3079,7 @@ fn run(cli: Cli) -> Result<()> {
             shard_strategy,
             no_semantic,
             max_ingest_bytes,
+            restore_overhead,
         } => run_plan_parents(
             &store,
             json,
@@ -3094,6 +3100,7 @@ fn run(cli: Cli) -> Result<()> {
             shard_strategy,
             no_semantic,
             max_ingest_bytes,
+            restore_overhead,
         ),
         Command::CheckpointService {
             fd,
@@ -4408,6 +4415,7 @@ fn run_plan_parents(
     shard_strategy: String,
     no_semantic: bool,
     max_ingest_bytes: u64,
+    restore_overhead: String,
 ) -> Result<()> {
     if versions.is_empty() {
         return Err(Error::invalid_argument(
@@ -4517,6 +4525,15 @@ fn run_plan_parents(
     let graph = probe.price_parent_graph(&probe_names, &price_options)?;
     drop(probe);
 
+    let restore_overhead = match restore_overhead.as_str() {
+        "measured" => Some(weftfs::cost_model::RestoreOverhead::MEASURED),
+        "none" => None,
+        other => {
+            return Err(Error::invalid_argument(format!(
+                "--restore-overhead must be `measured` or `none` (got `{other}`)"
+            )))
+        }
+    };
     let plan_options = weftfs::plan_graph::PlanOptions {
         lambda_read_ns: lambda_ns,
         reads_per_version,
@@ -4524,6 +4541,7 @@ fn run_plan_parents(
         sla_ns: sla_ms.map(|ms| ms.saturating_mul(1_000_000)),
         storage_budget,
         solver: weftfs::plan_graph::Solver::parse(&solver)?,
+        restore_overhead,
         ..weftfs::plan_graph::PlanOptions::default()
     };
     let plan = weftfs::plan_graph::optimize(&graph, &plan_options)?;
@@ -4592,8 +4610,16 @@ fn run_plan_parents(
                 "solver": plan.solver.as_str(),
                 "parents": plan.parent_indices(),
                 "predicted_bytes": plan.predicted_bytes,
+                "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
+                "predicted_overhead_ns": plan.predicted_overhead_ns,
                 "predicted_chain_ns": plan.predicted_chain_ns,
                 "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
+                "restore_overhead": plan.restore_overhead.map(|term| json!({
+                    "calibration": plan.restore_overhead_calibration,
+                    "per_version_ns": term.per_version_ns,
+                    "per_tensor_ns": term.per_tensor_ns,
+                    "per_mib_ns": term.per_mib_ns,
+                })),
                 "depth": plan.depths,
                 "dependencies": plan.dependencies,
                 "max_depth": plan.max_depth,
@@ -4651,6 +4677,16 @@ fn run_plan_parents(
             plan.predicted_total_decode_ns
         );
         println!("worst_restore_ns={}", plan.worst_restore_ns);
+        match plan.restore_overhead {
+            Some(term) => println!(
+                "restore_overhead per_version_ns={} per_tensor_ns={} per_mib_ns={} calibration={}",
+                term.per_version_ns,
+                term.per_tensor_ns,
+                term.per_mib_ns,
+                plan.restore_overhead_calibration
+            ),
+            None => println!("restore_overhead=none"),
+        }
         println!("max_depth={}", plan.max_depth);
         println!("dependencies={}", plan.dependencies);
         println!("objective={}", plan.objective);

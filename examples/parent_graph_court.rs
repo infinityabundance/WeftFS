@@ -60,9 +60,17 @@ fn run() -> Result<(), String> {
         None => None,
     };
     let restore_reps: usize = arg(&args, "--restore-reps")
-        .unwrap_or("3")
+        .unwrap_or("7")
         .parse()
         .map_err(|_| "bad --restore-reps")?;
+    if restore_reps < 5 {
+        return Err("--restore-reps must be at least 5 for the S13b prediction-error court".into());
+    }
+    let sla_sweep_ms: Vec<u64> = arg(&args, "--sla-sweep-ms")
+        .unwrap_or("500,850,1000,2000,2500,3000,4000,6000,14000")
+        .split(',')
+        .map(|item| item.trim().parse::<u64>().map_err(|_| "bad --sla-sweep-ms"))
+        .collect::<Result<_, _>>()?;
     let steps: Vec<u32> = arg(&args, "--steps")
         .unwrap_or("0,1,2,4,8,16,64,512,1000")
         .split(',')
@@ -257,6 +265,49 @@ fn run() -> Result<(), String> {
     };
     checks.insert("dp_matches_brute_force".to_owned(), dp_matches_brute);
 
+    // ---- lambda x SLA sweep -------------------------------------------------
+    //
+    // Pure model first: collect every distinct accepted plan so the court can
+    // realise each one once and attach its measured worst restore.
+    let mut sweep_options_rows: Vec<(u64, u64, Json, Option<Vec<Option<usize>>>)> = Vec::new();
+    let mut accepted_parents: Vec<Vec<Option<usize>>> = Vec::new();
+    for sla_ms in &sla_sweep_ms {
+        for lambda in [0u64, 1u64] {
+            let mut sweep_options = options.clone();
+            sweep_options.lambda_read_ns = lambda;
+            sweep_options.sla_ns = Some(sla_ms.saturating_mul(1_000_000));
+            match plan_graph::optimize(&graph, &sweep_options) {
+                Ok(plan) => {
+                    if !accepted_parents.iter().any(|p| p == &plan.parents) {
+                        accepted_parents.push(plan.parents.clone());
+                    }
+                    sweep_options_rows.push((
+                        lambda,
+                        *sla_ms,
+                        json!({
+                            "kind": "accepted",
+                            "predicted_worst_restore_ns": plan.worst_restore_ns,
+                            "predicted_decode_worst_ns": plan.predicted_decode_chain_ns.iter().copied().max().unwrap_or(0),
+                            "max_depth": plan.max_depth,
+                            "parents": plan.parent_indices(),
+                        }),
+                        Some(plan.parents.clone()),
+                    ));
+                }
+                Err(err) => sweep_options_rows.push((
+                    lambda,
+                    *sla_ms,
+                    json!({
+                        "kind": "refused",
+                        "class": err.class().as_str(),
+                        "message": err.message(),
+                    }),
+                    None,
+                )),
+            }
+        }
+    }
+
     // ---- SLA acceptance and typed refusal --------------------------------
     let mut sla_rows = Vec::new();
     if let Some(ms) = sla_ms {
@@ -269,6 +320,7 @@ fn run() -> Result<(), String> {
                 Ok(plan) => json!({
                     "kind": "accepted",
                     "worst_restore_ns": plan.worst_restore_ns,
+                    "predicted_decode_worst_ns": plan.predicted_decode_chain_ns.iter().copied().max().unwrap_or(0),
                     "satisfied": plan.sla_satisfied,
                     "parents": plan.parent_indices(),
                 }),
@@ -296,19 +348,48 @@ fn run() -> Result<(), String> {
                 },
             })),
         }
+        // Without a measured overhead model an SLA claim is refused.
+        let mut unmeasured = options.clone();
+        unmeasured.restore_overhead = None;
+        match plan_graph::optimize(&graph, &unmeasured) {
+            Ok(_) => sla_rows.push(json!({
+                "sla_ms": ms,
+                "restore_overhead": "none",
+                "outcome": {"kind": "accepted", "bug": "an SLA was accepted without a restore-overhead model"},
+            })),
+            Err(err) => sla_rows.push(json!({
+                "sla_ms": ms,
+                "restore_overhead": "none",
+                "outcome": {"kind": "refused", "class": err.class().as_str(), "message": err.message()},
+            })),
+        }
     }
 
     // ---- realise the plan classes ---------------------------------------
     let mut realizations = Vec::new();
     if !skip_realize {
-        let plan_list: Vec<(&str, Vec<Option<usize>>)> = vec![
-            ("chain", chain.clone()),
-            ("restart-2", k2.clone()),
-            ("restart-3", k3.clone()),
-            ("restart-4", k4.clone()),
-            ("optimizer", dp_plan.parents.clone()),
-            ("optimizer-bytes-only", dp0_plan.parents.clone()),
+        let mut plan_list: Vec<(String, Vec<Option<usize>>)> = vec![
+            ("chain".to_owned(), chain.clone()),
+            ("restart-2".to_owned(), k2.clone()),
+            ("restart-3".to_owned(), k3.clone()),
+            ("restart-4".to_owned(), k4.clone()),
+            ("optimizer".to_owned(), dp_plan.parents.clone()),
+            ("optimizer-bytes-only".to_owned(), dp0_plan.parents.clone()),
         ];
+        // Realise every plan the SLA sweep accepted, so an accepted plan can be
+        // checked against its measured restore. Bound the extra work.
+        let mut extra = 0usize;
+        for parents in &accepted_parents {
+            if plan_list.iter().any(|(_, existing)| existing == parents) {
+                continue;
+            }
+            if extra >= 3 {
+                eprintln!("parent_graph: more than 3 sweep-only plans; extra ones stay unmeasured");
+                break;
+            }
+            extra += 1;
+            plan_list.push((format!("sweep-plan-{extra}"), parents.clone()));
+        }
         let mut seen_plans = std::collections::BTreeSet::new();
         for (label, parents) in plan_list {
             let key: Vec<i64> = parents
@@ -321,7 +402,7 @@ fn run() -> Result<(), String> {
             }
             let row = realize(
                 &work,
-                label,
+                &label,
                 &sources,
                 &parents,
                 &graph,
@@ -341,6 +422,101 @@ fn run() -> Result<(), String> {
             realizations.push(row);
         }
     }
+
+    // ---- attach measured restores to the sweep ---------------------------
+    let measurement_key = |parents: &[Option<usize>]| -> Vec<i64> {
+        parents
+            .iter()
+            .map(|parent| parent.map(|p| p as i64).unwrap_or(-1))
+            .collect()
+    };
+    let mut measured_by_plan: BTreeMap<Vec<i64>, (String, f64, bool)> = BTreeMap::new();
+    for row in &realizations {
+        let label = row["label"].as_str().unwrap_or("?").to_owned();
+        let parents = row["predicted"]["parents"]
+            .as_array()
+            .map(|values| {
+                values
+                    .iter()
+                    .map(|value| value.as_i64().unwrap_or(-1))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let worst = row["restore_worst_ms"].as_f64().unwrap_or(0.0);
+        let exact = row["all_versions_exact"].as_bool().unwrap_or(false);
+        measured_by_plan.insert(parents, (label, worst, exact));
+    }
+    let mut accepted_measured = 0usize;
+    let mut accepted_unmeasured = 0usize;
+    let mut accepted_misses = 0usize;
+    let mut sla_sweep = Vec::new();
+    for (lambda, sla_ms, outcome, parents) in &sweep_options_rows {
+        let mut row = json!({
+            "lambda_ns": lambda,
+            "sla_ms": sla_ms,
+            "outcome": outcome,
+        });
+        if let Some(parents) = parents {
+            let key = measurement_key(parents);
+            match measured_by_plan.get(&key) {
+                Some((label, worst_ms, exact)) => {
+                    accepted_measured += 1;
+                    let holds = *worst_ms <= *sla_ms as f64;
+                    if !holds {
+                        accepted_misses += 1;
+                    }
+                    let predicted_ns = outcome["predicted_worst_restore_ns"].as_u64().unwrap_or(0);
+                    let measured_ns = (*worst_ms * 1_000_000.0).round() as u64;
+                    let error_ppm = if measured_ns == 0 {
+                        0
+                    } else {
+                        (((predicted_ns as f64 - measured_ns as f64) / measured_ns as f64)
+                            * 1_000_000.0)
+                            .round() as i64
+                    };
+                    row["measured"] = json!({
+                        "label": label,
+                        "worst_restore_ms": worst_ms,
+                        "sla_holds": holds,
+                        "all_versions_exact": exact,
+                        "prediction_error_ppm": error_ppm,
+                    });
+                }
+                None => {
+                    accepted_unmeasured += 1;
+                    row["measured"] = Json::Null;
+                }
+            }
+        }
+        sla_sweep.push(row);
+    }
+    checks.insert(
+        "no_accepted_plan_misses_its_sla".to_owned(),
+        accepted_misses == 0 && accepted_unmeasured == 0,
+    );
+    // The all-independent plan is the restore floor; the S13b success criterion
+    // is an absolute prediction error of at most 10 % on it.
+    let floor_error = realizations
+        .iter()
+        .find(|row| {
+            row["predicted"]["parents"]
+                .as_array()
+                .map(|values| values.iter().all(|value| value.as_i64() == Some(-1)))
+                .unwrap_or(false)
+        })
+        .map(|row| {
+            let predicted = row["predicted_restore_worst_ns"].as_f64().unwrap_or(0.0);
+            let measured = row["restore_worst_ms"].as_f64().unwrap_or(0.0) * 1_000_000.0;
+            if measured == 0.0 {
+                0.0
+            } else {
+                (predicted - measured).abs() / measured
+            }
+        });
+    checks.insert(
+        "floor_prediction_within_10_percent".to_owned(),
+        floor_error.map(|error| error <= 0.10).unwrap_or(false),
+    );
 
     // ---- lambda sweep -----------------------------------------------------
     let mut lambda_sweep = Vec::new();
@@ -374,7 +550,7 @@ fn run() -> Result<(), String> {
 
     // ---- receipt ---------------------------------------------------------
     let receipt = json!({
-        "schema": "weft.s13.parent-graph.v1",
+        "schema": "weft.s13b.parent-graph.v2",
         "court": {
             "kernel": std::env::var("WEFT_COURT_KERNEL").unwrap_or_else(|_| "unknown".into()),
             "image": std::env::var("WEFT_COURT_IMAGE").unwrap_or_else(|_| "unknown".into()),
@@ -396,6 +572,17 @@ fn run() -> Result<(), String> {
             "lambda_ns": chosen_lambda,
             "lambda_ns_source": if lambda_ns.is_some() { "explicit" } else { "break-even" },
             "restore_reps": restore_reps,
+            "restore_reps_minimum": 5,
+            "sla_sweep_ms": sla_sweep_ms,
+            "restore_overhead": {
+                "calibration": options
+                    .restore_overhead
+                    .map(|_| weftfs::cost_model::RESTORE_OVERHEAD_CALIBRATION),
+                "per_version_ns": options.restore_overhead.map(|term| term.per_version_ns),
+                "per_tensor_ns": options.restore_overhead.map(|term| term.per_tensor_ns),
+                "per_mib_ns": options.restore_overhead.map(|term| term.per_mib_ns),
+                "note": "charged once per version restore, never per dependency hop",
+            },
             "restore_note": "cold store reopen per repetition; OS page cache is warm, so this is decode-dominated and labelled",
             "pricing_ms": price_ms,
         },
@@ -418,6 +605,13 @@ fn run() -> Result<(), String> {
             },
         },
         "sla": sla_rows,
+        "sla_sweep": sla_sweep,
+        "sla_sweep_summary": {
+            "accepted_with_measurement": accepted_measured,
+            "accepted_without_measurement": accepted_unmeasured,
+            "accepted_misses": accepted_misses,
+        },
+        "floor_prediction_error": floor_error,
         "lambda_sweep": lambda_sweep,
         "realizations": realizations,
         "checks": checks,
@@ -549,6 +743,14 @@ fn realize(
             "name": name,
             "median_ms": median,
             "reps_ms": times,
+            "predicted_restore_ms": predicted.predicted_chain_ns[i] as f64 / 1_000_000.0,
+            "predicted_decode_ms": predicted.predicted_decode_chain_ns[i] as f64 / 1_000_000.0,
+            "predicted_overhead_ms": predicted.predicted_overhead_ns[i] as f64 / 1_000_000.0,
+            "prediction_error_ppm": if median > 0.0 {
+                (((predicted.predicted_chain_ns[i] as f64 / 1_000_000.0 - median) / median) * 1_000_000.0).round() as i64
+            } else {
+                0
+            },
             "exact_source_file": report.exact_source_file,
             "source_sha256_match": hex::encode(report.file_sha256) == source_sha,
             "all_tensors_exact": all_tensors_exact,
@@ -576,6 +778,39 @@ fn realize(
                 .and_then(Json::as_bool)
                 .unwrap_or(false)
     });
+    let worst_prediction_error_ppm = restores
+        .iter()
+        .filter_map(|row| row.get("prediction_error_ppm").and_then(Json::as_i64))
+        .map(i64::abs)
+        .max()
+        .unwrap_or(0);
+    // For a pure chain, the per-hop measured increment is checked against the
+    // measured delta row the model uses (hypothesis 3).
+    let chain_hops: Option<Json> = if parents
+        .iter()
+        .enumerate()
+        .all(|(i, parent)| i == 0 || *parent == Some(i - 1))
+        && parents.len() > 1
+    {
+        let mut hops = Vec::new();
+        for i in 1..parents.len() {
+            let previous = restores[i - 1]["median_ms"].as_f64().unwrap_or(0.0);
+            let current = restores[i]["median_ms"].as_f64().unwrap_or(0.0);
+            let predicted_decode = predicted.predicted_decode_chain_ns[i] as f64
+                - predicted.predicted_decode_chain_ns[i - 1] as f64;
+            hops.push(json!({
+                "index": i,
+                "measured_increment_ms": current - previous,
+                "predicted_decode_increment_ms": predicted_decode / 1_000_000.0,
+                "increment_error_ppm": if current - previous > 0.0 {
+                    ((((predicted_decode / 1_000_000.0) - (current - previous)) / (current - previous)) * 1_000_000.0).round() as i64
+                } else { 0 },
+            }));
+        }
+        Some(json!(hops))
+    } else {
+        None
+    };
     Ok(json!({
         "label": label,
         "store": path.display().to_string(),
@@ -588,6 +823,8 @@ fn realize(
         "restore_sum_ms": restore_sum,
         "restore_worst_ms": worst,
         "predicted_restore_worst_ns": predicted.worst_restore_ns,
+        "worst_prediction_error_ppm": worst_prediction_error_ppm,
+        "chain_hops": chain_hops,
         "all_versions_exact": all_exact,
         "verify_full_ok": verify.ok,
         "verify_problems": verify.problems.len(),
@@ -602,8 +839,11 @@ fn plan_json(plan: &plan_graph::ParentGraphPlan) -> Json {
         "parents": plan.parent_indices(),
         "objective": plan.objective.to_string(),
         "predicted_bytes": plan.predicted_bytes,
+        "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
+        "predicted_overhead_ns": plan.predicted_overhead_ns,
         "predicted_chain_ns": plan.predicted_chain_ns,
         "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
+        "restore_overhead_calibration": plan.restore_overhead_calibration,
         "depths": plan.depths,
         "dependencies": plan.dependencies,
         "max_depth": plan.max_depth,

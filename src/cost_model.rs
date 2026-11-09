@@ -201,6 +201,84 @@ const DECLARED: [(CostClass, Coefficients); 10] = [
 /// the raw rows.
 pub const MEASURED_CALIBRATION: &str = "weftfs-r2/decode-calibration/v1";
 
+/// Measured whole-checkpoint restore overhead that the affine decode rows do
+/// not cover.
+///
+/// The decode rows are fitted on single-object `Store::read_tensor` calls. A
+/// checkpoint restore does more work per version: it loads the checkpoint
+/// manifest, then for every tensor re-verifies the shard content root, the
+/// shard logical root, the reassembled content root, and the reassembled
+/// logical root, hashes the tensor for the report, and hashes the assembled
+/// container. Those passes are proportional to the version's logical bytes and
+/// carry a small per-tensor and per-version cost.
+///
+/// The values are measured by `examples/calibrate_restore.rs` on real
+/// `Store::restore_checkpoint` calls (see
+/// [`RESTORE_OVERHEAD_CALIBRATION`]); they are not declared. The S13 court's
+/// model-and-measurement gap is the defect this term fixes: before S13b the
+/// graph under-predicted the all-independent restore floor by 73.7 %.
+pub const RESTORE_OVERHEAD_CALIBRATION: &str = "weftfs-s13b/restore-overhead/v1";
+
+/// One additive term for the work a whole-checkpoint restore does beyond the
+/// affine decode rows.
+///
+/// `restore_ns(buf) = per_version_ns + per_tensor_ns * tensors
+/// + per_mib_ns * logical_mib`.
+///
+/// The term is per *version restore*, not per dependency hop: a chain restore
+/// decodes one frame per hop (already in the decode rows) and then verifies the
+/// final tensor once. Adding it per hop would double-count it and over-predict
+/// long chains.
+///
+/// S13b measurements (`weft.s13b.restore-floor.v1`,
+/// `bench/receipts/s13b-restore-floor-20261108T230417Z.json`): the per-MiB term
+/// is 2,114,993 ns over the 4 KiB-64 MiB sweep and the nine independent
+/// pythia-70m checkpoints validate at 778-793 ms against a 781.6 ms prediction
+/// (-1.5 %..+0.4 %); the per-tensor term is 29,205 ns; the per-version term is
+/// 13,285 ns, the measured manifest read of a one-tensor checkpoint. The
+/// residue does **not** scale with object count for tensors of 1 MiB or more
+/// (one 64 MiB tensor and sixty-four 1 MiB tensors measure within 7 % of each
+/// other at the same total), so hypothesis 1 of S13b is refuted in that range;
+/// the per-tensor term is the small-object fixed work that appears below
+/// roughly 256 KiB.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RestoreOverhead {
+    pub per_version_ns: u64,
+    pub per_tensor_ns: u64,
+    pub per_mib_ns: u64,
+}
+
+impl RestoreOverhead {
+    /// The baked measured term. See [`RESTORE_OVERHEAD_CALIBRATION`].
+    pub const MEASURED: RestoreOverhead = RestoreOverhead {
+        per_version_ns: 13_285,
+        per_tensor_ns: 29_205,
+        per_mib_ns: 2_114_993,
+    };
+
+    /// The zero term. Never use it for an SLA claim; it exists so a caller can
+    /// measure the omission explicitly in a diagnostic.
+    pub const ZERO: RestoreOverhead = RestoreOverhead {
+        per_version_ns: 0,
+        per_tensor_ns: 0,
+        per_mib_ns: 0,
+    };
+
+    /// Estimated restore overhead in nanoseconds. Integer arithmetic only.
+    pub fn estimate_ns(&self, tensors: u64, logical_bytes: u64) -> u64 {
+        let scaled = (u128::from(logical_bytes) * u128::from(self.per_mib_ns)) / 1_048_576u128;
+        let total = u128::from(self.per_version_ns)
+            .saturating_add(u128::from(self.per_tensor_ns).saturating_mul(u128::from(tensors)))
+            .saturating_add(scaled);
+        u64::try_from(total).unwrap_or(u64::MAX)
+    }
+}
+
+/// The baked measured restore overhead for `tensors` and `logical_bytes`.
+pub fn restore_overhead_ns(tensors: u64, logical_bytes: u64) -> u64 {
+    RestoreOverhead::MEASURED.estimate_ns(tensors, logical_bytes)
+}
+
 /// Measured mode-18 `FLOAT_TILED_STREAMS` decode row.
 ///
 /// Mode 18 has its own affine row measured with the same harness as the other
@@ -563,6 +641,25 @@ mod tests {
             );
         }
         assert!(streams_measured_coefficients().fixed_ns > 0);
+    }
+
+    #[test]
+    fn restore_overhead_is_measured_and_monotonic() {
+        let term = RestoreOverhead::MEASURED;
+        assert!(term.per_mib_ns > 0);
+        assert!(term.per_version_ns > 0);
+        // It is a whole-checkpoint term, not a per-hop term: zero tensors and
+        // zero bytes is the manifest-only floor, and both axes are monotonic.
+        assert_eq!(term.estimate_ns(0, 0), term.per_version_ns);
+        assert!(term.estimate_ns(1, 0) > term.estimate_ns(0, 0));
+        assert!(term.estimate_ns(0, 1 << 20) > term.estimate_ns(0, 0));
+        // 281,706,496 logical bytes and 76 tensors is the pythia floor this
+        // term is measured to fix; the S13b receipt predicts 794-803 ms.
+        let pythia = term.estimate_ns(76, 281_706_496);
+        assert!(
+            (570_000_000..=620_000_000).contains(&pythia),
+            "unexpected pythia floor overhead {pythia}"
+        );
     }
 
     #[test]

@@ -31,7 +31,12 @@ corpus="$root/.docker-cache/real-corpus"
 steps="${WEFT_PARENT_GRAPH_STEPS:-0,1,2,4,8,16,64,512,1000}"
 max_depth="${WEFT_PARENT_GRAPH_MAX_DEPTH:-8}"
 sla_ms="${WEFT_PARENT_GRAPH_SLA_MS:-4000}"
-reps="${WEFT_PARENT_GRAPH_REPS:-3}"
+reps="${WEFT_PARENT_GRAPH_REPS:-7}"
+if [[ "$reps" -lt 5 ]]; then
+  echo "parent_graph: WEFT_PARENT_GRAPH_REPS must be at least 5 (got $reps)" >&2
+  exit 1
+fi
+sla_sweep="${WEFT_PARENT_GRAPH_SLA_SWEEP_MS:-500,850,1000,2000,2500,3000,4000,6000,14000}"
 mkdir -p bench/receipts "$work"
 exec > >(tee "$log") 2>&1
 
@@ -76,6 +81,7 @@ echo "parent_graph: running the measured experiment"
   --steps "$steps" \
   --max-depth "$max_depth" \
   --sla-ms "$sla_ms" \
+  --sla-sweep-ms "$sla_sweep" \
   --restore-reps "$reps" \
   "${lambda_args[@]}"
 
