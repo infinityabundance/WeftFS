@@ -1,0 +1,38 @@
+s13b: stamp=20261108T230417Z
+s13b: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+s13b: limits memory=3g cpus=4 pids=1024
+s13b: revisions weftfs=4fc1ece75dd2d394509f84a26b46b87c68d03f04 weftcodec=cffcc1aab59b02d83144da158039718eb1f450b7
+s13b: reps=7 counts=1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384 total_mib=64 sizes=1,2,4,8,16,32,64 size_count=8
+s13b: chain=8MiB depth=8 real=/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors
+s13b: real container /work/.docker-cache/real-corpus/pythia-70m-step0.safetensors 281715176 B sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+s13b: trajectory step0 281715176 B sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+s13b: trajectory step1 281715176 B sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+s13b: trajectory step2 281715176 B sha256=491b4bafde38f7b58871b997597d5ca8447e683718879f846501b20a719127b2
+s13b: trajectory step4 281715176 B sha256=cf8a0b16691ab56ed52e5c6ace2c14f99637e7de755eba9ee3b113417d996223
+s13b: trajectory step8 281715176 B sha256=17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48
+s13b: trajectory step16 281715176 B sha256=c93333b4a7b6ca6337b5616167aac28a025c1a9b28763e240c904fc504a3ad09
+s13b: trajectory step64 281715176 B sha256=d6091e017aeea5319a2209bf95c71ecfc44a71302eb2553135bce3a834ad4616
+s13b: trajectory step512 281715176 B sha256=a46bd4c254e28664926b12762616596de5783608ca5403765586c126bdf5bcd4
+s13b: trajectory step1000 281715176 B sha256=09883f904c4a50de85c682cdfa0434aaf34e62392fe883e58410d12d39b1ee88
+s13b: building the release harness
+s13b: measuring
+bench/receipts/s13b-restore-floor-20261108T230417Z.json
+fit: per_version_ns=1 per_tensor_ns=29205 per_mib_ns=2114993 samples=154
+s13b: receipt=bench/receipts/s13b-restore-floor-20261108T230417Z.json
+s13b: work=/work/.docker-cache/s13b-20261108T230417Z
+s13b: schema weft.s13b.restore-floor.v1
+s13b: fit per_version_ns=1 per_tensor_ns=29205 per_mib_ns=2114993 samples=154 worst_residual_ppm=315721
+s13b: baked {"per_mib_ns": 2114993, "per_tensor_ns": 29205, "per_version_ns": 13285, "per_version_source": "measured_one_tensor_manifest_read"}
+s13b: real real-pythia-70m-step0 predicted=781565097 measured=780090501 error_ppm=1890
+s13b: trajectory step0 predicted=781565097 measured=789744628 error_ppm=-10357
+s13b: trajectory step1 predicted=781565097 measured=785825222 error_ppm=-5421
+s13b: trajectory step2 predicted=781565097 measured=778226604 error_ppm=4290
+s13b: trajectory step4 predicted=781565097 measured=779043875 error_ppm=3236
+s13b: trajectory step8 predicted=781565097 measured=793338461 error_ppm=-14840
+s13b: trajectory step16 predicted=781565097 measured=792759620 error_ppm=-14121
+s13b: trajectory step64 predicted=781565097 measured=780235189 error_ppm=1704
+s13b: trajectory step512 predicted=781565097 measured=778328589 error_ppm=4158
+s13b: trajectory step1000 predicted=781565097 measured=782594819 error_ppm=-1316
+s13b: chain sparse measured_hop=[14891us,15936us,14964us,16379us,14940us,14834us,11052us,18481us] model_hop=42382621
+s13b: chain dense measured_hop=[35556us,35472us,34819us,36717us,33122us,36826us,36573us,38655us] model_hop=42382621
+s13b: checks {"every_point_exact": true, "fit_samples_at_least_five": true, "fit_terms_non_negative": true, "points_complete": true, "trajectory_exact": true, "trajectory_floor_error_within_10_percent": true}

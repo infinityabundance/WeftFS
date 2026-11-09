@@ -1,0 +1,20 @@
+s13b: stamp=20261108T213833Z
+s13b: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+s13b: limits memory=3g cpus=4 pids=1024
+s13b: revisions weftfs=4fc1ece75dd2d394509f84a26b46b87c68d03f04 weftcodec=cffcc1aab59b02d83144da158039718eb1f450b7
+s13b: reps=7 counts=1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384 total_mib=64 sizes=1,2,4,8,16,32,64 size_count=8
+s13b: chain=8MiB depth=8 real=/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors
+s13b: real container /work/.docker-cache/real-corpus/pythia-70m-step0.safetensors 281715176 B sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+s13b: building the release harness
+s13b: measuring
+bench/receipts/s13b-restore-floor-20261108T213833Z.json
+fit: per_version_ns=1 per_tensor_ns=29836 per_mib_ns=2167428 samples=154
+s13b: receipt=bench/receipts/s13b-restore-floor-20261108T213833Z.json
+s13b: work=/work/.docker-cache/s13b-20261108T213833Z
+s13b: schema weft.s13b.restore-floor.v1
+s13b: fit per_version_ns=1 per_tensor_ns=29836 per_mib_ns=2167428 samples=154 worst_residual_ppm=314037
+s13b: baked {"per_mib_ns": 2167428, "per_tensor_ns": 29836, "per_version_ns": 13615, "per_version_source": "measured_one_tensor_manifest_read"}
+s13b: real real-pythia-70m-step0 predicted=795700044 measured=788200473 error_ppm=9515
+s13b: chain sparse measured_hop=[15535us,15079us,14060us,14952us,14563us,15620us,13692us,14684us] model_hop=42382621
+s13b: chain dense measured_hop=[35681us,36864us,33390us,35790us,37235us,38940us,33704us,34020us] model_hop=42382621
+s13b: checks {"every_point_exact": true, "fit_samples_at_least_five": true, "fit_terms_non_negative": true, "points_complete": true}

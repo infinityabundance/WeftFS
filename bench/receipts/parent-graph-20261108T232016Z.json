@@ -1,0 +1,4969 @@
+{
+  "checks": {
+    "dp_matches_brute_force": true,
+    "exact_chain": true,
+    "exact_optimizer": true,
+    "exact_restart-2": true,
+    "exact_restart-3": true,
+    "exact_restart-4": true,
+    "floor_prediction_within_10_percent": false,
+    "graph_valid": true,
+    "no_accepted_plan_misses_its_sla": false,
+    "probe_writes": true
+  },
+  "configuration": {
+    "lambda_ns": 1,
+    "lambda_ns_source": "break-even",
+    "max_depth": 8,
+    "pricing_ms": 1378771.797358,
+    "reads_per_version": 1,
+    "restore_note": "cold store reopen per repetition; OS page cache is warm, so this is decode-dominated and labelled",
+    "restore_overhead": {
+      "calibration": "weftfs-s13b/restore-overhead/v1",
+      "note": "charged once per version restore, never per dependency hop",
+      "per_mib_ns": 2114993,
+      "per_tensor_ns": 29205,
+      "per_version_ns": 13285
+    },
+    "restore_reps": 7,
+    "restore_reps_minimum": 5,
+    "sla_ms": 4000,
+    "sla_sweep_ms": [
+      500,
+      850,
+      1000,
+      2000,
+      2500,
+      3000,
+      4000,
+      6000,
+      14000
+    ],
+    "steps": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16,
+      64,
+      512,
+      1000
+    ]
+  },
+  "corpus": [
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step0",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+      "sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+      "step": 0,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step1",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step1.safetensors",
+      "sha256": "652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109",
+      "step": 1,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step2",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step2.safetensors",
+      "sha256": "491b4bafde38f7b58871b997597d5ca8447e683718879f846501b20a719127b2",
+      "step": 2,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step4",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step4.safetensors",
+      "sha256": "cf8a0b16691ab56ed52e5c6ace2c14f99637e7de755eba9ee3b113417d996223",
+      "step": 4,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step8",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step8.safetensors",
+      "sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+      "step": 8,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step16",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step16.safetensors",
+      "sha256": "c93333b4a7b6ca6337b5616167aac28a025c1a9b28763e240c904fc504a3ad09",
+      "step": 16,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step64",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step64.safetensors",
+      "sha256": "d6091e017aeea5319a2209bf95c71ecfc44a71302eb2553135bce3a834ad4616",
+      "step": 64,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step512",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step512.safetensors",
+      "sha256": "a46bd4c254e28664926b12762616596de5783608ca5403765586c126bdf5bcd4",
+      "step": 512,
+      "tensors": 76
+    },
+    {
+      "bytes": 281715176,
+      "element_bytes": 281706496,
+      "name": "step1000",
+      "path": "/work/.docker-cache/real-corpus/pythia-70m-step1000.safetensors",
+      "sha256": "09883f904c4a50de85c682cdfa0434aaf34e62392fe883e58410d12d39b1ee88",
+      "step": 1000,
+      "tensors": 76
+    }
+  ],
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "floor_prediction_error": 0.1183759915194268,
+  "graph": {
+    "schema": "weft.s13.version-graph.v1",
+    "versions": [
+      {
+        "independent": {
+          "bytes": 163913737,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 0,
+        "logical_bytes": 281706496,
+        "name": "step0",
+        "parents": []
+      },
+      {
+        "independent": {
+          "bytes": 163913750,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 1,
+        "logical_bytes": 281706496,
+        "name": "step1",
+        "parents": [
+          {
+            "bytes": 59586,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 0,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163782202,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 2,
+        "logical_bytes": 281706496,
+        "name": "step2",
+        "parents": [
+          {
+            "bytes": 13805303,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 13805308,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 1,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163819323,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 3,
+        "logical_bytes": 281706496,
+        "name": "step4",
+        "parents": [
+          {
+            "bytes": 33207096,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 33207094,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 33400495,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 2,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163769995,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 4,
+        "logical_bytes": 281706496,
+        "name": "step8",
+        "parents": [
+          {
+            "bytes": 50518532,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 50518529,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 50371767,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 2,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 49194064,
+            "compatible": true,
+            "coupled_ns": 1422234358,
+            "coupled_tensors": 26,
+            "decode_ns": 1423420448,
+            "parent": 3,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 164087526,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 5,
+        "logical_bytes": 281706496,
+        "name": "step16",
+        "parents": [
+          {
+            "bytes": 62573348,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 62573347,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 62554123,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 2,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 62784566,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 3,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 61156238,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 4,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163865927,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 6,
+        "logical_bytes": 281706496,
+        "name": "step64",
+        "parents": [
+          {
+            "bytes": 92647533,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 92647533,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 92646561,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 2,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 92636942,
+            "compatible": true,
+            "coupled_ns": 1422790350,
+            "coupled_tensors": 34,
+            "decode_ns": 1423760470,
+            "parent": 3,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 92451781,
+            "compatible": true,
+            "coupled_ns": 1422975582,
+            "coupled_tensors": 37,
+            "decode_ns": 1423868140,
+            "parent": 4,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 91887925,
+            "compatible": true,
+            "coupled_ns": 1422975582,
+            "coupled_tensors": 37,
+            "decode_ns": 1423868140,
+            "parent": 5,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163836028,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 7,
+        "logical_bytes": 281706496,
+        "name": "step512",
+        "parents": [
+          {
+            "bytes": 116815269,
+            "compatible": true,
+            "coupled_ns": 1423037326,
+            "coupled_tensors": 38,
+            "decode_ns": 1423904030,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116815268,
+            "compatible": true,
+            "coupled_ns": 1423037326,
+            "coupled_tensors": 38,
+            "decode_ns": 1423904030,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116816241,
+            "compatible": true,
+            "coupled_ns": 1422780010,
+            "coupled_tensors": 34,
+            "decode_ns": 1423751653,
+            "parent": 2,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116816071,
+            "compatible": true,
+            "coupled_ns": 1422666862,
+            "coupled_tensors": 32,
+            "decode_ns": 1423688690,
+            "parent": 3,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116814118,
+            "compatible": true,
+            "coupled_ns": 1422728606,
+            "coupled_tensors": 33,
+            "decode_ns": 1423724580,
+            "parent": 4,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116806553,
+            "compatible": true,
+            "coupled_ns": 1422728606,
+            "coupled_tensors": 33,
+            "decode_ns": 1423724580,
+            "parent": 5,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 116574720,
+            "compatible": true,
+            "coupled_ns": 1422656522,
+            "coupled_tensors": 32,
+            "decode_ns": 1423679873,
+            "parent": 6,
+            "total_tensors": 76
+          }
+        ]
+      },
+      {
+        "independent": {
+          "bytes": 163657585,
+          "decode_ns": 211139428,
+          "tensors": 76
+        },
+        "index": 8,
+        "logical_bytes": 281706496,
+        "name": "step1000",
+        "parents": [
+          {
+            "bytes": 120958127,
+            "compatible": true,
+            "coupled_ns": 1423037326,
+            "coupled_tensors": 38,
+            "decode_ns": 1423904030,
+            "parent": 0,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120958128,
+            "compatible": true,
+            "coupled_ns": 1423037326,
+            "coupled_tensors": 38,
+            "decode_ns": 1423904030,
+            "parent": 1,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120959608,
+            "compatible": true,
+            "coupled_ns": 1422903498,
+            "coupled_tensors": 36,
+            "decode_ns": 1423823433,
+            "parent": 2,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120959945,
+            "compatible": true,
+            "coupled_ns": 1422656522,
+            "coupled_tensors": 32,
+            "decode_ns": 1423679873,
+            "parent": 3,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120959245,
+            "compatible": true,
+            "coupled_ns": 1422656522,
+            "coupled_tensors": 32,
+            "decode_ns": 1423679873,
+            "parent": 4,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120957629,
+            "compatible": true,
+            "coupled_ns": 1422584438,
+            "coupled_tensors": 31,
+            "decode_ns": 1423635166,
+            "parent": 5,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 120900795,
+            "compatible": true,
+            "coupled_ns": 1422574098,
+            "coupled_tensors": 31,
+            "decode_ns": 1423626349,
+            "parent": 6,
+            "total_tensors": 76
+          },
+          {
+            "bytes": 117183664,
+            "compatible": true,
+            "coupled_ns": 1422893158,
+            "coupled_tensors": 36,
+            "decode_ns": 1423814616,
+            "parent": 7,
+            "total_tensors": 76
+          }
+        ]
+      }
+    ]
+  },
+  "independent": [
+    {
+      "cumulative_data_bytes": 163913246,
+      "index": 0,
+      "manifest_id": "17432029af91b879b17354f0e97a05fc5a8f3d8281376536807994609f17b24d",
+      "marginal_data_bytes": 163913246,
+      "name": "step0",
+      "source_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+      "write_ms": 26488.83518
+    },
+    {
+      "cumulative_data_bytes": 300372648,
+      "index": 1,
+      "manifest_id": "58d2bf30c8cba99ef263fd3a4e5bdbca2d66cc38880e0e85f679fc93bcb2d77a",
+      "marginal_data_bytes": 136459402,
+      "name": "step1",
+      "source_sha256": "652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109",
+      "write_ms": 26302.115047
+    },
+    {
+      "cumulative_data_bytes": 464163364,
+      "index": 2,
+      "manifest_id": "887a85d164f09921ecd70748a41956d42a511fec889fb1a2e2425089c725ca3e",
+      "marginal_data_bytes": 163790716,
+      "name": "step2",
+      "source_sha256": "491b4bafde38f7b58871b997597d5ca8447e683718879f846501b20a719127b2",
+      "write_ms": 26891.195093000002
+    },
+    {
+      "cumulative_data_bytes": 627990241,
+      "index": 3,
+      "manifest_id": "7c7a9ba22943cfe420b2fdfd01f80599ac87e3f991187f2cb249733190b986e4",
+      "marginal_data_bytes": 163826877,
+      "name": "step4",
+      "source_sha256": "cf8a0b16691ab56ed52e5c6ace2c14f99637e7de755eba9ee3b113417d996223",
+      "write_ms": 28875.454244
+    },
+    {
+      "cumulative_data_bytes": 791766819,
+      "index": 4,
+      "manifest_id": "bf4c1de4d141f83f2cf5e7dabbb101c35692450357d41e9adcbcbfdc2c11b75f",
+      "marginal_data_bytes": 163776578,
+      "name": "step8",
+      "source_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+      "write_ms": 34408.310864
+    },
+    {
+      "cumulative_data_bytes": 955858460,
+      "index": 5,
+      "manifest_id": "845a0c6d8fda72fa1349ab549218febfd2d8b64dde81190360205f802458e807",
+      "marginal_data_bytes": 164091641,
+      "name": "step16",
+      "source_sha256": "c93333b4a7b6ca6337b5616167aac28a025c1a9b28763e240c904fc504a3ad09",
+      "write_ms": 27710.128871999998
+    },
+    {
+      "cumulative_data_bytes": 1119731716,
+      "index": 6,
+      "manifest_id": "d4c587ec1365634baa59c6edddd0e56804e23fb3fa83efa200e9a08374b56712",
+      "marginal_data_bytes": 163873256,
+      "name": "step64",
+      "source_sha256": "d6091e017aeea5319a2209bf95c71ecfc44a71302eb2553135bce3a834ad4616",
+      "write_ms": 26820.598172
+    },
+    {
+      "cumulative_data_bytes": 1283574911,
+      "index": 7,
+      "manifest_id": "d8e2035752ba2ce4ed2449fb18afe88e3a3ee609d3d83e2bc18129e34ee17621",
+      "marginal_data_bytes": 163843195,
+      "name": "step512",
+      "source_sha256": "a46bd4c254e28664926b12762616596de5783608ca5403765586c126bdf5bcd4",
+      "write_ms": 26725.041279
+    },
+    {
+      "cumulative_data_bytes": 1447239539,
+      "index": 8,
+      "manifest_id": "d4d67742c8d98d0d026c88da1beffdd3c8361a4b7d43454fcd5cf4acdec6e52d",
+      "marginal_data_bytes": 163664628,
+      "name": "step1000",
+      "source_sha256": "09883f904c4a50de85c682cdfa0434aaf34e62392fe883e58410d12d39b1ee88",
+      "write_ms": 26631.013284
+    }
+  ],
+  "lambda_sweep": [
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 8,
+          "depths": [
+            0,
+            1,
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "max_depth": 2,
+          "objective": "648639992",
+          "parents": [
+            -1,
+            0,
+            0,
+            0,
+            3,
+            0,
+            5,
+            0,
+            7
+          ],
+          "predicted_bytes": 648639992,
+          "predicted_chain_ns": [
+            781578381,
+            2204998829,
+            2204998829,
+            2204998829,
+            3628419277,
+            2205267071,
+            3629135211,
+            2205482411,
+            3629297027
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            1634559876,
+            1634559876,
+            1634559876,
+            3057980324,
+            1634828118,
+            3058696258,
+            1635043458,
+            3058858074
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "22694175865",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 3629.297027,
+          "worst_restore_ns": 3629297027
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 6,
+          "depths": [
+            0,
+            1,
+            2,
+            0,
+            1,
+            2,
+            0,
+            1,
+            2
+          ],
+          "max_depth": 2,
+          "objective": "849572567",
+          "parents": [
+            -1,
+            0,
+            1,
+            -1,
+            3,
+            4,
+            -1,
+            6,
+            7
+          ],
+          "predicted_bytes": 849572567,
+          "predicted_chain_ns": [
+            781578381,
+            2204998829,
+            3628419277,
+            781578381,
+            2204998829,
+            3628687519,
+            781578381,
+            2205258254,
+            3629072870
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            1634559876,
+            3057980324,
+            211139428,
+            1634559876,
+            3058248566,
+            211139428,
+            1634819301,
+            3058633917
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "19846170721",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 3629.07287,
+          "worst_restore_ns": 3629072870
+        }
+      },
+      "lambda_ns": 0
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "8508851502",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "8508851502",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 1
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "15543056931",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "15543056931",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 2
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "29611467789",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "29611467789",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 4
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "57748289505",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "57748289505",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 8
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "114021932937",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "114021932937",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 16
+    },
+    {
+      "brute_force": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "451663793529",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "brute-force",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "dp": {
+        "kind": "plan",
+        "plan": {
+          "budget_satisfied": true,
+          "dependencies": 0,
+          "depths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "max_depth": 0,
+          "objective": "451663793529",
+          "parents": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "predicted_bytes": 1474646073,
+          "predicted_chain_ns": [
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381,
+            781578381
+          ],
+          "predicted_decode_chain_ns": [
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428,
+            211139428
+          ],
+          "predicted_overhead_ns": [
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953,
+            570438953
+          ],
+          "predicted_total_decode_ns": "7034205429",
+          "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+          "schema": "weft.s13.parent-graph.plan.v1",
+          "sla_satisfied": true,
+          "solver": "dp",
+          "worst_restore_ms": 781.578381,
+          "worst_restore_ns": 781578381
+        }
+      },
+      "lambda_ns": 64
+    }
+  ],
+  "plans": {
+    "break_even_lambda": {
+      "restart_2": 0.008408030334694293,
+      "restart_3": 0.005266019605748325,
+      "restart_4": 0.00471409660159618
+    },
+    "brute_force": {
+      "budget_satisfied": true,
+      "dependencies": 0,
+      "depths": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "max_depth": 0,
+      "objective": "8508851502",
+      "parents": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "predicted_bytes": 1474646073,
+      "predicted_chain_ns": [
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "7034205429",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "brute-force",
+      "worst_restore_ms": 781.578381,
+      "worst_restore_ns": 781578381
+    },
+    "brute_force_error": null,
+    "chain": {
+      "budget_satisfied": true,
+      "dependencies": 8,
+      "depths": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "max_depth": 8,
+      "objective": "647175737",
+      "parents": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "predicted_bytes": 647175737,
+      "predicted_chain_ns": [
+        781578381,
+        2204998829,
+        3628419277,
+        5051839725,
+        6475260173,
+        7898948863,
+        9322817003,
+        10746496876,
+        12170311492
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        1634559876,
+        3057980324,
+        4481400772,
+        5904821220,
+        7328509910,
+        8752378050,
+        10176057923,
+        11599872539
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "58280670619",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": false,
+      "solver": "dp",
+      "worst_restore_ms": 12170.311492,
+      "worst_restore_ns": 12170311492
+    },
+    "dp": {
+      "budget_satisfied": true,
+      "dependencies": 0,
+      "depths": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "max_depth": 0,
+      "objective": "8508851502",
+      "parents": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "predicted_bytes": 1474646073,
+      "predicted_chain_ns": [
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "7034205429",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "dp",
+      "worst_restore_ms": 781.578381,
+      "worst_restore_ns": 781578381
+    },
+    "dp_bytes_only": {
+      "budget_satisfied": true,
+      "dependencies": 6,
+      "depths": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        2,
+        0,
+        1,
+        2
+      ],
+      "max_depth": 2,
+      "objective": "849572567",
+      "parents": [
+        -1,
+        0,
+        1,
+        -1,
+        3,
+        4,
+        -1,
+        6,
+        7
+      ],
+      "predicted_bytes": 849572567,
+      "predicted_chain_ns": [
+        781578381,
+        2204998829,
+        3628419277,
+        781578381,
+        2204998829,
+        3628687519,
+        781578381,
+        2205258254,
+        3629072870
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        1634559876,
+        3057980324,
+        211139428,
+        1634559876,
+        3058248566,
+        211139428,
+        1634819301,
+        3058633917
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "19846170721",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "dp",
+      "worst_restore_ms": 3629.07287,
+      "worst_restore_ns": 3629072870
+    },
+    "greedy": {
+      "budget_satisfied": true,
+      "dependencies": 0,
+      "depths": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "max_depth": 0,
+      "objective": "8508851502",
+      "parents": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "predicted_bytes": 1474646073,
+      "predicted_chain_ns": [
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381,
+        781578381
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428,
+        211139428
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "7034205429",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "greedy",
+      "worst_restore_ms": 781.578381,
+      "worst_restore_ns": 781578381
+    },
+    "restart-2": {
+      "budget_satisfied": true,
+      "dependencies": 4,
+      "depths": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "max_depth": 1,
+      "objective": "1030180485",
+      "parents": [
+        -1,
+        0,
+        -1,
+        2,
+        -1,
+        4,
+        -1,
+        6,
+        -1
+      ],
+      "predicted_bytes": 1030180485,
+      "predicted_chain_ns": [
+        781578381,
+        2204998829,
+        781578381,
+        2204998829,
+        781578381,
+        2205267071,
+        781578381,
+        2205258254,
+        781578381
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        1634559876,
+        211139428,
+        1634559876,
+        211139428,
+        1634828118,
+        211139428,
+        1634819301,
+        211139428
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "12728414888",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "dp",
+      "worst_restore_ms": 2205.267071,
+      "worst_restore_ns": 2205267071
+    },
+    "restart-3": {
+      "budget_satisfied": true,
+      "dependencies": 6,
+      "depths": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        2,
+        0,
+        1,
+        2
+      ],
+      "max_depth": 2,
+      "objective": "849572567",
+      "parents": [
+        -1,
+        0,
+        1,
+        -1,
+        3,
+        4,
+        -1,
+        6,
+        7
+      ],
+      "predicted_bytes": 849572567,
+      "predicted_chain_ns": [
+        781578381,
+        2204998829,
+        3628419277,
+        781578381,
+        2204998829,
+        3628687519,
+        781578381,
+        2205258254,
+        3629072870
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        1634559876,
+        3057980324,
+        211139428,
+        1634559876,
+        3058248566,
+        211139428,
+        1634819301,
+        3058633917
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "19846170721",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": true,
+      "solver": "dp",
+      "worst_restore_ms": 3629.07287,
+      "worst_restore_ns": 3629072870
+    },
+    "restart-4": {
+      "budget_satisfied": true,
+      "dependencies": 6,
+      "depths": [
+        0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        3,
+        0
+      ],
+      "max_depth": 3,
+      "objective": "808225589",
+      "parents": [
+        -1,
+        0,
+        1,
+        2,
+        -1,
+        4,
+        5,
+        6,
+        -1
+      ],
+      "predicted_bytes": 808225589,
+      "predicted_chain_ns": [
+        781578381,
+        2204998829,
+        3628419277,
+        5051839725,
+        781578381,
+        2205267071,
+        3629135211,
+        5052815084,
+        781578381
+      ],
+      "predicted_decode_chain_ns": [
+        211139428,
+        1634559876,
+        3057980324,
+        4481400772,
+        211139428,
+        1634828118,
+        3058696258,
+        4482376131,
+        211139428
+      ],
+      "predicted_overhead_ns": [
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953,
+        570438953
+      ],
+      "predicted_total_decode_ns": "24117210340",
+      "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+      "schema": "weft.s13.parent-graph.plan.v1",
+      "sla_satisfied": false,
+      "solver": "dp",
+      "worst_restore_ms": 5052.815084,
+      "worst_restore_ns": 5052815084
+    }
+  },
+  "realizations": [
+    {
+      "all_versions_exact": true,
+      "bytes_error_bytes": 235879,
+      "chain_hops": [
+        {
+          "increment_error_ppm": 1355702,
+          "index": 1,
+          "measured_increment_ms": 604.244791,
+          "predicted_decode_increment_ms": 1423.420448
+        },
+        {
+          "increment_error_ppm": 1763281,
+          "index": 2,
+          "measured_increment_ms": 515.119739,
+          "predicted_decode_increment_ms": 1423.420448
+        },
+        {
+          "increment_error_ppm": 206252,
+          "index": 3,
+          "measured_increment_ms": 1180.035616,
+          "predicted_decode_increment_ms": 1423.420448
+        },
+        {
+          "increment_error_ppm": 195704,
+          "index": 4,
+          "measured_increment_ms": 1190.445318000001,
+          "predicted_decode_increment_ms": 1423.420448
+        },
+        {
+          "increment_error_ppm": 176731,
+          "index": 5,
+          "measured_increment_ms": 1209.867366999999,
+          "predicted_decode_increment_ms": 1423.68869
+        },
+        {
+          "increment_error_ppm": 116270,
+          "index": 6,
+          "measured_increment_ms": 1275.5589710000004,
+          "predicted_decode_increment_ms": 1423.86814
+        },
+        {
+          "increment_error_ppm": 133239,
+          "index": 7,
+          "measured_increment_ms": 1256.29248,
+          "predicted_decode_increment_ms": 1423.679873
+        },
+        {
+          "increment_error_ppm": 171591,
+          "index": 8,
+          "measured_increment_ms": 1215.2828499999996,
+          "predicted_decode_increment_ms": 1423.814616
+        }
+      ],
+      "label": "chain",
+      "predicted": {
+        "budget_satisfied": true,
+        "dependencies": 8,
+        "depths": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "max_depth": 8,
+        "objective": "58927846356",
+        "parents": [
+          -1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "predicted_bytes": 647175737,
+        "predicted_chain_ns": [
+          781578381,
+          2204998829,
+          3628419277,
+          5051839725,
+          6475260173,
+          7898948863,
+          9322817003,
+          10746496876,
+          12170311492
+        ],
+        "predicted_decode_chain_ns": [
+          211139428,
+          1634559876,
+          3057980324,
+          4481400772,
+          5904821220,
+          7328509910,
+          8752378050,
+          10176057923,
+          11599872539
+        ],
+        "predicted_overhead_ns": [
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953
+        ],
+        "predicted_total_decode_ns": "58280670619",
+        "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+        "schema": "weft.s13.parent-graph.plan.v1",
+        "sla_satisfied": false,
+        "solver": "dp",
+        "worst_restore_ms": 12170.311492,
+        "worst_restore_ns": 12170311492
+      },
+      "predicted_bytes": 647175737,
+      "predicted_restore_worst_ns": 12170311492,
+      "restore_sum_ms": 40988.024184,
+      "restore_worst_ms": 9238.155266,
+      "restores": [
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 0,
+          "median_ms": 791.308134,
+          "name": "step0",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -12296,
+          "reps_ms": [
+            790.942954,
+            791.2331929999999,
+            791.244512,
+            791.308134,
+            791.653774,
+            792.518591,
+            793.4342389999999
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925246,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 1,
+          "median_ms": 1395.552925,
+          "name": "step1",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 580018,
+          "reps_ms": [
+            1376.748534,
+            1391.830199,
+            1395.22261,
+            1395.552925,
+            1396.0991869999998,
+            1396.7053979999998,
+            1400.036123
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163954849,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 2,
+          "median_ms": 1910.672664,
+          "name": "step2",
+          "predicted_decode_ms": 3057.980324,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3628.419277,
+          "prediction_error_ppm": 899027,
+          "reps_ms": [
+            1908.295448,
+            1909.104783,
+            1910.641207,
+            1910.672664,
+            1913.7032430000002,
+            1914.6662370000001,
+            1914.900212
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 177711166,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 3,
+          "median_ms": 3090.70828,
+          "name": "step4",
+          "predicted_decode_ms": 4481.400772,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 5051.839725,
+          "prediction_error_ppm": 634525,
+          "reps_ms": [
+            3075.041591,
+            3079.3616140000004,
+            3080.3715230000003,
+            3090.70828,
+            3098.9096489999997,
+            3105.878912,
+            3116.699611
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 211061962,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 4,
+          "median_ms": 4281.153598000001,
+          "name": "step8",
+          "predicted_decode_ms": 5904.82122,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 6475.260173,
+          "prediction_error_ppm": 512504,
+          "reps_ms": [
+            4257.627854,
+            4262.827372000001,
+            4264.877609,
+            4281.153598000001,
+            4288.35915,
+            4303.639501000001,
+            4337.697885
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 260187153,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 5,
+          "median_ms": 5491.020965,
+          "name": "step16",
+          "predicted_decode_ms": 7328.50991,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 7898.948863,
+          "prediction_error_ppm": 438521,
+          "reps_ms": [
+            5473.002362,
+            5480.002149,
+            5488.37129,
+            5491.020965,
+            5505.03557,
+            5544.246675,
+            5577.574264
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 321283532,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 6,
+          "median_ms": 6766.579936,
+          "name": "step64",
+          "predicted_decode_ms": 8752.37805,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 9322.817003,
+          "prediction_error_ppm": 377774,
+          "reps_ms": [
+            6703.607151,
+            6762.059913,
+            6762.483766,
+            6766.579936,
+            6786.062802,
+            6802.426264,
+            6814.0807700000005
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 413113470,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 7,
+          "median_ms": 8022.872416,
+          "name": "step512",
+          "predicted_decode_ms": 10176.057923,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 10746.496876,
+          "prediction_error_ppm": 339482,
+          "reps_ms": [
+            7920.700882,
+            7934.152623,
+            8017.520735,
+            8022.872416,
+            8035.596474,
+            8041.930775999999,
+            8049.275235
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 529564593,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 8,
+          "median_ms": 9238.155266,
+          "name": "step1000",
+          "predicted_decode_ms": 11599.872539,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 12170.311492,
+          "prediction_error_ppm": 317396,
+          "reps_ms": [
+            9155.869074,
+            9229.143293,
+            9235.404806,
+            9238.155266,
+            9241.148768000001,
+            9272.264851999998,
+            9290.482152999999
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 646641775,
+          "tensors": 76
+        }
+      ],
+      "store": "/work/.docker-cache/parent-graph-20261108T232016Z/work/realize-chain",
+      "total_data_bytes": 647411616,
+      "verify_checked_representations": 684,
+      "verify_full_ok": true,
+      "verify_problems": 0,
+      "worst_prediction_error_ppm": 899027,
+      "writes": [
+        {
+          "cumulative_data_bytes": 163913246,
+          "index": 0,
+          "manifest_id": "b8d79749bd4e201b6c875513787a00df91c6cd898389088762ff2f8af3fbc869",
+          "marginal_data_bytes": 163913246,
+          "max_dependency_depth": 0,
+          "name": "step0",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26434.384058
+        },
+        {
+          "cumulative_data_bytes": 163984203,
+          "index": 1,
+          "manifest_id": "47722652c30ac0446cb39de9b157b5e084767a5995e8bd8f01a480214f2dc792",
+          "marginal_data_bytes": 70957,
+          "max_dependency_depth": 1,
+          "name": "step1",
+          "parent": 0,
+          "parent_name": "step0",
+          "strategy_mix": {
+            "sparse-delta": 20,
+            "zstd": 50,
+            "zstd-patch": 6
+          },
+          "write_ms": 29420.936458
+        },
+        {
+          "cumulative_data_bytes": 177810829,
+          "index": 2,
+          "manifest_id": "6756199fd5dec8cff8e8263c7b18fd7986a8724016d03b331eb976edbe02cef4",
+          "marginal_data_bytes": 13826626,
+          "max_dependency_depth": 2,
+          "name": "step2",
+          "parent": 1,
+          "parent_name": "step1",
+          "strategy_mix": {
+            "sparse-delta": 2,
+            "zstd": 50,
+            "zstd-patch": 24
+          },
+          "write_ms": 32333.410184999997
+        },
+        {
+          "cumulative_data_bytes": 211238406,
+          "index": 3,
+          "manifest_id": "104abc9e857f5125cb01da31b3c6a78a2f6a5cee5f574a25dec1e54e949c7516",
+          "marginal_data_bytes": 33427577,
+          "max_dependency_depth": 3,
+          "name": "step4",
+          "parent": 2,
+          "parent_name": "step2",
+          "strategy_mix": {
+            "weight-delta": 25,
+            "zstd": 50,
+            "zstd-patch": 1
+          },
+          "write_ms": 34826.614692
+        },
+        {
+          "cumulative_data_bytes": 260461345,
+          "index": 4,
+          "manifest_id": "bd26b4e3552103a62f0ec41f1b07ae7b2cba9393e05d25f000aa938862d9bdd2",
+          "marginal_data_bytes": 49222939,
+          "max_dependency_depth": 4,
+          "name": "step8",
+          "parent": 3,
+          "parent_name": "step4",
+          "strategy_mix": {
+            "weight-delta": 26,
+            "zstd": 50
+          },
+          "write_ms": 40394.843796
+        },
+        {
+          "cumulative_data_bytes": 321647858,
+          "index": 5,
+          "manifest_id": "426aa9e9de6530b596d402906970a5bfa9e6215f225c0e7434e27d7dc482037a",
+          "marginal_data_bytes": 61186513,
+          "max_dependency_depth": 5,
+          "name": "step16",
+          "parent": 4,
+          "parent_name": "step8",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 43831.132376
+        },
+        {
+          "cumulative_data_bytes": 413572926,
+          "index": 6,
+          "manifest_id": "ff15e48005c6ffb427d428ebafe3106553f997f7174a32f2b90a720b6cb92744",
+          "marginal_data_bytes": 91925068,
+          "max_dependency_depth": 6,
+          "name": "step64",
+          "parent": 5,
+          "parent_name": "step16",
+          "strategy_mix": {
+            "weight-delta": 37,
+            "zstd": 39
+          },
+          "write_ms": 47632.548617
+        },
+        {
+          "cumulative_data_bytes": 530186141,
+          "index": 7,
+          "manifest_id": "6aab3e51ff115dad8b42c6777dec022e904f77b427970fb20e42cac6e13f6d4a",
+          "marginal_data_bytes": 116613215,
+          "max_dependency_depth": 7,
+          "name": "step512",
+          "parent": 6,
+          "parent_name": "step64",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 51418.125581
+        },
+        {
+          "cumulative_data_bytes": 647411616,
+          "index": 8,
+          "manifest_id": "e49820e5e5af28c56cdfc579c217b07aa7847439ebedfe44c7ea39f1f6a49469",
+          "marginal_data_bytes": 117225475,
+          "max_dependency_depth": 8,
+          "name": "step1000",
+          "parent": 7,
+          "parent_name": "step512",
+          "strategy_mix": {
+            "weight-delta": 36,
+            "zstd": 40
+          },
+          "write_ms": 55301.036811000005
+        }
+      ]
+    },
+    {
+      "all_versions_exact": true,
+      "bytes_error_bytes": 105193,
+      "chain_hops": null,
+      "label": "restart-2",
+      "predicted": {
+        "budget_satisfied": true,
+        "dependencies": 4,
+        "depths": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        "max_depth": 1,
+        "objective": "13758595373",
+        "parents": [
+          -1,
+          0,
+          -1,
+          2,
+          -1,
+          4,
+          -1,
+          6,
+          -1
+        ],
+        "predicted_bytes": 1030180485,
+        "predicted_chain_ns": [
+          781578381,
+          2204998829,
+          781578381,
+          2204998829,
+          781578381,
+          2205267071,
+          781578381,
+          2205258254,
+          781578381
+        ],
+        "predicted_decode_chain_ns": [
+          211139428,
+          1634559876,
+          211139428,
+          1634559876,
+          211139428,
+          1634828118,
+          211139428,
+          1634819301,
+          211139428
+        ],
+        "predicted_overhead_ns": [
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953
+        ],
+        "predicted_total_decode_ns": "12728414888",
+        "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+        "schema": "weft.s13.parent-graph.plan.v1",
+        "sla_satisfied": true,
+        "solver": "dp",
+        "worst_restore_ms": 2205.267071,
+        "worst_restore_ns": 2205267071
+      },
+      "predicted_bytes": 1030180485,
+      "predicted_restore_worst_ns": 2205267071,
+      "restore_sum_ms": 11454.388821,
+      "restore_worst_ms": 2049.8960930000003,
+      "restores": [
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 0,
+          "median_ms": 798.475925,
+          "name": "step0",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -21162,
+          "reps_ms": [
+            796.736514,
+            797.623687,
+            797.751846,
+            798.475925,
+            799.090272,
+            801.502817,
+            912.269799
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925246,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 1,
+          "median_ms": 1408.862079,
+          "name": "step1",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 565092,
+          "reps_ms": [
+            1404.37969,
+            1407.116286,
+            1407.2175419999999,
+            1408.862079,
+            1409.532002,
+            1412.227089,
+            1460.763043
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163954849,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 2,
+          "median_ms": 798.66063,
+          "name": "step2",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -21389,
+          "reps_ms": [
+            797.845061,
+            798.457149,
+            798.460257,
+            798.66063,
+            798.811952,
+            801.157697,
+            911.3282660000001
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163793711,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 3,
+          "median_ms": 1983.114233,
+          "name": "step4",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 111887,
+          "reps_ms": [
+            1975.057246,
+            1979.338681,
+            1983.092806,
+            1983.114233,
+            1988.313792,
+            1992.095255,
+            2072.071636
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 197147315,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 4,
+          "median_ms": 802.5957080000001,
+          "name": "step8",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -26187,
+          "reps_ms": [
+            799.6912649999999,
+            801.511136,
+            801.92022,
+            802.5957080000001,
+            805.561999,
+            806.2825230000001,
+            906.885949
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163781504,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 5,
+          "median_ms": 2049.8960930000003,
+          "name": "step16",
+          "predicted_decode_ms": 1634.828118,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2205.267071,
+          "prediction_error_ppm": 75795,
+          "reps_ms": [
+            2043.9474469999998,
+            2045.074191,
+            2046.851383,
+            2049.8960930000003,
+            2050.436915,
+            2094.631036,
+            2114.954498
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 224889331,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 6,
+          "median_ms": 804.117039,
+          "name": "step64",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -28029,
+          "reps_ms": [
+            800.430253,
+            800.8458400000001,
+            802.222206,
+            804.117039,
+            804.2305279999999,
+            804.4719289999999,
+            918.445293
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163877435,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 7,
+          "median_ms": 2027.05058,
+          "name": "step512",
+          "predicted_decode_ms": 1634.819301,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2205.258254,
+          "prediction_error_ppm": 87915,
+          "reps_ms": [
+            2016.4434189999997,
+            2018.275481,
+            2024.25927,
+            2027.05058,
+            2028.172919,
+            2075.526495,
+            2185.838972
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 280368923,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 8,
+          "median_ms": 781.616534,
+          "name": "step1000",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -49,
+          "reps_ms": [
+            780.178333,
+            780.702401,
+            781.1166939999999,
+            781.616534,
+            781.9891700000001,
+            782.269121,
+            907.664599
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163669091,
+          "tensors": 76
+        }
+      ],
+      "store": "/work/.docker-cache/parent-graph-20261108T232016Z/work/realize-restart-2",
+      "total_data_bytes": 1030285678,
+      "verify_checked_representations": 684,
+      "verify_full_ok": true,
+      "verify_problems": 0,
+      "worst_prediction_error_ppm": 565092,
+      "writes": [
+        {
+          "cumulative_data_bytes": 163913246,
+          "index": 0,
+          "manifest_id": "7bc62280bf410c970808fe7a0a4264067ce8fe9468f1177a0b6d6691505bb383",
+          "marginal_data_bytes": 163913246,
+          "max_dependency_depth": 0,
+          "name": "step0",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27162.76455
+        },
+        {
+          "cumulative_data_bytes": 163984203,
+          "index": 1,
+          "manifest_id": "b2998f9a490fafc8064584053c24108045e92855f7d0c05b966e212da4bc23b9",
+          "marginal_data_bytes": 70957,
+          "max_dependency_depth": 1,
+          "name": "step1",
+          "parent": 0,
+          "parent_name": "step0",
+          "strategy_mix": {
+            "sparse-delta": 20,
+            "zstd": 50,
+            "zstd-patch": 6
+          },
+          "write_ms": 30371.252204
+        },
+        {
+          "cumulative_data_bytes": 327774919,
+          "index": 2,
+          "manifest_id": "a22a35b314c963c4e84e2f516ffd5e5960f3fcb54f5730ef883329413f7ea66e",
+          "marginal_data_bytes": 163790716,
+          "max_dependency_depth": 0,
+          "name": "step2",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27378.144154
+        },
+        {
+          "cumulative_data_bytes": 361197328,
+          "index": 3,
+          "manifest_id": "acd358b49a95bac0013ce801f16115066b7df6ed7833062b0b5dfb8d2befa8a1",
+          "marginal_data_bytes": 33422409,
+          "max_dependency_depth": 1,
+          "name": "step4",
+          "parent": 2,
+          "parent_name": "step2",
+          "strategy_mix": {
+            "weight-delta": 25,
+            "zstd": 50,
+            "zstd-patch": 1
+          },
+          "write_ms": 31897.746419
+        },
+        {
+          "cumulative_data_bytes": 524973906,
+          "index": 4,
+          "manifest_id": "ec26e631f9e6101ac501fb1a8f15ceb0904e7d5c683f11a48ad00834c9723c87",
+          "marginal_data_bytes": 163776578,
+          "max_dependency_depth": 0,
+          "name": "step8",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26900.637834
+        },
+        {
+          "cumulative_data_bytes": 586150083,
+          "index": 5,
+          "manifest_id": "98ea86ead36e6a2225360eda7a0a27227af0981e633852a9503f7cae9f523eab",
+          "marginal_data_bytes": 61176177,
+          "max_dependency_depth": 1,
+          "name": "step16",
+          "parent": 4,
+          "parent_name": "step8",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 33632.432156999996
+        },
+        {
+          "cumulative_data_bytes": 750023339,
+          "index": 6,
+          "manifest_id": "3b52efd06f8c858664e3727611e22a383b03b9197570ac0bd5d032e259d2e2bf",
+          "marginal_data_bytes": 163873256,
+          "max_dependency_depth": 0,
+          "name": "step64",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27101.763153
+        },
+        {
+          "cumulative_data_bytes": 866621050,
+          "index": 7,
+          "manifest_id": "6204b5e7ae655ccb383550ef9bbf1acbed1ca3fbae7de497e6f59abcf9861451",
+          "marginal_data_bytes": 116597711,
+          "max_dependency_depth": 1,
+          "name": "step512",
+          "parent": 6,
+          "parent_name": "step64",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 34713.538236
+        },
+        {
+          "cumulative_data_bytes": 1030285678,
+          "index": 8,
+          "manifest_id": "4b62a1bdd04c2a260dd4625036b564d5da7a14ff83b21d902258f6d5a74eb221",
+          "marginal_data_bytes": 163664628,
+          "max_dependency_depth": 0,
+          "name": "step1000",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27168.650469
+        }
+      ]
+    },
+    {
+      "all_versions_exact": true,
+      "bytes_error_bytes": 140025,
+      "chain_hops": null,
+      "label": "restart-3",
+      "predicted": {
+        "budget_satisfied": true,
+        "dependencies": 6,
+        "depths": [
+          0,
+          1,
+          2,
+          0,
+          1,
+          2,
+          0,
+          1,
+          2
+        ],
+        "max_depth": 2,
+        "objective": "20695743288",
+        "parents": [
+          -1,
+          0,
+          1,
+          -1,
+          3,
+          4,
+          -1,
+          6,
+          7
+        ],
+        "predicted_bytes": 849572567,
+        "predicted_chain_ns": [
+          781578381,
+          2204998829,
+          3628419277,
+          781578381,
+          2204998829,
+          3628687519,
+          781578381,
+          2205258254,
+          3629072870
+        ],
+        "predicted_decode_chain_ns": [
+          211139428,
+          1634559876,
+          3057980324,
+          211139428,
+          1634559876,
+          3058248566,
+          211139428,
+          1634819301,
+          3058633917
+        ],
+        "predicted_overhead_ns": [
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953
+        ],
+        "predicted_total_decode_ns": "19846170721",
+        "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+        "schema": "weft.s13.parent-graph.plan.v1",
+        "sla_satisfied": true,
+        "solver": "dp",
+        "worst_restore_ms": 3629.07287,
+        "worst_restore_ns": 3629072870
+      },
+      "predicted_bytes": 849572567,
+      "predicted_restore_worst_ns": 3629072870,
+      "restore_sum_ms": 16146.509078,
+      "restore_worst_ms": 3234.3358919999996,
+      "restores": [
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 0,
+          "median_ms": 793.015577,
+          "name": "step0",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -14422,
+          "reps_ms": [
+            792.395502,
+            792.519934,
+            793.001623,
+            793.015577,
+            793.281122,
+            793.4329359999999,
+            795.86531
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925246,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 1,
+          "median_ms": 1400.123712,
+          "name": "step1",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 574860,
+          "reps_ms": [
+            1395.418954,
+            1396.138104,
+            1397.179782,
+            1400.123712,
+            1400.167304,
+            1401.049008,
+            1489.553735
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163954849,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 2,
+          "median_ms": 1945.1169109999998,
+          "name": "step2",
+          "predicted_decode_ms": 3057.980324,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3628.419277,
+          "prediction_error_ppm": 865399,
+          "reps_ms": [
+            1909.136425,
+            1933.648182,
+            1942.478874,
+            1945.1169109999998,
+            1948.2473040000002,
+            1951.761447,
+            1992.027474
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 177711166,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 3,
+          "median_ms": 779.099192,
+          "name": "step4",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": 3182,
+          "reps_ms": [
+            777.781304,
+            778.184436,
+            778.666223,
+            779.099192,
+            779.4554449999999,
+            779.714368,
+            780.945463
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163830832,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 4,
+          "median_ms": 1983.979489,
+          "name": "step8",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 111402,
+          "reps_ms": [
+            1968.530012,
+            1978.511583,
+            1982.932931,
+            1983.979489,
+            1984.305679,
+            1984.715979,
+            1995.808557
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 212967111,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 5,
+          "median_ms": 3213.480039,
+          "name": "step16",
+          "predicted_decode_ms": 3058.248566,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3628.687519,
+          "prediction_error_ppm": 129208,
+          "reps_ms": [
+            3184.369116,
+            3203.19656,
+            3206.851498,
+            3213.480039,
+            3215.723187,
+            3219.645411,
+            3253.7295529999997
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 274063490,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 6,
+          "median_ms": 779.7660159999999,
+          "name": "step64",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": 2324,
+          "reps_ms": [
+            778.3675089999999,
+            779.1190310000001,
+            779.490382,
+            779.7660159999999,
+            779.9973669999999,
+            780.467695,
+            780.6374910000001
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163877435,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 7,
+          "median_ms": 2017.59225,
+          "name": "step512",
+          "predicted_decode_ms": 1634.819301,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2205.258254,
+          "prediction_error_ppm": 93015,
+          "reps_ms": [
+            1996.947382,
+            2011.9592320000002,
+            2015.207782,
+            2017.59225,
+            2019.1575140000002,
+            2021.4026500000002,
+            2025.386895
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 280368923,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 8,
+          "median_ms": 3234.3358919999996,
+          "name": "step1000",
+          "predicted_decode_ms": 3058.633917,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3629.07287,
+          "prediction_error_ppm": 122046,
+          "reps_ms": [
+            3216.104725,
+            3222.8877850000003,
+            3224.57073,
+            3234.3358919999996,
+            3237.044782,
+            3237.460674,
+            3238.9467710000004
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 397459222,
+          "tensors": 76
+        }
+      ],
+      "store": "/work/.docker-cache/parent-graph-20261108T232016Z/work/realize-restart-3",
+      "total_data_bytes": 849712592,
+      "verify_checked_representations": 684,
+      "verify_full_ok": true,
+      "verify_problems": 0,
+      "worst_prediction_error_ppm": 865399,
+      "writes": [
+        {
+          "cumulative_data_bytes": 163913246,
+          "index": 0,
+          "manifest_id": "27749426375a4e63635eee243ba4ff227cd909ac8730572a2371432d4afcda4a",
+          "marginal_data_bytes": 163913246,
+          "max_dependency_depth": 0,
+          "name": "step0",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26581.467818
+        },
+        {
+          "cumulative_data_bytes": 163984203,
+          "index": 1,
+          "manifest_id": "eb4b4d53bfca1005252e45bc09d74638557e01cbdd4024cc1ddeef566752986e",
+          "marginal_data_bytes": 70957,
+          "max_dependency_depth": 1,
+          "name": "step1",
+          "parent": 0,
+          "parent_name": "step0",
+          "strategy_mix": {
+            "sparse-delta": 20,
+            "zstd": 50,
+            "zstd-patch": 6
+          },
+          "write_ms": 30003.201811
+        },
+        {
+          "cumulative_data_bytes": 177810829,
+          "index": 2,
+          "manifest_id": "e3ace60dca9e0061329174f6fa5151da35557ac0a643e6c4cc7aef90711430ca",
+          "marginal_data_bytes": 13826626,
+          "max_dependency_depth": 2,
+          "name": "step2",
+          "parent": 1,
+          "parent_name": "step1",
+          "strategy_mix": {
+            "sparse-delta": 2,
+            "zstd": 50,
+            "zstd-patch": 24
+          },
+          "write_ms": 32997.955114
+        },
+        {
+          "cumulative_data_bytes": 341637706,
+          "index": 3,
+          "manifest_id": "eedae539858cee9ca73a1c35def516fe29185ed3246065abadb5818fdb49aa84",
+          "marginal_data_bytes": 163826877,
+          "max_dependency_depth": 0,
+          "name": "step4",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27098.614062
+        },
+        {
+          "cumulative_data_bytes": 390852893,
+          "index": 4,
+          "manifest_id": "53f42c01514f2fb279c98d0d10eafead0bc5d0ac1e53fe9f1f92031ff4c28e63",
+          "marginal_data_bytes": 49215187,
+          "max_dependency_depth": 1,
+          "name": "step8",
+          "parent": 3,
+          "parent_name": "step4",
+          "strategy_mix": {
+            "weight-delta": 26,
+            "zstd": 50
+          },
+          "write_ms": 33558.173148
+        },
+        {
+          "cumulative_data_bytes": 452031654,
+          "index": 5,
+          "manifest_id": "fe60e2097bf4a930b68067c8d4d844cfb905308f5ece92f4d11f3ee054044a6d",
+          "marginal_data_bytes": 61178761,
+          "max_dependency_depth": 2,
+          "name": "step16",
+          "parent": 4,
+          "parent_name": "step8",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 37416.287864
+        },
+        {
+          "cumulative_data_bytes": 615904910,
+          "index": 6,
+          "manifest_id": "f3a07188ef57dfeb389b733cfe84df40af3a0d6454101852c6daaecd5581680b",
+          "marginal_data_bytes": 163873256,
+          "max_dependency_depth": 0,
+          "name": "step64",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 35355.159462
+        },
+        {
+          "cumulative_data_bytes": 732502621,
+          "index": 7,
+          "manifest_id": "10fe674865e605196ba851320daa3e1814348176ae9ca47f23d864dd88a50b48",
+          "marginal_data_bytes": 116597711,
+          "max_dependency_depth": 1,
+          "name": "step512",
+          "parent": 6,
+          "parent_name": "step64",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 37755.737634
+        },
+        {
+          "cumulative_data_bytes": 849712592,
+          "index": 8,
+          "manifest_id": "d6df4de6a967a3d308168c80192cd53ae420fd72a355f89ecbd9f35ea546649f",
+          "marginal_data_bytes": 117209971,
+          "max_dependency_depth": 2,
+          "name": "step1000",
+          "parent": 7,
+          "parent_name": "step512",
+          "strategy_mix": {
+            "weight-delta": 36,
+            "zstd": 40
+          },
+          "write_ms": 37052.603341
+        }
+      ]
+    },
+    {
+      "all_versions_exact": true,
+      "bytes_error_bytes": 147811,
+      "chain_hops": null,
+      "label": "restart-4",
+      "predicted": {
+        "budget_satisfied": true,
+        "dependencies": 6,
+        "depths": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          0
+        ],
+        "max_depth": 3,
+        "objective": "24925435929",
+        "parents": [
+          -1,
+          0,
+          1,
+          2,
+          -1,
+          4,
+          5,
+          6,
+          -1
+        ],
+        "predicted_bytes": 808225589,
+        "predicted_chain_ns": [
+          781578381,
+          2204998829,
+          3628419277,
+          5051839725,
+          781578381,
+          2205267071,
+          3629135211,
+          5052815084,
+          781578381
+        ],
+        "predicted_decode_chain_ns": [
+          211139428,
+          1634559876,
+          3057980324,
+          4481400772,
+          211139428,
+          1634828118,
+          3058696258,
+          4482376131,
+          211139428
+        ],
+        "predicted_overhead_ns": [
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953
+        ],
+        "predicted_total_decode_ns": "24117210340",
+        "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+        "schema": "weft.s13.parent-graph.plan.v1",
+        "sla_satisfied": false,
+        "solver": "dp",
+        "worst_restore_ms": 5052.815084,
+        "worst_restore_ns": 5052815084
+      },
+      "predicted_bytes": 808225589,
+      "predicted_restore_worst_ns": 5052815084,
+      "restore_sum_ms": 18662.836717,
+      "restore_worst_ms": 4503.914532999999,
+      "restores": [
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 0,
+          "median_ms": 797.014511,
+          "name": "step0",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -19367,
+          "reps_ms": [
+            793.836847,
+            795.070507,
+            796.2994190000001,
+            797.014511,
+            798.23083,
+            798.6507320000001,
+            800.72561
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925246,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 1,
+          "median_ms": 1405.024024,
+          "name": "step1",
+          "predicted_decode_ms": 1634.559876,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2204.998829,
+          "prediction_error_ppm": 569367,
+          "reps_ms": [
+            1397.924447,
+            1402.321046,
+            1404.070086,
+            1405.024024,
+            1405.12514,
+            1405.193909,
+            1405.685282
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163954849,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 2,
+          "median_ms": 1957.542669,
+          "name": "step2",
+          "predicted_decode_ms": 3057.980324,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3628.419277,
+          "prediction_error_ppm": 853558,
+          "reps_ms": [
+            1953.604181,
+            1954.217009,
+            1956.79157,
+            1957.542669,
+            1957.652969,
+            1968.2931350000001,
+            1970.787249
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 177711166,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 3,
+          "median_ms": 3140.786387,
+          "name": "step4",
+          "predicted_decode_ms": 4481.400772,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 5051.839725,
+          "prediction_error_ppm": 608463,
+          "reps_ms": [
+            3130.830766,
+            3132.8149399999998,
+            3134.249132,
+            3140.786387,
+            3151.356272,
+            3159.864284,
+            3162.985655
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 211061962,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 4,
+          "median_ms": 796.9793619999999,
+          "name": "step8",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -19324,
+          "reps_ms": [
+            794.2290869999999,
+            796.45988,
+            796.4918640000001,
+            796.9793619999999,
+            798.351361,
+            800.5074079999999,
+            802.951329
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163781504,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 5,
+          "median_ms": 2006.677678,
+          "name": "step16",
+          "predicted_decode_ms": 1634.828118,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 2205.267071,
+          "prediction_error_ppm": 98964,
+          "reps_ms": [
+            1992.721641,
+            1992.982778,
+            2002.7445799999998,
+            2006.677678,
+            2007.220044,
+            2008.703745,
+            2047.7563810000001
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 224889331,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 6,
+          "median_ms": 3273.783645,
+          "name": "step64",
+          "predicted_decode_ms": 3058.696258,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 3629.135211,
+          "prediction_error_ppm": 108545,
+          "reps_ms": [
+            3235.895046,
+            3239.252801,
+            3265.892513,
+            3273.783645,
+            3275.965074,
+            3277.953025,
+            3280.166601
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 316719269,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 7,
+          "median_ms": 4503.914532999999,
+          "name": "step512",
+          "predicted_decode_ms": 4482.376131,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 5052.815084,
+          "prediction_error_ppm": 121872,
+          "reps_ms": [
+            4444.698350999999,
+            4471.815506000001,
+            4499.729305,
+            4503.914532999999,
+            4509.674553,
+            4512.829666,
+            4517.4074470000005
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 433170392,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 8,
+          "median_ms": 781.113908,
+          "name": "step1000",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": 595,
+          "reps_ms": [
+            778.05952,
+            778.84596,
+            779.763712,
+            781.113908,
+            781.202536,
+            781.244919,
+            781.746562
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163669091,
+          "tensors": 76
+        }
+      ],
+      "store": "/work/.docker-cache/parent-graph-20261108T232016Z/work/realize-restart-4",
+      "total_data_bytes": 808373400,
+      "verify_checked_representations": 684,
+      "verify_full_ok": true,
+      "verify_problems": 0,
+      "worst_prediction_error_ppm": 853558,
+      "writes": [
+        {
+          "cumulative_data_bytes": 163913246,
+          "index": 0,
+          "manifest_id": "fbc4bd631ba268646f8b178104816cf070c40e520ef1b4f81d9ded7fa6f692c7",
+          "marginal_data_bytes": 163913246,
+          "max_dependency_depth": 0,
+          "name": "step0",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26729.677285
+        },
+        {
+          "cumulative_data_bytes": 163984203,
+          "index": 1,
+          "manifest_id": "db491b248b10dd7ef3fb6983785056bf4bbb5b1b2e1de3b6fe1b5e0f591c0023",
+          "marginal_data_bytes": 70957,
+          "max_dependency_depth": 1,
+          "name": "step1",
+          "parent": 0,
+          "parent_name": "step0",
+          "strategy_mix": {
+            "sparse-delta": 20,
+            "zstd": 50,
+            "zstd-patch": 6
+          },
+          "write_ms": 30227.177559
+        },
+        {
+          "cumulative_data_bytes": 177810829,
+          "index": 2,
+          "manifest_id": "99de6df9c363f51ada3f1030d52dfe6fac65c9ae90e43c8f400f39b580958a8b",
+          "marginal_data_bytes": 13826626,
+          "max_dependency_depth": 2,
+          "name": "step2",
+          "parent": 1,
+          "parent_name": "step1",
+          "strategy_mix": {
+            "sparse-delta": 2,
+            "zstd": 50,
+            "zstd-patch": 24
+          },
+          "write_ms": 32378.418388
+        },
+        {
+          "cumulative_data_bytes": 211238406,
+          "index": 3,
+          "manifest_id": "6acc36b5681bc02ff46e696ae8d5a5a36b03fda99ea57df30f3b0ef0691420f0",
+          "marginal_data_bytes": 33427577,
+          "max_dependency_depth": 3,
+          "name": "step4",
+          "parent": 2,
+          "parent_name": "step2",
+          "strategy_mix": {
+            "weight-delta": 25,
+            "zstd": 50,
+            "zstd-patch": 1
+          },
+          "write_ms": 35156.191538
+        },
+        {
+          "cumulative_data_bytes": 375014984,
+          "index": 4,
+          "manifest_id": "6a4f51c378d535f7f5144fffc60314faf93e91440c0039ebd65f85c8f3919a4e",
+          "marginal_data_bytes": 163776578,
+          "max_dependency_depth": 0,
+          "name": "step8",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26528.71947
+        },
+        {
+          "cumulative_data_bytes": 436191161,
+          "index": 5,
+          "manifest_id": "ef440c539edfb99a776fa7d1da0d281aac64900589cbf47288c5a130ab7a9bba",
+          "marginal_data_bytes": 61176177,
+          "max_dependency_depth": 1,
+          "name": "step16",
+          "parent": 4,
+          "parent_name": "step8",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 32937.981665
+        },
+        {
+          "cumulative_data_bytes": 528105893,
+          "index": 6,
+          "manifest_id": "b24f34aff9a5ff5e5a44c0942c5b6f5fe9122d554ba1f43730e3dbaf809d0fe9",
+          "marginal_data_bytes": 91914732,
+          "max_dependency_depth": 2,
+          "name": "step64",
+          "parent": 5,
+          "parent_name": "step16",
+          "strategy_mix": {
+            "weight-delta": 37,
+            "zstd": 39
+          },
+          "write_ms": 36380.838378
+        },
+        {
+          "cumulative_data_bytes": 644708772,
+          "index": 7,
+          "manifest_id": "8d0c279e00c26df38c5b5b1dc2efc1deab09dcd359d214ab97c4ca246bb6642f",
+          "marginal_data_bytes": 116602879,
+          "max_dependency_depth": 3,
+          "name": "step512",
+          "parent": 6,
+          "parent_name": "step64",
+          "strategy_mix": {
+            "weight-delta": 32,
+            "zstd": 44
+          },
+          "write_ms": 40418.068140999996
+        },
+        {
+          "cumulative_data_bytes": 808373400,
+          "index": 8,
+          "manifest_id": "fae071d1e6fcfcbdd978dde6d5dfe2d9e85c02c789f4c9dbcd30d71db56aa534",
+          "marginal_data_bytes": 163664628,
+          "max_dependency_depth": 0,
+          "name": "step1000",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27050.956018
+        }
+      ]
+    },
+    {
+      "all_versions_exact": true,
+      "bytes_error_bytes": -27406534,
+      "chain_hops": null,
+      "label": "optimizer",
+      "predicted": {
+        "budget_satisfied": true,
+        "dependencies": 0,
+        "depths": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max_depth": 0,
+        "objective": "8508851502",
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_bytes": 1474646073,
+        "predicted_chain_ns": [
+          781578381,
+          781578381,
+          781578381,
+          781578381,
+          781578381,
+          781578381,
+          781578381,
+          781578381,
+          781578381
+        ],
+        "predicted_decode_chain_ns": [
+          211139428,
+          211139428,
+          211139428,
+          211139428,
+          211139428,
+          211139428,
+          211139428,
+          211139428,
+          211139428
+        ],
+        "predicted_overhead_ns": [
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953,
+          570438953
+        ],
+        "predicted_total_decode_ns": "7034205429",
+        "restore_overhead_calibration": "weftfs-s13b/restore-overhead/v1",
+        "schema": "weft.s13.parent-graph.plan.v1",
+        "sla_satisfied": true,
+        "solver": "dp",
+        "worst_restore_ms": 781.578381,
+        "worst_restore_ns": 781578381
+      },
+      "predicted_bytes": 1474646073,
+      "predicted_restore_worst_ns": 781578381,
+      "restore_sum_ms": 7618.006177000001,
+      "restore_worst_ms": 886.521208,
+      "restores": [
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 0,
+          "median_ms": 805.408173,
+          "name": "step0",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -29587,
+          "reps_ms": [
+            792.884896,
+            798.910156,
+            800.585499,
+            805.408173,
+            827.9489530000001,
+            855.680106,
+            882.561653
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925246,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 1,
+          "median_ms": 795.956366,
+          "name": "step1",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -18064,
+          "reps_ms": [
+            781.147543,
+            781.746658,
+            792.223582,
+            795.956366,
+            799.799405,
+            808.418484,
+            874.0822539999999
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163925259,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 2,
+          "median_ms": 801.3181179999999,
+          "name": "step2",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -24634,
+          "reps_ms": [
+            781.474267,
+            782.0422639999999,
+            782.571346,
+            801.3181179999999,
+            802.455851,
+            808.469018,
+            861.3431860000001
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163793711,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 3,
+          "median_ms": 807.159351,
+          "name": "step4",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -31693,
+          "reps_ms": [
+            796.68591,
+            800.364861,
+            805.868783,
+            807.159351,
+            812.046431,
+            812.8168609999999,
+            893.803224
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163830832,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 4,
+          "median_ms": 881.8830770000001,
+          "name": "step8",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -113739,
+          "reps_ms": [
+            877.9644450000001,
+            878.250322,
+            880.086682,
+            881.8830770000001,
+            884.410175,
+            901.235697,
+            909.247119
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163781504,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 5,
+          "median_ms": 878.5082279999999,
+          "name": "step16",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -110335,
+          "reps_ms": [
+            874.088619,
+            874.129552,
+            874.198437,
+            878.5082279999999,
+            881.197277,
+            883.6571600000001,
+            887.484715
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 164099034,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 6,
+          "median_ms": 881.773507,
+          "name": "step64",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -113629,
+          "reps_ms": [
+            875.2750070000001,
+            877.9677,
+            879.587108,
+            881.773507,
+            884.618036,
+            885.841663,
+            886.265401
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163877435,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 7,
+          "median_ms": 879.478149,
+          "name": "step512",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -111316,
+          "reps_ms": [
+            872.356039,
+            877.021588,
+            877.0479690000001,
+            879.478149,
+            879.587125,
+            891.8918540000001,
+            893.346859
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163847535,
+          "tensors": 76
+        },
+        {
+          "all_tensors_exact": true,
+          "exact_source_file": true,
+          "index": 8,
+          "median_ms": 886.521208,
+          "name": "step1000",
+          "predicted_decode_ms": 211.139428,
+          "predicted_overhead_ms": 570.438953,
+          "predicted_restore_ms": 781.578381,
+          "prediction_error_ppm": -118376,
+          "reps_ms": [
+            874.846201,
+            881.82602,
+            883.4769329999999,
+            886.521208,
+            887.777641,
+            889.954748,
+            898.579385
+          ],
+          "source_sha256_match": true,
+          "store_bytes_read": 163669091,
+          "tensors": 76
+        }
+      ],
+      "store": "/work/.docker-cache/parent-graph-20261108T232016Z/work/realize-optimizer",
+      "total_data_bytes": 1447239539,
+      "verify_checked_representations": 684,
+      "verify_full_ok": true,
+      "verify_problems": 0,
+      "worst_prediction_error_ppm": 118376,
+      "writes": [
+        {
+          "cumulative_data_bytes": 163913246,
+          "index": 0,
+          "manifest_id": "078d3dab11a7ceb1cd6572a9d7acbe54f088cdf27b1e15e27d6db1732cd39938",
+          "marginal_data_bytes": 163913246,
+          "max_dependency_depth": 0,
+          "name": "step0",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26694.796406
+        },
+        {
+          "cumulative_data_bytes": 300372648,
+          "index": 1,
+          "manifest_id": "6db2e72baacc7240f26d86a873fef85d2a1eaa0d1954f725c260d40bafdcfa9e",
+          "marginal_data_bytes": 136459402,
+          "max_dependency_depth": 0,
+          "name": "step1",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27374.900884
+        },
+        {
+          "cumulative_data_bytes": 464163364,
+          "index": 2,
+          "manifest_id": "a5422b9efb1eb773580fe75ade6a956af35817da524e9d55039c382fbb9e4f51",
+          "marginal_data_bytes": 163790716,
+          "max_dependency_depth": 0,
+          "name": "step2",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27196.177645
+        },
+        {
+          "cumulative_data_bytes": 627990241,
+          "index": 3,
+          "manifest_id": "9ad40bebb348f3fb30c129e03198010ef679740b6c12b2b2f211606c4eeb3cc0",
+          "marginal_data_bytes": 163826877,
+          "max_dependency_depth": 0,
+          "name": "step4",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27163.676627
+        },
+        {
+          "cumulative_data_bytes": 791766819,
+          "index": 4,
+          "manifest_id": "53b0f648bea968190713c45a452e5f272ad87d75a181a4b150a453d6929eaa4e",
+          "marginal_data_bytes": 163776578,
+          "max_dependency_depth": 0,
+          "name": "step8",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27212.143819
+        },
+        {
+          "cumulative_data_bytes": 955858460,
+          "index": 5,
+          "manifest_id": "de5b026ed6fa24836bfd723e4b6a119f24c2a0813b593c5e03d78139d72e20ac",
+          "marginal_data_bytes": 164091641,
+          "max_dependency_depth": 0,
+          "name": "step16",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27245.268503
+        },
+        {
+          "cumulative_data_bytes": 1119731716,
+          "index": 6,
+          "manifest_id": "bc19360fc8fd422c20b54857c540bf4ee5a39655b78e243b46a43c1190df17ae",
+          "marginal_data_bytes": 163873256,
+          "max_dependency_depth": 0,
+          "name": "step64",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26961.832426
+        },
+        {
+          "cumulative_data_bytes": 1283574911,
+          "index": 7,
+          "manifest_id": "a41f06d4f9f865e1ac827e5c426aa90e31f208b20eed0d716714c08b8183f6e7",
+          "marginal_data_bytes": 163843195,
+          "max_dependency_depth": 0,
+          "name": "step512",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 26804.339694
+        },
+        {
+          "cumulative_data_bytes": 1447239539,
+          "index": 8,
+          "manifest_id": "acdc667ac8b80d4894c4f5da5d882b2cf6854247f27466e6d95891b03e6dddc9",
+          "marginal_data_bytes": 163664628,
+          "max_dependency_depth": 0,
+          "name": "step1000",
+          "parent": -1,
+          "parent_name": null,
+          "strategy_mix": {
+            "zstd": 76
+          },
+          "write_ms": 27397.035721
+        }
+      ]
+    }
+  ],
+  "revisions": {
+    "weftcodec": "cffcc1aab59b02d83144da158039718eb1f450b7",
+    "weftfs": "4fc1ece75dd2d394509f84a26b46b87c68d03f04"
+  },
+  "schema": "weft.s13b.parent-graph.v2",
+  "sla": [
+    {
+      "outcome": {
+        "kind": "accepted",
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "satisfied": true,
+        "worst_restore_ns": 781578381
+      },
+      "sla_ms": 4000,
+      "sla_ns": 4000000000
+    },
+    {
+      "outcome": {
+        "class": "LimitExceeded",
+        "kind": "refused",
+        "message": "no plan satisfies the 1 ns restore SLA; version 0 alone needs 781578381 ns"
+      },
+      "sla_ms": 1e-6
+    },
+    {
+      "outcome": {
+        "class": "InvalidArgument",
+        "kind": "refused",
+        "message": "an SLA claim requires a measured restore-overhead model; set PlanOptions::restore_overhead (or drop the SLA). Treating the whole-checkpoint restore work as zero is the S13 defect"
+      },
+      "restore_overhead": "none",
+      "sla_ms": 4000
+    }
+  ],
+  "sla_sweep": [
+    {
+      "lambda_ns": 0,
+      "outcome": {
+        "class": "LimitExceeded",
+        "kind": "refused",
+        "message": "no plan satisfies the 500000000 ns restore SLA; version 0 alone needs 781578381 ns"
+      },
+      "sla_ms": 500
+    },
+    {
+      "lambda_ns": 1,
+      "outcome": {
+        "class": "LimitExceeded",
+        "kind": "refused",
+        "message": "no plan satisfies the 500000000 ns restore SLA; version 0 alone needs 781578381 ns"
+      },
+      "sla_ms": 500
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": false,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 850
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": false,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 850
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 1000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 1000
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 2000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 2000
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "restart-2",
+        "prediction_error_ppm": 75795,
+        "sla_holds": true,
+        "worst_restore_ms": 2049.8960930000003
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 1,
+        "parents": [
+          -1,
+          0,
+          -1,
+          2,
+          -1,
+          4,
+          -1,
+          6,
+          -1
+        ],
+        "predicted_decode_worst_ns": 1634828118,
+        "predicted_worst_restore_ns": 2205267071
+      },
+      "sla_ms": 2500
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 2500
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "restart-2",
+        "prediction_error_ppm": 75795,
+        "sla_holds": true,
+        "worst_restore_ms": 2049.8960930000003
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 1,
+        "parents": [
+          -1,
+          0,
+          -1,
+          2,
+          -1,
+          4,
+          -1,
+          6,
+          -1
+        ],
+        "predicted_decode_worst_ns": 1634828118,
+        "predicted_worst_restore_ns": 2205267071
+      },
+      "sla_ms": 3000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 3000
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "restart-3",
+        "prediction_error_ppm": 122046,
+        "sla_holds": true,
+        "worst_restore_ms": 3234.3358919999996
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 2,
+        "parents": [
+          -1,
+          0,
+          1,
+          -1,
+          3,
+          4,
+          -1,
+          6,
+          7
+        ],
+        "predicted_decode_worst_ns": 3058633917,
+        "predicted_worst_restore_ns": 3629072870
+      },
+      "sla_ms": 4000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 4000
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "restart-4",
+        "prediction_error_ppm": 121872,
+        "sla_holds": true,
+        "worst_restore_ms": 4503.914532999999
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 3,
+        "parents": [
+          -1,
+          0,
+          1,
+          2,
+          -1,
+          4,
+          5,
+          6,
+          -1
+        ],
+        "predicted_decode_worst_ns": 4482376131,
+        "predicted_worst_restore_ns": 5052815084
+      },
+      "sla_ms": 6000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 6000
+    },
+    {
+      "lambda_ns": 0,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "chain",
+        "prediction_error_ppm": 317396,
+        "sla_holds": true,
+        "worst_restore_ms": 9238.155266
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 8,
+        "parents": [
+          -1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "predicted_decode_worst_ns": 11599872539,
+        "predicted_worst_restore_ns": 12170311492
+      },
+      "sla_ms": 14000
+    },
+    {
+      "lambda_ns": 1,
+      "measured": {
+        "all_versions_exact": true,
+        "label": "optimizer",
+        "prediction_error_ppm": -118376,
+        "sla_holds": true,
+        "worst_restore_ms": 886.521208
+      },
+      "outcome": {
+        "kind": "accepted",
+        "max_depth": 0,
+        "parents": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "predicted_decode_worst_ns": 211139428,
+        "predicted_worst_restore_ns": 781578381
+      },
+      "sla_ms": 14000
+    }
+  ],
+  "sla_sweep_summary": {
+    "accepted_misses": 2,
+    "accepted_with_measurement": 16,
+    "accepted_without_measurement": 0
+  }
+}
