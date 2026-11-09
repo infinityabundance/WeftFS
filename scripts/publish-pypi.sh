@@ -49,4 +49,6 @@ inner="cd /work && bash scripts/pypi-publish-inner.sh"
 if [[ "$dry_run" == "1" ]]; then
   inner="$inner --dry-run"
 fi
-exec "$root/scripts/docker-court.sh" python "$inner"
+# Deliberately not `exec`: the EXIT trap must still run so the token file is
+# removed even when the court fails.
+"$root/scripts/docker-court.sh" python "$inner"
