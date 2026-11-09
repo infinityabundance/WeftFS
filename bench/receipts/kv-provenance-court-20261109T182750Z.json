@@ -1,0 +1,129 @@
+{
+  "checks": {
+    "adapter_set_ordering": {
+      "ab_equals_a": false,
+      "ab_equals_ba": true,
+      "set_root_a": "7cfe9a8622ecd48051a001000b00e5a5ae5d1db9ceccb44a4a9ca001aead7bdf",
+      "set_root_ab": "aad45143a043c6c57e76750e6ca4dccfa9b5b5b5a264f5e25f65024e2e12c59a",
+      "verdict": "pass"
+    },
+    "byte_emission": {
+      "all_refusals_emit_zero": true,
+      "rule": "a refused store read cannot return a page value and therefore emits zero bytes",
+      "verdict": "pass"
+    },
+    "collision": {
+      "cross_resolve_class": "Unauthorized",
+      "cross_resolve_emitted_bytes": 0,
+      "distinct": true,
+      "matching_resolve_class": "ok",
+      "matching_resolve_emitted_bytes": 4096,
+      "payload_bytes": 4096,
+      "payload_hash": "a126fc3da63ffdf02eaa1d60d645b9da15dee5674388367f5d93e864347246c9",
+      "root_a": "ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f",
+      "root_b": "ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e",
+      "verdict": "pass"
+    },
+    "forgery": {
+      "dimension_root": [
+        {
+          "class": "Malformed",
+          "tampered": "adapter_set_root"
+        },
+        {
+          "class": "Malformed",
+          "tampered": "tokenizer_root"
+        }
+      ],
+      "payload_swap_class": "Corrupt",
+      "verdict": "pass"
+    },
+    "salt": {
+      "not_proven": "timing / access-pattern privacy",
+      "payload_hash_equal": true,
+      "proven": "roots differ",
+      "root_a": "81700d3d936812482e035199f6b3a31eb9b094c220a623e20ea7add165f3483a",
+      "root_b": "48b0c60e34540393801775a134d2045e5a543217e537bb19270bbeb1be6254a5",
+      "roots_distinct": true,
+      "salt_a": "b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0",
+      "salt_b": "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1",
+      "verdict": "pass"
+    },
+    "store_scope": {
+      "content_and_object_id": {
+        "class": "Unauthorized",
+        "emitted_bytes": 0
+      },
+      "descriptor_id": {
+        "class": "ok",
+        "emitted_bytes": 4096
+      },
+      "mode12_reader": {
+        "class": "Corrupt",
+        "emitted_bytes": 0
+      },
+      "none": {
+        "class": "Unauthorized",
+        "emitted_bytes": 0
+      },
+      "other_provenance_descriptor": {
+        "class": "Unauthorized",
+        "emitted_bytes": 0
+      },
+      "plain_descriptor_id": {
+        "class": "Unauthorized",
+        "emitted_bytes": 0
+      },
+      "prov_reader_on_mode12": {
+        "class": "Corrupt",
+        "emitted_bytes": 0
+      },
+      "verdict": "pass"
+    },
+    "store_verify_full": {
+      "checked_objects": 2,
+      "checked_representations": 0,
+      "generation": 7,
+      "ok": true,
+      "verdict": "pass"
+    }
+  },
+  "environment": {
+    "court": "weft/rust-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": "memory=3g swap=3g pids=1024 cpus=4 tmpfs=/tmp:1g",
+    "revisions": {
+      "WeftCodec": "306f7a585a1fa631003760249773eb757351b1b2",
+      "WeftCodec-Go": "869c4fa949db7353c58473e3a0bdeb662ef9e535",
+      "WeftFS": "789296a0e56b8ba32abde7d224220d8f0bb3980c",
+      "WeftFS-Go": "6c0289da176b1916b699c87682ed33de2e7bebd7"
+    }
+  },
+  "raw_court_log": "bench/receipts/kv-provenance-court-20261109T182750Z.log",
+  "raw_lines": [
+    "forgery dimension_root tampered=adapter_set_root class=Malformed",
+    "forgery dimension_root tampered=tokenizer_root class=Malformed",
+    "collision payload_bytes=4096 payload_hash=a126fc3da63ffdf02eaa1d60d645b9da15dee5674388367f5d93e864347246c9 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f root_b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e distinct=true",
+    "salt salt_a=b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0 salt_b=b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1 root_a=81700d3d936812482e035199f6b3a31eb9b094c220a623e20ea7add165f3483a root_b=48b0c60e34540393801775a134d2045e5a543217e537bb19270bbeb1be6254a5 payload_hash_equal=true roots_distinct=true",
+    "salt proven=roots_differ not_proven=timing_or_access_pattern_privacy",
+    "forgery payload_swap class=Corrupt",
+    "collision cross_resolve scope=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f frame_root=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e emitted_bytes=0 class=Unauthorized",
+    "collision matching_resolve scope=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f emitted_bytes=4096 class=ok",
+    "adapter_set ab_equals_ba=true ab_equals_a=false set_root_ab=aad45143a043c6c57e76750e6ca4dccfa9b5b5b5a264f5e25f65024e2e12c59a set_root_a=7cfe9a8622ecd48051a001000b00e5a5ae5d1db9ceccb44a4a9ca001aead7bdf root_ab=1f67caa8906ecfd30d75bcf363961215a4b70f98b3a778a34831fc65eccce5e3 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f",
+    "store written object=5f0c0b6461d233626017ea921bbaec12334da3f7b7d8ecfd6f5f8ff42ce350bf descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a provenance_root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f mode=19",
+    "store scope=descriptor_id emitted_bytes=4096 class=ok exact=true",
+    "store scope=mode12_reader emitted_bytes=0 class=Corrupt",
+    "store scope=plain_descriptor_id emitted_bytes=0 class=Unauthorized",
+    "store scope=content_and_object_id emitted_bytes=0 class=Unauthorized",
+    "store scope=other_provenance_descriptor emitted_bytes=0 class=Unauthorized",
+    "store scope=none emitted_bytes=0 class=Unauthorized",
+    "store raw_fetch bytes=5509 is_frame=true equals_plaintext=false",
+    "store identical_bytes_two_descriptors descriptor_a=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a descriptor_b=04f023272817e5cf9d42bb248dcf0bce384b8e40054c37cde5873601569124f7 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f root_b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e",
+    "store verify_full ok=true checked_objects=2 checked_representations=0 generation=7",
+    "store scope=prov_reader_on_mode12 emitted_bytes=0 class=Corrupt",
+    "store attributes plain_mode_attr=false prov_mode_attr=true plain_keys=6 prov_keys=8 denial_text=kv page is not available to this principal"
+  ],
+  "schema": "weft.kv-provenance.court.v1",
+  "stamp": "20261109T182750Z",
+  "supersedes": "bench/receipts/kv-provenance-court-20261109T182414Z.json"
+}

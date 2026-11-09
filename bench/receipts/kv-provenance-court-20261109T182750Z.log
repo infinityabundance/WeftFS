@@ -1,0 +1,94 @@
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: `weftfs` (lib) generated 4 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5503:8
+     |
+5503 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5510:8
+     |
+5510 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5527:7
+     |
+5527 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5529:4
+     |
+5529 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5562:4
+     |
+5562 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+   Compiling weftfs v1.2.0 (/work)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.38s
+     Running tests/kv_provenance.rs (.docker-cache/target-rust/debug/deps/kv_provenance-4a8da727e376ebce)
+
+running 5 tests
+COURT forgery dimension_root tampered=adapter_set_root class=Malformed
+COURT forgery dimension_root tampered=tokenizer_root class=Malformed
+COURT collision payload_bytes=4096 payload_hash=a126fc3da63ffdf02eaa1d60d645b9da15dee5674388367f5d93e864347246c9 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f root_b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e distinct=true
+COURT salt salt_a=b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0 salt_b=b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1 root_a=81700d3d936812482e035199f6b3a31eb9b094c220a623e20ea7add165f3483a root_b=48b0c60e34540393801775a134d2045e5a543217e537bb19270bbeb1be6254a5 payload_hash_equal=true roots_distinct=true
+COURT salt proven=roots_differ not_proven=timing_or_access_pattern_privacy
+test salt_makes_identical_pages_unlinkable_by_root ... ok
+COURT forgery payload_swap class=Corrupt
+test forgery_is_rejected ... ok
+COURT collision cross_resolve scope=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f frame_root=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e emitted_bytes=0 class=Unauthorized
+COURT collision matching_resolve scope=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f emitted_bytes=4096 class=ok
+test collision_two_adapter_roots_are_two_identities ... ok
+COURT adapter_set ab_equals_ba=true ab_equals_a=false set_root_ab=aad45143a043c6c57e76750e6ca4dccfa9b5b5b5a264f5e25f65024e2e12c59a set_root_a=7cfe9a8622ecd48051a001000b00e5a5ae5d1db9ceccb44a4a9ca001aead7bdf root_ab=1f67caa8906ecfd30d75bcf363961215a4b70f98b3a778a34831fc65eccce5e3 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f
+test adapter_set_is_canonical ... ok
+COURT store written object=5f0c0b6461d233626017ea921bbaec12334da3f7b7d8ecfd6f5f8ff42ce350bf descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a provenance_root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f mode=19
+COURT store scope=descriptor_id emitted_bytes=4096 class=ok exact=true
+COURT store scope=mode12_reader emitted_bytes=0 class=Corrupt
+COURT store scope=plain_descriptor_id emitted_bytes=0 class=Unauthorized
+COURT store scope=content_and_object_id emitted_bytes=0 class=Unauthorized
+COURT store scope=other_provenance_descriptor emitted_bytes=0 class=Unauthorized
+COURT store scope=none emitted_bytes=0 class=Unauthorized
+COURT store raw_fetch bytes=5509 is_frame=true equals_plaintext=false
+COURT store identical_bytes_two_descriptors descriptor_a=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a descriptor_b=04f023272817e5cf9d42bb248dcf0bce384b8e40054c37cde5873601569124f7 root_a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f root_b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e
+COURT store verify_full ok=true checked_objects=2 checked_representations=0 generation=7
+COURT store scope=prov_reader_on_mode12 emitted_bytes=0 class=Corrupt
+COURT store attributes plain_mode_attr=false prov_mode_attr=true plain_keys=6 prov_keys=8 denial_text=kv page is not available to this principal
+test store_scope_is_the_provenance_descriptor_id ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

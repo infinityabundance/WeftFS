@@ -7102,8 +7102,9 @@ identity is a hash over them.
 
 ### Collision and fail-closed results
 
-Receipt `bench/receipts/kv-provenance-court-20261109T182414Z.json` (5/5 tests,
-raw log beside it). Two frames with byte-identical 4,096-byte payloads and the
+Receipt `bench/receipts/kv-provenance-court-20261109T182750Z.json` (5/5 tests,
+raw log beside it; the earlier `…182414Z` receipt is retained, it predates the
+`verify --full` row). Two frames with byte-identical 4,096-byte payloads and the
 same payload hash (`a126fc3d…7246c9`) but different adapter roots have different
 roots (`ba5ec110…5d7f5f` vs `ef7309ea…24618e`); cross-resolving either under the
 other's root returns `Unauthorized` with **0 bytes emitted**, while the matching
@@ -7122,6 +7123,7 @@ Store scope (one 4,096-byte page, capability grants listed by `roots`):
 | no envelope | 0 | `Unauthorized` |
 | mode-19 object through the mode-12 reader | 0 | `Corrupt` |
 | mode-12 object through the provenance reader | 0 | `Corrupt` |
+| `Store::verify(true)` over the mode-19 objects | — | `ok` (2 objects) |
 
 A raw `read_object` returns 5,509 bytes that start with `WFT1` and are not the
 plaintext, so a content-hash fetch yields a frame, never a decode.

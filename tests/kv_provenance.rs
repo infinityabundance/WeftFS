@@ -560,6 +560,14 @@ fn store_scope_is_the_provenance_descriptor_id() {
         other.provenance_root.to_hex()
     ));
 
+    // The store's own verifier must accept mode-19 objects as ordinary files.
+    let report = store.verify(true).expect("verify --full");
+    assert!(report.ok, "verify failed: {:?}", report.problems);
+    court(&format!(
+        "store verify_full ok=true checked_objects={} checked_representations={} generation={}",
+        report.checked_objects, report.checked_representations, report.generation
+    ));
+
     // The provenance reader must not decode a plain mode-12 page either.
     let plain_page = store
         .write_kv_page(

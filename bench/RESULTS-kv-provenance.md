@@ -32,8 +32,9 @@ descriptor envelope. Mode 12 is byte-identical to before.
 
 ## 2. Adversarial court (raw outcomes)
 
-Receipt: `bench/receipts/kv-provenance-court-20261109T182414Z.json`, raw log
-beside it (`…Z.log`). Five tests, all pass; the numbers below are the exact
+Receipt: `bench/receipts/kv-provenance-court-20261109T182750Z.json`, raw log
+beside it (`…Z.log`); the earlier `…182414Z` receipt is retained as superseded
+(it predates the `verify --full` row). Five tests, all pass; the numbers below are the exact
 values printed by the court.
 
 ### 2.1 Collision: identical bytes, different adapter roots
@@ -84,6 +85,7 @@ values printed by the court.
 | no envelope | 0 | `Unauthorized` |
 | mode-19 object through the mode-12 reader | 0 | `Corrupt` |
 | mode-12 object through the provenance reader | 0 | `Corrupt` |
+| `Store::verify(true)` over the stored mode-19 objects | — | `ok`, 2 objects, generation 7 |
 
 A raw `read_object` of the stored blob returns 5,509 bytes that start with
 `WFT1` and are **not** the plaintext; a content-hash fetch therefore yields a
