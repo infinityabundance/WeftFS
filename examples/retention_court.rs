@@ -502,10 +502,11 @@ fn run_policy(work: &Path, rate: Rate, policy: Policy, mode: ClassMode) -> Resul
                     writes += 1;
                     if let Some(stale) = cache.remove(&page_index) {
                         retained = retained.saturating_sub(stale.size);
-                        if policy != Policy::FixedTtl {
-                            if let Some(name) = stale.object_name {
-                                release_object(s, pages_dir, &name).map_err(weftfs::Error::io)?;
-                            }
+                        // A miss replaces the entry, so the previous object must
+                        // be released for every policy; otherwise the old frame
+                        // stays reachable and its bytes are never reclaimable.
+                        if let Some(name) = stale.object_name {
+                            release_object(s, pages_dir, &name).map_err(weftfs::Error::io)?;
                         }
                     }
                     let class = class_for(mode, spec.ephemeral);
