@@ -6441,3 +6441,147 @@ Gates at `163a6a2` / `cffcc1a`: Rust `cargo test --all-targets` **658 passed /
 passed / 0 failed / 2 pre-existing ignored**; `scripts/check-claims.sh` OK;
 spec drift 42/42; conformance manifest OK; aggregate **37/37**
 (`verify-20261108T165021Z.json`) at the S12 revision `94a4818`.
+
+## Subphase S13b — measured restore floor / honest SLA (2026-11-08)
+
+Goal: make the parent-graph planner's restore prediction honest. S13's court
+found it was not: the chain was over-predicted by 24.2 % and the
+all-independent floor under-predicted by 73.7 % (0.211 s predicted, 0.802 s
+measured for a 76-tensor, 281,715,176 B pythia version). An SLA chosen between
+those numbers was accepted by the model and missed in practice.
+
+Revision: receipts were produced from the S13b working tree on base `4fc1ece`;
+the code is commit `f385450`, this evidence `d351da8`, docs/claims follow.
+`main` untouched. Submodules unchanged (`WeftCodec cffcc1a`, `WeftCodec-Go
+0db665e`, `WeftFS-Go 6d58137`).
+
+### Hypotheses and what the measurement said
+
+The new harness `examples/calibrate_restore.rs` times real
+`Store::restore_checkpoint` calls (not in-memory frame decode) on checkpoints
+written with the writer's `Planned` representation, 7 repetitions per point,
+and fits `residue = measured_restore − Σ measured decode rows`.
+Receipt `bench/receipts/s13b-restore-floor-20261108T230417Z.json` (154 fitted
+samples; court 3 GiB / 4 cpus / 1024 pids, `weft/bench-court:1` id
+`sha256:4c6c41fb…`).
+
+1. **Per-object fixed cost: refuted for tensors ≥ ~256 KiB.** At a fixed 64 MiB
+   total, one 64 MiB tensor has 136.2 ms of residue and sixty-four 1 MiB
+   tensors 127.0 ms. The count slope only turns positive for sub-256-KiB
+   tensors (a 4 KiB tensor carries ~30–40 µs of non-decode restore work).
+2. **Per-version cost: real but tiny.** Manifest read: 14.0 µs (1 tensor),
+   0.31 ms (76 tensors), 77 ms (16,384). The fitted intercept is ~0; the baked
+   13,285 ns per-version term is the measured one-tensor manifest read.
+3. **Chain over-prediction is not a misplaced constant.** The controlled chain
+   (8 MiB tensor, 8 hops) measures 14.9–15.9 ms/hop for sparse-delta and
+   35.6–38.7 ms/hop for weight-delta against the 42.4 ms row: the error is per
+   hop and class-dependent (sparse-delta and zstd-patch reuse the weight-delta
+   row; zstd-19 reuses the level-3 zstd row).
+
+### What changed
+
+- `src/cost_model.rs`: `RestoreOverhead { per_version_ns, per_tensor_ns,
+  per_mib_ns }` and `RESTORE_OVERHEAD_CALIBRATION =
+  "weftfs-s13b/restore-overhead/v1"`. Baked measured term **13,285 / 29,205 /
+  2,114,993 ns**, integer arithmetic only.
+- `src/plan_graph.rs`: `restore_ns(i) = decode_chain_ns(i) + overhead(i)`,
+  charged **once per version restore**, never per dependency hop (the first
+  draft added it to the recursive chain and would have over-predicted a
+  depth-8 chain by an extra 8 × 0.6 s). `PlanOptions::restore_overhead`
+  defaults to the measured term. All three solvers prune on the corrected
+  restore, not the raw decode chain. An SLA claim with the model withheld is a
+  typed `InvalidArgument`; the plan records the model it used
+  (`predicted_decode_chain_ns`, `predicted_overhead_ns`, `predicted_chain_ns`,
+  `restore_overhead_calibration`).
+- `weftfs plan-parents --restore-overhead measured|none` and the corrected
+  fields in the report.
+- `examples/parent_graph_court.rs`: 7 restore reps (minimum 5), a
+  λ × SLA sweep, per-version prediction error, chain-hop diagnostics, and the
+  `floor_prediction_within_10_percent` / `no_accepted_plan_misses_its_sla`
+  checks. Receipt schema `weft.s13b.parent-graph.v2`.
+- `bench/scripts/s13b_restore_floor_court.sh` (calibration court) and
+  `bench/scripts/parent_graph_court.sh` (7 reps + sweep).
+- `tests/parent_graph_restore_floor.rs` 6/6: the baked constants equal the
+  measured receipt and the receipt carries samples; the graph charges the
+  term once; an SLA that only fits without the term is refused
+  (`LimitExceeded`) with no store created; a withheld model cannot claim an
+  SLA (`InvalidArgument`); determinism; and a store round trip whose
+  logical/content roots are unchanged.
+
+### Corrected prediction vs measurement
+
+Court receipt `bench/receipts/parent-graph-20261108T232016Z.json`, the same
+nine pythia-70m checkpoints and the same λ/SLA values as S13, 7 medians per
+version. Every version of every realised plan restored byte-exactly and
+`verify --full` was clean.
+
+| plan (λ, SLA) | predicted worst | measured worst | error | note |
+|---|---:|---:|---:|---|
+| chain | 12,170.3 ms | 9,238.2 ms | +31.7 % | conservative |
+| restart-2 | 2,205.3 ms | 2,049.9 ms | +7.6 % | conservative |
+| restart-3 (λ=0, 4 s) | 3,629.1 ms | 3,234.3 ms | +12.2 % | conservative |
+| restart-4 | 5,052.8 ms | 4,503.9 ms | +12.2 % | conservative |
+| all-independent floor (λ=1, 4 s) | 781.6 ms | 886.5 ms | **−11.8 %** | cold-cache step |
+
+Calibration validation, not the court: a real step-0 container predicts
+781.6 ms vs 780.1 ms measured (+0.19 %); all nine independent checkpoints in a
+fresh store measure 778.2–793.3 ms against 781.6 ms (−1.5 %..+0.4 %).
+
+### SLA sweep and plan choices
+
+`500, 850, 1000, 2000, 2500, 3000, 4000, 6000, 14000` ms at λ = 0 and λ = 1:
+
+- 500 ms: refused (`LimitExceeded`) at both λ. S13 would have accepted the
+  floor (211 ms prediction).
+- 850 ms: all-independent accepted (781.6 ms prediction); measured 886.5 ms
+  because of the cold versions, so this accepted plan **misses** its SLA.
+- 1000–2000 ms: all-independent, holds.
+- 2500/3000 ms: restart-2 at λ=0, all-independent at λ=1, holds.
+- 4000 ms: restart-3 at λ=0 (unchanged from S13), all-independent at λ=1
+  (unchanged), holds.
+- 6000 ms: restart-4 at λ=0, all-independent at λ=1, holds.
+- 14000 ms: chain at λ=0, all-independent at λ=1, holds.
+
+No plan choice at the S13 λ/SLA values changed. The correction shows up as
+the typed 500 ms refusal and as the 850 ms acceptance becoming marginal. The
+court's `no_accepted_plan_misses_its_sla` check is **false** (2 of 16 measured
+acceptances miss, both the same floor at 850 ms).
+
+### Losses and limitations
+
+- **The floor residual is a page-cache-capacity boundary, not a fitted error.**
+  In the 3 GiB court the all-independent store is 1.5 GB over nine versions;
+  versions 0–3 restore warm at 796–807 ms (+1.8..+3.3 % vs 781.6 ms) and
+  versions 4–8 at 878–886 ms (−11.3..−11.8 %), with identical 163.9 MB reads.
+  A fresh-store nine-checkpoint calibration run measures all nine at
+  778–793 ms. Every cold restore costs ~100 ms per 164 MB. The first S13b
+  court run (retained, `parent-graph-20261108T215207Z`) showed the same step
+  with a larger penalty (782–805 warm, 964–987 cold). **The constant was not
+  raised to cover the cold case.**
+- **Chain and restart predictions are conservative** because per-candidate
+  pricing is unchanged in this subphase: sparse-delta and zstd-patch use the
+  weight-delta row, and a level-19 zstd frame uses the level-3 row. The chain
+  measured hops are 604/515 ms for the sparse hops and 1,180–1,276 ms for the
+  weight-delta hops against a 1,423 ms row. Correcting those rows could flip
+  stored strategies across corpora and is a separate decision.
+- The count sweep's linear per-tensor term over-predicts mid-size many-tensor
+  checkpoints (worst fit residual 31.6 % at a 128 × 512 KiB point) because the
+  per-object cost only turns on below ~256 KiB.
+- Rust only. WeftFS-Go has no parent-graph planner; the constant is documented
+  in the Rust cost model only and **no cross-language agreement is claimed**.
+- Restores are single-threaded; the model is warm-cache, one host, one public
+  corpus, no fleet/cloud/cold-media claim.
+- The 4 KiB–64 MiB sweep and the trajectory are synthetic/single-corpus; the
+  fit is a host-local measurement, not a universal constant.
+
+### Gates
+
+Rust `cargo test --all-targets` **668 passed / 0 failed / 0 ignored** (132
+test binaries, including the 10 new S13b tests); FUSE `cargo test --features
+fuse --all-targets` **711 passed / 0 failed / 2 pre-existing ignored**;
+`scripts/check-claims.sh` **659/659 OK**; `scripts/check-spec-drift.sh` **42/42
+OK**; `scripts/gen-conformance-manifest.sh --check` **355 entries OK**;
+`scripts/check-conformance-coverage.sh` **355 entries OK**. No aggregate
+`verify-all` run was made for S13b; the S13 aggregate
+(`verify-20261108T165021Z.json`, 37/37 at `94a4818`) predates this change and
+is **not** cited for it.

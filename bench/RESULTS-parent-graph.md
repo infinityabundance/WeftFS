@@ -1,141 +1,244 @@
-# Parent-graph planning on a real pythia-70m trajectory (S13)
+# Parent-graph planning on a real pythia-70m trajectory (S13, corrected by S13b)
 
-Receipt: `bench/receipts/parent-graph-20261108T192017Z.json`
-(schema `weft.s13.parent-graph.v1`), measured at WeftFS `163a6a2` /
-WeftCodec `cffcc1a` in the default bench court (3 GiB, 4 cpus, 1024 pids,
-`weft/bench-court:1` id `sha256:4c6c41fb…`).
+Receipts (all at WeftFS `4fc1ece` / WeftCodec `cffcc1a`, default bench court:
+3 GiB / 4 cpus / 1024 pids, `weft/bench-court:1` id `sha256:4c6c41fb…`):
+
+| evidence | receipt |
+|---|---|
+| S13b restore-overhead calibration | `bench/receipts/s13b-restore-floor-20261108T230417Z.json` |
+| S13b parent-graph court | `bench/receipts/parent-graph-20261108T232016Z.json` |
+| S13b first court run (retained; larger cold-cache penalty) | `bench/receipts/parent-graph-20261108T215207Z.json` |
+| S13 original court (superseded predictions) | `bench/receipts/parent-graph-20261108T192017Z.json` |
 
 Reproduce:
 
 ```sh
 scripts/docker-court.sh bench \
+  "cd /work && bash bench/scripts/s13b_restore_floor_court.sh"
+scripts/docker-court.sh bench \
   "cd /work && bash bench/scripts/parent_graph_court.sh"
 ```
 
-Corpus (re-hashed inside the court; 76 tensors each, 281,715,176 B each):
+Corpus: the nine cached pythia-70m checkpoints, 281,715,176 B and 76 tensors
+each, re-hashed in both courts (step 0
+`17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e`, step 1000
+`09883f904c4a50de85c682cdfa0434aaf34e62392fe883e58410d12d39b1ee88`).
 
-| step | bytes | sha256 |
-|---|---:|---|
-| 0 | 281,715,176 | `17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e` |
-| 1 | 281,715,176 | `652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109` |
-| 2 | 281,715,176 | `491b4bafde38f7b58871b997597d5ca8447e683718879f846501b20a719127b2` |
-| 4 | 281,715,176 | `cf8a0b16691ab56ed52e5c6ace2c14f99637e7de755eba9ee3b113417d996223` |
-| 8 | 281,715,176 | `17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48` |
-| 16 | 281,715,176 | `c93333b4a7b6ca6337b5616167aac28a025c1a9b28763e240c904fc504a3ad09` |
-| 64 | 281,715,176 | `d6091e017aeea5319a2209bf95c71ecfc44a71302eb2553135bce3a834ad4616` |
-| 512 | 281,715,176 | `a46bd4c254e28664926b12762616596de5783608ca5403765586c126bdf5bcd4` |
-| 1000 | 281,715,176 | `09883f904c4a50de85c682cdfa0434aaf34e62392fe883e58410d12d39b1ee88` |
+## What S13b changed
 
-Every container has 76 tensors and 281,706,496 element bytes; the 8,680-byte
-difference from the file size is the safetensors header.
+S13's model summed the measured affine decode rows and nothing else. Its own
+court measured the resulting error: the chain worst restore was over-predicted
+by 24.2 % and the all-independent floor under-predicted by 73.7 % (0.211 s
+predicted, 0.802 s measured). An SLA chosen between those numbers would have
+been accepted and missed.
 
-The receipt is the authority for the full list; the table reproduces it.
+S13b adds a **measured whole-checkpoint restore overhead**, charged once per
+version restore:
 
-## What was measured
+```
+restore_ns(i) = decode_chain_ns(i) + restore_overhead_ns(i)
+restore_overhead_ns(i) = per_version_ns + per_tensor_ns * tensors(i)
+                       + per_mib_ns * logical_mib(i)
+```
 
-1. Every version was written **independently** into a private probe store
-   (1,447,239,539 B actual, 163,913,246 B for step 0 growing to 1,447,239,539 B
-   for all nine).
-2. Every earlier-version parent was priced with the shipped
-   `Store::plan_tensor` (45 version-prices; 1,388.8 s in the court). The graph
-   is in the receipt (`graph.versions[i].parents[j]`).
-3. The chain/restart DP, the exhaustive oracle (`N = 9 <= 12`) and the greedy
-   pass ran on that measured matrix.
-4. Five plans were realised in separate stores; every version was restored
-   three times from a freshly opened read-only handle, compared with the source
-   container, and the store was `verify --full`-ed.
+The baked term (`RESTORE_OVERHEAD_CALIBRATION =
+weftfs-s13b/restore-overhead/v1`) is `13,285 / 29,205 / 2,114,993` ns. It is
+fitted on real `Store::restore_checkpoint` calls, not on in-memory frame
+decode, and validated on the real checkpoints. The solvers now prune on the
+corrected restore (not the raw decode chain), and an SLA claim with no
+overhead model is refused with a typed `InvalidArgument`.
 
-`lambda_ns` defaults to the smallest integer at which any restart interval
-beats the chain on the measured matrix. The break-even values are
-0.008408 (k=2), 0.005266 (k=3), 0.004714 (k=4) bytes/ns, so the court ran at
-`lambda_ns = 1` (1 byte per ns = 1 GB/s). The SLA was 4 s.
+## Calibration: which hypothesis held
 
-## Plan comparison (model prices from the measured graph)
+The harness (`examples/calibrate_restore.rs`) writes complete checkpoints with
+the writer's `Planned` representation and times `restore_checkpoint` from a
+fresh read-only handle, 7 repetitions per point (154 fitted samples), then fits
+`residue = measured_restore − Σ decode rows`.
 
-| plan | parents | depth | edge bytes | Σ chain decode | worst restore |
+| hypothesis | verdict | evidence |
+|---|---|---|
+| 1. per-object fixed cost | **refuted above ~256 KiB** | at a fixed 64 MiB total: one 64 MiB tensor = 136.2 ms residue, sixty-four 1 MiB tensors = 127.0 ms. No positive count slope until tensors fall below ~256 KiB. |
+| 2. per-version cost | real but tiny | manifest read 14.0 µs for 1 tensor, 0.31 ms for 76, 77 ms for 16,384. The per-tensor term absorbs it; the measured intercept is ~0. |
+| 3. chain over-prediction is a misplaced constant | **no** | the controlled chain shows the over-prediction is per hop and class-dependent (below), not a per-version term counted per hop. |
+
+The measured per-object term is the small-object fixed work: a 4 KiB tensor
+carries ~30–40 µs of restore work that is not decode. Model checkpoints have
+few such tensors (44 tensors of 2–8 KiB in pythia = ~1.8 ms), so it is a
+correctness term, not a pythia-sized one.
+
+Fit residuals: worst point residual 31.6 % (a 128 × 512 KiB point), which is
+the cost of forcing one linear count slope over a range where the per-object
+cost only turns on below 256 KiB. Real-container validation (step 0):
+predicted 781.6 ms, measured 780.1 ms (+0.19 %). Whole-trajectory validation
+(all nine checkpoints, each written independently into one store): predicted
+781.6 ms for every version, measured 778.2–793.3 ms, error −1.5 %..+0.4 %.
+
+Chain-hop check (8 MiB tensor, 8 hops, `Planned`):
+
+| hops | chosen representation | measured increment | model row | model error |
+|---|---|---:|---:|---:|
+| 1–2 | sparse-delta | ~14.9–15.9 ms | 42.4 ms | +166 %..+184 % (model too high) |
+| 3–8 | weight-delta | 35.6–38.7 ms | 42.4 ms | +10 %..+19 % (model too high) |
+
+This is the S13b chain residual: `SPARSE_DELTA` and `ZSTD_PATCH` share the
+`WEIGHT_DELTA` decode row, and level-19 zstd shares the level-3 `ZSTD` row.
+Correcting those candidate prices would change stored strategies across
+corpora and is explicitly out of scope; the graph's chain/restart predictions
+are therefore conservative.
+
+## Corrected plan comparison (model)
+
+`lambda_ns = 1` (the measured break-even values are 0.008408 / 0.005266 /
+0.004714 bytes/ns for restart intervals 2/3/4), SLA 4 s.
+
+| plan | parents | depth | edge bytes | decode worst | **corrected worst restore** |
+|---|---|---:|---:|---:|---:|
+| current chain | `−1,0,1,2,3,4,5,6,7` | 8 | 647,175,737 | 11,599.9 ms | 12,170.3 ms |
+| restart every 2 | `−1,0,−1,2,−1,4,−1,6,−1` | 1 | 1,030,180,485 | 1,634.8 ms | 2,205.3 ms |
+| restart every 3 | `−1,0,1,−1,3,4,−1,6,7` | 2 | 849,572,567 | 3,058.6 ms | 3,629.1 ms |
+| restart every 4 | `−1,0,1,2,−1,4,5,6,−1` | 3 | 808,225,589 | 4,482.4 ms | 5,052.8 ms |
+| **DP @ λ=1, SLA 4 s** | all independent | 0 | 1,474,646,073 | 211.1 ms | **781.6 ms** |
+| DP @ λ=0, SLA 4 s | = restart every 3 | 2 | 849,572,567 | 3,058.6 ms | 3,629.1 ms |
+| brute force @ λ=1 | all independent | 0 | 1,474,646,073 | 211.1 ms | 781.6 ms |
+
+The DP and the exhaustive oracle still agree exactly. The per-version overhead
+is a constant across plans (every plan restores every version), so it changes
+no objective ordering; it only changes SLA feasibility and the reported times.
+
+## Realised stores (7 restore medians per version)
+
+| plan | data bytes | bytes error | **predicted worst** | **measured worst** | error | Σ measured | exact | verify |
+|---|---:|---:|---:|---:|---:|---:|---|---|
+| chain | 647,411,616 | +235,879 (+0.036 %) | 12,170.3 ms | 9,238.2 ms | +31.7 % | 40,988.0 ms | 9/9 | ok |
+| restart-2 | 1,030,285,678 | +105,193 (+0.010 %) | 2,205.3 ms | 2,049.9 ms | +7.6 % | 11,454.4 ms | 9/9 | ok |
+| restart-3 | 849,712,592 | +140,025 (+0.016 %) | 3,629.1 ms | 3,234.3 ms | +12.2 % | 16,146.5 ms | 9/9 | ok |
+| restart-4 | 808,373,400 | +147,811 (+0.018 %) | 5,052.8 ms | 4,503.9 ms | +12.2 % | 18,662.8 ms | 9/9 | ok |
+| optimizer (λ=1) | 1,447,239,539 | −27,406,534 (−1.86 %) | 781.6 ms | 886.5 ms | **−11.8 %** | 7,618.0 ms | 9/9 | ok |
+
+Every version in every plan matched the source container byte for byte and
+every store passed `verify --full` with 0 problems.
+
+Chain per-hop increments inside the realised chain plan (measured boundary
+between consecutive versions vs the model's incremental decode row):
+
+| hop | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| measured ms | 604.2 | 515.1 | 1,180.0 | 1,190.4 | 1,209.9 | 1,275.6 | 1,256.3 | 1,215.3 |
+| model ms | 1,423.4 | 1,423.4 | 1,423.4 | 1,423.4 | 1,423.7 | 1,423.9 | 1,423.7 | 1,423.8 |
+
+Hops 1–2 are sparse-delta/patch edges (model priced as weight-delta); hops 3–8
+are weight-delta. This is why the chain's corrected prediction is +31.7 %
+high: the per-hop rows over-price the real deltas, and the overhead correction
+is added once, not per hop.
+
+## The floor residual: a page-cache-capacity boundary
+
+The all-independent plan is the floor. Its corrected prediction is 781.6 ms;
+the court measured 886.5 ms (−11.8 %). The per-version detail shows this is
+not a model error but a measurement-regime change:
+
+| versions | predicted | measured | error |
+|---|---:|---:|---:|
+| 0–3 (step 0/1/2/4) | 781.6 ms | 796.0–807.2 ms | +1.8 %..+3.3 % |
+| 4–8 (step 8/16/64/512/1000) | 781.6 ms | 878.5–886.5 ms | −11.3 %..−11.8 % |
+
+All nine versions read the same 163.9 MB from the store; the step is not
+explained by bytes. The court restores nine 1.5 GB versions inside a 3 GiB
+cgroup; versions 0–3 stay in the page cache and versions 4–8 do not, adding
+~100 ms per 164 MB read (~0.9 GB/s from the device). The same nine checkpoints
+restored in the calibration court's fresh store (smaller footprint) measure
+778–793 ms, all inside 1.5 %. The first S13b court run showed the same step
+with a larger penalty (782–805 ms warm, 964–987 ms cold). The overhead term is
+measured warm; the S13 court already labelled its restore as "warm OS page
+cache", and this is the quantified boundary of that label. The constant was
+**not** raised to cover the cold case.
+
+## SLA sweep: accepted plans and whether they hold
+
+`500, 850, 1000, 2000, 2500, 3000, 4000, 6000, 14000` ms at λ = 0 and λ = 1:
+
+| SLA | λ=0 choice | λ=1 choice | predicted | measured | holds |
+|---:|---|---|---:|---:|---|
+| 500 ms | refused (`LimitExceeded`) | refused | — | — | — |
+| 850 ms | all independent | all independent | 781.6 ms | 886.5 ms | **no** (cold versions) |
+| 1000 ms | all independent | all independent | 781.6 ms | 886.5 ms | yes |
+| 2000 ms | all independent | all independent | 781.6 ms | 886.5 ms | yes |
+| 2500 ms | restart-2 | all independent | 2,205.3 / 781.6 ms | 2,049.9 / 886.5 ms | yes |
+| 3000 ms | restart-2 | all independent | 2,205.3 / 781.6 ms | 2,049.9 / 886.5 ms | yes |
+| 4000 ms | restart-3 | all independent | 3,629.1 / 781.6 ms | 3,234.3 / 886.5 ms | yes |
+| 6000 ms | restart-4 | all independent | 5,052.8 / 781.6 ms | 4,503.9 / 886.5 ms | yes |
+| 14000 ms | chain | all independent | 12,170.3 / 781.6 ms | 9,238.2 / 886.5 ms | yes |
+
+The 850 ms row is the only accepted plan that misses: its prediction (781.6 ms)
+is inside 850 ms and its *warm* measurement (778–807 ms) is too, but the cold
+versions measure 886.5 ms. The court's `no_accepted_plan_misses_its_sla` check
+is therefore **false**; it is reported as observed. At every other SLA in the
+sweep, every accepted plan holds.
+
+Changes from S13: the plan choices at λ=0/λ=1 and SLA 4 s are unchanged
+(independent at λ=1, restart-3 at λ=0). The corrections show up as (a) a
+typed refusal at 500 ms, which S13 would have accepted with a 211 ms
+prediction, and (b) an 850 ms acceptance that is now marginal and, cold,
+missed. All other sweep choices are unchanged.
+
+## Honest verdict
+
+* The floor is now predicted from a measured term, not from the decode rows
+  alone: 781.6 ms against a warm 778–807 ms (within 4 %) and a cold
+  878–886 ms (−11.8 %). The S13 73.7 % error is gone; the residual is a
+  quantified cache-capacity boundary.
+* Chain and restart predictions are conservative, not optimistic: +31.7 %
+  (chain), +12.2 % (restart-3/4), +7.6 % (restart-2). They over-state restore
+  time because sparse-delta, zstd-patch and zstd-19 are priced with the
+  weight-delta and level-3 zstd rows. That is a per-candidate pricing decision
+  left untouched.
+* The chain is still the smallest plan (647.4 MB) and the slowest (9.24 s
+  worst, 41.0 s for all nine); the λ=1 optimum is all-independent
+  (1,447.2 MB, 0.89 s worst, 7.62 s for all nine). The trade is unchanged; the
+  prediction of its cost is corrected.
+* The model is a single host, warm-cache, single-threaded restore model. It
+  does not model cold media, disk throughput, CPU contention, or per-candidate
+  decode-row bias. The court publishes the gap in every case it observed.
+
+## What is not claimed
+
+Not a Go implementation (WeftFS-Go has no parent-graph planner; the overhead
+constant is documented in the Rust cost model only and no cross-language
+agreement is claimed). Not a multi-writer protocol. No physical power-loss
+test. No per-candidate repricing. No cold-media or fleet SLA. One host, one
+public corpus, warm OS page cache for the calibration (the court's cold step is
+reported, not corrected).
+
+## Historical record: the original S13 court (superseded predictions)
+
+This section is retained verbatim in substance so the S13 evidence stays
+readable. Its **model** columns are the uncorrected ones; S13b above replaces
+them. Receipt: `bench/receipts/parent-graph-20261108T192017Z.json` (3 restore
+reps per version).
+
+| plan | parents | depth | edge bytes | Σ chain decode | worst restore (model) |
 |---|---|---:|---:|---:|---:|
 | current chain | `−1,0,1,2,3,4,5,6,7` | 8 | 647,175,737 | 53,146.7 ms | 11,599.9 ms |
 | restart every 2 | `−1,0,−1,2,−1,4,−1,6,−1` | 1 | 1,030,180,485 | 7,594.5 ms | 1,634.8 ms |
 | restart every 3 | `−1,0,1,−1,3,4,−1,6,7` | 2 | 849,572,567 | 14,712.2 ms | 3,058.6 ms |
 | restart every 4 | `−1,0,1,2,−1,4,5,6,−1` | 3 | 808,225,589 | 18,983.3 ms | 4,482.4 ms |
-| **DP @ λ=1, SLA 4 s** | all independent | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
+| DP @ λ=1, SLA 4 s | all independent | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
 | DP @ λ=0, SLA 4 s | = restart every 3 | 2 | 849,572,567 | 14,712.2 ms | 3,058.6 ms |
 | greedy @ λ=1 | all independent | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
 | brute force @ λ=1 | all independent | 0 | 1,474,646,073 | 1,900.3 ms | 211.1 ms |
 
-The DP and the exhaustive oracle agree exactly (`dp_matches_brute_force:
-true`). The greedy happens to agree at this λ; it is not claimed optimal.
+The DP and the exhaustive oracle agreed exactly (`dp_matches_brute_force:
+true`). The realised stores (3 restore medians per version):
 
-At λ=0 **without** an SLA the objective is bytes only, and the chain is the
-smallest plan in the measured table (647,175,737 B against 808,225,589 B for
-the next smallest), so that is what the DP returns. The 4 s SLA is what makes
-the DP restart: the chain's model worst case is 11.6 s. This is the honest
-answer to "why does any of this exist" — the planner chooses the trade; it
-does not impose one. With no latency objective and no SLA, the old behaviour
-is still the optimum.
+| plan | data bytes | predicted | error | worst restore | Σ restore |
+|---|---:|---:|---:|---:|---:|
+| chain | 647,411,616 | 647,175,737 | +235,879 (+0.036 %) | 9,336.3 ms | 41,218.8 ms |
+| restart-2 | 1,030,285,678 | 1,030,180,485 | +105,193 (+0.010 %) | 2,448.9 ms | 12,583.3 ms |
+| restart-3 | 849,712,592 | 849,572,567 | +140,025 (+0.016 %) | 3,248.2 ms | 16,289.9 ms |
+| restart-4 | 808,373,400 | 808,225,589 | +147,811 (+0.018 %) | 4,650.7 ms | 18,856.6 ms |
+| optimizer (λ=1) | 1,447,239,539 | 1,474,646,073 | −27,406,534 (−1.86 %) | 801.5 ms | 7,128.7 ms |
 
-## Realised stores (actual bytes, median-of-3 restore)
-
-| plan | data bytes | predicted | error | worst restore | Σ restore | exact | verify |
-|---|---:|---:|---:|---:|---:|---|---|
-| chain | 647,411,616 | 647,175,737 | +235,879 (+0.036 %) | 9,336.3 ms | 41,218.8 ms | 9/9 | ok |
-| restart-2 | 1,030,285,678 | 1,030,180,485 | +105,193 (+0.010 %) | 2,448.9 ms | 12,583.3 ms | 9/9 | ok |
-| restart-3 | 849,712,592 | 849,572,567 | +140,025 (+0.016 %) | 3,248.2 ms | 16,289.9 ms | 9/9 | ok |
-| restart-4 | 808,373,400 | 808,225,589 | +147,811 (+0.018 %) | 4,650.7 ms | 18,856.6 ms | 9/9 | ok |
-| optimizer (λ=1) | 1,447,239,539 | 1,474,646,073 | −27,406,534 (−1.86 %) | 801.5 ms | 7,128.7 ms | 9/9 | ok |
-
-Per-version restore medians (ms; step order 0, 1, 2, 4, 8, 16, 64, 512, 1000):
-
-| plan | 0 | 1 | 2 | 4 | 8 | 16 | 64 | 512 | 1000 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| chain | 790.9 | 1387.8 | 1921.7 | 3096.1 | 4290.8 | 5523.9 | 6826.8 | 8044.5 | 9336.3 |
-| restart-2 | 799.7 | 1403.3 | 801.7 | 2346.0 | 802.0 | 2393.0 | 787.1 | 2448.9 | 801.6 |
-| restart-3 | 791.3 | 1399.5 | 1971.8 | 798.2 | 2017.8 | 3248.2 | 800.5 | 2023.5 | 3239.0 |
-| restart-4 | 784.2 | 1389.2 | 1945.0 | 3141.6 | 797.3 | 2044.1 | 3310.3 | 4650.7 | 794.3 |
-| optimizer | 787.0 | 787.9 | 790.8 | 792.9 | 801.5 | 795.1 | 791.8 | 793.1 | 788.6 |
-
-All nine versions in every plan matched the source container byte for byte
-(`exact_source_file` and per-tensor SHA-256) and every store passed
-`verify --full` with 0 problems.
-
-## Honest verdict
-
-* The chain is the smallest plan (647.4 MB) and the slowest (9.34 s worst,
-  41.2 s for all nine). Restart points buy restore time with bytes:
-  k=2 is +59.1 % bytes for −73.8 % worst restore; k=3 is +31.3 % for −65.2 %;
-  k=4 is +24.9 % for −50.2 %.
-* At λ=1 the optimizer goes all the way to independent representations:
-  1,447.2 MB (2.24× the chain) but 0.80 s worst and 7.13 s for all nine
-  (11.6× / 5.8× faster). That is the correct decision for this objective; it is
-  not a recommendation for every deployment.
-* The model over-predicts chain restore by 24.2 % (11.60 s vs 9.34 s) and
-  under-predicts the all-independent restore by 73.7 % (0.211 s vs 0.802 s).
-  The all-independent gap is the fixed per-version container/manifest/SHA-256
-  work, which the affine decode table does not model. **The SLA is therefore a
-  model SLA, not a measured guarantee.** It accepted the 4 s SLA with a 0.211 s
-  prediction; the measured value is 0.802 s (still inside 4 s), but an SLA
-  chosen between those two numbers would be accepted and missed. This is a
-  published limitation, not a hidden one.
-* The all-independent store is 1.86 % smaller than the sum of its per-version
-  edge prices because identical chunks are deduplicated across independent
-  versions. The chain/restart stores are within +0.04 % of their predictions.
-* Break-even reads per version at λ bytes/ns is `λ_be / λ`. At λ=0.001
-  (1 MB/s) restart-2 needs 8.4 reads/version, restart-3 5.3, restart-4 4.7; at
-  λ=1 (1 GB/s) any read justifies them. For a cold archive read once, the
-  chain wins on bytes; for a hot trajectory, independent representations win on
-  time. The API's integer λ cannot express values below 1, which is why the
-  court publishes the break-even floats and the read-count interpretation
-  instead of picking a "realistic" λ silently.
-* The pricing pass is expensive: 1,388.8 s for nine versions because every
-  edge re-encodes the full candidate set. The planner is a write-time tool, not
-  a per-read cost.
-* `lambda_ns = 0` with no SLA reproduces the current chain exactly. The change
-  is opt-in through options, and no on-disk format changed.
-
-## What is not claimed
-
-Not a Go implementation; not a multi-writer protocol; no physical power-loss
-test; one host with a warm OS page cache (the restore is decode-dominated and
-labelled); no fleet or cloud claim. The `restart-4` measured worst (4.65 s)
-exceeds the 4 s SLA even though its *model* price (4.48 s) does too — the
-optimizer never chose it, which is the intended behaviour.
+S13's verdict: the chain was over-predicted by 24.2 % (11.60 s model vs
+9.34 s measured) and the all-independent floor under-predicted by 73.7 %
+(0.211 s vs 0.802 s) because the fixed restore work was not in the affine
+table. That is the defect S13b fixes; the corrected numbers are above.
