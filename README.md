@@ -70,6 +70,12 @@ is backed by a court receipt under hard memory, CPU, and pid limits. The Rust
 and Go filesystems are reference filesystems implementing this architecture,
 not data-plane competitors.
 
+Retention is a binding, not an identity: `spec/WEFT-RETENTION.md` defines a
+mutable `weft.retention.v1` record (`volatile` / `session` / `ephemeral` /
+`durable`) that references an artifact's existing content root, so changing a
+policy never forks dedup or a content root. A class-aware GC planner computes
+reachability first and only orders the already-unreachable set by class.
+
 **Writer capability, honestly stated.** The default is **MW1** — many
 producers, one committer. **MW2** — independent committers publishing against
 one shared authoritative head with typed conflicts, bounded retries, and

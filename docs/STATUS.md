@@ -7170,3 +7170,124 @@ time-to-first-token claim, synthetic pages, one host, warm cache. Not added to
 * Conformance manifest 376 entries (aggregate `9fb69ebf…a91177`), coverage
   mode 19 `8/12`; Rust and Go adapters 222 pass / 0 fail / 33 skip (frame kind).
 * Spec drift 48/48.
+
+## R6 — retention bindings and class-aware GC (2026-11-09)
+
+A storage layer cannot distinguish minute-scale utility from day-scale utility
+from bytes alone. This subphase adds a **retention binding** as a second,
+mutable, versioned layer that a GC planner can read, without touching artifact
+identity. Normative: `spec/WEFT-RETENTION.md` (`weft.retention.v1`).
+
+### The identity separation
+
+For a mode-19 KV page, identity remains
+`descriptor_root = H("weft/kv/prov/v1", WCB(descriptor))`. A binding references
+that root and declares `class`, `declared_lifetime_ms` (admission hint only),
+`producer`, `policy_epoch`, `issued_at`, optional `supersedes`, and an optional
+Ed25519 `signature`; its identity is
+`RetentionId = H("weft/retention/v1", WCB(record))`. No binding field is an
+input to any descriptor, content root, `ContentId`, `ObjectId`, manifest, or
+dedup key. Publishing, rebinding, or deleting a binding writes **zero artifact
+bytes**. Two artifacts with identical bytes and different policies have
+identical content roots and different `RetentionId`s. Rebinding is append-only
+(`supersedes`) and epoch-fenced (a lower epoch is `Conflict`).
+
+### Classes and the safety invariant
+
+`volatile` (seconds-to-minutes), `session` (hours), `ephemeral` (days),
+`durable` (indefinite; requires an in-memory pin, a snapshot root, or a
+checkpoint root, or the bind is refused). Class is never inferred from size,
+age, path, dtype, mode, or any other observable. GC computes reachability
+exactly as reachability-only GC does; class affects **ordering**, never
+reachability safety:
+
+> A class-aware pass reclaims a subset of what a reachability-only pass would
+> reclaim. It may retain unreachable bytes for a live binding's declared
+> window; it may never reclaim a blob that reachability GC would keep.
+
+Tests: `tests/retention.rs` 8/8, including
+`class_aware_gc_never_reclaims_a_reachable_blob` (snapshot-, checkpoint-,
+content-pin-, and provenance-retained artifacts, all expired, zero-budget
+plan); Go `store/retention_test.go` 7/7 with the same invariant.
+
+### Rust and Go surfaces
+
+* Rust: `src/retention.rs`, `Store::{set_retention, retention_of,
+  retention_history, retention_pointer, retention_binding, gc_plan,
+  retention_gc}`, `RetentionGcPlan` reporting per-class retained/reclaimable
+  blobs and bytes, plus the reason for every retained-but-expired artifact
+  (`reachable from <root>` or `retention live until <ns>`). The store's GC
+  reachability code was factored into one `compute_reachability` used by both
+  `Store::gc` and the retention planner, and now records root labels
+  (`head:`, `snapshot:`, `checkpoint:`, `transaction:`, `pin:`).
+* CLI: `weftfs retention set|show|history|plan|gc --apply`.
+* Go: `WeftFS-Go/store/retention.go` implements the same canonical record,
+  fixed 104-byte pointer, history, durable-root check, signed-record
+  verification, and GC ordering, reading the same `/retention/...` committed
+  layout. Go has no mode-19 KV writer, so its request supplies the artifact
+  anchor explicitly.
+* Cross-language (`scripts/retention_cross.sh`): **12/12 checks**, Rust record →
+  Go and Go record → Rust identical SHA-256/`RetentionId`; a Rust-written store
+  binding read by Go; a Go rebind read by Rust with the same bytes, id, and
+  class. `YES byte-identical` for both the record and the store binding.
+
+### The SWA-style court
+
+`examples/retention_court.rs` + `scripts/retention_court.sh`, receipt
+`bench/receipts/retention-20261109T220237Z.json` at WeftFS `9de0e09` /
+WeftCodec `813171b` / WeftCodec-Go `c872f26` / WeftFS-Go `9a87f56`. Synthetic,
+deterministic; bench court; 1,000 volatile pages (300 s) and 300 ephemeral pages
+(6 h), 360 × 60 s ticks, two request rates, 3.0 MB capacity, 20 snapshot-
+protected pages.
+
+| Rate | Policy | Safe-hit | Retained B | Reclaimed B | Unsafe | Physical B |
+|---|---|---:|---:|---:|---:|---:|
+| fast | fixed TTL + LRU | 35.31 % | 123,264 | 12,302,432 | 45 | 6,457,356 |
+| fast | reachability-only | 1.50 % | 68,480 | 16,524,224 | 0 | 5,012,636 |
+| fast | **class-aware** | **74.94 %** | 3,002,848 | 4,536,800 | 0 | 4,340,836 |
+| slow | fixed TTL + LRU | 0.97 % | 34,240 | 6,858,272 | 37 | 4,416,301 |
+| slow | reachability-only | 2.64 % | 68,480 | 6,782,944 | 0 | 2,766,411 |
+| slow | **class-aware** | **73.47 %** | 3,002,848 | 2,102,336 | 0 | 4,051,586 |
+
+Every hit re-reads the exact frame and compares it byte-for-byte; every run
+ends with `verify --full`. Class-aware beats fixed TTL by 39.6 points (fast) and
+72.5 points (slow). Fixed TTL evicts 45 / 37 still-reachable artifacts; the
+snapshot keeps their bytes, which is why an unsafe cache also cannot free that
+capacity. Reachability-only and class-aware report zero unsafe reclaims.
+
+Misclassification (class-aware, fast rate): declaring volatile pages
+`ephemeral` retains **+1,448,352 B** and reclaims 0 (a capacity loss);
+declaring ephemeral pages `volatile` costs **−7.69 points**, 277 extra misses,
+and 453 early reclaims, with **0 unsafe reclaims** — reachability still governs.
+
+### Every loss
+
+Class-aware retains 3.00 MB against a 3.00 MB budget: 2,848 B over at the end
+(0.09 %), with a 1,451,200 B peak over-budget from the initial 1,300-page
+seeding burst. Retention is a hint: no wall-clock guarantee, no clock-skew
+defence, and no verification that a producer's declaration is truthful. The
+trace is synthetic; the win is a property of this reuse distance and would be
+published as a tie if the distance were shorter than every window. No fleet,
+media, or serving claim. The court is 1,120.6 s and is not part of `verify-all`.
+The Go store has no mode-19 writer, so the anchor is explicit. Signatures verify
+against an embedded key; without a configured trust set they are not an
+authorization claim. `durable` is protected by reachability, not by a clock:
+once unreachable it is ordered last and reclaimed.
+
+### Gates
+
+* Rust `cargo test --all-targets`: **708 passed, 0 failed, 0 ignored** (141
+  suites).
+* FUSE court `cargo test --features fuse --all-targets`: **751 passed, 0
+  failed, 2 pre-existing ignored** (141 suites).
+* WeftFS-Go: `gofmt` clean, `go vet ./...` clean, `CGO_ENABLED=0 go build ./...`
+  clean, `go test -race -count=1 ./...` pass in the fuse court (cmd 45.8 s,
+  fusefs 7.1 s, store 209.6 s). The go court alone lacks `/bin/fusermount`; the
+  fuse court is the documented environment for that package.
+* Superseded receipts `retention-20261109T205135Z.json` and
+  `retention-20261109T211525Z.json` measured the court before fixed-TTL
+  evictions were batched into one group commit; their fixed-TTL physical bytes
+  and wall time are inflated by one commit per unlink and are not cited as the
+  result.
+* Claims, spec drift, and the conformance manifest are checked in the R6 docs
+  commit.
