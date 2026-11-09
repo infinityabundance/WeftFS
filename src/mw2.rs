@@ -247,6 +247,17 @@ impl Transaction {
         self.push(Op::PutObject(record), pre, DEFAULT_MAX_OPS)
     }
 
+    /// Add an object only if its id is absent. A concurrent create of the same
+    /// id is a typed conflict rather than a silent replace.
+    pub fn put_object_create(&mut self, record: ObjectRecord) -> Result<()> {
+        let pre = Precondition {
+            label: "object",
+            expected: PreValue::Absent,
+            idempotent: Some(PreValue::Hash(record.version)),
+        };
+        self.push(Op::PutObject(record), pre, DEFAULT_MAX_OPS)
+    }
+
     /// Delete an object that must still be exactly the observed version.
     pub fn delete_object(&mut self, state: &State, id: Hash32) -> Result<()> {
         let current = state
@@ -270,6 +281,18 @@ impl Transaction {
         let pre = Precondition {
             label: "entry",
             expected,
+            idempotent: Some(PreValue::Entry(record.clone())),
+        };
+        self.push(Op::PutEntry(record), pre, DEFAULT_MAX_OPS)
+    }
+
+    /// Add a directory entry only if `(parent,name)` is absent. This is the
+    /// create semantics: a concurrent create of the same name is `NameExists`,
+    /// never a silent replace.
+    pub fn put_entry_create(&mut self, record: EntryRecord) -> Result<()> {
+        let pre = Precondition {
+            label: "entry",
+            expected: PreValue::Absent,
             idempotent: Some(PreValue::Entry(record.clone())),
         };
         self.push(Op::PutEntry(record), pre, DEFAULT_MAX_OPS)

@@ -1,0 +1,102 @@
+== multiwriter court ==
+kernel: Linux 3b2aecb9c403 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5503:8
+     |
+5503 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5510:8
+     |
+5510 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5527:7
+     |
+5527 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5529:4
+     |
+5529 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5562:4
+     |
+5562 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+rust example sha256=4a7e7c7fc882c522ad48dc7ead880f019775d03a7ce2705d53fe5ab2f566bc81
+go example sha256=59b5980e77737c7c37dc538b6e7f1e5057bc399e00e3b01c5193531b6de2b207
+== parity ==
+parity: {"different": {}, "equal": true, "go": {"content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06", "head": "3de5dfc5919178d3688ec03d4d11eaec26414496041b32aeb1a5941df18f47f9", "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1", "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "size": 11, "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"}, "rust": {"content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06", "head": "3de5dfc5919178d3688ec03d4d11eaec26414496041b32aeb1a5941df18f47f9", "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1", "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "size": 11, "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"}}
+parity commit file: same; superblock: same
+cross read: {"go_reads_rust": {"content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "len": 11, "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "ok": true}, "ok": true, "rust_reads_go": {"content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "len": 11, "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "ok": true}}
+
+== mixed disjoint ==
+disjoint: {"attempts": 209, "committed": 160, "conflicts": 0, "errors": [], "expected": 160, "processes": 8, "retry_amplification": 1.30625}
+
+mixed verify: {"bad": [], "failed": 0, "verifiers": 16}
+
+mixed store generation: 161 (verify --full: true)
+== contention ==
+contended: {"committed": 1, "conflict_rate": 0.9875, "conflicts": 79, "errors": [], "operations": 80, "processes": 8}
+
+contended store generation: 2
+hot read: {"go": {"content_hash": "0398f23a6bee018af65f8db3e9a9950d149fb4352af3142c7eb6a074731fa204", "len": 4, "object_id": "2de14ee8141951be5188f907b940281deaefe80d2bddd30a40ee4c42d3aee817", "ok": true}, "ok": true, "rust": {"content_hash": "0398f23a6bee018af65f8db3e9a9950d149fb4352af3142c7eb6a074731fa204", "len": 4, "object_id": "2de14ee8141951be5188f907b940281deaefe80d2bddd30a40ee4c42d3aee817", "ok": true}}
+
+history: {"contended_generation": 2, "expected_contended_generation": 2, "expected_mixed_generation": 161, "mixed_generation": 161, "note": "finite history check, not a linearizability proof", "ok": true}
+
+{"receipt": "bench/receipts/multiwriter-court-20261109T143346Z.json", "result": "pass", "failures": 0}
+receipt: bench/receipts/multiwriter-court-20261109T143346Z.json
+abb7c6c15997f50a3cb002a788bbd3a7323c24d5282c624599f0d75f94c3df54  bench/receipts/multiwriter-court-20261109T143346Z.json
+79eeeca187d78dc160f9e9666ef74545ef1dbfd3175a3c33e8249a3362cd4646  bench/receipts/multiwriter-court-20261109T143346Z.log
