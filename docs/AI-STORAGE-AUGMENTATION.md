@@ -322,3 +322,4 @@ not the claim. This check is recorded in R2, guarded by entries in
 | Azure emulator and SAS | [`../bench/RESULTS-azure-sas.md`](../bench/RESULTS-azure-sas.md) | `azure-20261107T034219Z.json` |
 | Buck2 CAS prototype | [`../bench/RESULTS-buck2-cas-store.md`](../bench/RESULTS-buck2-cas-store.md) | `buck2-cas-store-correctness-20261109T113544Z.json` |
 | Release-wide non-claims | [`RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) | `release-artifacts-20261109T124325Z.json` |
+| Same-backend augmentation A/B/C/D/E (local and MinIO) | [`../bench/RESULTS-augmentation.md`](../bench/RESULTS-augmentation.md), [`../bench/CONTRACTS-augmentation.md`](../bench/CONTRACTS-augmentation.md) | `augmentation-local-20261109T134132Z.json`, `augmentation-minio-20261109T134257Z.json`, `augmentation-local-20261109T134434Z.json` |

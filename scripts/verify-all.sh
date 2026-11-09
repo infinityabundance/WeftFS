@@ -207,6 +207,17 @@ run_orchestrated_court ceph_rgw ceph_court env WEFT_COMPAT_STAMP="$stamp" bash s
 # as ceph_rgw apply.
 run_orchestrated_court s3_court s3_court env WEFT_COMPAT_STAMP="$stamp" bash scripts/s3_court.sh
 
+# R3 same-backend augmentation court. The aggregate uses its explicit reduced
+# configuration: 16 evenly spaced non-embedding tensors (1,849,344 logical
+# bytes, no 272 MB embedding), configurations A/B/C/D/E plus the supplementary
+# native-app baseline N, two restore passes. The full standalone receipts use
+# the embedding + 100 tensors (424,439,296 logical bytes). A court that cannot
+# run prints `augmentation_court: skip <reason>` and exits 78; the aggregate
+# records a skip, never a pass.
+run_orchestrated_court augmentation_local augmentation_court \
+  env WEFT_AUGMENTATION_REDUCED=1 WEFT_AUGMENTATION_STAMP="$stamp" \
+  bash scripts/augmentation_court.sh --local
+
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
 run_court rust "context_cross_rust_gen" \
@@ -296,7 +307,12 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   fi
   echo "  \"receipts\": {"
   echo "    \"ceph_rgw\": \"bench/receipts/ceph-rgw-${stamp}.json\","
-  echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\""
+  if [[ -f "bench/receipts/augmentation-local-${stamp}.json" ]]; then
+    echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\","
+    echo "    \"augmentation_local\": \"bench/receipts/augmentation-local-${stamp}.json\""
+  else
+    echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\""
+  fi
   echo "  },"
   echo "  \"result\": \"$([ "$status" -eq 0 ] && echo pass || echo fail)\","
   echo "  \"raw_log\": \"$log\""

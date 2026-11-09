@@ -1,0 +1,26 @@
+augmentation: backend=s3 configs=A,B,C,D,E,N subset(max_others=100, include_embedding=true) passes=2 label=full
+augmentation: work=/work/.docker-cache/augmentation-minio-20261109T131418Z
+augmentation: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe (parse 415.3 ms)
+augmentation: subset 101 tensors, 424439296 logical bytes, digest af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+augmentation: === configuration A ===
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+--- cleanup A (exit Some(0)) ---
+
+augmentation: cleanup A failed: /work/.docker-cache/augmentation-minio-20261109T131418Z/phases/A-cleanup.json: No such file or directory (os error 2)
+augmentation: === configuration B ===
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+--- cleanup B (exit Some(0)) ---
+
+augmentation: cleanup B failed: /work/.docker-cache/augmentation-minio-20261109T131418Z/phases/B-cleanup.json: No such file or directory (os error 2)
+augmentation: === configuration C ===
+--- write C (exit Some(1)) ---
+augmentation_bench: prepare `model.layers.13.mlp.gate_proj.weight`: Io: S3 PUT s3://weft-augmentation-20261109t131418z-c/manifests/7c/7c8776c6a7619e34d60c9f5cc9a3dcd1f2ec8da6289797b35fd5c12e42691dd9 returned HTTP 500: <?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>InternalError</Code><Message>We encountered an internal error, please try again.: cause(no space left on device)</Message><Key>manifests/7c/7c8776c6a7619e34d60c9f5cc9a3dcd1f2ec8da6289797b3
+
+augmentation: result=fail receipt=bench/receipts/augmentation-minio-20261109T131418Z.json

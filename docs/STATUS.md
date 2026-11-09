@@ -6747,3 +6747,165 @@ conformance vector changed, so no court rerun is claimed for R2.
 `9818b5d3eb1e1f35…`). No Rust/Go suite, FUSE court, or `verify-all` run is
 claimed because no code changed. The previous release-tree aggregate remains
 `verify-20261109T112958Z.json` (37/37).
+
+## Subphase R3 — same-backend augmentation A/B/C/D/E (2026-11-09)
+
+**Status: implemented, executed, and published, including every loss.** This is
+the first augmentation result measured on one backend per court with codec and
+protocol contributions isolated. Method is frozen in
+`bench/CONTRACTS-augmentation.md`; evidence is
+`bench/RESULTS-augmentation.md`; harness is `examples/augmentation_bench.rs` plus
+`scripts/augmentation_court.sh`.
+
+### What was added
+
+- Five configurations defined so they cannot drift: **A Native** (plain
+  per-tensor files or one PUT per object), **B Pass-through** (WeftFS raw, no
+  protocol metadata), **C Codec** (WeftFS planned representation, no protocol),
+  **D Protocol** (raw + Context Root, selector, provenance), **E Combined**
+  (C + D). A supplementary **N** (`native-app-equivalent`) baseline adds a
+  checksummed manifest, an atomically published key-set context, and a
+  provenance record over plain files, so the protocol delta is not confused
+  with the absence of any application scheme.
+- One command per backend runs the configurations in fresh child processes and
+  writes `weft.augmentation.v1` plus a raw log. Local:
+  `scripts/augmentation_court.sh --local`. MinIO:
+  `scripts/augmentation_court.sh --minio`. Reduced aggregate:
+  `WEFT_AUGMENTATION_REDUCED=1 scripts/augmentation_court.sh --local`.
+- Fixture: real Qwen2.5-0.5B-Instruct safetensors, whole-file SHA-256 verified in
+  the court. The whole-fixture gate is measured as `fixture_verify_ms`
+  (412–438 ms), reported, and excluded from every configuration's write wall
+  equally because it is a court integrity check, not an augmentation cost.
+  Published subset: the 272,269,312-byte embedding plus 100 evenly spaced
+  name-sorted tensors, **101 tensors / 424,439,296 logical bytes**. The
+  aggregate reduced subset is 16 non-embedding tensors / 1,849,344 bytes.
+- Metrics: durable write wall, logical bytes, physical bytes written (backend
+  counters, including probe/LOCK/FORMAT/superblock/commits/manifests/chunks/
+  index segments), footprint (file walk or object listing), cold and warm
+  restore wall, physical bytes read, write/read amplification, p50/p95/p99,
+  `VmHWM`, CPU user+sys, request counts, logical and physical throughput
+  separately, per-tensor chosen representation, and exactness. Unexecuted
+  backends are `NOT MEASURED` with a blocker, never zero.
+
+### Measured (local POSIX, 424,439,296 logical bytes)
+
+| Metric | A | B | C | D | E | N |
+|---|---:|---:|---:|---:|---:|---:|
+| Write wall (ms) | 335.9 | 2,852.7 | 24,840.1 | 2,879.2 | 24,789.2 | 337.7 |
+| Physical written (B) | 424,439,296 | 427,053,105 | 284,561,645 | 427,391,455 | 284,899,995 | 424,477,171 |
+| Footprint (B) | 424,439,296 | 426,630,999 | 284,139,539 | 427,146,560 | 284,655,442 | 424,477,171 |
+| Cold restore (ms) | 348.2 | 543.6 | 1,425.8 | 552.1 | 1,418.2 | 345.8 |
+| Warm restore (ms) | 191.7 | 284.0 | 1,301.4 | 284.4 | 1,277.8 | 190.1 |
+| Cold physical read (B) | 424,439,296 | 424,782,640 | 282,220,893 | 425,177,636 | 282,616,733 | 424,477,171 |
+| Write / read amplification | 1.0000 / 1.0000 | 1.0062 / 1.0008 | 0.6704 / 0.6649 | 1.0070 / 1.0017 | 0.6712 / 0.6659 | 1.0001 / 1.0001 |
+| Logical restore throughput (MB/s) | 1,218.9 | 780.8 | 297.7 | 768.8 | 299.3 | 1,227.5 |
+| Physical restore throughput (MB/s) | 1,218.9 | 781.5 | 197.9 | 770.1 | 199.3 | 1,227.6 |
+| p50 / p95 / p99 (µs) | 74 / 7,159 / 7,209 | 104 / 10,500 / 11,078 | 127 / 28,485 / 29,341 | 109 / 10,515 / 11,248 | 128 / 27,921 / 28,985 | 74 / 7,091 / 7,226 |
+| Write / restore peak RSS (KiB) | 270,584 / 269,184 | 271,692 / 273,032 | 1,187,552 / 714,360 | 271,424 / 273,628 | 1,187,136 / 714,828 | 270,380 / 269,548 |
+| Write / restore CPU (ms) | 100 / 190 | 270 / 310 | 23,210 / 1,300 | 280 / 320 | 23,180 / 1,300 | 100 / 190 |
+
+Deltas against A: B −56.1 % latency, −35.9 % logical throughput, −0.52 %
+storage, **+396.5 %** end-to-end overhead; C −309.5 %, −75.6 %, **+33.1 %**
+storage, **+3,739.6 %** overhead; D −58.6 %, −36.9 %, −0.64 %, **+401.6 %**;
+E −307.3 %, −75.4 %, **+32.9 %**, **+3,731.1 %**; N +0.7 %, +0.7 %, −0.009 %,
+−0.08 %.
+
+### Measured (MinIO RELEASE.2025-04-22T22-12-26Z, same subset)
+
+| Metric | A | B | C | D | E | N |
+|---|---:|---:|---:|---:|---:|---:|
+| Write wall (ms) | 825.7 | 1,603.5 | 23,708.1 | 1,653.1 | 23,605.9 | 838.2 |
+| Physical written (B) | 424,439,296 | 427,529,404 | 285,037,944 | 427,867,754 | 285,376,294 | 424,439,296 |
+| Footprint (B) | 424,439,296 | 426,631,264 | 284,139,804 | 427,146,826 | 284,655,708 | 424,477,171 |
+| Cold restore (ms) | 293.2 | 760.8 | 1,522.5 | 808.5 | 1,566.1 | 299.1 |
+| Cold physical read (B) | 424,439,296 | 424,782,640 | 282,220,893 | 425,177,636 | 282,616,733 | 424,477,171 |
+| Write / read amplification | 1.0000 / 1.0000 | 1.0073 / 1.0008 | 0.6716 / 0.6649 | 1.0081 / 1.0017 | 0.6724 / 0.6659 | 1.0000 / 1.0001 |
+| Logical restore throughput (MB/s) | 1,447.7 | 557.9 | 278.8 | 524.9 | 271.0 | 1,419.3 |
+| Write / restore peak RSS (KiB) | 272,404 / 274,408 | 272,692 / 274,380 | 1,189,004 / 716,300 | 272,692 / 274,744 | 1,188,600 / 717,152 | 272,500 / 272,356 |
+| Write / restore CPU (ms) | 250 / 220 | 450 / 310 | 22,840 / 1,330 | 460 / 310 | 22,800 / 1,310 | 250 / 220 |
+
+Deltas against A: B −159.5 % latency, −61.5 % logical throughput, −0.52 %
+storage, **+111.3 %** overhead; C −419.3 %, −80.7 %, **+33.1 %**,
+**+2,155.1 %**; D −175.8 %, −63.7 %, −0.64 %, **+120.0 %**; E −434.2 %,
+−81.3 %, **+32.9 %**, **+2,149.8 %**; N −2.0 %, −2.0 %, −0.009 %, +1.65 %.
+
+### Exactness
+
+Every configuration restored all 101 tensors and every SHA-256 matched the
+source on both backends: `mismatches: 0` in every A–E/N row of the three
+published receipts. The reduced receipt also has `mismatches: 0` for all six
+rows. D/E additionally verified the resolved object set equals the written set
+and the provenance record's 101 output roots equal the written manifest
+contents.
+
+### Losses (all published in the results document)
+
+- **C/E win bytes and lose time.** −33.1 %/-32.9 % storage and −33.5 % physical
+  reads, but **24,840.1 ms vs 335.9 ms** local write wall (73.9x), 1,425.8 ms
+  vs 348.2 ms cold restore (4.1x), 1.19 GiB vs 270 MiB write RSS. ZSTD-19 and
+  mode-9 encoding are 23.2 s of CPU. MinIO is the same shape (28.7x write,
+  5.2x restore).
+- **B and D are slower than A and slightly larger.** B footprint is +0.52 %,
+  cold restore +56 % local, write wall 8.5x. D is +0.64 % footprint and +58.6 %
+  latency. At 101 objects the store's commits/manifests/indexes do not pay for
+  themselves on a plain file-tree workload.
+- **Protocol cost is small but real.** D vs B: +0.9 % write wall, +1.6 % cold
+  restore locally; +3.1 % and +6.3 % on MinIO. D's footprint is +0.12 % over B.
+- **Small-object cost is severe.** The 1.8 MB reduced run measured B
+  **+1,032 %** and D **+1,246 %** end-to-end overhead versus A (19.2 ms write /
+  4.0 ms restore); per-commit metadata dominates. C still cut storage 27.4 % but
+  was 3.0x slower to restore.
+- **N is essentially A.** It achieves the protocol function with three metadata
+  objects and no store machinery (+0.5 % write local, +1.5 % MinIO). D's cost
+  buys snapshots, a selector engine, capability/version history, and
+  reconstruction semantics that N does not implement.
+- **Warm/cold is not fully controlled.** Local cold uses `fadvise(DONTNEED)`;
+  warm is a second pass. An earlier clean run measured A 563 ms / B 777 ms
+  against this run's 348 / 544 ms; the difference is page-cache state. A repeat
+  (`augmentation-local-20261109T133923Z.json`) was contaminated by host I/O
+  wait (D write 15.3 s with 0.3 s CPU; E 49.2 s) and is retained but not used
+  in the table. MinIO has no cold-cache control and its A cold restore is
+  faster than local A. No cold-media claim.
+- **MinIO tmpfs restart.** MinIO on a 1 GiB tmpfs charges deleted-but-open bytes
+  until process restart (`du` 0, `df` 406 MiB measured). The court restarts the
+  container between configurations; each configuration's write and restore
+  complete before its restart. Recorded in the receipt and contract.
+  `bench/receipts/augmentation-minio-20261109T131418Z.json` is the retained
+  failure that found it.
+
+### Receipts and gates
+
+- Local full: `bench/receipts/augmentation-local-20261109T134132Z.json`
+- MinIO full: `bench/receipts/augmentation-minio-20261109T134257Z.json`
+- Local reduced (aggregate configuration):
+  `bench/receipts/augmentation-local-20261109T134434Z.json`
+- Retained contaminated repeat:
+  `bench/receipts/augmentation-local-20261109T133923Z.json`
+- Retained MinIO failure (tmpfs):
+  `bench/receipts/augmentation-minio-20261109T131418Z.json`
+- The aggregate `verify-all.sh` now includes `augmentation_local` with
+  `WEFT_AUGMENTATION_REDUCED=1`; a court that cannot run prints
+  `augmentation_court: skip <reason>` and exits 78, which the aggregate records
+  as `skip`, never as a pass.
+
+Gate results for this change: `cargo test --all-targets` in the rust court
+**675 passed / 0 failed / 0 ignored across 134 suites**; the FUSE suite in the
+fuse court **718 passed / 0 failed / 2 pre-existing ignored across 134 suites**;
+`scripts/check-claims.sh` **709/709 OK**; `scripts/check-spec-drift.sh`
+**42/42 OK**; `scripts/gen-conformance-manifest.sh --check` **355 entries OK**.
+`scripts/verify-all.sh` was not rerun for R3: the change is a new example, a
+new court script, a one-line environment-forwarding addition to
+`scripts/docker-court.sh`, and documentation; no library code changed, and both
+the full local/MinIO courts and the reduced aggregate configuration were
+executed directly. The aggregate wiring is syntax-checked (`bash -n`) and the
+skip path is measured: with an unreachable Docker daemon the court prints
+`augmentation_court: skip no reachable docker daemon` and exits 78.
+
+### Residual
+
+Rust-only harness (no Go augmentation court); one host, warm source reads, one
+published run per cell plus the retained repeats; no live AWS/GCS/Azure; no
+3FS/CephFS/Lustre/BeeGFS/DAOS/JuiceFS/IBM Storage Scale/WEKA/VAST/AIStore
+execution; no physical media or power-loss claim; no multi-writer or fleet
+claim; MinIO restart between configurations; the reduced aggregate configuration
+is not a performance claim.

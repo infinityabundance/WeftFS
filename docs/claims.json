@@ -7452,5 +7452,157 @@
     "receipt": null,
     "kind": "present",
     "line": 445
+  },
+  {
+    "id": "augmentation_contract",
+    "claim": "The R3 augmentation methodology is frozen in bench/CONTRACTS-augmentation.md and cited by the results and status documents.",
+    "value": "CONTRACTS-augmentation.md",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_local_full_receipt",
+    "claim": "The full local A/B/C/D/E augmentation receipt is published and cited.",
+    "value": "augmentation-local-20261109T134132Z.json",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_minio_full_receipt",
+    "claim": "The full MinIO A/B/C/D/E augmentation receipt is published and cited.",
+    "value": "augmentation-minio-20261109T134257Z.json",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-minio-20261109T134257Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_reduced_receipt",
+    "claim": "The reduced aggregate augmentation receipt is published and cited.",
+    "value": "augmentation-local-20261109T134434Z.json",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134434Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_exactness",
+    "claim": "Every augmentation configuration restored every tensor with zero SHA-256 mismatches.",
+    "value": "mismatches: 0",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_codec_loss_write_wall",
+    "claim": "The codec configuration's local durable write wall is published as a loss.",
+    "value": "24,840.1",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_codec_storage_win",
+    "claim": "The codec configuration's local storage reduction is published.",
+    "value": "33.1 %",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_protocol_small_object_loss",
+    "claim": "The protocol configuration's reduced small-object overhead is published.",
+    "value": "1,246 %",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T134434Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_not_measured",
+    "claim": "Unexecuted augmentation backends are labelled NOT MEASURED with blockers.",
+    "value": "NOT MEASURED",
+    "locations": [
+      "bench/RESULTS-augmentation.md"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_minio_restart",
+    "claim": "The MinIO augmentation receipt records that the container is restarted between configurations.",
+    "value": "minio_restart_between_configurations",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "bench/CONTRACTS-augmentation.md"
+    ],
+    "receipt": "bench/receipts/augmentation-minio-20261109T134257Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_skip_semantics",
+    "claim": "A court that cannot run prints an explicit skip reason and exits 78.",
+    "value": "augmentation_court: skip",
+    "locations": [
+      "bench/CONTRACTS-augmentation.md",
+      "scripts/augmentation_court.sh"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_verify_all_court",
+    "claim": "The aggregate verification court includes the reduced local augmentation court.",
+    "value": "augmentation_local",
+    "locations": [
+      "scripts/verify-all.sh"
+    ],
+    "receipt": null,
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_repeat_retained",
+    "claim": "The host-I/O-contended local repeat is retained and named in the results and status documents.",
+    "value": "augmentation-local-20261109T133923Z.json",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-local-20261109T133923Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "augmentation_minio_failure_retained",
+    "claim": "The MinIO tmpfs failure that forced the restart methodology is retained and named.",
+    "value": "augmentation-minio-20261109T131418Z.json",
+    "locations": [
+      "bench/RESULTS-augmentation.md",
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/augmentation-minio-20261109T131418Z.json",
+    "kind": "present"
   }
 ]
