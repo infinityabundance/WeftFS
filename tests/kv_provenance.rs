@@ -373,7 +373,14 @@ fn grantee() -> Hash32 {
     Hash32::from_bytes([9u8; 32])
 }
 
-fn grant(store: &mut Store, tenant: &str, namespace: &str, roots: Vec<Hash32>) -> VerifiedEnvelope {
+fn grant(
+    store: &mut Store,
+    tenant: &str,
+    namespace: &str,
+    mut roots: Vec<Hash32>,
+) -> VerifiedEnvelope {
+    roots.sort();
+    roots.dedup();
     let envelope = CapabilityEnvelope::new(
         public_key_for_seed(&GRANTOR_SEED).unwrap(),
         grantee(),

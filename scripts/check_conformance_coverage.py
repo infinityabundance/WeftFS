@@ -4,7 +4,7 @@
 Checks, in order:
 
 1. `conformance/manifest.json` is up to date (`--check`).
-2. Every frame mode 0..19 has at least one valid vector and at least one
+2. Every frame mode 0..20 has at least one valid vector and at least one
    normative reject vector.
 3. Every identity record kind (WCB, selector, context, tensor, checkpoint,
    capability) has at least one valid vector.
@@ -57,13 +57,13 @@ def main():
         if entry.get("superseded_by"):
             continue
         mode = entry.get("mode")
-        if isinstance(mode, int) and 0 <= mode <= 19:
+        if isinstance(mode, int) and 0 <= mode <= 20:
             bucket = modes.setdefault(mode, {"valid": 0, "error": 0})
             if entry["expect"].get("ok"):
                 bucket["valid"] += 1
             else:
                 bucket["error"] += 1
-    for mode in range(20):
+    for mode in range(21):
         if mode not in modes:
             failures += fail("mode %d has no vectors at all" % mode)
             continue
@@ -116,7 +116,7 @@ def main():
 
     mode_summary = " ".join(
         "%d:%d/%d" % (mode, modes[mode]["valid"], modes[mode]["error"])
-        for mode in range(20)
+        for mode in range(21)
     )
     identity_summary = " ".join(
         "%s:%d" % (kind, identity[kind]["valid"]) for kind in IDENTITY_KINDS

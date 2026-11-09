@@ -1,11 +1,11 @@
 {
-  "aggregate_sha256": "9fb69ebfba3f5b7b1d22c843bec0a064a3b43665c391b90cfe4f36be58a91177",
+  "aggregate_sha256": "150115b466ad4d012819dd0ab430e9954590c6163e4f7253a6f2d8190cd55a24",
   "aggregate_sha256_definition": "SHA-256 over sorted '<sha256>  <path>\\n' lines for every entry whose kind is not `store` or `fuzz`.",
   "counts": {
     "capability": 7,
     "checkpoint": 5,
     "context": 27,
-    "frame": 255,
+    "frame": 277,
     "fuzz": 1,
     "selector": 22,
     "store": 1,
@@ -173,13 +173,13 @@
   },
   "mirrors": [
     {
-      "aggregate_sha256_common": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
-      "aggregate_sha256_from": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
-      "aggregate_sha256_to": "8d4bd587cca1cc2a0369b7c2a0c9a78bab03c67c13d55985b11cabebabc503b7",
-      "common_files": 369,
+      "aggregate_sha256_common": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
+      "aggregate_sha256_from": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
+      "aggregate_sha256_to": "429bb9c24663b248b1468b326635c3f956e1b573d06eeffeea53d96e310c08ac",
+      "common_files": 391,
       "differing": [],
-      "files_from": 369,
-      "files_to": 369,
+      "files_from": 391,
+      "files_to": 391,
       "from": "WeftCodec/conformance/v1",
       "identical": true,
       "only_from": [],
@@ -436,7 +436,7 @@
         "WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json",
         "WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json",
         "WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json",
-        "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json"
+        "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_21.json"
       ]
     },
     "2": {
@@ -449,10 +449,36 @@
       ]
     },
     "20": {
+      "error": 14,
+      "valid": 6,
+      "vectors": [
+        "WeftCodec/conformance/v1/engram/001_engram_bf16_one_group.json",
+        "WeftCodec/conformance/v1/engram/002_engram_fp16_many_groups.json",
+        "WeftCodec/conformance/v1/engram/003_engram_fp32_basic.json",
+        "WeftCodec/conformance/v1/engram/004_engram_empty_supersession.json",
+        "WeftCodec/conformance/v1/engram/005_engram_chain_two.json",
+        "WeftCodec/conformance/v1/engram/006_engram_region_subset.json",
+        "WeftCodec/conformance/v1/engram/101_edges_not_increasing.json",
+        "WeftCodec/conformance/v1/engram/102_last_edge_not_rows.json",
+        "WeftCodec/conformance/v1/engram/103_group_count_mismatch.json",
+        "WeftCodec/conformance/v1/engram/104_group_root_mismatch.json",
+        "WeftCodec/conformance/v1/engram/105_payload_truncated.json",
+        "WeftCodec/conformance/v1/engram/106_payload_hash_mismatch.json",
+        "WeftCodec/conformance/v1/engram/107_supersession_cycle.json",
+        "WeftCodec/conformance/v1/engram/108_supersession_missing.json",
+        "WeftCodec/conformance/v1/engram/109_supersession_incompatible.json",
+        "WeftCodec/conformance/v1/engram/110_unknown_hash_function.json",
+        "WeftCodec/conformance/v1/engram/111_unknown_precision.json",
+        "WeftCodec/conformance/v1/engram/112_reserved_mode_21.json",
+        "WeftCodec/conformance/v1/engram/113_non_canonical_descriptor.json",
+        "WeftCodec/conformance/v1/engram/114_reference_missing.json"
+      ]
+    },
+    "21": {
       "error": 1,
       "valid": 0,
       "vectors": [
-        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json"
+        "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved21.json"
       ]
     },
     "255": {
@@ -572,7 +598,7 @@
     }
   },
   "schema": "weft.conformance.manifest.v1",
-  "vector_count": 376,
+  "vector_count": 398,
   "vectors": [
     {
       "expect": {
@@ -1963,13 +1989,31 @@
         "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved20.json"
       ],
       "mode": 20,
-      "mode_name": null,
+      "mode_name": "engram_shard",
       "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json",
-      "sha256": "aaf1a6f78002f20100922441cc3db00727a97828d850e267c4e1abbbf03c882b",
+      "sha256": "7767890b6eca5162cf7b2604cc9658481f63969425966bd2fcd59e03209bfcec",
+      "superseded_by": "017_unknown_mode_reserved21",
       "supersedes": [
         "017_unknown_mode_reserved19"
       ],
       "vector_name": "017_unknown_mode_reserved20"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/codec/017_unknown_mode_reserved21.json"
+      ],
+      "mode": 21,
+      "mode_name": null,
+      "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved21.json",
+      "sha256": "0eae3d21ad693dadba96600b57df016605d4d612034cf6e41a41d665026318ba",
+      "supersedes": [
+        "017_unknown_mode_reserved20"
+      ],
+      "vector_name": "017_unknown_mode_reserved21"
     },
     {
       "expect": {
@@ -3105,6 +3149,318 @@
     },
     {
       "expect": {
+        "content_root": "9cbef6c8cf4f4f0696a8b6df6d11755a5dcca2c95d6fbf8fe9ea02df5a473024",
+        "decoded_sha256": "5019d8dffbca1d5835740548f611e7d8f7593888de2e730c6f10c89a494be61b",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/001_engram_bf16_one_group.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/001_engram_bf16_one_group.json",
+      "sha256": "ad5181813459b848e7bdefeee544d3cb0cf8497093f53d453791da4e1586b48c",
+      "subkind": "engram_shard",
+      "vector_name": "001_engram_bf16_one_group"
+    },
+    {
+      "expect": {
+        "content_root": "dcdc4a1aad2a6be1842bf1a474934bdc1536108907f13e009724e393803c5241",
+        "decoded_sha256": "925d94759011fa99ddc02a273d8aa532ea378e7aa9fb95a3b2ffa256336d9eb9",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/002_engram_fp16_many_groups.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/002_engram_fp16_many_groups.json",
+      "sha256": "bdd4b8d4f00f5718a3edb4dbd167ddd64a804ae00e94f7f00782ce29a3453a3f",
+      "subkind": "engram_shard",
+      "vector_name": "002_engram_fp16_many_groups"
+    },
+    {
+      "expect": {
+        "content_root": "a1dc9ddbd78d44455e01d82456dda36b46440a042e0f2c2e8878152957fe6492",
+        "decoded_sha256": "a29a7d2b45ceeb37ec5b849704bd9c6db192d89ef7ce2be2e0d9a8509e4e44b5",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/003_engram_fp32_basic.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/003_engram_fp32_basic.json",
+      "sha256": "acc1f0d3ea478b48afd194425e1593878ea43b6b60940141dddd6733830a671d",
+      "subkind": "engram_shard",
+      "vector_name": "003_engram_fp32_basic"
+    },
+    {
+      "expect": {
+        "content_root": "e19bc1c0773934a9dcc2fbf2935fbadb621822d20a292014807658fd549bb5f4",
+        "decoded_sha256": "a452ae91464c12fef69202aae110b4f4eb48972451e69188092ca3b9401b28e8",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/004_engram_empty_supersession.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/004_engram_empty_supersession.json",
+      "sha256": "7ef2fe82d429911804247d56489f1bcaa5c8ca5e835316c43e5d26fa397e58d1",
+      "subkind": "engram_shard",
+      "vector_name": "004_engram_empty_supersession"
+    },
+    {
+      "expect": {
+        "content_root": "04f71da5dd85abd0909ae06dd26a23385beca7b7088fed64cda96326dfe6aa83",
+        "decoded_sha256": "f64bdeeee10819f35476e189493c24c0c5538bfd5d2df5f9b0aeab6ba3d8bea8",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/005_engram_chain_two.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/005_engram_chain_two.json",
+      "sha256": "ede2843e5580f1ac384278dd6dfb772345945c0636e2bf872f3937e71e8bfca0",
+      "subkind": "engram_shard",
+      "vector_name": "005_engram_chain_two"
+    },
+    {
+      "expect": {
+        "content_root": "afc512d9c20df1445c73dd91758e9bcce1b9a3568489ac8e61ae10f643f88fe6",
+        "decoded_sha256": "881ba8a007994c9f64d730013f74ea6044fe6a34915b3c7f9b8b2d22c3da32c2",
+        "ok": true
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/006_engram_region_subset.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/006_engram_region_subset.json",
+      "sha256": "da2ccf83f40bcd918db5c54ac9b25666af1c5d37cbb579ee5a7d8631354c1fa0",
+      "subkind": "engram_shard",
+      "vector_name": "006_engram_region_subset"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/101_edges_not_increasing.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/101_edges_not_increasing.json",
+      "sha256": "e0ac52c2a728543e4280017cd2dd4d0d717c4beeb49b63d797d24586d4235360",
+      "subkind": "engram_shard",
+      "vector_name": "101_edges_not_increasing"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/102_last_edge_not_rows.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/102_last_edge_not_rows.json",
+      "sha256": "2ab160cd28ea054ef05034fb4ae9c29f73175b0fc38af03e0cd7b96709027f2e",
+      "subkind": "engram_shard",
+      "vector_name": "102_last_edge_not_rows"
+    },
+    {
+      "expect": {
+        "error": "Malformed"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/103_group_count_mismatch.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/103_group_count_mismatch.json",
+      "sha256": "8efd540781dff9e5a25d8f6715a80d1db0061ced6fb048dea6f0d92d94addc50",
+      "subkind": "engram_shard",
+      "vector_name": "103_group_count_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/104_group_root_mismatch.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/104_group_root_mismatch.json",
+      "sha256": "48050477732896f5c635c47a5df973afdd14825f556dff31321918fd46441583",
+      "subkind": "engram_shard",
+      "vector_name": "104_group_root_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/105_payload_truncated.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/105_payload_truncated.json",
+      "sha256": "1b62908c39d7c8bb1d92a7e12c87b415134c1d4f3bd10e78733545cfa69abf07",
+      "subkind": "engram_shard",
+      "vector_name": "105_payload_truncated"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/106_payload_hash_mismatch.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/106_payload_hash_mismatch.json",
+      "sha256": "b873a6b1a66d289e60601b87c2044cf689f31442577ae9c68a7ca178cc273aec",
+      "subkind": "engram_shard",
+      "vector_name": "106_payload_hash_mismatch"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/107_supersession_cycle.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/107_supersession_cycle.json",
+      "sha256": "47589617a9cbfe0aaed11734dd1b116ac9ec49db3abfaf45484683b9aaf88cd0",
+      "subkind": "engram_shard",
+      "vector_name": "107_supersession_cycle"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/108_supersession_missing.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/108_supersession_missing.json",
+      "sha256": "bd06a791210780700b42b9eddec4e3cadb83b2b3ba3e9838b51e2c2a73656b05",
+      "subkind": "engram_shard",
+      "vector_name": "108_supersession_missing"
+    },
+    {
+      "expect": {
+        "error": "Corrupt"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/109_supersession_incompatible.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/109_supersession_incompatible.json",
+      "sha256": "d7853713fc799be4cfec0e13eef21f09778ffc6fbc3f057b10d3ea69d3506de8",
+      "subkind": "engram_shard",
+      "vector_name": "109_supersession_incompatible"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/110_unknown_hash_function.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/110_unknown_hash_function.json",
+      "sha256": "40cb9e600395f693b8e9e4708de14165109ca8bcdd10560e6775dfdf6fb01378",
+      "subkind": "engram_shard",
+      "vector_name": "110_unknown_hash_function"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedFeature"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/111_unknown_precision.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/111_unknown_precision.json",
+      "sha256": "dc5e9467d832a83400553c8a786991f0e238c28a6448e04089257f8bbb0518c8",
+      "subkind": "engram_shard",
+      "vector_name": "111_unknown_precision"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/112_reserved_mode_21.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/112_reserved_mode_21.json",
+      "sha256": "493381098a3134e1923bd5a91e3f580f79bd6803cb1fe4492642ed4b50793635",
+      "subkind": "engram_shard",
+      "vector_name": "112_reserved_mode_21"
+    },
+    {
+      "expect": {
+        "error": "NonCanonical"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/113_non_canonical_descriptor.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/113_non_canonical_descriptor.json",
+      "sha256": "6c23d76c4176e85cea4ecb3f934b64ff0cc0bb18cdb7214ce1087aed28c36a57",
+      "subkind": "engram_shard",
+      "vector_name": "113_non_canonical_descriptor"
+    },
+    {
+      "expect": {
+        "error": "DependencyMissing"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/engram/114_reference_missing.json"
+      ],
+      "mode": 20,
+      "mode_name": "engram_shard",
+      "path": "WeftCodec/conformance/v1/engram/114_reference_missing.json",
+      "sha256": "c4a90dca132493e5b29da234258e411c7aa098e88a247cae946806947307dc83",
+      "subkind": "engram_shard",
+      "vector_name": "114_reference_missing"
+    },
+    {
+      "expect": {
         "content_root": "35153c5803d64f741aa02b737cb4cf0f300207f1613f09ffcc4e90668c151118",
         "decoded_sha256": "cc6a84643457dbf8cb7bbfd5ac91393643de84b7c73047e785c49a23cecc0a18",
         "ok": true
@@ -4005,9 +4361,28 @@
       "mode": 19,
       "mode_name": "kv_cache_prov",
       "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json",
-      "sha256": "08e99463dd5084eac39682ab10a243b713c0e3917152f1eaccedba28e655a4bb",
+      "sha256": "9f1356dfb00af4bd20a80e727fe97cc363a7a0257e84f5a397e8f3c8a0ab281d",
       "subkind": "kv_prov",
+      "superseded_by": "112_reserved_mode_21",
       "vector_name": "112_reserved_mode_20"
+    },
+    {
+      "expect": {
+        "error": "UnsupportedMode"
+      },
+      "kind": "frame",
+      "mirrors": [
+        "WeftCodec-Go/conformance/v1/kv-prov/112_reserved_mode_21.json"
+      ],
+      "mode": 19,
+      "mode_name": "kv_cache_prov",
+      "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_21.json",
+      "sha256": "6779c77facd701d9b19e4ff12e32d30c1280f10c755541ee5a6c50d4dd8fa33a",
+      "subkind": "kv_prov",
+      "supersedes": [
+        "112_reserved_mode_20"
+      ],
+      "vector_name": "112_reserved_mode_21"
     },
     {
       "expect": {

@@ -112,6 +112,10 @@ pub enum TensorStrategy {
     KvCache,
     /// One mode-13 `ACTIVATION_STREAM` frame (readable; never produced here).
     Activation,
+    /// One mode-20 `ENGRAM_SHARD` frame: region-addressable row groups with an
+    /// explicit supersession chain. Offered only when the caller supplies
+    /// engram metadata; never auto-selected.
+    EngramShard,
 }
 
 impl TensorStrategy {
@@ -135,6 +139,7 @@ impl TensorStrategy {
             // The read-only modes are never produced by this planner; price
             // them as the closest encode class so the objective stays defined.
             TensorStrategy::KvCache | TensorStrategy::Activation => EncodeClass::TensorSharded,
+            TensorStrategy::EngramShard => EncodeClass::TensorTiled,
         }
     }
 
@@ -166,6 +171,7 @@ impl TensorStrategy {
             TensorStrategy::SemanticDelta => "semantic-delta",
             TensorStrategy::KvCache => "kv-cache",
             TensorStrategy::Activation => "activation",
+            TensorStrategy::EngramShard => "engram-shard",
         }
     }
 
@@ -185,6 +191,7 @@ impl TensorStrategy {
             "semantic-delta" => Ok(TensorStrategy::SemanticDelta),
             "kv-cache" => Ok(TensorStrategy::KvCache),
             "activation" => Ok(TensorStrategy::Activation),
+            "engram-shard" => Ok(TensorStrategy::EngramShard),
             other => Err(Error::malformed(format!(
                 "unknown tensor strategy `{other}`"
             ))),
@@ -206,6 +213,7 @@ impl TensorStrategy {
             TensorStrategy::KvCache => Some(12),
             TensorStrategy::Activation => Some(13),
             TensorStrategy::SemanticDelta => Some(14),
+            TensorStrategy::EngramShard => Some(20),
         }
     }
 
@@ -253,6 +261,9 @@ impl TensorStrategy {
             TensorStrategy::SemanticDelta => CostClass::SemanticDelta,
             TensorStrategy::KvCache => CostClass::KvCache,
             TensorStrategy::Activation => CostClass::Activation,
+            // Mode 20 uses the same per-plane Huffman coder and group geometry
+            // as mode 15; it is priced with the mode-15 row.
+            TensorStrategy::EngramShard => CostClass::TensorTiled,
         }
     }
 }
@@ -969,6 +980,9 @@ pub struct TensorPlanOptions {
     /// Refuse the level-19 candidate when its estimated encode time exceeds
     /// this bound. Default 20 s.
     pub zstd19_cpu_budget_ns: u64,
+    /// Explicit mode-20 `ENGRAM_SHARD` metadata. `Some` offers the candidate;
+    /// `None` never offers it.
+    pub engram: Option<EngramWriteSpec>,
     /// Offer the whole-base ZSTD patch candidate (`zstd --patch-from`
     /// analogue) when a usable causal base exists.
     pub zstd_patch: bool,
@@ -1008,6 +1022,7 @@ impl Default for TensorPlanOptions {
             zstd19: true,
             zstd19_min_bytes: 1024 * 1024,
             zstd19_cpu_budget_ns: 20_000_000_000,
+            engram: None,
             zstd_patch: true,
             zstd_patch_level: 12,
             zstd_patch_min_bytes: 1024 * 1024,
@@ -1134,6 +1149,31 @@ impl TensorPlanOptions {
                 .saturating_add(region_cost(region_bytes).saturating_mul(region_reads)),
         }
     }
+}
+
+/// One changed row group in an incremental engram update.
+#[derive(Clone, Copy, Debug)]
+pub struct EngramGroupUpdate<'a> {
+    /// Group index (canonical order).
+    pub group: u32,
+    /// New canonical row-major bytes for exactly that group's rows.
+    pub bytes: &'a [u8],
+}
+
+/// Explicit engram metadata. Its presence is the opt-in for the mode-20
+/// `EngramShard` candidate; without it the planner never offers mode 20.
+#[derive(Clone, Debug, Default)]
+pub struct EngramWriteSpec {
+    /// Strictly increasing row edges: first 0, last = rows.
+    pub row_group_edges: Vec<u64>,
+    /// `ngram-sha256-v1` or `ngram-blake3-v1`.
+    pub hash_function: String,
+    /// Vocabulary size (1..=rows). Defaults to `rows` when zero.
+    pub vocab_size: u64,
+    /// Exact storage dtype; defaults to the tensor dtype.
+    pub precision: Option<String>,
+    /// Optional lossless quantization scheme; only `none` is implemented.
+    pub quantization: Option<String>,
 }
 
 /// Options for one tensor write.
@@ -1913,6 +1953,12 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 20 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        return self.read_engram_object(frame_id, tensor, &manifest, rep);
+                    }
                     if tensor.tensor_mode == 15
                         || tensor.tensor_mode == 17
                         || tensor.tensor_mode == 18
@@ -1960,6 +2006,14 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 20 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        let bytes = self.read_engram_object(frame_id, tensor, &manifest, rep)?;
+                        self.note_object_read(id);
+                        return Ok((bytes, TileDecodeStats::none(options)));
+                    }
                     if tensor.tensor_mode == 15
                         || tensor.tensor_mode == 17
                         || tensor.tensor_mode == 18
@@ -1981,6 +2035,182 @@ impl Store {
         self.tensor_metadata(id)?;
         let bytes = self.read_object(id)?;
         Ok((bytes, TileDecodeStats::none(options)))
+    }
+
+    /// Publish an incremental engram update.
+    ///
+    /// The listed groups are replaced with the supplied canonical bytes; every
+    /// other group is emitted as a reference to its existing group root, so
+    /// only the changed groups' bytes are written. The previous object version
+    /// is never rewritten. The new version's descriptor records the replaced
+    /// group root in `supersedes` and the earlier artifact as its dependency.
+    ///
+    /// Returns the new object version id.
+    pub fn update_engram_groups(
+        &mut self,
+        id: Hash32,
+        updates: &[EngramGroupUpdate<'_>],
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        if updates.is_empty() {
+            return Err(Error::invalid_argument(
+                "an engram update must change at least one group",
+            ));
+        }
+        let record = self.object_meta(id)?;
+        if record.kind != ObjectKind::File {
+            return Err(Error::invalid_argument(
+                "engram updates require a file object",
+            ));
+        }
+        let manifest =
+            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        let rep = manifest
+            .representation
+            .as_ref()
+            .ok_or_else(|| Error::invalid_argument("object has no representation"))?;
+        let tensor = rep
+            .tensor
+            .as_ref()
+            .ok_or_else(|| Error::invalid_argument("object is not a tensor"))?;
+        if tensor.tensor_mode != 20 || rep.strategy != "engram-shard" {
+            return Err(Error::invalid_argument(
+                "engram updates require an engram-shard object",
+            ));
+        }
+        let frame_id = rep
+            .frame
+            .ok_or_else(|| Error::corrupt("engram representation has no frame id"))?;
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
+        let limits = Limits::default();
+        let frame = Frame::parse(&frame_bytes, &limits)?;
+        let meta = weftcodec::engram::engram_metadata(&frame, &limits)?;
+        let old_table = self.read_tensor(id)?;
+        let word = meta.dtype.element_size();
+        let dim = meta.dim();
+        let row_bytes = dim
+            .checked_mul(word)
+            .ok_or_else(|| Error::limit_exceeded("engram row length overflows"))?;
+        let mut new_table = old_table;
+        let mut changed = std::collections::BTreeSet::new();
+        for update in updates {
+            let index = update.group as usize;
+            if index >= meta.groups.len() {
+                return Err(Error::invalid_argument(format!(
+                    "engram group {} is outside the table",
+                    update.group
+                )));
+            }
+            if !changed.insert(update.group) {
+                return Err(Error::invalid_argument(format!(
+                    "engram group {} appears more than once in one update",
+                    update.group
+                )));
+            }
+            let group = &meta.groups[index];
+            let expected = (group.row_end - group.row_start)
+                .checked_mul(row_bytes)
+                .ok_or_else(|| Error::limit_exceeded("engram group length overflows"))?;
+            if update.bytes.len() as u64 != expected {
+                return Err(Error::invalid_argument(format!(
+                    "engram group {} update is {} bytes but the group holds {expected}",
+                    update.group,
+                    update.bytes.len()
+                )));
+            }
+            let start = usize::try_from(group.row_start * row_bytes)
+                .map_err(|_| Error::limit_exceeded("engram group start does not fit usize"))?;
+            let end = start
+                .checked_add(update.bytes.len())
+                .ok_or_else(|| Error::limit_exceeded("engram group end overflows usize"))?;
+            let slot = new_table
+                .get_mut(start..end)
+                .ok_or_else(|| Error::corrupt("engram group range is outside the table"))?;
+            slot.copy_from_slice(update.bytes);
+        }
+        let mut references = BTreeMap::new();
+        let mut supersedes = vec![None; meta.groups.len()];
+        for (index, group) in meta.groups.iter().enumerate() {
+            if changed.contains(&(index as u32)) {
+                supersedes[index] = Some(group.group_root);
+            } else {
+                references.insert(
+                    index as u64,
+                    weftcodec::engram::EngramReference {
+                        group_root: group.group_root,
+                        dependency: 0,
+                    },
+                );
+                supersedes[index] = group.supersedes;
+            }
+        }
+        let physical = meta.dtype;
+        let input = weftcodec::engram::EngramInput {
+            hash_function: meta.hash_function.clone(),
+            vocab_size: meta.vocab_size,
+            table_shape: meta.table_shape.clone(),
+            dtype: physical,
+            precision: meta.precision.clone(),
+            row_group_edges: meta.row_group_edges.clone(),
+            references,
+            supersedes,
+        };
+        let new_frame = weftcodec::engram::encode_engram_with_dependencies(
+            &new_table,
+            &input,
+            &[manifest.content_hash],
+            &limits,
+        )?;
+        let root =
+            weftcodec::tensor::logical_root(physical, &meta.table_shape, &new_table, &limits)?;
+        let layout = TensorLayoutSpec::row_major();
+        let artifact = PreparedArtifact {
+            kind: RepresentationKind::Tensor,
+            strategy_name: "engram-shard".to_owned(),
+            frame: Some(new_frame),
+            dependencies: vec![record.content],
+            tensor: Some(TensorRepresentation {
+                tensor_mode: 20,
+                dtype: tensor.dtype,
+                shape: meta.table_shape.clone(),
+                logical_root: root,
+                layout: layout.to_value(tensor.dtype, &meta.table_shape)?,
+            }),
+            tile_shape: None,
+        };
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            tensor.dtype,
+            &meta.table_shape,
+            &new_table,
+            &layout,
+            &artifact,
+        )?;
+        let mut attrs = BTreeMap::new();
+        apply_tensor_attrs(
+            &mut attrs,
+            tensor.dtype,
+            &meta.table_shape,
+            root,
+            &layout,
+            "engram-shard",
+            None,
+        )?;
+        self.publish_file_version_with_attrs(
+            id,
+            record,
+            manifest_id,
+            content_hash,
+            size,
+            &[],
+            attrs,
+        )
     }
 
     /// Read a logical hyper-rectangle of a tensor object in row-major order.
@@ -2018,6 +2248,12 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
+                    if tensor.tensor_mode == 20 {
+                        let frame_id = rep.frame.ok_or_else(|| {
+                            Error::corrupt("tensor representation has no frame id")
+                        })?;
+                        return self.read_engram_region(frame_id, tensor, rep, region, options);
+                    }
                     if tensor.tensor_mode == 15
                         || tensor.tensor_mode == 17
                         || tensor.tensor_mode == 18
@@ -2096,6 +2332,283 @@ impl Store {
             return Err(Error::corrupt("whole-content hash mismatch"));
         }
         Ok((logical, stats))
+    }
+
+    /// Build a resolver for a mode-20 frame's dependency artifacts. Each
+    /// representation dependency is the earlier tensor object's **manifest
+    /// id**; its stored frame supplies the referenced group table. The map key
+    /// is the frame's own content hash, which is the hash the engram frame's
+    /// dependency table names.
+    fn engram_resolver(&self, rep: &Representation) -> Result<MapResolver> {
+        let limits = Limits::default();
+        let mut resolver = MapResolver::new();
+        for dependency in &rep.dependencies {
+            let manifest =
+                self.with_backend(|backend| recovery::read_manifest_via(backend, *dependency))?;
+            let dep_rep = manifest
+                .representation
+                .ok_or_else(|| Error::corrupt("engram dependency has no representation"))?;
+            let frame_id = dep_rep
+                .frame
+                .ok_or_else(|| Error::corrupt("engram dependency has no frame id"))?;
+            let frame_bytes = self.with_backend(|backend| {
+                recovery::read_blob_verified_via(
+                    backend,
+                    BlobKind::Manifest,
+                    frame_id,
+                    identity::MANIFEST_DOMAIN,
+                )
+            })?;
+            let frame = Frame::parse(&frame_bytes, &limits)?;
+            resolver.insert(frame.header.content_hash, frame_bytes);
+        }
+        Ok(resolver)
+    }
+
+    /// Decode a complete mode-20 object and verify its representation
+    /// identity. References resolve through the earlier artifacts named by the
+    /// representation's dependency list.
+    fn read_engram_object(
+        &self,
+        frame_id: Hash32,
+        tensor: &TensorRepresentation,
+        manifest: &Manifest,
+        rep: &Representation,
+    ) -> Result<Vec<u8>> {
+        let (layout_dtype, layout_shape, _) = TensorLayoutSpec::from_value(&tensor.layout)?;
+        if layout_dtype != tensor.dtype || layout_shape != tensor.shape {
+            return Err(Error::corrupt(
+                "tensor layout descriptor disagrees with the manifest dtype/shape",
+            ));
+        }
+        let frame_bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(
+                backend,
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )
+        })?;
+        let limits = Limits::default();
+        let frame = Frame::parse(&frame_bytes, &limits)?;
+        if frame.header.mode != Mode::EngramShard {
+            return Err(Error::corrupt(format!(
+                "tensor representation mode 20 has frame mode `{}`",
+                frame.header.mode.as_str()
+            )));
+        }
+        let meta = weftcodec::engram::engram_metadata(&frame, &limits)?;
+        let physical = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("engram dtype has no element layout"))?;
+        if meta.dtype != physical || meta.table_shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-20 dtype/shape disagrees with the representation manifest",
+            ));
+        }
+        let resolver = self.engram_resolver(rep)?;
+        let logical = weftcodec::engram::decode_engram(&frame, &resolver, &limits)?;
+        let root = weftcodec::tensor::logical_root(physical, &tensor.shape, &logical, &limits)?;
+        if root != tensor.logical_root {
+            return Err(Error::corrupt(
+                "mode-20 logical root disagrees with the manifest logical_root",
+            ));
+        }
+        if identity::content_hash(&logical) != manifest.content_hash {
+            return Err(Error::corrupt("whole-content hash mismatch"));
+        }
+        Ok(logical)
+    }
+
+    /// Region read for a mode-20 object: only the groups intersecting the row
+    /// range are fetched and decoded. Like the mode-15 path this does not read
+    /// the whole-frame trailer or re-check the whole-content hash.
+    fn read_engram_region(
+        &self,
+        frame_id: Hash32,
+        tensor: &TensorRepresentation,
+        rep: &Representation,
+        region: &Region,
+        options: &TileDecodeOptions,
+    ) -> Result<(RegionRead, TileDecodeStats)> {
+        let limits = Limits::default();
+        let key = crate::backend::Key::manifest(frame_id);
+        let probe_len = 96u64
+            .checked_add(
+                limits
+                    .max_dependency_count
+                    .saturating_mul(weftcodec::frame::DEP_ENTRY_LEN as u64),
+            )
+            .ok_or_else(|| Error::limit_exceeded("mode-20 probe length overflows"))?;
+        let probe = self.with_backend(|backend| backend.read(&key, 0, probe_len))?;
+        if probe.len() < 96 {
+            return Err(Error::corrupt("mode-20 frame is shorter than its header"));
+        }
+        let (header, _) = weftcodec::frame::parse_prefix(&probe, &limits)?;
+        if header.mode != Mode::EngramShard {
+            return Err(Error::corrupt(format!(
+                "tensor representation mode 20 has frame mode `{}`",
+                header.mode.as_str()
+            )));
+        }
+        if header.chunk_count != 0 {
+            return Err(Error::corrupt("mode-20 frame must not carry a chunk table"));
+        }
+        let table_len = header.table_len;
+        let tables_end = 96u64
+            .checked_add(table_len)
+            .ok_or_else(|| Error::limit_exceeded("mode-20 table length overflows"))?;
+        let dep_bytes = if table_len == 0 {
+            Vec::new()
+        } else {
+            self.with_backend(|backend| backend.read(&key, 96, table_len))?
+        };
+        if dep_bytes.len() as u64 != table_len {
+            return Err(Error::corrupt("mode-20 dependency table is truncated"));
+        }
+        let mut dependencies = Vec::with_capacity(header.dep_count as usize);
+        for index in 0..header.dep_count as usize {
+            let off = index * weftcodec::frame::DEP_ENTRY_LEN;
+            let entry = dep_bytes
+                .get(off..off + weftcodec::frame::DEP_ENTRY_LEN)
+                .ok_or_else(|| Error::corrupt("mode-20 dependency entry is truncated"))?;
+            let hash = identity::Hash32::from_slice(&entry[0..32])?;
+            let decoded_len = u64::from_le_bytes(entry[32..40].try_into().unwrap_or([0; 8]));
+            let dep_domain = entry[40];
+            let dep_flags = entry[41];
+            let codec_hint = u32::from_le_bytes(entry[44..48].try_into().unwrap_or([0; 4]));
+            dependencies.push(weftcodec::Dependency {
+                hash,
+                decoded_len,
+                dep_domain,
+                dep_flags,
+                codec_hint,
+            });
+        }
+        let prefix_read = self.with_backend(|backend| backend.read(&key, tables_end, 4))?;
+        if prefix_read.len() != 4 {
+            return Err(Error::corrupt("mode-20 descriptor length is truncated"));
+        }
+        let meta_len = u64::from(u32::from_le_bytes(
+            prefix_read.as_slice().try_into().unwrap_or([0; 4]),
+        ));
+        let payload_len = header
+            .body_len
+            .checked_sub(4)
+            .and_then(|value| value.checked_sub(meta_len))
+            .ok_or_else(|| Error::corrupt("mode-20 descriptor extends past the body"))?;
+        weftcodec::limits::check_len(meta_len, limits.max_string_bytes, "mode-20 descriptor")?;
+        let descriptor_start = tables_end + 4;
+        let descriptor =
+            self.with_backend(|backend| backend.read(&key, descriptor_start, meta_len))?;
+        if descriptor.len() as u64 != meta_len {
+            return Err(Error::corrupt("mode-20 descriptor is truncated"));
+        }
+        let meta = weftcodec::engram::parse_engram_descriptor(
+            &descriptor,
+            header.decoded_len,
+            payload_len,
+            &[],
+            &limits,
+        )?;
+        let physical = tensor
+            .dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("engram dtype has no element layout"))?;
+        if meta.dtype != physical || meta.table_shape != tensor.shape {
+            return Err(Error::corrupt(
+                "mode-20 dtype/shape disagrees with the representation manifest",
+            ));
+        }
+        region.validate(&meta.table_shape)?;
+        if region.is_empty() {
+            return Ok((
+                RegionRead {
+                    shape: region.extent(),
+                    bytes: Vec::new(),
+                    units_touched: 0,
+                },
+                TileDecodeStats::none(options),
+            ));
+        }
+        let header_prefix =
+            self.with_backend(|backend| backend.read(&key, 0, descriptor_start + meta_len))?;
+        let synthetic = Frame {
+            header,
+            dependencies,
+            chunks: Vec::new(),
+            body: &[],
+            bytes: &header_prefix,
+        };
+        let resolver = self.engram_resolver(rep)?;
+        let descriptor_view = weftcodec::engram::EngramDescriptor {
+            meta: meta.clone(),
+            payload: &[],
+        };
+        let payload_base = descriptor_start + meta_len;
+        let (row_bytes, touched) = weftcodec::engram::read_engram_region_with(
+            &synthetic,
+            &descriptor_view,
+            region.start[0],
+            region.end[0],
+            &resolver,
+            &limits,
+            |group| match group.storage {
+                weftcodec::engram::EngramStorage::Inline {
+                    offset,
+                    compressed_len,
+                } => {
+                    let absolute = payload_base.checked_add(offset).ok_or_else(|| {
+                        weftcodec::Error::limit_exceeded("engram group offset overflows")
+                    })?;
+                    let stored = self
+                        .with_backend(|backend| backend.read(&key, absolute, compressed_len))
+                        .map_err(|err| weftcodec::Error::io(err.to_string()))?;
+                    Ok(Some(stored))
+                }
+                weftcodec::engram::EngramStorage::Reference { .. } => Ok(None),
+            },
+        )?;
+        let dim = meta.dim();
+        let word = meta.dtype.element_size();
+        let start_col = region.start[1];
+        let end_col = region.end[1];
+        let bytes = if start_col == 0 && end_col == dim {
+            row_bytes
+        } else {
+            let rows = region.end[0] - region.start[0];
+            let row_len = usize::try_from(
+                dim.checked_mul(word)
+                    .ok_or_else(|| Error::limit_exceeded("engram row length overflows"))?,
+            )
+            .map_err(|_| Error::limit_exceeded("engram row length does not fit usize"))?;
+            let col_start = usize::try_from(start_col * word)
+                .map_err(|_| Error::limit_exceeded("engram column start does not fit usize"))?;
+            let col_end = usize::try_from(end_col * word)
+                .map_err(|_| Error::limit_exceeded("engram column end does not fit usize"))?;
+            let mut out = Vec::with_capacity(
+                usize::try_from(rows)
+                    .unwrap_or(0)
+                    .saturating_mul(col_end.saturating_sub(col_start)),
+            );
+            for row in 0..usize::try_from(rows).unwrap_or(0) {
+                let base = row * row_len;
+                let slice = row_bytes
+                    .get(base + col_start..base + col_end)
+                    .ok_or_else(|| Error::corrupt("engram region slice is outside the rows"))?;
+                out.extend_from_slice(slice);
+            }
+            out
+        };
+        Ok((
+            RegionRead {
+                shape: region.extent(),
+                bytes,
+                units_touched: touched.len() as u64,
+            },
+            TileDecodeStats::none(options),
+        ))
     }
 
     /// Region read for a mode-15 object using per-tile backend range reads.
@@ -3425,6 +3938,66 @@ impl Store {
             }
         }
 
+        // Mode 20 engram-shard. The caller must supply the row-group metadata;
+        // without it the candidate is skipped and never auto-selected.
+        match &options.engram {
+            Some(spec) => match self.prepare_mode20(dtype, shape, logical, spec, &limits) {
+                Ok((frame, root)) => {
+                    let physical = frame.len() as u64;
+                    let estimate = options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::TensorTiled,
+                        TensorStrategy::EngramShard,
+                        size,
+                    );
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::EngramShard,
+                                applicable: true,
+                                detail: format!(
+                                    "one mode-20 frame with {} row groups",
+                                    spec.row_group_edges.len().saturating_sub(1)
+                                ),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::EngramShard, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::EngramShard, size),
+                                )),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Tensor,
+                                strategy_name: "engram-shard".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: Some(TensorRepresentation {
+                                    tensor_mode: 20,
+                                    dtype,
+                                    shape: shape.to_vec(),
+                                    logical_root: root,
+                                    layout: layout.to_value(dtype, shape)?,
+                                }),
+                                tile_shape: None,
+                            }),
+                        },
+                    );
+                }
+                Err(err) => out.push(skipped(TensorStrategy::EngramShard, err.to_string())),
+            },
+            None => out.push(skipped(
+                TensorStrategy::EngramShard,
+                "no engram metadata supplied".to_owned(),
+            )),
+        }
+
         // Mode 17 float-tiled. The same opt-in as mode 15 (an explicit tile
         // shape or `auto_tile_bytes`); it is the independently decodable form
         // of the mode-9 plane split, so it is offered only for the dtypes that
@@ -4077,6 +4650,63 @@ impl Store {
         Ok((frame, meta.logical_root))
     }
 
+    fn prepare_mode20(
+        &self,
+        dtype: TensorElementDtype,
+        shape: &[u64],
+        logical: &[u8],
+        spec: &EngramWriteSpec,
+        limits: &Limits,
+    ) -> Result<(Vec<u8>, Hash32)> {
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::invalid_argument(format!(
+                "dtype `{}` has no element layout for mode 20",
+                dtype.as_str()
+            ))
+        })?;
+        let precision_name = spec.precision.as_deref().unwrap_or(physical.as_str());
+        let precision_dtype = weftcodec::TensorDtype::from_name(precision_name).map_err(|_| {
+            Error::invalid_argument(format!(
+                "engram precision `{precision_name}` is not a tensor dtype"
+            ))
+        })?;
+        let quantization =
+            spec.quantization
+                .as_ref()
+                .map(|scheme| weftcodec::engram::EngramQuantization {
+                    scheme: scheme.clone(),
+                    lossless: true,
+                });
+        let vocab_size = if spec.vocab_size == 0 {
+            shape[0]
+        } else {
+            spec.vocab_size
+        };
+        let input = weftcodec::engram::EngramInput {
+            hash_function: spec.hash_function.clone(),
+            vocab_size,
+            table_shape: shape.to_vec(),
+            dtype: physical,
+            precision: weftcodec::engram::EngramPrecision {
+                storage_dtype: precision_dtype,
+                quantization,
+            },
+            row_group_edges: spec.row_group_edges.clone(),
+            references: std::collections::BTreeMap::new(),
+            supersedes: Vec::new(),
+        };
+        let frame = weftcodec::engram::encode_engram(logical, &input, limits)?;
+        let parsed = Frame::parse(&frame, limits)?;
+        let meta = weftcodec::engram::engram_metadata(&parsed, limits)?;
+        if meta.table_shape != shape || meta.dtype != physical {
+            return Err(Error::corrupt(
+                "mode-20 shape or dtype disagrees with the write",
+            ));
+        }
+        let root = weftcodec::tensor::logical_root(physical, shape, logical, limits)?;
+        Ok((frame, root))
+    }
+
     fn prepare_delta(
         &self,
         dtype: TensorElementDtype,
@@ -4526,6 +5156,7 @@ impl Store {
             16 => Mode::SparseDelta,
             17 => Mode::FloatTiled,
             18 => Mode::FloatTiledStreams,
+            20 => Mode::EngramShard,
             other => {
                 return Err(Error::corrupt(format!(
                     "tensor_mode {other} is not a defined tensor frame mode"
@@ -4580,6 +5211,10 @@ impl Store {
             15 => self.decode_mode15(&frame, tensor, manifest, rep, &limits)?,
             17 => self.decode_mode17(&frame, tensor, manifest, rep, &limits)?,
             18 => weftcodec::decode_float_tiled_streams(&frame, &limits, 1)?,
+            20 => {
+                let resolver = self.engram_resolver(rep)?;
+                weftcodec::engram::decode_engram(&frame, &resolver, &limits)?
+            }
             _ => unreachable!("checked above"),
         };
         if logical.len() as u64 != manifest.size || logical.len() as u64 != rep.decoded_size {

@@ -446,6 +446,7 @@ impl TensorRepresentation {
             "float-tiled" => Some(17),
             "float-tiled-streams" => Some(18),
             "sparse-delta" => Some(16),
+            "engram-shard" => Some(20),
             _ => None,
         }
     }
@@ -463,6 +464,7 @@ impl TensorRepresentation {
             16 => Some("sparse-delta"),
             17 => Some("float-tiled"),
             18 => Some("float-tiled-streams"),
+            20 => Some("engram-shard"),
             _ => None,
         }
     }
@@ -983,7 +985,15 @@ impl Representation {
         }
         let dependencies = parse_dependencies(map)?;
         let decoded_size = wu::get_u64(map, "decoded_size")?;
-        if TensorRepresentation::mode_has_dependency(tensor_mode) {
+        if tensor_mode == 20 {
+            // An inline engram table has no dependency; an incrementally
+            // updated table names exactly one earlier artifact.
+            if dependencies.len() > 1 {
+                return Err(Error::malformed(
+                    "engram-shard representation allows at most one dependency",
+                ));
+            }
+        } else if TensorRepresentation::mode_has_dependency(tensor_mode) {
             if dependencies.len() != 1 {
                 return Err(Error::malformed(
                     "weight-delta/semantic-delta/sparse-delta representation requires exactly one dependency",

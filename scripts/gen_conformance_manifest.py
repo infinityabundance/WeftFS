@@ -56,6 +56,7 @@ MODE_NAMES = {
     17: "float_tiled",
     18: "float_tiled_streams",
     19: "kv_cache_prov",
+    20: "engram_shard",
 }
 
 # Directory -> (kind, subkind, mode, expectation builder name)
@@ -72,6 +73,7 @@ CODEC_DIRS = {
     "sparse-delta": ("frame", "sparse_delta", 16, "sparse_delta"),
     "float-tiled": ("frame", "float_tiled", 17, "frame"),
     "float-tiled-streams": ("frame", "float_tiled_streams", 18, "frame"),
+    "engram": ("frame", "engram_shard", 20, "engram"),
     "structured": ("wcb", None, None, "wcb"),
     "selectors": ("selector", None, None, "selector"),
     "context": ("context", "context_root", None, "context"),
@@ -411,6 +413,17 @@ def expectation_kv_prov(vector):
     return ok(vector.get("descriptor_root"), sha256(elements)), None
 
 
+def expectation_engram(vector):
+    if vector.get("expect_error"):
+        return error(vector["expect_error"]), None
+    if not vector.get("descriptor_root"):
+        raise SystemExit("engram vector %r has no descriptor_root" % vector.get("name"))
+    table = vector.get("table_hex")
+    if table is None:
+        raise SystemExit("engram vector %r has no table_hex" % vector.get("name"))
+    return ok(vector["descriptor_root"], decode_sha(table)), None
+
+
 def expectation_activation_stream(vector):
     if "expect_error" in vector:
         return error(vector["expect_error"]), None
@@ -451,6 +464,7 @@ EXPECTATIONS = {
     "kv_cache": expectation_kv_cache,
     "kv_prov": expectation_kv_prov,
     "activation_stream": expectation_activation_stream,
+    "engram": expectation_engram,
     "capability": expectation_capability,
     "checkpoint": expectation_checkpoint,
 }
