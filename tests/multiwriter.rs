@@ -99,14 +99,11 @@ fn optimistic_open_creates_the_policy_and_single_open_refuses_it() {
         drop(store);
     }
     assert!(path.join("writers").is_file(), "policy record was written");
-    let err = match Store::open_with_options(
-        &path,
-        OpenMode::ReadWrite,
-        options(WriterMode::Single),
-    ) {
-        Ok(_) => panic!("a single-mode writable open must refuse an optimistic store"),
-        Err(err) => err,
-    };
+    let err =
+        match Store::open_with_options(&path, OpenMode::ReadWrite, options(WriterMode::Single)) {
+            Ok(_) => panic!("a single-mode writable open must refuse an optimistic store"),
+            Err(err) => err,
+        };
     assert_eq!(err.class(), Class::UnsupportedVersion, "{err}");
 }
 
@@ -384,6 +381,72 @@ fn the_seeded_transaction_id_and_policy_are_inspectable() {
 }
 
 #[test]
+fn a_lost_publication_race_does_not_pollute_the_retry_state() {
+    use weftfs::format::Commit;
+    use weftfs::quota::{QuotaBudget, QuotaPrincipal};
+
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().to_path_buf();
+    let principal = QuotaPrincipal::Posix { uid: 0, gid: 0 };
+    {
+        let mut opts = options(WriterMode::Single);
+        opts.quotas = vec![QuotaBudget {
+            principal: principal.clone(),
+            max_new_bytes: u64::MAX,
+            max_objects: 1,
+        }];
+        let store = Store::init(&path, opts).unwrap();
+        drop(store);
+    }
+
+    let mut store = open(&path);
+    let genesis = store.head();
+    // A valid but unreferenced commit at the generation the transaction will
+    // try first. This is the shape a lost race leaves when the winning writer
+    // already used that generation, and it forces exactly one Busy retry.
+    let blocked = Commit {
+        generation: 2,
+        parent: Some(genesis),
+        timestamp_ns: NOW,
+        ops: Vec::new(),
+        checkpoint: None,
+        index_attestation: None,
+    };
+    let file = weftfs::format::encode_commit_file(&blocked.encode().unwrap()).unwrap();
+    fs::write(path.join("commits").join("2.commit"), file).unwrap();
+
+    let plan = plan_file(&store, State::ROOT_ID, b"once", b"bytes", b"seed-once");
+    let tx = stage(&store, "000000000000000000000000000000aa", &plan);
+    let outcome = store
+        .execute_transaction(&tx, &TransactionOptions::default())
+        .unwrap();
+    assert!(
+        outcome.attempts >= 2,
+        "the generation collision must be retried"
+    );
+    assert_eq!(
+        store.quota_usage(&principal).used_objects,
+        1,
+        "a retry must charge the published transaction exactly once; the \
+         unpublished attempt must not leak into the preflight state"
+    );
+    fs::remove_file(path.join("commits").join("2.commit")).unwrap();
+    drop(store);
+
+    let mut later = open(&path);
+    assert!(
+        later.verify(true).unwrap().ok,
+        "full verify after the retry"
+    );
+    let second = plan_file(&later, State::ROOT_ID, b"twice", b"more", b"seed-twice");
+    let tx2 = stage(&later, "000000000000000000000000000000ab", &second);
+    let err = later
+        .execute_transaction(&tx2, &TransactionOptions::default())
+        .unwrap_err();
+    assert_eq!(err.class(), Class::BudgetExceeded, "{err}");
+}
+
+#[test]
 fn a_quota_race_at_the_limit_rejects_the_loser() {
     use weftfs::quota::{QuotaBudget, QuotaPrincipal};
 
@@ -412,5 +475,9 @@ fn a_quota_race_at_the_limit_rejects_the_loser() {
         .execute_transaction(&tx_b, &TransactionOptions::default())
         .unwrap_err();
     assert_eq!(err.class(), Class::BudgetExceeded, "{err}");
-    assert_eq!(b.generation(), a.generation(), "a denied transaction publishes nothing");
+    assert_eq!(
+        b.generation(),
+        a.generation(),
+        "a denied transaction publishes nothing"
+    );
 }

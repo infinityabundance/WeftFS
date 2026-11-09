@@ -975,6 +975,16 @@ impl Store {
             capabilities.require_conditional_head("a read-write store")?;
         }
         let mut backend = backend_kind.open(&root)?;
+        if mode == OpenMode::ReadWrite
+            && writer_mode == crate::mw2::WriterMode::Optimistic
+            && !matches!(backend.label(), "local" | "object" | "3fs" | "s3")
+        {
+            return Err(Error::unsupported_version(format!(
+                "optimistic (MW2) publication is implemented for the local, object, 3fs, and \
+                 s3 commit planes; this backend is `{}`",
+                backend.label()
+            )));
+        }
         let format_bytes = backend.read_all(&Key::format()).map_err(|err| {
             // A transport or authorization failure is not corruption. Keep the
             // I/O class so an operator (and the distributed court) can
@@ -5960,10 +5970,10 @@ impl Store {
         let mut attempts: u32 = 0;
         loop {
             attempts = attempts.saturating_add(1);
-            let plane = self.with_backend(|backend| backend.load_published_head())?;
-            if attempts > 1 || plane != Some((self.generation, self.head)) {
-                self.reload_from_plane()?;
-            }
+            // Apply only the commits this handle has not seen, instead of
+            // replaying the whole chain. A divergence or a damaged commit
+            // falls back to the authoritative full reload.
+            self.refresh_to_head()?;
 
             crate::mw2::validate_preconditions(&self.state, tx)?;
             for check in &tx.auth {
@@ -5973,7 +5983,8 @@ impl Store {
             let generation = self
                 .generation
                 .checked_add(1)
-                .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+                .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?
+                .max(self.next_generation);
             let mut candidate = self.state.clone();
             candidate.apply_ops(&tx.ops)?;
             candidate.generation = generation;
@@ -5985,7 +5996,13 @@ impl Store {
                 ops.push(Self::quota_usage_op(plan));
             }
 
-            self.state = candidate;
+            // `candidate` becomes the working state for publication, but the
+            // last published state is retained. A lost race must be retried
+            // from that base, never from a state that still contains this
+            // attempt's own unpublished ops: quota charges, preconditions and
+            // authorization would otherwise be evaluated against a state the
+            // store never published.
+            let base = std::mem::replace(&mut self.state, candidate);
             self.next_generation = generation
                 .checked_add(1)
                 .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
@@ -6005,6 +6022,9 @@ impl Store {
                     });
                 }
                 Err(err) if err.class() == Class::Busy => {
+                    // The head did not move to this attempt, so the published
+                    // base is still the truth. Restore it before the retry.
+                    self.state = base;
                     let forced =
                         options.fail_after_attempts > 0 && attempts >= options.fail_after_attempts;
                     if attempts >= options.max_attempts || forced {
@@ -6213,6 +6233,55 @@ impl Store {
             generation -= 1;
         }
         Ok(false)
+    }
+
+    /// Catch up to the published head by applying only the missing commits.
+    ///
+    /// A rebase after a lost race usually has one (or a few) winner commits to
+    /// apply. Replaying the whole chain there is correct but O(chain length)
+    /// per retry; this path is the same replay restricted to the gap. Any
+    /// parent mismatch, missing commit, or op failure falls back to the
+    /// authoritative full reload, so the fast path can never invent state.
+    fn refresh_to_head(&mut self) -> Result<()> {
+        let plane = self.with_backend(|backend| backend.load_published_head())?;
+        let Some((generation, head)) = plane else {
+            return self.reload_from_plane();
+        };
+        if generation == self.generation && head == self.head {
+            return Ok(());
+        }
+        if generation < self.generation || (generation == self.generation && head != self.head) {
+            return self.reload_from_plane();
+        }
+        let mut state = self.state.clone();
+        let mut hash = self.head;
+        for next in (self.generation + 1)..=generation {
+            let loaded = match self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &Key::commit(next), Some(next))
+            }) {
+                Ok(loaded) => loaded,
+                Err(_) => return self.reload_from_plane(),
+            };
+            if loaded.commit.parent != Some(hash) {
+                return self.reload_from_plane();
+            }
+            if state.apply_ops(&loaded.commit.ops).is_err() {
+                return self.reload_from_plane();
+            }
+            state.generation = next;
+            hash = loaded.hash;
+        }
+        if hash != head {
+            return self.reload_from_plane();
+        }
+        self.state = state;
+        self.head = hash;
+        self.generation = generation;
+        self.next_generation = self.next_generation.max(generation + 1);
+        self.blob_index.clear();
+        self.blob_index_ready = false;
+        self.load_quota_record();
+        Ok(())
     }
 
     /// Re-select the published head and replay its bounded commit chain.
@@ -8652,7 +8721,19 @@ impl Store {
                         commit.generation
                     )));
                 }
-                backend.put_atomic(&key, &file_bytes)?;
+                match backend.put_atomic(&key, &file_bytes) {
+                    Ok(()) => {}
+                    Err(err) if err.class() == Class::Exists => {
+                        // Another committer used this generation first. The
+                        // transaction loop reloads the new head and retries.
+                        return Err(Error::busy(format!(
+                            "commit generation {} already exists with different bytes; retry \
+                             against the new head",
+                            commit.generation
+                        )));
+                    }
+                    Err(err) => return Err(err),
+                }
                 match backend.publish_head_conditional(
                     expected,
                     commit.generation,
@@ -8666,13 +8747,21 @@ impl Store {
                         Ok(true)
                     }
                     Err(err) if err.class() == Class::Busy => {
-                        // The head moved. The record is unreferenced; remove it
-                        // so a later generation is not blocked by an orphan.
+                        // The conditional head write was definitively refused
+                        // (the head still names another commit), so this record
+                        // is unreferenced. Remove it so a later generation is
+                        // not blocked by an orphan.
                         let _ = backend.delete(&key);
                         Err(err)
                     }
                     Err(err) => {
-                        let _ = backend.delete(&key);
+                        // Any other failure (transport, timeout, local I/O) is
+                        // ambiguous: the conditional write may have landed. A
+                        // delete here could destroy a published commit, so the
+                        // record is left in place. If it is unreferenced,
+                        // recovery and `verify` report it; if it is the new
+                        // head, the transaction is resolved by idempotent
+                        // lookup instead of losing acknowledged data.
                         Err(err)
                     }
                 }

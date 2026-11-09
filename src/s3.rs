@@ -67,7 +67,7 @@ use sha2::{Digest, Sha256};
 use crate::backend::{
     classify_listed_key as classify_relative, list_prefix_path as prefix_for_kind,
 };
-use crate::backend::{BackendStats, Capabilities, Key, KeyKind, StorageBackend};
+use crate::backend::{BackendStats, Capabilities, HeadExpectation, Key, KeyKind, StorageBackend};
 use crate::error::{Error, Result};
 use crate::format::{MAX_CHUNK_SIZE, SUPERBLOCK_BYTES};
 use crate::identity::Hash32;
@@ -1748,6 +1748,69 @@ impl StorageBackend for S3Backend {
             .bytes_read
             .fetch_add(bytes.len() as u64, Ordering::Relaxed);
         Ok(bytes)
+    }
+
+    /// MW2 head publication on S3: one conditional PUT whose If-Match is the
+    /// ETag observed together with the head check. The inherited `write_at`
+    /// re-reads between the check and the write and could silently replace a
+    /// newer slot; this override removes that window.
+    fn publish_head_conditional(
+        &mut self,
+        expected: HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+        slot_bytes: &[u8],
+    ) -> Result<()> {
+        let key = Key::superblock();
+        let current = self.get(&key, None)?;
+        if current.status == 404 {
+            return Err(Error::not_found("superblock does not exist"));
+        }
+        if current.status != 200 {
+            return Err(Error::io(format!(
+                "S3 read for head publication returned HTTP {}",
+                current.status
+            )));
+        }
+        let etag = current
+            .etag
+            .clone()
+            .ok_or_else(|| Error::io("S3 endpoint did not return an ETag"))?;
+        let observed = crate::format::decode_superblock(&current.body)?
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation);
+        let matches = match (&observed, expected.is_none()) {
+            (None, true) => true,
+            (Some(slot), false) => {
+                slot.generation == expected.generation && slot.commit == expected.commit
+            }
+            _ => false,
+        };
+        if !matches {
+            return Err(Error::busy(format!(
+                "head publication refused: expected generation {}, observed {}",
+                expected.generation,
+                observed.as_ref().map(|slot| slot.generation).unwrap_or(0)
+            )));
+        }
+        let mut image = current.body;
+        let offset = ((generation % 2) as usize) * crate::format::SLOT_BYTES;
+        let slot = crate::format::SuperblockSlot {
+            generation,
+            commit,
+            commit_len,
+            timestamp_ns,
+        };
+        image[offset..offset + crate::format::SLOT_BYTES].copy_from_slice(slot_bytes);
+        if self.put_conditional(&key, &image, Some(&etag))?.is_none() {
+            return Err(Error::busy(
+                "head publication lost the conditional write race",
+            ));
+        }
+        Ok(())
     }
 
     fn write_at(&mut self, key: &Key, offset: u64, bytes: &[u8]) -> Result<()> {
