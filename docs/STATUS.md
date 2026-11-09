@@ -24,8 +24,8 @@ the design, backend tradeoffs and every loss are in
 [`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwriter.md). FUSE file
 mutations and generic checkpoint publication remain MW1. The full R4 entry
 with measured tables is at the end of this document. The R4 aggregate is
-`bench/receipts/verify-20261109T160406Z.json` (**41/41** courts `pass`, 0
-failed, 0 skipped) at WeftFS `257f31a`; it now includes `tla`,
+`bench/receipts/verify-20261109T165707Z.json` (**41/41** courts `pass`, 0
+failed, 0 skipped) at WeftFS `a3256af`; it now includes `tla`,
 `multiwriter`, and `multiwriter_failure`.
 
 **Stage S6 update (2026-11-08):** the current verification receipt is
@@ -7046,11 +7046,12 @@ optimistic publishers; there is no physical power loss, no fleet, and no MW3.
   `.log`; retained superseded run `…144401Z`; retained failures
   `…144140Z`, `…144235Z`, `…144320Z`, `…144333Z`, `…144351Z.log`.
 * TLA+: `bench/receipts/tla-20261109T140116Z.json`.
-* Aggregate: `bench/receipts/verify-20261109T160406Z.json` (**41/41** courts
-  `pass`, 0 failed, 0 skipped) at WeftFS `257f31a`; the earlier 38/38 run
-  `verify-20261109T150758Z.json` is retained.
+* Aggregate: `bench/receipts/verify-20261109T165707Z.json` (**41/41** courts
+  `pass`, 0 failed, 0 skipped) at WeftFS `a3256af`; the earlier 41/41 run
+  `verify-20261109T160406Z.json` (at `257f31a`, before the spec-wording commit)
+  and the 38/38 run `verify-20261109T150758Z.json` are retained.
 * Code revisions: WeftFS `b0bcbc5` (protocol, courts, benchmark), WeftFS-Go
-  `f46b351`; aggregate at `257f31a`.
+  `f46b351`; aggregate at `a3256af`.
 
 ### What remains for MW3
 
