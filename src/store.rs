@@ -394,6 +394,51 @@ pub struct GcReport {
     pub problems: Vec<String>,
 }
 
+/// The reachable blob set of one GC pass, with the root that first retained
+/// each blob.
+///
+/// `origins` is evidence, not state: it lets a retention report say *why* an
+/// expired artifact was kept (`reachable from snapshot:<commit>`). Marking is
+/// idempotent and every reachable root is recorded for a blob, so the report
+/// can pick a deterministic label regardless of traversal order.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct Reachability {
+    pub manifests: BTreeSet<Hash32>,
+    pub chunks: BTreeSet<Hash32>,
+    pub origins: BTreeMap<Hash32, BTreeSet<String>>,
+}
+
+impl Reachability {
+    pub(crate) fn mark_manifest(&mut self, hash: Hash32, origin: &str) -> bool {
+        self.origins
+            .entry(hash)
+            .or_default()
+            .insert(origin.to_owned());
+        self.manifests.insert(hash)
+    }
+
+    pub(crate) fn mark_chunk(&mut self, hash: Hash32, origin: &str) -> bool {
+        self.origins
+            .entry(hash)
+            .or_default()
+            .insert(origin.to_owned());
+        self.chunks.insert(hash)
+    }
+
+    pub(crate) fn contains(&self, hash: &Hash32) -> bool {
+        self.manifests.contains(hash) || self.chunks.contains(hash)
+    }
+
+    /// The smallest root label that retained `hash`; deterministic and
+    /// independent of traversal order.
+    pub(crate) fn origin_of(&self, hash: &Hash32) -> Option<&str> {
+        self.origins
+            .get(hash)
+            .and_then(|labels| labels.iter().next())
+            .map(String::as_str)
+    }
+}
+
 /// Result of [`Store::merge_branches`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MergeReport {
@@ -1311,7 +1356,7 @@ impl Store {
         f(&**guard)
     }
 
-    fn with_backend_mut<T>(
+    pub(crate) fn with_backend_mut<T>(
         &self,
         f: impl FnOnce(&mut dyn StorageBackend) -> Result<T>,
     ) -> Result<T> {
@@ -7126,6 +7171,109 @@ impl Store {
         }
     }
 
+    /// Compute the reachable blob set and the root label that retained each
+    /// blob, exactly as [`Store::gc`] does.
+    ///
+    /// Roots, in the order they are labelled: live prepared transactions
+    /// (`transaction:<id>`), the current state (`head:<commit>`), snapshot
+    /// commits (`snapshot:<commit>`), checkpoint state manifests
+    /// (`checkpoint:<manifest>`), and content pins (`pin:<content>`). A corrupt
+    /// transaction record fails the pass closed instead of hiding a pin.
+    /// `expired_tx` receives transaction keys that must be removed on apply.
+    pub(crate) fn compute_reachability(
+        &self,
+        now_ns: i64,
+        expired_tx: &mut Vec<Key>,
+        problems: &mut Vec<String>,
+    ) -> Result<Reachability> {
+        let mut reach = Reachability::default();
+        let tx_grace_ns = self.options.gc_grace_secs.saturating_mul(1_000_000_000);
+        let tx_keys =
+            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Tx)))?;
+        if tx_keys.len() > 4096 {
+            return Err(Error::limit_exceeded(format!(
+                "{} prepared transaction records exceed the 4096-record GC bound",
+                tx_keys.len()
+            )));
+        }
+        let mut seen_pin = BTreeSet::new();
+        for key in tx_keys {
+            let bytes = self.with_backend(|backend| backend.read_all(&key))?;
+            let record = crate::mw2::decode_tx_record(&bytes)?;
+            let age_ns =
+                u64::try_from(now_ns.saturating_sub(record.updated_ns)).unwrap_or(u64::MAX);
+            if record.state == crate::mw2::TxRecordState::Prepared && age_ns <= tx_grace_ns {
+                let origin = format!("transaction:{}", record.id);
+                for pin in &record.pins {
+                    mark_manifest_tree(self, *pin, &mut reach, &origin, problems, 0, &mut seen_pin);
+                }
+            } else {
+                expired_tx.push(key);
+            }
+        }
+
+        mark_state(
+            self,
+            &self.state,
+            &mut reach,
+            &format!("head:{}", self.head.to_hex()),
+            problems,
+        );
+
+        let mut snapshot_commits: Vec<Hash32> = self.state.snapshots.values().copied().collect();
+        snapshot_commits.sort_unstable();
+        for commit in snapshot_commits {
+            match self.state_at(commit) {
+                Ok(state) => mark_state(
+                    self,
+                    &state,
+                    &mut reach,
+                    &format!("snapshot:{}", commit.to_hex()),
+                    problems,
+                ),
+                Err(err) => problems.push(format!("snapshot {commit} state is unreadable: {err}")),
+            }
+        }
+
+        // Checkpoints are roots even for rejected/unpublished generations:
+        // they are immutable evidence and are never swept by inference.
+        let mut commits =
+            self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))?;
+        commits.sort_by_key(|commit| commit.generation);
+        for commit in commits {
+            if let Some(checkpoint) = commit.commit.checkpoint {
+                let origin = format!("checkpoint:{}", checkpoint.to_hex());
+                reach.mark_manifest(checkpoint, &origin);
+                match self
+                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
+                {
+                    Ok(state) => mark_state(self, &state, &mut reach, &origin, problems),
+                    Err(err) => {
+                        problems.push(format!("checkpoint {checkpoint} is unreadable: {err}"))
+                    }
+                }
+            }
+        }
+
+        // Content pins held by open read handles are roots even if the object
+        // record has already been removed from state.
+        let mut pinned_contents: Vec<Hash32> = self.content_pins.keys().copied().collect();
+        pinned_contents.sort_unstable();
+        for content in pinned_contents {
+            let mut seen = BTreeSet::new();
+            mark_manifest_tree(
+                self,
+                content,
+                &mut reach,
+                &format!("pin:{}", content.to_hex()),
+                problems,
+                0,
+                &mut seen,
+            );
+        }
+        Ok(reach)
+    }
+
     /// Mark-and-sweep GC over unreachable chunks and manifests.
     ///
     /// Roots: current state, every snapshot commit state, and every checkpoint
@@ -7179,113 +7327,12 @@ impl Store {
             }
         }
 
-        let mut marked_manifests: BTreeSet<Hash32> = BTreeSet::new();
-        let mut marked_chunks: BTreeSet<Hash32> = BTreeSet::new();
-
-        // MW2: a live prepared transaction pins the manifests its ops name.
-        // Without this a concurrent sweep could reclaim a blob the eventual
-        // commit references (the TLA+ GC-flaw counterexample models exactly
-        // this). Expired records are abandoned and may be removed on apply.
-        // A corrupt record fails the whole pass closed rather than hiding a
-        // pin.
-        let tx_grace_ns = self.options.gc_grace_secs.saturating_mul(1_000_000_000);
-        let tx_keys =
-            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Tx)))?;
-        if tx_keys.len() > 4096 {
-            return Err(Error::limit_exceeded(format!(
-                "{} prepared transaction records exceed the 4096-record GC bound",
-                tx_keys.len()
-            )));
-        }
-        let now_ns = self.now_ns();
         let mut expired_tx: Vec<Key> = Vec::new();
-        let mut seen_pin = BTreeSet::new();
-        for key in tx_keys {
-            let bytes = self.with_backend(|backend| backend.read_all(&key))?;
-            let record = crate::mw2::decode_tx_record(&bytes)?;
-            let age_ns =
-                u64::try_from(now_ns.saturating_sub(record.updated_ns)).unwrap_or(u64::MAX);
-            if record.state == crate::mw2::TxRecordState::Prepared && age_ns <= tx_grace_ns {
-                for pin in &record.pins {
-                    mark_manifest_tree(
-                        self,
-                        *pin,
-                        &mut marked_manifests,
-                        &mut marked_chunks,
-                        &mut report.problems,
-                        0,
-                        &mut seen_pin,
-                    );
-                }
-            } else {
-                expired_tx.push(key);
-            }
-        }
+        let reach =
+            self.compute_reachability(self.now_ns(), &mut expired_tx, &mut report.problems)?;
 
-        mark_state(
-            self,
-            &self.state,
-            &mut marked_manifests,
-            &mut marked_chunks,
-            &mut report.problems,
-        );
-
-        let snapshot_commits: Vec<Hash32> = self.state.snapshots.values().copied().collect();
-        for commit in snapshot_commits {
-            match self.state_at(commit) {
-                Ok(state) => mark_state(
-                    self,
-                    &state,
-                    &mut marked_manifests,
-                    &mut marked_chunks,
-                    &mut report.problems,
-                ),
-                Err(err) => report
-                    .problems
-                    .push(format!("snapshot {commit} state is unreadable: {err}")),
-            }
-        }
-
-        // Checkpoints are roots even for rejected/unpublished generations:
-        // they are immutable evidence and are never swept by inference.
-        for commit in self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))? {
-            if let Some(checkpoint) = commit.commit.checkpoint {
-                marked_manifests.insert(checkpoint);
-                match self
-                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
-                {
-                    Ok(state) => mark_state(
-                        self,
-                        &state,
-                        &mut marked_manifests,
-                        &mut marked_chunks,
-                        &mut report.problems,
-                    ),
-                    Err(err) => report
-                        .problems
-                        .push(format!("checkpoint {checkpoint} is unreadable: {err}")),
-                }
-            }
-        }
-
-        // Content pins held by open read handles are roots even if the object
-        // record has already been removed from state.
-        let pinned_contents: Vec<Hash32> = self.content_pins.keys().copied().collect();
-        for content in pinned_contents {
-            let mut seen = BTreeSet::new();
-            mark_manifest_tree(
-                self,
-                content,
-                &mut marked_manifests,
-                &mut marked_chunks,
-                &mut report.problems,
-                0,
-                &mut seen,
-            );
-        }
-
-        report.marked_manifests = marked_manifests.len() as u64;
-        report.marked_chunks = marked_chunks.len() as u64;
+        report.marked_manifests = reach.manifests.len() as u64;
+        report.marked_chunks = reach.chunks.len() as u64;
 
         let now = SystemTime::now();
         let grace = self.options.gc_grace_secs;
@@ -7293,7 +7340,7 @@ impl Store {
         candidates.extend(collect_unmarked(
             self,
             KeyKind::Manifest,
-            &marked_manifests,
+            &reach.manifests,
             now,
             grace,
             &mut report,
@@ -7301,7 +7348,7 @@ impl Store {
         candidates.extend(collect_unmarked(
             self,
             KeyKind::Object,
-            &marked_chunks,
+            &reach.chunks,
             now,
             grace,
             &mut report,
@@ -8265,6 +8312,12 @@ impl Store {
             .ok()
             .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
             .unwrap_or(0)
+    }
+
+    /// True while a group commit is open. Retention GC refuses to run then
+    /// because it physically deletes blobs a rollback could restore.
+    pub(crate) fn in_group(&self) -> bool {
+        self.group_depth != 0
     }
 
     fn write_genesis(&mut self) -> Result<()> {
@@ -10150,8 +10203,8 @@ fn strip_tensor_attrs(attrs: &mut BTreeMap<String, Value>) {
 fn mark_state(
     store: &Store,
     state: &State,
-    manifests: &mut BTreeSet<Hash32>,
-    chunks: &mut BTreeSet<Hash32>,
+    reach: &mut Reachability,
+    origin: &str,
     problems: &mut Vec<String>,
 ) {
     for record in state.objects.values() {
@@ -10161,7 +10214,7 @@ fn mark_state(
         if let Some(Value::Bytes(bytes)) = record.attrs.get(crate::state::ATTR_CAUSAL_HASH) {
             if let Ok(hash) = Hash32::from_slice(bytes) {
                 if hash != Hash32::ZERO {
-                    manifests.insert(hash);
+                    reach.mark_manifest(hash, origin);
                 }
             }
         }
@@ -10169,15 +10222,7 @@ fn mark_state(
             continue;
         }
         let mut seen = BTreeSet::new();
-        mark_manifest_tree(
-            store,
-            record.content,
-            manifests,
-            chunks,
-            problems,
-            0,
-            &mut seen,
-        );
+        mark_manifest_tree(store, record.content, reach, origin, problems, 0, &mut seen);
     }
 
     // Authenticated capability envelopes are retained while their attachment
@@ -10193,7 +10238,7 @@ fn mark_state(
             .get(crate::state::CAPABILITY_ENVELOPE_BLOB_ATTR)
         {
             if let Ok(hash) = Hash32::from_hex(text) {
-                manifests.insert(hash);
+                reach.mark_manifest(hash, origin);
             }
         }
     }
@@ -10222,7 +10267,7 @@ fn mark_state(
             continue;
         }
         // Fail safe: keep the record blob even if it cannot be parsed.
-        manifests.insert(id);
+        reach.mark_manifest(id, origin);
         match store.with_backend(|backend| crate::provenance::read_provenance_via(backend, id)) {
             Ok(record) => {
                 for input in &record.inputs {
@@ -10231,10 +10276,10 @@ fn mark_state(
                         .and_then(|object| state.objects.get(&object))
                         .map(|object| object.content)
                         .unwrap_or(input.content);
-                    mark_content_root_if_present(store, root, manifests, chunks, problems);
+                    mark_content_root_if_present(store, root, reach, origin, problems);
                 }
                 for output in &record.outputs {
-                    mark_content_root_if_present(store, *output, manifests, chunks, problems);
+                    mark_content_root_if_present(store, *output, reach, origin, problems);
                 }
             }
             Err(err) => problems.push(format!("cannot read provenance {id}: {err}")),
@@ -10247,8 +10292,8 @@ fn mark_state(
 fn mark_content_root_if_present(
     store: &Store,
     root: Hash32,
-    manifests: &mut BTreeSet<Hash32>,
-    chunks: &mut BTreeSet<Hash32>,
+    reach: &mut Reachability,
+    origin: &str,
     problems: &mut Vec<String>,
 ) {
     if root == Hash32::ZERO {
@@ -10257,7 +10302,7 @@ fn mark_content_root_if_present(
     match store.with_backend(|backend| backend.exists(&Key::manifest(root))) {
         Ok(true) => {
             let mut seen = BTreeSet::new();
-            mark_manifest_tree(store, root, manifests, chunks, problems, 0, &mut seen);
+            mark_manifest_tree(store, root, reach, origin, problems, 0, &mut seen);
         }
         Ok(false) => {}
         Err(err) => problems.push(format!("cannot stat manifest {root}: {err}")),
@@ -10266,11 +10311,12 @@ fn mark_content_root_if_present(
 
 /// Mark a manifest and everything it physically references: raw chunks, the
 /// codec frame blob, and (transitively, bounded) dependency content roots.
-fn mark_manifest_tree(
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mark_manifest_tree(
     store: &Store,
     manifest_id: Hash32,
-    manifests: &mut BTreeSet<Hash32>,
-    chunks: &mut BTreeSet<Hash32>,
+    reach: &mut Reachability,
+    origin: &str,
     problems: &mut Vec<String>,
     depth: usize,
     seen: &mut BTreeSet<Hash32>,
@@ -10285,7 +10331,7 @@ fn mark_manifest_tree(
         problems.push(format!("manifest {manifest_id} participates in a cycle"));
         return;
     }
-    manifests.insert(manifest_id);
+    reach.mark_manifest(manifest_id, origin);
     match store.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id)) {
         Ok(manifest) => {
             if let Some(rep) = &manifest.representation {
@@ -10297,14 +10343,14 @@ fn mark_manifest_tree(
                         return;
                     }
                     if let Some(frame) = rep.frame {
-                        manifests.insert(frame);
+                        reach.mark_manifest(frame, origin);
                     }
                     for dependency in &rep.dependencies {
                         mark_manifest_tree(
                             store,
                             *dependency,
-                            manifests,
-                            chunks,
+                            reach,
+                            origin,
                             problems,
                             depth + 1,
                             seen,
@@ -10321,14 +10367,14 @@ fn mark_manifest_tree(
                     };
                     for extent in &overlay.extents {
                         for chunk in &extent.chunks {
-                            chunks.insert(chunk.hash);
+                            reach.mark_chunk(chunk.hash, origin);
                         }
                     }
                     mark_manifest_tree(
                         store,
                         overlay.base,
-                        manifests,
-                        chunks,
+                        reach,
+                        origin,
                         problems,
                         depth + 1,
                         seen,
@@ -10337,7 +10383,7 @@ fn mark_manifest_tree(
                 }
             }
             for chunk in manifest.chunks {
-                chunks.insert(chunk.hash);
+                reach.mark_chunk(chunk.hash, origin);
             }
         }
         Err(err) => problems.push(format!("cannot read manifest {manifest_id}: {err}")),
@@ -10397,7 +10443,7 @@ fn collect_unreachable_indexes(
     Ok(out)
 }
 
-fn collect_unmarked(
+pub(crate) fn collect_unmarked(
     store: &Store,
     kind: KeyKind,
     marked: &BTreeSet<Hash32>,

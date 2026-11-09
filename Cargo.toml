@@ -53,6 +53,10 @@ libc = "0.2"
 # rustls-backed; the court talks plain HTTP to MinIO, while a real endpoint can
 # use HTTPS. No ASGI/async runtime is pulled in.
 ureq = { version = "2.12", default-features = false, features = ["tls"] }
+# Optional Ed25519 signatures on retention bindings (subphase R6). Already in
+# the dependency graph through `weftcodec`'s capability envelopes, so no new
+# crate is fetched.
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
 
 [features]
 fuse = ["dep:fuser", "dep:ctrlc", "dep:log"]

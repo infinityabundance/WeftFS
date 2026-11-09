@@ -66,6 +66,7 @@ pub mod recovery;
 pub mod recovery_first;
 pub mod representation;
 pub mod restore_pipeline;
+pub mod retention;
 pub mod s3;
 pub mod safetensors;
 pub mod service_account;
@@ -130,6 +131,10 @@ pub use recovery_first::{
     CachedTensor, RecoveryFirstOptions, RecoveryFirstReport, RECOVERY_CACHE_SCHEMA,
 };
 pub use restore_pipeline::{run_ordered_pipeline, RestorePipelineOptions, RestorePipelineStats};
+pub use retention::{
+    RetainedArtifact, RetentionBinding, RetentionCandidate, RetentionClass, RetentionClassSummary,
+    RetentionGcPlan, RetentionPointer, RetentionRequest, RetentionSignature,
+};
 pub use s3::{S3Backend, S3Config};
 pub use singleflight::{
     CancelToken, ReconstructionKey, RegionKey, SingleFlightOptions, SingleFlightStats,

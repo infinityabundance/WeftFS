@@ -39,6 +39,7 @@ use weftfs::provenance::{
     ProvenanceRecord, PROVENANCE_SCHEMA,
 };
 use weftfs::quota::{parse_quota_file, QuotaPrincipal};
+use weftfs::retention::{RetentionClass, RetentionGcPlan, RetentionRequest};
 use weftfs::s3::S3Config;
 use weftfs::state::{
     object_causal_closure, ObjectKind, RelationTarget, ATTR_CAUSAL_HASH, ATTR_IDENTITY_MODE,
@@ -1007,6 +1008,11 @@ enum Command {
         #[command(subcommand)]
         command: KvCommand,
     },
+    /// Retention bindings and class-aware GC (`spec/WEFT-RETENTION.md`).
+    Retention {
+        #[command(subcommand)]
+        command: RetentionCommand,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1421,6 +1427,73 @@ enum ProvenanceCommand {
         target: String,
         #[arg(long, default_value_t = 8)]
         depth: u32,
+    },
+}
+
+#[derive(Subcommand)]
+enum RetentionCommand {
+    /// Publish (or rebind) a retention binding for an artifact. Nothing about
+    /// the artifact's identity, content root, or bytes changes.
+    Set {
+        /// Artifact provenance descriptor root (64 hex).
+        #[arg(long = "descriptor-root")]
+        descriptor_root: Option<String>,
+        /// Instead of a root, resolve the descriptor root from this object.
+        #[arg(long)]
+        object: Option<String>,
+        /// volatile | session | ephemeral | durable.
+        #[arg(long)]
+        class: String,
+        /// Declared useful lifetime in milliseconds (omitted for durable).
+        #[arg(long = "lifetime-ms")]
+        lifetime_ms: Option<u64>,
+        /// The producing run.
+        #[arg(long)]
+        producer: String,
+        /// Monotonic policy generation (must not decrease on a rebind).
+        #[arg(long = "policy-epoch", default_value_t = 0)]
+        policy_epoch: u64,
+        /// Explicit issue instant (nanoseconds); default: the store clock.
+        #[arg(long = "issued-at-ns")]
+        issued_at_ns: Option<i64>,
+        /// Sign the binding with this 32-byte Ed25519 seed (64 hex).
+        #[arg(long = "sign-seed-hex")]
+        sign_seed_hex: Option<String>,
+        /// Require the embedded key to be one of these (repeatable, 64 hex).
+        #[arg(long = "trust-key-hex")]
+        trust_keys_hex: Vec<String>,
+    },
+    /// Show the current binding for an artifact.
+    Show {
+        #[arg(long = "descriptor-root")]
+        descriptor_root: Option<String>,
+        #[arg(long)]
+        object: Option<String>,
+    },
+    /// Follow `supersedes` from the current binding, newest first.
+    History {
+        #[arg(long = "descriptor-root")]
+        descriptor_root: Option<String>,
+        #[arg(long)]
+        object: Option<String>,
+        #[arg(long, default_value_t = 64)]
+        limit: usize,
+    },
+    /// Dry-run class-aware GC: reachability first, then class ordering.
+    Plan {
+        #[arg(long = "budget-bytes")]
+        budget_bytes: Option<u64>,
+        #[arg(long = "now-ns")]
+        now_ns: Option<i64>,
+    },
+    /// Run class-aware GC. Without `--apply` this is a dry run.
+    Gc {
+        #[arg(long)]
+        apply: bool,
+        #[arg(long = "budget-bytes")]
+        budget_bytes: Option<u64>,
+        #[arg(long = "now-ns")]
+        now_ns: Option<i64>,
     },
 }
 
@@ -3199,6 +3272,7 @@ fn run(cli: Cli) -> Result<()> {
         ),
         Command::Capability { command } => run_capability(&store, json, policy, command),
         Command::Kv { command } => run_kv(&store, json, policy, command),
+        Command::Retention { command } => run_retention(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -6686,6 +6760,337 @@ fn run_provenance(
                 Ok(())
             }
         }
+    }
+}
+
+fn run_retention(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: RetentionCommand,
+) -> Result<()> {
+    match command {
+        RetentionCommand::Set {
+            descriptor_root,
+            object,
+            class,
+            lifetime_ms,
+            producer,
+            policy_epoch,
+            issued_at_ns,
+            sign_seed_hex,
+            trust_keys_hex,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let root = resolve_descriptor_root(&store, descriptor_root, object)?;
+            let class = RetentionClass::parse(&class)?;
+            let lifetime = match (class, lifetime_ms) {
+                (RetentionClass::Durable, None) => 0,
+                (RetentionClass::Durable, Some(value)) if value == 0 => 0,
+                (RetentionClass::Durable, Some(_)) => {
+                    return Err(Error::invalid_argument(
+                        "a durable binding declares no lifetime (omit --lifetime-ms or pass 0)",
+                    ))
+                }
+                (_, Some(value)) => value,
+                (_, None) => {
+                    return Err(Error::invalid_argument(format!(
+                        "a {} binding needs --lifetime-ms",
+                        class
+                    )))
+                }
+            };
+            let mut request = RetentionRequest::new(root, class, lifetime, producer);
+            request.policy_epoch = policy_epoch;
+            request.issued_at_ns = issued_at_ns;
+            if let Some(seed) = sign_seed_hex {
+                let bytes = Hash32::from_hex(&seed)
+                    .map_err(|_| Error::invalid_argument("--sign-seed-hex must be 64 hex chars"))?;
+                request.sign_seed = Some(*bytes.as_bytes());
+            }
+            if !trust_keys_hex.is_empty() {
+                let mut keys = Vec::with_capacity(trust_keys_hex.len());
+                for text in &trust_keys_hex {
+                    let key = Hash32::from_hex(text).map_err(|_| {
+                        Error::invalid_argument("--trust-key-hex must be 64 hex chars")
+                    })?;
+                    keys.push(*key.as_bytes());
+                }
+                request.trust_keys = Some(keys);
+            }
+            let id = store.set_retention(request)?;
+            let binding = store.retention_binding(id)?;
+            if json {
+                print_json(&json!({
+                    "retention_id": id.to_hex(),
+                    "descriptor_root": binding.descriptor_root.to_hex(),
+                    "class": binding.class.as_str(),
+                    "declared_lifetime_ms": binding.declared_lifetime_ms,
+                    "producer": binding.producer,
+                    "policy_epoch": binding.policy_epoch,
+                    "issued_at_ns": binding.issued_at_ns,
+                    "supersedes": binding.supersedes.map(|hash| hash.to_hex()),
+                    "generation": store.generation(),
+                }))
+            } else {
+                println!("retention_id={id}");
+                println!("descriptor_root={}", binding.descriptor_root);
+                println!("class={}", binding.class.as_str());
+                println!("declared_lifetime_ms={}", binding.declared_lifetime_ms);
+                println!(
+                    "supersedes={}",
+                    binding
+                        .supersedes
+                        .map(|hash| hash.to_hex())
+                        .unwrap_or_else(|| "-".to_owned())
+                );
+                Ok(())
+            }
+        }
+        RetentionCommand::Show {
+            descriptor_root,
+            object,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let root = resolve_descriptor_root(&store, descriptor_root, object)?;
+            let binding = store
+                .retention_of(root)?
+                .ok_or_else(|| Error::not_found(format!("no retention binding for {root}")))?;
+            if json {
+                print_json(&json!({
+                    "descriptor_root": root.to_hex(),
+                    "retention_id": binding.id()?.to_hex(),
+                    "record": value_to_json(&binding.to_value()),
+                }))
+            } else {
+                println!("descriptor_root={root}");
+                println!("retention_id={}", binding.id()?);
+                println!("class={}", binding.class.as_str());
+                println!("declared_lifetime_ms={}", binding.declared_lifetime_ms);
+                println!("producer={}", binding.producer);
+                println!("policy_epoch={}", binding.policy_epoch);
+                println!("issued_at_ns={}", binding.issued_at_ns);
+                println!(
+                    "supersedes={}",
+                    binding
+                        .supersedes
+                        .map(|hash| hash.to_hex())
+                        .unwrap_or_else(|| "-".to_owned())
+                );
+                Ok(())
+            }
+        }
+        RetentionCommand::History {
+            descriptor_root,
+            object,
+            limit,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let root = resolve_descriptor_root(&store, descriptor_root, object)?;
+            let history = store.retention_history(root, limit)?;
+            if json {
+                let rows: Vec<_> = history
+                    .iter()
+                    .map(|(id, binding)| {
+                        json!({
+                            "retention_id": id.to_hex(),
+                            "class": binding.class.as_str(),
+                            "declared_lifetime_ms": binding.declared_lifetime_ms,
+                            "producer": binding.producer,
+                            "policy_epoch": binding.policy_epoch,
+                            "issued_at_ns": binding.issued_at_ns,
+                            "supersedes": binding.supersedes.map(|hash| hash.to_hex()),
+                        })
+                    })
+                    .collect();
+                print_json(&json!({
+                    "descriptor_root": root.to_hex(),
+                    "count": rows.len(),
+                    "history": rows,
+                }))
+            } else {
+                println!("descriptor_root={root}");
+                println!("count={}", history.len());
+                for (id, binding) in &history {
+                    println!(
+                        "binding id={id} class={} lifetime_ms={} epoch={} issued_at_ns={}",
+                        binding.class.as_str(),
+                        binding.declared_lifetime_ms,
+                        binding.policy_epoch,
+                        binding.issued_at_ns
+                    );
+                }
+                Ok(())
+            }
+        }
+        RetentionCommand::Plan {
+            budget_bytes,
+            now_ns,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let now = now_ns.unwrap_or_else(cli_now_ns);
+            let plan = store.gc_plan(now, budget_bytes)?;
+            print_retention_plan(&plan, json)
+        }
+        RetentionCommand::Gc {
+            apply,
+            budget_bytes,
+            now_ns,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let now = now_ns.unwrap_or_else(cli_now_ns);
+            let plan = store.retention_gc(apply, now, budget_bytes)?;
+            print_retention_plan(&plan, json)
+        }
+    }
+}
+
+fn cli_now_ns() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
+        .unwrap_or(0)
+}
+
+fn resolve_descriptor_root(
+    store: &Store,
+    descriptor_root: Option<String>,
+    object: Option<String>,
+) -> Result<Hash32> {
+    match (descriptor_root, object) {
+        (Some(text), None) => Hash32::from_hex(&text)
+            .map_err(|_| Error::invalid_argument("--descriptor-root must be 64 hex chars")),
+        (None, Some(target)) => {
+            let object = find_object_by_identity(store, &target)?;
+            let descriptor = store.kv_prov_descriptor(object.id)?;
+            Ok(descriptor.provenance_root)
+        }
+        (Some(_), Some(_)) => Err(Error::invalid_argument(
+            "pass either --descriptor-root or --object, not both",
+        )),
+        (None, None) => Err(Error::invalid_argument(
+            "one of --descriptor-root or --object is required",
+        )),
+    }
+}
+
+fn print_retention_plan(plan: &RetentionGcPlan, json: bool) -> Result<()> {
+    if json {
+        let classes: Vec<_> = plan
+            .classes
+            .iter()
+            .map(|summary| {
+                json!({
+                    "class": summary.class,
+                    "reachable_artifacts": summary.reachable_artifacts,
+                    "reachable_blobs": summary.reachable_blobs,
+                    "reachable_bytes": summary.reachable_bytes,
+                    "retained_live_artifacts": summary.retained_live_artifacts,
+                    "retained_live_blobs": summary.retained_live_blobs,
+                    "retained_live_bytes": summary.retained_live_bytes,
+                    "reclaimable_artifacts": summary.reclaimable_artifacts,
+                    "reclaimable_blobs": summary.reclaimable_blobs,
+                    "reclaimable_bytes": summary.reclaimable_bytes,
+                })
+            })
+            .collect();
+        let retained: Vec<_> = plan
+            .retained
+            .iter()
+            .map(|artifact| {
+                json!({
+                    "descriptor_root": artifact.descriptor_root.to_hex(),
+                    "class": artifact.class,
+                    "binding": artifact.binding.to_hex(),
+                    "artifact": artifact.artifact.to_hex(),
+                    "expired": artifact.expired,
+                    "bytes": artifact.bytes,
+                    "reason": artifact.reason,
+                })
+            })
+            .collect();
+        let candidates: Vec<_> = plan
+            .candidates
+            .iter()
+            .map(|candidate| {
+                json!({
+                    "path": candidate.path,
+                    "bytes": candidate.bytes,
+                    "class": candidate.class,
+                    "descriptor_roots": candidate.descriptor_roots.iter().map(|hash| hash.to_hex()).collect::<Vec<_>>(),
+                    "expiry_ns": candidate.expiry_ns,
+                })
+            })
+            .collect();
+        print_json(&json!({
+            "schema": "weft.retention.plan.v1",
+            "applied": plan.applied,
+            "now_ns": plan.now_ns,
+            "budget_bytes": plan.budget_bytes,
+            "grace_secs": plan.grace_secs,
+            "reachable_manifests": plan.reachable_manifests,
+            "reachable_chunks": plan.reachable_chunks,
+            "classes": classes,
+            "retained": retained,
+            "candidates": candidates,
+            "planned_bytes": plan.planned_bytes,
+            "planned_blobs": plan.planned_blobs,
+            "over_budget_bytes": plan.over_budget_bytes,
+            "reclaimed_bytes": plan.reclaimed_bytes,
+            "reclaimed_blobs": plan.reclaimed_blobs,
+            "reclaimed_pack_bytes": plan.reclaimed_pack_bytes,
+            "problems": plan.problems,
+        }))
+    } else {
+        println!("applied={}", plan.applied);
+        println!("now_ns={}", plan.now_ns);
+        println!(
+            "budget_bytes={}",
+            plan.budget_bytes
+                .map(|value| value.to_string())
+                .unwrap_or_else(|| "none".to_owned())
+        );
+        println!("reachable weft.manifest={}", plan.reachable_manifests);
+        println!("reachable chunks={}", plan.reachable_chunks);
+        for summary in &plan.classes {
+            println!(
+                "class={} reachable_artifacts={} reachable_bytes={} retained_live_artifacts={} retained_live_bytes={} reclaimable_artifacts={} reclaimable_blobs={} reclaimable_bytes={}",
+                summary.class,
+                summary.reachable_artifacts,
+                summary.reachable_bytes,
+                summary.retained_live_artifacts,
+                summary.retained_live_bytes,
+                summary.reclaimable_artifacts,
+                summary.reclaimable_blobs,
+                summary.reclaimable_bytes
+            );
+        }
+        for artifact in &plan.retained {
+            println!(
+                "retained descriptor_root={} class={} expired={} bytes={} reason={}",
+                artifact.descriptor_root,
+                artifact.class,
+                artifact.expired,
+                artifact.bytes,
+                artifact.reason
+            );
+        }
+        for candidate in &plan.candidates {
+            println!(
+                "candidate path={} class={} bytes={}",
+                candidate.path, candidate.class, candidate.bytes
+            );
+        }
+        println!("planned_bytes={}", plan.planned_bytes);
+        println!("planned_blobs={}", plan.planned_blobs);
+        println!("over_budget_bytes={}", plan.over_budget_bytes);
+        println!("reclaimed_bytes={}", plan.reclaimed_bytes);
+        println!("reclaimed_blobs={}", plan.reclaimed_blobs);
+        for problem in &plan.problems {
+            println!("problem={problem}");
+        }
+        Ok(())
     }
 }
 
