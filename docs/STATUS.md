@@ -7777,3 +7777,137 @@ what the planner selects.**
   the passing reruns. A second run (`verify-20261110T170837Z.json`, 41/42) is
   retained because it found a `local` declaration outside a function in the new
   court script.
+
+## Subphase R11 — training goodput and time-to-safe-resume (2026-11-10)
+
+Full evidence and every loss:
+[`bench/RESULTS-training-goodput.md`](../bench/RESULTS-training-goodput.md).
+Receipt `bench/receipts/training-goodput-20261110T200930Z.json` (raw log
+beside it), measured at WeftFS `a40c17d` in `weft/python-court:1`
+(`sha256:aec5deb0…76152`), Linux `7.3.3-1-cachyos`, 3 GiB / 4 CPU / 1024 pids /
+1 GiB `/tmp`, `cap-drop=ALL`, **torch 2.15.0+cpu, no GPU**. No wire, frame,
+manifest, planner or store code changed.
+
+### The loop, not a fixture
+
+`python/courts/training_goodput.py` trains a real three-block transformer stack
+(414,432 parameters; explicit causal multi-head attention, GELU MLP,
+LayerNorm, token+position embeddings) with AdamW on a deterministic seeded
+next-token dataset: 256 steps, 5 repetitions, checkpoint every 64 steps (4
+checkpoints), batch 8 × sequence 48 × vocabulary 384. Fixed: seed, data,
+batch order, no dropout, one BLAS thread,
+`torch.use_deterministic_algorithms(True)`. Checkpoints are asynchronous in
+all configurations (clone + submit, encode on a worker, hard
+`staging_bytes=64 MiB`); the training thread never runs the encoder. All 15
+runs produced the same loss-bit trajectory and the same final state hash.
+
+### A / B / C on identical steps and data
+
+A = `torch.save` file, B = local PyTorch DCP directory, C = DCP through
+`weftcodec.dcp` / `save_checkpoint_async`. Medians of 5 runs; step p50/p95
+pooled over 1,245 clean steps per configuration.
+
+| metric | A | B | C (WeftFS) |
+|---|---:|---:|---:|
+| loop wall (ms) | **2,667.0** | 2,747.9 | 3,190.7 |
+| training steps/s (step sum) | 96.22 | 93.75 | **94.17** |
+| end-to-end steps/s (wall) | **95.99** | 93.16 | 80.23 |
+| step p50 / p95 (ms) | 10.12 / 10.63 | 10.07 / 10.85 | **10.02 / 10.58** |
+| save pause p50 / max (ms) | 0.68 / 0.86 | 0.74 / 0.96 | 3.41 / 3.70 |
+| save completion p50 (ms) | **3.86** | 20.11 | 444.13 |
+| final checkpoint completion (ms) | **3.61** | 18.35 | 459.02 |
+| step the save lands at | 1 | 1 | 29 |
+| physical bytes/checkpoint | 5,025,099 | 5,277,059 | **4,924,427** |
+| peak RSS (KiB) | **370,156** | 371,152 | 379,272 |
+| resume load p50 (ms) | **7.1** | 21.9 | 231.4 |
+
+The training steps are not slower (p50 10.02 vs 10.12/10.07 ms; p95 10.58 vs
+10.63/10.85). Training rates are **96.22 / 93.75 / 94.17 steps/s** in A/B/C.
+The wall deficit is the final in-flight checkpoint having no later step to
+overlap (472.5 ms post-loop tail vs 6.5/17.7); the WeftFS step sum is 2.2 %
+above A and 0.4 % below B. WeftFS writes 2.00 % fewer physical bytes per
+checkpoint than `torch.save` and 6.68 % fewer than DCP.
+
+### Why a WeftFS checkpoint is 444 ms
+
+Adapter spans: 380.2 ms `checkpoint_write_ms` (memfd handoff + service round
+trip + manifest verification), 284.5 ms bare service round trip (Rust candidate
+encode + group commit), ~64 ms Python staging/service start/metadata commit.
+A control in the receipt (`store_growth_probe`): a checkpoint in a **fresh
+store** is 210.5 ms (`checkpoint_write_ms` 186.8); the second and later
+checkpoints in the same store are 383.8/433.3/455.8 ms for the same 4.99 MB
+container. Per-checkpoint deltas are constant (manifest 4.59 MB, objects
+0.16 MB, commit 0.12 MB, index 62 KB), so the growth is store-state bookkeeping,
+not more data; this court measures it and does not localise it further.
+
+### Exactness and resumption
+
+Every checkpoint of every normal run was restored by a **fresh process**:
+**60/60** exact tensor/optimizer/step comparisons, **60/60** next-step loss
+bits, **45/45** post-step states (the last checkpoint of each run has no next
+step); cross-configuration loss trajectory and final state are identical.
+Staging bound is fail-closed: 1,024 B is refused with `StagingLimitExceeded`
+naming the tensor; the 64 MiB production bound accepts with a 147,456 B peak.
+
+SIGKILL court (WeftFS only, 3 repetitions per scenario; TTSR = kill → first
+completed optimizer step, including store discovery):
+
+| scenario | TTSR p50 / p95 (ms) | steps lost | exposed |
+|---|---:|---:|---|
+| kill after the 128 checkpoint was acked | 1,385.1 / 1,386.0 | 12 | 128 |
+| kill immediately after submit | 1,381.5 / 1,386.5 | 64 | 64 only (3/3); 128 absent |
+| kill 225 ms into the save | 1,366.5 / 1,371.6 | 64 | 64 only (3/3); 128 absent |
+| kill 405 ms into the save | 1,360.5 / 1,376.5 | 0 | 128 complete (3/3) |
+| kill 518 ms into the save | 1,379.4 / 1,398.6 | 0 | 128 complete (3/3) |
+
+All **15/15** kill runs resumed from a complete checkpoint (old-or-new, never
+partial); `checkpoint verify` and `verify --full` were clean, and every resumed
+state and next-step loss was exact. Of the ~1.36-1.39 s TTSR, store discovery is
+27-62 ms and the checkpoint load 217-231 ms; `import weftcodec.dcp` (including
+torch 2.15) alone is 889 ms in a fresh process. A long-lived worker that keeps
+torch imported is not implemented and is not claimed.
+
+### Losses
+
+* Loop wall **1.20×** `torch.save`, **1.16×** local DCP (mostly the final
+  checkpoint tail; step p50 is not slower).
+* Pause 3.41 ms vs 0.68/0.74 ms (4.6-4.9×), almost all of it the
+  `save_checkpoint_async` submit call; the clone is 0.59 ms.
+* Completion 444.1 ms: **22.1×** local DCP, **115×** the `torch.save` worker.
+* Later checkpoints in the same store cost 384-456 ms vs ~210 ms for the first
+  (store-state bookkeeping).
+* Resume load 231.4 ms, **10.6×** local DCP.
+* Worst single step 68.1 ms vs 15.2/15.5 ms (host scheduling/background encode
+  contention; the pause max is 3.70 ms).
+* Any kill loses the steps after the last acked checkpoint (12 or 64 here).
+* Peak RSS +2.5 % vs `torch.save`, +2.2 % vs DCP.
+
+### Gates at this change
+
+* Python court: **364 passed / 70 skipped / 0 failed** at `a40c17d`
+  (`PYTHONPATH=/work/python python3 -m pytest -q python/tests`), including the
+  new `python/tests/test_goodput_harness.py` 4/4 (exact capture/install,
+  deterministic data, loss bits, fail-closed staging bound). The court image
+  was rebuilt with numpy (`sha256:aec5deb0…76152`) so the documented tensor-view
+  test runs; numpy is present equally in all three configurations.
+* Three pre-existing drifts were found by this gate and fixed minimally: the
+  Orbax collection guard raised when the parent package was absent,
+  `test_service` asserted protocol 1 while the shipped protocol is 2, and the
+  Python reader's unimplemented-mode table omitted the new modes 19
+  (`KV_CACHE_PROV`) and 20 (`ENGRAM_SHARD`), so their vectors failed instead of
+  skipping.
+* Host gates: claims **820/820**, spec drift **57/57**, conformance manifest and
+  coverage **420 entries**.
+* Rust `cargo test --all-targets` was **not run**: no Rust library code changed
+  (the only non-Python changes are docs, the Dockerfile and the court's
+  environment-forwarding list).
+* `scripts/verify-all.sh` was not rerun; this court is standalone and is not
+  registered there.
+
+### Non-claims
+
+Single CPU host, no GPU or multi-rank/distributed claim; synthetic model/data;
+SIGKILL process faults, not physical power loss; single-writer MW1; no cloud
+backend; no production queueing/skip policy; TTSR includes fresh-process
+startup, with the store share reported separately. The court is standalone and
+is not part of `verify-all`.

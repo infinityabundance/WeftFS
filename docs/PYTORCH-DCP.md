@@ -304,7 +304,65 @@ returns in under a millisecond), but total completion is the same as the
 synchronous path; the current implementation does not overlap CLI work with
 the next tensor copy.
 
-## 7. Non-claims
+## 7. Training-loop goodput (R11)
+
+Receipt `bench/receipts/training-goodput-20261110T200930Z.json`,
+analysis `bench/RESULTS-training-goodput.md`, measured at WeftFS `a40c17d`
+in `weft/python-court:1` with **torch 2.15.0+cpu** (no GPU). The harness is
+`python/courts/training_goodput.py`; it trains a real 414,432-parameter
+transformer stack with AdamW for 256 steps, checkpoints every 64 steps with
+`save_checkpoint_async` (`topology=1`, `zstd`, `staging_bytes=64 MiB`), and
+compares three configurations on identical steps, seeds and batches:
+A `torch.save`, B local DCP, C this adapter. 5 repetitions each.
+
+| metric | A `torch.save` | B local DCP | C WeftFS |
+|---|---:|---:|---:|
+| loop wall (ms) | **2,667.0** | 2,747.9 | 3,190.7 |
+| step p50 / p95, pooled (ms) | 10.12 / 10.63 | 10.07 / 10.85 | **10.02 / 10.58** |
+| save pause p50 / max (ms) | 0.68 / 0.86 | 0.74 / 0.96 | 3.41 / 3.70 |
+| save completion p50 (ms) | **3.86** | 20.11 | 444.13 |
+| physical bytes/checkpoint | 5,025,099 | 5,277,059 | **4,924,427** |
+| resume load p50 (ms) | **7.1** | 21.9 | 231.4 |
+| peak RSS max (KiB) | **370,156** | 371,152 | 379,272 |
+
+The training thread never runs the encoder: the pause is a 0.59 ms state clone
+plus the async submit (3.41 ms p50 total). The pooled step p50 is not slower;
+the loop-wall deficit is dominated by the **final** in-flight checkpoint, which
+has no later step to overlap (472.5 ms post-loop tail vs 6.5/17.7 ms). WeftFS
+writes 2.00 % fewer physical bytes per checkpoint than `torch.save` and 6.68 %
+fewer than DCP.
+
+A checkpoint completion is 444.1 ms: 380.2 ms adapter-recorded
+`checkpoint_write_ms`, 284.5 ms bare service round trip, ~64 ms Python staging /
+service start / metadata commit. A control in the receipt shows a first
+checkpoint in a fresh store at 210.5 ms and the second and later in the same
+store at 384-456 ms for the same 4.99 MB container, with constant per-checkpoint
+deltas; the growth is store-state bookkeeping, not more data.
+
+**Exactness:** every one of the 4 checkpoints of every one of the 15 normal
+runs was restored by a fresh process: 60/60 exact parameter/optimizer/step
+comparisons, 60/60 next-step loss bits, 45/45 post-step states (the last
+checkpoint has no next step), and identical loss trajectory/final state across
+configurations.
+
+**Time-to-safe-resume:** SIGKILL after an acknowledged checkpoint resumes in
+**1.385 s p50** (12 steps lost); killing immediately or 225 ms into a save
+exposes only the previous complete checkpoint (3/3 each, 64 steps lost);
+killing 405/518 ms into a save exposes the new complete checkpoint (3/3, 0
+steps lost). All 15/15 kill runs were exact with a clean `verify --full`; the
+store never exposed a partial checkpoint. Of the ~1.36-1.39 s, discovery is
+27-62 ms and the load 217-231 ms; `import weftcodec.dcp` (including torch) is
+889 ms in a fresh process. A persistent worker is not implemented and is not
+claimed.
+
+Losses: wall 1.20× `torch.save` and 1.16× DCP (final-checkpoint tail); pause
+4.6-4.9× the baselines in relative terms (3.41 ms absolute); completion 22.1×
+DCP and 115× `torch.save`; resume load 10.6× DCP; later same-store checkpoints
+2× the first; worst single step 68.1 ms vs 15.2/15.5 ms; any kill loses the
+steps after the last acked checkpoint. Single CPU host, synthetic data,
+SIGKILL not power loss, single-writer store; no GPU or distributed claim.
+
+## 8. Non-claims
 
 * Not a GPU-direct or zero-copy path; tensors are copied through host memory.
 * No multi-rank distributed training or cluster test was run. All tests call

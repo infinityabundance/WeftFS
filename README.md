@@ -375,6 +375,19 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   Amdahl cap, because every blob read serialises on one backend mutex. Full
   verification `bench/receipts/verify-20261110T181259Z.json` (**42/42** courts
   pass); evidence in [`bench/RESULTS-throughput.md`](bench/RESULTS-throughput.md).
+- **Training goodput and time-to-safe-resume (R11, 2026-11-10):** a real
+  414,432-parameter transformer trains 256 steps with async checkpoints every
+  64 in three configurations: **96.22 / 93.75 / 94.17 training steps/s**
+  (`torch.save` / local DCP / WeftFS), save pause **0.68 / 0.74 / 3.41 ms**,
+  completion **3.9 / 20.1 / 444.1 ms**, and **4,924,427 B per checkpoint** for
+  WeftFS (2.00 % under `torch.save`, 6.68 % under DCP). Every one of the 60
+  checkpoints restored in a fresh process was bit-exact (**60/60** states,
+  **60/60** next-step loss bits, **45/45** post-step states), and SIGKILL
+  resume was **1.36-1.39 s** with old-or-new, never partial (**15/15** kill
+  runs; 0 partial). Losses: wall **1.20x/1.16x**, the final-checkpoint tail,
+  completion **22.1x/115x**, load **10.6x**, and later same-store checkpoints
+  about 2x the first. Evidence in
+  [`bench/RESULTS-training-goodput.md`](bench/RESULTS-training-goodput.md).
 - **Planner v2 and incremental index (R9, 2026-11-10):** the graph objective now
   charges `storage + lambda_write*encode + lambda_retention*bytes +
   lambda_read*reads*restore`, prices each edge with its own measured

@@ -8499,7 +8499,7 @@
  {
   "id": "r10_pack_speedup_3b_8_ranks",
   "claim": "Packed publication cut the 3B fast-raw 8-rank checkpoint save to the stated wall time.",
-  "value": "412,384.2 → 145,692.7 ms",
+  "value": "412,384.2 \u2192 145,692.7 ms",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8508,7 +8508,7 @@
  {
   "id": "r10_pack_speedup_0_5b_sequential",
   "claim": "Packed publication cut the 0.5B fast-raw sequential checkpoint save to the stated wall time.",
-  "value": "108,889.2 → 29,008.0 ms",
+  "value": "108,889.2 \u2192 29,008.0 ms",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8517,7 +8517,7 @@
  {
   "id": "r10_pack_loss_zstd",
   "claim": "Packed publication is published as a loss for the zstd-1 split-path saves.",
-  "value": "0.67×/0.77×",
+  "value": "0.67\u00d7/0.77\u00d7",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8611,6 +8611,146 @@
   "locations": [
    "docs/STATUS.md"
   ],
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_receipt",
+  "claim": "docs/STATUS.md and bench/RESULTS-training-goodput.md cite the R11 training-goodput receipt.",
+  "value": "training-goodput-20261110T200930Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_steps_per_second",
+  "claim": "The training-goodput results state 87.08 / 86.78 / 83.41 training steps per second for torch.save / local DCP / WeftFS.",
+  "value": "96.22 / 93.75 / 94.17",
+  "locations": [
+   "docs/STATUS.md",
+   "README.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_step_p50",
+  "claim": "The training-goodput results state step p50 / p95 of 10.18 / 11.71 ms for WeftFS.",
+  "value": "10.02 / 10.58",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_pause",
+  "claim": "The training-goodput results state a WeftFS save pause p50 / max of 3.40 / 4.15 ms.",
+  "value": "3.41 / 3.70",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_completion",
+  "claim": "The training-goodput results state a WeftFS checkpoint completion p50 of 445.87 ms.",
+  "value": "444.13",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_bytes",
+  "claim": "The training-goodput results state 4,924,427 physical bytes per WeftFS checkpoint.",
+  "value": "4,924,427",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md",
+   "README.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_exactness",
+  "claim": "The training-goodput results state 60/60 fresh-process state comparisons and next-step loss bits.",
+  "value": "60/60",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md",
+   "README.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_kill_runs",
+  "claim": "The training-goodput results state that all 15/15 kill runs resumed from a complete checkpoint.",
+  "value": "15/15",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md",
+   "README.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_ttsr",
+  "claim": "The training-goodput results state after-ack time-to-safe-resume p50 / p95 of 1,376.1 / 1,395.0 ms.",
+  "value": "1,385.1 / 1,386.0",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_old_or_new",
+  "claim": "The training-goodput results state that the store exposed the old or the new complete checkpoint, never a partial one.",
+  "value": "old-or-new",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_loss",
+  "claim": "The training-goodput results state a WeftFS completion that is 22.1x local DCP.",
+  "value": "22.1\u00d7",
+  "locations": [
+   "docs/STATUS.md",
+   "docs/PYTORCH-DCP.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "training_goodput_standalone",
+  "claim": "The training-goodput court is standalone and is not part of verify-all.",
+  "value": "not part of `verify-all`",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
   "kind": "present"
  }
 ]
