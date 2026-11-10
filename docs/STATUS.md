@@ -7634,9 +7634,9 @@ the other's delta chain; no Go timing is claimed.
 
 ### Gates at this change
 
-* Rust `cargo test --all-targets`: **722 passed / 0 failed / 0 ignored**
+* Rust `cargo test --all-targets`: **723 passed / 0 failed / 0 ignored**
   across 148 suites.
-* FUSE `cargo test --features fuse --all-targets`: **765 passed / 0 failed /
+* FUSE `cargo test --features fuse --all-targets`: **766 passed / 0 failed /
   2 pre-existing ignored** across 148 suites.
 * Go `go test -race -count=1`: `store` **ok (215.2 s)**, `cmd/weftfs` ok,
   `fusefs` ok, `index` ok, `model` ok. One full-suite run
