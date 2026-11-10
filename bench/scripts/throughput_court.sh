@@ -37,6 +37,10 @@ restore_threads="${WEFT_THROUGHPUT_RESTORE_THREADS:-1 2 4 8}"
 tile_threads="${WEFT_THROUGHPUT_TILE_THREADS:-1 4}"
 shards="${WEFT_THROUGHPUT_SHARDS:-8}"
 save_configs="${WEFT_THROUGHPUT_SAVE_CONFIGS:-raw zstd planned}"
+# Reduced aggregate runs ingest a tensor prefix (`--limit`) instead of the whole
+# family; the receipt records the limit and its own concatenated digest covers
+# exactly the selected tensors.
+ingest_limit="${WEFT_THROUGHPUT_INGEST_LIMIT:-}"
 
 corpus="$root/.docker-cache/real-corpus"
 mkdir -p "$work" bench/receipts
@@ -125,13 +129,17 @@ for family in $families; do
   done
 
   # ---- ingest phase breakdown (per tensor and per checkpoint) -------------
-  echo "== ingest $family (phase profile, $reps rep) =="
+  echo "== ingest $family (phase profile, $reps rep, limit=${ingest_limit:-all}) =="
+  local ingest_limit_args=()
+  if [[ -n "$ingest_limit" ]]; then
+    ingest_limit_args=(--limit "$ingest_limit")
+  fi
   WEFT_PHASE_PROFILE=1 "$bin" ingest \
     --store "$family_work/ingest-store" \
     --base-file "$model" --next-file "$model" \
     --family "$family-throughput" --variant throughput \
     --access-pattern whole --lambda-ns 0 \
-    --reps "$reps" --no-snapshot \
+    --reps "$reps" --no-snapshot "${ingest_limit_args[@]}" \
     --out "$family_work/ingest.json"
   add_input "ingest_${family}=$family_work/ingest.json"
 

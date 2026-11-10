@@ -8455,5 +8455,162 @@
   ],
   "receipt": "bench/receipts/index-chain-20261110T050010Z.json",
   "kind": "present"
+ },
+ {
+  "id": "r10_receipt_0_5b",
+  "claim": "The R10 throughput court's Qwen2.5-0.5B receipt is cited by STATUS and the R10 results note.",
+  "value": "throughput-20261110T134917Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-throughput.md"
+  ],
+  "receipt": "bench/receipts/throughput-20261110T134917Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r10_receipt_3b",
+  "claim": "The R10 throughput court's Qwen2.5-3B receipt is cited by STATUS and the R10 results note.",
+  "value": "throughput-20261110T145341Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-throughput.md"
+  ],
+  "receipt": "bench/receipts/throughput-20261110T145341Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r10_encode_dominates_3b",
+  "claim": "For the 3B planned family ingest, encode (not publication) dominates the wall time.",
+  "value": "865,052.9 ms of 920,052.4 ms wall",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_publish_dominates_save",
+  "claim": "For the 3B fast-raw 8-way checkpoint save, blob publication dominates the wall time.",
+  "value": "771,452.7 ms of 798,331.8 ms wall",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_pack_speedup_3b_8_ranks",
+  "claim": "Packed publication cut the 3B fast-raw 8-rank checkpoint save to the stated wall time.",
+  "value": "412,384.2 → 145,692.7 ms",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_pack_speedup_0_5b_sequential",
+  "claim": "Packed publication cut the 0.5B fast-raw sequential checkpoint save to the stated wall time.",
+  "value": "108,889.2 → 29,008.0 ms",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_pack_loss_zstd",
+  "claim": "Packed publication is published as a loss for the zstd-1 split-path saves.",
+  "value": "0.67×/0.77×",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_pack_catalog_bound_fallback",
+  "claim": "The default 8 MiB pack catalog bound left 24,870 members (1.54 GB) flat on the 3B save, as a fallback rather than a failure.",
+  "value": "24,870 members (1.54 GB)",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_restore_3b_8_workers",
+  "claim": "3B pipelined restore at 8 workers measures the stated p50 and throughput.",
+  "value": "26,238.8 / 235.2",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_restore_0_5b_2_workers",
+  "claim": "0.5B pipelined restore at 2 workers measures the stated p50 and throughput.",
+  "value": "1,434.7 / 695.5",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_restore_limit_is_one_mutex",
+  "claim": "Parallel restore is limited by the single backend mutex, not by the largest tensor.",
+  "value": "The measured limit is not the largest tensor: it is one backend mutex.",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_streaming_not_implemented",
+  "claim": "No store-level streaming encoder was implemented in R10, and the reason is stated with the profile that justifies it.",
+  "value": "**No streaming path was",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_court_registered",
+  "claim": "The R10 throughput court is registered in the aggregate verification script.",
+  "value": "is registered in `scripts/verify-all.sh`",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_new_tests",
+  "claim": "R10 adds the pack-plane checkpoint tests, the pipelined restore tests and the profiler tests.",
+  "value": "`tests/checkpoint_packs.rs` 5/5",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_pipelined_restore_api",
+  "claim": "The pipelined checkpoint restore API is named in the R10 results note.",
+  "value": "`Store::restore_checkpoint_pipelined`",
+  "locations": [
+   "bench/RESULTS-throughput.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_phase_profiler_off_by_default",
+  "claim": "The phase profiler is off unless a harness opts in.",
+  "value": "off** unless a harness calls",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
+ },
+ {
+  "id": "r10_no_wire_change",
+  "claim": "R10 changes no wire format, frame, manifest field, planner price, candidate order or selected strategy.",
+  "value": "No wire format, frame, manifest field, planner price,",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "kind": "present"
  }
 ]

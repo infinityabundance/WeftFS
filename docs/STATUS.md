@@ -7652,3 +7652,112 @@ the other's delta chain; no Go timing is claimed.
   fail against a freshly written v3 store; rebuilding the cached Go binary
   fixed it. The test skips when no Go binary is present, so a clean checkout
   is unaffected.
+
+## Subphase R10 — throughput: phase profile, batched publication, pipelined restore (2026-11-10)
+
+Full evidence and every loss: [`bench/RESULTS-throughput.md`](../bench/RESULTS-throughput.md).
+Receipts: `bench/receipts/throughput-20261110T134917Z.json` (Qwen2.5-0.5B) and
+`bench/receipts/throughput-20261110T145341Z.json` (Qwen2.5-3B), both from
+`bench/scripts/throughput_court.sh` inside `weft/bench-court:1`
+(`sha256:4c6c41fb…f66501559`) at the default hard limits (3 GiB / 4 CPU / 1024
+pids / 1 GiB `/tmp`). No wire format, frame, manifest field, planner price,
+candidate order or selected strategy changed; frozen fixtures are untouched.
+
+### What the profile found
+
+* **Family ingest, planned writer: encode dominates.** 3B `encode`
+  865,052.9 ms of 920,052.4 ms wall (**89.8 %**), `blob_publish` 19,480.9 ms
+  (2.0 %), `source_read` 11,038.7 ms, `index_segment` 7,184.4 ms,
+  `manifest_commit` 6,854.2 ms, `digest` 1,617.7 ms; effective rate
+  ≈ 13.4 MB/s. 0.5B: `encode` 434,347.1 ms of 533,551.7 ms (81.4 %),
+  `blob_publish` 25,455.2 ms.
+* **Checkpoint save, fast raw, 8-way: publication dominates.** 3B
+  `blob_publish` 771,452.7 ms of 798,331.8 ms wall (**96.6 %**) across
+  **99,103** publications, `encode` 7.5 ms. 0.5B: 137,556.7 ms of
+  139,035.7 ms (98.9 %) across 19,170 publications.
+
+The profiler is `src/phase_profile.rs`: seven wall-clock phases
+(`source_read`, `digest`, `encode`, `blob_publish`, `manifest_commit`,
+`index_segment`, `verify`), **off** unless a harness calls
+`phase_profile::begin()` or sets `WEFT_PHASE_PROFILE=1`, thread-safe, bounded
+(250,000 samples per phase), with per-tensor attribution by snapshot diff. It is
+instrumented at the publication sites (`Store::store_blob`, `publish_commit`,
+`index_attestation_for`, `persist_built_index`, `Store::verify`,
+`prepare_candidates`, `store_tensor_artifact`, `SafetensorsFile` reads and
+digests), never estimated in the harness.
+
+### Batched durable publication (the pack plane as a batching layer)
+
+Small blobs (≤ 64 KiB members) are sealed into content-addressed packs named by
+a compare-and-swap catalog. Identity is unchanged: identical head, identical
+checkpoint manifest bytes, identical manifest root for flat vs packed at ranks
+0/1/2/4/8 with a fixed clock and deterministic seed
+(`tests/checkpoint_packs.rs` 5/5).
+
+Two real defects were found and fixed by those tests: (a) workers sealing
+concurrently raced the local catalog compare-and-swap, which is atomic only
+under the writer lock, and could silently lose members — blob workers now run in
+**deferred catalog** mode and the single committer merges every worker's members
+in one catalog publication, so no worker writes a control record; (b) the merge
+detected a member packed by two workers and then *dropped* it instead of keeping
+the existing entry.
+
+Measured (fast raw, best of 2 for 0.5B): 0.5B sequential 108,889.2 → 29,008.0 ms
+(**3.75×**), ranks-8 22,608.8 → 7,353.9 ms (**3.07×**); 3B sequential
+800,031.6 → 507,126.8 ms (**1.58×**), ranks-8 412,384.2 → 145,692.7 ms
+(**2.83×**). Losses: zstd-1 packs **0.67×/0.77×** and planned ranks-8 **0.85×**
+(packing helps only when publications are small and numerous); 3B sequential
+footprint **+12.3 %** because the sequential path republished 46,069 catalog
+segments for 278 seals; the 8 MiB catalog bound left 24,870 members (1.54 GB)
+flat on the 3B save (fallback, not failure); peak RSS **+31-43 %** with packs;
+split-path request counters are committer-only.
+
+### Pipelined full-checkpoint restore
+
+`Store::restore_checkpoint_pipelined[_at]` drives the shipped ordered pipeline:
+bounded tensor workers, a bounded in-flight byte budget, exact container order,
+per-tensor tile threads, and the same header/order/exactness prologue as
+`restore_checkpoint` (`tests/checkpoint_restore_pipeline.rs` 4/4: byte-identical
+at 1/2/4/8 workers × 1/2 tile threads, single-tensor and region parity, tiled
+mode-15 shards).
+
+Measured into a SHA-256 hashing sink (decode + read + hash, no host writeback),
+container SHA-256 equal to the recorded source SHA-256 in every cell:
+
+| family | 1 worker | 2 | 4 | 8 | Amdahl cap |
+|---|---:|---:|---:|---:|---:|
+| 0.5B (988 MB, largest 272 MB) | 1,978.3 ms / 503.0 MB/s | **1,434.7 / 695.5** | 1,479.6 / 670.4 | 1,459.7 / 677.1 | 3.63× |
+| 3B (6.17 GB, largest 622 MB) | 31,670.1 ms / 194.9 MB/s | 26,737.9 / 230.8 | 26,432.6 / 233.5 | **26,238.8 / 235.2** | 9.92× |
+
+**The measured limit is not the largest tensor: it is one backend mutex.** 8
+workers buy 1.21× on 3B and 2 workers buy 1.36× on 0.5B against a 9.92× cap,
+because every blob read serializes on the store's single backend lock and each
+tensor's shards decode on one thread. Tile threads are within noise for
+non-tiled checkpoints. Peak RSS for the 3B restore is 1,534,292 KiB.
+
+### Streaming encode: not implemented, with the evidence
+
+The task's condition is met (encode dominates the planned ingest), but the
+profile localises the cost inside the codec candidate encoders (mode 9 for the
+large matrices: p95 3,933.1 ms, max 4,532.0 ms per tensor), not in store-side
+buffering — the checkpoint writer already reads and encodes one shard at a time
+and the restore already decodes tiles on a bounded pool. A store-level
+streaming path cannot remove that work; a streaming mode-9/mode-15 encoder is a
+WeftCodec change with its own conformance obligations. **No streaming path was
+implemented rather than implement one whose only "win" would come from changing
+what the planner selects.**
+
+### Gates at this change
+
+* New/updated tests: `tests/checkpoint_packs.rs` 5/5 (including 1/2/4/8-rank
+  deferred packs with heavy dedup and real SIGABRT crash proxies at
+  `pack_after_pack_object` / `pack_after_catalog_segments`),
+  `tests/checkpoint_restore_pipeline.rs` 4/4, `src/phase_profile.rs` 4/4,
+  `tests/packs.rs` 13/13.
+* `bench/scripts/throughput_court.sh` is registered in `scripts/verify-all.sh`
+  in a reduced configuration (one family, one save configuration, one rank
+  count, a 40-tensor ingest prefix, two restore thread counts); the full-size
+  receipts above are the standalone runs.
+* Rust all-targets, FUSE all-targets, Go `-race`, claims, spec drift and the
+  conformance manifest are recorded by the aggregate receipt for this change in
+  `bench/receipts/verify-*.json` (see the next entry).
