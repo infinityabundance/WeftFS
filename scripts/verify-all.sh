@@ -158,23 +158,12 @@ fi
 
 # Throughput (R10): the phase profile, the pack-plane save and the pipelined
 # restore. Reduced for the aggregate — one family, one save configuration, one
-# rank count, a tensor-prefix ingest and two restore thread counts. The
-# full-size receipts (`throughput-20261110T134917Z.json`,
-# `throughput-20261110T145341Z.json`) are the standalone runs and are cited in
+# rank count, a 40-tensor ingest prefix, two restore thread counts. The
+# full-size standalone receipts are `throughput-20261110T134917Z.json` (0.5B)
+# and `throughput-20261110T145341Z.json` (3B), cited in
 # `bench/RESULTS-throughput.md`.
-echo "=== throughput ===" | tee -a "$log"
-if WEFT_THROUGHPUT_FAMILIES=qwen0.5b WEFT_THROUGHPUT_REPS=1 \
-   WEFT_THROUGHPUT_RANKS=8 WEFT_THROUGHPUT_SAVE_CONFIGS=raw \
-   WEFT_THROUGHPUT_INGEST_LIMIT=40 \
-   WEFT_THROUGHPUT_RESTORE_THREADS="1 4" WEFT_THROUGHPUT_TILE_THREADS=1 \
-   bash bench/scripts/throughput_court.sh >>"$log" 2>&1; then
-  echo "throughput=pass" >> "$results"
-  echo "PASS throughput"
-else
-  echo "throughput=fail" >> "$results"
-  echo "FAIL throughput"
-  status=1
-fi
+run_court bench "throughput" \
+  "WEFT_THROUGHPUT_FAMILIES=qwen0.5b WEFT_THROUGHPUT_REPS=1 WEFT_THROUGHPUT_RANKS=8 WEFT_THROUGHPUT_SAVE_CONFIGS=raw WEFT_THROUGHPUT_INGEST_LIMIT=40 WEFT_THROUGHPUT_RESTORE_THREADS='1 4' WEFT_THROUGHPUT_TILE_THREADS=1 bash bench/scripts/throughput_court.sh"
 
 # Index trust: a forged self-consistent index subset must be rejected by the
 # commit attestation, and a genuine cross-language segment must load without a
