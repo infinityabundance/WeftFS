@@ -238,6 +238,42 @@ fn an_sla_is_accepted_only_when_the_uncertainty_bound_fits() {
 }
 
 #[test]
+fn a_refusal_names_the_best_achievable_bound() {
+    let model = RestoreOverhead {
+        per_version_ns: 0,
+        per_tensor_ns: 0,
+        per_mib_ns: 0,
+        margin_ns_per_mib: 1_000,
+    };
+    let base = PlanOptions {
+        lambda_read_ns: 0,
+        restore_overhead: Some(model),
+        ..PlanOptions::default()
+    };
+    let point = plan_graph::optimize(&uncertain_graph(), &base).unwrap();
+    let sla = point.worst_sla_bound_ns - 1;
+    let refused = PlanOptions {
+        sla_ns: Some(sla),
+        ..base
+    };
+    let err = plan_graph::optimize(&uncertain_graph(), &refused).unwrap_err();
+    assert_eq!(err.class().as_str(), "LimitExceeded");
+    // A constrained solver can prune every assignment before the final check;
+    // the refusal must still name the SLA and the best achievable bound.
+    assert!(
+        err.message().contains(&sla.to_string()),
+        "{}",
+        err.message()
+    );
+    assert!(
+        err.message()
+            .contains(&point.worst_sla_bound_ns.to_string()),
+        "{}",
+        err.message()
+    );
+}
+
+#[test]
 fn uncertainty_accumulates_along_a_chain_and_the_plan_is_deterministic() {
     let mut versions = Vec::new();
     for i in 0..4usize {

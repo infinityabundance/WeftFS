@@ -746,6 +746,88 @@ fn check_constraints(plan: &ParentGraphPlan, options: &PlanOptions) -> Result<()
     Ok(())
 }
 
+/// Dispatch one solver.
+fn run_solver(
+    graph: &VersionGraph,
+    solver: Solver,
+    options: &PlanOptions,
+) -> Result<Vec<Option<usize>>> {
+    match solver {
+        Solver::Dp => solve_dp(graph, options),
+        Solver::Greedy => solve_greedy(graph, options),
+        Solver::BruteForce => {
+            if graph.len() > options.brute_force_limit {
+                return Err(Error::new(
+                    Class::LimitExceeded,
+                    format!(
+                        "brute-force solver is limited to {} versions; the graph has {} (use --solver dp or greedy)",
+                        options.brute_force_limit,
+                        graph.len()
+                    ),
+                ));
+            }
+            solve_brute_force(graph, options)
+        }
+        Solver::Auto => unreachable!("Auto is resolved before the solver dispatch"),
+    }
+}
+
+/// Turn a bare "no assignment" failure into a typed refusal that names the best
+/// achievable uncertainty bound. A constrained solver may prune every partial
+/// assignment before `check_constraints` can describe the best plan, so re-run
+/// the same solver without the SLA/budget and report that plan's bound. If even
+/// the unconstrained search fails, the original error is the truth.
+fn diagnose_refusal(
+    graph: &VersionGraph,
+    solver: Solver,
+    options: &PlanOptions,
+    original: Error,
+) -> Error {
+    if options.sla_ns.is_none() && options.storage_budget.is_none() {
+        return original;
+    }
+    let mut relaxed = options.clone();
+    relaxed.sla_ns = None;
+    relaxed.storage_budget = None;
+    let Ok(parents) = run_solver(graph, solver, &relaxed) else {
+        return original;
+    };
+    let Ok(best) = evaluate(graph, &parents, &relaxed) else {
+        return original;
+    };
+    if let Some(sla) = options.sla_ns {
+        if best.worst_sla_bound_ns > sla {
+            let margin = best
+                .worst_sla_bound_ns
+                .saturating_sub(best.worst_restore_ns)
+                .saturating_sub(best.worst_uncertainty_ns);
+            return Error::new(
+                Class::LimitExceeded,
+                format!(
+                    "no plan satisfies the {sla} ns restore SLA; the best unconstrained worst-case bound is {} ns (point prediction {} ns + {} ns measured SLA margin + {} ns measured decode uncertainty; calibrations {SLA_MARGIN_CALIBRATION} / {})",
+                    best.worst_sla_bound_ns,
+                    best.worst_restore_ns,
+                    margin,
+                    best.worst_uncertainty_ns,
+                    best.hop_uncertainty_calibration
+                ),
+            );
+        }
+    }
+    if let Some(budget) = options.storage_budget {
+        if best.predicted_bytes > budget {
+            return Error::new(
+                Class::LimitExceeded,
+                format!(
+                    "no plan satisfies the {budget}-byte storage budget; the best unconstrained plan stores {} bytes",
+                    best.predicted_bytes
+                ),
+            );
+        }
+    }
+    original
+}
+
 /// Run the requested solver.
 pub fn optimize(graph: &VersionGraph, options: &PlanOptions) -> Result<ParentGraphPlan> {
     options.validate()?;
@@ -766,23 +848,9 @@ pub fn optimize(graph: &VersionGraph, options: &PlanOptions) -> Result<ParentGra
     if graph.is_empty() {
         return evaluate(graph, &[], options);
     }
-    let parents = match solved {
-        Solver::Dp => solve_dp(graph, options)?,
-        Solver::Greedy => solve_greedy(graph, options)?,
-        Solver::BruteForce => {
-            if graph.len() > options.brute_force_limit {
-                return Err(Error::new(
-                    Class::LimitExceeded,
-                    format!(
-                        "brute-force solver is limited to {} versions; the graph has {} (use --solver dp or greedy)",
-                        options.brute_force_limit,
-                        graph.len()
-                    ),
-                ));
-            }
-            solve_brute_force(graph, options)?
-        }
-        Solver::Auto => unreachable!("Auto is resolved before the solver dispatch"),
+    let parents = match run_solver(graph, solved, options) {
+        Ok(parents) => parents,
+        Err(err) => return Err(diagnose_refusal(graph, solved, options, err)),
     };
     let mut plan = evaluate(graph, &parents, options)?;
     // The chain/restart DP optimises the objective, not the optional storage
