@@ -1,0 +1,80 @@
+throughput_court: stamp=20261110T134917Z
+throughput_court: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+throughput_court: limits memory=3g cpus=4 pids=1024
+throughput_court: revisions weftfs=b76739fc82725d80bd1797f25c992d21c2fc2ac6 weftcodec=4cd729f55b65a80370946499feaff70a5277ef04
+throughput_court: families=qwen0.5b reps=2 ranks=0 1 8 restore_threads=1 2 4 8 tile_threads=1 4 configs=raw zstd planned
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 5 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.06s
+throughput_court: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+== save qwen0.5b raw (flat vs packed, ranks: 0 1 8) ==
+sequential: head=287ace2297440cb1 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(108937.601139)
+ranks-1: head=287ace2297440cb1 median_prepare_ms=Number(108512.91967) median_commit_ms=Number(67.08349100000001) median_wall_ms=Number(109721.426898)
+ranks-8: head=287ace2297440cb1 median_prepare_ms=Number(52164.84437) median_commit_ms=Number(70.467312) median_wall_ms=Number(53401.9194695)
+packed-sequential: head=287ace2297440cb1 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(59113.448997)
+packed-ranks-1: head=287ace2297440cb1 median_prepare_ms=Number(2575.863244) median_commit_ms=Number(77.610102) median_wall_ms=Number(3992.7300265)
+packed-ranks-8: head=287ace2297440cb1 median_prepare_ms=Number(36088.563223) median_commit_ms=Number(75.5172125) median_wall_ms=Number(37493.70485449999)
+bench_parallel_checkpoint: receipt /work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/save-raw.json
+== save qwen0.5b zstd (flat vs packed, ranks: 0 1 8) ==
+sequential: head=08ed62c9e7ef34a5 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(13949.296323999999)
+ranks-1: head=08ed62c9e7ef34a5 median_prepare_ms=Number(42996.496568) median_commit_ms=Number(75.2250825) median_wall_ms=Number(46019.4799515)
+ranks-8: head=08ed62c9e7ef34a5 median_prepare_ms=Number(3365.748946) median_commit_ms=Number(73.6870625) median_wall_ms=Number(6428.252095)
+packed-sequential: head=08ed62c9e7ef34a5 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(5884.082488)
+packed-ranks-1: head=08ed62c9e7ef34a5 median_prepare_ms=Number(33786.4535745) median_commit_ms=Number(572.2192484999999) median_wall_ms=Number(36880.637509)
+packed-ranks-8: head=08ed62c9e7ef34a5 median_prepare_ms=Number(5904.592171) median_commit_ms=Number(69.94413399999999) median_wall_ms=Number(8299.045137500001)
+bench_parallel_checkpoint: receipt /work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/save-zstd.json
+== save qwen0.5b planned (flat vs packed, ranks: 0 1 8) ==
+sequential: head=b03ed1623fb8dc65 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(59063.5950055)
+ranks-1: head=b03ed1623fb8dc65 median_prepare_ms=Number(58543.958045) median_commit_ms=Number(75.3323925) median_wall_ms=Number(68160.7699165)
+ranks-8: head=b03ed1623fb8dc65 median_prepare_ms=Number(9103.6361205) median_commit_ms=Number(74.2488615) median_wall_ms=Number(18824.029429000002)
+packed-sequential: head=b03ed1623fb8dc65 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(22604.099109)
+packed-ranks-1: head=b03ed1623fb8dc65 median_prepare_ms=Number(40194.9865635) median_commit_ms=Number(441.0907525) median_wall_ms=Number(50231.8573075)
+packed-ranks-8: head=b03ed1623fb8dc65 median_prepare_ms=Number(12748.6088375) median_commit_ms=Number(70.2059565) median_wall_ms=Number(22194.222536499998)
+bench_parallel_checkpoint: receipt /work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/save-planned.json
+== ingest qwen0.5b (phase profile, 2 rep) ==
+/work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/ingest.json
+== checkpoint qwen0.5b (fast raw, 8-way, phase profile) ==
+/work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/checkpoint.json
+== restore qwen0.5b (threads: 1 2 4 8; tile threads: 1 4) ==
+/work/.docker-cache/throughput-20261110T134917Z/qwen0.5b/restore.json
+== assemble ==
+bench/receipts/throughput-20261110T134917Z.json
+throughput_court: receipt bench/receipts/throughput-20261110T134917Z.json
+throughput_court: log bench/receipts/throughput-20261110T134917Z.log

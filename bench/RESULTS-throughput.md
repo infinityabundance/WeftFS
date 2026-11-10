@@ -284,14 +284,21 @@ cloud run.
 
 | gate | result |
 |---|---|
-| Rust `cargo test --all-targets` | see `docs/STATUS.md` R10 (recorded after the gates run) |
-| FUSE `cargo test --features fuse --all-targets` | as above |
-| Go `go test -race ./...` | as above |
-| `scripts/check-claims.sh` | as above |
-| `scripts/check-spec-drift.sh` | no spec changed in R10 |
-| conformance manifest / coverage | unchanged (no wire-format change) |
-| new tests | `tests/checkpoint_packs.rs` 5/5, `tests/checkpoint_restore_pipeline.rs` 4/4, `src/phase_profile.rs` 4/4 |
+| Rust `cargo test --all-targets` | **736 passed / 0 failed / 0 ignored**, 150 suites |
+| FUSE `cargo test --features fuse --all-targets` | **779 passed / 0 failed / 2 pre-existing ignored**, 150 suites |
+| Go `go test -race ./...` | `store` ok (136.5 s), `cmd/weftfs` ok, `fusefs` ok, `index` ok, `model` ok |
+| `scripts/check-claims.sh` | **808 / 808** |
+| `scripts/check-spec-drift.sh` | no spec changed in R10 (unchanged) |
+| conformance manifest / coverage | unchanged (no wire-format change; 420 entries) |
+| new tests | `tests/checkpoint_packs.rs` 5/5, `tests/checkpoint_restore_pipeline.rs` 4/4, `src/phase_profile.rs` 4/4, `tests/packs.rs` 13/13 |
+| aggregate | `bench/receipts/verify-20261110T181259Z.json` — **42/42** courts pass, 0 failed, 0 skipped |
 
 `bench/scripts/throughput_court.sh` is registered in `scripts/verify-all.sh` in a
-reduced configuration (`qwen0.5b`, one save configuration, two rep counts); the
-full-size receipts above are the standalone runs.
+reduced configuration (`qwen0.5b`, one save configuration, one rank count, a
+40-tensor ingest prefix, two restore thread counts); the full-size receipts
+above are the standalone runs. Two aggregate runs are retained because they
+found real defects in this change: `verify-20261110T160409Z.json` (40/42 — the
+new court was invoked on the host instead of in the bench court, plus a
+`rust_fuse` failure that did not reproduce standalone) and
+`verify-20261110T170837Z.json` (41/42 — a `local` declaration outside a function
+in the new court script).

@@ -358,6 +358,23 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   (5.83x)** at 4 threads, backend reads **3.02 GB -> 107.5 MB**, decodes
   **640 -> 26**; peak RSS rises by about 289 MiB; the thread-local counter fix
   removes the decode-counter flake.
+- **Throughput profile and batched publication (R10, 2026-11-10):** an opt-in
+  seven-phase profiler (`source_read`, `digest`, `encode`, `blob_publish`,
+  `manifest_commit`, `index_segment`, `verify`) shows the 3B planned family
+  ingest is **encode-bound** (865.1 s of 920.1 s wall, 89.8 %) while a fast-raw
+  8-way checkpoint save is **publication-bound** (771.5 s of 798.3 s, 96.6 %,
+  99,103 publications). Packing small blobs through the pack plane with a
+  *deferred* catalog (workers publish packs, the single committer publishes the
+  catalog) cuts the 3B fast-raw 8-rank save **412.4 -> 145.7 s (2.83x)** and the
+  0.5B sequential save **108.9 -> 29.0 s (3.75x)** with identical heads,
+  manifests and roots. Losses: zstd-1 and planned split saves get slower
+  (0.67x/0.77x/0.85x), the 3B sequential packed store grows 12.3 %, the 8 MiB
+  catalog bound leaves 1.54 GB flat, and peak RSS rises 31–43 %. Pipelined
+  full-checkpoint restore (bounded tensor workers and tile threads, exact order)
+  is byte-identical at 1/2/4/8 workers but only **1.21x** on 3B against a 9.92x
+  Amdahl cap, because every blob read serialises on one backend mutex. Full
+  verification `bench/receipts/verify-20261110T181259Z.json` (**42/42** courts
+  pass); evidence in [`bench/RESULTS-throughput.md`](bench/RESULTS-throughput.md).
 - **Planner v2 and incremental index (R9, 2026-11-10):** the graph objective now
   charges `storage + lambda_write*encode + lambda_retention*bytes +
   lambda_read*reads*restore`, prices each edge with its own measured
@@ -373,7 +390,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   p50 **+0.605 ms**, first query after reopen **0.258 -> 1.411 ms** (chain load),
   and a snapshot at every step keeps its chain un-reclaimed. Go writes the same
   bytes and each language loads the other's chain. Full verification
-  `bench/receipts/verify-20261110T111645Z.json` (**41/41** courts pass).
+  `bench/receipts/verify-20261110T181259Z.json` (**42/42** courts pass).
 - **Overlays (R9):** 500 x 4 KiB writes **917.3 -> 415.5 ms** local and
   **2,308.3 -> 1,702.9 ms** MinIO, with the same content root; compaction
   preserves the root; Go has read-only v4 support.

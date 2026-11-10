@@ -1,0 +1,71 @@
+{
+  "kind": "correctness-verification",
+  "timestamp_utc": "20261110T160409Z",
+  "host": {
+    "uname": "Linux 7.3.3-1-cachyos x86_64",
+    "docker": "Docker version 29.1.5, build 0e6fee6"
+  },
+  "revisions": {
+    "WeftFS": "26366f20c2a0b4c62fdc5b9a3fa0723c96ecd94b",
+    "WeftCodec": "4cd729f55b65a80370946499feaff70a5277ef04",
+    "WeftCodec-Go": "d989c038b995d468c641989589f9d5756939585b",
+    "WeftFS-Go": "ad90835857e95479ac1305fcc16f90ac891a45ca"
+  },
+  "summary": {
+    "courts": 42,
+    "passed": 40,
+    "failed": 2,
+    "skipped": 0
+  },
+  "courts": {
+    "rust_codec": "pass",
+    "rust_store": "pass",
+    "go_codec": "pass",
+    "rust_fuse": "fail",
+    "go_store_and_fuse": "pass",
+    "codec_cross_rust_encode": "pass",
+    "codec_cross_go_all": "pass",
+    "codec_cross_rust_decode": "pass",
+    "codec_cross_compare": "pass",
+    "spec_drift": "pass",
+    "claims": "pass",
+    "conformance_manifest": "pass",
+    "conformance_coverage": "pass",
+    "generated_types": "pass",
+    "buck2_cas": "pass",
+    "buck2_cas_store": "pass",
+    "threefs": "pass",
+    "checkpoint_family_lifecycle": "pass",
+    "trajectory": "pass",
+    "write_policy": "pass",
+    "recovery_load": "pass",
+    "kv_capability": "pass",
+    "parallel_checkpoint": "pass",
+    "throughput": "fail",
+    "index_trust": "pass",
+    "agent_memory": "pass",
+    "ceph_rgw": "pass",
+    "s3_court": "pass",
+    "augmentation_local": "pass",
+    "context_cross_rust_gen": "pass",
+    "context_cross_go_gen": "pass",
+    "context_cross_rust_parse": "pass",
+    "context_cross_compare": "pass",
+    "capability_cross_rust_gen": "pass",
+    "capability_cross_go_gen": "pass",
+    "capability_cross_rust_verify": "pass",
+    "capability_cross_go_verify": "pass",
+    "capability_cross_compare": "pass",
+    "fuzz_diff": "pass",
+    "tla": "pass",
+    "multiwriter": "pass",
+    "multiwriter_failure": "pass"
+  },
+  "receipts": {
+    "ceph_rgw": "bench/receipts/ceph-rgw-20261110T160409Z.json",
+    "s3_court": "bench/receipts/s3-court-20261110T160409Z.json",
+    "augmentation_local": "bench/receipts/augmentation-local-20261110T160409Z.json"
+  },
+  "result": "fail",
+  "raw_log": "bench/receipts/verify-20261110T160409Z.log"
+}

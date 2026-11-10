@@ -7758,6 +7758,22 @@ what the planner selects.**
   in a reduced configuration (one family, one save configuration, one rank
   count, a 40-tensor ingest prefix, two restore thread counts); the full-size
   receipts above are the standalone runs.
-* Rust all-targets, FUSE all-targets, Go `-race`, claims, spec drift and the
-  conformance manifest are recorded by the aggregate receipt for this change in
-  `bench/receipts/verify-*.json` (see the next entry).
+### Gates at this change (measured)
+
+* Rust `cargo test --all-targets`: **736 passed / 0 failed / 0 ignored** across
+  150 suites.
+* FUSE `cargo test --features fuse --all-targets -- --test-threads=1`:
+  **779 passed / 0 failed / 2 pre-existing ignored** across 150 suites.
+* Go `go test -race -count=1 ./...` in the FUSE court: `store` ok (136.5 s),
+  `cmd/weftfs` ok (45.7 s), `fusefs` ok, `index` ok, `model` ok.
+* Host gates: claims **808/808**, spec drift **unchanged (no spec edit)**,
+  conformance manifest/coverage unchanged (no wire change).
+* `scripts/verify-all.sh`: **42/42** courts pass, 0 failed, 0 skipped; receipt
+  `bench/receipts/verify-20261110T181259Z.json`. The R10 court is one of them
+  (`throughput`, reduced configuration). One earlier aggregate run
+  (`verify-20261110T160409Z.json`, 40/42) is **retained**: it exposed that the
+  new court was invoked on the host instead of in the bench court (no `/work`),
+  and a `rust_fuse` failure that did not reproduce standalone (779 passed) or in
+  the passing reruns. A second run (`verify-20261110T170837Z.json`, 41/42) is
+  retained because it found a `local` declaration outside a function in the new
+  court script.
