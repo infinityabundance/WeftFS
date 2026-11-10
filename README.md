@@ -373,7 +373,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   p50 **+0.605 ms**, first query after reopen **0.258 -> 1.411 ms** (chain load),
   and a snapshot at every step keeps its chain un-reclaimed. Go writes the same
   bytes and each language loads the other's chain. Full verification
-  `bench/receipts/verify-20261110T075205Z.json` (**41/41** courts pass).
+  `bench/receipts/verify-20261110T111645Z.json` (**41/41** courts pass).
 - **Overlays (R9):** 500 x 4 KiB writes **917.3 -> 415.5 ms** local and
   **2,308.3 -> 1,702.9 ms** MinIO, with the same content root; compaction
   preserves the root; Go has read-only v4 support.

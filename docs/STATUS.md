@@ -7646,7 +7646,7 @@ the other's delta chain; no Go timing is claimed.
 * Host gates: claims **791/791**, spec drift **57/57**, conformance manifest
   **420 entries** (aggregate `6287b817…8dfbe8`), coverage OK.
 * `scripts/verify-all.sh`: **41/41** courts pass, 0 failed, 0 skipped;
-  receipt `bench/receipts/verify-20261110T075205Z.json`.
+  receipt `bench/receipts/verify-20261110T111645Z.json`.
 * A stale cached Go CLI (`/work/.docker-cache/target-go/weftfs`, built before
   commit v3) made `tests/branching.rs::go_reads_and_verifies_a_rust_branch`
   fail against a freshly written v3 store; rebuilding the cached Go binary
