@@ -236,7 +236,7 @@ fn run() -> Result<(), String> {
         max_depth,
         sla_ns: sla_ms.map(|ms| ms.saturating_mul(1_000_000)),
         storage_budget: None,
-        solver: Solver::Dp,
+        solver: Solver::Auto,
         ..PlanOptions::default()
     };
 
@@ -280,9 +280,17 @@ fn run() -> Result<(), String> {
         ..base_options.clone()
     };
 
-    let dp_plan = plan_graph::optimize(&graph, &options).map_err(|e| format!("dp: {e}"))?;
+    // R9: the exact oracle is cheap on a nine-version graph. Use it for the
+    // optimizer plan and keep the chain/restart DP as a reported comparison, so
+    // a non-adjacent parent that the DP cannot express is not silently lost.
+    let optimizer_plan =
+        plan_graph::optimize(&graph, &options).map_err(|e| format!("optimizer: {e}"))?;
+    let mut dp_options = options.clone();
+    dp_options.solver = Solver::Dp;
+    let dp_plan = plan_graph::optimize(&graph, &dp_options).map_err(|e| format!("dp: {e}"))?;
     let mut dp0_options = options.clone();
     dp0_options.lambda_read_ns = 0;
+    dp0_options.solver = Solver::Dp;
     let dp0_plan = plan_graph::optimize(&graph, &dp0_options).map_err(|e| format!("dp0: {e}"))?;
     let mut greedy_options = options.clone();
     greedy_options.solver = Solver::Greedy;
@@ -310,6 +318,13 @@ fn run() -> Result<(), String> {
         None => false,
     };
     checks.insert("dp_matches_brute_force".to_owned(), dp_matches_brute);
+    checks.insert(
+        "optimizer_is_the_exact_oracle".to_owned(),
+        brute_plan
+            .as_ref()
+            .map(|brute| brute.parents == optimizer_plan.parents)
+            .unwrap_or(false),
+    );
 
     // ---- lambda x SLA sweep -------------------------------------------------
     //
@@ -423,9 +438,14 @@ fn run() -> Result<(), String> {
             ("restart-2".to_owned(), k2.clone()),
             ("restart-3".to_owned(), k3.clone()),
             ("restart-4".to_owned(), k4.clone()),
-            ("optimizer".to_owned(), dp_plan.parents.clone()),
+            ("optimizer".to_owned(), optimizer_plan.parents.clone()),
             ("optimizer-bytes-only".to_owned(), dp0_plan.parents.clone()),
         ];
+        if let Some(brute) = &brute_plan {
+            if brute.parents != optimizer_plan.parents {
+                plan_list.push(("brute-force".to_owned(), brute.parents.clone()));
+            }
+        }
         // Realise every plan the SLA sweep accepted, so an accepted plan can be
         // checked against its measured restore. Bound the extra work.
         let mut extra = 0usize;
@@ -433,8 +453,8 @@ fn run() -> Result<(), String> {
             if plan_list.iter().any(|(_, existing)| existing == parents) {
                 continue;
             }
-            if extra >= 3 {
-                eprintln!("parent_graph: more than 3 sweep-only plans; extra ones stay unmeasured");
+            if extra >= 8 {
+                eprintln!("parent_graph: more than 8 sweep-only plans; extra ones stay unmeasured");
                 break;
             }
             extra += 1;
@@ -583,7 +603,7 @@ fn run() -> Result<(), String> {
         "restart-2_ms": k2_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
         "restart-3_ms": k3_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
         "restart-4_ms": k4_metrics.worst_sla_bound_ns as f64 / 1_000_000.0,
-        "all-independent_ms": dp_plan.worst_sla_bound_ns as f64 / 1_000_000.0,
+        "all-independent_ms": optimizer_plan.worst_sla_bound_ns as f64 / 1_000_000.0,
         "note": "an SLA below these values is refused; the measured restore of the accepted plan is compared against the SLA in the sweep",
     });
 
@@ -673,7 +693,7 @@ fn run() -> Result<(), String> {
                 "hop_rows": [
                     {"class": "sparse-delta", "under_prediction_ppm": 153_302, "samples": 48},
                     {"class": "weight-delta", "under_prediction_ppm": 178_209, "samples": 48},
-                    {"class": "zstd-patch", "under_prediction_ppm": 312_958, "samples": 48},
+                    {"class": "zstd-patch", "under_prediction_ppm": 624_556, "samples": 48},
                 ],
                 "label": "warm page cache, single host, local backend; measured max under-prediction over the fitted samples",
             },
@@ -688,6 +708,7 @@ fn run() -> Result<(), String> {
             "restart-3": plan_json(&k3_metrics),
             "restart-4": plan_json(&k4_metrics),
             "dp": plan_json(&dp_plan),
+            "optimizer": plan_json(&optimizer_plan),
             "dp_bytes_only": plan_json(&dp0_plan),
             "greedy": plan_json(&greedy_plan),
             "brute_force": brute_plan.as_ref().map(plan_json),

@@ -414,14 +414,19 @@ pub fn measured_hop_row(class: CostClass) -> Option<Coefficients> {
 /// the weight-delta row is exactly the substitution this planner refuses.
 pub const ZSTD_PATCH_HOP_CALIBRATION: &str = "weftfs-r9/zstd-patch-hop/v1";
 
-/// Measured zstd-patch hop row: 1,675,326 ns/MiB through the origin over 48
-/// samples (4/8/16 MiB, two change shapes, depth 8, forced strategy).
-/// Receipt: `bench/receipts/s13c-chain-hop-zstd-patch-20261110T090000Z.json`.
-pub const ZSTD_PATCH_HOP: Coefficients = Coefficients::new(0, 1_675_326);
+/// Measured zstd-patch hop row: 1,148,427 ns/MiB through the origin over 48
+/// samples (4/8/16 MiB, two change shapes, depth 8, forced strategy, F32 — the
+/// dtype of the real pythia containers).
+/// Receipt: `bench/receipts/s13c-chain-hop-zstd-patch-20261110T104000Z.json`.
+/// The earlier BF16 run (`...090000Z.json`) measured 1,675,326 ns/MiB and is
+/// retained as superseded: the payload dtype changes the patch frame size.
+pub const ZSTD_PATCH_HOP: Coefficients = Coefficients::new(0, 1_148_427);
 
-/// Measured under-prediction bound for the zstd-patch hop row: 312,958 ppm
-/// (31.30 %) over the same 48 samples.
-pub const ZSTD_PATCH_HOP_UNCERTAINTY_PPM: u64 = 312_958;
+/// Measured under-prediction bound for the zstd-patch hop row: 624,556 ppm
+/// (62.46 %) over the same 48 samples. The patch frame's decode is dominated by
+/// the base read and varies with the changed-byte distribution, so the bound is
+/// wide; it is measured, not padded.
+pub const ZSTD_PATCH_HOP_UNCERTAINTY_PPM: u64 = 624_556;
 
 /// The measured under-prediction bound for a graph hop, in ppm of the point
 /// prediction. `None` when the class has no measured hop row.

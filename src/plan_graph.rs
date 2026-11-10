@@ -223,6 +223,10 @@ pub enum Solver {
     BruteForce,
     /// One-pass greedy over every earlier parent.
     Greedy,
+    /// The exact oracle when the graph is within `brute_force_limit`, otherwise
+    /// the chain-or-restart DP. This is the CLI default: a nine-version graph
+    /// gets the exact answer, a long trajectory stays practical.
+    Auto,
 }
 
 impl Solver {
@@ -231,6 +235,7 @@ impl Solver {
             Solver::Dp => "dp",
             Solver::BruteForce => "brute-force",
             Solver::Greedy => "greedy",
+            Solver::Auto => "auto",
         }
     }
 
@@ -239,8 +244,9 @@ impl Solver {
             "dp" => Ok(Solver::Dp),
             "brute-force" | "bruteforce" | "exact" => Ok(Solver::BruteForce),
             "greedy" => Ok(Solver::Greedy),
+            "auto" => Ok(Solver::Auto),
             other => Err(Error::invalid_argument(format!(
-                "--solver must be `dp`, `brute-force`, or `greedy` (got `{other}`)"
+                "--solver must be `auto`, `dp`, `brute-force`, or `greedy` (got `{other}`)"
             ))),
         }
     }
@@ -738,10 +744,23 @@ fn check_constraints(plan: &ParentGraphPlan, options: &PlanOptions) -> Result<()
 pub fn optimize(graph: &VersionGraph, options: &PlanOptions) -> Result<ParentGraphPlan> {
     options.validate()?;
     graph.validate()?;
+    let solved = match options.solver {
+        Solver::Auto => {
+            if graph.len() <= options.brute_force_limit {
+                Solver::BruteForce
+            } else {
+                Solver::Dp
+            }
+        }
+        other => other,
+    };
+    let mut resolved = options.clone();
+    resolved.solver = solved;
+    let options = &resolved;
     if graph.is_empty() {
         return evaluate(graph, &[], options);
     }
-    let parents = match options.solver {
+    let parents = match solved {
         Solver::Dp => solve_dp(graph, options)?,
         Solver::Greedy => solve_greedy(graph, options)?,
         Solver::BruteForce => {
@@ -757,6 +776,7 @@ pub fn optimize(graph: &VersionGraph, options: &PlanOptions) -> Result<ParentGra
             }
             solve_brute_force(graph, options)?
         }
+        Solver::Auto => unreachable!("Auto is resolved before the solver dispatch"),
     };
     let mut plan = evaluate(graph, &parents, options)?;
     // The chain/restart DP optimises the objective, not the optional storage

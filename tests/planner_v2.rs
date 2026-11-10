@@ -42,6 +42,58 @@ fn write_trade_graph() -> VersionGraph {
 }
 
 #[test]
+fn the_default_solver_uses_the_exact_oracle_when_it_is_cheap() {
+    // v1/v2/v3 can all name v0; the adjacent edge is much larger than the
+    // non-adjacent one, so the chain/restart DP cannot reach the optimum.
+    let independent = EdgeCost {
+        bytes: 1_000,
+        decode_ns: 10,
+        ..EdgeCost::default()
+    };
+    let cheap = EdgeCost {
+        bytes: 10,
+        decode_ns: 5,
+        ..EdgeCost::default()
+    };
+    let adjacent = EdgeCost {
+        bytes: 500,
+        decode_ns: 5,
+        ..EdgeCost::default()
+    };
+    let mut versions = vec![VersionCost {
+        name: "v0".into(),
+        logical_bytes: 1_000,
+        independent,
+        edges: vec![],
+    }];
+    for i in 1..4usize {
+        let edges = (0..i)
+            .map(|j| Some(if j + 1 == i { adjacent } else { cheap }))
+            .collect();
+        versions.push(VersionCost {
+            name: format!("v{i}"),
+            logical_bytes: 1_000,
+            independent,
+            edges,
+        });
+    }
+    let graph = VersionGraph { versions };
+    let auto = PlanOptions {
+        solver: plan_graph::Solver::Auto,
+        ..PlanOptions::default()
+    };
+    let exact = plan_graph::optimize(&graph, &auto).unwrap();
+    assert_eq!(exact.parents, vec![None, Some(0), Some(0), Some(0)]);
+    assert_eq!(exact.solver, plan_graph::Solver::BruteForce);
+
+    let mut dp = auto.clone();
+    dp.solver = plan_graph::Solver::Dp;
+    let restricted = plan_graph::optimize(&graph, &dp).unwrap();
+    assert_eq!(restricted.parents, vec![None, Some(0), Some(1), Some(2)]);
+    assert!(exact.objective < restricted.objective);
+}
+
+#[test]
 fn a_bytes_cheap_but_expensive_to_build_representation_is_priced() {
     // Bytes only: the 90-byte delta wins.
     let bytes_only = PlanOptions {

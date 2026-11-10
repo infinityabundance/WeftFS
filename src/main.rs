@@ -679,9 +679,9 @@ enum Command {
         /// Maximum predicted total edge bytes.
         #[arg(long = "storage-budget", value_name = "BYTES")]
         storage_budget: Option<u64>,
-        /// `dp` (chain/restart, the default), `brute-force` (exact oracle,
-        /// small graphs), or `greedy` (one pass over every earlier parent).
-        #[arg(long = "solver", default_value = "dp")]
+        /// `auto` (exact when the graph is within the oracle limit, otherwise
+        /// the chain/restart DP), `dp`, `brute-force`, or `greedy`.
+        #[arg(long = "solver", default_value = "auto")]
         solver: String,
         /// Write the chosen graph into a new store (must be `--store` or `--out`).
         #[arg(long)]
