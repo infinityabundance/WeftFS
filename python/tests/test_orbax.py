@@ -33,8 +33,16 @@ import support  # noqa: E402
 from weftcodec import wcb  # noqa: E402
 from weftcodec.dcp import DEFAULT_CLI, _Storage, init_store  # noqa: E402
 
-HAS_JAX = importlib.util.find_spec("jax") is not None
-HAS_ORBAX = importlib.util.find_spec("orbax.checkpoint") is not None
+def _has_module(name: str) -> bool:
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ImportError, ModuleNotFoundError):
+        # find_spec raises when a parent package (e.g. ``orbax``) is absent.
+        return False
+
+
+HAS_JAX = _has_module("jax")
+HAS_ORBAX = _has_module("orbax.checkpoint")
 WEFTFS_CLI = Path(os.environ.get("WEFTFS_CLI", DEFAULT_CLI))
 
 

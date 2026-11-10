@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir \
       "pytest>=8,<9" \
       "blake3>=0.3.1" \
       "zstandard>=0.22" \
+      "numpy>=2,<3" \
       "build>=1.2" \
       "setuptools>=68" \
       wheel \

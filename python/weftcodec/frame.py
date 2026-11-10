@@ -75,8 +75,10 @@ MODE_NAMES = {
 #: Modes this Python reader can actually materialize plaintext for.
 IMPLEMENTED_MODES = frozenset(MODE_NAMES)
 
-#: Modes whose wire value is allocated but not implemented here.
-UNIMPLEMENTED_MODES = frozenset()
+#: Modes whose wire value is allocated but not implemented here. Modes 19
+#: (KV_CACHE_PROV) and 20 (ENGRAM_SHARD) have normative vectors in the shared
+#: corpus but no Python decoder; the conformance adapter skips them explicitly.
+UNIMPLEMENTED_MODES = frozenset({19, 20})
 
 
 @dataclass(frozen=True)

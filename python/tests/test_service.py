@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from weftcodec.service import (
+    PROTOCOL_VERSION,
     CheckpointService,
     ServiceError,
     ServiceUnavailable,
@@ -117,7 +118,7 @@ def test_info_manifest_and_restore_into_a_caller_memfd(store):
     root, payload = store
     with CheckpointService(root, cli=CLI) as service:
         info = service.info()
-        assert info["protocol"] == 1
+        assert info["protocol"] == PROTOCOL_VERSION
         assert info["max_frame_bytes"] == 1 << 20
         assert info["store_root"] == os.fspath(root)
         assert service.list_checkpoints() == ["svc"]
