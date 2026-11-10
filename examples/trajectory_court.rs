@@ -276,6 +276,14 @@ fn series(args: &[String]) -> Result<(), String> {
     // `--full-index` reproduces the pre-WFX3 behaviour: one full-state segment
     // per committed generation. The default is an incremental delta chain.
     let full_index = flag(args, "--full-index");
+    // Chain-depth sensitivity: the writer default is 32 deltas (plan bound).
+    let index_chain_max_deltas = arg(args, "--index-chain-max-deltas")
+        .map(|value| {
+            value
+                .parse::<u32>()
+                .map_err(|_| "bad --index-chain-max-deltas")
+        })
+        .transpose()?;
     // `--query-reopen` measures the first query on fresh read-only handles after
     // the series, which is the number an operator pays after a restart.
     let query_reopen = flag(args, "--query-reopen");
@@ -301,6 +309,8 @@ fn series(args: &[String]) -> Result<(), String> {
             gc_grace_secs: 0,
             fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
             incremental_index: !full_index,
+            index_chain_max_deltas: index_chain_max_deltas
+                .unwrap_or(Options::default().index_chain_max_deltas),
             ..Options::default()
         },
     )
@@ -609,6 +619,8 @@ fn series(args: &[String]) -> Result<(), String> {
         "single_tensor": single,
         "range": region_text,
         "index_mode": if full_index { "full" } else { "delta" },
+        "index_chain_max_deltas": index_chain_max_deltas
+            .unwrap_or(Options::default().index_chain_max_deltas),
         "head_segment": head_kind,
         "head_chain_depth": head_depth,
         "index_writes": index_writes,

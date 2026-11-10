@@ -263,7 +263,16 @@ fn mode_report(
             "builds": builds,
         }));
     }
-    let mut stats = Store::open(root, OpenMode::ReadWrite).expect("reopen writable");
+    let mut stats = Store::open_with_options(
+        root,
+        OpenMode::ReadWrite,
+        Options {
+            gc_grace_secs: 0,
+            fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
+            ..Options::default()
+        },
+    )
+    .expect("reopen writable");
     let (gc_ms, report) = timed(|| stats.gc(true).expect("gc"));
     let index_after_gc = dir_bytes(&root.join("indexes"));
     let (compact_ms, new_head) = timed(|| stats.compact_index().expect("compact index"));
@@ -309,9 +318,12 @@ fn mode_report(
         "first_query_after_reopen": queries,
         "gc": {
             "ms": gc_ms,
+            "snapshots": stats.snapshot_list().len(),
             "deleted_blobs": report.deleted.len(),
             "deleted_indexes": report.deleted_indexes.len(),
             "deleted_index_bytes": report.deleted_index_bytes,
+            "retained_indexes": report.retained,
+            "candidates": report.candidates.len(),
             "index_bytes_after_gc": index_after_gc,
             "problems": report.problems,
         },
@@ -360,7 +372,15 @@ fn main() {
     // The pinned store keeps a snapshot at every commit, which is the
     // trajectory retention shape. Report its live index tree and what GC may
     // drop; no compaction here.
-    let mut pinned_store = Store::open(&pinned_root, OpenMode::ReadWrite).expect("pinned store");
+    let mut pinned_store = Store::open_with_options(
+        &pinned_root,
+        OpenMode::ReadWrite,
+        Options {
+            gc_grace_secs: 0,
+            ..Options::default()
+        },
+    )
+    .expect("pinned store");
     let (pinned_gc_ms, pinned_gc) = timed(|| pinned_store.gc(true).expect("pinned gc"));
     drop(pinned_store);
     let pinned_report = json!({
