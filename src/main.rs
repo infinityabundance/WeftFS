@@ -653,6 +653,18 @@ enum Command {
         /// Bytes charged per estimated nanosecond of decode time (0 = bytes only).
         #[arg(long = "lambda-ns", default_value_t = 0)]
         lambda_ns: u64,
+        /// Bytes charged per estimated nanosecond of one-time encode work.
+        /// Defaults to `--lambda-ns`.
+        #[arg(long = "lambda-write-ns", value_name = "NS")]
+        lambda_write_ns: Option<u64>,
+        /// Bytes charged per retained byte over the plan lifetime. This is an
+        /// explicit policy exchange rate; the repository has no measured
+        /// retention-cost table, so the default is 0.
+        #[arg(long = "lambda-retention-ns", default_value_t = 0)]
+        lambda_retention_ns: u64,
+        /// Price and print the plan without writing a target store.
+        #[arg(long = "dry-run")]
+        dry_run: bool,
         /// Expected reads per version; each read pays its whole chain.
         #[arg(long = "reads-per-version", default_value_t = 1)]
         reads_per_version: u64,
@@ -3155,6 +3167,9 @@ fn run(cli: Cli) -> Result<()> {
             versions,
             max_depth,
             lambda_ns,
+            lambda_write_ns,
+            lambda_retention_ns,
+            dry_run,
             reads_per_version,
             sla_ms,
             storage_budget,
@@ -3176,6 +3191,9 @@ fn run(cli: Cli) -> Result<()> {
             versions,
             max_depth,
             lambda_ns,
+            lambda_write_ns,
+            lambda_retention_ns,
+            dry_run,
             reads_per_version,
             sla_ms,
             storage_budget,
@@ -4006,6 +4024,7 @@ fn run_checkpoint(
                 semantic_search: !no_semantic,
                 allow_experimental_modes,
                 max_ingest_bytes,
+                forced_strategy: None,
                 deterministic_seed: match checkpoint_seed.as_deref() {
                     None => None,
                     Some(text) => {
@@ -4482,6 +4501,29 @@ fn run_checkpoint(
     }
 }
 
+/// One reporting row per representation used by an edge. Empty when the edge
+/// has no representation mix (for example an externally supplied graph).
+fn edge_representation_rows(edge: Option<&weftfs::plan_graph::EdgeCost>) -> Vec<serde_json::Value> {
+    let Some(edge) = edge else {
+        return Vec::new();
+    };
+    weftfs::plan_graph::STRATEGIES
+        .iter()
+        .enumerate()
+        .filter(|(slot, _)| edge.representations[*slot] > 0)
+        .map(|(slot, strategy)| {
+            json!({
+                "strategy": strategy.as_str(),
+                "tensors": edge.representations[slot],
+                "encode_class": strategy.encode_class().as_str(),
+                "encode_provenance": weftfs::cost_model::encode_row(strategy.encode_class())
+                    .provenance
+                    .as_str(),
+            })
+        })
+        .collect()
+}
+
 /// `weftfs plan-parents`: price every earlier-version parent, optimize the
 /// dependency graph, and optionally write the chosen graph.
 #[allow(clippy::too_many_arguments)]
@@ -4492,6 +4534,9 @@ fn run_plan_parents(
     versions: Vec<String>,
     max_depth: u32,
     lambda_ns: u64,
+    lambda_write_ns: Option<u64>,
+    lambda_retention_ns: u64,
+    dry_run: bool,
     reads_per_version: u64,
     sla_ms: Option<u64>,
     storage_budget: Option<u64>,
@@ -4507,6 +4552,11 @@ fn run_plan_parents(
     max_ingest_bytes: u64,
     restore_overhead: String,
 ) -> Result<()> {
+    if dry_run && apply {
+        return Err(Error::invalid_argument(
+            "plan-parents --dry-run and --apply are mutually exclusive",
+        ));
+    }
     if versions.is_empty() {
         return Err(Error::invalid_argument(
             "plan-parents needs at least one --versions NAME=FILE",
@@ -4626,6 +4676,9 @@ fn run_plan_parents(
     };
     let plan_options = weftfs::plan_graph::PlanOptions {
         lambda_read_ns: lambda_ns,
+        lambda_write_ns: lambda_write_ns.unwrap_or(0),
+        lambda_write_ns_set: lambda_write_ns.is_some(),
+        lambda_retention_ns,
         reads_per_version,
         max_depth,
         sla_ns: sla_ms.map(|ms| ms.saturating_mul(1_000_000)),
@@ -4678,6 +4731,17 @@ fn run_plan_parents(
                         .map(|edge| edge.decode_ns)
                         .unwrap_or(0),
                     "chain_decode_ns": plan.predicted_chain_ns[index],
+                    "edge_encode_ns": graph
+                        .edge(index, plan.parents[index])
+                        .map(|edge| edge.encode_ns)
+                        .unwrap_or(0),
+                    "edge_uncertainty_ns": graph
+                        .edge(index, plan.parents[index])
+                        .map(|edge| edge.decode_uncertainty_ns)
+                        .unwrap_or(0),
+                    "representations": edge_representation_rows(
+                        graph.edge(index, plan.parents[index]).ok().as_ref(),
+                    ),
                     "depth": plan.depths[index],
                     "candidates": version.edges.iter().enumerate().map(|(j, edge)| json!({
                         "parent": j,
@@ -4702,10 +4766,27 @@ fn run_plan_parents(
                 "predicted_bytes": plan.predicted_bytes,
                 "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
                 "predicted_overhead_ns": plan.predicted_overhead_ns,
+                "predicted_encode_ns": plan.predicted_encode_ns,
+                "predicted_uncertainty_ns": plan.predicted_uncertainty_ns,
                 "predicted_margin_ns": plan.predicted_margin_ns,
                 "predicted_chain_ns": plan.predicted_chain_ns,
                 "predicted_sla_bound_ns": plan.predicted_sla_bound_ns,
                 "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
+                "write_cost": {
+                    "lambda_write_ns": plan_options.effective_write_lambda(),
+                    "total_encode_ns": plan.total_encode_ns,
+                    "cost_units": plan.write_cost_units.to_string(),
+                },
+                "retention": {
+                    "lambda_retention_ns": plan_options.lambda_retention_ns,
+                    "retained_bytes": plan.retained_bytes,
+                    "cost_units": plan.retention_cost_units.to_string(),
+                },
+                "uncertainty": {
+                    "hop_calibration": plan.hop_uncertainty_calibration,
+                    "decode_calibration": plan.decode_uncertainty_calibration,
+                    "worst_uncertainty_ns": plan.worst_uncertainty_ns,
+                },
                 "restore_overhead": plan.restore_overhead.map(|term| json!({
                     "calibration": plan.restore_overhead_calibration,
                     "per_version_ns": term.per_version_ns,
@@ -4759,24 +4840,60 @@ fn run_plan_parents(
                 .map(|p| sources[p].0.clone())
                 .unwrap_or_else(|| "none".to_owned());
             println!(
-                "version={index} name={} parent={parent} independent_bytes={} edge_bytes={} chain_ns={} depth={}",
+                "version={index} name={} parent={parent} independent_bytes={} edge_bytes={} edge_encode_ns={} edge_uncertainty_ns={} chain_ns={} depth={}",
                 sources[index].0,
                 version.independent.bytes,
                 graph
                     .edge(index, plan.parents[index])
                     .map(|edge| edge.bytes)
                     .unwrap_or(0),
+                graph
+                    .edge(index, plan.parents[index])
+                    .map(|edge| edge.encode_ns)
+                    .unwrap_or(0),
+                graph
+                    .edge(index, plan.parents[index])
+                    .map(|edge| edge.decode_uncertainty_ns)
+                    .unwrap_or(0),
                 plan.predicted_chain_ns[index],
                 plan.depths[index]
             );
+            if let Ok(edge) = graph.edge(index, plan.parents[index]) {
+                let mix: Vec<String> = weftfs::plan_graph::STRATEGIES
+                    .iter()
+                    .enumerate()
+                    .filter(|(slot, _)| edge.representations[*slot] > 0)
+                    .map(|(slot, strategy)| {
+                        format!("{}={}", strategy.as_str(), edge.representations[slot])
+                    })
+                    .collect();
+                if !mix.is_empty() {
+                    println!("version={index} representations={}", mix.join(","));
+                }
+            }
         }
         println!("predicted_bytes={}", plan.predicted_bytes);
+        println!("total_encode_ns={}", plan.total_encode_ns);
+        println!(
+            "write_cost lambda_write_ns={} units={}",
+            plan_options.effective_write_lambda(),
+            plan.write_cost_units
+        );
+        println!(
+            "retention lambda_retention_ns={} retained_bytes={} units={}",
+            plan_options.lambda_retention_ns, plan.retained_bytes, plan.retention_cost_units
+        );
         println!(
             "predicted_total_decode_ns={}",
             plan.predicted_total_decode_ns
         );
         println!("worst_restore_ns={}", plan.worst_restore_ns);
+        println!("worst_uncertainty_ns={}", plan.worst_uncertainty_ns);
         println!("worst_sla_bound_ns={}", plan.worst_sla_bound_ns);
+        println!(
+            "uncertainty_calibration hop={} decode={}",
+            plan.hop_uncertainty_calibration, plan.decode_uncertainty_calibration
+        );
         match plan.restore_overhead {
             Some(term) => println!(
                 "restore_overhead per_version_ns={} per_tensor_ns={} per_mib_ns={} calibration={} sla_margin_ns_per_mib={} sla_margin_calibration={}",

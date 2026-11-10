@@ -101,6 +101,7 @@ fn dp_matches_the_oracle_when_chain_or_restart_is_optimal() {
             coupled_ns: 0,
             coupled_tensors: 0,
             total_tensors: 1,
+            ..plan_graph::EdgeCost::default()
         };
         let edges = (0..i)
             .map(|j| {
@@ -110,6 +111,7 @@ fn dp_matches_the_oracle_when_chain_or_restart_is_optimal() {
                     coupled_ns: 40,
                     coupled_tensors: 1,
                     total_tensors: 1,
+                    ..plan_graph::EdgeCost::default()
                 })
             })
             .collect();
@@ -148,6 +150,7 @@ fn the_oracle_can_prefer_a_non_adjacent_parent() {
         coupled_ns: 1,
         coupled_tensors: 1,
         total_tensors: 1,
+        ..plan_graph::EdgeCost::default()
     };
     for i in 0..4usize {
         versions.push(plan_graph::VersionCost {
@@ -184,6 +187,7 @@ fn determinism_is_byte_stable() {
             coupled_ns: 0,
             coupled_tensors: 0,
             total_tensors: 1,
+            ..plan_graph::EdgeCost::default()
         };
         versions.push(plan_graph::VersionCost {
             name: format!("v{i}"),
@@ -197,6 +201,7 @@ fn determinism_is_byte_stable() {
                         coupled_ns: 20,
                         coupled_tensors: 1,
                         total_tensors: 1,
+                        ..plan_graph::EdgeCost::default()
                     })
                 })
                 .collect(),
@@ -222,6 +227,7 @@ fn depth_bound_holds_for_every_solver() {
             coupled_ns: 0,
             coupled_tensors: 0,
             total_tensors: 1,
+            ..plan_graph::EdgeCost::default()
         };
         versions.push(plan_graph::VersionCost {
             name: format!("v{i}"),
@@ -235,6 +241,7 @@ fn depth_bound_holds_for_every_solver() {
                         coupled_ns: 10,
                         coupled_tensors: 1,
                         total_tensors: 1,
+                        ..plan_graph::EdgeCost::default()
                     })
                 })
                 .collect(),
@@ -269,6 +276,7 @@ fn sla_refusal_is_typed_and_does_not_degrade() {
             coupled_ns: 0,
             coupled_tensors: 0,
             total_tensors: 1,
+            ..plan_graph::EdgeCost::default()
         };
         versions.push(plan_graph::VersionCost {
             name: format!("v{i}"),
@@ -282,6 +290,7 @@ fn sla_refusal_is_typed_and_does_not_degrade() {
                         coupled_ns: 100,
                         coupled_tensors: 1,
                         total_tensors: 1,
+                        ..plan_graph::EdgeCost::default()
                     })
                 })
                 .collect(),

@@ -145,9 +145,14 @@ pub struct CheckpointWriteOptions {
     pub allow_experimental_modes: bool,
     /// Per-tensor streaming ingest bound. The writer streams the source tensor
     /// in fixed windows and reads one shard at a time, so no whole-tensor
-    /// buffer is allocated; a tensor (or one of its shards) larger than this is
+    /// buffer is allocated; a tensor (or one shard) larger than this is
     /// refused before anything is published. Default 1 GiB.
     pub max_ingest_bytes: u64,
+    /// Force every shard of this checkpoint to one representation. `None` (the
+    /// default) uses the shard strategy and the planner. This exists so a court
+    /// can measure one representation's cost on a controlled chain; a forced
+    /// strategy that is not applicable is a typed error, never a fallback.
+    pub forced_strategy: Option<TensorStrategy>,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -168,6 +173,7 @@ impl Default for CheckpointWriteOptions {
             deterministic_seed: None,
             allow_experimental_modes: false,
             max_ingest_bytes: 1024 * 1024 * 1024,
+            forced_strategy: None,
         }
     }
 }
@@ -1169,7 +1175,15 @@ fn checkpoint_shard_transport(
                 Some(tile),
             )
         }
-        ShardStrategy::Planned => (dtype.as_str().to_owned(), shard_shape.to_vec(), None, None),
+        ShardStrategy::Planned => match options.forced_strategy {
+            Some(hint) => (
+                dtype.as_str().to_owned(),
+                shard_shape.to_vec(),
+                Some(hint),
+                None,
+            ),
+            None => (dtype.as_str().to_owned(), shard_shape.to_vec(), None, None),
+        },
         ShardStrategy::Zstd => (
             dtype.as_str().to_owned(),
             shard_shape.to_vec(),

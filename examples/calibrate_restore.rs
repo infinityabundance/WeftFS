@@ -177,6 +177,13 @@ fn run() -> Result<(), String> {
         .unwrap_or("8")
         .parse()
         .map_err(|_| "--chain-depth must be an integer")?;
+    // S9: force one representation on every child of the controlled chain, so a
+    // row can be measured for a representation the planner would otherwise
+    // choose only on some corpora (for example zstd-patch).
+    let chain_forced: Option<TensorStrategy> = match arg(&args, "--chain-forced-strategy") {
+        None => None,
+        Some(text) => Some(TensorStrategy::parse(text).map_err(|err| err.to_string())?),
+    };
     // A chains-only invocation measures the hop sweep and nothing else. It is
     // the cheap way to (re)derive the graph hop rows without repeating the
     // whole restore-floor sweep.
@@ -380,6 +387,7 @@ fn run() -> Result<(), String> {
             ChangeKind::Sparse,
             sweep_dtype,
             reps,
+            chain_forced,
         )?;
         let dense = measure_chain(
             &work,
@@ -389,6 +397,7 @@ fn run() -> Result<(), String> {
             ChangeKind::Dense,
             sweep_dtype,
             reps,
+            chain_forced,
         )?;
         chain_sweep.push(json!({"tensor_mib": size_mib, "sparse": sparse, "dense": dense}));
     }
@@ -511,6 +520,7 @@ fn run() -> Result<(), String> {
             "chain_tensor_mib": chain_tensor_mib,
             "chain_sizes_mib": chain_sizes_mib,
             "chain_depth": chain_depth,
+            "chain_forced_strategy": chain_forced.map(TensorStrategy::as_str),
             "chains_only": chains_only,
             "real_strategy": real_strategy.as_str(),
             "sweep_strategy": sweep_strategy.as_str(),
@@ -1089,6 +1099,7 @@ fn measure_chain(
     kind: ChangeKind,
     dtype: PayloadDtype,
     reps: usize,
+    forced: Option<TensorStrategy>,
 ) -> Result<Json, String> {
     let dir = work.join(id);
     let store_path = dir.join("store");
@@ -1150,6 +1161,7 @@ fn measure_chain(
             strategy: ShardStrategy::Planned,
             semantic_search: false,
             causal_checkpoint: previous_name.clone(),
+            forced_strategy: if step == 0 { None } else { forced },
             ..CheckpointWriteOptions::default()
         };
         let report = store

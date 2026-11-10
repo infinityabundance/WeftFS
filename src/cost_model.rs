@@ -347,6 +347,100 @@ const HOP_MEASURED: [(CostClass, Coefficients); 2] = [
     (CostClass::SparseDelta, Coefficients::new(0, 2_071_283)),
 ];
 
+/// Identifier for the measured per-hop uncertainty bounds.
+///
+/// The bound is the largest **under**-prediction of the baked row over every
+/// fitted `(bytes, ns)` hop sample, expressed in parts per million of the
+/// prediction. It is measured from the raw samples in the two committed
+/// `weft.s13c.chain-hop.v1` receipts (`bench/receipts/s13c-chain-hop-*.json`),
+/// unioned per class:
+///
+/// * sparse-delta: 153,302 ppm (15.33 %) over 48 samples
+/// * weight-delta: 178,209 ppm (17.82 %) over 48 samples
+///
+/// Only the under-prediction direction matters for an SLA: an over-prediction
+/// is conservative. The bound is warm-cache, single-host, local-backend.
+pub const HOP_UNCERTAINTY_CALIBRATION: &str = "weftfs-r9/hop-uncertainty/v1";
+
+/// Measured under-prediction bound per hop class, in parts per million.
+const HOP_UNCERTAINTY_PPM: [(CostClass, u64); 2] = [
+    (CostClass::WeightDelta, 178_209),
+    (CostClass::SparseDelta, 153_302),
+];
+
+/// Identifier for the measured decode-row uncertainty bounds.
+///
+/// The persisted decode rows are two-point fits, so they have no within-fit
+/// residual. The uncertainty recorded here is the observed cross-run spread of
+/// the same host calibration: the maximum absolute deviation from 1.0 of
+/// `this_run_vs_baked_ns_per_mib_ratio` across the two committed
+/// `weftfs-r1` / `weftfs-r2` planner receipts, with a 1 % floor for classes the
+/// receipts did not repeat. It bounds run-to-run drift, not a within-run
+/// residual; that is the measured quantity available for these rows.
+pub const DECODE_UNCERTAINTY_CALIBRATION: &str = "weftfs-r9/decode-uncertainty/v1";
+
+/// Measured run-to-run under-prediction bound per decode class, in ppm.
+const DECODE_UNCERTAINTY_PPM: [(CostClass, u64); 10] = [
+    (CostClass::Raw, 10_000),
+    (CostClass::Zstd, 10_560),
+    (CostClass::FloatTensor, 10_000),
+    (CostClass::TensorSharded, 10_000),
+    (CostClass::TensorTiled, 10_000),
+    (CostClass::WeightDelta, 10_000),
+    (CostClass::SparseDelta, 10_000),
+    (CostClass::SemanticDelta, 10_000),
+    (CostClass::KvCache, 10_000),
+    (CostClass::Activation, 10_000),
+];
+
+/// The graph-hop measured row for `class`, when one was measured.
+///
+/// `None` means the class has no controlled-chain measurement. The parent-graph
+/// planner refuses to price such an edge instead of borrowing a neighbouring
+/// row.
+pub fn measured_hop_row(class: CostClass) -> Option<Coefficients> {
+    HOP_MEASURED
+        .iter()
+        .find(|(candidate, _)| *candidate == class)
+        .map(|(_, row)| *row)
+}
+
+/// Identifier for the measured zstd-patch hop row.
+///
+/// `ZSTD_PATCH` (mode-4 `DICTIONARY` against the whole base) has no
+/// [`CostClass`] of its own: the persisted calibration schema is frozen at ten
+/// classes. It nevertheless gets its own measured controlled-chain row, because
+/// the pythia graph selects it on adjacent fine-tune steps and pricing it with
+/// the weight-delta row is exactly the substitution this planner refuses.
+pub const ZSTD_PATCH_HOP_CALIBRATION: &str = "weftfs-r9/zstd-patch-hop/v1";
+
+/// Measured zstd-patch hop row: 1,675,326 ns/MiB through the origin over 48
+/// samples (4/8/16 MiB, two change shapes, depth 8, forced strategy).
+/// Receipt: `bench/receipts/s13c-chain-hop-zstd-patch-20261110T090000Z.json`.
+pub const ZSTD_PATCH_HOP: Coefficients = Coefficients::new(0, 1_675_326);
+
+/// Measured under-prediction bound for the zstd-patch hop row: 312,958 ppm
+/// (31.30 %) over the same 48 samples.
+pub const ZSTD_PATCH_HOP_UNCERTAINTY_PPM: u64 = 312_958;
+
+/// The measured under-prediction bound for a graph hop, in ppm of the point
+/// prediction. `None` when the class has no measured hop row.
+pub fn hop_uncertainty_ppm(class: CostClass) -> Option<u64> {
+    HOP_UNCERTAINTY_PPM
+        .iter()
+        .find(|(candidate, _)| *candidate == class)
+        .map(|(_, ppm)| *ppm)
+}
+
+/// The measured run-to-run under-prediction bound for a decode row, in ppm.
+pub fn decode_uncertainty_ppm(class: CostClass) -> u64 {
+    DECODE_UNCERTAINTY_PPM
+        .iter()
+        .find(|(candidate, _)| *candidate == class)
+        .map(|(_, ppm)| *ppm)
+        .unwrap_or(10_000)
+}
+
 /// The graph-hop row for `class`: a measured hop override when one exists,
 /// otherwise the [`CostModelKind::Measured`] decode row unchanged.
 pub fn hop_coefficients(class: CostClass) -> Coefficients {
@@ -494,6 +588,13 @@ fn estimate_with(row: Coefficients, decoded_bytes: u64) -> u64 {
         .saturating_add(row.fixed_ns)
 }
 
+/// Estimate nanoseconds from an explicit [`Coefficients`] row. Exposed so the
+/// planner's hop table and a diagnostics caller use the same integer
+/// arithmetic as the baked decode table.
+pub fn estimate_from_row(row: Coefficients, bytes: u64) -> u64 {
+    estimate_with(row, bytes)
+}
+
 /// The affine coefficients for one class under one baked model.
 pub fn coefficients(class: CostClass, model: CostModelKind) -> Coefficients {
     CostTable::baked(model).row(class)
@@ -551,6 +652,16 @@ pub enum EncodeProvenance {
     Measured,
     Derived,
     Declared,
+}
+
+impl EncodeProvenance {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            EncodeProvenance::Measured => "measured",
+            EncodeProvenance::Derived => "derived",
+            EncodeProvenance::Declared => "declared",
+        }
+    }
 }
 
 /// Encode classes. These track the planner's strategies rather than the frozen

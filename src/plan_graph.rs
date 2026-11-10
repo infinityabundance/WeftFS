@@ -83,6 +83,12 @@ pub struct EdgeCost {
     pub bytes: u64,
     /// Incremental decode nanoseconds for this version's own frames.
     pub decode_ns: u64,
+    /// One-time encode nanoseconds for this version's own frames, from the
+    /// measured encode table ([`crate::cost_model::ENCODE_CALIBRATION`]).
+    pub encode_ns: u64,
+    /// Measured under-prediction bound on `decode_ns`, in nanoseconds. It is
+    /// the sum over tensors of `point * measured_under_prediction_ppm`.
+    pub decode_uncertainty_ns: u64,
     /// Decode nanoseconds attributable to tensors that actually take the delta
     /// edge. Recorded for diagnostics; the objective uses `decode_ns`.
     pub coupled_ns: u64,
@@ -90,6 +96,48 @@ pub struct EdgeCost {
     pub coupled_tensors: u32,
     /// Tensors in the version.
     pub total_tensors: u32,
+    /// How many tensors of this edge use each [`TensorStrategy`], in the slot
+    /// order of [`strategy_slot`]. This is reporting/audit data: it proves an
+    /// edge was priced with the representation it actually uses.
+    pub representations: [u32; STRATEGY_SLOTS],
+}
+
+/// Number of [`crate::tensor_store::TensorStrategy`] variants.
+pub const STRATEGY_SLOTS: usize = 14;
+
+/// Every strategy in its canonical slot order.
+pub const STRATEGIES: [crate::tensor_store::TensorStrategy; STRATEGY_SLOTS] = [
+    crate::tensor_store::TensorStrategy::Raw,
+    crate::tensor_store::TensorStrategy::Zstd,
+    crate::tensor_store::TensorStrategy::ZstdPatch,
+    crate::tensor_store::TensorStrategy::FloatTensor,
+    crate::tensor_store::TensorStrategy::TensorSharded,
+    crate::tensor_store::TensorStrategy::TensorTiled,
+    crate::tensor_store::TensorStrategy::FloatTiled,
+    crate::tensor_store::TensorStrategy::FloatTiledStreams,
+    crate::tensor_store::TensorStrategy::WeightDelta,
+    crate::tensor_store::TensorStrategy::SparseDelta,
+    crate::tensor_store::TensorStrategy::SemanticDelta,
+    crate::tensor_store::TensorStrategy::KvCache,
+    crate::tensor_store::TensorStrategy::Activation,
+    crate::tensor_store::TensorStrategy::EngramShard,
+];
+
+/// The slot a strategy occupies in [`EdgeCost::representations`].
+pub fn strategy_slot(strategy: crate::tensor_store::TensorStrategy) -> usize {
+    STRATEGIES
+        .iter()
+        .position(|candidate| *candidate == strategy)
+        .expect("every TensorStrategy is listed in STRATEGIES")
+}
+
+/// One representation's measured graph price: point decode, measured
+/// under-prediction bound, and the encode estimate.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct HopPrice {
+    pub decode_ns: u64,
+    pub decode_uncertainty_ns: u64,
+    pub encode_ns: u64,
 }
 
 /// One version in the graph.
@@ -203,6 +251,20 @@ impl Solver {
 pub struct PlanOptions {
     /// Bytes charged per nanosecond of decode time (`0` = bytes-only).
     pub lambda_read_ns: u64,
+    /// Bytes charged per nanosecond of the one-time **encode** work. When not
+    /// set explicitly it tracks `lambda_read_ns`, exactly like
+    /// [`crate::tensor_store::TensorPlanOptions::effective_write_lambda`], so a
+    /// bytes-only plan stays bytes-only and a latency-priced plan pays for the
+    /// representation it builds.
+    pub lambda_write_ns: u64,
+    /// Whether `lambda_write_ns` was set explicitly.
+    pub lambda_write_ns_set: bool,
+    /// Bytes charged per retained byte over the plan's lifetime. This is an
+    /// explicit caller exchange rate, not a measured physical constant: the
+    /// repository has no measured retention-cost table. It defaults to `0`,
+    /// which leaves the retention term reported but unpriced. The storage term
+    /// is charged separately at one byte per byte.
+    pub lambda_retention_ns: u64,
     /// Expected reads per version over its lifetime. Each read pays the whole
     /// chain (`chain_decode_ns`), so this multiplies the decode term.
     pub reads_per_version: u64,
@@ -233,6 +295,9 @@ impl Default for PlanOptions {
     fn default() -> Self {
         PlanOptions {
             lambda_read_ns: 0,
+            lambda_write_ns: 0,
+            lambda_write_ns_set: false,
+            lambda_retention_ns: 0,
             reads_per_version: 1,
             max_depth: MAX_SUPPORTED_DEPTH,
             sla_ns: None,
@@ -245,6 +310,16 @@ impl Default for PlanOptions {
 }
 
 impl PlanOptions {
+    /// The write lambda actually applied: the explicit value when set,
+    /// otherwise the read lambda.
+    pub fn effective_write_lambda(&self) -> u64 {
+        if self.lambda_write_ns_set {
+            self.lambda_write_ns
+        } else {
+            self.lambda_read_ns
+        }
+    }
+
     pub fn validate(&self) -> Result<()> {
         if self.max_depth > MAX_SUPPORTED_DEPTH {
             return Err(Error::invalid_argument(format!(
@@ -292,13 +367,31 @@ pub struct ParentGraphPlan {
     pub predicted_chain_ns: Vec<u64>,
     /// The measured restore overhead charged to each version.
     pub predicted_overhead_ns: Vec<u64>,
+    /// One-time encode nanoseconds charged to each version.
+    pub predicted_encode_ns: Vec<u64>,
+    /// Measured decode under-prediction bound accumulated along each version's
+    /// chain. This is the `uncertainty_bound` an SLA is compared against.
+    pub predicted_uncertainty_ns: Vec<u64>,
     /// The measured SLA margin charged to each version (see
     /// [`SLA_MARGIN_CALIBRATION`]). Charged only to the SLA bound below, never
     /// to the objective or the point prediction.
     pub predicted_margin_ns: Vec<u64>,
-    /// `predicted_chain_ns[i] + predicted_margin_ns[i]`: the bound the SLA is
-    /// compared against.
+    /// `predicted_chain_ns[i] + predicted_margin_ns[i] +
+    /// predicted_uncertainty_ns[i]`: the bound the SLA is compared against.
     pub predicted_sla_bound_ns: Vec<u64>,
+    /// Sum of the per-version one-time encode estimates.
+    pub total_encode_ns: u64,
+    /// Bytes the plan keeps live for the trajectory (the sum of edge bytes).
+    /// Reported as the retention term's base; every plan retains its own
+    /// representations.
+    pub retained_bytes: u64,
+    /// `retained_bytes * lambda_retention_ns` contribution to the objective.
+    pub retention_cost_units: u128,
+    /// `total_encode_ns * effective_write_lambda()` contribution.
+    pub write_cost_units: u128,
+    /// The measured hop/decode uncertainty calibration names.
+    pub hop_uncertainty_calibration: &'static str,
+    pub decode_uncertainty_calibration: &'static str,
     /// The overhead model the prediction used, or `None` when the caller
     /// supplied no model (then no SLA may be claimed).
     pub restore_overhead: Option<RestoreOverhead>,
@@ -318,8 +411,11 @@ pub struct ParentGraphPlan {
     /// prediction; the SLA is compared against [`Self::worst_sla_bound_ns`].
     pub worst_restore_ns: u64,
     /// Worst-case restore **bound** (`max(predicted_sla_bound_ns)`), i.e. the
-    /// point prediction plus the measured margin.
+    /// point prediction plus the measured margin and the measured decode
+    /// uncertainty.
     pub worst_sla_bound_ns: u64,
+    /// The uncertainty component of the worst bound (`max(predicted_uncertainty_ns)`).
+    pub worst_uncertainty_ns: u64,
     /// True when the plan's worst restore bound satisfies the SLA (also true
     /// when none was given).
     pub sla_satisfied: bool,
@@ -377,15 +473,18 @@ pub fn evaluate(
     let mut chain_ns = vec![0u64; parents.len()];
     let mut overhead_ns = vec![0u64; parents.len()];
     let mut margin_ns = vec![0u64; parents.len()];
+    let mut uncertainty_ns = vec![0u64; parents.len()];
     let mut sla_bound_ns = vec![0u64; parents.len()];
+    let mut encode_ns = vec![0u64; parents.len()];
     let mut depths = vec![0u32; parents.len()];
     let mut bytes: u128 = 0;
     let mut decode_weighted: u128 = 0;
+    let mut encode_total: u128 = 0;
     let mut dependencies = 0u32;
     for (i, parent) in parents.iter().copied().enumerate() {
         let edge = graph.edge(i, parent)?;
-        let (decode_chain, depth) = match parent {
-            None => (edge.decode_ns, 0u32),
+        let (decode_chain, uncertainty_chain, depth) = match parent {
+            None => (edge.decode_ns, edge.decode_uncertainty_ns, 0u32),
             Some(j) => {
                 if depths[j] >= options.max_depth {
                     return Err(Error::invalid_argument(format!(
@@ -398,10 +497,16 @@ pub fn evaluate(
                     .ok_or_else(|| {
                         Error::limit_exceeded("chain decode nanoseconds overflow u64")
                     })?;
-                (chain, depths[j] + 1)
+                let uncertainty = uncertainty_ns[j]
+                    .checked_add(edge.decode_uncertainty_ns)
+                    .ok_or_else(|| {
+                        Error::limit_exceeded("chain decode uncertainty overflow u64")
+                    })?;
+                (chain, uncertainty, depths[j] + 1)
             }
         };
         decode_chain_ns[i] = decode_chain;
+        uncertainty_ns[i] = uncertainty_chain;
         // The restore overhead is charged once per version restore, never once
         // per dependency hop: a deeper chain decodes one more frame, which the
         // decode rows already price.
@@ -427,14 +532,23 @@ pub fn evaluate(
             .map(|term| term.estimate_margin_ns(graph.versions[i].logical_bytes))
             .unwrap_or(0);
         margin_ns[i] = margin;
+        // The uncertainty bound is the measured under-prediction of the decode
+        // rows along this version's chain. Unlike the per-version restore
+        // margin it is per hop, because each hop's row has its own measured
+        // error and the chain sums them.
         sla_bound_ns[i] = chain_ns[i]
             .checked_add(margin)
+            .and_then(|value| value.checked_add(uncertainty_chain))
             .ok_or_else(|| Error::limit_exceeded("SLA restore bound overflow u64"))?;
         depths[i] = depth;
         dependencies += u32::from(parent.is_some());
         bytes = bytes
             .checked_add(u128::from(edge.bytes))
             .ok_or_else(|| Error::limit_exceeded("edge byte total overflow u128"))?;
+        encode_ns[i] = edge.encode_ns;
+        encode_total = encode_total
+            .checked_add(u128::from(edge.encode_ns))
+            .ok_or_else(|| Error::limit_exceeded("encode nanosecond total overflow u128"))?;
         let weighted = u128::from(options.lambda_read_ns)
             .checked_mul(u128::from(options.reads_per_version))
             .and_then(|factor| factor.checked_mul(u128::from(chain_ns[i])))
@@ -445,11 +559,22 @@ pub fn evaluate(
     }
     let predicted_bytes =
         u64::try_from(bytes).map_err(|_| Error::limit_exceeded("edge byte total exceeds u64"))?;
+    let total_encode_ns = u64::try_from(encode_total)
+        .map_err(|_| Error::limit_exceeded("encode nanosecond total exceeds u64"))?;
+    let write_cost_units = encode_total
+        .checked_mul(u128::from(options.effective_write_lambda()))
+        .ok_or_else(|| Error::limit_exceeded("write cost overflow u128"))?;
+    let retention_cost_units = bytes
+        .checked_mul(u128::from(options.lambda_retention_ns))
+        .ok_or_else(|| Error::limit_exceeded("retention cost overflow u128"))?;
     let objective = bytes
-        .checked_add(decode_weighted)
+        .checked_add(write_cost_units)
+        .and_then(|value| value.checked_add(retention_cost_units))
+        .and_then(|value| value.checked_add(decode_weighted))
         .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?;
     let worst_restore_ns = chain_ns.iter().copied().max().unwrap_or(0);
     let worst_sla_bound_ns = sla_bound_ns.iter().copied().max().unwrap_or(0);
+    let worst_uncertainty_ns = uncertainty_ns.iter().copied().max().unwrap_or(0);
     let max_depth = depths.iter().copied().max().unwrap_or(0);
     let sla_satisfied = options
         .sla_ns
@@ -470,8 +595,16 @@ pub fn evaluate(
         predicted_decode_chain_ns: decode_chain_ns,
         predicted_chain_ns: chain_ns,
         predicted_overhead_ns: overhead_ns,
+        predicted_encode_ns: encode_ns,
+        predicted_uncertainty_ns: uncertainty_ns,
         predicted_margin_ns: margin_ns,
         predicted_sla_bound_ns: sla_bound_ns,
+        total_encode_ns,
+        retained_bytes: predicted_bytes,
+        retention_cost_units,
+        write_cost_units,
+        hop_uncertainty_calibration: crate::cost_model::HOP_UNCERTAINTY_CALIBRATION,
+        decode_uncertainty_calibration: crate::cost_model::DECODE_UNCERTAINTY_CALIBRATION,
         restore_overhead: options.restore_overhead,
         restore_overhead_calibration: RESTORE_OVERHEAD_CALIBRATION,
         sla_margin_calibration: SLA_MARGIN_CALIBRATION,
@@ -481,6 +614,7 @@ pub fn evaluate(
         max_depth,
         worst_restore_ns,
         worst_sla_bound_ns,
+        worst_uncertainty_ns,
         sla_satisfied,
         budget_satisfied,
     })
@@ -525,15 +659,19 @@ fn version_margin_ns(graph: &VersionGraph, options: &PlanOptions, i: usize) -> u
 }
 
 /// The quantity an SLA actually bounds: the point prediction plus the measured
-/// margin. Every solver prunes and `check_constraints` compares on this value.
+/// per-version margin plus the measured decode uncertainty accumulated along
+/// the chain. Every solver prunes and `check_constraints` compares on this
+/// value.
 fn sla_bound_ns(
     graph: &VersionGraph,
     options: &PlanOptions,
     i: usize,
     decode_chain_ns: u64,
+    uncertainty_ns: u64,
 ) -> u64 {
     restore_chain_ns(graph, options, i, decode_chain_ns)
         .saturating_add(version_margin_ns(graph, options, i))
+        .saturating_add(uncertainty_ns)
 }
 
 /// Result of a solver before constraint finalisation.
@@ -544,6 +682,8 @@ struct Candidate {
     dependencies: u32,
     /// Chain decode nanoseconds of the last version.
     chain_ns: u64,
+    /// Measured decode under-prediction bound accumulated along the chain.
+    uncertainty_ns: u64,
     /// Chain depth of the last version.
     depth: u32,
 }
@@ -567,12 +707,14 @@ fn check_constraints(plan: &ParentGraphPlan, options: &PlanOptions) -> Result<()
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!(
-                    "no plan satisfies the {} ns restore SLA; the best predicted worst-case restore is {} ns plus a {} ns measured SLA margin (point prediction {} ns; calibration {}), bound {} ns",
+                    "no plan satisfies the {} ns restore SLA; the best predicted worst-case restore is {} ns plus a {} ns measured SLA margin and a {} ns measured decode-uncertainty bound (point prediction {} ns; calibrations {} / {}), bound {} ns",
                     sla,
                     plan.worst_restore_ns,
-                    plan.worst_sla_bound_ns - plan.worst_restore_ns,
+                    plan.worst_sla_bound_ns - plan.worst_restore_ns - plan.worst_uncertainty_ns,
+                    plan.worst_uncertainty_ns,
                     plan.worst_restore_ns,
                     SLA_MARGIN_CALIBRATION,
+                    plan.hop_uncertainty_calibration,
                     plan.worst_sla_bound_ns
                 ),
             ));
@@ -666,25 +808,33 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
     // Version 0 can only be independent.
     let v0 = &graph.versions[0];
     if let Some(sla) = options.sla_ns {
-        if sla_bound_ns(graph, options, 0, v0.independent.decode_ns) > sla {
+        if sla_bound_ns(
+            graph,
+            options,
+            0,
+            v0.independent.decode_ns,
+            v0.independent.decode_uncertainty_ns,
+        ) > sla
+        {
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!(
-                    "no plan satisfies the {} ns restore SLA; version 0 alone needs {} ns plus a {} ns measured SLA margin",
+                    "no plan satisfies the {} ns restore SLA; version 0 alone needs {} ns plus a {} ns measured SLA margin and a {} ns measured decode-uncertainty bound",
                     sla,
                     restore_chain_ns(graph, options, 0, v0.independent.decode_ns),
-                    version_margin_ns(graph, options, 0)
+                    version_margin_ns(graph, options, 0),
+                    v0.independent.decode_uncertainty_ns
                 ),
             ));
         }
     }
     states[0] = vec![Some(Candidate {
         parents: vec![None],
-        objective: u128::from(v0.independent.bytes)
-            .checked_add(decode_term(options, v0.independent.decode_ns))
+        objective: edge_units(options, v0.independent, v0.independent.decode_ns)
             .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?,
         dependencies: 0,
         chain_ns: v0.independent.decode_ns,
+        uncertainty_ns: v0.independent.decode_uncertainty_ns,
         depth: 0,
     })];
     for i in 1..n {
@@ -694,14 +844,21 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
         // Restart: the previous prefix may end at any depth; only the smallest
         // objective for the new depth-0 state matters.
         let mut best_restart: Option<Candidate> = None;
-        let restart_term = u128::from(version.independent.bytes)
-            .checked_add(decode_term(options, version.independent.decode_ns))
+        let restart_term = edge_units(options, version.independent, version.independent.decode_ns)
             .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?;
         // A restart of version `i` is itself a restore; if its own overhead
         // already breaks the SLA no prefix can use it.
         let restart_fits = options
             .sla_ns
-            .map(|sla| sla_bound_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .map(|sla| {
+                sla_bound_ns(
+                    graph,
+                    options,
+                    i,
+                    version.independent.decode_ns,
+                    version.independent.decode_uncertainty_ns,
+                ) <= sla
+            })
             .unwrap_or(true);
         for state in states[i - 1].iter().flatten() {
             if !restart_fits {
@@ -717,6 +874,7 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
                     .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?,
                 dependencies: state.dependencies,
                 chain_ns: version.independent.decode_ns,
+                uncertainty_ns: version.independent.decode_uncertainty_ns,
                 depth: 0,
             };
             if best_restart
@@ -739,31 +897,33 @@ fn solve_dp(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<us
                     let chain = state.chain_ns.checked_add(edge.decode_ns).ok_or_else(|| {
                         Error::limit_exceeded("chain decode nanoseconds overflow u64")
                     })?;
+                    let uncertainty = state
+                        .uncertainty_ns
+                        .checked_add(edge.decode_uncertainty_ns)
+                        .ok_or_else(|| Error::limit_exceeded("chain uncertainty overflow u64"))?;
                     if options
                         .sla_ns
-                        .map(|sla| sla_bound_ns(graph, options, i, chain) > sla)
+                        .map(|sla| sla_bound_ns(graph, options, i, chain, uncertainty) > sla)
                         .unwrap_or(false)
                     {
                         continue;
                     }
                     let mut parents = state.parents.clone();
                     parents.push(Some(i - 1));
-                    let candidate = Candidate {
-                        parents,
-                        objective: state
-                            .objective
-                            .checked_add(
-                                u128::from(edge.bytes)
-                                    .checked_add(decode_term(options, chain))
-                                    .ok_or_else(|| {
-                                        Error::limit_exceeded("objective overflow u128")
-                                    })?,
-                            )
-                            .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?,
-                        dependencies: state.dependencies + 1,
-                        chain_ns: chain,
-                        depth: state.depth + 1,
-                    };
+                    let candidate =
+                        Candidate {
+                            parents,
+                            objective: state
+                                .objective
+                                .checked_add(edge_units(options, edge, chain).ok_or_else(|| {
+                                    Error::limit_exceeded("objective overflow u128")
+                                })?)
+                                .ok_or_else(|| Error::limit_exceeded("objective overflow u128"))?,
+                            dependencies: state.dependencies + 1,
+                            chain_ns: chain,
+                            uncertainty_ns: uncertainty,
+                            depth: state.depth + 1,
+                        };
                     let slot = next[d + 1].clone();
                     if slot
                         .as_ref()
@@ -804,11 +964,34 @@ fn decode_term(options: &PlanOptions, chain_ns: u64) -> u128 {
         .saturating_mul(u128::from(chain_ns))
 }
 
+/// The complete cost of one version under this plan:
+///
+/// ```text
+/// storage(bytes) + write(encode) + retention(retained bytes) + reads * restore
+/// ```
+///
+/// Bytes are charged once; the encode term is charged once and weighted by the
+/// effective write lambda; the retention term is the same byte total weighted
+/// by the explicit retention lambda; the restore term is the whole chain
+/// (including the measured per-version overhead) weighted by the read lambda and
+/// the expected read count.
+fn edge_units(options: &PlanOptions, edge: EdgeCost, chain_ns: u64) -> Option<u128> {
+    let bytes = u128::from(edge.bytes);
+    let retention = bytes.checked_mul(u128::from(options.lambda_retention_ns))?;
+    let write =
+        u128::from(edge.encode_ns).checked_mul(u128::from(options.effective_write_lambda()))?;
+    bytes
+        .checked_add(write)?
+        .checked_add(retention)?
+        .checked_add(decode_term(options, chain_ns))
+}
+
 /// Exhaustive oracle over every earlier compatible parent.
 fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Option<usize>>> {
     let n = graph.len();
     let mut parents: Vec<Option<usize>> = vec![None; n];
     let mut chain_ns = vec![0u64; n];
+    let mut uncertainty_ns = vec![0u64; n];
     let mut best: Option<Candidate> = None;
     let mut bytes: u128 = 0;
 
@@ -818,6 +1001,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
         options: &PlanOptions,
         parents: &mut Vec<Option<usize>>,
         chain_ns: &mut Vec<u64>,
+        uncertainty_ns: &mut Vec<u64>,
         depths: &mut Vec<u32>,
         bytes: &mut u128,
         best: &mut Option<Candidate>,
@@ -829,6 +1013,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
                 objective: plan.objective,
                 dependencies: plan.dependencies,
                 chain_ns: *chain_ns.last().unwrap_or(&0),
+                uncertainty_ns: *uncertainty_ns.last().unwrap_or(&0),
                 depth: *depths.last().unwrap_or(&0),
             };
             if best
@@ -846,15 +1031,19 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
                 Ok(edge) => edge,
                 Err(_) => continue,
             };
-            let (chain, depth) = match choice {
-                None => (edge.decode_ns, 0u32),
-                Some(j) => (chain_ns[j].saturating_add(edge.decode_ns), depths[j] + 1),
+            let (chain, uncertainty, depth) = match choice {
+                None => (edge.decode_ns, edge.decode_uncertainty_ns, 0u32),
+                Some(j) => (
+                    chain_ns[j].saturating_add(edge.decode_ns),
+                    uncertainty_ns[j].saturating_add(edge.decode_uncertainty_ns),
+                    depths[j] + 1,
+                ),
             };
             if depth > options.max_depth {
                 continue;
             }
             if let Some(sla) = options.sla_ns {
-                if sla_bound_ns(graph, options, i, chain) > sla {
+                if sla_bound_ns(graph, options, i, chain, uncertainty) > sla {
                     continue;
                 }
             }
@@ -870,6 +1059,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
             }
             parents[i] = choice;
             chain_ns[i] = chain;
+            uncertainty_ns[i] = uncertainty;
             depths[i] = depth;
             recurse(
                 i + 1,
@@ -877,6 +1067,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
                 options,
                 parents,
                 chain_ns,
+                uncertainty_ns,
                 depths,
                 bytes,
                 best,
@@ -886,6 +1077,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
         parents[i] = None;
         depths[i] = 0;
         chain_ns[i] = 0;
+        uncertainty_ns[i] = 0;
         Ok(())
     }
 
@@ -896,6 +1088,7 @@ fn solve_brute_force(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<
         options,
         &mut parents,
         &mut chain_ns,
+        &mut uncertainty_ns,
         &mut depths,
         &mut bytes,
         &mut best,
@@ -914,37 +1107,60 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
     let n = graph.len();
     let mut parents: Vec<Option<usize>> = vec![None; n];
     let mut chain_ns = vec![0u64; n];
+    let mut uncertainty_ns = vec![0u64; n];
     let mut depths = vec![0u32; n];
     let mut bytes_total: u128 = 0;
     for i in 0..n {
         let version = &graph.versions[i];
-        let mut best: Option<(u128, u32, Option<usize>, u64, u64, u32)> = None;
-        let mut consider = |parent: Option<usize>, edge: EdgeCost, chain: u64, depth: u32| {
-            // The version's own contribution is its edge bytes plus the whole
-            // chain decode cost priced at the read weight.
-            let edge_cost = u128::from(edge.bytes)
-                .checked_add(decode_term(options, chain))
-                .unwrap_or(u128::MAX);
-            let deps = u32::from(parent.is_some());
-            let better_candidate = match &best {
-                None => true,
-                Some((cost, best_deps, best_parent, _, _, _)) => {
-                    edge_cost < *cost
-                        || (edge_cost == *cost
-                            && (deps < *best_deps || (deps == *best_deps && parent < *best_parent)))
+        let mut best: Option<(u128, u32, Option<usize>, u64, u64, u64, u32)> = None;
+        let mut consider =
+            |parent: Option<usize>, edge: EdgeCost, chain: u64, uncertainty: u64, depth: u32| {
+                // The version's own contribution is its edge bytes, its encode cost,
+                // its retention weight, and the whole chain decode cost.
+                let edge_cost = edge_units(options, edge, chain).unwrap_or(u128::MAX);
+                let deps = u32::from(parent.is_some());
+                let better_candidate = match &best {
+                    None => true,
+                    Some((cost, best_deps, best_parent, _, _, _, _)) => {
+                        edge_cost < *cost
+                            || (edge_cost == *cost
+                                && (deps < *best_deps
+                                    || (deps == *best_deps && parent < *best_parent)))
+                    }
+                };
+                if better_candidate {
+                    best = Some((
+                        edge_cost,
+                        deps,
+                        parent,
+                        chain,
+                        uncertainty,
+                        edge.bytes,
+                        depth,
+                    ));
                 }
             };
-            if better_candidate {
-                best = Some((edge_cost, deps, parent, chain, edge.bytes, depth));
-            }
-        };
         // Restart.
         if options
             .sla_ns
-            .map(|sla| sla_bound_ns(graph, options, i, version.independent.decode_ns) <= sla)
+            .map(|sla| {
+                sla_bound_ns(
+                    graph,
+                    options,
+                    i,
+                    version.independent.decode_ns,
+                    version.independent.decode_uncertainty_ns,
+                ) <= sla
+            })
             .unwrap_or(true)
         {
-            consider(None, version.independent, version.independent.decode_ns, 0);
+            consider(
+                None,
+                version.independent,
+                version.independent.decode_ns,
+                version.independent.decode_uncertainty_ns,
+                0,
+            );
         }
         if options.max_depth >= 1 {
             for j in 0..i {
@@ -955,18 +1171,19 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
                     continue;
                 }
                 let chain = chain_ns[j].saturating_add(edge.decode_ns);
+                let uncertainty = uncertainty_ns[j].saturating_add(edge.decode_uncertainty_ns);
                 if options
                     .sla_ns
-                    .map(|sla| sla_bound_ns(graph, options, i, chain) > sla)
+                    .map(|sla| sla_bound_ns(graph, options, i, chain, uncertainty) > sla)
                     .unwrap_or(false)
                 {
                     continue;
                 }
-                consider(Some(j), edge, chain, depths[j] + 1);
+                consider(Some(j), edge, chain, uncertainty, depths[j] + 1);
             }
         }
         drop(consider);
-        let Some((_cost, _, parent, chain, edge_bytes, depth)) = best else {
+        let Some((_cost, _, parent, chain, uncertainty, edge_bytes, depth)) = best else {
             return Err(Error::new(
                 Class::LimitExceeded,
                 format!("no feasible parent for version {i}"),
@@ -983,6 +1200,7 @@ fn solve_greedy(graph: &VersionGraph, options: &PlanOptions) -> Result<Vec<Optio
         }
         parents[i] = parent;
         chain_ns[i] = chain;
+        uncertainty_ns[i] = uncertainty;
         depths[i] = depth;
         bytes_total = new_bytes;
     }
@@ -1019,21 +1237,113 @@ impl Default for PriceOptions {
     }
 }
 
-/// Decode price of one graph edge's chosen representation.
+/// Price one graph edge's chosen representation.
 ///
 /// The store knows the chosen representation at plan time, so the graph prices
-/// each edge with **that** representation's measured hop row
-/// ([`crate::cost_model::hop_estimate_ns`]) instead of the write-time decode
-/// row. The two tables are deliberately different: the write table drives
-/// candidate selection and correcting it would flip stored representations,
-/// while the hop table exists only to price chains. Mode 18
-/// (`FLOAT_TILED_STREAMS`) keeps its own measured decode row because the
-/// persisted calibration class set has no mode-18 class.
-pub fn hop_decode_ns(strategy: crate::tensor_store::TensorStrategy, decoded_bytes: u64) -> u64 {
-    if strategy == crate::tensor_store::TensorStrategy::FloatTiledStreams {
-        return crate::cost_model::estimate_streams_ns(decoded_bytes);
-    }
-    crate::cost_model::hop_estimate_ns(strategy.cost_class(), decoded_bytes)
+/// each edge with **that** representation's measured row. Only rows that were
+/// actually measured are accepted:
+///
+/// | strategy | row | source |
+/// |---|---|---|
+/// | raw, zstd, float-tensor, tensor-sharded, tensor-tiled | measured decode row | `weftfs-r2/decode-calibration/v1` |
+/// | float-tiled-streams (mode 18) | measured mode-18 row | `weftfs-mode18/decode-calibration/v1` |
+/// | weight-delta (mode 11) | measured controlled-chain hop row | `weftfs-s13c/chain-hop/v1` |
+/// | sparse-delta (mode 16) | measured controlled-chain hop row | `weftfs-s13c/chain-hop/v1` |
+/// | zstd-patch (mode 4) | measured controlled-chain hop row | `weftfs-r9/zstd-patch-hop/v1` |
+/// | semantic-delta (mode 14) | measured incremental decode row | `weftfs-r2/decode-calibration/v1` |
+///
+/// Mode 17 (`FLOAT_TILED`), mode 20 (`ENGRAM_SHARD`), and the read-only
+/// KV/activation strategies have **no measured row**. They are refused with
+/// [`crate::Class::UnmeasuredCost`] naming the strategy; the planner never
+/// borrows a neighbouring row.
+///
+/// The returned uncertainty is the measured under-prediction bound (p95/max
+/// over the fitted samples, see [`crate::cost_model::HOP_UNCERTAINTY_CALIBRATION`]
+/// and [`crate::cost_model::DECODE_UNCERTAINTY_CALIBRATION`]).
+pub fn hop_price(
+    strategy: crate::tensor_store::TensorStrategy,
+    decoded_bytes: u64,
+) -> Result<HopPrice> {
+    use crate::tensor_store::TensorStrategy::*;
+    let encode_ns = crate::cost_model::estimate_encode_ns(strategy.encode_class(), decoded_bytes);
+    let (decode_ns, uncertainty_ppm) = match strategy {
+        Raw | Zstd | FloatTensor | TensorSharded | TensorTiled => {
+            let class = strategy.cost_class();
+            (
+                crate::cost_model::estimate_ns(
+                    class,
+                    decoded_bytes,
+                    crate::cost_model::CostModelKind::Measured,
+                ),
+                crate::cost_model::decode_uncertainty_ppm(class),
+            )
+        }
+        FloatTiledStreams => (
+            crate::cost_model::estimate_streams_ns(decoded_bytes),
+            crate::cost_model::decode_uncertainty_ppm(crate::cost_model::CostClass::TensorTiled),
+        ),
+        WeightDelta | SparseDelta => {
+            let class = strategy.cost_class();
+            let row = crate::cost_model::measured_hop_row(class).ok_or_else(|| {
+                Error::unmeasured_cost(format!(
+                    "`{}` has no measured graph-hop row",
+                    strategy.as_str()
+                ))
+            })?;
+            let ppm = crate::cost_model::hop_uncertainty_ppm(class).ok_or_else(|| {
+                Error::unmeasured_cost(format!(
+                    "`{}` has no measured graph-hop uncertainty bound",
+                    strategy.as_str()
+                ))
+            })?;
+            (estimate_with_row(row, decoded_bytes), ppm)
+        }
+        SemanticDelta => {
+            let class = strategy.cost_class();
+            (
+                crate::cost_model::estimate_ns(
+                    class,
+                    decoded_bytes,
+                    crate::cost_model::CostModelKind::Measured,
+                ),
+                crate::cost_model::decode_uncertainty_ppm(class),
+            )
+        }
+        ZstdPatch => (
+            estimate_with_row(crate::cost_model::ZSTD_PATCH_HOP, decoded_bytes),
+            crate::cost_model::ZSTD_PATCH_HOP_UNCERTAINTY_PPM,
+        ),
+        FloatTiled => {
+            return Err(Error::unmeasured_cost(
+                "mode 17 `float-tiled` has no measured decode row (it previously reused \
+                 the mode-15 row); refusing to price this edge",
+            ))
+        }
+        EngramShard => {
+            return Err(Error::unmeasured_cost(
+                "mode 20 `engram-shard` has no measured decode row (it previously reused \
+                 the mode-15 row); refusing to price this edge",
+            ))
+        }
+        KvCache | Activation => {
+            return Err(Error::unmeasured_cost(format!(
+                "`{}` carries a declared decode row only; refusing to price this edge",
+                strategy.as_str()
+            )))
+        }
+    };
+    let decode_uncertainty_ns =
+        u64::try_from((u128::from(decode_ns) * u128::from(uncertainty_ppm) + 999_999) / 1_000_000)
+            .unwrap_or(u64::MAX);
+    Ok(HopPrice {
+        decode_ns,
+        decode_uncertainty_ns,
+        encode_ns,
+    })
+}
+
+fn estimate_with_row(row: crate::cost_model::Coefficients, bytes: u64) -> u64 {
+    crate::cost_model::estimate_from_row(row, bytes)
 }
 
 /// Append the store-facing planner. Kept in this module so the pure optimizer
@@ -1151,9 +1461,23 @@ impl crate::store::Store {
                 independent.bytes = independent
                     .bytes
                     .saturating_add(price.chosen_physical_bytes);
-                independent.decode_ns = independent
-                    .decode_ns
-                    .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
+                let hop = hop_price(price.chosen, tensor.element_bytes).map_err(|err| {
+                    Error::new(
+                        err.class(),
+                        format!(
+                            "checkpoint `{}` tensor `{}`: {err}",
+                            checkpoints[i], tensor.name
+                        ),
+                    )
+                })?;
+                independent.decode_ns = independent.decode_ns.saturating_add(hop.decode_ns);
+                independent.decode_uncertainty_ns = independent
+                    .decode_uncertainty_ns
+                    .saturating_add(hop.decode_uncertainty_ns);
+                independent.encode_ns = independent
+                    .encode_ns
+                    .saturating_add(price.chosen_estimated_encode_ns);
+                independent.representations[strategy_slot(price.chosen)] += 1;
                 independent.total_tensors += 1;
 
                 for j in 0..i {
@@ -1185,14 +1509,26 @@ impl crate::store::Store {
                     )?;
                     let sum = &mut edge_sums[j];
                     sum.bytes = sum.bytes.saturating_add(price.chosen_physical_bytes);
-                    sum.decode_ns = sum
-                        .decode_ns
-                        .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
+                    let hop = hop_price(price.chosen, tensor.element_bytes).map_err(|err| {
+                        Error::new(
+                            err.class(),
+                            format!(
+                                "checkpoint `{}` tensor `{}` against parent `{}`: {err}",
+                                checkpoints[i], tensor.name, checkpoints[j]
+                            ),
+                        )
+                    })?;
+                    sum.decode_ns = sum.decode_ns.saturating_add(hop.decode_ns);
+                    sum.decode_uncertainty_ns = sum
+                        .decode_uncertainty_ns
+                        .saturating_add(hop.decode_uncertainty_ns);
+                    sum.encode_ns = sum
+                        .encode_ns
+                        .saturating_add(price.chosen_estimated_encode_ns);
+                    sum.representations[strategy_slot(price.chosen)] += 1;
                     sum.total_tensors += 1;
                     if is_delta_strategy(price.chosen) && !causal.is_empty() {
-                        sum.coupled_ns = sum
-                            .coupled_ns
-                            .saturating_add(hop_decode_ns(price.chosen, tensor.element_bytes));
+                        sum.coupled_ns = sum.coupled_ns.saturating_add(hop.decode_ns);
                         sum.coupled_tensors += 1;
                         edge_compatible[j] = true;
                     }
@@ -1288,6 +1624,7 @@ mod tests {
             coupled_ns: ns,
             coupled_tensors: 1,
             total_tensors: 1,
+            ..EdgeCost::default()
         }
     }
 

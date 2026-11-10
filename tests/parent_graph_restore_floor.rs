@@ -28,6 +28,7 @@ fn edge(bytes: u64, decode_ns: u64) -> EdgeCost {
         coupled_ns: decode_ns,
         coupled_tensors: 1,
         total_tensors: 1,
+        ..EdgeCost::default()
     }
 }
 

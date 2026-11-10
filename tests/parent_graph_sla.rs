@@ -18,7 +18,7 @@ use weftfs::cost_model::{
     self, hop_coefficients, hop_estimate_ns, CostClass, CostModelKind, RestoreOverhead,
     RESTORE_OVERHEAD_CALIBRATION, SLA_MARGIN_CALIBRATION,
 };
-use weftfs::plan_graph::{self, hop_decode_ns, EdgeCost, PlanOptions, VersionCost, VersionGraph};
+use weftfs::plan_graph::{self, hop_price, EdgeCost, PlanOptions, VersionCost, VersionGraph};
 use weftfs::safetensors::{self, SafetensorsEntry};
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::tensor_store::TensorStrategy;
@@ -48,6 +48,7 @@ fn edge(bytes: u64, decode_ns: u64) -> EdgeCost {
         coupled_ns: decode_ns,
         coupled_tensors: 1,
         total_tensors: 1,
+        ..EdgeCost::default()
     }
 }
 
@@ -195,14 +196,23 @@ fn the_baked_hop_rows_are_the_measured_chain_union() {
 }
 
 #[test]
-fn each_representation_is_priced_by_its_own_hop_row() {
+fn each_representation_is_priced_by_its_own_measured_row() {
     let bytes = 8 * MIB;
-    let sparse = hop_decode_ns(TensorStrategy::SparseDelta, bytes);
-    let weight = hop_decode_ns(TensorStrategy::WeightDelta, bytes);
+    let sparse = hop_price(TensorStrategy::SparseDelta, bytes).unwrap();
+    let weight = hop_price(TensorStrategy::WeightDelta, bytes).unwrap();
     // The S13b defect was that both used the weight-delta decode row.
-    assert_ne!(sparse, weight, "sparse and weight hops share a row");
-    assert_eq!(sparse, hop_estimate_ns(CostClass::SparseDelta, bytes));
-    assert_eq!(weight, hop_estimate_ns(CostClass::WeightDelta, bytes));
+    assert_ne!(sparse.decode_ns, weight.decode_ns);
+    assert_eq!(
+        sparse.decode_ns,
+        hop_estimate_ns(CostClass::SparseDelta, bytes)
+    );
+    assert_eq!(
+        weight.decode_ns,
+        hop_estimate_ns(CostClass::WeightDelta, bytes)
+    );
+    // Every measured row carries an under-prediction bound.
+    assert!(sparse.decode_uncertainty_ns > 0);
+    assert!(weight.decode_uncertainty_ns > 0);
 
     // Non-delta classes keep the measured decode rows unchanged: this table is
     // a delta-hop correction, not a re-pricing of independent representations.
@@ -212,23 +222,55 @@ fn each_representation_is_priced_by_its_own_hop_row() {
         CostClass::FloatTensor,
         CostClass::TensorSharded,
         CostClass::TensorTiled,
-        CostClass::SemanticDelta,
     ] {
+        let strategy = match class {
+            CostClass::Raw => TensorStrategy::Raw,
+            CostClass::Zstd => TensorStrategy::Zstd,
+            CostClass::FloatTensor => TensorStrategy::FloatTensor,
+            CostClass::TensorSharded => TensorStrategy::TensorSharded,
+            CostClass::TensorTiled => TensorStrategy::TensorTiled,
+            other => panic!("unexpected class {other:?}"),
+        };
         assert_eq!(
-            hop_estimate_ns(class, bytes),
+            hop_price(strategy, bytes).unwrap().decode_ns,
             cost_model::estimate_ns(class, bytes, CostModelKind::Measured),
             "{} must keep the measured decode row",
             class.as_str()
         );
     }
-    // A zstd-patch edge is a delta and shares the measured weight-delta hop
-    // row (no zstd-patch hop was measured; documented, not hidden).
-    assert_eq!(hop_decode_ns(TensorStrategy::ZstdPatch, bytes), weight);
+    // A zstd-patch edge has its own measured controlled-chain row (the pythia
+    // graph selects it on adjacent steps), so it is priced rather than
+    // substituted.
+    let patch = hop_price(TensorStrategy::ZstdPatch, bytes).unwrap();
+    assert_eq!(
+        patch.decode_ns,
+        cost_model::estimate_from_row(cost_model::ZSTD_PATCH_HOP, bytes)
+    );
+    assert_eq!(
+        patch.decode_uncertainty_ns,
+        u64::try_from(
+            (u128::from(patch.decode_ns) * u128::from(cost_model::ZSTD_PATCH_HOP_UNCERTAINTY_PPM)
+                + 999_999)
+                / 1_000_000
+        )
+        .unwrap()
+    );
+    assert_ne!(patch.decode_ns, weight.decode_ns);
+    // Mode 17 and mode 20 have no measured decode row.
+    for strategy in [TensorStrategy::FloatTiled, TensorStrategy::EngramShard] {
+        let err = hop_price(strategy, bytes).unwrap_err();
+        assert_eq!(err.class().as_str(), "UnmeasuredCost", "{strategy:?}");
+        assert!(err.message().contains(strategy.as_str()), "{strategy:?}");
+    }
     // Mode 18 keeps its own measured row.
     assert_eq!(
-        hop_decode_ns(TensorStrategy::FloatTiledStreams, bytes),
+        hop_price(TensorStrategy::FloatTiledStreams, bytes)
+            .unwrap()
+            .decode_ns,
         cost_model::estimate_streams_ns(bytes)
     );
+    // The encode term is present and positive for every priced row.
+    assert!(weight.encode_ns > 0);
 }
 
 /// A three-version graph whose versions are 1 MiB each.
@@ -437,7 +479,7 @@ fn graph_edges_use_the_hop_rows_and_a_plan_round_trips_unchanged() {
     let strategy = TensorStrategy::parse(&meta.strategy).unwrap();
     assert_eq!(
         graph.versions[1].independent.decode_ns,
-        hop_decode_ns(strategy, tensor.element_bytes),
+        hop_price(strategy, tensor.element_bytes).unwrap().decode_ns,
         "the graph did not price the stored representation {} with the hop table",
         meta.strategy
     );
@@ -447,8 +489,12 @@ fn graph_edges_use_the_hop_rows_and_a_plan_round_trips_unchanged() {
     // equals the write-time decode row the S13b model over-priced.
     let delta_edge = graph.versions[1].edges[0].expect("v1 must be able to name v0");
     let bytes = tensor.element_bytes;
-    let sparse = hop_decode_ns(TensorStrategy::SparseDelta, bytes);
-    let weight = hop_decode_ns(TensorStrategy::WeightDelta, bytes);
+    let sparse = hop_price(TensorStrategy::SparseDelta, bytes)
+        .unwrap()
+        .decode_ns;
+    let weight = hop_price(TensorStrategy::WeightDelta, bytes)
+        .unwrap()
+        .decode_ns;
     assert_ne!(sparse, weight);
     assert!(
         delta_edge.decode_ns == sparse || delta_edge.decode_ns == weight,
@@ -457,6 +503,14 @@ fn graph_edges_use_the_hop_rows_and_a_plan_round_trips_unchanged() {
     );
     let write_row = cost_model::estimate_ns(CostClass::WeightDelta, bytes, CostModelKind::Measured);
     assert_ne!(delta_edge.decode_ns, write_row);
+    // The edge records which representation it priced and carries both a write
+    // term and a measured uncertainty bound.
+    assert!(delta_edge.encode_ns > 0);
+    assert!(delta_edge.decode_uncertainty_ns > 0);
+    assert!(
+        delta_edge.representations.iter().sum::<u32>() > 0,
+        "the edge did not record its representation mix"
+    );
 
     // Optimise with a generous SLA and round-trip the plan into a new store.
     let plan = plan_graph::optimize(

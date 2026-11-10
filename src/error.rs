@@ -48,6 +48,10 @@ pub enum Class {
     /// The operation is not expressible for the object's physical
     /// representation (for example a shrink over an immutable overlay).
     UnsupportedRepresentation,
+    /// A cost model was asked to price a representation whose row has not been
+    /// measured. The planner refuses rather than substituting a neighbouring
+    /// row.
+    UnmeasuredCost,
     /// Selector grammar error.
     Parse,
     /// Selector schema string is not `weft.selector.v1`.
@@ -86,6 +90,7 @@ impl Class {
             Class::NonCanonical => "NonCanonical",
             Class::UnsupportedVersion => "UnsupportedVersion",
             Class::UnsupportedRepresentation => "UnsupportedRepresentation",
+            Class::UnmeasuredCost => "UnmeasuredCost",
             Class::Parse => "Parse",
             Class::UnknownSchema => "UnknownSchema",
             Class::BudgetExceeded => "BudgetExceeded",
@@ -184,6 +189,9 @@ impl Error {
     }
     pub fn unsupported_representation(message: impl Into<String>) -> Self {
         Self::new(Class::UnsupportedRepresentation, message)
+    }
+    pub fn unmeasured_cost(message: impl Into<String>) -> Self {
+        Self::new(Class::UnmeasuredCost, message)
     }
     pub fn parse(message: impl Into<String>) -> Self {
         Self::new(Class::Parse, message)
