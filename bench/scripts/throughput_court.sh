@@ -130,7 +130,7 @@ for family in $families; do
 
   # ---- ingest phase breakdown (per tensor and per checkpoint) -------------
   echo "== ingest $family (phase profile, $reps rep, limit=${ingest_limit:-all}) =="
-  local ingest_limit_args=()
+  ingest_limit_args=()
   if [[ -n "$ingest_limit" ]]; then
     ingest_limit_args=(--limit "$ingest_limit")
   fi
