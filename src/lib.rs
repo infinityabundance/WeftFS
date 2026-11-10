@@ -57,6 +57,7 @@ pub mod mw2;
 pub mod object_cache;
 pub mod packs;
 pub mod parallel;
+pub mod phase_profile;
 pub mod plan_graph;
 pub mod planes;
 pub mod provenance;
@@ -112,6 +113,7 @@ pub use parallel::{
     effective_threads, ParallelReadOptions, ParallelReadStats, TileDecodeOptions, TileDecodeStats,
     DEFAULT_MAX_INFLIGHT_BYTES,
 };
+pub use phase_profile::{Phase, PhaseGuard, PhaseSnapshot, PhaseTotals};
 pub use plan_graph::{
     EdgeCost, ParentGraphPlan, PlanOptions as ParentGraphPlanOptions, Solver as ParentGraphSolver,
     VersionCost, VersionGraph,

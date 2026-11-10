@@ -1345,6 +1345,34 @@ impl Store {
             .unwrap_or_default()
     }
 
+    /// Physical packing counters when a batching blob plane is active.
+    ///
+    /// `None` for every store that publishes one physical object per blob.
+    pub fn pack_stats(&self) -> Option<crate::packs::PackStats> {
+        self.with_backend(|backend| Ok(backend.blob_plane_stats()))
+            .ok()
+            .flatten()
+    }
+
+    /// Seal and publish every blob a batching plane is holding in memory.
+    ///
+    /// The commit path already calls this before a commit record is published,
+    /// so a caller needs it only when it must make blob publication visible
+    /// *before* a commit: the prepare/commit checkpoint writer seals each
+    /// worker's batch so the committer can verify the members it names.
+    /// Idempotent, and a no-op for a plane that publishes eagerly.
+    pub fn flush_blob_batch(&self) -> Result<()> {
+        self.with_backend_mut(|backend| backend.flush_buffered_blobs())
+    }
+
+    /// Drop a batching plane's cached catalog so the next access re-reads it.
+    ///
+    /// Blobs buffered in an unsealed open pack are kept; only metadata is
+    /// dropped. A no-op for a plane without cached metadata.
+    pub fn refresh_blob_catalog(&self) -> Result<()> {
+        self.with_backend_mut(|backend| backend.refresh_blob_metadata())
+    }
+
     /// Per-plane capabilities when the store runs a split backend.
     pub fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
         self.with_backend(|backend| Ok(backend.plane_capabilities()))
@@ -1861,6 +1889,7 @@ impl Store {
         state: &State,
         commit: &crate::format::Commit,
     ) -> Result<(Option<IndexAttestation>, Option<PreparedIndex>)> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::IndexSegment);
         if !self.options.attest_indexes || self.mode != OpenMode::ReadWrite {
             return Ok((None, None));
         }
@@ -2054,6 +2083,7 @@ impl Store {
     /// Best-effort index write after a commit has published. The index is
     /// derived data: a failure is a diagnostic and never fails the commit.
     fn persist_built_index(&self, commit: Hash32, prepared: PreparedIndex) {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::IndexSegment);
         if self.mode != OpenMode::ReadWrite {
             return;
         }
@@ -2109,6 +2139,15 @@ impl Store {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         *stats = IndexStats::default();
+    }
+
+    /// Test hook: read one physical blob by key, counting its requests.
+    ///
+    /// The pack plane's read amplification is a property of the plane, not of a
+    /// store verb, so the court and its tests need one unopinionated read.
+    #[doc(hidden)]
+    pub fn read_blob_for_bench(&self, key: &crate::backend::Key) -> Result<Vec<u8>> {
+        self.with_backend(|backend| backend.read_all(key))
     }
 
     /// Rewrite the advisory segment for the current head (benchmark only).
@@ -6848,6 +6887,7 @@ impl Store {
     /// Verify the superblock, commit chain, manifests, and (optionally) every
     /// chunk and whole-file content hash.
     pub fn verify(&self, full: bool) -> Result<VerifyReport> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Verify);
         let mut report = VerifyReport {
             full,
             generation: self.generation,
@@ -9009,10 +9049,12 @@ impl Store {
 
     /// Publish one commit through the configured writer mode.
     fn publish_commit(&self, commit: &Commit) -> Result<Hash32> {
-        match self.options.writer_mode {
-            crate::mw2::WriterMode::Single => self.publish_commit_single(commit),
-            crate::mw2::WriterMode::Optimistic => self.publish_commit_optimistic(commit),
-        }
+        crate::phase_profile::timed(crate::phase_profile::Phase::ManifestCommit, || {
+            match self.options.writer_mode {
+                crate::mw2::WriterMode::Single => self.publish_commit_single(commit),
+                crate::mw2::WriterMode::Optimistic => self.publish_commit_optimistic(commit),
+            }
+        })
     }
 
     /// Write the commit file, fsync it and its directory, publish the
@@ -10210,36 +10252,40 @@ impl Store {
                 "this handle may not publish blobs; use a writable store or a blob worker",
             ));
         }
-        let hash = identity::h(domain, bytes);
+        let hash = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+            identity::h(domain, bytes)
+        });
         let key = match kind {
             BlobKind::Object => Key::object(hash),
             BlobKind::Manifest => Key::manifest(hash),
         };
-        self.with_backend_mut(|backend| {
-            let capabilities = backend.capabilities();
-            capabilities.require_atomic_publish("blob publication")?;
-            if bytes.len() as u64 > capabilities.max_object_bytes {
-                return Err(Error::limit_exceeded(format!(
-                    "blob is {} bytes, above the backend's {}-byte bound",
-                    bytes.len(),
-                    capabilities.max_object_bytes
-                )));
-            }
-            match backend.read_all(&key) {
-                Ok(existing) => {
-                    if identity::h(domain, &existing) != hash {
-                        return Err(Error::corrupt(format!(
-                            "existing blob {} does not match its name",
-                            key.display_path()
-                        )));
-                    }
-                    return Ok(hash);
+        crate::phase_profile::timed(crate::phase_profile::Phase::BlobPublish, || {
+            self.with_backend_mut(|backend| {
+                let capabilities = backend.capabilities();
+                capabilities.require_atomic_publish("blob publication")?;
+                if bytes.len() as u64 > capabilities.max_object_bytes {
+                    return Err(Error::limit_exceeded(format!(
+                        "blob is {} bytes, above the backend's {}-byte bound",
+                        bytes.len(),
+                        capabilities.max_object_bytes
+                    )));
                 }
-                Err(err) if err.class() == crate::error::Class::NotFound => {}
-                Err(err) => return Err(err),
-            }
-            backend.put_atomic(&key, bytes)?;
-            Ok(hash)
+                match backend.read_all(&key) {
+                    Ok(existing) => {
+                        if identity::h(domain, &existing) != hash {
+                            return Err(Error::corrupt(format!(
+                                "existing blob {} does not match its name",
+                                key.display_path()
+                            )));
+                        }
+                        return Ok(hash);
+                    }
+                    Err(err) if err.class() == crate::error::Class::NotFound => {}
+                    Err(err) => return Err(err),
+                }
+                backend.put_atomic(&key, bytes)?;
+                Ok(hash)
+            })
         })
     }
 

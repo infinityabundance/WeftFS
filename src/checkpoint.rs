@@ -1672,7 +1672,7 @@ impl Store {
                 let per_rank_bytes = parallel.per_rank_bytes;
                 let ranks = parallel.ranks;
                 let deadline = deadline;
-                handles.push(scope.spawn(move || -> Result<Vec<PreparedCheckpointTensor>> {
+                handles.push(scope.spawn(move || -> Result<(Vec<PreparedCheckpointTensor>, Store)> {
                     // One isolated handle per rank: its own backend instance and
                     // its own replayed read-only state. Control-state
                     // publication is refused by `require_writable`; immutable
@@ -1718,13 +1718,22 @@ impl Store {
                         in_flight.release(reserved);
                         out.push(fragment?);
                     }
-                    Ok(out)
+                    Ok((out, worker))
                 }));
             }
             let mut all = Vec::with_capacity(selected.len());
+            // Rank handles are sealed one at a time and in rank order, after
+            // every worker has finished. Sealing publishes the buffered pack,
+            // republishes the touched catalog segments, and advances the
+            // catalog root with one compare-and-swap, so concurrent seals would
+            // race the CAS and gain nothing (the bytes published are the same).
+            let mut workers: Vec<Store> = Vec::new();
             for handle in handles {
                 match handle.join() {
-                    Ok(Ok(items)) => all.extend(items),
+                    Ok(Ok((items, worker))) => {
+                        all.extend(items);
+                        workers.push(worker);
+                    }
                     Ok(Err(err)) => return Err(err),
                     Err(_) => {
                         return Err(Error::cancelled(
@@ -1733,6 +1742,16 @@ impl Store {
                     }
                 }
             }
+            for worker in &workers {
+                // Re-read the catalog root this handle last observed: another
+                // rank may have sealed since this handle opened, and the seal
+                // is a compare-and-swap against the bytes it read.
+                worker.refresh_blob_catalog()?;
+                worker.flush_blob_batch()?;
+            }
+            // The committer's own plane may have cached a catalog root from
+            // before any worker sealed; re-read it before verifying fragments.
+            self.refresh_blob_catalog()?;
             all.sort_by_key(|item| item.tensor_index);
             Ok(all)
         })?;
@@ -2035,6 +2054,7 @@ impl Store {
     /// prove it decodes to the exact bytes, content root, and logical root the
     /// fragment claims. A worker's claims are never trusted.
     fn verify_prepared_checkpoint_tensor(&self, fragment: &PreparedCheckpointTensor) -> Result<()> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Verify);
         let limits = Limits::default();
         let dtype = TensorElementDtype::parse(&fragment.tensor.dtype)?;
         let mut tensor_bytes = Vec::with_capacity(

@@ -1240,6 +1240,18 @@ pub trait StorageBackend: Send {
         Ok(crate::packs::PackReclaim::default())
     }
 
+    /// Physical packing counters for a plane that groups small blobs into
+    /// packs. Default: this backend publishes one object per blob.
+    fn blob_plane_stats(&self) -> Option<crate::packs::PackStats> {
+        None
+    }
+
+    /// Drop a batching plane's cached metadata so the next access re-reads it.
+    /// Default: nothing is cached.
+    fn refresh_blob_metadata(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Report structural problems in the blob plane's own metadata (the pack
     /// catalog, for example). Default: the plane has no metadata of its own.
     fn verify_blob_plane(&self) -> Result<Vec<String>> {
@@ -3325,6 +3337,14 @@ impl StorageBackend for CompositeBackend {
 
     fn flush_buffered_blobs(&mut self) -> Result<()> {
         self.blobs.flush()
+    }
+
+    fn blob_plane_stats(&self) -> Option<crate::packs::PackStats> {
+        self.blobs.pack_counters()
+    }
+
+    fn refresh_blob_metadata(&mut self) -> Result<()> {
+        self.blobs.refresh_metadata()
     }
 
     fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {

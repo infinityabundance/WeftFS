@@ -761,6 +761,7 @@ impl BlobPlane for PackedBlobPlane {
     }
 
     fn flush(&mut self) -> Result<()> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::BlobPublish);
         let Self {
             inner,
             catalog,
@@ -772,6 +773,27 @@ impl BlobPlane for PackedBlobPlane {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
         seal(inner, catalog, options, &mut state)
+    }
+
+    fn pack_counters(&self) -> Option<PackStats> {
+        Some(self.pack_stats())
+    }
+
+    fn refresh_metadata(&mut self) -> Result<()> {
+        // Only drop the cached *catalog root and segments*. Blobs buffered in
+        // the open pack are uncompressed local state and are kept: a refresh
+        // must never discard publications that have not been sealed yet.
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.loaded = false;
+        state.root_token = None;
+        state.segment_ids.clear();
+        state.segments.clear();
+        state.absent.clear();
+        state.absent_order.clear();
+        Ok(())
     }
 
     fn stats(&self) -> BackendStats {

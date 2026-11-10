@@ -3397,6 +3397,7 @@ impl Store {
         hint: Option<TensorStrategy>,
         keep_artifacts: bool,
     ) -> Result<Vec<PreparedCandidate>> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Encode);
         let limits = Limits::default();
         let size = logical.len() as u64;
         let mut out = Vec::new();
@@ -4989,7 +4990,9 @@ impl Store {
         layout: &TensorLayoutSpec,
         artifact: &PreparedArtifact,
     ) -> Result<(Hash32, Hash32, u64)> {
-        let content_hash = identity::content_hash(logical);
+        let content_hash = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+            identity::content_hash(logical)
+        });
         let size = logical.len() as u64;
         let representation = match artifact.kind {
             RepresentationKind::Raw => {

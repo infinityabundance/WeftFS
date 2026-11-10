@@ -316,6 +316,25 @@ pub trait BlobPlane: Send {
         Ok(Vec::new())
     }
 
+    /// Physical packing counters, when this plane groups small blobs into packs.
+    ///
+    /// `None` for every plane that publishes one physical object per blob. A
+    /// batching plane reports its own per-process activity, so a receipt can
+    /// state how many members were packed and how many stayed flat.
+    fn pack_counters(&self) -> Option<crate::packs::PackStats> {
+        None
+    }
+
+    /// Drop cached metadata so the next access re-reads it from the plane.
+    ///
+    /// A batching plane caches its catalog root for the lifetime of the handle
+    /// ("the catalog as of this open"). A handle that publishes through other
+    /// handles — the prepare/commit checkpoint writer — must refresh before it
+    /// reads their members. The default plane has no cached metadata.
+    fn refresh_metadata(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Object length in bytes.
     fn len(&self, key: &Key) -> Result<u64>;
 

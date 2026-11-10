@@ -323,6 +323,7 @@ impl SafetensorsFile {
         byte_offset: u64,
         out: &mut [u8],
     ) -> Result<()> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::SourceRead);
         let end = byte_offset
             .checked_add(out.len() as u64)
             .ok_or_else(|| Error::limit_exceeded("tensor range offset overflow"))?;
@@ -370,6 +371,7 @@ impl SafetensorsFile {
         index: u32,
         max_bytes: u64,
     ) -> Result<Vec<u8>> {
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::SourceRead);
         let limits = weftcodec::Limits::default();
         let count = weftcodec::tensor::validate_shape(&tensor.shape, &limits)?;
         let expected = weftcodec::tensor::payload_len(count, dtype)?;
@@ -497,14 +499,26 @@ impl SafetensorsFile {
             .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
         let mut remaining = tensor.byte_len();
         let mut buffer = vec![0u8; window];
+        // Source read and hashing are timed separately and recorded once per
+        // tensor, so the profiler does not pay a lock per 4 MiB window.
+        let mut read_ns: u64 = 0;
+        let mut hash_ns: u64 = 0;
         while remaining > 0 {
             let want = usize::try_from(remaining.min(window as u64))
                 .map_err(|_| Error::limit_exceeded("tensor window does not fit in memory"))?;
+            let read_started = std::time::Instant::now();
             file.read_exact(&mut buffer[..want])
                 .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+            read_ns = read_ns.saturating_add(read_started.elapsed().as_nanos() as u64);
+            let hash_started = std::time::Instant::now();
             content.update(&buffer[..want]);
             values.update(&buffer[..want]);
+            hash_ns = hash_ns.saturating_add(hash_started.elapsed().as_nanos() as u64);
             remaining -= want as u64;
+        }
+        if crate::phase_profile::enabled() {
+            crate::phase_profile::record(crate::phase_profile::Phase::SourceRead, read_ns);
+            crate::phase_profile::record(crate::phase_profile::Phase::Digest, hash_ns);
         }
         Ok((
             crate::identity::finish_content_hash(content),
