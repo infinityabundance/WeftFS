@@ -272,6 +272,14 @@ fn store_options(_args: &[String]) -> Options {
 }
 
 fn store_backend(args: &[String]) -> Result<BackendKind, String> {
+    let kind = match value_of(args, "--backend").as_deref() {
+        None | Some("local") => BackendKind::Local,
+        Some("object") => BackendKind::Object,
+        Some("s3") => BackendKind::S3 {
+            config: weftfs::s3::S3Config::from_env().map_err(|err| err.to_string())?,
+        },
+        Some(other) => return Err(format!("unknown --backend `{other}`")),
+    };
     Ok(if flag(args, "--pack") {
         let mut options = weftfs::packs::PackOptions::default();
         if let Some(text) = value_of(args, "--pack-catalog-bytes") {
@@ -280,9 +288,9 @@ fn store_backend(args: &[String]) -> Result<BackendKind, String> {
                 .map_err(|_| "--pack-catalog-bytes must be an integer".to_owned())?;
         }
         options.validate().map_err(|err| err.to_string())?;
-        BackendKind::packed(BackendKind::Local, options).map_err(|err| err.to_string())?
+        BackendKind::packed(kind, options).map_err(|err| err.to_string())?
     } else {
-        BackendKind::Local
+        kind
     })
 }
 
@@ -340,6 +348,13 @@ fn ingest(args: &[String]) -> Result<(), String> {
     let mut strategies: BTreeMap<String, u64> = BTreeMap::new();
     let mut written_bytes = 0u64;
     for (index, tensor) in selected.iter().enumerate() {
+        eprintln!(
+            "PROGRESS ingest-begin {} {} bytes={} rss_hwm_kib={}",
+            index,
+            tensor.name,
+            tensor.byte_len(),
+            peak_rss_kib()
+        );
         let read_started = Instant::now();
         let bytes = read_tensor_bytes(&container, tensor)?;
         let read_ms = read_started.elapsed().as_secs_f64() * 1000.0;
@@ -482,8 +497,20 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
             .map_err(|err| format!("{}: {err}", store_path.display()))?;
     }
     let backend = store_backend(args)?;
-    let mut store = Store::init_with_backend(&store_path, store_options(args), backend)
-        .map_err(|err| err.to_string())?;
+    let mut store = if store_path.join("FORMAT").exists() {
+        // A later checkpoint write into an existing store opens it read-write;
+        // `init_with_backend` only creates a new store.
+        Store::open_with_options_and_backend(
+            &store_path,
+            OpenMode::ReadWrite,
+            store_options(args),
+            backend,
+        )
+        .map_err(|err| err.to_string())?
+    } else {
+        Store::init_with_backend(&store_path, store_options(args), backend)
+            .map_err(|err| err.to_string())?
+    };
     let started = Instant::now();
     let report = store
         .write_checkpoint(&name, &source, &options)

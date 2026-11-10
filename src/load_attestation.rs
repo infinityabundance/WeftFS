@@ -258,11 +258,14 @@ impl LoadAttestation {
                 }
                 AttestStatus::Unverified => {
                     totals.unverified_tensors += 1;
-                    totals.unverified_bytes = totals
-                        .unverified_bytes
-                        .saturating_add(tensor.element_bytes.saturating_sub(tensor.bytes_loaded));
                 }
             }
+            // Bytes of this tensor that the record does **not** attest: the
+            // whole tensor when it was not read, the remainder when only a
+            // region was read.
+            totals.unverified_bytes = totals
+                .unverified_bytes
+                .saturating_add(tensor.element_bytes.saturating_sub(tensor.bytes_loaded));
         }
         self.totals = totals;
     }
@@ -896,8 +899,7 @@ pub fn verify_against_store(
         )));
     }
     let mut result = AttestationVerification {
-        signature_verified: attestation.signature.is_some()
-            || options.trust.is_empty() && !options.require_signature,
+        signature_verified: attestation.signature.is_some(),
         ..AttestationVerification::default()
     };
     for entry in &attestation.tensors {
