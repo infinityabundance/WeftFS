@@ -7911,3 +7911,109 @@ SIGKILL process faults, not physical power loss; single-writer MW1; no cloud
 backend; no production queueing/skip policy; TTSR includes fresh-process
 startup, with the store share reported separately. The court is standalone and
 is not part of `verify-all`.
+
+## Subphase R12 — 7B scale, fleet cold-start, attested loads (2026-11-10)
+
+Three measured questions and one new signed record. Every number came from a
+court run inside `scripts/docker-court.sh`; the only limit that differs from the
+default is the fleet court's 8 GiB (recorded there, not hidden).
+
+### 1. 7B — real Qwen2.5-7B-Instruct, and the limit it hits
+
+Corpus: four published shards merged into one 15,231,272,088 B container
+(`5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1`, 339 BF16
+tensors, largest 1,089,994,752 B), fetched through the LFS-verifying fetch
+script and merged by a per-tensor-verified merge tool.
+
+* The **per-tensor planner ingest is OOM-killed** in the default 3 GiB bench
+  court: exit 137 on `model.embed_tokens.weight`, cgroup peak 3,221,225,472 B (the
+  limit), store left empty. The limit was not raised.
+* The **bounded/streaming checkpoint writer fits**, 8-way, fast raw:
+  **flat 1,406,533.6 ms / 10.83 MB/s / 173,032 KiB RSS / +0.98 % bytes**;
+  **packed 1,088,654.1 ms / 13.99 MB/s / 287,420 KiB RSS / +51.16 % bytes**
+  (911 packs, 236,237 members, **148,694 catalog-segment publishes**). Both
+  `verify --full` clean (2,713 objects, 2,713 manifests, 233,539 chunks).
+* **Full restore** from the packed store is exact at 1/4/8 workers:
+  **337.7 / 367.5 / 367.8 MB/s**, i.e. **1.089x**, against an Amdahl cap of
+  13.97x set by the 1.015 GiB embedding. Peak RSS 2.2-2.4 GiB.
+* 70B is stated only as a **linear extrapolation** (flat ≈ 3.6 h, packed ≈ 2.8 h,
+  restore ≈ 6.4 min at 8 workers); the ingest path cannot be extrapolated
+  because it already fails at 7B.
+
+### 2. Fleet cold-start — 100 replicas, one shared store handle
+
+The real SmolLM-135M-Instruct checkpoint (272 BF16 tensors, 269 MB) in a real
+MinIO instance over loopback; one shared read-only server with 100 FUSE views;
+100 replica processes each reading the whole model.
+
+| | single-flight + cache | control |
+|---|---:|---:|
+| backend bytes | **28,248,268,423** | 442,325,447,419 |
+| backend requests | **61,908** | 112,368 |
+| single-flight waiters | 37,327 (87 %) | — |
+| cache hits / resident | 13,133 / 53.2 MB | — |
+| time-to-first p50 / p95 | **118.3 / 141.9 ms** | 134.7 / 205.5 ms |
+| wall until all 100 ready | **51,827.3 ms** | 672,765.2 ms |
+| cgroup peak / pids peak | 1.64 GiB / 315 | 1.83 GiB / 322 |
+
+100/100 replicas in both, 272 tensors and 269,030,016 B each, all 100 byte
+digests identical, **0 OOM kills and 0 pids refusals**. The honest limits:
+startup is serialised in one process, one backend mutex is both the reason the
+control is only ~13x slower (not 100x) and the reason it cannot scale further,
+and the decode counter is instrumented only on the gated read path, so the
+control has **no** decode-call number (none is invented).
+
+### 3. Attested loads — a signed, independently verifiable record
+
+New `weft.load-attestation.v1` (`docs/LOAD-ATTESTATION.md`): canonical WCB with
+checkpoint/manifest roots, per-tensor logical roots, the **exact loaded
+ranges** with domain-separated digests, the shard **groups** whose roots were
+verified while consuming them, the verifier identity, a timestamp, and an
+Ed25519 signature over the record without its signature key.
+
+* Full load of 272 tensors: 2,133.2 ms (126.1 MB/s), 2,176 groups, receipt
+  456,430 B. Verification in a second process: **2,241.0 ms, 8,734.4 µs/MiB
+  (8.73 ms/MiB), 1.05x the load**, 272 ranges replayed.
+* A 20-tensor load reports the other **252 as `unverified` with a reason**; a
+  50-row region load says `full_root_verified: false` and lists 271 unverified.
+* Tampering: a changed range digest fails the **signature**; a corrupted store
+  blob fails the **replay**; the court's flipped-byte record is rejected as
+  non-canonical. `tests/attested_load.rs` 9/9.
+* The signature format is shared: `WeftFS-Go/cmd/attest-verify` verified the
+  Rust-produced record (`signed=true`, 272 loaded, 2,176 groups) and rejected
+  the tampered one. It does **not** replay bytes (`byte_replay=not_performed`).
+
+### Losses (all three increments)
+
+Per-tensor ingest fails at 7B; packed sequential footprint +51.2 %; restore
+parallelism 1.089x of a 13.97x cap; every write/restore cgroup peak is pinned at
+the 3 GiB limit by page cache (process RSS is reported separately); fleet
+startup serialisation, one backend mutex, 128 MiB cache cannot hold the model,
+tail latency, and no decode count for the control; attestation costs a second
+full pass and ~1.7 KB of receipt per tensor, a lazy record cannot prove unread
+bytes, the signature proves origin not truth, regions must be row-aligned, and
+Go verification is signature-only. Single host, warm caches, no power-loss,
+media, multi-host, fleet, cloud or serving claim.
+
+### Evidence and commits
+
+Receipts `bench/receipts/scale-7b-20261110T213731Z.json`,
+`bench/receipts/fleet-coldstart-20261110T225018Z.json`,
+`bench/receipts/attested-loads-20261110T232937Z.json` (+ `.log` beside each).
+`bench/receipts/scale-7b-20261110T204331Z.json` is retained: its `verify_packed`
+and restores failed because the court re-opened the packed store without
+`--pack` (a court bug, corrected in the run above).
+
+### Gates at this change
+
+* Rust `cargo test --all-targets`: **153 suites, 746 passed / 0 failed / 0
+  ignored**.
+* FUSE `cargo test --features fuse --all-targets`: **154 suites, 789 passed /
+  0 failed / 2 ignored** (the two pre-existing ignores).
+* Go `go test -race -count=1 ./...` in the **fuse** court: all packages pass
+  (cmd 46.2 s, fusefs 12.7 s, index, model, store 212.1 s). The same command in
+  the *go* court fails only because that image has no `/bin/fusermount`
+  (`mount: exec: "/bin/fusermount": stat … no such file or directory`); that is
+  an environment gap, not a test result, and is recorded as such.
+* Host gates: claims **836/836**, spec drift **57/57**, conformance manifest
+  **420 entries** (aggregate `6287b817…dfbe8`).

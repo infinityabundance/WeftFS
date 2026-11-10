@@ -1,0 +1,213 @@
+{
+  "backend": {
+    "binary_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
+    "data_dir": "a directory under the court's /work bind mount (not tmpfs)",
+    "product": "MinIO",
+    "release": "RELEASE.2025-04-22T22-12-26Z",
+    "started_by": "bench/scripts/fleet_coldstart_inner.sh inside the bench court",
+    "version_line": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)"
+  },
+  "configurations": {
+    "with": {
+      "cgroup": {
+        "memory_events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "memory_peak_bytes": 1757917184,
+        "pids_events": {
+          "max": 0
+        },
+        "pids_peak": 315
+      },
+      "exit": 0,
+      "memory_limit": "8g",
+      "replica_bytes": [
+        269030016
+      ],
+      "replica_bytes_digest_agrees": true,
+      "replica_bytes_digests": [
+        "cb1814f4cd4f6ad9d4b1a6de5aab299c252d30e6f7dd9e6f60328bd87c4b823a"
+      ],
+      "replica_rss_kib": {
+        "max": 4180,
+        "sum": 404236
+      },
+      "replica_tensors": [
+        272
+      ],
+      "replica_time_to_first_ms": {
+        "max": 157.596,
+        "min": 11.63,
+        "p50": 118.347,
+        "p95": 141.852
+      },
+      "replica_total_ms": {
+        "max": 50726.029,
+        "p50": 49952.935,
+        "p95": 50567.158
+      },
+      "replicas_completed": 100,
+      "replicas_expected": 100,
+      "server": {
+        "all_replicas_done_ns": 1794351135172447837,
+        "backend": {
+          "bytes_read": 28248268423,
+          "range_reads": 0,
+          "reads": 61908
+        },
+        "cache": {
+          "admissions": 181,
+          "bytes": 53154432,
+          "bytes_served": 3361908096,
+          "enabled": true,
+          "entries": 181,
+          "evictions": 0,
+          "hits": 13133,
+          "max_bytes": 134217728,
+          "misses": 4967,
+          "rejections": 0
+        },
+        "decode_bytes": 3120960064,
+        "decode_calls": 5440,
+        "label": "with",
+        "mount_ms": 76.099,
+        "open_ms": 144.987,
+        "peak_rss_kib": 1032148,
+        "ready_ns": 1794351083333453672,
+        "schema": "weft-fleet-coldstart-server-v1",
+        "single_flight": {
+          "cancellations": 0,
+          "degraded": 0,
+          "enabled": true,
+          "leaders": 5440,
+          "max_observed_entries": 20,
+          "panics": 0,
+          "waiters": 37327
+        },
+        "views": 100
+      },
+      "server_peak_rss_kib": 1032148,
+      "wall_to_all_ready_ms": 51827.26118
+    },
+    "without": {
+      "cgroup": {
+        "memory_events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "memory_peak_bytes": 1964732416,
+        "pids_events": {
+          "max": 0
+        },
+        "pids_peak": 322
+      },
+      "exit": 0,
+      "memory_limit": "8g",
+      "replica_bytes": [
+        269030016
+      ],
+      "replica_bytes_digest_agrees": true,
+      "replica_bytes_digests": [
+        "cb1814f4cd4f6ad9d4b1a6de5aab299c252d30e6f7dd9e6f60328bd87c4b823a"
+      ],
+      "replica_rss_kib": {
+        "max": 4052,
+        "sum": 382052
+      },
+      "replica_tensors": [
+        272
+      ],
+      "replica_time_to_first_ms": {
+        "max": 208.325,
+        "min": 17.187,
+        "p50": 134.747,
+        "p95": 205.549
+      },
+      "replica_total_ms": {
+        "max": 671669.329,
+        "p50": 651409.197,
+        "p95": 670153.401
+      },
+      "replicas_completed": 100,
+      "replicas_expected": 100,
+      "server": {
+        "all_replicas_done_ns": 1794351810403677751,
+        "backend": {
+          "bytes_read": 442325447419,
+          "range_reads": 0,
+          "reads": 112368
+        },
+        "cache": {
+          "admissions": 0,
+          "bytes": 0,
+          "bytes_served": 0,
+          "enabled": false,
+          "entries": 0,
+          "evictions": 0,
+          "hits": 0,
+          "max_bytes": 0,
+          "misses": 0,
+          "rejections": 0
+        },
+        "decode_bytes": 0,
+        "decode_calls": 0,
+        "label": "without",
+        "mount_ms": 69.27,
+        "open_ms": 148.142,
+        "peak_rss_kib": 1285848,
+        "ready_ns": 1794351137610305815,
+        "schema": "weft-fleet-coldstart-server-v1",
+        "single_flight": {
+          "cancellations": 0,
+          "degraded": 0,
+          "enabled": false,
+          "leaders": 0,
+          "max_observed_entries": 0,
+          "panics": 0,
+          "waiters": 0
+        },
+        "views": 100
+      },
+      "server_peak_rss_kib": 1285848,
+      "wall_to_all_ready_ms": 672765.162308
+    }
+  },
+  "corpus": {
+    "dtype": "BF16",
+    "repo": "HuggingFaceTB/SmolLM-135M-Instruct",
+    "sha256": "c1464c9ebccc6fb497aa4ccc8d74d29b33f9a9eddc4638a4575719357f532f2d",
+    "size_bytes": 269060552,
+    "source": "SmolLM-135M-Instruct.safetensors",
+    "tensors": 272
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "8g",
+    "memory_swap": "8g",
+    "no_new_privileges": true,
+    "nproc": 2048,
+    "pids": 1024,
+    "weftfs_revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  "generated_utc": "20261110T225018Z",
+  "label": "one host, N processes, loopback MinIO; not a fleet, multi-host or cloud claim",
+  "log": "bench/receipts/fleet-coldstart-20261110T225018Z.log",
+  "replicas": 100,
+  "schema": "weft-fleet-coldstart-court-v1"
+}

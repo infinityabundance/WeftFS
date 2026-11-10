@@ -1,0 +1,301 @@
+{
+  "corpus": {
+    "file": "Qwen2.5-7B-Instruct.safetensors",
+    "merge_tool": "bench/scripts/safetensors_merge.py (per-tensor sha256 verified against each shard)",
+    "repo": "Qwen/Qwen2.5-7B-Instruct",
+    "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+    "shards": 4,
+    "size_bytes": 15231272088
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "no_new_privileges": true,
+    "nproc": 2048,
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": "4cd729f55b65a80370946499feaff70a5277ef04",
+    "weftfs_revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  "disk_headroom_bytes_after": 64330858496,
+  "generated_utc": "20261110T213731Z",
+  "label": "real public checkpoint, single host, warm page cache; not a fleet/media/cloud claim",
+  "log": "bench/receipts/scale-7b-20261110T213731Z.log",
+  "phases": {
+    "flat": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 15303837341,
+          "bytes_written": 15247335585,
+          "range_reads": 1,
+          "reads": 247123,
+          "writes": 236263
+        },
+        "checkpoint_id": "2f9ac6146241840ee8011f3422ec016528dbdb389b4587065076b6759b66d2bd",
+        "complete": true,
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "65ad8767628951e94c14a88ac842eeaefbcd5bc50e564eeac2b7e04b5d5f13e5",
+        "manifest_id": "022d4a1d5113521b2faa63a948ab12f3e7b845cd2f8b7188ffd0941ed24d13d7",
+        "manifest_root": "fafaf4b5d1908865bafe09a18eaa77e1c2963e023aa9a46742eda56f0d7e27a8",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 10.829,
+        "name": "qwen7b",
+        "pack_stats": null,
+        "packed": false,
+        "peak_rss_kib": 173032,
+        "phase": "checkpoint",
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 15247327175,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 1406533.645,
+        "write_policy": "fast"
+      }
+    },
+    "ingest": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 137,
+      "report": null
+    },
+    "packed": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 15311372123,
+          "bytes_written": 23031003420,
+          "range_reads": 247026,
+          "reads": 248035,
+          "writes": 150542
+        },
+        "checkpoint_id": "03075ecfa5f730914f35d01d63a246d5f119d530e2996c8c4343b64c1e05776b",
+        "complete": true,
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "38955d40e4295cc70ed824b7cedeba61710b2babb80a4cacb5110e503f73f0be",
+        "manifest_id": "9b18161a525febbcfb25bb73bf5ecddf767ff81c62d94a3c8f1a24a26a0d45d0",
+        "manifest_root": "378f800576b0cbb52c460c5456b995856031317621e1501fc43eac5ec24c7062",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 13.991,
+        "name": "qwen7b",
+        "pack_stats": {
+          "catalog_entries": 236237,
+          "catalog_root_publishes": 911,
+          "catalog_segment_publishes": 148694,
+          "flat_bytes": 2721040,
+          "flat_members": 17,
+          "packed_bytes": 15242664309,
+          "packed_members": 236237,
+          "packing_disabled": false,
+          "sealed_packs": 911
+        },
+        "packed": true,
+        "peak_rss_kib": 287420,
+        "phase": "checkpoint",
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 23023484778,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 1088654.129,
+        "write_policy": "fast"
+      }
+    },
+    "restore_1": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "backend": {
+          "bytes_read": 15269256788,
+          "range_reads": 241628,
+          "reads": 241676
+        },
+        "bytes": 15231272088,
+        "exact_source_file": true,
+        "expect_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "mb_per_s": 337.709,
+        "name": "qwen7b",
+        "peak_rss_kib": 2230164,
+        "phase": "restore",
+        "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "sha256_match": true,
+        "shards_read": 2712,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes_read": 15268572464,
+        "store_reads": 483280,
+        "tensors": 339,
+        "threads": 1,
+        "tile_threads": 1,
+        "units_touched": 2712,
+        "wall_ms": 45101.825
+      }
+    },
+    "restore_4": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "backend": {
+          "bytes_read": 15269256788,
+          "range_reads": 241628,
+          "reads": 241676
+        },
+        "bytes": 15231272088,
+        "exact_source_file": true,
+        "expect_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "mb_per_s": 367.482,
+        "name": "qwen7b",
+        "peak_rss_kib": 2406596,
+        "phase": "restore",
+        "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "sha256_match": true,
+        "shards_read": 2712,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes_read": 15268572464,
+        "store_reads": 483280,
+        "tensors": 339,
+        "threads": 4,
+        "tile_threads": 1,
+        "units_touched": 2712,
+        "wall_ms": 41447.644
+      }
+    },
+    "restore_8": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "backend": {
+          "bytes_read": 15269256788,
+          "range_reads": 241628,
+          "reads": 241676
+        },
+        "bytes": 15231272088,
+        "exact_source_file": true,
+        "expect_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "mb_per_s": 367.765,
+        "name": "qwen7b",
+        "peak_rss_kib": 2360764,
+        "phase": "restore",
+        "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "sha256_match": true,
+        "shards_read": 2712,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes_read": 15268572464,
+        "store_reads": 483280,
+        "tensors": 339,
+        "threads": 8,
+        "tile_threads": 1,
+        "units_touched": 2712,
+        "wall_ms": 41415.8
+      }
+    },
+    "verify_flat": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 15247327175,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 48790.691
+      }
+    },
+    "verify_ingest": {
+      "cgroup_memory_peak_bytes": 8052736,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 10096,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 0.308
+      }
+    },
+    "verify_packed": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 23023484778,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 21543.697
+      }
+    }
+  },
+  "schema": "weft-scale-7b-court-v1"
+}

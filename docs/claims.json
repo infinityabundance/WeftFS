@@ -8752,5 +8752,166 @@
   ],
   "receipt": "bench/receipts/training-goodput-20261110T200930Z.json",
   "kind": "present"
+ },
+ {
+  "id": "r12_7b_real_corpus",
+  "claim": "The R12 7B court ran the real Qwen2.5-7B-Instruct merged checkpoint, not synthetic data.",
+  "value": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_ingest_oom",
+  "claim": "The planned per-tensor 7B ingest is OOM-killed in the default 3 GiB court.",
+  "value": "3,221,225,472 B",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_flat",
+  "claim": "The 7B flat 8-way fast-raw checkpoint write took 1,406,533.6 ms at 10.83 MB/s.",
+  "value": "1,406,533.6 ms",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_packed",
+  "claim": "The 7B packed 8-way fast-raw checkpoint write took 1,088,654.1 ms at 13.99 MB/s.",
+  "value": "1,088,654.1 ms",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_packed_footprint",
+  "claim": "The 7B packed sequential store is 51.16 % larger than the element bytes.",
+  "value": "+51.16 %",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_restore",
+  "claim": "The 7B full restore is 367.5 MB/s at 4 workers, 1.089x the one-worker rate.",
+  "value": "41,447.6 ms",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_extrapolation",
+  "claim": "The 70B figures are a linear extrapolation from the measured 7B throughput, not a measurement.",
+  "value": "12,900 s",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_7b_no_limit_raised",
+  "claim": "No court limit was raised for the 7B run.",
+  "value": "**No limit was raised.**",
+  "locations": [
+   "bench/RESULTS-scale-7b.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_fleet_wall",
+  "claim": "The 100-replica fleet cold start drops from 672,765.2 ms to 51,827.3 ms with single-flight and the decoded-object cache.",
+  "value": "51,827.3 ms",
+  "locations": [
+   "bench/RESULTS-fleet-coldstart.md"
+  ],
+  "receipt": "bench/receipts/fleet-coldstart-20261110T225018Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_fleet_bytes",
+  "claim": "The 100-replica fleet reads 28,248,268,423 backend bytes with the read layers and 442,325,447,419 without.",
+  "value": "442,325,447,419",
+  "locations": [
+   "bench/RESULTS-fleet-coldstart.md"
+  ],
+  "receipt": "bench/receipts/fleet-coldstart-20261110T225018Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_fleet_no_oom",
+  "claim": "Neither fleet configuration was OOM-killed or hit the pids limit.",
+  "value": "**0 / 0**",
+  "locations": [
+   "bench/RESULTS-fleet-coldstart.md"
+  ],
+  "receipt": "bench/receipts/fleet-coldstart-20261110T225018Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_fleet_not_a_fleet",
+  "claim": "The fleet court is one host with N processes and is not a fleet claim.",
+  "value": "not a fleet claim",
+  "locations": [
+   "bench/RESULTS-fleet-coldstart.md"
+  ],
+  "receipt": "bench/receipts/fleet-coldstart-20261110T225018Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_attest_cost",
+  "claim": "Attestation verification costs 8,734.4 us per MiB over the full model.",
+  "value": "8,734.4",
+  "locations": [
+   "bench/RESULTS-attested-loads.md"
+  ],
+  "receipt": "bench/receipts/attested-loads-20261110T232937Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_attest_unverified",
+  "claim": "A partial load lists the other 252 tensors as unverified rather than omitting them.",
+  "value": "252 unverified",
+  "locations": [
+   "bench/RESULTS-attested-loads.md"
+  ],
+  "receipt": "bench/receipts/attested-loads-20261110T232937Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_attest_go",
+  "claim": "The independent Go verifier checks the signed record but performs no byte replay.",
+  "value": "byte_replay=not_performed",
+  "locations": [
+   "bench/RESULTS-attested-loads.md",
+   "docs/LOAD-ATTESTATION.md"
+  ],
+  "receipt": "bench/receipts/attested-loads-20261110T232937Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12_attest_tamper",
+  "claim": "A tampered loaded range and a tampered store both fail verification.",
+  "value": "9/9 pass",
+  "locations": [
+   "bench/RESULTS-attested-loads.md"
+  ],
+  "receipt": "bench/receipts/attested-loads-20261110T232937Z.json",
+  "kind": "present"
  }
 ]

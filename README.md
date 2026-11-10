@@ -388,6 +388,27 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   completion **22.1x/115x**, load **10.6x**, and later same-store checkpoints
   about 2x the first. Evidence in
   [`bench/RESULTS-training-goodput.md`](bench/RESULTS-training-goodput.md).
+- **7B scale, fleet cold-start, attested loads (R12, 2026-11-10):** the real
+  Qwen2.5-7B-Instruct checkpoint (15.23 GB, 339 BF16 tensors,
+  `5527ae97…c1ef1`). The 3 GiB court **cannot** hold the per-tensor ingest path
+  (OOM exit 137 on the 1.015 GiB embedding at the 3 GiB cgroup limit; no limit
+  raised). The bounded streaming writer does: 8-way fast raw **1,406.5 s flat
+  (10.83 MB/s, 173 MiB RSS, +0.98 % bytes)** and **1,088.7 s packed (13.99 MB/s,
+  281 MiB RSS, +51.2 % footprint from 148,694 catalog publishes)**; both
+  `verify --full` clean. Full restore from the packed store is exact at 1/4/8
+  workers: **337.7 / 367.5 / 367.8 MB/s (1.089x)** against a 13.97x cap. A
+  100-process fleet over one shared S3 (MinIO) `StoreHandle` with 100 FUSE views
+  drops cold-start wall **672.8 -> 51.8 s (13.0x)** and backend bytes
+  **442.3 -> 28.2 GB (15.7x)**, with 37,327 single-flight waiters and 13,133
+  cache hits; 100/100 replicas byte-identical, 0 OOM, 0 pids refusals. Signed
+  `weft.load-attestation.v1` loads: 272 tensors in 2,133 ms, verification
+  8,734 µs/MiB (1.05x the load), a 456 KB receipt, unloaded tensors listed as
+  unverified, a tampered record or store rejected, and an **independent Go
+  verifier** for the shared Ed25519/WCB signature. Evidence in
+  [`bench/RESULTS-scale-7b.md`](bench/RESULTS-scale-7b.md),
+  [`bench/RESULTS-fleet-coldstart.md`](bench/RESULTS-fleet-coldstart.md) and
+  [`bench/RESULTS-attested-loads.md`](bench/RESULTS-attested-loads.md); design
+  in [`docs/LOAD-ATTESTATION.md`](docs/LOAD-ATTESTATION.md).
 - **Planner v2 and incremental index (R9, 2026-11-10):** the graph objective now
   charges `storage + lambda_write*encode + lambda_retention*bytes +
   lambda_read*reads*restore`, prices each edge with its own measured

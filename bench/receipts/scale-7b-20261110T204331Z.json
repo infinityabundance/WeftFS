@@ -1,0 +1,235 @@
+{
+  "corpus": {
+    "file": "Qwen2.5-7B-Instruct.safetensors",
+    "merge_tool": "bench/scripts/safetensors_merge.py (per-tensor sha256 verified against each shard)",
+    "repo": "Qwen/Qwen2.5-7B-Instruct",
+    "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+    "shards": 4,
+    "size_bytes": 15231272088
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "no_new_privileges": true,
+    "nproc": 2048,
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": "4cd729f55b65a80370946499feaff70a5277ef04",
+    "weftfs_revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  "disk_headroom_bytes_after": 64365817856,
+  "generated_utc": "20261110T204331Z",
+  "label": "real public checkpoint, single host, warm page cache; not a fleet/media/cloud claim",
+  "log": "bench/receipts/scale-7b-20261110T204331Z.log",
+  "phases": {
+    "flat": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 15303837341,
+          "bytes_written": 15247335585,
+          "range_reads": 1,
+          "reads": 247123,
+          "writes": 236263
+        },
+        "checkpoint_id": "66b9656d9fccab98ac323a85e324853c2655754a0d4f48bb47c753a4372f1959",
+        "complete": true,
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "d19d767abd0c38d3036f0ae6ae169eca4d7e81daa366d00c83523d5e486df455",
+        "manifest_id": "990d71cdbed129d8d903ef7018bbe39c2c11637314a6d579707879682b4c0a7d",
+        "manifest_root": "8edfc88c90f69b3b0b84d6914384eb313db6e88db1299686fc23fd3e777cbeae",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 11.287,
+        "name": "qwen7b",
+        "pack_stats": null,
+        "packed": false,
+        "peak_rss_kib": 172636,
+        "phase": "checkpoint",
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 15247327175,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 1349408.202,
+        "write_policy": "fast"
+      }
+    },
+    "ingest": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 137,
+      "report": null
+    },
+    "packed": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 15311372123,
+          "bytes_written": 23031210984,
+          "range_reads": 247026,
+          "reads": 248035,
+          "writes": 150544
+        },
+        "checkpoint_id": "c64b76281116b3dfbbc64696230a15dc12e9761e857466e3928e5ac7911dacf5",
+        "complete": true,
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "6d7a0a9efc95e253a7e4fef2e92a5199bedb8f21eb93bd80805ff8ef4cec3013",
+        "manifest_id": "20d16b1847971ff9b2015eaabee0df5242e96bf6e3a1a4516d0aacc50724658f",
+        "manifest_root": "b71fe249afd1cc17876d92234636fe6d6f3b717b8dc1b63bd696341510aa1d35",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 11.353,
+        "name": "qwen7b",
+        "pack_stats": {
+          "catalog_entries": 236237,
+          "catalog_root_publishes": 911,
+          "catalog_segment_publishes": 148696,
+          "flat_bytes": 2721040,
+          "flat_members": 17,
+          "packed_bytes": 15242664309,
+          "packed_members": 236237,
+          "packing_disabled": false,
+          "sealed_packs": 911
+        },
+        "packed": true,
+        "peak_rss_kib": 288412,
+        "phase": "checkpoint",
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 23023692342,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 1341549.217,
+        "write_policy": "fast"
+      }
+    },
+    "restore_1": {
+      "cgroup_memory_peak_bytes": 28663808,
+      "exit": 1,
+      "report": null
+    },
+    "restore_4": {
+      "cgroup_memory_peak_bytes": 28905472,
+      "exit": 1,
+      "report": null
+    },
+    "restore_8": {
+      "cgroup_memory_peak_bytes": 28803072,
+      "exit": 1,
+      "report": null
+    },
+    "verify_flat": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 15247327175,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 47172.316
+      }
+    },
+    "verify_ingest": {
+      "cgroup_memory_peak_bytes": 10457088,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 10096,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 0.154
+      }
+    },
+    "verify_packed": {
+      "cgroup_memory_peak_bytes": 30609408,
+      "exit": 0,
+      "report": {
+        "generation": 1,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 23023692342,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 1,
+          "ok": false,
+          "problems": [
+            {
+              "class": "Corrupt",
+              "detail": "generation 2 rejected: Corrupt: missing blob manifests/5e/5edb9918f6a55c0ff3ff0479ba47a8185ba12983f1c3e49873420edc07e3db75: NotFound: key manifests/5e/5edb9918f6a55c0ff3ff0479ba47a8185ba12983f1c3e49873420edc07e3db75 does not exist: No such file or directory (os error 2)"
+            },
+            {
+              "class": "Corrupt",
+              "detail": "recovery selected generation 1 but the superblock published 2"
+            }
+          ]
+        },
+        "wall_ms": 159.862
+      }
+    }
+  },
+  "schema": "weft-scale-7b-court-v1"
+}
