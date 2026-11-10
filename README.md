@@ -358,6 +358,22 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   (5.83x)** at 4 threads, backend reads **3.02 GB -> 107.5 MB**, decodes
   **640 -> 26**; peak RSS rises by about 289 MiB; the thread-local counter fix
   removes the decode-counter flake.
+- **Planner v2 and incremental index (R9, 2026-11-10):** the graph objective now
+  charges `storage + lambda_write*encode + lambda_retention*bytes +
+  lambda_read*reads*restore`, prices each edge with its own measured
+  representation row (mode 17/20 and KV/activation are refused
+  `UnmeasuredCost`), and accepts an SLA only if `prediction + margin + measured
+  uncertainty <= sla`. On the same nine pythia-70m checkpoints **22/22 accepted
+  plans held their SLA** (0 missed), and the 850 ms SLA that used to be accepted
+  and missed is now refused; every plan class predicts within 5 % except the
+  all-independent floor (−16.02 %, page-cache state). Advisory index segments
+  became incremental WFX3 deltas: **97,066,019 B -> 3,342,744 B (29.0x)** in the
+  1,250-commit court and **104.6 MB -> 6.2 MB** for the trajectory series; peak
+  index on the old pinned trajectory is **3.53 GB -> 0.11 GB**. Losses: commit
+  p50 **+0.605 ms**, first query after reopen **0.258 -> 1.411 ms** (chain load),
+  and a snapshot at every step keeps its chain un-reclaimed. Go writes the same
+  bytes and each language loads the other's chain. Full verification
+  `bench/receipts/verify-20261110T075205Z.json` (**41/41** courts pass).
 - **Overlays (R9):** 500 x 4 KiB writes **917.3 -> 415.5 ms** local and
   **2,308.3 -> 1,702.9 ms** MinIO, with the same content root; compaction
   preserves the root; Go has read-only v4 support.

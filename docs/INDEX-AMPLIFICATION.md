@@ -162,13 +162,20 @@ for a commit that changes most rows the writer emits a full segment, so the read
 cost is never worse than `D` full segments. The measured costs are in
 `bench/RESULTS-index-amplification.md`.
 
-## Evidence plan
+## Evidence
 
-* Rust and Go: `chain load == full segment answers`, forged/partial chain
-  rejection, compaction, GC of unreferenced segments, snapshot pinning an old
-  generation, chain-depth and byte-budget bounds.
-* Byte-identical **full** segments between Rust and Go; a Rust delta chain loads
-  in Go and a Go chain loads in Rust (real processes, committed fixtures).
-* Re-run the trajectory court: index bytes before/after, index as a percentage
-  of data, query p50 after reopen, commit overhead per write, compaction cost,
-  GC result, residual amplification.
+Rust tests `tests/index_chain.rs` (chain load == full-segment answers,
+forged/partial chain rejection, compaction, GC of unreferenced segments, a
+snapshot pinning an old generation, chain-depth and byte-budget bounds) and
+`tests/index_persistence.rs` (trust, forgery, corruption). Go:
+`store/index_chain_test.go` and the three handoff tests. A full WFX3 segment is
+byte-identical across Rust and Go, a Rust delta chain loads in Go, and a Go
+chain loads in Rust.
+
+Measured amplification, commit cost, chain read cost, compaction, GC, and the
+pinned-snapshot retention shape are in
+[`bench/RESULTS-index-amplification.md`](../bench/RESULTS-index-amplification.md).
+Headline: 97,066,019 B -> 3,342,744 B in a 1,250-commit court; 104.6 MB ->
+6.2 MB for the trajectory series; peak index on the old pinned trajectory
+3.53 GB -> 0.11 GB. Losses: commit p50 +0.605 ms, first query after reopen
+0.258 -> 1.411 ms, and snapshots keep their chains.

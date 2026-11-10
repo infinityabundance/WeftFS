@@ -13,14 +13,20 @@
 //! edge costs and calls one of the solvers here. The objective is
 //!
 //! ```text
-//! F(plan) = sum_i edge_bytes(i, parent(i))
+//! F(plan) = sum_i storage_bytes(i, parent(i))
+//!         + lambda_write_ns * sum_i encode_ns(i, parent(i))
+//!         + lambda_retention_ns * sum_i storage_bytes(i, parent(i))
 //!         + lambda_read_ns * reads_per_version * sum_i chain_decode_ns(i)
 //! ```
 //!
 //! where `chain_decode_ns(i)` is the sum of the measured incremental decode
 //! costs of every frame on `i`'s chain (the same recursion
-//! [`crate::rebase`] uses for the current representation). Both terms are
-//! integer-only, so a plan is reproducible bit-for-bit.
+//! [`crate::rebase`] uses for the current representation). `encode_ns` comes
+//! from the measured write rows, so a representation that is cheap to store but
+//! expensive to build is not mispriced. `lambda_write_ns` defaults to the read
+//! lambda; `lambda_retention_ns` is explicit and defaults to zero because there
+//! is no measured retention table. All terms are integer-only, so a plan is
+//! reproducible bit-for-bit.
 //!
 //! # Solvers
 //!

@@ -7542,3 +7542,110 @@ five measurements a deployed-3FS experiment would have to make.
   (aggregate `6287b817…8dfbe8`), coverage OK including `transport`
   5 valid / 17 reject.
 
+
+## Subphase R9 — planner v2 and incremental advisory index (2026-11-10)
+
+Two measured defects are closed: the parent-graph planner had no write term, one
+shared hop row, and no uncertainty bound (an 850 ms SLA was accepted and missed
+at 886.5 ms); advisory index segments reached 3,466,466,150 B for a 74 MB data
+tree. Evidence: `bench/RESULTS-planner-v2.md`,
+`bench/RESULTS-index-amplification.md`, and the receipts named there.
+
+### Planner v2 (implemented, measured)
+
+The graph objective is now
+`storage(bytes) + lambda_write*encode_ns + lambda_retention*bytes +
+lambda_read*reads*chain_ns`. Coefficients come only from the measured tables:
+`weftfs-write-cost/v1` for encode, `weftfs-r2/decode-calibration/v1`,
+`weftfs-mode18/decode-calibration/v1`, `weftfs-s13c/chain-hop/v1`, and
+`weftfs-r9/zstd-patch-hop/v1` for per-representation hops,
+`weftfs-s13b/restore-overhead/v1` for the per-version restore floor, and
+`weftfs-s13c/sla-margin/v1` for the margin. There is no measured retention
+table, so `lambda_retention` is explicit and defaults to 0; that is stated, not
+papered over.
+
+Each graph edge is priced with the representation the parent actually uses
+(raw, zstd, float-tensor, tensor-sharded, tensor-tiled, weight-delta,
+sparse-delta, zstd-patch, semantic-delta, float-tiled-streams). Mode 17
+(`FLOAT_TILED`), mode 20 (`ENGRAM_SHARD`), and the read-only KV/activation
+strategies have no measured row and are refused with the typed
+`UnmeasuredCost` class; no neighbouring row is substituted. The uncertainty
+bound is the measured under-prediction per class (zstd-patch 62.5 %, weight-delta
+17.8 %, sparse-delta 15.3 %, decode rows 1.0–1.05 %), summed per hop; an SLA is
+accepted only if `prediction + margin + bound <= sla`.
+
+The court (`bench/receipts/parent-graph-20261110T015802Z.json`) is the same nine
+pythia-70m checkpoints and lambdas. **22/22 accepted plans held their SLA, 0
+missed**; 12 of 13 plan classes predict within 5 %, the all-independent floor is
+−16.02 % because of cgroup page-cache state (warm 796–807 ms vs cold 878–886 ms
+for the same 163.9 MB read), published rather than tuned. The SLA accept/refuse
+boundary moved from 850 ms (accepted, then missed) to 950 ms (the floor's bound
+is 949.77 ms; the measured floor is 930.7 ms). At `λ=1` the exact oracle selects
+the eight-dependency plan at 654,498,531 B predicted / 654,600,088 B realised;
+the bytes-only plan is 809,012,976 B. `Solver::Auto` is now the default (exact
+oracle at ≤ 12 versions, DP above).
+
+### WFX3 incremental index segments (implemented in Rust and Go, measured)
+
+A segment is now full or a delta against the immediately previous generation,
+with element-level patches (`added ids/edges`, `removed ids/edges`). The commit
+attestation grew to `weftfs.commit.v3` with `segment_kind`, `segment_base`,
+`segment_depth`, and `segment_root = H("weft/index/chain/v1",
+WCB({generation, chain}))`; v1/v2 commits are unchanged and never trust a chain.
+The loader resolves the chain, checks every segment id and generation, then the
+counts, the candidate root, the chain shape, and the chain root; any failure is
+a diagnostic note and a rebuild. GC expands every retained commit's chain first
+and refuses to delete anything if a chain cannot be resolved. Bounds: 32 deltas
+by default (hard reader bound 256), an optional total-byte budget that skips an
+advisory write (never the commit), and compaction to a full segment.
+
+Per-commit court (1,250 commits, 1,192,538 B data): index **97,066,019 B →
+3,342,744 B (29.0x)**; per-commit index bytes p50 77,892 → 406; commit wall p50
+0.627 → 1.232 ms (+0.605 ms); first relation query after reopen 0.258 → 1.411 ms;
+GC removes 96.6 MB / 1,245 segments → 2.85 MB / 1,141, leaving ~0.47–0.50 MB; a
+snapshot at every commit keeps the chain and reclaims 0.
+
+Trajectory re-run (50 synthetic steps, 34,894,788 B data): series index
+104,637,501 B (full control) → **6,237,283 B** at the default bound and
+**2,119,849 B** at 256 deltas. The historical pinned-GC peak of 3,531,842,070 B
+is **113,586,041 B** now (31.1x lower); that pass reclaimed 0 B because the
+chain was retained. The unpinned GC leaves ~13.2 MB in every mode. The
+historical 3.47 GB cannot be reproduced in full mode on today's harness (the
+checkpoint writer now group-commits, and the full-segment control peaks at
+212 MB), so both the per-commit court and the current control are reported
+rather than conflated. Read cost is the real loss: 9.3 ms at depth 16–31 and
+60.7 ms at depth 99 for the 3,200-object index; compaction returns it to
+0.24 ms. Go writes the same full segment byte-for-byte and each language loads
+the other's delta chain; no Go timing is claimed.
+
+### Residual
+
+* Index is still one segment per commit (O(commits), not O(state)); ~406 B per
+  append, ~33 KB per tensor delete.
+* A forced full segment every 33 commits at the default bound.
+* Snapshots retain their chain; a snapshot per step makes the tree
+  un-reclaimable until those snapshots are dropped or the head is compacted.
+* Chain reads cost D+1 file reads and decodes.
+* Mode 17/20 and KV/activation remain unpriced; no measured retention table;
+  no cold-media, fleet, or multi-writer claim.
+
+### Gates at this change
+
+* Rust `cargo test --all-targets`: **722 passed / 0 failed / 0 ignored**
+  across 148 suites.
+* FUSE `cargo test --features fuse --all-targets`: **765 passed / 0 failed /
+  2 pre-existing ignored** across 148 suites.
+* Go `go test -race -count=1`: `store` **ok (215.2 s)**, `cmd/weftfs` ok,
+  `fusefs` ok, `index` ok, `model` ok. One full-suite run
+  (`calibrate_test.go::TestCalibrationMeasurementIsDeterministicWithinTolerance`)
+  saw a timing drift under whole-suite load and passed standalone and in the
+  `store` rerun; it measures decode throughput and is unrelated to this change.
+* Host gates: claims **791/791**, spec drift **57/57**, conformance manifest
+  **420 entries** (aggregate `6287b817…8dfbe8`), coverage OK.
+* `scripts/verify-all.sh`: **41/41** courts pass, 0 failed, 0 skipped;
+  receipt `bench/receipts/verify-20261110T075205Z.json`.
+* A stale cached Go CLI (`/work/.docker-cache/target-go/weftfs`, built before
+  commit v3) made `tests/branching.rs::go_reads_and_verifies_a_rust_branch`
+  fail against a freshly written v3 store; rebuilding the cached Go binary
+  fixed it. The test skips when no Go binary is present, so a clean checkout
+  is unaffected.
