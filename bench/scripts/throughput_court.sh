@@ -155,7 +155,7 @@ for family in $families; do
   add_input "restore_${family}=$family_work/restore.json"
 
   # Keep the disk bounded: the stores are large and only the JSON is evidence.
-  rm -rf "$family_work/save-"* "$family_work/ingest-store" "$family_work/checkpoint-store"
+  rm -rf "$family_work"/save-*/store-* "$family_work/ingest-store" "$family_work/checkpoint-store"
 done
 
 echo "== assemble =="
