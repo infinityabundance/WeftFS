@@ -393,7 +393,7 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   `5527ae97…c1ef1`). The 3 GiB court **cannot** hold the per-tensor ingest path
   (OOM exit 137 on the 1.015 GiB embedding at the 3 GiB cgroup limit; no limit
   raised). The bounded streaming writer does: 8-way fast raw **1,406.5 s flat
-  (10.83 MB/s, 173 MiB RSS, +0.98 % bytes)** and **1,088.7 s packed (13.99 MB/s,
+  (10.83 MB/s, 173 MiB RSS, +0.11 % bytes)** and **1,088.7 s packed (13.99 MB/s,
   281 MiB RSS, +51.2 % footprint from 148,694 catalog publishes)**; both
   `verify --full` clean. Full restore from the packed store is exact at 1/4/8
   workers: **337.7 / 367.5 / 367.8 MB/s (1.089x)** against a 13.97x cap. A

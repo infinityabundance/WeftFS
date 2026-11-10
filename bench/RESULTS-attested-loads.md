@@ -61,10 +61,13 @@ here contributes two). It is signed (`signed: true`) and its receipt root is
   in the manifest blob of a recorded group and requires `verify_against_store`
   to fail with a `Corrupt`/`Malformed` read — the store's own group hashing
   catches it before the receipt digest comparison.
-* `tests/attested_load.rs` **9/9 pass**, also covering: a region load does not
-  claim a whole-tensor root, an unloaded tensor is reported with a reason, the
-  trust set is enforced, wrong totals and an unverified entry without a reason
-  are rejected on decode, and the recorded digests reproduce from the store.
+* `tests/attested_load.rs` passed **9/9** in this court run, also covering: a
+  region load does not claim a whole-tensor root, an unloaded tensor is reported
+  with a reason, the trust set is enforced, wrong totals and an unverified entry
+  without a reason are rejected on decode, and the recorded digests reproduce
+  from the store. The suite has since grown to **10** tests: an unsigned record
+  now decodes, verifies with `signature_verified: false`, and is refused when a
+  signature is required.
 
 ### Independent Go verification
 

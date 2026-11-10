@@ -324,3 +324,33 @@ fn container_header(bytes: &[u8]) -> u64 {
     prefix.copy_from_slice(&bytes[..8]);
     8 + u64::from_le_bytes(prefix)
 }
+
+#[test]
+fn an_unsigned_record_decodes_and_is_refused_when_a_signature_is_required() {
+    let dir = tempdir().unwrap();
+    let store = store_with_checkpoint(dir.path());
+    let options = AttestOptions {
+        seed: None,
+        ..defaults()
+    };
+    let attestation = attest_checkpoint_load(&store, "pair", &options).unwrap();
+    assert!(attestation.signature.is_none());
+    let bytes = attestation.encode().unwrap();
+    let decoded = LoadAttestation::decode(&bytes).unwrap();
+    assert!(decoded.signature.is_none());
+
+    let report = verify_against_store(&store, &decoded, &VerifyOptions::default()).unwrap();
+    assert!(!report.signature_verified);
+    assert_eq!(report.verified_tensors, 2);
+
+    let err = verify_against_store(
+        &store,
+        &decoded,
+        &VerifyOptions {
+            trust: Vec::new(),
+            require_signature: true,
+        },
+    )
+    .unwrap_err();
+    assert_eq!(err.class().as_str(), "Unauthorized");
+}

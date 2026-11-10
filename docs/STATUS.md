@@ -7929,7 +7929,7 @@ script and merged by a per-tensor-verified merge tool.
   court: exit 137 on `model.embed_tokens.weight`, cgroup peak 3,221,225,472 B (the
   limit), store left empty. The limit was not raised.
 * The **bounded/streaming checkpoint writer fits**, 8-way, fast raw:
-  **flat 1,406,533.6 ms / 10.83 MB/s / 173,032 KiB RSS / +0.98 % bytes**;
+  **flat 1,406,533.6 ms / 10.83 MB/s / 173,032 KiB RSS / +0.11 % bytes**;
   **packed 1,088,654.1 ms / 13.99 MB/s / 287,420 KiB RSS / +51.16 % bytes**
   (911 packs, 236,237 members, **148,694 catalog-segment publishes**). Both
   `verify --full` clean (2,713 objects, 2,713 manifests, 233,539 chunks).
@@ -8017,3 +8017,6 @@ and restores failed because the court re-opened the packed store without
   an environment gap, not a test result, and is recorded as such.
 * Host gates: claims **836/836**, spec drift **57/57**, conformance manifest
   **420 entries** (aggregate `6287b817…dfbe8`).
+* The three R12 courts are **standalone and not registered in
+  `verify-all.sh`**; `verify-all` still reports the 42 courts it already had.
+  Their receipts are the evidence above.

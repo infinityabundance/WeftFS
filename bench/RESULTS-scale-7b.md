@@ -60,7 +60,7 @@ bound; 1.5 GiB is above the 1.015 GiB embedding.
 
 | phase | wall | MB/s | peak RSS | store bytes | vs element bytes |
 |---|---:|---:|---:|---:|---:|
-| flat | **1,406,533.6 ms** (23.4 min) | **10.83** | 173,032 KiB (169 MiB) | 15,247,327,175 | **+0.98 %** |
+| flat | **1,406,533.6 ms** (23.4 min) | **10.83** | 173,032 KiB (169 MiB) | 15,247,327,175 | **+0.11 %** |
 | packed | **1,088,654.1 ms** (18.1 min) | **13.99** | 287,420 KiB (281 MiB) | 23,023,484,778 | **+51.16 %** |
 
 Both wrote 339 tensors × 8 shards = **2,712 shard objects** and 233,539 chunks,

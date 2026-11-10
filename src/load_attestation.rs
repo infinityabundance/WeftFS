@@ -452,8 +452,6 @@ impl LoadAttestation {
     pub fn decode(bytes: &[u8]) -> Result<LoadAttestation> {
         let value = wu::decode(bytes)?;
         let map = wu::as_map(&value)?;
-        // The signing form omits `signature`; the stored form includes it.
-        let has_signature = map.contains_key("signature");
         wu::check_keys(
             map,
             &[
@@ -658,11 +656,8 @@ impl LoadAttestation {
                 ));
             }
         }
-        if attestation.signature.is_some() != has_signature {
-            return Err(Error::corrupt(
-                "load attestation signature presence mismatch",
-            ));
-        }
+        // A record whose `signature` key is present but null is a valid
+        // unsigned record; there is nothing further to check here.
         Ok(attestation)
     }
 }
