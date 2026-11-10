@@ -2301,6 +2301,119 @@ struct RestoredBytes {
     topology_root: Option<Hash32>,
 }
 
+/// Everything a restore needs before it reads one byte of tensor payload.
+///
+/// The sequential, pipelined, and load-receipt restores all start from this, so
+/// they cannot disagree about the output header, the tensor order, or what
+/// "exact source file" means.
+struct RestorePrologue {
+    /// The requested region, when this is a single-tensor region restore.
+    region: Option<Region>,
+    /// The tensors to restore, in container (`source_offset`) order.
+    order: Vec<CheckpointTensor>,
+    /// The output container header.
+    header: Vec<u8>,
+    manifest_root: Hash32,
+    /// True when the output must reproduce the source container exactly.
+    exact_all: bool,
+    source_sha256: Option<[u8; 32]>,
+    source_header: Option<Vec<u8>>,
+    source_file_bytes: Option<u64>,
+}
+
+impl RestorePrologue {
+    /// Declared payload length of one tensor in this restore.
+    fn restored_len(&self, tensor: &CheckpointTensor) -> Result<usize> {
+        let shape = match &self.region {
+            Some(region) => region.extent(),
+            None => tensor.shape.clone(),
+        };
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype
+            .physical_tensor_dtype()
+            .ok_or_else(|| Error::unsupported_version("tensor dtype has no physical layout"))?;
+        let len = tc::payload_len(checked_product(&shape)?, physical)?;
+        usize::try_from(len)
+            .map_err(|_| Error::limit_exceeded("restored tensor does not fit usize"))
+    }
+
+    /// Apply the exactness rules and build the report.
+    #[allow(clippy::too_many_arguments)]
+    fn finish(
+        &self,
+        name: &str,
+        tensors: Vec<RestoredTensor>,
+        shards_read: usize,
+        units_touched: u64,
+        file_bytes: u64,
+        file_sha256: [u8; 32],
+        before: crate::backend::BackendStats,
+        after: crate::backend::BackendStats,
+    ) -> Result<CheckpointRestoreReport> {
+        let exact_source_file = self
+            .source_sha256
+            .map(|expected| expected == file_sha256)
+            .unwrap_or(false);
+        let header_reproduced = self
+            .source_header
+            .as_ref()
+            .map(|expected| expected.as_slice() == self.header.as_slice())
+            .unwrap_or(false);
+        if self.exact_all {
+            if let Some(expected_len) = self.source_file_bytes {
+                if file_bytes != expected_len {
+                    return Err(Error::corrupt(format!(
+                        "restored file is {file_bytes} bytes but the source checkpoint records \
+                         {expected_len}"
+                    )));
+                }
+            }
+            if let Some(expected) = self.source_sha256 {
+                if file_sha256 != expected {
+                    return Err(Error::corrupt(format!(
+                        "restored file SHA-256 {} does not match the checkpoint's source SHA-256 {}",
+                        hex::encode(file_sha256),
+                        hex::encode(expected)
+                    )));
+                }
+            }
+        }
+        Ok(CheckpointRestoreReport {
+            name: name.to_owned(),
+            manifest_root: self.manifest_root,
+            file_sha256,
+            file_bytes,
+            source_sha256: self.source_sha256,
+            exact_source_file,
+            header_reproduced,
+            tensors,
+            shards_read,
+            units_touched,
+            store_bytes_read: after.bytes_read.saturating_sub(before.bytes_read),
+            store_reads: after.reads.saturating_sub(before.reads)
+                + after.range_reads.saturating_sub(before.range_reads),
+        })
+    }
+}
+
+fn restored_tensor_report(tensor: &CheckpointTensor, restored: RestoredBytes) -> RestoredTensor {
+    RestoredTensor {
+        name: tensor.name.clone(),
+        dtype: tensor.dtype.clone(),
+        shape: restored.shape,
+        full_shape: tensor.shape.clone(),
+        full_logical_root: tensor.logical_root,
+        restored_content_root: restored.restored_content_root,
+        bytes: restored.bytes.len() as u64,
+        shards_read: restored.shards_read,
+        units_touched: restored.units_touched,
+        full_root_verified: restored.full_root_verified,
+        shard_roots_verified: restored.shard_roots_verified,
+        topology_root: restored.topology_root,
+        sha256: safetensors::sha256(&restored.bytes),
+    }
+}
+
 impl Store {
     /// Load a checkpoint manifest by name.
     pub fn checkpoint_manifest(&self, name: &str) -> Result<CheckpointManifest> {
@@ -2348,6 +2461,214 @@ impl Store {
         lazy_tiles: bool,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
+        let prologue = self.restore_prologue(state, snapshot, name, options)?;
+        let limits = Limits::default();
+        let before = self.backend_stats();
+        let tiles = crate::parallel::TileDecodeOptions::default();
+
+        let mut hasher = Sha256::new();
+        hasher.update(&prologue.header);
+        writer
+            .write_all(&prologue.header)
+            .map_err(|err| Error::io(format!("restore output: {err}")))?;
+        let mut file_bytes = prologue.header.len() as u64;
+
+        let mut tensors = Vec::with_capacity(prologue.order.len());
+        let mut shards_read = 0usize;
+        let mut units_touched = 0u64;
+        for tensor in &prologue.order {
+            let restored = self.restore_tensor(
+                name,
+                tensor,
+                options.region.as_ref(),
+                options.topology.as_ref(),
+                &limits,
+                state,
+                snapshot,
+                lazy_tiles,
+                &tiles,
+            )?;
+            writer
+                .write_all(&restored.bytes)
+                .map_err(|err| Error::io(format!("restore output: {err}")))?;
+            hasher.update(&restored.bytes);
+            file_bytes += restored.bytes.len() as u64;
+            shards_read += restored.shards_read;
+            units_touched += restored.units_touched;
+            tensors.push(restored_tensor_report(tensor, restored));
+        }
+        let after = self.backend_stats();
+        prologue.finish(
+            name,
+            tensors,
+            shards_read,
+            units_touched,
+            file_bytes,
+            hasher.finalize().into(),
+            before,
+            after,
+        )
+    }
+
+    /// Restore a complete checkpoint with bounded workers across tensors and
+    /// tiles, in deterministic container order.
+    ///
+    /// This is the same restore as [`Store::restore_checkpoint`], driven by the
+    /// shipped ordered pipeline ([`crate::restore_pipeline::run_ordered_pipeline`]):
+    ///
+    /// * **Exact order.** The sink receives the container's tensors in
+    ///   `source_offset` order, so the header and every payload land at the same
+    ///   byte positions for any worker count. The output is byte-identical to
+    ///   [`Store::restore_checkpoint`]; `tests/checkpoint_restore_pipeline.rs`
+    ///   compares the SHA-256 of 1/2/4/8-worker restores.
+    /// * **Bounded memory.** `pipeline.max_inflight_bytes` bounds the sum of
+    ///   declined tensor sizes that are decoding, waiting for the writer, or
+    ///   being written. A tensor larger than the bound runs alone.
+    /// * **Tiles.** `pipeline.tile_threads` decodes one tensor's independent
+    ///   tiles concurrently. It multiplies with `pipeline.threads`; a court must
+    ///   measure oversubscription rather than assume it helps.
+    /// * **Read layers and authorization.** Every shard is read through the
+    ///   shipped `read_tensor_with_options` / `read_tensor_region_with_options`
+    ///   path, so single-flight coalescing and the decoded-object cache apply
+    ///   exactly as they do for a sequential restore. This method takes no
+    ///   capability token; it is the same trust model as
+    ///   [`Store::restore_checkpoint`].
+    /// * **One error policy.** The error is the lowest failing tensor in
+    ///   container order, and the sink holds exactly the prefix before it.
+    pub fn restore_checkpoint_pipelined<W: Write>(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        self.restore_checkpoint_pipelined_inner(None, None, name, options, pipeline, false, writer)
+    }
+
+    /// [`Store::restore_checkpoint_pipelined`] against a pinned snapshot.
+    pub fn restore_checkpoint_pipelined_at<W: Write>(
+        &self,
+        snapshot: Hash32,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        let state = self.state_at(snapshot)?;
+        self.restore_checkpoint_pipelined_inner(
+            Some(&state),
+            Some(snapshot),
+            name,
+            options,
+            pipeline,
+            false,
+            writer,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn restore_checkpoint_pipelined_inner<W: Write>(
+        &self,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        lazy_tiles: bool,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        let prologue = self.restore_prologue(state, snapshot, name, options)?;
+        let limits = Limits::default();
+        let before = self.backend_stats();
+        let tiles = crate::parallel::TileDecodeOptions {
+            threads: pipeline.tile_threads,
+            ..crate::parallel::TileDecodeOptions::default()
+        };
+        let region = options.region.as_ref();
+        let topology = options.topology.as_ref();
+
+        let mut hasher = Sha256::new();
+        hasher.update(&prologue.header);
+        writer
+            .write_all(&prologue.header)
+            .map_err(|err| Error::io(format!("restore output: {err}")))?;
+        let mut file_bytes = prologue.header.len() as u64;
+        let mut tensors: Vec<RestoredTensor> = Vec::with_capacity(prologue.order.len());
+        let mut shards_read = 0usize;
+        let mut units_touched = 0u64;
+
+        let sizes: Vec<Result<usize>> = prologue
+            .order
+            .iter()
+            .map(|tensor| prologue.restored_len(tensor))
+            .collect();
+        let outcome = crate::restore_pipeline::run_ordered_pipeline(
+            &prologue.order,
+            &sizes,
+            pipeline,
+            |_index, tensor| {
+                self.restore_tensor(
+                    name, tensor, region, topology, &limits, state, snapshot, lazy_tiles, &tiles,
+                )
+            },
+            |restored| restored.bytes.len(),
+            |_index, restored| {
+                writer
+                    .write_all(&restored.bytes)
+                    .map_err(|err| Error::io(format!("restore output: {err}")))?;
+                hasher.update(&restored.bytes);
+                file_bytes += restored.bytes.len() as u64;
+                shards_read += restored.shards_read;
+                units_touched += restored.units_touched;
+                let tensor = &prologue.order[_index];
+                tensors.push(RestoredTensor {
+                    name: tensor.name.clone(),
+                    dtype: tensor.dtype.clone(),
+                    shape: restored.shape.clone(),
+                    full_shape: tensor.shape.clone(),
+                    full_logical_root: tensor.logical_root,
+                    restored_content_root: restored.restored_content_root,
+                    bytes: restored.bytes.len() as u64,
+                    shards_read: restored.shards_read,
+                    units_touched: restored.units_touched,
+                    full_root_verified: restored.full_root_verified,
+                    shard_roots_verified: restored.shard_roots_verified,
+                    topology_root: restored.topology_root,
+                    sha256: safetensors::sha256(&restored.bytes),
+                });
+                Ok(())
+            },
+        )?;
+        if outcome.tensors_written != prologue.order.len() {
+            return Err(Error::corrupt(format!(
+                "pipelined restore wrote {} of {} tensors",
+                outcome.tensors_written,
+                prologue.order.len()
+            )));
+        }
+        let after = self.backend_stats();
+        prologue.finish(
+            name,
+            tensors,
+            shards_read,
+            units_touched,
+            file_bytes,
+            hasher.finalize().into(),
+            before,
+            after,
+        )
+    }
+
+    /// Validate the restore request, load the manifest, and derive the output
+    /// header. Shared by the sequential, the pipelined, and the load-receipt
+    /// restores so none of them can disagree about what "exact" means.
+    fn restore_prologue(
+        &self,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+    ) -> Result<RestorePrologue> {
         if options.region.is_some() && options.tensor.is_none() {
             return Err(Error::invalid_argument(
                 "a region restore requires --tensor (one named tensor)",
@@ -2367,11 +2688,8 @@ impl Store {
             Some(tensor) => vec![manifest.tensor(tensor)?],
             None => manifest.tensors.iter().collect(),
         };
-        let mut order: Vec<&CheckpointTensor> = selected.clone();
+        let mut order: Vec<CheckpointTensor> = selected.into_iter().cloned().collect();
         order.sort_by_key(|tensor| tensor.source_offset);
-
-        let limits = Limits::default();
-        let before = self.backend_stats();
 
         let exact_all = options.tensor.is_none()
             && options.region.is_none()
@@ -2405,95 +2723,15 @@ impl Store {
                 safetensors::encode_header(&borrowed, metadata.as_ref())?
             }
         };
-
-        let mut hasher = Sha256::new();
-        hasher.update(&header);
-        writer
-            .write_all(&header)
-            .map_err(|err| Error::io(format!("restore output: {err}")))?;
-        let mut file_bytes = header.len() as u64;
-
-        let mut tensors = Vec::with_capacity(order.len());
-        let mut shards_read = 0usize;
-        let mut units_touched = 0u64;
-        for tensor in &order {
-            let restored = self.restore_tensor(
-                name,
-                tensor,
-                options.region.as_ref(),
-                options.topology.as_ref(),
-                &limits,
-                state,
-                snapshot,
-                lazy_tiles,
-            )?;
-            writer
-                .write_all(&restored.bytes)
-                .map_err(|err| Error::io(format!("restore output: {err}")))?;
-            hasher.update(&restored.bytes);
-            file_bytes += restored.bytes.len() as u64;
-            shards_read += restored.shards_read;
-            units_touched += restored.units_touched;
-            tensors.push(RestoredTensor {
-                name: tensor.name.clone(),
-                dtype: tensor.dtype.clone(),
-                shape: restored.shape,
-                full_shape: tensor.shape.clone(),
-                full_logical_root: tensor.logical_root,
-                restored_content_root: restored.restored_content_root,
-                bytes: restored.bytes.len() as u64,
-                shards_read: restored.shards_read,
-                units_touched: restored.units_touched,
-                full_root_verified: restored.full_root_verified,
-                shard_roots_verified: restored.shard_roots_verified,
-                topology_root: restored.topology_root,
-                sha256: safetensors::sha256(&restored.bytes),
-            });
-        }
-        let file_sha256: [u8; 32] = hasher.finalize().into();
-        let exact_source_file = manifest
-            .source_sha256
-            .map(|expected| expected == file_sha256)
-            .unwrap_or(false);
-        let header_reproduced = manifest
-            .source_header
-            .as_ref()
-            .map(|expected| expected.as_slice() == header.as_slice())
-            .unwrap_or(false);
-        if exact_all {
-            if let Some(expected_len) = manifest.source_file_bytes {
-                if file_bytes != expected_len {
-                    return Err(Error::corrupt(format!(
-                        "restored file is {file_bytes} bytes but the source checkpoint records \
-                         {expected_len}"
-                    )));
-                }
-            }
-            if let Some(expected) = manifest.source_sha256 {
-                if file_sha256 != expected {
-                    return Err(Error::corrupt(format!(
-                        "restored file SHA-256 {} does not match the checkpoint's source SHA-256 {}",
-                        hex::encode(file_sha256),
-                        hex::encode(expected)
-                    )));
-                }
-            }
-        }
-        let after = self.backend_stats();
-        Ok(CheckpointRestoreReport {
-            name: name.to_owned(),
+        Ok(RestorePrologue {
+            region: options.region.clone(),
+            order,
+            header,
             manifest_root,
-            file_sha256,
-            file_bytes,
+            exact_all,
             source_sha256: manifest.source_sha256,
-            exact_source_file,
-            header_reproduced,
-            tensors,
-            shards_read,
-            units_touched,
-            store_bytes_read: after.bytes_read.saturating_sub(before.bytes_read),
-            store_reads: after.reads.saturating_sub(before.reads)
-                + after.range_reads.saturating_sub(before.range_reads),
+            source_header: manifest.source_header.clone(),
+            source_file_bytes: manifest.source_file_bytes,
         })
     }
 
@@ -2539,6 +2777,7 @@ impl Store {
             state.as_ref(),
             snapshot,
             false,
+            &crate::parallel::TileDecodeOptions::default(),
         )?;
         let report = RestoredTensor {
             name: tensor.name.clone(),
@@ -2746,6 +2985,7 @@ impl Store {
         state: Option<&State>,
         snapshot: Option<Hash32>,
         lazy_tiles: bool,
+        tiles: &crate::parallel::TileDecodeOptions,
     ) -> Result<RestoredBytes> {
         let dtype = TensorElementDtype::parse(&tensor.dtype)?;
         let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
@@ -2763,8 +3003,9 @@ impl Store {
                 let mut verified = 0usize;
                 let mut units_touched = 0u64;
                 for shard in &shards {
-                    let (bytes, units) =
-                        self.read_shard(checkpoint, tensor, shard, state, snapshot, lazy_tiles)?;
+                    let (bytes, units) = self.read_shard(
+                        checkpoint, tensor, shard, state, snapshot, lazy_tiles, tiles,
+                    )?;
                     units_touched += units;
                     if bytes.len() as u64 != shard.byte_len {
                         return Err(context(
@@ -2974,6 +3215,7 @@ impl Store {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn read_shard(
         &self,
         checkpoint: &str,
@@ -2982,6 +3224,7 @@ impl Store {
         state: Option<&State>,
         snapshot: Option<Hash32>,
         lazy_tiles: bool,
+        tiles: &crate::parallel::TileDecodeOptions,
     ) -> Result<(Vec<u8>, u64)> {
         let id = self.verify_shard_entry(checkpoint, tensor, shard, state, snapshot)?;
         // Lazy verification: a mode-15/17/18 object is read through the range
@@ -3001,7 +3244,7 @@ impl Store {
                 let shape = meta.shape.clone();
                 let region = Region::new(vec![0u64; shape.len()], shape);
                 let read = self
-                    .read_tensor_region(id, &region)
+                    .read_tensor_region_with_options(id, &region, tiles)
                     .map_err(|err| context(&tensor.name, shard, err))?;
                 return Ok((read.bytes, read.units_touched));
             }
@@ -3014,7 +3257,7 @@ impl Store {
                     .map_err(|err| context(&tensor.name, shard, err))?
             }
             None => self
-                .read_tensor(id)
+                .read_tensor_with_options(id, tiles)
                 .map_err(|err| context(&tensor.name, shard, err))?,
         };
         Ok((bytes, 1))

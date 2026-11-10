@@ -119,6 +119,11 @@ fn child(args: &[String]) -> Result<()> {
     let s3 = flag(args, "--s3");
     let filter = arg(args, "--filter");
     let fast = flag(args, "--fast");
+    let phases = flag(args, "--phases");
+    let pack = flag(args, "--pack");
+    let fast_codec_raw = arg(args, "--fast-codec")
+        .map(|codec| codec == "raw")
+        .unwrap_or(false);
 
     let seed: [u8; 32] = {
         let bytes = hex::decode(seed_hex).expect("seed hex");
@@ -138,30 +143,65 @@ fn child(args: &[String]) -> Result<()> {
         } else {
             WritePolicy::Planned
         },
-        fast_codec: FastCodec::Zstd,
+        fast_codec: if fast_codec_raw {
+            FastCodec::Raw
+        } else {
+            FastCodec::Zstd
+        },
         fast_zstd_level: 1,
         deterministic_seed: Some(seed),
         ..CheckpointWriteOptions::default()
+    };
+
+    let pack_options: Option<weftfs::packs::PackOptions> = if pack {
+        let mut policy = weftfs::packs::PackOptions::default();
+        if let Some(bytes) = arg(args, "--pack-target-bytes") {
+            policy.pack_target_bytes = bytes.parse().expect("--pack-target-bytes");
+        }
+        if let Some(bytes) = arg(args, "--pack-member-threshold") {
+            policy.member_threshold_bytes = bytes.parse().expect("--pack-member-threshold");
+        }
+        if let Some(bytes) = arg(args, "--pack-catalog-bytes") {
+            policy.max_catalog_bytes = bytes.parse().expect("--pack-catalog-bytes");
+        }
+        if let Some(segments) = arg(args, "--pack-segments") {
+            policy.catalog_segments = segments.parse().expect("--pack-segments");
+        }
+        policy.validate().expect("pack policy");
+        Some(policy)
+    } else {
+        None
     };
 
     let mut store = if s3 {
         let mut config = S3Config::from_env()?;
         config.bucket = store_label.to_owned();
         S3Backend::new("<parallel-bench>", config.clone()).ensure_bucket()?;
-        Store::init_with_backend(
-            "<parallel-bench>",
-            options.clone(),
-            BackendKind::S3 { config },
-        )?
+        let kind = match pack_options {
+            Some(policy) => BackendKind::packed(BackendKind::S3 { config }, policy)?,
+            None => BackendKind::S3 { config },
+        };
+        Store::init_with_backend("<parallel-bench>", options.clone(), kind)?
     } else {
         let path = PathBuf::from(store_label);
         if path.exists() {
             fs::remove_dir_all(&path)
                 .map_err(|err| weftfs::error::Error::io(format!("{}: {err}", path.display())))?;
         }
-        Store::init(&path, options.clone())?
+        match pack_options {
+            Some(policy) => Store::init_with_backend(
+                &path,
+                options.clone(),
+                BackendKind::packed(BackendKind::Local, policy)?,
+            )?,
+            None => Store::init(&path, options.clone())?,
+        }
     };
 
+    if phases {
+        weftfs::phase_profile::begin();
+    }
+    let before = store.backend_stats();
     let started = Instant::now();
     let report = if ranks == 0 {
         store.write_checkpoint("ckpt", Path::new(model), &checkpoint)?
@@ -175,6 +215,13 @@ fn child(args: &[String]) -> Result<()> {
         store.write_checkpoint_parallel("ckpt", Path::new(model), &checkpoint, &parallel)?
     };
     let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
+    let phase_report = if phases {
+        weftfs::phase_profile::finish().to_json()
+    } else {
+        Json::Null
+    };
+    let after = store.backend_stats();
+    let pack_stats = store.pack_stats().map(|stats| json!(stats));
 
     let store_bytes = if s3 {
         Json::Null
@@ -188,7 +235,12 @@ fn child(args: &[String]) -> Result<()> {
             "backend": if s3 { "s3" } else { "local" },
             "filter": filter,
             "shards": shards,
-            "write_policy": if fast { "fast/zstd-1" } else { "planned" },
+            "write_policy": match (fast, fast_codec_raw) {
+                (true, true) => "fast/raw",
+                (true, false) => "fast/zstd-1",
+                (false, _) => "planned",
+            },
+            "pack": pack,
             "max_in_flight_bytes": max_inflight,
             "head": report.head.to_hex(),
             "checkpoint_id": report.checkpoint_id.to_hex(),
@@ -203,6 +255,17 @@ fn child(args: &[String]) -> Result<()> {
             "commit_ms": report.commit_ms,
             "wall_ms": wall_ms,
             "peak_rss_kib": peak_rss_kib(),
+            "phases": phase_report,
+            "backend_stats": {
+                "reads": after.reads - before.reads,
+                "range_reads": after.range_reads - before.range_reads,
+                "bytes_read": after.bytes_read - before.bytes_read,
+                "writes": after.writes - before.writes,
+                "bytes_written": after.bytes_written - before.bytes_written,
+                "link_publications": after.link_publications - before.link_publications,
+                "rename_publications": after.rename_publications - before.rename_publications,
+            },
+            "pack_stats": pack_stats,
         })
     );
     Ok(())
@@ -220,6 +283,9 @@ fn run_child(
     shards: u32,
     max_inflight: u64,
     fast: bool,
+    phases: bool,
+    pack: bool,
+    fast_codec: Option<&str>,
 ) -> std::io::Result<Json> {
     let mut command = Command::new(exe);
     command
@@ -244,6 +310,15 @@ fn run_child(
     }
     if fast {
         command.arg("--fast");
+    }
+    if phases {
+        command.arg("--phases");
+    }
+    if pack {
+        command.arg("--pack");
+    }
+    if let Some(codec) = fast_codec {
+        command.arg("--fast-codec").arg(codec);
     }
     let output = command.output()?;
     if !output.status.success() {
@@ -334,93 +409,141 @@ fn parent(args: &[String]) -> Result<()> {
     let mut configurations = Vec::new();
     let fast = flag(args, "--fast");
     let reps: usize = arg(args, "--reps").unwrap_or("3").parse().expect("--reps");
-    let runs: &[usize] = &[0, 1, 2, 4, 8];
+    // `--ranks` narrows the rank sweep for a reduced court run. The default is
+    // the full sweep, so a standalone run is unchanged.
+    let rank_sweep: Vec<usize> = arg(args, "--ranks")
+        .map(|text| {
+            text.split([',', ' '])
+                .filter(|part| !part.is_empty())
+                .map(|part| part.parse().expect("--ranks member"))
+                .collect()
+        })
+        .unwrap_or_else(|| vec![0, 1, 2, 4, 8]);
+    let runs: &[usize] = &rank_sweep;
     let stamp = arg(args, "--stamp")
         .map(str::to_owned)
         .unwrap_or_else(chrono_stamp);
 
     let mut heads: BTreeMap<String, String> = BTreeMap::new();
     let mut manifest_roots: BTreeMap<String, String> = BTreeMap::new();
-    for &ranks in runs {
-        let label = if ranks == 0 {
-            "sequential".to_owned()
-        } else {
-            format!("ranks-{ranks}")
-        };
-        let mut samples: Vec<Json> = Vec::new();
-        for rep in 0..reps {
-            let store = if s3 {
-                format!("weft-parallel-{}-r{ranks}-{rep}", stamp.to_lowercase())
-            } else {
-                work.join(format!("store-r{ranks}"))
+    let phases = flag(args, "--phases");
+    let fast_codec = arg(args, "--fast-codec");
+    let pack_compare = flag(args, "--pack-compare");
+
+    // One measured configuration. `prefix` distinguishes the flat and packed
+    // halves of a `--pack-compare` run without changing the default receipt.
+    let mut measure_configuration =
+        |ranks: usize, pack: bool, prefix: &str, configurations: &mut Vec<Json>| -> Result<()> {
+            let label = format!(
+                "{prefix}{}",
+                if ranks == 0 {
+                    "sequential".to_owned()
+                } else {
+                    format!("ranks-{ranks}")
+                }
+            );
+            let mut samples: Vec<Json> = Vec::new();
+            for rep in 0..reps {
+                let store = if s3 {
+                    format!(
+                        "weft-parallel-{}-r{ranks}-{rep}{}",
+                        stamp.to_lowercase(),
+                        if pack { "-packed" } else { "" }
+                    )
+                } else {
+                    work.join(format!(
+                        "store-r{ranks}{}",
+                        if pack { "-packed" } else { "" }
+                    ))
                     .to_string_lossy()
                     .into_owned()
-            };
-            let started = Instant::now();
-            let value = run_child(
-                &exe,
-                &model,
-                &store,
-                ranks,
-                seed,
-                s3,
-                filter,
-                shards,
-                max_inflight,
-                fast,
-            )
-            .map_err(|err| weftfs::error::Error::io(format!("child: {err}")))?;
-            heads.insert(label.clone(), value["head"].as_str().unwrap().to_owned());
-            manifest_roots.insert(
-                label.clone(),
-                value["manifest_root"].as_str().unwrap().to_owned(),
+                };
+                let started = Instant::now();
+                let value = run_child(
+                    &exe,
+                    &model,
+                    &store,
+                    ranks,
+                    seed,
+                    s3,
+                    filter,
+                    shards,
+                    max_inflight,
+                    fast,
+                    phases,
+                    pack,
+                    fast_codec,
+                )
+                .map_err(|err| weftfs::error::Error::io(format!("child: {err}")))?;
+                heads.insert(label.clone(), value["head"].as_str().unwrap().to_owned());
+                manifest_roots.insert(
+                    label.clone(),
+                    value["manifest_root"].as_str().unwrap().to_owned(),
+                );
+                let mut sample = value.as_object().cloned().unwrap_or_default();
+                sample.insert("store".to_owned(), Json::String(store.clone()));
+                sample.insert(
+                    "parent_observed_ms".to_owned(),
+                    json!(started.elapsed().as_secs_f64() * 1000.0),
+                );
+                samples.push(Json::Object(sample));
+            }
+            let median_block = json!({
+                "prepare_ms": median(&samples, "prepare_ms"),
+                "validate_ms": median(&samples, "validate_ms"),
+                "commit_ms": median(&samples, "commit_ms"),
+                "wall_ms": median(&samples, "wall_ms"),
+                "peak_rss_kib": median(&samples, "peak_rss_kib"),
+                "store_bytes": median(&samples, "store_bytes"),
+            });
+            let best_block = json!({
+                "prepare_ms": minimum(&samples, "prepare_ms"),
+                "validate_ms": minimum(&samples, "validate_ms"),
+                "commit_ms": minimum(&samples, "commit_ms"),
+                "wall_ms": minimum(&samples, "wall_ms"),
+                "peak_rss_kib": maximum(&samples, "peak_rss_kib"),
+                "store_bytes": minimum(&samples, "store_bytes"),
+            });
+            println!(
+                "{label}: head={} median_prepare_ms={:?} median_commit_ms={:?} median_wall_ms={:?}",
+                &heads[&label][..16],
+                median_block["prepare_ms"],
+                median_block["commit_ms"],
+                median_block["wall_ms"]
             );
-            let mut sample = value.as_object().cloned().unwrap_or_default();
-            sample.insert(
-                "store".to_owned(),
-                Json::String(store.clone()),
-            );
-            sample.insert(
-                "parent_observed_ms".to_owned(),
-                json!(started.elapsed().as_secs_f64() * 1000.0),
-            );
-            samples.push(Json::Object(sample));
+            configurations.push(json!({
+                "label": label,
+                "ranks": ranks,
+                "pack": pack,
+                "reps": reps,
+                "median": median_block,
+                "best": best_block,
+                "runs": samples,
+            }));
+            Ok(())
+        };
+
+    for &ranks in runs {
+        measure_configuration(ranks, false, "", &mut configurations)?;
+    }
+    // The packed configurations are a second, labelled set. They publish the
+    // same head and manifest root; only physical placement differs.
+    let mut packed_configurations: Vec<Json> = Vec::new();
+    if pack_compare {
+        for &ranks in runs {
+            measure_configuration(ranks, true, "packed-", &mut packed_configurations)?;
         }
-        let median = json!({
-            "prepare_ms": median(&samples, "prepare_ms"),
-            "validate_ms": median(&samples, "validate_ms"),
-            "commit_ms": median(&samples, "commit_ms"),
-            "wall_ms": median(&samples, "wall_ms"),
-            "peak_rss_kib": median(&samples, "peak_rss_kib"),
-            "store_bytes": median(&samples, "store_bytes"),
-        });
-        let minimum = json!({
-            "prepare_ms": minimum(&samples, "prepare_ms"),
-            "validate_ms": minimum(&samples, "validate_ms"),
-            "commit_ms": minimum(&samples, "commit_ms"),
-            "wall_ms": minimum(&samples, "wall_ms"),
-            "peak_rss_kib": maximum(&samples, "peak_rss_kib"),
-            "store_bytes": minimum(&samples, "store_bytes"),
-        });
-        println!(
-            "{label}: head={} median_prepare_ms={:?} median_commit_ms={:?} median_wall_ms={:?}",
-            &heads[&label][..16],
-            median["prepare_ms"],
-            median["commit_ms"],
-            median["wall_ms"]
-        );
-        configurations.push(json!({
-            "label": label,
-            "ranks": ranks,
-            "reps": reps,
-            "median": median,
-            "best": minimum,
-            "runs": samples,
-        }));
     }
 
-    let expected_head = heads["sequential"].clone();
-    let expected_root = manifest_roots["sequential"].clone();
+    let baseline_label = configurations
+        .first()
+        .and_then(|item| item["label"].as_str().map(str::to_owned))
+        .unwrap_or_else(|| "sequential".to_owned());
+    let expected_head = heads.get(&baseline_label).cloned().unwrap_or_default();
+    let expected_root = manifest_roots
+        .get(&baseline_label)
+        .cloned()
+        .unwrap_or_default();
     let mut checks: Vec<Json> = Vec::new();
     for (label, head) in &heads {
         checks.push(json!({
@@ -452,17 +575,24 @@ fn parent(args: &[String]) -> Result<()> {
         }
     }
 
-    // Speedups are reported from the measurements, never asserted.
+    // Speedups are reported from the measurements, never asserted. A reduced
+    // rank sweep (`--ranks`) may not contain ranks=1, so every ratio above a
+    // missing baseline is reported as null rather than as a fabricated number.
     let mut derived = Vec::new();
-    let seq_wall = configurations[0]["best"]["wall_ms"]
-        .as_f64()
+    let seq_wall = configurations
+        .first()
+        .map(|item| item["best"]["wall_ms"].as_f64().unwrap_or(0.0))
         .unwrap_or(0.0);
-    let ranks1_prepare = configurations[1]["best"]["prepare_ms"]
-        .as_f64()
+    let baseline = configurations
+        .iter()
+        .find(|item| item["ranks"].as_u64() == Some(1));
+    let ranks1_prepare = baseline
+        .map(|item| item["best"]["prepare_ms"].as_f64().unwrap_or(0.0))
         .unwrap_or(0.0);
-    let ranks1_wall = configurations[1]["best"]["wall_ms"]
-        .as_f64()
+    let ranks1_wall = baseline
+        .map(|item| item["best"]["wall_ms"].as_f64().unwrap_or(0.0))
         .unwrap_or(0.0);
+    let has_ranks1 = baseline.is_some();
     for item in configurations.iter().skip(1) {
         let ranks = item["ranks"].as_u64().unwrap_or(0);
         let prepare = item["best"]["prepare_ms"].as_f64().unwrap_or(0.0);
@@ -470,8 +600,8 @@ fn parent(args: &[String]) -> Result<()> {
         derived.push(json!({
             "ranks": ranks,
             "basis": "best-of-N (warm-page-cache comparable run); medians are published beside it",
-            "prepare_speedup_vs_ranks_1": if prepare > 0.0 { ranks1_prepare / prepare } else { 0.0 },
-            "wall_speedup_vs_ranks_1": if wall > 0.0 { ranks1_wall / wall } else { 0.0 },
+            "prepare_speedup_vs_ranks_1": if has_ranks1 && prepare > 0.0 { ranks1_prepare / prepare } else { 0.0 },
+            "wall_speedup_vs_ranks_1": if has_ranks1 && wall > 0.0 { ranks1_wall / wall } else { 0.0 },
             "wall_speedup_vs_sequential": if wall > 0.0 { seq_wall / wall } else { 0.0 },
             "prepare_ms": prepare,
             "wall_ms": wall,
@@ -483,8 +613,96 @@ fn parent(args: &[String]) -> Result<()> {
             "median_wall_ms": item["median"]["wall_ms"],
         }));
     }
-    let sequential_best = configurations[0]["best"].clone();
-    let sequential_median = configurations[0]["median"].clone();
+    let sequential_best = configurations
+        .first()
+        .map(|item| item["best"].clone())
+        .unwrap_or(Json::Null);
+    let sequential_median = configurations
+        .first()
+        .map(|item| item["median"].clone())
+        .unwrap_or(Json::Null);
+    let sequential_label = configurations
+        .first()
+        .and_then(|item| item["label"].as_str().map(str::to_owned))
+        .unwrap_or_default();
+
+    // Flat vs packed at the same rank count. Every number is measured; the
+    // delta fields are simple ratios so a reader can see a loss as easily as a
+    // win. `requests` is `reads + range_reads + writes` of the blob/commit
+    // plane, so a packed save's request count is directly comparable.
+    let pack_comparison: Json = if pack_compare {
+        let mut rows = Vec::new();
+        for (flat, packed) in configurations.iter().zip(packed_configurations.iter()) {
+            let ranks = flat["ranks"].as_u64().unwrap_or(0);
+            let flat_best = &flat["best"];
+            let packed_best = &packed["best"];
+            let flat_runs = flat["runs"].as_array().cloned().unwrap_or_default();
+            let packed_runs = packed["runs"].as_array().cloned().unwrap_or_default();
+            let flat_writes: f64 = flat_runs
+                .iter()
+                .filter_map(|run| run.pointer("/backend_stats/writes").and_then(Json::as_f64))
+                .sum();
+            let packed_writes: f64 = packed_runs
+                .iter()
+                .filter_map(|run| run.pointer("/backend_stats/writes").and_then(Json::as_f64))
+                .sum();
+            let flat_written: f64 = flat_runs
+                .iter()
+                .filter_map(|run| {
+                    run.pointer("/backend_stats/bytes_written")
+                        .and_then(Json::as_f64)
+                })
+                .sum();
+            let packed_written: f64 = packed_runs
+                .iter()
+                .filter_map(|run| {
+                    run.pointer("/backend_stats/bytes_written")
+                        .and_then(Json::as_f64)
+                })
+                .sum();
+            let flat_wall = flat_best["wall_ms"].as_f64().unwrap_or(0.0);
+            let packed_wall = packed_best["wall_ms"].as_f64().unwrap_or(0.0);
+            let flat_prepare = flat_best["prepare_ms"].as_f64().unwrap_or(0.0);
+            let packed_prepare = packed_best["prepare_ms"].as_f64().unwrap_or(0.0);
+            rows.push(json!({
+                "ranks": ranks,
+                "flat": {
+                    "wall_ms": flat_wall,
+                    "prepare_ms": flat_prepare,
+                    "commit_ms": flat_best["commit_ms"],
+                    "store_bytes": flat_best["store_bytes"],
+                    "peak_rss_kib": flat_best["peak_rss_kib"],
+                    "writes_last_rep_sum": flat_writes,
+                    "bytes_written_last_rep_sum": flat_written,
+                    "phases": flat_runs.first().and_then(|run| run.get("phases")).cloned().unwrap_or(Json::Null),
+                },
+                "packed": {
+                    "wall_ms": packed_wall,
+                    "prepare_ms": packed_prepare,
+                    "commit_ms": packed_best["commit_ms"],
+                    "store_bytes": packed_best["store_bytes"],
+                    "peak_rss_kib": packed_best["peak_rss_kib"],
+                    "writes_last_rep_sum": packed_writes,
+                    "bytes_written_last_rep_sum": packed_written,
+                    "pack_stats": packed_runs.first().and_then(|run| run.get("pack_stats")).cloned().unwrap_or(Json::Null),
+                    "phases": packed_runs.first().and_then(|run| run.get("phases")).cloned().unwrap_or(Json::Null),
+                },
+                "wall_speedup_flat_over_packed": if packed_wall > 0.0 { flat_wall / packed_wall } else { 0.0 },
+                "prepare_speedup_flat_over_packed": if packed_prepare > 0.0 { flat_prepare / packed_prepare } else { 0.0 },
+                "request_ratio_flat_over_packed": if packed_writes > 0.0 { flat_writes / packed_writes } else { 0.0 },
+                "written_bytes_ratio_flat_over_packed": if packed_written > 0.0 { flat_written / packed_written } else { 0.0 },
+                "same_head": flat_runs.first().and_then(|run| run.get("head")) == packed_runs.first().and_then(|run| run.get("head")),
+                "same_manifest_root": flat_runs.first().and_then(|run| run.get("manifest_root")) == packed_runs.first().and_then(|run| run.get("manifest_root")),
+            }));
+        }
+        json!({
+            "basis": "best-of-N per configuration (warm-page-cache comparable); the median spreads stay in the two configuration blocks",
+            "request_metric": "backend_stats.writes (blob and control publications), summed over the repetitions of that configuration",
+            "rows": rows,
+        })
+    } else {
+        Json::Null
+    };
 
     let receipt = json!({
         "schema": "weft-parallel-checkpoint-court-v1",
@@ -496,7 +714,14 @@ fn parent(args: &[String]) -> Result<()> {
             "sha256": file_sha256(&model).unwrap_or_default(),
         },
         "shards": shards,
-        "write_policy": if fast { "fast/zstd-1" } else { "planned" },
+        "rank_sweep": rank_sweep,
+        "write_policy": match (fast, fast_codec) {
+            (true, Some("raw")) => "fast/raw",
+            (true, _) => "fast/zstd-1",
+            (false, _) => "planned",
+        },
+        "phases": phases,
+        "pack_compare": pack_compare,
         "tensor_filter": filter,
         "max_in_flight_bytes": max_inflight,
         "deterministic_seed": seed,
@@ -514,8 +739,11 @@ fn parent(args: &[String]) -> Result<()> {
         },
         "sequential_best": sequential_best,
         "sequential_median": sequential_median,
+        "sequential_label": sequential_label,
         "reps": reps,
         "configurations": configurations,
+        "packed_configurations": packed_configurations,
+        "pack_comparison": pack_comparison,
         "derived": derived,
         "checks": checks,
         "checks_passed": checks.iter().all(|check| check["pass"].as_bool().unwrap_or(false)),

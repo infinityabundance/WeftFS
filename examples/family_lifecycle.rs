@@ -69,6 +69,8 @@ fn run() -> Result<(), String> {
         "measure" => measure(&args[1..]),
         "baselines" => baselines(&args[1..]),
         "checkpoint" => checkpoint(&args[1..]),
+        "restore" => restore(&args[1..]),
+        "throughput" => throughput(&args[1..]),
         "topology" => topology(&args[1..]),
         "crash-child" => crash_child(&args[1..]),
         "recovery" => recovery(&args[1..]),
@@ -77,8 +79,8 @@ fn run() -> Result<(), String> {
         "recompare" => recompare(&args[1..]),
         "assemble" => assemble(&args[1..]),
         other => Err(format!(
-            "unknown phase `{other}` (expected ingest, measure, baselines, checkpoint, \
-             topology, crash-child, recovery, gc, assemble)"
+            "unknown phase `{other}` (expected ingest, measure, baselines, checkpoint, restore, \
+             throughput, topology, crash-child, recovery, gc, assemble)"
         )),
     }
 }
@@ -295,23 +297,53 @@ fn sha256_hex(bytes: &[u8]) -> String {
 /// key prefix), so the court gives every repetition its own bucket through
 /// `suffix`. Local stores use a directory instead.
 fn backend_from_with_suffix(args: &[String], suffix: &str) -> Result<BackendKind, String> {
-    match value_of(args, "--backend")
+    let kind = match value_of(args, "--backend")
         .unwrap_or_else(|| "local".to_owned())
         .as_str()
     {
-        "local" => Ok(BackendKind::Local),
-        "object" => Ok(BackendKind::Object),
+        "local" => BackendKind::Local,
+        "object" => BackendKind::Object,
         "s3" => {
             let mut config = weftfs::s3::S3Config::from_env().map_err(|err| err.to_string())?;
             if !suffix.is_empty() {
                 config.bucket = format!("{}-{}", config.bucket, suffix);
             }
-            Ok(BackendKind::S3 { config })
+            BackendKind::S3 { config }
         }
-        other => Err(format!(
-            "--backend must be local, object, or s3 (got `{other}`)"
-        )),
+        other => {
+            return Err(format!(
+                "--backend must be local, object, or s3 (got `{other}`)"
+            ))
+        }
+    };
+    // `--pack` is a physical publication batching layer over the selected
+    // backend, exactly as the CLI's global flag is.
+    if flag(args, "--pack") {
+        let mut policy = weftfs::packs::PackOptions::default();
+        if let Some(bytes) = value_of(args, "--pack-target-bytes") {
+            policy.pack_target_bytes = bytes
+                .parse()
+                .map_err(|_| "--pack-target-bytes must be an integer".to_owned())?;
+        }
+        if let Some(bytes) = value_of(args, "--pack-member-threshold") {
+            policy.member_threshold_bytes = bytes
+                .parse()
+                .map_err(|_| "--pack-member-threshold must be an integer".to_owned())?;
+        }
+        if let Some(bytes) = value_of(args, "--pack-catalog-bytes") {
+            policy.max_catalog_bytes = bytes
+                .parse()
+                .map_err(|_| "--pack-catalog-bytes must be an integer".to_owned())?;
+        }
+        if let Some(segments) = value_of(args, "--pack-segments") {
+            policy.catalog_segments = segments
+                .parse()
+                .map_err(|_| "--pack-segments must be an integer".to_owned())?;
+        }
+        policy.validate().map_err(|err| err.to_string())?;
+        return BackendKind::packed(kind, policy).map_err(|err| err.to_string());
     }
+    Ok(kind)
 }
 
 /// Bucket suffix for one repetition of a remote store. The suffix also names
@@ -755,6 +787,13 @@ fn ingest(args: &[String]) -> Result<(), String> {
     let mut last_verify = Json::Null;
     let mut last_snapshot = Json::Null;
     let mut last_generation = 0u64;
+    // Phase profiling is opt-in. When it is on, the seven library phases are
+    // attributed per tensor (a snapshot diff around one write) and summarised
+    // for the whole phase; when it is off, the rows carry `null`.
+    let profiling = phase_profiling_requested();
+    if profiling {
+        weftfs::phase_profile::begin();
+    }
 
     for rep in 0..reps {
         let root_path = store_root(args, &store_path, rep, reps);
@@ -805,7 +844,14 @@ fn ingest(args: &[String]) -> Result<(), String> {
         let mut base_rows = Vec::new();
         let mut base_versions: BTreeMap<String, weftfs::Hash32> = BTreeMap::new();
         for tensor in &base_tensors {
+            let read_started = Instant::now();
             let bytes = read_tensor_bytes(&base, tensor)?;
+            if profiling {
+                weftfs::phase_profile::record(
+                    weftfs::Phase::SourceRead,
+                    read_started.elapsed().as_nanos() as u64,
+                );
+            }
             if std::env::var_os("WEFT_FAMILY_PROGRESS").is_some() {
                 eprintln!(
                     "ingest: base {} bytes={} rss_hwm_kib={}",
@@ -814,6 +860,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                     peak_rss_kib()
                 );
             }
+            let phase_before = profiling.then(weftfs::phase_profile::snapshot);
             let started = Instant::now();
             let id = store
                 .write_tensor_file_with_spec(
@@ -827,6 +874,8 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 )
                 .map_err(|err| format!("write base/{}: {err}", tensor.name))?;
             let write_ms = started.elapsed().as_secs_f64() * 1000.0;
+            let tensor_phases = phase_before
+                .map(|before| weftfs::phase_profile::snapshot().since(&before).to_json());
             let meta = store.tensor_metadata(id).map_err(|e| e.to_string())?;
             let record = store.object_meta(id).map_err(|e| e.to_string())?;
             let manifest = store
@@ -847,6 +896,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 "tile_shape": meta.tile_shape,
                 "data_bytes": data_bytes,
                 "write_ms": round(write_ms),
+                "phases": tensor_phases,
             }));
         }
         let base_wall_ms = base_started.elapsed().as_secs_f64() * 1000.0;
@@ -855,7 +905,14 @@ fn ingest(args: &[String]) -> Result<(), String> {
         let next_started = Instant::now();
         let mut next_rows = Vec::new();
         for tensor in &next_tensors {
+            let read_started = Instant::now();
             let bytes = read_tensor_bytes(&next, tensor)?;
+            if profiling {
+                weftfs::phase_profile::record(
+                    weftfs::Phase::SourceRead,
+                    read_started.elapsed().as_nanos() as u64,
+                );
+            }
             if std::env::var_os("WEFT_FAMILY_PROGRESS").is_some() {
                 eprintln!(
                     "ingest: next {} bytes={} rss_hwm_kib={}",
@@ -870,6 +927,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                     tensor_spec.causal = vec![*version];
                 }
             }
+            let phase_before = profiling.then(weftfs::phase_profile::snapshot);
             let started = Instant::now();
             let id = store
                 .write_tensor_file_with_spec(
@@ -883,6 +941,8 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 )
                 .map_err(|err| format!("write next/{}: {err}", tensor.name))?;
             let write_ms = started.elapsed().as_secs_f64() * 1000.0;
+            let tensor_phases = phase_before
+                .map(|before| weftfs::phase_profile::snapshot().since(&before).to_json());
             let meta = store.tensor_metadata(id).map_err(|e| e.to_string())?;
             let record = store.object_meta(id).map_err(|e| e.to_string())?;
             let manifest = store
@@ -905,6 +965,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
                 "tile_shape": meta.tile_shape,
                 "causal": if tensor_spec.causal.is_empty() { Json::Null } else { json!(tensor_spec.causal[0].to_hex()) },
                 "write_ms": round(write_ms),
+                "phases": tensor_phases,
             }));
         }
         let next_wall_ms = next_started.elapsed().as_secs_f64() * 1000.0;
@@ -1004,6 +1065,11 @@ fn ingest(args: &[String]) -> Result<(), String> {
         .iter()
         .filter_map(|row| row.get("family_wall_ms").and_then(Json::as_f64))
         .collect();
+    let phase_totals = if profiling {
+        weftfs::phase_profile::finish().to_json()
+    } else {
+        Json::Null
+    };
     let tensors = last_tensors.ok_or_else(|| "ingest produced no tensor records".to_owned())?;
     let base_rows = tensors
         .get("base")
@@ -1060,6 +1126,12 @@ fn ingest(args: &[String]) -> Result<(), String> {
             "median_family_wall_ms": round(median(&walls)),
             "min_family_wall_ms": round(walls.iter().cloned().fold(f64::INFINITY, f64::min)),
             "max_family_wall_ms": round(walls.iter().cloned().fold(0.0f64, f64::max)),
+        },
+        "phases": phase_totals,
+        "phase_note": if profiling {
+            "wall-clock totals across every thread; a phase total can exceed wall time when the prepare path runs it concurrently. Unmeasured time is the residual (chunk-table construction, planner arithmetic, in-memory state application, harness bookkeeping)."
+        } else {
+            "phase profiling was off (set WEFT_PHASE_PROFILE=1)"
         },
         "tensors": {
             "base": base_rows,
@@ -1784,6 +1856,15 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         .filter(|pair| pair[0] == "--tensor-filter")
         .map(|pair| pair[1].clone())
         .collect();
+    let write_policy = weftfs::tensor_store::WritePolicy::parse(
+        &value_of(args, "--write-policy").unwrap_or_else(|| "planned".to_owned()),
+    )
+    .map_err(|err| err.to_string())?;
+    let fast_codec = weftfs::tensor_store::FastCodec::parse(
+        &value_of(args, "--fast-codec").unwrap_or_else(|| "zstd".to_owned()),
+    )
+    .map_err(|err| err.to_string())?;
+    let profiling = phase_profiling_requested();
 
     if !backend_is_remote(args) && store_path.exists() {
         fs::remove_dir_all(&store_path)
@@ -1803,6 +1884,9 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
     let started = Instant::now();
+    if profiling {
+        weftfs::phase_profile::begin();
+    }
     let report = store
         .write_checkpoint(
             &name,
@@ -1813,12 +1897,20 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
                 filters: filters.clone(),
                 strategy,
                 tile_shape: tile_shape.clone(),
+                write_policy,
+                fast_codec,
                 ..CheckpointWriteOptions::default()
             },
         )
         .map_err(|err| format!("checkpoint write: {err}"))?;
     let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
+    let phase_totals = if profiling {
+        weftfs::phase_profile::finish().to_json()
+    } else {
+        Json::Null
+    };
     let stats = store.backend_stats();
+    let pack_stats = store.pack_stats().map(|stats| json!(stats));
     let verify = store.verify(true).map_err(|e| format!("verify: {e}"))?;
     let receipt = json!({
         "schema": "weft.family-lifecycle.checkpoint.v1",
@@ -1830,7 +1922,20 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         "axis": axis,
         "tile_shape": tile_shape,
         "filters": filters,
+        "write_policy": write_policy.as_str(),
+        "fast_codec": match fast_codec {
+            weftfs::tensor_store::FastCodec::Raw => "raw",
+            weftfs::tensor_store::FastCodec::Zstd => "zstd",
+        },
+        "pack": store.pack_stats().is_some(),
+        "pack_stats": pack_stats,
         "wall_ms": round(wall_ms),
+        "phases": phase_totals,
+        "phase_note": if profiling {
+            "wall-clock totals across every thread; unmeasured time is the residual (chunk-table construction, planner arithmetic, in-memory state application, harness bookkeeping)"
+        } else {
+            "phase profiling was off (set WEFT_PHASE_PROFILE=1)"
+        },
         "tensors": report.tensors.len(),
         "shard_objects": report.shard_objects,
         "total_element_bytes": report.total_element_bytes,
@@ -1846,6 +1951,257 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         },
         "backend": stats_json(&weftfs::backend::BackendStats::default(), &stats),
         "verify": {"ok": verify.ok, "problems": verify.problems.len()},
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    write_json(&out, &receipt)?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+/// True when the caller asked for phase profiling (`WEFT_PHASE_PROFILE=1`).
+fn phase_profiling_requested() -> bool {
+    weftfs::phase_profile::enabled()
+}
+
+/// Pipelined full-checkpoint restore at several worker counts.
+///
+/// The sink hashes every restored byte and counts it, so exactness is proven
+/// without a host writeback: the numbers are decode + read + SHA-256, and the
+/// report says so. Each run compares the container SHA-256 against the
+/// checkpoint's recorded source SHA-256.
+fn restore(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let name = required(args, "--name")?;
+    let out = PathBuf::from(required(args, "--out")?);
+    let reps = parse_u64(args, "--reps", 3)? as usize;
+    let threads: Vec<usize> = value_of(args, "--threads")
+        .unwrap_or_else(|| "1".to_owned())
+        .split(',')
+        .map(|part| {
+            part.trim()
+                .parse()
+                .map_err(|_| format!("--threads member `{part}` is not an integer"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let tile_threads: Vec<usize> = value_of(args, "--tile-threads")
+        .unwrap_or_else(|| "1".to_owned())
+        .split(',')
+        .map(|part| {
+            part.trim()
+                .parse()
+                .map_err(|_| format!("--tile-threads member `{part}` is not an integer"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let max_inflight = parse_u64(args, "--max-inflight-bytes", 256 * 1024 * 1024)? as usize;
+
+    let open_started = Instant::now();
+    let store = Store::open_with_options_and_backend(
+        &store_path,
+        OpenMode::ReadOnly,
+        options(65_536, 256),
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
+    )
+    .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+    let open_ms = open_started.elapsed().as_secs_f64() * 1000.0;
+    let manifest = store
+        .load_checkpoint(&name)
+        .map_err(|err| format!("load checkpoint: {err}"))?;
+    let source_sha256 = manifest.source_sha256.map(hex::encode).unwrap_or_default();
+    let logical_bytes = manifest.element_bytes;
+    let largest = manifest
+        .tensors
+        .iter()
+        .map(|tensor| tensor.element_bytes)
+        .max()
+        .unwrap_or(0);
+    let tensors = manifest.tensors.len();
+
+    let mut matrix: BTreeMap<String, Json> = BTreeMap::new();
+    for &worker_threads in &threads {
+        for &tile_worker_threads in &tile_threads {
+            let pipeline = RestorePipelineOptions {
+                threads: worker_threads,
+                max_inflight_bytes: max_inflight,
+                tile_threads: tile_worker_threads,
+            };
+            let mut samples = Vec::new();
+            let mut backend_bytes = 0u64;
+            let mut requests = 0u64;
+            let mut decode_bytes = 0u64;
+            let mut stats_row = Json::Null;
+            let mut sha_match = false;
+            for rep in 0..reps {
+                let before = store.backend_stats();
+                let mut sink = HashSink {
+                    hasher: Sha256::new(),
+                    bytes: 0,
+                };
+                let started = Instant::now();
+                let report = store
+                    .restore_checkpoint_pipelined(
+                        &name,
+                        &CheckpointRestoreOptions::default(),
+                        &pipeline,
+                        &mut sink,
+                    )
+                    .map_err(|err| format!("pipelined restore: {err}"))?;
+                samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                let after = store.backend_stats();
+                backend_bytes = after.bytes_read.saturating_sub(before.bytes_read);
+                requests = after.reads.saturating_sub(before.reads)
+                    + after.range_reads.saturating_sub(before.range_reads);
+                if rep == 0 {
+                    let digest = hex::encode(sink.hasher.finalize());
+                    sha_match = source_sha256.is_empty() || digest == source_sha256;
+                    if sink.bytes != report.file_bytes {
+                        return Err("restored sink saw a different byte count".to_owned());
+                    }
+                    decode_bytes = report.tensors.iter().map(|tensor| tensor.bytes).sum();
+                    stats_row = json!({
+                        "tasks": tensors,
+                        "bytes_written": report.file_bytes,
+                        "shards_read": report.shards_read,
+                        "units_touched": report.units_touched,
+                        "exact_source_file": report.exact_source_file,
+                        "header_reproduced": report.header_reproduced,
+                        "manifest_root": report.manifest_root.to_hex(),
+                        "file_sha256": hex::encode(report.file_sha256),
+                    });
+                }
+            }
+            let best_ms = samples
+                .iter()
+                .cloned()
+                .fold(f64::INFINITY, f64::min)
+                .max(1.0);
+            let mb_per_s = logical_bytes as f64 / 1_000_000.0 / (best_ms / 1000.0);
+            matrix.insert(
+                format!("threads_{worker_threads}_tiles_{tile_worker_threads}"),
+                json!({
+                    "threads": worker_threads,
+                    "tile_threads": tile_worker_threads,
+                    "max_inflight_bytes": max_inflight,
+                    "tensors": tensors,
+                    "logical_bytes": logical_bytes,
+                    "largest_tensor_bytes": largest,
+                    "amdahl_cap_speedup": if largest > 0 { logical_bytes as f64 / largest as f64 } else { 0.0 },
+                    "decode_bytes_last_rep": decode_bytes,
+                    "backend_bytes_read_last_rep": backend_bytes,
+                    "backend_requests_last_rep": requests,
+                    "mb_per_s_best": mb_per_s,
+                    "sha256_match": sha_match,
+                    "stats": stats_row,
+                    "latency": distribution(&samples),
+                }),
+            );
+        }
+    }
+
+    // The largest tensor alone, sequential and at the highest worker count: the
+    // measured single-tensor floor an Amdahl argument is built on.
+    let subject = manifest
+        .tensors
+        .iter()
+        .max_by_key(|tensor| tensor.element_bytes)
+        .map(|tensor| tensor.name.clone())
+        .ok_or_else(|| "checkpoint has no tensors".to_owned())?;
+    let mut single = Vec::new();
+    for _ in 0..reps {
+        let options = CheckpointRestoreOptions {
+            tensor: Some(subject.clone()),
+            ..CheckpointRestoreOptions::default()
+        };
+        let mut sink = HashSink {
+            hasher: Sha256::new(),
+            bytes: 0,
+        };
+        let started = Instant::now();
+        store
+            .restore_checkpoint_pipelined(
+                &name,
+                &options,
+                &RestorePipelineOptions::default(),
+                &mut sink,
+            )
+            .map_err(|err| format!("single tensor restore: {err}"))?;
+        single.push(started.elapsed().as_secs_f64() * 1000.0);
+    }
+
+    let receipt = json!({
+        "schema": "weft.family-lifecycle.restore.v1",
+        "phase": "restore",
+        "store": store_path.display().to_string(),
+        "checkpoint": name,
+        "open_ms": round(open_ms),
+        "logical_bytes": logical_bytes,
+        "largest_tensor": subject,
+        "largest_tensor_bytes": largest,
+        "amdahl_cap_speedup": if largest > 0 { logical_bytes as f64 / largest as f64 } else { 0.0 },
+        "sink": "SHA-256 hashing sink: decode + backend read + hash, no host writeback",
+        "single_largest_tensor": distribution(&single),
+        "configurations": matrix,
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    write_json(&out, &receipt)?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+/// Assemble the throughput court's phase receipts into one receipt.
+///
+/// `--input name=path` is repeatable. Each file is parsed and embedded under
+/// `inputs.<name>` unchanged, so the court adds provenance and environment but
+/// never rewrites a measured number.
+fn throughput(args: &[String]) -> Result<(), String> {
+    let out = PathBuf::from(required(args, "--out")?);
+    let label = value_of(args, "--label").unwrap_or_default();
+    let mut inputs: BTreeMap<String, Json> = BTreeMap::new();
+    for pair in args.windows(2) {
+        if pair[0] != "--input" {
+            continue;
+        }
+        let (name, path) = pair[1]
+            .split_once('=')
+            .ok_or_else(|| format!("--input must be name=path (got `{}`)", pair[1]))?;
+        let text = fs::read_to_string(path).map_err(|err| format!("read {path}: {err}"))?;
+        let value: Json =
+            serde_json::from_str(&text).map_err(|err| format!("parse {path}: {err}"))?;
+        inputs.insert(name.to_owned(), value);
+    }
+    if inputs.is_empty() {
+        return Err("throughput needs at least one --input name=path".to_owned());
+    }
+    let receipt = json!({
+        "schema": "weft.throughput-court.v1",
+        "phase": "throughput",
+        "label": label,
+        "court": {
+            "image": std::env::var("WEFT_COURT_IMAGE").ok(),
+            "image_id": std::env::var("WEFT_COURT_IMAGE_ID").ok(),
+            "memory": std::env::var("WEFT_COURT_MEMORY").ok(),
+            "cpus": std::env::var("WEFT_COURT_CPUS").ok(),
+            "pids": std::env::var("WEFT_COURT_PIDS").ok(),
+            "kernel": std::env::var("WEFT_COURT_KERNEL").ok(),
+        },
+        "revisions": {
+            "weftfs": std::env::var("WEFT_REPO_WEFTFS").ok(),
+            "weftcodec": std::env::var("WEFT_REPO_WEFTCODEC").ok(),
+            "weftcodec_go": std::env::var("WEFT_REPO_WEFTCODEC_GO").ok(),
+            "weftfs_go": std::env::var("WEFT_REPO_WEFTFS_GO").ok(),
+        },
+        "labels": [
+            "Single host, warm page cache, one run per configuration unless the inner receipt says otherwise; no fleet, media, power-loss, or cloud claim.",
+            "Phase totals are wall-clock sums across every thread and are not a partition of wall time; unmeasured time is the residual.",
+            "Restore throughput is measured with a SHA-256 hashing sink, so it is decode + backend read + hash, not host writeback."
+        ],
+        "inputs": inputs,
         "peak_rss_kib": peak_rss_kib(),
     });
     write_json(&out, &receipt)?;
