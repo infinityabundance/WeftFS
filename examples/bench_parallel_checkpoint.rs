@@ -76,8 +76,20 @@ fn dir_bytes(path: &Path) -> u64 {
 }
 
 fn file_sha256(path: &Path) -> std::io::Result<String> {
-    let bytes = fs::read(path)?;
-    let digest = Sha256::digest(&bytes);
+    // Streamed in fixed windows: a 6 GiB container must not be read into one
+    // allocation (the bench court's memory bound is the point).
+    use std::io::Read;
+    let mut file = fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; 8 * 1024 * 1024];
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    let digest = hasher.finalize();
     Ok(digest.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
