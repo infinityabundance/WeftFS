@@ -3380,6 +3380,18 @@ fn source_metadata(header_bytes: &[u8]) -> Option<serde_json::Value> {
 // Verification helper
 // ---------------------------------------------------------------------------
 
+/// Load a checkpoint manifest as it exists at a pinned snapshot.
+pub fn checkpoint_manifest_at(
+    store: &Store,
+    snapshot: Hash32,
+    name: &str,
+) -> Result<CheckpointManifest> {
+    let state = store.state_at(snapshot)?;
+    Ok(store
+        .load_checkpoint_with_id_at(&state, Some(snapshot), name)?
+        .1)
+}
+
 /// Full verification of a checkpoint: every shard decoded, every per-shard and
 /// per-tensor logical root recomputed. Returns the number of tensors verified.
 pub fn verify_checkpoint(store: &Store, name: &str) -> Result<usize> {
