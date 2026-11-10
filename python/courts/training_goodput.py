@@ -1121,12 +1121,29 @@ def summarise_run(result):
         if event.get("worker")
     ]
     completions_sorted = [event["completion_ms"] for event in done_events(result)]
+    final_done = [
+        event["completion_ms"]
+        for event in done_events(result)
+        if int(event["checkpoint_step"]) == int(result["steps"])
+    ]
+    augment_sum = sum(
+        float(event.get("augment_ms") or 0.0)
+        for event in result["events"]
+        if event.get("event") == "step"
+    )
+    step_sum = sum(result["step_ms"])
+    final_completion = final_done[0] if final_done else None
     return {
         "steps": result["steps"],
         "checkpoints": len(checkpoints),
         "loop_wall_ms": result["run_wall_ms"],
         "process_wall_ms": result["process_wall_ms"],
         "parent_wall_ms": result.get("parent_wall_ms"),
+        "step_sum_ms": round(step_sum, 3),
+        "augment_sum_ms": round(augment_sum, 3),
+        "final_completion_ms": final_completion,
+        "post_loop_tail_ms": round(result["run_wall_ms"] - step_sum, 3),
+        "loop_cpu_ms": (result.get("proc") or {}).get("cpu_ms"),
         "step_ms_median_of_run": median(clean),
         "step_ms_p95": percentile(clean_no_augment, 0.95),
         "step_ms_max": max(clean_no_augment) if clean_no_augment else None,
@@ -1195,6 +1212,11 @@ def aggregate_config(rows, resume_rows):
         "pause_ms_max_pooled": max(pooled_pauses) if pooled_pauses else None,
         "loop_wall_ms_median": median(values("loop_wall_ms")),
         "process_wall_ms_median": median(values("process_wall_ms")),
+        "step_sum_ms_median": median(values("step_sum_ms")),
+        "augment_sum_ms_median": median(values("augment_sum_ms")),
+        "final_completion_ms_median": median(values("final_completion_ms")),
+        "post_loop_tail_ms_median": median(values("post_loop_tail_ms")),
+        "loop_cpu_ms_median": median(values("loop_cpu_ms")),
         "step_ms_p50_median": median(values("step_ms_median_of_run")),
         "step_ms_p95_median": median(values("step_ms_p95")),
         "step_ms_max": max(values("step_ms_max")) if values("step_ms_max") else None,
@@ -2090,8 +2112,11 @@ def run(args):
             "pause_ms": "state clone + async submit on the training thread",
             "completion_ms": "submit to the save worker's completion callback",
             "landing_step": "first training step that observes the completed save",
-            "step_ms": "training step wall time including the checkpoint pause on checkpoint steps; medians exclude checkpoint and post-step verification steps",
-            "time_to_safe_resume_ms": "SIGKILL epoch to the first completed optimizer step in a fresh process",
+            "step_ms": "training step wall time including the checkpoint pause on checkpoint steps and the post-checkpoint harness state verification on the next step; medians exclude both of those steps",
+            "step_sum_ms": "sum of every step timer; comparable across configurations because the harness work is identical",
+            "augment_sum_ms": "the part of step_sum spent cloning and hashing the state after a checkpoint (harness verification, not training)",
+            "post_loop_tail_ms": "loop wall after the last step: the final in-flight checkpoint has no later step to overlap",
+            "time_to_safe_resume_ms": "SIGKILL epoch to the first completed optimizer step in a fresh process, including store discovery and fresh-process startup",
             "wall": "loop wall from before step 1 to after the last save completes",
         },
         "commands": [
