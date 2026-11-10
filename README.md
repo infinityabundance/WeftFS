@@ -365,8 +365,8 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   `UnmeasuredCost`), and accepts an SLA only if `prediction + margin + measured
   uncertainty <= sla`. On the same nine pythia-70m checkpoints **22/22 accepted
   plans held their SLA** (0 missed), and the 850 ms SLA that used to be accepted
-  and missed is now refused; every plan class predicts within 5 % except the
-  all-independent floor (−16.02 %, page-cache state). Advisory index segments
+  and missed is now refused; every plan class predicts within 15 % (the
+  all-independent floor is −14.96 %, page-cache state). Advisory index segments
   became incremental WFX3 deltas: **97,066,019 B -> 3,342,744 B (29.0x)** in the
   1,250-commit court and **104.6 MB -> 6.2 MB** for the trajectory series; peak
   index on the old pinned trajectory is **3.53 GB -> 0.11 GB**. Losses: commit

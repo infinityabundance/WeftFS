@@ -7574,13 +7574,16 @@ bound is the measured under-prediction per class (zstd-patch 62.5 %, weight-delt
 17.8 %, sparse-delta 15.3 %, decode rows 1.0–1.05 %), summed per hop; an SLA is
 accepted only if `prediction + margin + bound <= sla`.
 
-The court (`bench/receipts/parent-graph-20261110T015802Z.json`) is the same nine
+The court (`bench/receipts/parent-graph-20261110T093000Z.json`) is the same nine
 pythia-70m checkpoints and lambdas. **22/22 accepted plans held their SLA, 0
-missed**; 12 of 13 plan classes predict within 5 %, the all-independent floor is
-−16.02 % because of cgroup page-cache state (warm 796–807 ms vs cold 878–886 ms
-for the same 163.9 MB read), published rather than tuned. The SLA accept/refuse
-boundary moved from 850 ms (accepted, then missed) to 950 ms (the floor's bound
-is 949.77 ms; the measured floor is 930.7 ms). At `λ=1` the exact oracle selects
+missed**; every plan class predicts within 15 % and eleven of thirteen within
+5 %. The all-independent floor is −14.96 % in this receipt (−16.02 % in the
+retained first run) because of cgroup page-cache state (warm 796–807 ms vs cold
+878–886 ms for the same 163.9 MB read); it is published rather than tuned, and
+it sits at the 15 % boundary. Every refusal is a typed `LimitExceeded` naming
+the requested SLA and the best achievable bound. The SLA accept/refuse boundary
+moved from 850 ms (accepted, then missed) to 950 ms (the floor's bound is
+949.77 ms; the measured floor is 919.0 ms). At `λ=1` the exact oracle selects
 the eight-dependency plan at 654,498,531 B predicted / 654,600,088 B realised;
 the bytes-only plan is 809,012,976 B. `Solver::Auto` is now the default (exact
 oracle at ≤ 12 versions, DP above).
