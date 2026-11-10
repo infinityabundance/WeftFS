@@ -35,6 +35,7 @@ use crate::identity::{self, Hash32};
 use crate::index::{
     StateIndex, StateIndexCache, DEFAULT_INDEX_CAPACITY, INDEX_STATE_DOMAIN, MAX_INDEX_FILE_BYTES,
 };
+use crate::index_chain::{IndexChain, SegmentKind};
 use crate::object_cache::{
     CacheKey, ObjectCache, ObjectCacheOptions, ObjectCacheStats, MAX_CACHE_ENTRIES,
 };
@@ -187,6 +188,17 @@ pub struct Options {
     /// and no index segment: a segment without an attestation is never trusted,
     /// so it exists only to reproduce the frozen v1 fixture bytes.
     pub attest_indexes: bool,
+    /// Writer default: force a full WFX3 segment after this many deltas. The
+    /// hard reader bound is `index_chain::HARD_MAX_CHAIN_DELTAS` (256).
+    pub index_chain_max_deltas: u32,
+    /// Optional cap on the total bytes held in `indexes/`. `None` (the default)
+    /// means no policy; a configured cap skips an index write that would exceed
+    /// it and records a diagnostic note. The commit is unaffected.
+    pub index_bytes_budget: Option<u64>,
+    /// Write incremental WFX3 segments. Default on. Turning it off writes a
+    /// full WFX3 segment for every attested commit (the chain depth is always
+    /// 0); WFX2 segments are still readable either way.
+    pub incremental_index: bool,
     /// MW2 writer policy. `Single` (the default) is MW1: an exclusive writer
     /// holds `LOCK` and no concurrent committer is admitted. `Optimistic`
     /// publishes through a conditional head compare-and-swap and is implemented
@@ -216,6 +228,9 @@ impl Default for Options {
             cache_bytes: 0,
             cache_entries: MAX_CACHE_ENTRIES,
             attest_indexes: true,
+            index_chain_max_deltas: crate::index_chain::DEFAULT_MAX_CHAIN_DELTAS,
+            index_bytes_budget: None,
+            incremental_index: true,
             writer_mode: crate::mw2::WriterMode::Single,
         }
     }
@@ -474,6 +489,14 @@ pub struct IndexStats {
     pub notes: Vec<String>,
 }
 
+/// A fully encoded segment plus the index it resolves to. The commit hash is
+/// not known when the segment is encoded (WFX3 carries no commit field), so the
+/// writer prepares the bytes first and publishes them after the commit.
+struct PreparedIndex {
+    bytes: Vec<u8>,
+    index: StateIndex,
+}
+
 /// Result of [`Store::statfs`], all counters derived from replayed state.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct StatFs {
@@ -696,6 +719,9 @@ pub struct Store {
     index_cache: Mutex<StateIndexCache>,
     /// Advisory index diagnostics and reject/write-failure notes.
     index_stats: Mutex<IndexStats>,
+    /// Set by [`Store::compact_index`] so the next commit writes a full
+    /// segment regardless of the base chain.
+    force_full_index: std::sync::atomic::AtomicBool,
     /// Capability evidence from the writable open: two plane probes for a
     /// split backend, a blob+commit probe of the single backend otherwise.
     /// `None` on a read-only open, which never writes a probe.
@@ -942,6 +968,7 @@ impl Store {
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
             index_stats: Mutex::new(IndexStats::default()),
+            force_full_index: std::sync::atomic::AtomicBool::new(false),
             quota: QuotaState::default(),
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
@@ -1125,6 +1152,7 @@ impl Store {
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
             index_stats: Mutex::new(IndexStats::default()),
+            force_full_index: std::sync::atomic::AtomicBool::new(false),
             quota: QuotaState::default(),
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
@@ -1566,6 +1594,20 @@ impl Store {
                 return None;
             }
         };
+        if bytes.len() >= 4 && &bytes[0..4] == crate::index_chain::MAGIC_V3 {
+            return self.load_wfx3_index(commit, state, &bytes, &displayed);
+        }
+        self.load_wfx2_index(commit, state, &bytes, &displayed)
+    }
+
+    /// Legacy WFX2 full segment (read-only compatibility).
+    fn load_wfx2_index(
+        &self,
+        commit: Hash32,
+        state: &State,
+        bytes: &[u8],
+        displayed: &str,
+    ) -> Option<Arc<StateIndex>> {
         if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             self.note_index_reject(format!(
                 "index {displayed} is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
@@ -1573,7 +1615,7 @@ impl Store {
             ));
             return None;
         }
-        let index = match StateIndex::decode_file(&bytes) {
+        let index = match StateIndex::decode_file(bytes) {
             Ok(index) => index,
             Err(err) => {
                 self.note_index_reject(format!("ignoring index {displayed}: {err}"));
@@ -1604,6 +1646,135 @@ impl Store {
             ));
             return None;
         };
+        if attestation.is_v3() {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: a v3 commit names a segment chain, not a WFX2 file"
+            ));
+            return None;
+        }
+        if !self.wfx_attestation_matches(
+            &index,
+            commit,
+            index.generation(),
+            &attestation,
+            displayed,
+        ) {
+            return None;
+        }
+        self.bump_index_stat(|stats| stats.disk_loads += 1);
+        Some(Arc::new(index))
+    }
+
+    /// WFX3 full or delta segment, resolved against its attested chain.
+    fn load_wfx3_index(
+        &self,
+        commit: Hash32,
+        state: &State,
+        bytes: &[u8],
+        displayed: &str,
+    ) -> Option<Arc<StateIndex>> {
+        if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
+            self.note_index_reject(format!(
+                "index {displayed} is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
+                bytes.len()
+            ));
+            return None;
+        }
+        let segment = match crate::index_chain::decode_segment(bytes) {
+            Ok(segment) => segment,
+            Err(err) => {
+                self.note_index_reject(format!("ignoring index {displayed}: {err}"));
+                return None;
+            }
+        };
+        let header = segment.header;
+        let resolved =
+            match crate::index_chain::resolve_chain_segment(segment, |base_commit, _base_id| {
+                self.with_backend(|backend| backend.read_all(&Key::index(base_commit)))
+            }) {
+                Ok(resolved) => resolved,
+                Err(err) => {
+                    self.note_index_reject(format!(
+                        "ignoring index {displayed}: cannot resolve its segment chain: {err}"
+                    ));
+                    return None;
+                }
+            };
+        let index = resolved.index.with_resolved_commit(commit);
+        if header.generation != index.generation() {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: header generation differs from the resolved index"
+            ));
+            return None;
+        }
+        if !index.matches_state(state) {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: generation/counts disagree with the replayed state"
+            ));
+            return None;
+        }
+        let Some(attestation) = self.attested_index(commit, index.generation()) else {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: the commit carries no index attestation"
+            ));
+            return None;
+        };
+        if !attestation.is_v3() {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: a v1/v2 commit cannot attest a WFX3 chain"
+            ));
+            return None;
+        }
+        if !self.wfx_attestation_matches(
+            &index,
+            commit,
+            index.generation(),
+            &attestation,
+            displayed,
+        ) {
+            return None;
+        }
+        // The chain itself is attested: kind, immediate base, depth, and the
+        // root over every segment id from the head to the full ancestor.
+        if attestation.segment_kind != Some(resolved.chain.kind)
+            || attestation.segment_base != resolved.chain.base()
+            || attestation.segment_depth != resolved.chain.depth()
+        {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: segment chain shape disagrees with the commit \
+                 attestation (forged or partial chain); rebuild-only"
+            ));
+            return None;
+        }
+        let root = match resolved.chain.root(index.generation()) {
+            Ok(root) => root,
+            Err(err) => {
+                self.note_index_reject(format!(
+                    "ignoring index {displayed}: cannot derive the chain root: {err}"
+                ));
+                return None;
+            }
+        };
+        if root != attestation.segment_root {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: segment root disagrees with the commit attestation \
+                 (forged or partial chain); rebuild-only"
+            ));
+            return None;
+        }
+        self.bump_index_stat(|stats| stats.disk_loads += 1);
+        Some(Arc::new(index))
+    }
+
+    /// Shared count/candidates/state-root checks for a loaded segment.
+    fn wfx_attestation_matches(
+        &self,
+        index: &StateIndex,
+        commit: Hash32,
+        generation: u64,
+        attestation: &IndexAttestation,
+        displayed: &str,
+    ) -> bool {
         if attestation.object_count != index.object_count() as u64
             || attestation.relation_count != index.relation_count() as u64
             || attestation.entry_count != index.entry_count() as u64
@@ -1611,7 +1782,7 @@ impl Store {
             self.note_index_reject(format!(
                 "ignoring index {displayed}: counts disagree with the commit attestation"
             ));
-            return None;
+            return false;
         }
         let candidates = match index.candidates_root() {
             Ok(value) => value,
@@ -1619,42 +1790,47 @@ impl Store {
                 self.note_index_reject(format!(
                     "ignoring index {displayed}: cannot re-derive its candidate root: {err}"
                 ));
-                return None;
+                return false;
             }
         };
         if candidates != attestation.candidates_root {
             self.note_index_reject(format!(
-                "ignoring index {displayed}: candidate root disagrees with the commit attestation \
-                 (forged or incomplete index); rebuild-only"
+                "ignoring index {displayed}: candidate root disagrees with the commit \
+                 attestation (forged or incomplete index); rebuild-only"
             ));
-            return None;
+            return false;
         }
-        let (_, record) = match self.read_commit_record(index.generation()) {
+        let (_, record) = match self.read_commit_record(generation) {
             Some(record) => record,
             None => {
                 self.note_index_reject(format!(
                     "ignoring index {displayed}: cannot re-read its commit record"
                 ));
-                return None;
+                return false;
             }
         };
+        if record.id().ok() != Some(commit) {
+            self.note_index_reject(format!(
+                "ignoring index {displayed}: commit record hash mismatch"
+            ));
+            return false;
+        }
         let state_root = match record.encode_fields() {
             Ok(bytes) => identity::h(INDEX_STATE_DOMAIN, &bytes),
             Err(err) => {
                 self.note_index_reject(format!(
                     "ignoring index {displayed}: cannot recompute the attested state root: {err}"
                 ));
-                return None;
+                return false;
             }
         };
         if state_root != attestation.state_root {
             self.note_index_reject(format!(
                 "ignoring index {displayed}: attested state root disagrees with the commit record"
             ));
-            return None;
+            return false;
         }
-        self.bump_index_stat(|stats| stats.disk_loads += 1);
-        Some(Arc::new(index))
+        true
     }
 
     /// Read and validate the commit record for `generation`.
@@ -1684,7 +1860,7 @@ impl Store {
         &self,
         state: &State,
         commit: &crate::format::Commit,
-    ) -> Result<(Option<IndexAttestation>, Option<StateIndex>)> {
+    ) -> Result<(Option<IndexAttestation>, Option<PreparedIndex>)> {
         if !self.options.attest_indexes || self.mode != OpenMode::ReadWrite {
             return Ok((None, None));
         }
@@ -1694,24 +1870,166 @@ impl Store {
             // the commit is v1 and no segment can be trusted.
             return Ok((None, None));
         }
+        let generation = index.generation();
         let state_root = identity::h(INDEX_STATE_DOMAIN, &commit.encode_fields()?);
         let candidates_root = index.candidates_root()?;
-        Ok((
-            Some(IndexAttestation {
-                object_count: index.object_count() as u64,
-                relation_count: index.relation_count() as u64,
-                entry_count: index.entry_count() as u64,
-                state_root,
-                candidates_root,
-            }),
-            Some(index),
-        ))
+
+        let full_bytes = crate::index_chain::encode_full(&index)?;
+        let full_id = crate::index_chain::file_segment_id(&full_bytes)?;
+        let force_full = self
+            .force_full_index
+            .load(std::sync::atomic::Ordering::Relaxed)
+            || !self.options.incremental_index
+            || self.head == Hash32::ZERO
+            || generation <= 1;
+        let mut chosen: Option<(Vec<u8>, Vec<Hash32>)> = None;
+        if !force_full {
+            if let Some(base) = self.load_attested_chain(self.head) {
+                if base.index.generation().checked_add(1) == Some(generation)
+                    && base.chain.depth() < u64::from(self.options.index_chain_max_deltas)
+                {
+                    let base_id = base.chain.chain[0];
+                    let delta =
+                        crate::index_chain::encode_delta(&base.index, &index, base_id, self.head)?;
+                    if delta.len() < full_bytes.len() {
+                        chosen = Some((delta, base.chain.chain.clone()));
+                    }
+                }
+            }
+        }
+        let (bytes, chain) = match chosen {
+            Some((delta, base_chain)) => {
+                let id = crate::index_chain::file_segment_id(&delta)?;
+                let mut chain = Vec::with_capacity(base_chain.len() + 1);
+                chain.push(id);
+                chain.extend(base_chain);
+                let chain = IndexChain {
+                    kind: SegmentKind::Delta,
+                    chain,
+                };
+                (delta, chain)
+            }
+            None => (
+                full_bytes,
+                IndexChain {
+                    kind: SegmentKind::Full,
+                    chain: vec![full_id],
+                },
+            ),
+        };
+        // Byte policy: a configured cap may skip the write. The commit then
+        // carries no attestation, exactly like `attest_indexes = false`; the
+        // reader rebuilds.
+        if let Some(budget) = self.options.index_bytes_budget {
+            let total = self.index_bytes_total().unwrap_or(u64::MAX);
+            if total.saturating_add(bytes.len() as u64) > budget {
+                self.note_index_write_error(format!(
+                    "index for generation {generation} skipped: {} bytes would exceed the \
+                     {budget}-byte index budget (currently {total})",
+                    bytes.len()
+                ));
+                return Ok((None, None));
+            }
+        }
+        let segment_root = chain.root(generation)?;
+        let attestation = IndexAttestation {
+            object_count: index.object_count() as u64,
+            relation_count: index.relation_count() as u64,
+            entry_count: index.entry_count() as u64,
+            state_root,
+            candidates_root,
+            segment_kind: Some(chain.kind),
+            segment_base: chain.base(),
+            segment_depth: chain.depth(),
+            segment_root,
+        };
+        Ok((Some(attestation), Some(PreparedIndex { bytes, index })))
     }
 
-    /// Publish an index that was built for the attestation, atomically.
-    fn write_built_index(&self, commit: Hash32, index: StateIndex) -> Result<u64> {
-        let index = index.with_commit(commit);
-        let bytes = index.encode_file()?;
+    /// Resolve the attested chain for an already-published commit. Used when
+    /// the next commit wants to extend it with a delta.
+    fn load_attested_chain(&self, commit: Hash32) -> Option<crate::index_chain::ResolvedChain> {
+        let (_, record) = self.read_commit_record(self.generation)?;
+        if record.id().ok()? != commit {
+            return None;
+        }
+        let attestation = record.index_attestation?;
+        if !attestation.is_v3() {
+            return None;
+        }
+        let bytes = self
+            .with_backend(|backend| backend.read_all(&Key::index(commit)))
+            .ok()?;
+        let resolved = crate::index_chain::resolve_chain(&bytes, |base_commit, _base_id| {
+            self.with_backend(|backend| backend.read_all(&Key::index(base_commit)))
+        })
+        .ok()?;
+        if resolved.index.object_count() as u64 != attestation.object_count
+            || resolved.index.relation_count() as u64 != attestation.relation_count
+            || resolved.index.entry_count() as u64 != attestation.entry_count
+            || resolved.index.candidates_root().ok()? != attestation.candidates_root
+            || resolved.chain.kind != attestation.segment_kind?
+            || resolved.chain.base() != attestation.segment_base
+            || resolved.chain.depth() != attestation.segment_depth
+            || resolved.chain.root(resolved.index.generation()).ok()? != attestation.segment_root
+        {
+            return None;
+        }
+        Some(resolved)
+    }
+
+    /// Total bytes currently held in `indexes/`. Only called when a byte budget
+    /// is configured or by the diagnostic CLI.
+    pub fn index_bytes_total(&self) -> Result<u64> {
+        let keys =
+            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Index)))?;
+        let mut total = 0u64;
+        for key in keys {
+            if matches!(key, Key::Index { .. }) {
+                if let Ok(len) = self.with_backend(|backend| backend.len(&key)) {
+                    total = total.saturating_add(len);
+                }
+            }
+        }
+        Ok(total)
+    }
+
+    /// Add every ancestor segment named by a retained commit's WFX3 chain to
+    /// the retained set. A failure is returned so GC can retain everything
+    /// rather than guess.
+    fn expand_retained_index_chains(&self, retained: &mut BTreeSet<Hash32>) -> Result<()> {
+        let mut queue: std::collections::VecDeque<Hash32> = retained.iter().copied().collect();
+        let mut visited: BTreeSet<Hash32> = BTreeSet::new();
+        while let Some(commit) = queue.pop_front() {
+            if !visited.insert(commit) {
+                continue;
+            }
+            let bytes = match self.with_backend(|backend| backend.read_all(&Key::index(commit))) {
+                Ok(bytes) => bytes,
+                Err(err) if err.class() == crate::error::Class::NotFound => continue,
+                Err(err) => return Err(err),
+            };
+            if bytes.len() < 4 || &bytes[0..4] != crate::index_chain::MAGIC_V3 {
+                continue;
+            }
+            let header = crate::index_chain::decode_segment(&bytes)?.header;
+            if header.kind == SegmentKind::Full {
+                continue;
+            }
+            if visited.len() > crate::index_chain::HARD_MAX_CHAIN_DELTAS as usize {
+                return Err(Error::limit_exceeded(
+                    "index segment chain exceeds the hard depth bound",
+                ));
+            }
+            retained.insert(header.base_commit);
+            queue.push_back(header.base_commit);
+        }
+        Ok(())
+    }
+
+    /// Publish an index that was built and encoded for the attestation.
+    fn write_built_index(&self, commit: Hash32, prepared: PreparedIndex) -> Result<u64> {
+        let bytes = prepared.bytes;
         if bytes.len() as u64 > MAX_INDEX_FILE_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "index encoding is {} bytes, above the {MAX_INDEX_FILE_BYTES}-byte cap",
@@ -1728,18 +2046,18 @@ impl Store {
         self.index_cache
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(commit, Arc::new(index));
+            .insert(commit, Arc::new(prepared.index.with_commit(commit)));
         self.bump_index_stat(|stats| stats.writes += 1);
         Ok(bytes.len() as u64)
     }
 
     /// Best-effort index write after a commit has published. The index is
     /// derived data: a failure is a diagnostic and never fails the commit.
-    fn persist_built_index(&self, commit: Hash32, index: StateIndex) {
+    fn persist_built_index(&self, commit: Hash32, prepared: PreparedIndex) {
         if self.mode != OpenMode::ReadWrite {
             return;
         }
-        if let Err(err) = self.write_built_index(commit, index) {
+        if let Err(err) = self.write_built_index(commit, prepared) {
             self.note_index_write_error(format!("index for {commit} was not written: {err}"));
         }
     }
@@ -1793,23 +2111,87 @@ impl Store {
         *stats = IndexStats::default();
     }
 
-    /// Write the advisory index for the current head (benchmark only).
+    /// Rewrite the advisory segment for the current head (benchmark only).
+    ///
+    /// The bytes are the attested chain's head segment, re-published; this
+    /// measures the index write without changing the attestation. A benchmark
+    /// that wants to measure full-state encoding uses `StateIndex::encode_file`
+    /// through `build_index_for_bench` + a direct write.
     #[doc(hidden)]
     pub fn write_index_for_bench(&self) -> Result<u64> {
         self.require_writable()?;
-        let (_, record) = self
-            .read_commit_record(self.generation)
-            .ok_or_else(|| Error::corrupt("cannot read the head commit record"))?;
-        let attestation = record.index_attestation.ok_or_else(|| {
-            Error::invalid_argument("a loadable index needs an attested head commit")
-        })?;
-        let index = StateIndex::build(&self.state).with_commit(self.head);
-        if index.candidates_root()? != attestation.candidates_root {
-            return Err(Error::corrupt(
-                "rebuilt index differs from the head commit's attestation",
+        let bytes = self.with_backend(|backend| backend.read_all(&Key::index(self.head)))?;
+        self.with_backend_mut(|backend| backend.put_atomic(&Key::index(self.head), &bytes))?;
+        self.bump_index_stat(|stats| stats.writes += 1);
+        Ok(bytes.len() as u64)
+    }
+
+    /// Test hook: forge the head index by removing one tag row and re-encoding
+    /// a *valid* full segment (correct digest and counts). The commit
+    /// attestation's candidate root is the only remaining refutation.
+    #[doc(hidden)]
+    pub fn forge_head_index_remove_tag_for_test(&self, tag: &str) -> Result<()> {
+        self.require_writable()?;
+        let bytes = self.with_backend(|backend| backend.read_all(&Key::index(self.head)))?;
+        let forged = crate::index_chain::forge_remove_tag_for_test(&bytes, tag)?;
+        let key = Key::index(self.head);
+        // `put_atomic` is create-once; a test forgery deliberately replaces the
+        // file, so delete the original first.
+        self.with_backend_mut(|backend| backend.delete(&key))?;
+        self.with_backend_mut(|backend| backend.put_atomic(&key, &forged))?;
+        Ok(())
+    }
+
+    /// Diagnostic: the head segment's kind (`full`/`delta`) and chain depth.
+    pub fn index_head_chain(&self) -> Result<(String, u64)> {
+        let bytes = match self.with_backend(|backend| backend.read_all(&Key::index(self.head))) {
+            Ok(bytes) => bytes,
+            Err(err) if err.class() == crate::error::Class::NotFound => {
+                return Ok(("none".to_owned(), 0))
+            }
+            Err(err) => return Err(err),
+        };
+        if bytes.len() < 4 || &bytes[0..4] != crate::index_chain::MAGIC_V3 {
+            return Ok(("wfx2".to_owned(), 0));
+        }
+        let segment = crate::index_chain::decode_segment(&bytes)?;
+        let head_kind = segment.header.kind;
+        let mut depth = 0u64;
+        let mut current = segment;
+        while current.header.kind == SegmentKind::Delta {
+            depth += 1;
+            if depth > u64::from(crate::index_chain::HARD_MAX_CHAIN_DELTAS) {
+                return Err(Error::limit_exceeded(
+                    "index head chain exceeds the hard depth bound",
+                ));
+            }
+            let base_bytes = self.with_backend(|backend| {
+                backend.read_all(&Key::index(current.header.base_commit))
+            })?;
+            current = crate::index_chain::decode_segment(&base_bytes)?;
+        }
+        Ok((head_kind.as_str().to_owned(), depth))
+    }
+
+    /// Compact the advisory index: publish a no-op commit whose segment is a
+    /// full state snapshot, so the previous chain can be dropped by GC.
+    ///
+    /// The commit has no state ops; replay is a no-op. A snapshot of the old
+    /// head keeps the old chain, so history is never broken. Returns the new
+    /// head commit.
+    pub fn compact_index(&mut self) -> Result<Hash32> {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "index compaction cannot run inside a group commit",
             ));
         }
-        self.write_built_index(self.head, index)
+        self.force_full_index
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+        let result = self.commit_ops(Vec::new(), false);
+        self.force_full_index
+            .store(false, std::sync::atomic::Ordering::SeqCst);
+        result
     }
 
     /// Build an index from `state` without writing it (benchmark only).
@@ -7399,17 +7781,30 @@ impl Store {
                 retained_indexes.insert(commit.hash);
             }
         }
-        let mut index_candidates =
-            collect_unreachable_indexes(self, &retained_indexes, now, grace, &mut report)?;
-        index_candidates.sort_by(|a, b| a.0.cmp(&b.0));
-        for (key, len) in &index_candidates {
-            let display = key.display_path();
-            report.candidates.push(display.clone());
-            if apply {
-                self.with_backend_mut(|backend| backend.delete(key))?;
-                report.deleted_indexes.push(display);
-                report.deleted_index_bytes = report.deleted_index_bytes.saturating_add(*len);
-                self.bump_index_stat(|stats| stats.gc_deleted += 1);
+        match self.expand_retained_index_chains(&mut retained_indexes) {
+            Ok(()) => {
+                let mut index_candidates =
+                    collect_unreachable_indexes(self, &retained_indexes, now, grace, &mut report)?;
+                index_candidates.sort_by(|a, b| a.0.cmp(&b.0));
+                for (key, len) in &index_candidates {
+                    let display = key.display_path();
+                    report.candidates.push(display.clone());
+                    if apply {
+                        self.with_backend_mut(|backend| backend.delete(key))?;
+                        report.deleted_indexes.push(display);
+                        report.deleted_index_bytes =
+                            report.deleted_index_bytes.saturating_add(*len);
+                        self.bump_index_stat(|stats| stats.gc_deleted += 1);
+                    }
+                }
+            }
+            Err(err) => {
+                // A chain that cannot be resolved is never guessed at: retain
+                // every index segment rather than risk deleting an ancestor a
+                // retained snapshot still needs.
+                report.problems.push(format!(
+                    "index GC skipped: cannot resolve a retained segment chain: {err}"
+                ));
             }
         }
         // One whole-pass total so every unlinked byte is accounted exactly

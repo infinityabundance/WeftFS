@@ -20,10 +20,11 @@ use weftfs::identity::Hash32;
 use weftfs::state::RelationTarget;
 use weftfs::store::{OpenMode, Options, Store};
 
-const INDEX_MAGIC_V2: &[u8; 4] = b"WFX2";
-const INDEX_V2_DOMAIN: &str = "weft/index/v2";
-/// magic(4) + version(4) + commit(32) + four u64 fields(32).
-const INDEX_HEADER_BYTES: usize = 72;
+const INDEX_MAGIC_V3: &[u8; 4] = b"WFX3";
+const INDEX_SEGMENT_DOMAIN: &str = "weft/index/segment/v3";
+/// magic(4) + version(4) + kind(1) + generation(8) + base generation(8) +
+/// base id(32) + base commit(32) + three counts(24).
+const INDEX_HEADER_BYTES: usize = 113;
 
 struct Fixture {
     store: Store,
@@ -41,6 +42,9 @@ fn options() -> Options {
         checkpoint_interval: 256,
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
+        // These tests exercise trust and corruption, not the chain; a full
+        // segment per commit makes the forged-subset mutation exact.
+        index_chain_max_deltas: 0,
         ..Options::default()
     }
 }
@@ -240,7 +244,7 @@ fn check_matrix(
 
 fn assert_index_header(path: &Path) {
     let bytes = fs::read(path).expect("read index");
-    assert_eq!(&bytes[0..4], INDEX_MAGIC_V2, "index magic");
+    assert_eq!(&bytes[0..4], INDEX_MAGIC_V3, "index magic");
     assert_eq!(
         u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
         1,
@@ -255,7 +259,7 @@ fn rewrite_index(path: &Path, mutate: impl FnOnce(&mut Vec<u8>)) {
     let mut bytes = fs::read(path).expect("read index");
     mutate(&mut bytes);
     let body_len = bytes.len() - 32;
-    let digest = weftfs::identity::h(INDEX_V2_DOMAIN, &bytes[..body_len]);
+    let digest = weftfs::identity::h(INDEX_SEGMENT_DOMAIN, &bytes[..body_len]);
     bytes[body_len..].copy_from_slice(digest.as_bytes());
     fs::write(path, bytes).expect("write index");
 }
@@ -404,14 +408,16 @@ fn corrupt_index_rebuilds_and_results_are_unchanged() {
                 fs::write(&path, &bytes).unwrap();
             }
             Corruption::Generation => rewrite_index(&path, |bytes| {
-                bytes[40..48].copy_from_slice(&0u64.to_le_bytes());
+                bytes[9..17].copy_from_slice(&0u64.to_le_bytes());
             }),
             Corruption::Commit => rewrite_index(&path, |bytes| {
-                bytes[8..40].fill(0xAB);
+                // There is no commit field in WFX3; a full segment must not
+                // name a base commit.
+                bytes[57..89].fill(0xAB);
             }),
             Corruption::ObjectCount => rewrite_index(&path, |bytes| {
-                let current = u64::from_le_bytes(bytes[48..56].try_into().unwrap());
-                bytes[48..56].copy_from_slice(&(current + 1).to_le_bytes());
+                let current = u64::from_le_bytes(bytes[89..97].try_into().unwrap());
+                bytes[89..97].copy_from_slice(&(current + 1).to_le_bytes());
             }),
             Corruption::Version => rewrite_index(&path, |bytes| {
                 bytes[4..8].copy_from_slice(&99u32.to_le_bytes());
@@ -681,42 +687,16 @@ fn read_u32(bytes: &[u8], pos: &mut usize) -> u32 {
 /// self-consistency check the loader performs before the attestation still
 /// passes: the magic, version, commit, generation, all three state counts, the
 /// canonical layout, and the segment's own digest.
-fn forge_one_missing_candidate(path: &Path) {
-    let mut bytes = fs::read(path).expect("read index");
-    let mut pos = INDEX_HEADER_BYTES;
-    let names = read_u32(&bytes, &mut pos) as usize;
-    assert!(names > 0, "fixture index must have an attribute set");
-    let mut removed = false;
-    for _ in 0..names {
-        let name_len = read_u32(&bytes, &mut pos) as usize;
-        pos += name_len;
-        let count_pos = pos;
-        let count = read_u32(&bytes, &mut pos) as usize;
-        if !removed && count > 1 {
-            let last = pos + (count - 1) * 32;
-            bytes.drain(last..last + 32);
-            bytes[count_pos..count_pos + 4]
-                .copy_from_slice(&((count - 1) as u32).to_le_bytes());
-            removed = true;
-            break;
-        }
-        pos += count * 32;
-    }
-    assert!(removed, "fixture index must contain a set with >=2 members");
-    let body_len = bytes.len() - 32;
-    let digest = weftfs::identity::h(INDEX_V2_DOMAIN, &bytes[..body_len]);
-    bytes[body_len..].copy_from_slice(digest.as_bytes());
-    fs::write(path, bytes).expect("write forged index");
-}
-
 #[test]
 fn forged_self_consistent_subset_is_rejected_by_the_commit_attestation() {
     let fixture = build_fixture();
     let root = fixture.store.root().to_path_buf();
     let head = fixture.store.head();
     let path = index_path(&root, head);
-    assert!(path.exists(), "the writer attests and persists the head index");
-    drop(fixture.store);
+    assert!(
+        path.exists(),
+        "the writer attests and persists the head index"
+    );
 
     // The honest segment loads on reopen.
     {
@@ -724,9 +704,7 @@ fn forged_self_consistent_subset_is_rejected_by_the_commit_attestation() {
         store.reset_index_stats();
         let query = selector::parse("select tag(\"alpha\")").unwrap();
         let limits = weftcodec::Limits::default();
-        store
-            .resolve(&query, None, &principal(), &limits)
-            .unwrap();
+        store.resolve(&query, None, &principal(), &limits).unwrap();
         let stats = store.index_stats();
         assert_eq!(stats.disk_loads, 1, "attested segment must load: {stats:?}");
         assert_eq!(stats.rejects, 0, "{stats:?}");
@@ -734,14 +712,17 @@ fn forged_self_consistent_subset_is_rejected_by_the_commit_attestation() {
 
     // Forge one missing candidate and reopen: only the commit attestation can
     // refute this, and it must.
-    forge_one_missing_candidate(&path);
+    fixture
+        .store
+        .forge_head_index_remove_tag_for_test("alpha")
+        .expect("forge the head index");
+    drop(fixture.store);
+
     let store = Store::open(&root, OpenMode::ReadOnly).unwrap();
     store.reset_index_stats();
     let query = selector::parse("select tag(\"alpha\")").unwrap();
     let limits = weftcodec::Limits::default();
-    let result = store
-        .resolve(&query, None, &principal(), &limits)
-        .unwrap();
+    let result = store.resolve(&query, None, &principal(), &limits).unwrap();
     let scan = store
         .resolve_scan(&query, None, &principal(), &limits)
         .unwrap();

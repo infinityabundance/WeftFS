@@ -199,6 +199,41 @@ impl StateIndex {
         self
     }
 
+    /// Build an index from resolved map state. Used by the WFX3 chain loader
+    /// after applying a full segment and its deltas; the caller must have
+    /// verified the counts and completeness.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn from_parts(
+        commit: Hash32,
+        generation: u64,
+        object_count: usize,
+        relation_count: usize,
+        entry_count: usize,
+        objects_by_attr_eq: HashMap<(String, Vec<u8>), BTreeSet<Hash32>>,
+        objects_with_attr: HashMap<String, BTreeSet<Hash32>>,
+        relations_from: HashMap<(Hash32, String), Vec<IndexedRelation>>,
+        tags: HashMap<String, BTreeSet<Hash32>>,
+    ) -> StateIndex {
+        StateIndex {
+            commit,
+            generation,
+            object_count,
+            relation_count,
+            entry_count,
+            complete: true,
+            objects_by_attr_eq,
+            objects_with_attr,
+            relations_from,
+            tags,
+        }
+    }
+
+    /// Set the commit key on a resolved chain result.
+    pub(crate) fn with_resolved_commit(mut self, commit: Hash32) -> StateIndex {
+        self.commit = commit;
+        self
+    }
+
     /// Encode the compact advisory file (WFX2).
     ///
     /// Sections are written once, sorted, so a load is a sequential read plus
@@ -450,28 +485,28 @@ pub(crate) fn eq_key(value: &Value) -> Option<Vec<u8>> {
     wcb::encode_default(&normalized).ok()
 }
 
-fn push_u32(out: &mut Vec<u8>, value: u64) -> Result<()> {
+pub(crate) fn push_u32(out: &mut Vec<u8>, value: u64) -> Result<()> {
     let value =
         u32::try_from(value).map_err(|_| Error::limit_exceeded("index count exceeds u32"))?;
     out.extend_from_slice(&value.to_le_bytes());
     Ok(())
 }
 
-fn push_u64(out: &mut Vec<u8>, value: u64) {
+pub(crate) fn push_u64(out: &mut Vec<u8>, value: u64) {
     out.extend_from_slice(&value.to_le_bytes());
 }
 
-fn push_bytes(out: &mut Vec<u8>, bytes: &[u8]) -> Result<()> {
+pub(crate) fn push_bytes(out: &mut Vec<u8>, bytes: &[u8]) -> Result<()> {
     push_u32(out, bytes.len() as u64)?;
     out.extend_from_slice(bytes);
     Ok(())
 }
 
-fn push_str(out: &mut Vec<u8>, text: &str) -> Result<()> {
+pub(crate) fn push_str(out: &mut Vec<u8>, text: &str) -> Result<()> {
     push_bytes(out, text.as_bytes())
 }
 
-fn push_ids(out: &mut Vec<u8>, ids: &BTreeSet<Hash32>) -> Result<()> {
+pub(crate) fn push_ids(out: &mut Vec<u8>, ids: &BTreeSet<Hash32>) -> Result<()> {
     push_u32(out, ids.len() as u64)?;
     for id in ids {
         out.extend_from_slice(id.as_bytes());
@@ -480,7 +515,7 @@ fn push_ids(out: &mut Vec<u8>, ids: &BTreeSet<Hash32>) -> Result<()> {
 }
 
 /// `target kind || target payload`, used as the sort key and written verbatim.
-fn target_bytes(edge: &IndexedRelation) -> Result<Vec<u8>> {
+pub(crate) fn target_bytes(edge: &IndexedRelation) -> Result<Vec<u8>> {
     let mut out = Vec::new();
     match &edge.target {
         RelationTarget::Object(hash) => {
@@ -523,7 +558,7 @@ fn target_bytes(edge: &IndexedRelation) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-fn read_named_sets(
+pub(crate) fn read_named_sets(
     reader: &mut IndexReader<'_>,
     min_element_bytes: usize,
 ) -> Result<HashMap<String, BTreeSet<Hash32>>> {
@@ -539,7 +574,7 @@ fn read_named_sets(
     Ok(map)
 }
 
-fn read_target(reader: &mut IndexReader<'_>) -> Result<(RelationKind, RelationTarget)> {
+pub(crate) fn read_target(reader: &mut IndexReader<'_>) -> Result<(RelationKind, RelationTarget)> {
     let tag = reader.u8()?;
     match tag {
         TARGET_OBJECT => Ok((
@@ -584,21 +619,21 @@ fn read_target(reader: &mut IndexReader<'_>) -> Result<(RelationKind, RelationTa
 }
 
 /// Bounds-checked little-endian reader over the WFX2 body (digest excluded).
-struct IndexReader<'a> {
+pub(crate) struct IndexReader<'a> {
     bytes: &'a [u8],
     pos: usize,
 }
 
 impl<'a> IndexReader<'a> {
-    fn new(bytes: &'a [u8]) -> IndexReader<'a> {
+    pub(crate) fn new(bytes: &'a [u8]) -> IndexReader<'a> {
         IndexReader { bytes, pos: 0 }
     }
 
-    fn remaining(&self) -> usize {
+    pub(crate) fn remaining(&self) -> usize {
         self.bytes.len() - self.pos
     }
 
-    fn take(&mut self, len: usize) -> Result<&'a [u8]> {
+    pub(crate) fn take(&mut self, len: usize) -> Result<&'a [u8]> {
         let end = self
             .pos
             .checked_add(len)
@@ -611,34 +646,34 @@ impl<'a> IndexReader<'a> {
         Ok(slice)
     }
 
-    fn u8(&mut self) -> Result<u8> {
+    pub(crate) fn u8(&mut self) -> Result<u8> {
         Ok(self.take(1)?[0])
     }
 
-    fn u32(&mut self) -> Result<u32> {
+    pub(crate) fn u32(&mut self) -> Result<u32> {
         Ok(u32::from_le_bytes(
             self.take(4)?.try_into().expect("4 bytes"),
         ))
     }
 
-    fn u64(&mut self) -> Result<u64> {
+    pub(crate) fn u64(&mut self) -> Result<u64> {
         Ok(u64::from_le_bytes(
             self.take(8)?.try_into().expect("8 bytes"),
         ))
     }
 
-    fn hash32(&mut self) -> Result<Hash32> {
+    pub(crate) fn hash32(&mut self) -> Result<Hash32> {
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(self.take(32)?);
         Ok(Hash32::from_bytes(bytes))
     }
 
-    fn bytes(&mut self) -> Result<&'a [u8]> {
+    pub(crate) fn bytes(&mut self) -> Result<&'a [u8]> {
         let len = self.u32()? as usize;
         self.take(len)
     }
 
-    fn string(&mut self) -> Result<String> {
+    pub(crate) fn string(&mut self) -> Result<String> {
         let bytes = self.bytes()?;
         String::from_utf8(bytes.to_vec())
             .map_err(|_| Error::malformed("index text is not valid UTF-8"))
@@ -646,7 +681,7 @@ impl<'a> IndexReader<'a> {
 
     /// Read a section count after proving the remaining bytes can hold that
     /// many minimum-size elements. Prevents a corrupt count from allocating.
-    fn bounded_count(&mut self, min_element_bytes: usize) -> Result<usize> {
+    pub(crate) fn bounded_count(&mut self, min_element_bytes: usize) -> Result<usize> {
         let count = self.u32()? as usize;
         if min_element_bytes != 0 && count > self.remaining() / min_element_bytes {
             return Err(Error::corrupt(
@@ -656,7 +691,7 @@ impl<'a> IndexReader<'a> {
         Ok(count)
     }
 
-    fn id_set(&mut self) -> Result<BTreeSet<Hash32>> {
+    pub(crate) fn id_set(&mut self) -> Result<BTreeSet<Hash32>> {
         let count = self.u32()? as usize;
         if count > self.remaining() / 32 {
             return Err(Error::corrupt(

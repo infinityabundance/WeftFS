@@ -34,6 +34,10 @@ pub const COMMIT_SCHEMA: &str = "weftfs.commit.v1";
 /// v1 set plus one optional field, so a v1 reader that checks exact keys must
 /// be taught the new schema (both languages here are).
 pub const COMMIT_SCHEMA_V2: &str = "weftfs.commit.v2";
+/// Commit schema whose `index_attestation` also names the advisory index
+/// segment chain. The six authoritative fields are byte-identical to v1/v2; the
+/// attestation's key set grows by the segment-chain fields.
+pub const COMMIT_SCHEMA_V3: &str = "weftfs.commit.v3";
 /// File manifest schema string (see `WEFT-MODEL.md` §2.3).
 pub const MANIFEST_SCHEMA: &str = "weft.manifest.v1";
 /// Legacy v1 spelling accepted on read (see `docs/store-status.md` §3.1).
@@ -170,37 +174,106 @@ pub struct IndexAttestation {
     pub entry_count: u64,
     pub state_root: Hash32,
     pub candidates_root: Hash32,
+    /// Present only in a `weftfs.commit.v3` attestation: the kind of the head
+    /// segment (`full` or `delta`).
+    pub segment_kind: Option<crate::index_chain::SegmentKind>,
+    /// The immediate base segment id for a delta (absent for full / v2).
+    pub segment_base: Option<Hash32>,
+    /// `segment_chain.len() - 1` (0 for a full segment / v2).
+    pub segment_depth: u64,
+    /// `H("weft/index/chain/v1", WCB({generation, chain}))`, where `chain` is
+    /// the head segment id followed by every ancestor to the full segment.
+    pub segment_root: Hash32,
 }
 
 impl IndexAttestation {
-    const KEYS: &'static [&'static str] = &[
+    const KEYS_V2: &'static [&'static str] = &[
         "candidates_root",
         "entry_count",
         "object_count",
         "relation_count",
         "state_root",
     ];
+    const KEYS_V3: &'static [&'static str] = &[
+        "candidates_root",
+        "entry_count",
+        "object_count",
+        "relation_count",
+        "segment_base",
+        "segment_depth",
+        "segment_kind",
+        "segment_root",
+        "state_root",
+    ];
+
+    /// True when this attestation names a segment chain (a v3 commit).
+    pub fn is_v3(&self) -> bool {
+        self.segment_kind.is_some()
+    }
 
     pub fn to_value(&self) -> Value {
-        wu::map([
+        let mut pairs = vec![
             ("object_count", Value::U64(self.object_count)),
             ("relation_count", Value::U64(self.relation_count)),
             ("entry_count", Value::U64(self.entry_count)),
             ("state_root", wu::hash_value(self.state_root)),
             ("candidates_root", wu::hash_value(self.candidates_root)),
-        ])
+        ];
+        if let Some(kind) = self.segment_kind {
+            pairs.push(("segment_kind", Value::Str(kind.as_str().to_owned())));
+            pairs.push(("segment_base", wu::opt_hash_value(self.segment_base)));
+            pairs.push(("segment_depth", Value::U64(self.segment_depth)));
+            pairs.push(("segment_root", wu::hash_value(self.segment_root)));
+        }
+        wu::map(pairs)
     }
 
-    pub fn from_wcb(value: &Value) -> Result<Self> {
+    pub fn from_wcb(value: &Value, v3: bool) -> Result<Self> {
         let map = wu::as_map(value)?;
-        wu::check_keys(map, Self::KEYS)?;
-        Ok(IndexAttestation {
+        wu::check_keys(map, if v3 { Self::KEYS_V3 } else { Self::KEYS_V2 })?;
+        let mut attestation = IndexAttestation {
             object_count: wu::get_u64(map, "object_count")?,
             relation_count: wu::get_u64(map, "relation_count")?,
             entry_count: wu::get_u64(map, "entry_count")?,
             state_root: wu::get_hash(map, "state_root")?,
             candidates_root: wu::get_hash(map, "candidates_root")?,
-        })
+            segment_kind: None,
+            segment_base: None,
+            segment_depth: 0,
+            segment_root: Hash32::ZERO,
+        };
+        if v3 {
+            let kind = wu::get_text(map, "segment_kind")?;
+            attestation.segment_kind = Some(crate::index_chain::SegmentKind::parse(&kind)?);
+            attestation.segment_base = wu::get_opt_hash(map, "segment_base")?;
+            attestation.segment_depth = wu::get_u64(map, "segment_depth")?;
+            attestation.segment_root = wu::get_hash(map, "segment_root")?;
+            if attestation.segment_depth > u64::from(crate::index_chain::HARD_MAX_CHAIN_DELTAS) {
+                return Err(Error::limit_exceeded(format!(
+                    "index segment chain depth {} exceeds the hard bound {}",
+                    attestation.segment_depth,
+                    crate::index_chain::HARD_MAX_CHAIN_DELTAS
+                )));
+            }
+            match attestation.segment_kind {
+                Some(crate::index_chain::SegmentKind::Full) => {
+                    if attestation.segment_base.is_some() || attestation.segment_depth != 0 {
+                        return Err(Error::corrupt(
+                            "a full index segment attestation cannot name a base",
+                        ));
+                    }
+                }
+                Some(crate::index_chain::SegmentKind::Delta) => {
+                    if attestation.segment_base.is_none() || attestation.segment_depth == 0 {
+                        return Err(Error::corrupt(
+                            "a delta index segment attestation must name a base and depth",
+                        ));
+                    }
+                }
+                None => unreachable!("v3 always sets a segment kind"),
+            }
+        }
+        Ok(attestation)
     }
 }
 
@@ -234,6 +307,9 @@ impl Commit {
         "checkpoint",
         "index_attestation",
     ];
+    /// v3 has the same commit-level key set as v2; only the attestation map
+    /// grows.
+    const KEYS_V3: &'static [&'static str] = Self::KEYS_V2;
 
     /// The six v1 fields as a canonical map. This is also the `state_root`
     /// preimage, so it is independent of whether this record carries an
@@ -259,7 +335,12 @@ impl Commit {
                 wu::map(pairs)
             }
             Some(attestation) => {
-                let mut pairs = vec![("schema", Value::Str(COMMIT_SCHEMA_V2.to_owned()))];
+                let schema = if attestation.is_v3() {
+                    COMMIT_SCHEMA_V3
+                } else {
+                    COMMIT_SCHEMA_V2
+                };
+                let mut pairs = vec![("schema", Value::Str(schema.to_owned()))];
                 pairs.extend(self.fields());
                 pairs.push(("index_attestation", attestation.to_value()));
                 wu::map(pairs)
@@ -298,12 +379,23 @@ impl Commit {
                 wu::check_keys(map, Self::KEYS_V2)?;
                 match map.get("index_attestation") {
                     None | Some(Value::Null) => None,
-                    Some(item) => Some(IndexAttestation::from_wcb(item)?),
+                    Some(item) => Some(IndexAttestation::from_wcb(item, false)?),
+                }
+            }
+            COMMIT_SCHEMA_V3 => {
+                wu::check_keys(map, Self::KEYS_V3)?;
+                match map.get("index_attestation") {
+                    None | Some(Value::Null) => {
+                        return Err(Error::corrupt(
+                            "a weftfs.commit.v3 record must carry an index attestation",
+                        ))
+                    }
+                    Some(item) => Some(IndexAttestation::from_wcb(item, true)?),
                 }
             }
             other => {
                 return Err(Error::unknown_schema(format!(
-                    "commit schema `{other}` is neither `{COMMIT_SCHEMA}` nor `{COMMIT_SCHEMA_V2}`"
+                    "commit schema `{other}` is neither `{COMMIT_SCHEMA}`, `{COMMIT_SCHEMA_V2}`, nor `{COMMIT_SCHEMA_V3}`"
                 )))
             }
         };

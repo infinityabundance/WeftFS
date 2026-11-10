@@ -49,6 +49,7 @@ pub mod fuse;
 pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
+pub(crate) mod index_chain;
 pub mod kv_capability;
 pub mod kv_prefix;
 pub mod load_receipt;

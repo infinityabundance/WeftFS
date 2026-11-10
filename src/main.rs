@@ -2867,6 +2867,7 @@ fn run(cli: Cli) -> Result<()> {
                             "loads": index_stats.disk_loads,
                             "builds": index_stats.builds,
                             "rejects": index_stats.rejects,
+                            "notes": index_stats.notes,
                         },
                     }))
                 } else {
