@@ -1,0 +1,52 @@
+throughput_court: stamp=20261110T142530Z
+throughput_court: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+throughput_court: limits memory=3g cpus=4 pids=1024
+throughput_court: revisions weftfs=dba21fd42618063a927a02321399ae5d63fe9979 weftcodec=4cd729f55b65a80370946499feaff70a5277ef04
+throughput_court: families=qwen3b reps=1 ranks=0 8 restore_threads=1 2 4 8 tile_threads=1 configs=raw
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 5 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.46s
+throughput_court: verified Qwen2.5-3B.safetensors sha256=52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab
+== save qwen3b raw (flat vs packed, ranks: 0 8) ==
+sequential: head=1c7d39f4aadeb920 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(620669.269804)
+ranks-8: head=1c7d39f4aadeb920 median_prepare_ms=Number(347202.739578) median_commit_ms=Number(120.348453) median_wall_ms=Number(387281.628751)
+packed-sequential: head=1c7d39f4aadeb920 median_prepare_ms=Null median_commit_ms=Null median_wall_ms=Number(497555.29953)
+packed-ranks-8: head=1c7d39f4aadeb920 median_prepare_ms=Number(76177.962481) median_commit_ms=Number(163.345194) median_wall_ms=Number(93629.017153)
+bench/scripts/throughput_court.sh: line 104:    24 Killed                  "$save_bin" --model "$model" --work "$family_work/save-$config" --out "$family_work/save-$config.json" --stamp "$stamp-$family-$config" --phases --pack-compare --reps "$reps" --shards "$shards" --ranks "$ranks" "${policy_args[@]}"
