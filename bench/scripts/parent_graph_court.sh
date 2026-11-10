@@ -91,6 +91,21 @@ echo "parent_graph: measuring the controlled hop chains"
   --reps "$reps" \
   --sweep-dtype f32
 
+# R9: zstd-patch is one of the representations the graph actually chooses, so
+# it gets its own measured controlled-chain row rather than borrowing the
+# weight-delta row.
+patch_hop_receipt="$work/hop-zstd-patch.json"
+echo "parent_graph: measuring the zstd-patch hop chain"
+"$hop_bin" \
+  --out "$patch_hop_receipt" \
+  --work "$work/hop-zstd-patch" \
+  --chains-only \
+  --chain-sizes-mib 4,8,16 \
+  --chain-depth 8 \
+  --reps 5 \
+  --sweep-dtype f32 \
+  --chain-forced-strategy zstd-patch
+
 "$bin" \
   --corpus "$corpus" \
   --work "$work/work" \
@@ -101,6 +116,7 @@ echo "parent_graph: measuring the controlled hop chains"
   --sla-sweep-ms "$sla_sweep" \
   --restore-reps "$reps" \
   --hop-receipt "$hop_receipt" \
+  --hop-receipt "$patch_hop_receipt" \
   "${lambda_args[@]}"
 
 # The CLI is a separate surface from the library the harness calls. Exercise it
@@ -149,9 +165,11 @@ margin = d.get("sla_margin") or {}
 print("parent_graph: sla_margin baked=%s derived=%s match=%s"
       % (margin.get("baked_ns_per_mib"), margin.get("derived_ns_per_mib"), margin.get("matches_baked")))
 print("parent_graph: sla_boundary", json.dumps(d.get("sla_boundary"), sort_keys=True))
-for row in (d.get("hop_calibration") or {}).get("rows", []):
-    print("parent_graph: hop %-13s baked=%d remeasured=%d error_ppm=%d samples=%d"
-          % (row["class"], row["baked_ns_per_mib"], row["remeasured_ns_per_mib"], row["remeasured_error_ppm"], row["samples"]))
+for item in (d.get("hop_calibration") or []):
+    for row in item.get("rows", []):
+        print("parent_graph: hop %-13s baked=%d remeasured=%d error_ppm=%d samples=%d"
+              % (row["class"], row["baked_ns_per_mib"], row["remeasured_ns_per_mib"],
+                 row["remeasured_error_ppm"], row["samples"]))
 for row in d["realizations"]:
     print(
         "parent_graph: realized %-20s data=%d predicted=%d worst_restore_ms=%.1f exact=%s verify_ok=%s"

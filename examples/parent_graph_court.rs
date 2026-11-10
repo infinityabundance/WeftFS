@@ -89,7 +89,13 @@ fn run() -> Result<(), String> {
         arg(&args, "--floor-court-receipt")
             .unwrap_or("bench/receipts/parent-graph-20261108T232016Z.json"),
     );
-    let hop_receipt = arg(&args, "--hop-receipt").map(PathBuf::from);
+    let hop_receipts: Vec<PathBuf> = args
+        .iter()
+        .enumerate()
+        .filter(|(_, item)| item.as_str() == "--hop-receipt")
+        .filter_map(|(index, _)| args.get(index + 1))
+        .map(PathBuf::from)
+        .collect();
 
     if work.exists() {
         fs::remove_dir_all(&work).map_err(|e| format!("{}: {e}", work.display()))?;
@@ -201,16 +207,20 @@ fn run() -> Result<(), String> {
         "baked_margin_matches_derivation".to_owned(),
         margin.ns_per_mib == baked_margin,
     );
-    let hop_calibration = match hop_receipt.as_ref() {
-        Some(path) => Some(read_hop_calibration(path)?),
-        None => None,
-    };
+    let mut hop_calibration: Option<Json> = None;
+    let mut hop_rows_all: Vec<Json> = Vec::new();
+    let mut hop_matches = true;
+    for path in &hop_receipts {
+        let calibration = read_hop_calibration(path)?;
+        hop_matches &= calibration.matches_baked;
+        hop_rows_all.push(calibration.json);
+    }
+    if !hop_rows_all.is_empty() {
+        hop_calibration = Some(Json::Array(hop_rows_all));
+    }
     checks.insert(
         "baked_hop_rows_match_remeasurement".to_owned(),
-        hop_calibration
-            .as_ref()
-            .map(|row| row.matches_baked)
-            .unwrap_or(false),
+        !hop_receipts.is_empty() && hop_matches,
     );
 
     // ---- plan classes -----------------------------------------------------
@@ -323,6 +333,8 @@ fn run() -> Result<(), String> {
                         json!({
                             "kind": "accepted",
                             "predicted_worst_restore_ns": plan.worst_restore_ns,
+                            "predicted_uncertainty_worst_ns": plan.worst_uncertainty_ns,
+                            "predicted_sla_bound_worst_ns": plan.worst_sla_bound_ns,
                             "predicted_decode_worst_ns": plan.predicted_decode_chain_ns.iter().copied().max().unwrap_or(0),
                             "max_depth": plan.max_depth,
                             "parents": plan.parent_indices(),
@@ -356,6 +368,8 @@ fn run() -> Result<(), String> {
                 Ok(plan) => json!({
                     "kind": "accepted",
                     "worst_restore_ns": plan.worst_restore_ns,
+                    "worst_uncertainty_ns": plan.worst_uncertainty_ns,
+                    "worst_sla_bound_ns": plan.worst_sla_bound_ns,
                     "predicted_decode_worst_ns": plan.predicted_decode_chain_ns.iter().copied().max().unwrap_or(0),
                     "satisfied": plan.sla_satisfied,
                     "parents": plan.parent_indices(),
@@ -647,6 +661,22 @@ fn run() -> Result<(), String> {
                     "ns_per_mib": row.ns_per_mib,
                 }))
                 .collect::<Vec<_>>(),
+            "zstd_patch_hop": {
+                "calibration": weftfs::cost_model::ZSTD_PATCH_HOP_CALIBRATION,
+                "fixed_ns": weftfs::cost_model::ZSTD_PATCH_HOP.fixed_ns,
+                "ns_per_mib": weftfs::cost_model::ZSTD_PATCH_HOP.ns_per_mib,
+                "uncertainty_ppm": weftfs::cost_model::ZSTD_PATCH_HOP_UNCERTAINTY_PPM,
+            },
+            "uncertainty": {
+                "hop_calibration": weftfs::cost_model::HOP_UNCERTAINTY_CALIBRATION,
+                "decode_calibration": weftfs::cost_model::DECODE_UNCERTAINTY_CALIBRATION,
+                "hop_rows": [
+                    {"class": "sparse-delta", "under_prediction_ppm": 153_302, "samples": 48},
+                    {"class": "weight-delta", "under_prediction_ppm": 178_209, "samples": 48},
+                    {"class": "zstd-patch", "under_prediction_ppm": 312_958, "samples": 48},
+                ],
+                "label": "warm page cache, single host, local backend; measured max under-prediction over the fitted samples",
+            },
             "restore_note": "cold store reopen per repetition; OS page cache is warm, so this is decode-dominated and labelled",
             "pricing_ms": price_ms,
         },
@@ -670,7 +700,7 @@ fn run() -> Result<(), String> {
         },
         "sla": sla_rows,
         "sla_margin": margin_json(&margin, baked_margin, &overhead_receipt, &floor_court_receipt),
-        "hop_calibration": hop_calibration.as_ref().map(|row| row.json.clone()),
+        "hop_calibration": hop_calibration,
         "sla_boundary": sla_boundary,
         "sla_sweep": sla_sweep,
         "sla_sweep_summary": {
@@ -911,9 +941,18 @@ fn plan_json(plan: &plan_graph::ParentGraphPlan) -> Json {
         "predicted_bytes": plan.predicted_bytes,
         "predicted_decode_chain_ns": plan.predicted_decode_chain_ns,
         "predicted_overhead_ns": plan.predicted_overhead_ns,
+        "predicted_encode_ns": plan.predicted_encode_ns,
+        "predicted_uncertainty_ns": plan.predicted_uncertainty_ns,
         "predicted_margin_ns": plan.predicted_margin_ns,
         "predicted_chain_ns": plan.predicted_chain_ns,
         "predicted_sla_bound_ns": plan.predicted_sla_bound_ns,
+        "total_encode_ns": plan.total_encode_ns,
+        "retained_bytes": plan.retained_bytes,
+        "write_cost_units": plan.write_cost_units.to_string(),
+        "retention_cost_units": plan.retention_cost_units.to_string(),
+        "hop_uncertainty_calibration": plan.hop_uncertainty_calibration,
+        "decode_uncertainty_calibration": plan.decode_uncertainty_calibration,
+        "worst_uncertainty_ns": plan.worst_uncertainty_ns,
         "predicted_total_decode_ns": plan.predicted_total_decode_ns.to_string(),
         "restore_overhead_calibration": plan.restore_overhead_calibration,
         "sla_margin_calibration": plan.sla_margin_calibration,
@@ -1096,10 +1135,20 @@ fn read_hop_calibration(path: &Path) -> Result<HopCalibration, String> {
         .ok_or("the hop receipt has no hop_fit")?
     {
         let strategy = row["strategy"].as_str().ok_or("strategy")?;
-        let Some(class) = weftfs::cost_model::CostClass::parse(strategy) else {
-            continue;
+        let baked_row = match strategy {
+            "zstd-patch" => weftfs::cost_model::ZSTD_PATCH_HOP,
+            other => {
+                let Some(class) = weftfs::cost_model::CostClass::parse(other) else {
+                    continue;
+                };
+                if class != weftfs::cost_model::CostClass::SparseDelta
+                    && class != weftfs::cost_model::CostClass::WeightDelta
+                {
+                    continue;
+                }
+                weftfs::cost_model::hop_coefficients(class)
+            }
         };
-        let baked_row = weftfs::cost_model::hop_coefficients(class);
         let samples = row["samples"].as_u64().unwrap_or(0);
         let mut numerator: u128 = 0;
         let mut denominator: u128 = 0;
@@ -1123,23 +1172,18 @@ fn read_hop_calibration(path: &Path) -> Result<HopCalibration, String> {
                 * 1_000_000.0)
                 .round() as i64
         };
-        // Only the delta classes have a hop override to compare against.
-        if class == weftfs::cost_model::CostClass::SparseDelta
-            || class == weftfs::cost_model::CostClass::WeightDelta
-        {
-            if error_ppm.abs() > 100_000 || samples < 5 {
-                matches_baked = false;
-            }
-            rows.push(json!({
-                "class": class.as_str(),
-                "samples": samples,
-                "sizes_bytes": row["sizes_bytes"],
-                "baked_ns_per_mib": baked_row.ns_per_mib,
-                "remeasured_ns_per_mib": derived,
-                "remeasured_error_ppm": error_ppm,
-                "repeatability_gate_ppm": 100_000,
-            }));
+        if error_ppm.abs() > 100_000 || samples < 5 {
+            matches_baked = false;
         }
+        rows.push(json!({
+            "class": strategy,
+            "samples": samples,
+            "sizes_bytes": row["sizes_bytes"],
+            "baked_ns_per_mib": baked_row.ns_per_mib,
+            "remeasured_ns_per_mib": derived,
+            "remeasured_error_ppm": error_ppm,
+            "repeatability_gate_ppm": 100_000,
+        }));
     }
     Ok(HopCalibration {
         json: json!({
