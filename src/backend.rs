@@ -1252,6 +1252,28 @@ pub trait StorageBackend: Send {
         Ok(())
     }
 
+    /// `true` when this backend's blob plane can defer its pack catalog to
+    /// another handle (see [`crate::planes::BlobPlane::defer_pack_catalog`]).
+    fn defer_pack_catalog(&mut self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// Take members this handle packed without cataloguing them.
+    fn take_pending_pack_members(&mut self) -> Result<Option<crate::packs::DeferredPackEntries>> {
+        Ok(None)
+    }
+
+    /// Merge deferred members into this handle's catalog.
+    fn adopt_pending_pack_members(
+        &mut self,
+        members: crate::packs::DeferredPackEntries,
+    ) -> Result<()> {
+        let _ = members;
+        Err(Error::invalid_argument(
+            "this backend has no pack catalog to adopt deferred members into",
+        ))
+    }
+
     /// Report structural problems in the blob plane's own metadata (the pack
     /// catalog, for example). Default: the plane has no metadata of its own.
     fn verify_blob_plane(&self) -> Result<Vec<String>> {
@@ -3345,6 +3367,21 @@ impl StorageBackend for CompositeBackend {
 
     fn refresh_blob_metadata(&mut self) -> Result<()> {
         self.blobs.refresh_metadata()
+    }
+
+    fn defer_pack_catalog(&mut self) -> Result<bool> {
+        self.blobs.defer_pack_catalog()
+    }
+
+    fn take_pending_pack_members(&mut self) -> Result<Option<crate::packs::DeferredPackEntries>> {
+        self.blobs.take_pending_pack_members()
+    }
+
+    fn adopt_pending_pack_members(
+        &mut self,
+        members: crate::packs::DeferredPackEntries,
+    ) -> Result<()> {
+        self.blobs.adopt_pending_pack_members(members)
     }
 
     fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {

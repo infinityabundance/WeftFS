@@ -1373,6 +1373,36 @@ impl Store {
         self.with_backend_mut(|backend| backend.refresh_blob_metadata())
     }
 
+    /// Switch this handle's blob plane into deferred pack-catalog mode.
+    ///
+    /// Returns `true` when the plane packs blobs and will now publish packs
+    /// without publishing catalog metadata; the caller must hand the deferred
+    /// members to one owner with [`Store::take_pending_pack_members`] and
+    /// [`Store::adopt_pending_pack_members`]. Returns `false` for a store that
+    /// does not pack, which is a no-op.
+    pub fn defer_pack_catalog(&self) -> Result<bool> {
+        self.with_backend_mut(|backend| backend.defer_pack_catalog())
+    }
+
+    /// Take every pack member this handle published without cataloguing it.
+    ///
+    /// `None` for a handle that is not in deferred mode. The open pack is
+    /// sealed first, so the returned members always name published packs.
+    pub fn take_pending_pack_members(&self) -> Result<Option<crate::packs::DeferredPackEntries>> {
+        self.with_backend_mut(|backend| backend.take_pending_pack_members())
+    }
+
+    /// Merge another handle's deferred members into this handle's catalog.
+    ///
+    /// Exactly one handle (the committer) calls this, so the catalog root is
+    /// advanced by a single writer: no control-record race exists.
+    pub fn adopt_pending_pack_members(
+        &self,
+        members: crate::packs::DeferredPackEntries,
+    ) -> Result<()> {
+        self.with_backend_mut(|backend| backend.adopt_pending_pack_members(members))
+    }
+
     /// Per-plane capabilities when the store runs a split backend.
     pub fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
         self.with_backend(|backend| Ok(backend.plane_capabilities()))

@@ -335,6 +335,34 @@ pub trait BlobPlane: Send {
         Ok(())
     }
 
+    /// Switch this plane into **deferred catalog** mode, where sealing a pack
+    /// publishes the immutable pack object but records its members instead of
+    /// touching the catalog. Returns `false` for a plane that has no catalog.
+    ///
+    /// This is what lets N blob workers publish small blobs concurrently
+    /// without any of them writing a control record: one committer adopts every
+    /// worker's members in a single catalog publication.
+    fn defer_pack_catalog(&mut self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// Take the members deferred by [`BlobPlane::defer_pack_catalog`], sealing
+    /// the open pack first. `None` for a plane that does not defer.
+    fn take_pending_pack_members(&mut self) -> Result<Option<crate::packs::DeferredPackEntries>> {
+        Ok(None)
+    }
+
+    /// Merge another handle's deferred members into this plane's catalog.
+    fn adopt_pending_pack_members(
+        &mut self,
+        members: crate::packs::DeferredPackEntries,
+    ) -> Result<()> {
+        let _ = members;
+        Err(Error::invalid_argument(
+            "this blob plane has no pack catalog to adopt deferred members into",
+        ))
+    }
+
     /// Object length in bytes.
     fn len(&self, key: &Key) -> Result<u64>;
 

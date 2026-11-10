@@ -363,6 +363,84 @@ fn packed_checkpoint_crash_proxy_yields_old_or_new() {
 }
 
 #[test]
+fn concurrent_packed_prepare_seals_the_whole_catalog() {
+    // Many small chunks (so several packs auto-seal during prepare) and
+    // 1/2/4/8 blob workers. A lost compare-and-swap must retry and an identical
+    // member packed by two workers must stay catalogued exactly once, never
+    // dropped.
+    let dir = tempdir().unwrap();
+    let source_dir = dir.path().join("src");
+    fs::create_dir_all(&source_dir).unwrap();
+    let specs: &[(&str, &[u64])] = &[
+        ("a", &[2048, 1024]),
+        ("b", &[1024, 1024]),
+        ("c", &[512, 1024]),
+        ("d", &[2048, 512]),
+    ];
+    let payloads: Vec<Vec<u8>> = specs
+        .iter()
+        .enumerate()
+        .map(|(index, (_, shape))| {
+            let count: usize = shape.iter().map(|dim| *dim as usize).product();
+            random_bytes(count * 2, 0xbeef_0000 + index as u64)
+        })
+        .collect();
+    let entries: Vec<SafetensorsEntry> = specs
+        .iter()
+        .zip(payloads.iter())
+        .map(|((name, shape), data)| SafetensorsEntry {
+            name,
+            dtype: "bf16",
+            shape,
+            data,
+        })
+        .collect();
+    let file = safetensors::encode_file(&entries, None).unwrap();
+    let source = source_dir.join("race.safetensors");
+    fs::write(&source, &file).unwrap();
+
+    for ranks in [1usize, 2, 4, 8] {
+        let store_path = dir.path().join(format!("store-r{ranks}"));
+        let kind = BackendKind::packed(BackendKind::Local, pack_options(4 << 20, 16))
+            .expect("pack policy");
+        let mut store = Store::init_with_backend(&store_path, opts(), kind.clone())
+            .expect("init");
+        let report = store
+            .write_checkpoint_parallel(
+                "ckpt",
+                &source,
+                &write_options(),
+                &ParallelCheckpointOptions {
+                    ranks,
+                    max_in_flight_bytes: 8 << 20,
+                    per_rank_bytes: 64 << 20,
+                    ..ParallelCheckpointOptions::default()
+                },
+            )
+            .unwrap_or_else(|err| panic!("ranks={ranks}: packed parallel checkpoint: {err}"));
+        assert_eq!(report.tensors.len(), 4);
+        let pack = store.pack_stats().expect("pack counters");
+        assert!(pack.sealed_packs > 0, "ranks={ranks}: no pack sealed: {pack:?}");
+        assert_eq!(
+            pack.flat_members, 0,
+            "ranks={ranks}: unexpected flat members: {pack:?}"
+        );
+        drop(store);
+
+        let reader = Store::open_with_backend(&store_path, OpenMode::ReadOnly, kind)
+            .expect("reopen");
+        let report = reader.verify(true).expect("verify");
+        assert!(report.problems.is_empty(), "ranks={ranks}: {:?}", report.problems);
+        for ((name, _), expected) in specs.iter().zip(payloads.iter()) {
+            let bytes = reader
+                .restore_named_tensor_at(None, "ckpt", name, None, None)
+                .expect("restore tensor");
+            assert_eq!(&bytes.bytes, expected, "ranks={ranks}: tensor `{name}` differs");
+        }
+    }
+}
+
+#[test]
 fn cold_read_of_a_packed_member_costs_more_requests() {
     let dir = tempdir().unwrap();
     let (_payloads, source) = write_container(&dir.path().join("src"));

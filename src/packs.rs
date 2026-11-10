@@ -357,6 +357,13 @@ struct CatalogState {
     open_bytes: Vec<u8>,
     open_entries: Vec<Entry>,
     open_index: BTreeMap<(u8, Hash32), usize>,
+    /// When set, sealing publishes the pack object and *records* its members
+    /// here instead of touching the catalog. One owner adopts them later.
+    defer: bool,
+    pending: Vec<Entry>,
+    /// Digest per deferred key, so a second publication of the same key inside
+    /// one handle is idempotent and a different payload is still refused.
+    pending_digests: BTreeMap<(u8, Hash32), Hash32>,
     /// Keys this plane has *observed* absent in the flat namespace, bounded.
     /// The store reads a blob before publishing it; without this the plane
     /// would ask the inner namespace the same question twice per put.
@@ -364,6 +371,30 @@ struct CatalogState {
     absent_order: std::collections::VecDeque<Key>,
     counters: PackStats,
     notes: Vec<String>,
+}
+
+/// Members of packs a plane published **without** publishing catalog metadata.
+///
+/// A blob worker of the prepare/commit checkpoint writer packs its small blobs
+/// and publishes the immutable pack objects immediately (content-addressed, so
+/// safe to publish concurrently), then hands this list to the single committer.
+/// The committer merges every worker's members into one catalog publication, so
+/// no worker ever writes a control record.
+#[derive(Debug, Default)]
+pub struct DeferredPackEntries {
+    entries: Vec<Entry>,
+}
+
+impl DeferredPackEntries {
+    /// Number of deferred members.
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    /// True when nothing was deferred.
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
 }
 
 /// Bound on the negative cache. A single-writer store holds an exclusive lock,
@@ -639,6 +670,20 @@ impl BlobPlane for PackedBlobPlane {
         let Some((kind, id)) = member_identity(key) else {
             return inner.put_if_absent(key, bytes);
         };
+        if state.defer {
+            // In deferred mode a member this handle already packed is not
+            // readable from the catalog yet, so idempotency is decided here.
+            if let Some(recorded) = state.pending_digests.get(&(kind, id)).copied() {
+                return if recorded == identity::h(MEMBER_DOMAIN, bytes) {
+                    Ok(())
+                } else {
+                    Err(Error::exists(format!(
+                        "key {} is already packed with different bytes",
+                        key.display_path()
+                    )))
+                };
+            }
+        }
         let length = bytes.len() as u64;
         let max_entries = options.max_catalog_entries();
         let pending = state.total_entries + state.open_entries.len() as u64;
@@ -777,6 +822,53 @@ impl BlobPlane for PackedBlobPlane {
 
     fn pack_counters(&self) -> Option<PackStats> {
         Some(self.pack_stats())
+    }
+
+    fn defer_pack_catalog(&mut self) -> Result<bool> {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.defer = true;
+        Ok(true)
+    }
+
+    fn take_pending_pack_members(&mut self) -> Result<Option<DeferredPackEntries>> {
+        let Self {
+            inner,
+            options,
+            state,
+            ..
+        } = self;
+        let mut state = state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !state.defer {
+            return Ok(None);
+        }
+        // Seal the open pack so every member this handle published is in a
+        // published pack object before the catalog can name it.
+        seal_deferred(inner, options, &mut state)?;
+        let entries = std::mem::take(&mut state.pending);
+        state.pending_digests.clear();
+        Ok(Some(DeferredPackEntries { entries }))
+    }
+
+    fn adopt_pending_pack_members(&mut self, members: DeferredPackEntries) -> Result<()> {
+        if members.entries.is_empty() {
+            return Ok(());
+        }
+        let Self {
+            inner,
+            catalog,
+            options,
+            state,
+        } = self;
+        let mut state = state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        ensure_loaded(&**catalog, options, &mut state)?;
+        commit_entries(inner, catalog, options, &mut state, members.entries)
     }
 
     fn refresh_metadata(&mut self) -> Result<()> {
@@ -1235,6 +1327,9 @@ fn seal(
     if state.open_entries.is_empty() {
         return Ok(());
     }
+    if state.defer {
+        return seal_deferred(inner, options, state);
+    }
     let pack_bytes = std::mem::take(&mut state.open_bytes);
     let mut entries = std::mem::take(&mut state.open_entries);
     let index = std::mem::take(&mut state.open_index);
@@ -1252,6 +1347,44 @@ fn seal(
     }
 }
 
+/// Seal the open pack in deferred mode: publish the immutable pack object and
+/// record its members for the one catalog owner. No control record is touched.
+fn seal_deferred(
+    inner: &mut Box<dyn BlobPlane + Send>,
+    _options: &PackOptions,
+    state: &mut CatalogState,
+) -> Result<()> {
+    if state.open_entries.is_empty() {
+        return Ok(());
+    }
+    let pack_bytes = std::mem::take(&mut state.open_bytes);
+    let mut entries = std::mem::take(&mut state.open_entries);
+    state.open_index.clear();
+    let pack_id = identity::h(PACK_DOMAIN, &pack_bytes);
+    for entry in entries.iter_mut() {
+        entry.pack = pack_id;
+    }
+    // Same ordering as the catalogued path: the pack is durable before any
+    // catalog record that names it can exist, and here it is published only
+    // after every member's bytes are already in it.
+    inner.put_if_absent(&Key::pack(pack_id), &pack_bytes)?;
+    crash_point("pack_after_pack_object");
+    for entry in entries {
+        state.pending_digests.insert(entry.sort_key(), entry.digest);
+        state.pending.push(entry);
+    }
+    state.counters.sealed_packs += 1;
+    Ok(())
+}
+
+/// Seals one pack. Segment publication and the root compare-and-swap are
+/// retried when another handle advanced the catalog first: two blob workers of
+/// the prepare/commit checkpoint writer can seal concurrently, and the loser of
+/// a CAS must re-merge against the winner's segments rather than fail the
+/// checkpoint. Every published object is content-addressed, so a retry
+/// republishes the same bytes idempotently.
+const MAX_SEAL_ATTEMPTS: usize = 16;
+
 fn seal_inner(
     inner: &mut Box<dyn BlobPlane + Send>,
     catalog: &mut Box<dyn CommitPlane + Send>,
@@ -1268,59 +1401,133 @@ fn seal_inner(
     //    pack, never a catalog entry pointing at missing bytes.
     inner.put_if_absent(&Key::pack(pack_id), pack_bytes)?;
     crash_point("pack_after_pack_object");
-
-    // 2. Publish each touched catalog segment as an immutable object.
-    let mut per_segment: BTreeMap<usize, Vec<Entry>> = BTreeMap::new();
-    for entry in entries.iter() {
-        per_segment
-            .entry(segment_index(entry.id, options.catalog_segments))
-            .or_default()
-            .push(*entry);
-    }
-    let mut new_ids = state.segment_ids.clone();
-    let mut pending: Vec<(usize, Arc<Segment>, Vec<u8>)> = Vec::new();
-    for (segment_index_value, mut added) in per_segment {
-        let current = load_segment(&**inner, options, state, segment_index_value)?;
-        let mut merged = current.entries.clone();
-        merged.append(&mut added);
-        merged.sort_by_key(Entry::sort_key);
-        if merged
-            .windows(2)
-            .any(|pair| pair[0].sort_key() == pair[1].sort_key())
-        {
-            return Err(Error::corrupt(
-                "catalog already names a member being packed again",
-            ));
-        }
-        let segment = Arc::new(Segment {
-            index: segment_index_value as u32,
-            entries: merged,
-        });
-        let bytes = segment.encode();
-        new_ids[segment_index_value] = fragment_id(&bytes);
-        pending.push((segment_index_value, segment, bytes));
-    }
-    for (_, _, bytes) in &pending {
-        let id = fragment_id(bytes);
-        inner.put_if_absent(&Key::pack_catalog(id), bytes)?;
-        state.counters.catalog_segment_publishes += 1;
-    }
-    crash_point("pack_after_catalog_segments");
-
-    // 3. Publish the root with one compare-and-swap.
-    let new_total = state.total_entries + entries.len() as u64;
-    let root = encode_root(&new_ids, new_total)?;
-    let token = state.root_token.clone();
-    let written = commit_root(&mut **catalog, &root, token.as_deref())?;
-    state.root_token = Some(written);
-    state.segment_ids = new_ids;
-    state.total_entries = new_total;
-    for (index, segment, _) in pending {
-        state.segments[index] = Some(segment);
-    }
+    commit_entries(inner, catalog, options, state, entries.to_vec())?;
     state.counters.sealed_packs += 1;
-    state.counters.catalog_root_publishes += 1;
     Ok(())
+}
+
+/// Merge `entries` into the catalog: publish the touched segments, then
+/// advance the root with one compare-and-swap.
+///
+/// This is the only place that writes pack catalog metadata, so the deferred
+/// path (`take_pending_pack_members` → `adopt_pending_pack_members`) and the
+/// immediate path cannot drift.
+fn commit_entries(
+    inner: &mut Box<dyn BlobPlane + Send>,
+    catalog: &mut Box<dyn CommitPlane + Send>,
+    options: &PackOptions,
+    state: &mut CatalogState,
+    entries: Vec<Entry>,
+) -> Result<()> {
+    let mut attempt = 0usize;
+    loop {
+        // 2. Publish each touched catalog segment as an immutable object.
+        let mut per_segment: BTreeMap<usize, Vec<Entry>> = BTreeMap::new();
+        for entry in entries.iter() {
+            per_segment
+                .entry(segment_index(entry.id, options.catalog_segments))
+                .or_default()
+                .push(*entry);
+        }
+        let mut new_ids = state.segment_ids.clone();
+        let mut pending: Vec<(usize, Arc<Segment>, Vec<u8>)> = Vec::new();
+        let mut fresh_entries = 0u64;
+        for (segment_index_value, mut added) in per_segment {
+            let current = load_segment(&**inner, options, state, segment_index_value)?;
+            // Merge two sorted lists. A key this pack holds that the catalog
+            // already names is **not** an error: content addressing means two
+            // workers can pack the same chunk concurrently, and identical
+            // bytes are exactly what the key promises. Reject only a key whose
+            // recorded length or digest disagrees (a collision or a bug).
+            added.sort_by_key(Entry::sort_key);
+            let existing = &current.entries;
+            let mut merged = Vec::with_capacity(existing.len() + added.len());
+            let mut fresh = 0u64;
+            let mut cursor = 0usize;
+            for entry in added {
+                while cursor < existing.len() && existing[cursor].sort_key() < entry.sort_key() {
+                    merged.push(existing[cursor]);
+                    cursor += 1;
+                }
+                if cursor < existing.len() && existing[cursor].sort_key() == entry.sort_key() {
+                    let recorded = existing[cursor];
+                    if recorded.length != entry.length || recorded.digest != entry.digest {
+                        return Err(Error::corrupt(format!(
+                            "catalog already names {} with different bytes than this pack holds",
+                            entry.key().display_path()
+                        )));
+                    }
+                    // Keep the catalogued copy: an identical member is still a
+                    // member, and dropping it here would silently un-name it.
+                    merged.push(recorded);
+                    cursor += 1;
+                    continue;
+                }
+                merged.push(entry);
+                fresh += 1;
+            }
+            merged.extend_from_slice(&existing[cursor..]);
+            if fresh == 0 {
+                // Every member of this segment was already catalogued.
+                continue;
+            }
+            fresh_entries += fresh;
+            let segment = Arc::new(Segment {
+                index: segment_index_value as u32,
+                entries: merged,
+            });
+            let bytes = segment.encode();
+            new_ids[segment_index_value] = fragment_id(&bytes);
+            pending.push((segment_index_value, segment, bytes));
+        }
+        if fresh_entries == 0 {
+            // Another handle catalogued every member of this pack first. The
+            // pack object is unreferenced garbage and no root change is needed.
+            note(
+                state,
+                "pack was already named by the catalog; nothing to publish".to_owned(),
+            );
+            return Ok(());
+        }
+        for (_, _, bytes) in &pending {
+            let id = fragment_id(bytes);
+            inner.put_if_absent(&Key::pack_catalog(id), bytes)?;
+            state.counters.catalog_segment_publishes += 1;
+        }
+        crash_point("pack_after_catalog_segments");
+
+        // 3. Publish the root with one compare-and-swap.
+        let new_total = state.total_entries + fresh_entries;
+        let root = encode_root(&new_ids, new_total)?;
+        let token = state.root_token.clone();
+        match commit_root(&mut **catalog, &root, token.as_deref()) {
+            Ok(written) => {
+                state.root_token = Some(written);
+                state.segment_ids = new_ids;
+                state.total_entries = new_total;
+                for (index, segment, _) in pending {
+                    state.segments[index] = Some(segment);
+                }
+                state.counters.catalog_root_publishes += 1;
+                return Ok(());
+            }
+            Err(err) if err.class() == Class::Busy && attempt < MAX_SEAL_ATTEMPTS => {
+                attempt += 1;
+                // Re-read the catalog root and every segment this seal touches;
+                // the winner's entries are now part of the merge base.
+                state.loaded = false;
+                state.root_token = None;
+                state.segment_ids.clear();
+                state.segments.clear();
+                ensure_loaded(&**catalog, options, state)?;
+                note(
+                    state,
+                    format!("pack catalog compare-and-swap retry {attempt} after concurrent seal"),
+                );
+            }
+            Err(err) => return Err(err),
+        }
+    }
 }
 
 /// Rebuild the open pack after members were removed from it, so buffered

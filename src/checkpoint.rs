@@ -1679,6 +1679,12 @@ impl Store {
                     // blob publication is the only write this handle performs.
                     let worker =
                         Store::open_blob_worker(&root, store_options, backend_kind)?;
+                    // A packing plane must not publish catalog metadata from a
+                    // worker: the local catalog compare-and-swap is atomic only
+                    // under the writer lock, which workers deliberately do not
+                    // hold. Deferred mode publishes the immutable pack objects
+                    // and hands the member list to the single committer.
+                    worker.defer_pack_catalog()?;
                     let mut out = Vec::new();
                     let mut rank_bytes: u64 = 0;
                     for (tensor_index, tensor) in selected.iter().enumerate() {
@@ -1743,11 +1749,16 @@ impl Store {
                 }
             }
             for worker in &workers {
-                // Re-read the catalog root this handle last observed: another
-                // rank may have sealed since this handle opened, and the seal
-                // is a compare-and-swap against the bytes it read.
-                worker.refresh_blob_catalog()?;
-                worker.flush_blob_batch()?;
+                if let Some(members) = worker.take_pending_pack_members()? {
+                    // The committer is the only handle that writes the catalog,
+                    // so this merge cannot lose a concurrent update.
+                    self.adopt_pending_pack_members(members)?;
+                } else {
+                    // A batching plane that cannot defer: publish the packed
+                    // blobs from one handle at a time, never concurrently.
+                    worker.refresh_blob_catalog()?;
+                    worker.flush_blob_batch()?;
+                }
             }
             // The committer's own plane may have cached a catalog root from
             // before any worker sealed; re-read it before verifying fragments.
