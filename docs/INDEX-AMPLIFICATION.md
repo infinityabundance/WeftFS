@@ -46,18 +46,33 @@ section tags
 digest [32]                  BLAKE3("weft/index/segment/v3", all preceding bytes)
 ```
 
-A **row** is one map key and its value:
+A **row** is one map key and its value. The flag byte selects one of three
+forms:
 
-* `objects_with_attr`: `str name`, `u8 present`, [`u32 count`, ids] when present;
-* `objects_by_attr_eq`: `str name`, `bytes key`, `u8 present`, [ids] when present;
-* `relations_from`: `hash32 subject`, `str predicate`, `u8 present`,
-  [`u32 edge_count`, edges] when present;
-* `tags`: `str tag`, `u8 present`, [ids] when present.
+* `0` **absent** — the row was removed (tombstone);
+* `1` **present** — the full value (used in a full segment and for a key the
+  base does not have);
+* `2` **patch** — an element-level delta against the base row:
+  `u32 added count, added elements, u32 removed count, removed elements`.
 
-A full segment writes every row with `present = 1`. A delta writes only keys
-whose value differs from the base, with `present = 0` as a tombstone. Rows are
-sorted by their canonical key, so the encoding is deterministic and a load is a
-sequential walk plus map insertion. Duplicate keys are rejected.
+Row keys:
+
+* `objects_with_attr`: `str name`, flag, then ids;
+* `objects_by_attr_eq`: `str name`, `bytes key`, flag, then ids;
+* `relations_from`: `hash32 subject`, `str predicate`, flag, then target edges;
+* `tags`: `str tag`, flag, then ids.
+
+A full segment writes every row with flag `1`. A delta writes only keys whose
+value differs from the base. Using element-level patches rather than rewriting
+whole sets is essential: an attribute such as `weft.tensor.dtype` has a set of
+every tensor object, so a row-level delta would re-emit the whole growing set
+on every append (measured: 97,066,019 B for 1,250 commits at row level). With
+patches the same trajectory is 3,342,744 B. A patch is validated strictly: every
+removal must name a present element, every addition an absent one, and no patch
+may empty a row (an empty row is written as `absent`). Rows are sorted by their
+canonical key and elements within a row are sorted, so the encoding is
+deterministic and a load is a sequential walk plus map insertion. Duplicate keys
+are rejected.
 
 `segment_id = BLAKE3("weft/index/segment/v3", file bytes without the trailing
 digest)`. The segment intentionally carries no commit hash: the commit's
@@ -141,9 +156,11 @@ state), then GC may drop the old head chain when no snapshot pins it. A snapshot
 of the old head keeps the old chain, so compaction never breaks history.
 
 The tradeoff is explicit: a chain read costs `D` extra file reads and `D` map
-applies. For a per-commit delta of a few rows the chain is far smaller than one
-full segment; for a commit that changes most rows the writer emits a full
-segment, so the read cost is never worse than `D` full segments.
+applies. Because a delta applies element-level patches, a per-commit delta is
+proportional to the rows that actually changed, not to the size of the state;
+for a commit that changes most rows the writer emits a full segment, so the read
+cost is never worse than `D` full segments. The measured costs are in
+`bench/RESULTS-index-amplification.md`.
 
 ## Evidence plan
 

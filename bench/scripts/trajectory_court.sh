@@ -28,6 +28,21 @@ receipt="${WEFT_TRAJECTORY_RECEIPT:-bench/receipts/trajectory-$stamp.json}"
 log="bench/receipts/trajectory-$stamp.log"
 corpus="$root/.docker-cache/real-corpus"
 synth_steps="${WEFT_TRAJ_SYNTH_STEPS:-50}"
+# Optional flags. `WEFT_TRAJ_INDEX_MODE=full` reproduces the pre-WFX3 writer
+# (one full-state segment per commit); the default is the incremental chain.
+index_mode="${WEFT_TRAJ_INDEX_MODE:-delta}"
+index_flag=()
+if [[ "$index_mode" == "full" ]]; then
+  index_flag=(--full-index)
+fi
+baseline_flag=()
+if [[ "${WEFT_TRAJ_BASELINES:-1}" == "0" ]]; then
+  baseline_flag=(--no-baselines)
+fi
+query_flag=()
+if [[ "${WEFT_TRAJ_QUERY_REOPEN:-0}" == "1" ]]; then
+  query_flag=(--query-reopen)
+fi
 mkdir -p "$work/phases" bench/receipts
 exec > >(tee "$log") 2>&1
 
@@ -71,8 +86,8 @@ pythia_arg="${pythia_arg%,}"
 
 # Record the configuration in the receipt: the aggregate verification court runs
 # a reduced trajectory, and that must be visible rather than inferred.
-printf '{"phase":"configuration","synthetic_steps":%s,"pythia_steps":"%s","qwen":%s,"snapshots":true,"note":"a reduced run is labelled here; the standalone full-size receipt is the full evidence"}\n' \
-  "$(printf '%s' "$synth_steps")" "$pythia_steps" "$([ "$run_qwen" = "1" ] && echo true || echo false)" >"$work/phases/configuration.json"
+printf '{"phase":"configuration","synthetic_steps":%s,"pythia_steps":"%s","qwen":%s,"snapshots":true,"index_mode":"%s","note":"a reduced run is labelled here; the standalone full-size receipt is the full evidence"}\n' \
+  "$(printf '%s' "$synth_steps")" "$pythia_steps" "$([ "$run_qwen" = "1" ] && echo true || echo false)" "$index_mode" >"$work/phases/configuration.json"
 
 # --- synthetic 50-step series ----------------------------------------------
 echo "trajectory: generating a declared synthetic ${synth_steps}-step series"
@@ -86,30 +101,36 @@ done
 synth_arg="${synth_arg%,}"
 synth_last="synthetic-step$(printf '%03d' "$synth_steps")"
 
-echo "trajectory: synthetic series (snapshot pinned at every step)"
+echo "trajectory: synthetic series (snapshot pinned at every step, index=$index_mode)"
 "$bin" series --store "$work/store-synth" --out "$work/phases/synthetic-series.json" \
-  --steps "$synth_arg" --strategy planned --shards 1 --snapshots --range "0:1,0:64"
+  --steps "$synth_arg" --strategy planned --shards 1 --snapshots --range "0:1,0:64" \
+  "${index_flag[@]}" "${baseline_flag[@]}" "${query_flag[@]}"
 echo "trajectory: synthetic GC with snapshots pinned"
 "$bin" gc --store "$work/store-synth" --out "$work/phases/synthetic-gc-pinned.json" \
   --keep "$synth_last"
 
 echo "trajectory: synthetic series (no snapshots) for the GC-reclaim phase"
 "$bin" series --store "$work/store-synth-nosnap" --out "$work/phases/synthetic-series-nosnap.json" \
-  --steps "$synth_arg" --strategy planned --shards 1 --range "0:1,0:64"
+  --steps "$synth_arg" --strategy planned --shards 1 --range "0:1,0:64" \
+  "${index_flag[@]}" "${baseline_flag[@]}" "${query_flag[@]}"
 echo "trajectory: synthetic GC without snapshots"
 "$bin" gc --store "$work/store-synth-nosnap" --out "$work/phases/synthetic-gc-reclaim.json" \
   --keep "$synth_last"
 
 # --- real public weights ---------------------------------------------------
+if [[ -n "$pythia_arg" ]]; then
 echo "trajectory: pythia-70m consecutive steps"
 "$bin" series --store "$work/store-pythia" --out "$work/phases/pythia-series.json" \
-  --steps "$pythia_arg" --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:256"
+  --steps "$pythia_arg" --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:256" \
+  "${index_flag[@]}" "${baseline_flag[@]}" "${query_flag[@]}"
+fi
 
 if [[ "$run_qwen" == "1" ]]; then
 echo "trajectory: qwen base -> instruct"
 "$bin" series --store "$work/store-qwen" --out "$work/phases/qwen-series.json" \
   --steps "qwen-base=$corpus/Qwen2.5-0.5B.safetensors,qwen-instruct=$corpus/Qwen2.5-0.5B-Instruct.safetensors" \
-  --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:896"
+  --strategy planned --shards 1 --snapshots --no-semantic --range "0:1,0:896" \
+  "${index_flag[@]}" "${baseline_flag[@]}" "${query_flag[@]}"
 else
   echo "trajectory: qwen half skipped (WEFT_TRAJ_QWEN=0)"
 fi

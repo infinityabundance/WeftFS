@@ -273,6 +273,12 @@ fn series(args: &[String]) -> Result<(), String> {
     let snapshots = flag(args, "--snapshots");
     let baselines = !flag(args, "--no-baselines");
     let semantic = !flag(args, "--no-semantic");
+    // `--full-index` reproduces the pre-WFX3 behaviour: one full-state segment
+    // per committed generation. The default is an incremental delta chain.
+    let full_index = flag(args, "--full-index");
+    // `--query-reopen` measures the first query on fresh read-only handles after
+    // the series, which is the number an operator pays after a restart.
+    let query_reopen = flag(args, "--query-reopen");
     let mut single = arg(args, "--single").unwrap_or_default().to_owned();
     let region_text = arg(args, "--range").unwrap_or("0:1");
     let region = {
@@ -294,6 +300,7 @@ fn series(args: &[String]) -> Result<(), String> {
         Options {
             gc_grace_secs: 0,
             fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
+            incremental_index: !full_index,
             ..Options::default()
         },
     )
@@ -550,6 +557,49 @@ fn series(args: &[String]) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     }
     let full = store.verify(true).map_err(|e| e.to_string())?;
+    let final_data_bytes = data_bytes(&store_path);
+    let final_index_bytes = dir_bytes(&store_path.join("indexes"));
+    let (head_kind, head_depth) = store.index_head_chain().map_err(|e| e.to_string())?;
+    let index_writes = store.index_stats().writes;
+    let index_note = store.index_stats().notes.clone();
+    drop(store);
+
+    // First query on a fresh read-only handle: the index load (chain or full
+    // segment) plus the selector evaluation. Seven independent opens.
+    let mut query_reopen_row = Json::Null;
+    if query_reopen {
+        let principal = weftfs::auth::Principal::new(0, 0, Vec::new());
+        let limits = weftcodec::Limits::default();
+        let attr_query = weftcodec::selector::parse("select has(attrs.weft.tensor.strategy)")
+            .map_err(|e| e.to_string())?;
+        let mut samples = Vec::new();
+        let mut loads = Vec::new();
+        let mut builds = Vec::new();
+        let mut matched = Vec::new();
+        for _ in 0..7 {
+            let ro = Store::open(&store_path, OpenMode::ReadOnly).map_err(|e| e.to_string())?;
+            ro.reset_index_stats();
+            let started = Instant::now();
+            let resolution = ro
+                .resolve(&attr_query, None, &principal, &limits)
+                .map_err(|e| e.to_string())?;
+            samples.push(started.elapsed().as_secs_f64() * 1000.0);
+            let stats = ro.index_stats();
+            loads.push(stats.disk_loads);
+            builds.push(stats.builds);
+            matched.push(resolution.matched_count);
+        }
+        samples.sort_by(|a, b| a.partial_cmp(b).expect("finite timings"));
+        query_reopen_row = json!({
+            "selector": "select has(attrs.weft.tensor.strategy)",
+            "opens": samples.len(),
+            "p50_ms": samples[samples.len() / 2],
+            "samples_ms": samples,
+            "disk_loads": loads,
+            "builds": builds,
+            "matched": matched,
+        });
+    }
     let receipt = json!({
         "phase": "series",
         "store": store_path.display().to_string(),
@@ -558,9 +608,16 @@ fn series(args: &[String]) -> Result<(), String> {
         "snapshots": snapshots,
         "single_tensor": single,
         "range": region_text,
+        "index_mode": if full_index { "full" } else { "delta" },
+        "head_segment": head_kind,
+        "head_chain_depth": head_depth,
+        "index_writes": index_writes,
+        "index_notes": index_note,
         "steps": rows,
         "verify_full_problems": full.problems.len(),
-        "final_data_bytes": data_bytes(&store_path),
+        "final_data_bytes": final_data_bytes,
+        "final_index_bytes": final_index_bytes,
+        "query_after_reopen": query_reopen_row,
     });
     fs::write(
         &out,

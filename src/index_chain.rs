@@ -22,7 +22,6 @@ use crate::index::{
     push_bytes, push_ids, push_str, push_u32, push_u64, read_target, target_bytes, IndexReader,
     IndexedRelation, StateIndex,
 };
-use crate::state::{RelationKind, RelationTarget};
 use crate::wcb_util as wu;
 
 /// WFX3 magic.
@@ -47,6 +46,10 @@ const DIGEST_BYTES: usize = 32;
 const HEADER_BYTES: usize = 4 + 4 + 1 + 8 + 8 + 32 + 32 + 8 + 8 + 8;
 const PRESENT: u8 = 1;
 const ABSENT: u8 = 0;
+/// Element-level patch against the base row: added ids/edges then removed
+/// ids/edges. Used whenever the base already has the row, so an append to a
+/// large set costs the appended element rather than the whole set.
+const PATCH: u8 = 2;
 
 /// Segment kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -309,25 +312,23 @@ fn encode_segment(
     if let Some(base) = base {
         names.extend(base.objects_with_attr.keys());
     }
-    let mut rows: Vec<(&String, Option<&BTreeSet<Hash32>>)> = Vec::new();
+    let mut rows: Vec<(
+        &String,
+        Option<&BTreeSet<Hash32>>,
+        Option<&BTreeSet<Hash32>>,
+    )> = Vec::new();
     for name in names {
         let new = index.objects_with_attr.get(name);
         let old = base.and_then(|b| b.objects_with_attr.get(name));
         if base.is_some() && new == old {
             continue;
         }
-        rows.push((name, new));
+        rows.push((name, new, old));
     }
     push_u32(&mut out, rows.len() as u64)?;
-    for (name, ids) in rows {
+    for (name, ids, old) in rows {
         push_str(&mut out, name)?;
-        match ids {
-            Some(ids) => {
-                out.push(PRESENT);
-                push_ids(&mut out, ids)?;
-            }
-            None => out.push(ABSENT),
-        }
+        write_id_row(&mut out, ids, old)?;
     }
 
     // objects_by_attr_eq
@@ -335,26 +336,24 @@ fn encode_segment(
     if let Some(base) = base {
         keys.extend(base.objects_by_attr_eq.keys().cloned());
     }
-    let mut attr_rows: Vec<((String, Vec<u8>), Option<&BTreeSet<Hash32>>)> = Vec::new();
+    let mut attr_rows: Vec<(
+        (String, Vec<u8>),
+        Option<&BTreeSet<Hash32>>,
+        Option<&BTreeSet<Hash32>>,
+    )> = Vec::new();
     for key in keys {
         let new = index.objects_by_attr_eq.get(&key);
         let old = base.and_then(|b| b.objects_by_attr_eq.get(&key));
         if base.is_some() && new == old {
             continue;
         }
-        attr_rows.push((key, new));
+        attr_rows.push((key, new, old));
     }
     push_u32(&mut out, attr_rows.len() as u64)?;
-    for ((name, key), ids) in attr_rows {
+    for ((name, key), ids, old) in attr_rows {
         push_str(&mut out, &name)?;
         push_bytes(&mut out, &key)?;
-        match ids {
-            Some(ids) => {
-                out.push(PRESENT);
-                push_ids(&mut out, ids)?;
-            }
-            None => out.push(ABSENT),
-        }
+        write_id_row(&mut out, ids, old)?;
     }
 
     // relations_from
@@ -364,7 +363,8 @@ fn encode_segment(
     }
     relation_keys.sort();
     relation_keys.dedup();
-    let mut relation_rows: Vec<((Hash32, String), Option<Vec<Vec<u8>>>)> = Vec::new();
+    let mut relation_rows: Vec<((Hash32, String), Option<Vec<Vec<u8>>>, Option<Vec<Vec<u8>>>)> =
+        Vec::new();
     for key in relation_keys {
         let new = index.relations_from.get(&key);
         let old = base.and_then(|b| b.relations_from.get(&key));
@@ -373,22 +373,17 @@ fn encode_segment(
         if base.is_some() && new_canon == old_canon {
             continue;
         }
-        relation_rows.push((key, if new.is_some() { Some(new_canon) } else { None }));
+        relation_rows.push((
+            key,
+            if new.is_some() { Some(new_canon) } else { None },
+            if old.is_some() { Some(old_canon) } else { None },
+        ));
     }
     push_u32(&mut out, relation_rows.len() as u64)?;
-    for ((subject, predicate), edges) in relation_rows {
+    for ((subject, predicate), edges, old) in relation_rows {
         out.extend_from_slice(subject.as_bytes());
         push_str(&mut out, &predicate)?;
-        match edges {
-            Some(edges) => {
-                out.push(PRESENT);
-                push_u32(&mut out, edges.len() as u64)?;
-                for edge in edges {
-                    out.extend_from_slice(&edge);
-                }
-            }
-            None => out.push(ABSENT),
-        }
+        write_edge_row(&mut out, edges, old)?;
     }
 
     // tags
@@ -396,25 +391,23 @@ fn encode_segment(
     if let Some(base) = base {
         tags.extend(base.tags.keys());
     }
-    let mut tag_rows: Vec<(&String, Option<&BTreeSet<Hash32>>)> = Vec::new();
+    let mut tag_rows: Vec<(
+        &String,
+        Option<&BTreeSet<Hash32>>,
+        Option<&BTreeSet<Hash32>>,
+    )> = Vec::new();
     for tag in tags {
         let new = index.tags.get(tag);
         let old = base.and_then(|b| b.tags.get(tag));
         if base.is_some() && new == old {
             continue;
         }
-        tag_rows.push((tag, new));
+        tag_rows.push((tag, new, old));
     }
     push_u32(&mut out, tag_rows.len() as u64)?;
-    for (tag, ids) in tag_rows {
+    for (tag, ids, old) in tag_rows {
         push_str(&mut out, tag)?;
-        match ids {
-            Some(ids) => {
-                out.push(PRESENT);
-                push_ids(&mut out, ids)?;
-            }
-            None => out.push(ABSENT),
-        }
+        write_id_row(&mut out, ids, old)?;
     }
 
     if out.len() as u64 + DIGEST_BYTES as u64 > MAX_SEGMENT_BYTES {
@@ -428,6 +421,63 @@ fn encode_segment(
     Ok(out)
 }
 
+/// Write one set-valued row: present, absent, or an element-level patch.
+fn write_id_row(
+    out: &mut Vec<u8>,
+    new: Option<&BTreeSet<Hash32>>,
+    old: Option<&BTreeSet<Hash32>>,
+) -> Result<()> {
+    match (new, old) {
+        (None, _) => out.push(ABSENT),
+        (Some(ids), None) => {
+            out.push(PRESENT);
+            push_ids(out, ids)?;
+        }
+        (Some(ids), Some(old)) => {
+            let added: BTreeSet<Hash32> = ids.difference(old).copied().collect();
+            let removed: BTreeSet<Hash32> = old.difference(ids).copied().collect();
+            out.push(PATCH);
+            push_ids(out, &added)?;
+            push_ids(out, &removed)?;
+        }
+    }
+    Ok(())
+}
+
+/// Write one relation row: present, absent, or an element-level patch.
+fn write_edge_row(
+    out: &mut Vec<u8>,
+    new: Option<Vec<Vec<u8>>>,
+    old: Option<Vec<Vec<u8>>>,
+) -> Result<()> {
+    match (new, old) {
+        (None, _) => out.push(ABSENT),
+        (Some(edges), None) => {
+            out.push(PRESENT);
+            push_u32(out, edges.len() as u64)?;
+            for edge in edges {
+                out.extend_from_slice(&edge);
+            }
+        }
+        (Some(edges), Some(old)) => {
+            let new_set: BTreeSet<Vec<u8>> = edges.into_iter().collect();
+            let old_set: BTreeSet<Vec<u8>> = old.into_iter().collect();
+            let added: Vec<&Vec<u8>> = new_set.difference(&old_set).collect();
+            let removed: Vec<&Vec<u8>> = old_set.difference(&new_set).collect();
+            out.push(PATCH);
+            push_u32(out, added.len() as u64)?;
+            for edge in added {
+                out.extend_from_slice(edge);
+            }
+            push_u32(out, removed.len() as u64)?;
+            for edge in removed {
+                out.extend_from_slice(edge);
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Canonical edge bytes, sorted by target, for equality and delta encoding.
 fn canonical_edges(edges: Option<&Vec<IndexedRelation>>) -> Result<Vec<Vec<u8>>> {
     let Some(edges) = edges else {
@@ -438,10 +488,106 @@ fn canonical_edges(edges: Option<&Vec<IndexedRelation>>) -> Result<Vec<Vec<u8>>>
     Ok(encoded)
 }
 
+/// Apply an element-level patch to a set-valued row. Validates that every
+/// removal names a present id, every addition names an absent id, and the row
+/// does not become empty; a malformed patch is a typed error, never tolerated.
+fn apply_id_patch(ids: &mut BTreeSet<Hash32>, reader: &mut IndexReader<'_>) -> Result<()> {
+    let added = reader.id_set()?;
+    let removed = reader.id_set()?;
+    for id in &removed {
+        if !ids.contains(id) {
+            return Err(Error::corrupt(
+                "WFX3 patch removes an id that is not in the base row",
+            ));
+        }
+    }
+    for id in &added {
+        if ids.contains(id) {
+            return Err(Error::corrupt(
+                "WFX3 patch adds an id already in the base row",
+            ));
+        }
+    }
+    for id in &removed {
+        ids.remove(id);
+    }
+    for id in added {
+        ids.insert(id);
+    }
+    if ids.is_empty() {
+        return Err(Error::corrupt("WFX3 patch empties a set-valued row"));
+    }
+    Ok(())
+}
+
+/// Apply an element-level patch to a relation row (added/removed target edges).
+fn apply_edge_patch(edges: &mut Vec<IndexedRelation>, reader: &mut IndexReader<'_>) -> Result<()> {
+    let base: BTreeSet<Vec<u8>> = edges.iter().map(target_bytes).collect::<Result<_>>()?;
+    let added_count = reader.bounded_count(1)?;
+    let mut added = Vec::with_capacity(added_count);
+    let mut added_keys: BTreeSet<Vec<u8>> = BTreeSet::new();
+    let mut last: Option<Vec<u8>> = None;
+    for _ in 0..added_count {
+        let (kind, target) = read_target(reader)?;
+        let edge = IndexedRelation { kind, target };
+        let encoded = target_bytes(&edge)?;
+        if let Some(previous) = &last {
+            if encoded <= *previous {
+                return Err(Error::corrupt("WFX3 patch additions are not sorted"));
+            }
+        }
+        if base.contains(&encoded) {
+            return Err(Error::corrupt(
+                "WFX3 patch adds a target already in the base row",
+            ));
+        }
+        last = Some(encoded.clone());
+        added_keys.insert(encoded);
+        added.push(edge);
+    }
+    let removed_count = reader.bounded_count(1)?;
+    let mut removed_keys: BTreeSet<Vec<u8>> = BTreeSet::new();
+    let mut last: Option<Vec<u8>> = None;
+    for _ in 0..removed_count {
+        let (kind, target) = read_target(reader)?;
+        let encoded = target_bytes(&IndexedRelation { kind, target })?;
+        if let Some(previous) = &last {
+            if encoded <= *previous {
+                return Err(Error::corrupt("WFX3 patch removals are not sorted"));
+            }
+        }
+        if !base.contains(&encoded) {
+            return Err(Error::corrupt(
+                "WFX3 patch removes a target that is not in the base row",
+            ));
+        }
+        if added_keys.contains(&encoded) {
+            return Err(Error::corrupt(
+                "WFX3 patch both adds and removes one target",
+            ));
+        }
+        last = Some(encoded.clone());
+        removed_keys.insert(encoded);
+    }
+    if base.len() - removed_keys.len() + added_keys.len() == 0 {
+        return Err(Error::corrupt("WFX3 patch empties a relation row"));
+    }
+    let mut kept = Vec::with_capacity(base.len() - removed_keys.len());
+    for edge in edges.drain(..) {
+        if !removed_keys.contains(&target_bytes(&edge)?) {
+            kept.push(edge);
+        }
+    }
+    kept.extend(added);
+    *edges = kept;
+    Ok(())
+}
+
 /// Resolve a segment file against an optional base index.
 ///
 /// A full segment must not have a base; a delta requires one and its generation
 /// must be exactly one greater. The resolved counts must equal the header.
+#[cfg(test)]
 pub(crate) fn resolve_segment(bytes: &[u8], base: Option<&StateIndex>) -> Result<StateIndex> {
     let segment = decode_segment(bytes)?;
     resolve_parsed_segment(&segment, base)
@@ -495,6 +641,14 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
             PRESENT => {
                 objects_with_attr.insert(name, reader.id_set()?);
             }
+            PATCH => {
+                let Some(ids) = objects_with_attr.get_mut(&name) else {
+                    return Err(Error::corrupt(
+                        "WFX3 objects_with_attr patch has no base row",
+                    ));
+                };
+                apply_id_patch(ids, &mut reader)?;
+            }
             ABSENT => {
                 if header.kind == SegmentKind::Full || objects_with_attr.remove(&name).is_none() {
                     return Err(Error::corrupt(
@@ -502,7 +656,7 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
                     ));
                 }
             }
-            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1")),
+            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1/2")),
         }
     }
 
@@ -522,6 +676,12 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
             PRESENT => {
                 objects_by_attr_eq.insert((name, key), reader.id_set()?);
             }
+            PATCH => {
+                let Some(ids) = objects_by_attr_eq.get_mut(&(name, key)) else {
+                    return Err(Error::corrupt("WFX3 attr_eq patch has no base row"));
+                };
+                apply_id_patch(ids, &mut reader)?;
+            }
             ABSENT => {
                 if header.kind == SegmentKind::Full
                     || objects_by_attr_eq.remove(&(name, key)).is_none()
@@ -529,7 +689,7 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
                     return Err(Error::corrupt("WFX3 attr_eq tombstone has no base row"));
                 }
             }
-            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1")),
+            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1/2")),
         }
     }
 
@@ -565,12 +725,18 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
                 }
                 relations_from.insert(key, edges);
             }
+            PATCH => {
+                let Some(edges) = relations_from.get_mut(&key) else {
+                    return Err(Error::corrupt("WFX3 relation patch has no base row"));
+                };
+                apply_edge_patch(edges, &mut reader)?;
+            }
             ABSENT => {
                 if header.kind == SegmentKind::Full || relations_from.remove(&key).is_none() {
                     return Err(Error::corrupt("WFX3 relation tombstone has no base row"));
                 }
             }
-            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1")),
+            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1/2")),
         }
     }
 
@@ -589,12 +755,18 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
             PRESENT => {
                 tags.insert(tag, reader.id_set()?);
             }
+            PATCH => {
+                let Some(ids) = tags.get_mut(&tag) else {
+                    return Err(Error::corrupt("WFX3 tag patch has no base row"));
+                };
+                apply_id_patch(ids, &mut reader)?;
+            }
             ABSENT => {
                 if header.kind == SegmentKind::Full || tags.remove(&tag).is_none() {
                     return Err(Error::corrupt("WFX3 tag tombstone has no base row"));
                 }
             }
-            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1")),
+            _ => return Err(Error::corrupt("WFX3 present flag is not 0/1/2")),
         }
     }
     if reader.remaining() != 0 {
