@@ -9840,5 +9840,123 @@
   ],
   "receipt": "bench/receipts/release-artifacts-20261111T200115Z.json",
   "kind": "present"
+ },
+ {
+  "id": "r12c_plan_document",
+  "claim": "STATUS points at the seven-item R12c plan that this session's subphases A and B are executed against.",
+  "value": "docs/PLAN-R12C.md",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_receipt",
+  "claim": "The session-vs-per-save training-goodput measurement is recorded in a receipt at the named revision.",
+  "value": "training-goodput-session-20261111T220500Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_warm_p50_4_steps",
+  "claim": "At a 4-step checkpoint interval the reused session's warm completion p50 on the unchanged 169-entry fixture.",
+  "value": "62.9",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_persave_warm_p50_4_steps",
+  "claim": "At a 4-step checkpoint interval the per-save-service completion p50 on the same fixture and steps.",
+  "value": "339.0",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_loop_wall_4_steps",
+  "claim": "Session median loop wall at a 4-step checkpoint interval (192 steps).",
+  "value": "4,476.3",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_persave_loop_wall_4_steps",
+  "claim": "Per-save-service median loop wall at a 4-step checkpoint interval (192 steps).",
+  "value": "17,615.8",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_pause_p50_4_steps",
+  "claim": "The session's training-thread pause p50 at a 4-step checkpoint interval.",
+  "value": "0.80",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_fsync_equality",
+  "claim": "Both configurations report the same backend barrier count per save, so the session does not relax durability.",
+  "value": "528",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "bench/receipts/training-goodput-session-20261111T220500Z.json"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_crash_phase_test",
+  "claim": "A reused session is proved old-or-new at every publication phase with the store's own crash injection.",
+  "value": "test_session_save_aborted_at_each_publication_phase_leaves_old_or_new",
+  "locations": [
+   "python/tests/test_dcp.py",
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_orphan_commit_reported",
+  "claim": "A crash between the commit-file fsync and the superblock write leaves the old state visible and reports the orphan commit file rather than hiding it.",
+  "value": "above the highest published superblock",
+  "locations": [
+   "python/tests/test_dcp.py",
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_kill_old_branch",
+  "claim": "The session SIGKILL court exercises the pre-commit branch: the previous checkpoint is resumed and one interval is lost.",
+  "value": "3 old / 0 new",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
  }
 ]

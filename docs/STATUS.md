@@ -8870,3 +8870,92 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
   * `docs/RELEASE-v1.3.0.md` gained a "Release engineering notes" section with
     the tag moves, the aggregate delta and the PyPI block. No measured number
     or existing claim was changed.
+
+## Subphase R12c — persistent checkpoint sessions (2026-11-11)
+
+Plan: [`docs/PLAN-R12C.md`](PLAN-R12C.md) (seven items; this session covers
+subphase A and subphase B = item 1). Starting revision `d3db8aa`.
+
+### A — credibility and reproducibility gaps
+
+* The plan exists and labels each item with mechanism / acceptance / evidence /
+  not-claimed.
+* Fixed now: `python/README.md` claimed **"weftcodec 1.3.0 is published on
+  PyPI"**; the release artifact receipt says `published: false` (no token at
+  `.docker-cache/.pypi-token`). It now states the block, the wheel/sdist sha256,
+  and that `pip install weftcodec==1.2.0` is what PyPI serves today. The parent
+  README v1.3.0 artifacts bullet said the crates/PyPI/images "are cut by this
+  release's publishing step"; it now records the outcome (crates 1.3.0 live
+  with checksums, four GHCR index digests, PyPI blocked) from
+  `bench/receipts/release-artifacts-20261111T200115Z.json`.
+  `docs/containers.md` carried the same two stale sentences and was corrected.
+* Fixed now: the README verification and multi-writer headlines named a receipt
+  but no revision. They now name parent `3ab54c7` (three commits before the tag,
+  no codec/store/runtime change in the delta) and WeftFS `b0bcbc5e` /
+  WeftFS-Go `f46b351f`, and say that **no aggregate exists at the current
+  `staging` HEAD**.
+* Fixed now: the README marked the older per-release sections as historical, so
+  the v1.1.0 "PyPI remains unpublished" sentences and the v1.2.0 "the 1.3.0
+  upload rebuilds the description" sentence read as history, not as current
+  status.
+* Fixed now: `docs/PROGRAM.md` P8 described the conformance surface as it was
+  when the phase opened (295 entries, 288-file corpus, adapters 206/0/89 and
+  56/0/239, coverage modes 0–14, Python reader to mode 8). It now states 420
+  entries / aggregate `6287b817` / 413 identical shared files at `aa3abcad` /
+  Rust and Go 288/0/132 / Python 229/0/191 / coverage modes 0–20 / Python reader
+  0–18, and keeps the old numbers in a paragraph labelled historical.
+* Fixed now: this file's head called v1.3.0 a release candidate with "no receipt
+  claimed yet"; it now records the release, the 45/45 aggregate at `3ab54c7`,
+  and the absence of an aggregate at HEAD.
+* Verified already fixed by `81d2da4` and unchanged since: README engineering
+  rule 6 (MW1 default, MW2 opt-in via `--writer-mode optimistic` on the explicit
+  transaction API, MW3 not implemented); `WeftFS-Go/store/rebase.go`
+  `storeVersion = "1.3.0"` (line 28), matching `Cargo.toml` and the release.
+* Gates after the edits: `scripts/check-claims.sh` OK (927 entries), spec drift
+  OK (60/60).
+
+### B — persistent sessions inside the training-goodput court
+
+Full analysis and every loss:
+[`bench/RESULTS-training-goodput-session.md`](../bench/RESULTS-training-goodput-session.md).
+Receipt `bench/receipts/training-goodput-session-20261111T220500Z.json` at
+WeftFS `76f0981`, WeftCodec `d9234e5`, WeftCodec-Go `fe05240`, WeftFS-Go
+`146b517`; earlier runs `…T210500Z` (`7d5f5eb`) and `…T213500Z` (`7d0d19c`)
+are retained and are not the current number.
+
+The harness gained an **opt-in** `weft-session` configuration: one
+`CheckpointSession` per (store, run), every checkpoint submitted through
+`session.save`. The default `run` court is unchanged (still the five R12b
+configurations; a reduced default run was executed to confirm). New `sweep`
+subcommand and `bench/scripts/training_goodput_session_court.sh`.
+
+192 steps, 3 repetitions, 4/8/16/32 steps between checkpoints, same 169-entry
+4,989,309-byte fixture, same durability (528 backend fsyncs and 265 writes per
+save in **both** arms). Warm completion p50 (ms): **339.0 → 62.9** at 4 steps,
+**173.6 → 50.6** at 8, **119.9 → 47.7** at 16, **94.7 → 46.3** at 32. Loop wall
+17,615.8 → **4,476.3 ms** at 4 steps; training-thread pause p50 3.99 → **0.80
+ms**. Server-side publish p50 115.5 → 28.0 ms (4 steps): the win is the reused
+writable handle, not a faster encoder.
+
+Losses published: at 4 steps the clean step p50 rises 13 % (11.99 vs 10.61 ms,
+p95 +45 %) because more save work overlaps training; the first checkpoint is
+~2x slower (helper start); at 32 steps the loop wall is 4.3 % **worse**; a warm
+session holds the writer lock for up to `session_idle_secs`; `--resume final`
+verifies every checkpoint of the first repetition only.
+
+Exactness: 196/196 resumed states, 196/196 next-step loss bits, 172/172
+post-step states; identical loss trajectory and final state in every cell.
+SIGKILL through a session (`checkpoint_every=16`, 3 repetitions): after-ack and
+after-completion resume the new checkpoint (3/3 each); `before_ack_half`
+resumes the previous one (**3 old / 0 new**, 16 steps lost, 3/3 exact). All
+`verify --full` clean.
+
+Five python-court session tests pass, including two new ones: a warm session
+still refuses an independent writer with `Busy` and releases it on close, and
+`WEFT_CRASH_PHASE` through a session exposes old-or-new at `after_objects`,
+`after_commit_file` and `after_superblock_write`. The crash test recorded a real
+observation: a kill between the commit-file fsync and the superblock leaves the
+old complete state visible and `verify --full` reports
+`commit file for generation N exists above the highest published superblock
+generation N-1` — reported, not hidden; the test asserts it is the only problem
+in that phase.

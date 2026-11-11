@@ -442,6 +442,20 @@ before.
   nothing was published under the allocated name; a lost response that landed
   is reported as "published but not finished" rather than duplicated.
 
+A session is now measured inside the real training loop, not only in the
+isolated latency court: `bench/RESULTS-training-goodput-session.md` (receipt
+`bench/receipts/training-goodput-session-20261111T220500Z.json`) sweeps 4/8/16/32
+steps between checkpoints on the unchanged 169-entry fixture. Warm completion
+p50 falls from 339.0 to 62.9 ms at the 4-step interval and loop wall from
+17,615.8 to 4,476.3 ms; the training-thread pause falls from 3.99 to 0.80 ms.
+The win is the reused writable handle (server-side publish p50 115.5 → 28.0 ms),
+not a faster encoder, and the same 528 backend fsyncs per save are observed in
+both configurations. The same document publishes the losses: a ~2x slower first
+checkpoint, 13 % higher clean-step p50 at the 4-step interval, and a 4.3 %
+higher loop wall at 32 steps. A warm session still refuses an independent writer
+with `Busy`, and `WEFT_CRASH_PHASE` through a session exposes old-or-new at
+every publication phase (`tests/test_dcp.py`).
+
 Two planner changes came out of the R12b profile and are part of the same
 release:
 
