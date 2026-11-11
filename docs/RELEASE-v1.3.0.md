@@ -291,6 +291,41 @@ and rust courts after the 1.3.0 lockfile regeneration.
   installed distribution metadata when the package is installed). It exists
   because `__version__` was left at `1.1.0` through the 1.2.0 release.
 
+## Release engineering notes
+
+This section was added after publishing. The "Distribution and artifacts"
+text above was written before the publishing step and describes the plan, not
+the final state; the facts below are the recorded outcome.
+
+- **The parent `v1.3.0` tag was moved twice after creation.** It was created at
+  `37c8942` (the release aggregate commit), moved to `c68b3d5` (added
+  `COPY examples` to `Dockerfile.weftfs`), and moved finally to `e0d8cb6`
+  (removed the explicit `[[example]] fleet_coldstart` stanza in `Cargo.toml`
+  and made the example gate itself, because the CI image build context does not
+  contain `examples/`). The submodule tags were unaffected: WeftCodec
+  `d9234e5`, WeftCodec-Go `fe05240`, WeftFS-Go `80ddb5b`. The final annotated
+  tag object is `c21621e3f5ea08f087c2e1155baf8cedf2dceb26` and it peels to
+  commit `e0d8cb6eb79f1a2c34287f1328262213ed5b9322`.
+- **The 45/45 aggregate predates the final tag by three commits.** It was run
+  at parent `3ab54c7` (`verify-20261111T182601Z.json`). Between it and
+  `e0d8cb6` are `37c8942` (aggregate and documentation only), `c68b3d5`
+  (`Dockerfile.weftfs` `+4`), and `e0d8cb6` (that `+4` removed, the `[[example]]`
+  stanza removed, and `examples/fleet_coldstart.rs` made self-gating, `+30`).
+  No codec, store, or runtime code changed in that delta, and the aggregate's
+  codec/store revisions are exactly the submodule tag commits.
+- **PyPI is not published.** `scripts/publish-pypi.sh` requires
+  `.docker-cache/.pypi-token`; that file does not exist and no token was
+  available. The wheel (`weftcodec-1.3.0-py3-none-any.whl`, sha256
+  `ba1ddf26c8fcb2791f875d9a16b766dfaa7ba999c4fbcbb10bf4d744d51f3660`) and the
+  sdist (`weftcodec-1.3.0.tar.gz`, sha256
+  `d6eb391ef25bbe7e361a7232422f0d239f50af2bc60bd52203b194cefea655c7`) are
+  built and passed `twine check`, but they are not uploaded. This is a blocked
+  item, never a completed publication.
+- The release artifact record is
+  `bench/receipts/release-artifacts-20261111T200115Z.json` (four tag commits,
+  crates.io checksums, the four GHCR image index digests, the Python artifacts,
+  and the PyPI block).
+
 ## Not claimed
 
 - **MW3**, distributed consensus, conflict domains, sharded heads, coordinated

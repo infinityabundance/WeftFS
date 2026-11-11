@@ -8822,3 +8822,44 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
   * Still absent: Go KV prefix tier (`kv_prefix_*`, `kv gc`), Go envelope
     verification, any FUSE or serving-engine KV path, and a Go CLI KV page
     writer.
+
+- 2026-11-11 (R16, v1.3.0 release): parent `staging` == `main` `e0d8cb6`;
+  tags exist in all four repos. Nothing was pushed, tagged, merged, or
+  published while recording this entry.
+  * The parent `v1.3.0` tag resolves to `e0d8cb6` and was **moved twice after
+    creation**: `37c8942` (release aggregate) -> `c68b3d5` (added `COPY examples`
+    to `Dockerfile.weftfs`) -> `e0d8cb6` (removed the explicit `[[example]]
+    fleet_coldstart` stanza and made the example gate itself, because the CI
+    image build context does not contain `examples/`). The submodule tags were
+    unaffected by those moves: WeftCodec `d9234e5`, WeftCodec-Go `fe05240`,
+    WeftFS-Go `80ddb5b`.
+  * The 45/45 aggregate `bench/receipts/verify-20261111T182601Z.json` was run
+    at parent `3ab54c7`, which is **three** commits before the final tag (the
+    hand-off said two; the commit graph says three). Between them are
+    `37c8942` (aggregate, README, docs and receipts), `c68b3d5`
+    (`Dockerfile.weftfs` +4) and `e0d8cb6` (that +4 removed, the
+    `Cargo.toml` `[[example]]` stanza removed, `examples/fleet_coldstart.rs`
+    +30 and self-gating). The net `Dockerfile.weftfs` delta is zero; no codec,
+    store, or runtime code changed, and the aggregate's codec/store revisions
+    are exactly the submodule tag commits.
+  * crates.io `weftcodec 1.3.0` (checksum `45cfbd12...`) and `weftfs 1.3.0`
+    (`f7e394ac...`) are live and neither is yanked. All four GHCR images exist
+    at `:v1.3.0` and `:latest`, and each pair resolves to one index digest:
+    weftfs `07c70fd7...`, weftcodec `0b8cc85f...`, weftcodec-go `ad627083...`,
+    weftfs-go `396cb94b...`. Running the `weftfs:v1.3.0` image with `--version`
+    printed `weftfs 1.3.0` (`docker run --rm` on the image above).
+  * Python artifacts are built and `twine check` passed: wheel
+    `weftcodec-1.3.0-py3-none-any.whl` sha256 `ba1ddf26...` (99,438 B) and sdist
+    `weftcodec-1.3.0.tar.gz` sha256 `d6eb391e...` (124,756 B). **PyPI is not
+    published**: `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`,
+    that file does not exist, and no token was available. This is a blocked
+    item, never a completed publication.
+  * `bench/receipts/release-artifacts-20261111T200115Z.json` records the four
+    tag commits, the live crates.io checksums, the image index digests, the
+    Python artifacts and the PyPI block. The tag-move history is
+    operator-recorded because no local tag reflog is retained; the current tag
+    target and each named commit's contents were verified, as were the registry
+    values.
+  * `docs/RELEASE-v1.3.0.md` gained a "Release engineering notes" section with
+    the tag moves, the aggregate delta and the PyPI block. No measured number
+    or existing claim was changed.
