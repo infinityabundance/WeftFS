@@ -8960,3 +8960,64 @@ old complete state visible and `verify --full` reports
 `commit file for generation N exists above the highest published superblock
 generation N-1` — reported, not hidden; the test asserts it is the only problem
 in that phase.
+
+- 2026-11-11 (R12c item 2, operation-derived incremental index maintenance):
+  parent `staging` code `7d7e2af` (baseline evidence `036add1`); not pushed yet.
+  * `Store::index_attestation_for` no longer calls `StateIndex::build` on every
+    publish. New `src/index_incremental.rs` takes the previous head's index,
+    applies only the rows the committed ops changed, and records element-level
+    membership before each mutation; `index_chain::encode_delta_changed` writes
+    those rows with the unchanged WFX3 tags/patch rules. A unit test proves the
+    derived delta bytes equal `encode_delta`'s whole-state diff.
+  * Pre-images come from the pre-op state (single commit), the group undo
+    journal (`group_pre_relations` added), or the MW2 transaction base. Any
+    missing pre-image, unexplained row, generation gap or failed `Arc` unwrap
+    returns "rebuild": `maintenance_fallbacks`, a counted `StateIndex::build`,
+    and a full segment. `maintenance_updates` counts the fast path. The
+    in-memory chain is validated against the published commit record before
+    use (counts, chain kind/base/depth/root, recorded `candidates_root`); the
+    disk path still recomputes the candidates root. Trust, format and the
+    `weftfs.commit.v2` attestation are unchanged.
+  * Reader-merge bound is the existing writer bound: `index_chain_max_deltas`
+    deltas plus one full ancestor, **32 + 1 = 33** by default, hard reader cap
+    256 + 1. No new segment format; `weftfs compact` is unchanged.
+  * Baseline at `b69fa0e` (bench court, 3g/4cpu/pids 1024, bounded /tmp,
+    release, tmpfs, warm cache), history sweep with a constant 64-object live
+    set and one `set_xattr` commit per step: commit p50 0.198 / 0.201 /
+    0.199 ms at 1k / 10k / 100k generations; index tree 0.83 / 8.20 / 81.82 MB.
+    At 1,000 generations: 0.198 ms (64 live), 2.077 ms (1,000 live),
+    22.577 ms (10,000 live); `index_build` was 0.848 ms and 9.630 ms of those.
+  * Post-change, same fixture and sizes: p50 **0.110 ms / 0.112 ms / 0.112 ms**
+    at 1k / 10k / 100k — flat within 1.8 % while history grows 100x — and the
+    index bytes are identical in every cell. Live-state cells: 0.641 ms at
+    1,000 live (3.24x faster), **5.569 ms** at 10,000 live (4.05x), 0.353 ms
+    at 512 live (3.08x). Full-segment control 0.155 → 0.114 ms. A same-revision
+    control with `incremental_index_maintenance = false` reproduces the
+    baseline within 0.5 % (2.072 vs 2.077 ms), so the comparison is the change.
+    Cold first-query p50 is unchanged within noise; peak RSS fell
+    (64 live 16.2 -> 12.2 MiB, 10,000 live 167.2 -> 86.0 MiB).
+  * Still O(index) per commit and published as such: the attested
+    `candidates_root` (the trust contract) and the forced full segment every
+    33 commits; live-state cost is ~0.5 us/object (was ~2.2). Removing that
+    needs a Merkle row root (new attestation) or a larger merge bound.
+  * Correctness: `tests/index_incremental.rs` 3/3 — 10,000 randomized ops per
+    seed for seeds 1, 7, 2026 (create, attr update, unrelated metadata edit,
+    delete, rename, object relation, tag add/delete) with byte-exact WFX2
+    section equality against `StateIndex::build` every 500 ops and at the end,
+    query equality against the scan oracle, group commits, and damaged/absent/
+    orphan segment rejection; unit tests 5/5; `tests/index_chain.rs` gains a
+    self-consistent wrong-ancestor rejection. Rust all-targets 782 passed /
+    0 failed; FUSE 827 passed / 0 failed / 2 pre-existing ignored; Go store
+    `Index|Handoff` suite PASS (78.7 s).
+  * Cross-language is format compatibility only: Go resolves the Rust delta
+    chain and re-encodes it byte-identically, and a Rust store at this revision
+    verifies from Go (`verify --full`, `generation=6`). **No Go incremental
+    maintenance and no Go timing** are claimed.
+  * Found and **not fixed** (out of item scope): `expand_retained_index_chains`
+    applies `HARD_MAX_CHAIN_DELTAS` to one `visited` set shared by every
+    retained root, so index GC refuses once a store retains a few checkpoints —
+    `index GC skipped: cannot resolve a retained segment chain: LimitExceeded`.
+    The index tree then grows with commits; the bounded /tmp filled at
+    generation 80,785 (512 live) and 9,750 (10,000 live), both retained.
+    1,000,000 generations was not attempted for that reason (linear
+    ~0.4 KB/commit) and is not extrapolated.
