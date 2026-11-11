@@ -179,3 +179,51 @@ Headline: 97,066,019 B -> 3,342,744 B in a 1,250-commit court; 104.6 MB ->
 6.2 MB for the trajectory series; peak index on the old pinned trajectory
 3.53 GB -> 0.11 GB. Losses: commit p50 +0.605 ms, first query after reopen
 0.258 -> 1.411 ms, and snapshots keep their chains.
+
+## R12b — the writer keeps the chain it just published (2026-11-11)
+
+Receipts `bench/receipts/index-chain-20261111T031356Z.json` (after) and
+`bench/receipts/index-chain-20261111T025745Z.json` (before), both from
+`scripts/docker-court.sh bench "cargo run --release --locked --example
+index_chain_bench"` at the same 1,000-commit workload.
+
+`index_attestation_for` re-derived its diff base by reading and re-resolving up
+to `index_chain_max_deltas` (32) segments **on every commit**, and it always
+encoded a full-state segment even when the delta was chosen. Three changes:
+
+1. The writer keeps the chain it just published (`AttestedCache`: commit, full
+   index, `IndexChain`). `load_attested_chain` validates that entry against the
+   previous **commit record** (counts, `candidates_root`, kind, base, depth,
+   chain root) before use, so the cache cannot launder a mismatch; a miss or a
+   mismatch falls back to the existing disk path with the same checks.
+2. The full-state encode is skipped only when the delta is at most 1 KiB **and**
+   the state has at least 256 rows: 256 rows of names and ids exceed 1 KiB by a
+   wide margin, so a 1 KiB delta is certainly smaller. Every other case keeps
+   the exact length comparison, so a tiny state still publishes whichever
+   segment is smaller.
+3. `PreparedIndex` carries the chain so the publish path can prime the cache.
+
+Measured (1,000 commits, 1,250 generations, per-commit p50/p95 and
+first/last-quartile medians):
+
+| | p50 | p95 | first quartile | last quartile | index bytes |
+|---|---:|---:|---:|---:|---:|
+| delta chain, before | 1.178 ms | 2.151 | 0.537 | 1.812 | 3,342,744 |
+| **delta chain, after** | **0.695 ms** | **1.196** | **0.271** | **1.106** | 3,342,744 |
+| full segment per commit (after) | 0.650 ms | 1.154 | 0.239 | 1.023 | 97,066,019 |
+
+The delta path is now within 7 % of the same run's full-segment path instead
+of ~1.8x slower, at 29x less index data, and it writes exactly the bytes it did
+before (the size rule is unchanged). **Not done, and stated plainly:** changing the
+delta is still `O(state)` — `StateIndex::build` plus the whole-index diff — so
+the last quartile is still ~4x the first. A row-level incremental index
+(consuming committed ops and updating only the affected rows) is **not**
+implemented; `StateIndex::build` remains the correctness oracle, and
+`tests/index_chain.rs::the_writer_chain_cache_answers_like_a_cold_oracle`
+asserts the hot-cache answers equal both a full-segment store and a cold
+read-only handle that resolves the persisted chain from disk.
+
+On the R12b checkpoint fixture (169 objects, one commit per save) the change is
+inside the noise: `index_load` 1.90 → 1.38 ms, `index_build` 0.94 → 1.19 ms,
+completion 37.7 → 40.6 ms across runs with ±10 % host noise. The chain depth
+there is 1-2, so there was nothing to re-read.

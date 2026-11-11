@@ -299,3 +299,44 @@ fn the_chain_depth_bound_and_byte_budget_are_enforced() {
     assert_answers_equal(&budget, None, "budgeted store");
     assert!(budget.index_bytes_total().unwrap() <= 1);
 }
+
+/// The writer's in-memory chain is only a cache: the answers it produces must
+/// equal a fresh full-segment store's answers *and* a fresh read-only handle's
+/// answers from the persisted chain (`StateIndex::build` at a cold start is the
+/// oracle).
+#[test]
+fn the_writer_chain_cache_answers_like_a_cold_oracle() {
+    let cached_dir = tempdir().unwrap();
+    let oracle_dir = tempdir().unwrap();
+    let mut cached = Store::init(cached_dir.path(), options()).unwrap();
+    let mut oracle_options = options();
+    oracle_options.index_chain_max_deltas = 0;
+    let mut oracle = Store::init(oracle_dir.path(), oracle_options).unwrap();
+    // 40 commits crosses the default 32-delta full-segment boundary, so both a
+    // chain and a forced full segment are exercised.
+    for index in 0..40 {
+        write_files(&mut cached, 1, &format!("f{index:02}"));
+        write_files(&mut oracle, 1, &format!("f{index:02}"));
+    }
+    let (kind, depth) = cached.index_head_chain().unwrap();
+    assert_eq!(kind, "delta");
+    assert!(depth > 0);
+    // Queries on the hot writer use the cached chain and never rebuild.
+    assert_answers_equal(&cached, None, "hot writer");
+    let stats = cached.index_stats();
+    assert_eq!(stats.builds, 0, "the hot writer must not rebuild: {stats:?}");
+    assert_eq!(stats.rejects, 0, "{stats:?}");
+    assert_answers_equal(&oracle, None, "full-segment oracle");
+    drop(cached);
+    drop(oracle);
+
+    // A cold handle resolves the persisted chain from disk and answers the same.
+    let cold = Store::open(cached_dir.path(), OpenMode::ReadOnly).unwrap();
+    let oracle = Store::open(oracle_dir.path(), OpenMode::ReadOnly).unwrap();
+    assert_answers_equal(&cold, None, "cold chain");
+    assert_answers_equal(&oracle, None, "cold full");
+    let cold_stats = cold.index_stats();
+    assert!(cold_stats.disk_loads >= 1, "{cold_stats:?}");
+    assert_eq!(cold_stats.builds, 0, "{cold_stats:?}");
+    assert_eq!(cold.index_head_chain().unwrap(), (kind, depth));
+}

@@ -495,6 +495,23 @@ pub struct IndexStats {
 struct PreparedIndex {
     bytes: Vec<u8>,
     index: StateIndex,
+    /// The attested chain the bytes belong to, so the writer can keep the next
+    /// commit's diff base in memory instead of re-reading the chain.
+    chain: Option<IndexChain>,
+}
+
+/// One resolved chain held by the writer: the full index at `commit` and the
+/// segment chain that attests it.
+struct AttestedCache {
+    commit: Hash32,
+    index: Arc<StateIndex>,
+    chain: IndexChain,
+}
+
+/// The base a new delta is derived against.
+struct AttestedBase {
+    index: Arc<StateIndex>,
+    chain: IndexChain,
 }
 
 /// Result of [`Store::statfs`], all counters derived from replayed state.
@@ -717,6 +734,11 @@ pub struct Store {
     /// index is derived data only; correctness is checked by `StateIndex`
     /// shape and no store mutation is ever written from it.
     index_cache: Mutex<StateIndexCache>,
+    /// The chain this writer last published, so the next commit derives its
+    /// delta from memory instead of re-reading up to `index_chain_max_deltas`
+    /// segments. Validated against the previous commit record on every use; a
+    /// stale or forged entry is ignored and the disk path runs.
+    attested_cache: Mutex<Option<AttestedCache>>,
     /// Advisory index diagnostics and reject/write-failure notes.
     index_stats: Mutex<IndexStats>,
     /// Set by [`Store::compact_index`] so the next commit writes a full
@@ -967,6 +989,7 @@ impl Store {
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
+            attested_cache: Mutex::new(None),
             index_stats: Mutex::new(IndexStats::default()),
             force_full_index: std::sync::atomic::AtomicBool::new(false),
             quota: QuotaState::default(),
@@ -1160,6 +1183,7 @@ impl Store {
             pins: BTreeMap::new(),
             content_pins: BTreeMap::new(),
             index_cache: Mutex::new(StateIndexCache::new(DEFAULT_INDEX_CAPACITY)),
+            attested_cache: Mutex::new(None),
             index_stats: Mutex::new(IndexStats::default()),
             force_full_index: std::sync::atomic::AtomicBool::new(false),
             quota: QuotaState::default(),
@@ -1959,8 +1983,9 @@ impl Store {
         };
         let (bytes, chain) = {
             let _attest = crate::phase_profile::scope(crate::phase_profile::Phase::IndexAttest);
-            let full_bytes = crate::index_chain::encode_full(&index)?;
-            let full_id = crate::index_chain::file_segment_id(&full_bytes)?;
+            // Derive the delta first: a full-state encode is only needed when a
+            // delta is not chosen (or cannot be built), so the common case no
+            // longer pays for both.
             let mut chosen: Option<(Vec<u8>, Vec<Hash32>)> = None;
             if let Some(base) = base {
                 if base.index.generation().checked_add(1) == Some(generation)
@@ -1969,7 +1994,16 @@ impl Store {
                     let base_id = base.chain.chain[0];
                     let delta =
                         crate::index_chain::encode_delta(&base.index, &index, base_id, self.head)?;
-                    if delta.len() < full_bytes.len() {
+                    // A tiny delta on a state big enough that any full
+                    // segment must dwarf it is chosen without encoding the full
+                    // segment; otherwise the comparison is exact, as before.
+                    // 256 rows of names + ids exceed 1 KiB by a wide margin, so
+                    // this is a bound, not a heuristic guess.
+                    let rows = index.object_count() + index.relation_count() + index.entry_count();
+                    let small = delta.len() <= 1024 && rows >= 256;
+                    let wins =
+                        small || delta.len() < crate::index_chain::encode_full(&index)?.len();
+                    if wins {
                         chosen = Some((delta, base.chain.chain.clone()));
                     }
                 }
@@ -1986,13 +2020,17 @@ impl Store {
                     };
                     (delta, chain)
                 }
-                None => (
-                    full_bytes,
-                    IndexChain {
-                        kind: SegmentKind::Full,
-                        chain: vec![full_id],
-                    },
-                ),
+                None => {
+                    let full_bytes = crate::index_chain::encode_full(&index)?;
+                    let full_id = crate::index_chain::file_segment_id(&full_bytes)?;
+                    (
+                        full_bytes,
+                        IndexChain {
+                            kind: SegmentKind::Full,
+                            chain: vec![full_id],
+                        },
+                    )
+                }
             }
         };
         // Byte policy: a configured cap may skip the write. The commit then
@@ -2021,12 +2059,27 @@ impl Store {
             segment_depth: chain.depth(),
             segment_root,
         };
-        Ok((Some(attestation), Some(PreparedIndex { bytes, index })))
+        Ok((
+            Some(attestation),
+            Some(PreparedIndex {
+                bytes,
+                index,
+                chain: Some(chain),
+            }),
+        ))
     }
 
     /// Resolve the attested chain for an already-published commit. Used when
     /// the next commit wants to extend it with a delta.
-    fn load_attested_chain(&self, commit: Hash32) -> Option<crate::index_chain::ResolvedChain> {
+    ///
+    /// The writer validates the in-memory chain first: the previous commit's
+    /// attestation must name the same counts, candidates root, kind, base,
+    /// depth and chain root. Only a cache miss (or a mismatch, which is treated
+    /// as untrusted) falls back to reading and re-resolving the segment chain
+    /// from the store. That is what keeps a commit's index work flat as the
+    /// chain deepens, without weakening the attestation: the same checks run on
+    /// both paths.
+    fn load_attested_chain(&self, commit: Hash32) -> Option<AttestedBase> {
         let (_, record) = self.read_commit_record(self.generation)?;
         if record.id().ok()? != commit {
             return None;
@@ -2035,6 +2088,33 @@ impl Store {
         if !attestation.is_v3() {
             return None;
         }
+        let matches = |index: &StateIndex, chain: &IndexChain| -> Option<()> {
+            if index.object_count() as u64 != attestation.object_count
+                || index.relation_count() as u64 != attestation.relation_count
+                || index.entry_count() as u64 != attestation.entry_count
+                || index.candidates_root().ok()? != attestation.candidates_root
+                || chain.kind != attestation.segment_kind?
+                || chain.base() != attestation.segment_base
+                || chain.depth() != attestation.segment_depth
+                || chain.root(index.generation()).ok()? != attestation.segment_root
+            {
+                return None;
+            }
+            Some(())
+        };
+        if let Some(cached) = self
+            .attested_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .as_ref()
+        {
+            if cached.commit == commit && matches(&cached.index, &cached.chain).is_some() {
+                return Some(AttestedBase {
+                    index: Arc::clone(&cached.index),
+                    chain: cached.chain.clone(),
+                });
+            }
+        }
         let bytes = self
             .with_backend(|backend| backend.read_all(&Key::index(commit)))
             .ok()?;
@@ -2042,18 +2122,18 @@ impl Store {
             self.with_backend(|backend| backend.read_all(&Key::index(base_commit)))
         })
         .ok()?;
-        if resolved.index.object_count() as u64 != attestation.object_count
-            || resolved.index.relation_count() as u64 != attestation.relation_count
-            || resolved.index.entry_count() as u64 != attestation.entry_count
-            || resolved.index.candidates_root().ok()? != attestation.candidates_root
-            || resolved.chain.kind != attestation.segment_kind?
-            || resolved.chain.base() != attestation.segment_base
-            || resolved.chain.depth() != attestation.segment_depth
-            || resolved.chain.root(resolved.index.generation()).ok()? != attestation.segment_root
-        {
-            return None;
-        }
-        Some(resolved)
+        matches(&resolved.index, &resolved.chain)?;
+        let index = Arc::new(resolved.index);
+        let chain = resolved.chain;
+        *self
+            .attested_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(AttestedCache {
+            commit,
+            index: Arc::clone(&index),
+            chain: chain.clone(),
+        });
+        Some(AttestedBase { index, chain })
     }
 
     /// Total bytes currently held in `indexes/`. Only called when a byte budget
@@ -2121,10 +2201,24 @@ impl Store {
                     Key::index(commit).display_path()
                 ))
             })?;
+        let index = Arc::new(prepared.index.with_commit(commit));
         self.index_cache
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(commit, Arc::new(prepared.index.with_commit(commit)));
+            .insert(commit, Arc::clone(&index));
+        if let Some(chain) = prepared.chain {
+            // Keep the chain the next commit will extend. It is validated
+            // against the published commit record before any use, so a cache
+            // entry can never launder a mismatch.
+            *self
+                .attested_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(AttestedCache {
+                commit,
+                index,
+                chain,
+            });
+        }
         self.bump_index_stat(|stats| stats.writes += 1);
         Ok(bytes.len() as u64)
     }

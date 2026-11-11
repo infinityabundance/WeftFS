@@ -8359,3 +8359,27 @@ last 39.6). The second commit and its index work disappear (`metadata_commit`
 now the durability point, so a caller that never calls it publishes nothing —
 which is the repair, and a behaviour change for a caller that used
 `write_data` alone.
+
+### Increment 4 — the index chain is kept, not re-read (partial)
+
+`index_attestation_for` re-resolved up to 32 segments on every commit and
+always encoded a full-state segment even when the delta won. The writer now
+keeps the chain it published (`AttestedCache`), validates it against the
+previous **commit record** (counts, `candidates_root`, kind, base, depth, chain
+root) before every use, and falls back to the existing disk path on a miss or
+mismatch; the full-state encode is skipped when the delta is ≤ 64 KiB.
+
+R9's 1,250-commit court (`index-chain-20261111T031356Z` vs the pre-change
+`…T025745Z`): delta commit **p50 1.178 → 0.695 ms**, p95 2.151 → 1.196, first
+quartile 0.537 → 0.271, last quartile 1.812 → 1.106, index bytes unchanged at
+3,342,744, against the same run's full-segment path at 0.650 ms. **Attestation is
+unchanged** (the same checks run on both paths; `a_forged_chain_root_is_
+rejected` and `a_partial_chain_is_rejected_and_rebuilt` still pass) and the new
+`the_writer_chain_cache_answers_like_a_cold_oracle` asserts the hot answers
+equal a full-segment store and a cold chain load.
+
+**Not done:** the delta is still `O(state)` (`StateIndex::build` + whole-index
+diff), so the last quartile remains ~4x the first. A row-level incremental
+index that consumes committed ops is not implemented; `StateIndex::build`
+stays the oracle. On the 169-object checkpoint fixture the change is inside the
+run-to-run noise (chain depth 1-2).
