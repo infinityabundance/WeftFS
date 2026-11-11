@@ -1,4 +1,4 @@
-# Implementation status — 2026-11-09 (v1.2.0)
+# Implementation status — 2026-11-11 (v1.3.0 release candidate)
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. **v1.2.0 is released**: tags are
@@ -7,11 +7,15 @@ implemented, tested, ignored, and not done. **v1.2.0 is released**: tags are
 850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
 release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
 (**37/37** courts `pass`, 0 failed, 0 skipped) at WeftFS `135a382`, WeftCodec
-`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. The v1.1.0-era state
-below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
+`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. **v1.3.0 is a release
+candidate on `staging`**: its note is
+[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md), and the release-tree aggregate
+is recorded by the follow-up verification pass (no receipt is claimed yet).
+The v1.1.0-era state below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
 `99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
-[`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). The independent Python reader
-and both codec implementations cover every allocated mode 0–18.
+[`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
+every allocated mode 0–20; the independent Python reader covers every allocated
+mode 0–18 (modes 19 and 20 are rejected `UnsupportedMode`).
 
 **Subphase R4 (multi-writer) status, 2026-11-09:** the default writer level is
 still **MW1 — many producers, one committer**. The pre-R4 claim that MW2 and MW3
@@ -285,21 +289,20 @@ Docker court).
 
 ## 1. Repositories and revisions
 
-| Repo | Verified revision | Role |
+| Repo | Staging revision at the start of this pass | Role |
 |---|---|---|
-| `WeftFS` | `d6ba189` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `3f3eae0` | Rust codec v1 + AI modes, checkpoint and capability support |
-| `WeftCodec-Go` | `65bc14d` | independent Go codec, capability parity |
-| `WeftFS-Go` | `f920ae0` | independent Go store + FUSE, spec mirror |
+| `WeftFS` | `e77f0e5` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `67cea30` | Rust codec v1 + AI modes, checkpoint and capability support |
+| `WeftCodec-Go` | `5e047c3` | independent Go codec, capability parity |
+| `WeftFS-Go` | `225eb0d` | independent Go store + FUSE, spec mirror |
 
-These are the revisions pinned by the latest full verification receipt
-(`bench/receipts/verify-20261106T011444Z.json`, 27/27 courts pass).
-The current release is **v0.8.0** (`docs/RELEASE-v0.8.0.md`); the tag, the
-per-repo GitHub releases, the four GHCR images, the two crates, and the Python
-wheel are cut from the `staging` and `main` commits after the version bump and
-release documentation, with this receipt's code revisions unchanged apart from
-version literals and docs (both branches are kept identical and pushed in all
-four repositories).
+These are the `staging` heads every repository reported before the v1.3.0
+release-candidate commit pass (`git rev-parse HEAD` in each repository, all
+`staging == origin/staging`). The release-tree aggregate for v1.3.0 will be
+recorded by the follow-up verification pass together with the revisions it
+verifies; no receipt exists for the release candidate at this point. The latest
+complete aggregate is `bench/receipts/verify-20261111T131235Z.json` (**45/45**)
+at WeftFS `40df0cd`.
 
 ## 2. What is implemented and tested
 
@@ -1415,9 +1418,13 @@ It is **not published to PyPI** (no API token); it is a release artifact.
 6. **Physical power-loss court** (real media/device write-cache loss), host
    page-cache loss, and real disk firmware that lies about flushes; the F9 QEMU
    VM proxy and its `cache=unsafe` lying-fsync device model are not physical.
-   Remote/object-storage backend also remains unimplemented and unclaimed.
-7. **Encryption, multi-writer, distributed consistency**; explicitly out of
-   scope for v1 claims.
+   Remote/object-storage backends are implemented and court-tested (S3 on MinIO
+   and Ceph RGW, GCS on `fake-gcs-server`, Azure Blob on Azurite, 3FS through
+   its POSIX/USRBIO shims); no live cloud account and no deployed 3FS cluster
+   was available.
+7. **MW3, encryption at rest, and distributed consensus**; explicitly out of
+   scope for v1 claims. MW1 is the default writer level and the bounded MW2
+   transaction protocol is implemented and opt-in.
 8. **Streaming codec API for files larger than memory**; chunked/range APIs are
    real, but the CLI materializes whole inputs within limits.
 9. **atime/ctime persistence**, device/FIFO/socket nodes, and Rust `O_TMPFILE`;
@@ -6768,7 +6775,8 @@ conformance vector changed, so no court rerun is claimed for R2.
   Go v4 writer/compaction with the cross-language byte-equality tests. The
   historical R9/R11/R17 residuals in this file are annotated as closed by
   R20/R25 rather than presented as current. `docs/PLANES.md` records the Go
-  plane split and S3/GCS planes and the absence of a Go Azure backend. The
+  plane split and the S3, GCS, and Azure planes, including the R14 Go Azure
+  Blob backend. The
   “next work queue” entries for v2 and WFX2 parity are marked closed.
 * **Claims.** 20 new entries cover the positioning wording, the six matrix
   categories, the 3FS shim statement, the MW1 statement, the MW2/MW3 absence,
@@ -8216,9 +8224,11 @@ Registration adds no measurement and re-runs no package:
 * The PyPI build byproducts `python/build/` and `python/weftcodec.egg-info/`
   were deleted. Both are gitignored and untracked; nothing in the tree
   references them.
-* `WeftFS-Go/store/azureclient.go` is an unfinished, untracked Go Azure
-  backend attempt. It is left exactly as found: not built, not tested, not
-  shipped, and not a parity claim.
+* `WeftFS-Go/store/azureclient.go` was, at R13, an unfinished and untracked Go
+  Azure backend attempt. The R13 disk-full event truncated it to 0 bytes; R14
+  replaced it with a real implementation (`store/azureclient.go`,
+  `azureblob.go`, `azurecommit.go`) that is tracked, tested, and courted. It is
+  not a recovery of the truncated bytes.
 
 ### What R13 does not establish
 
@@ -8227,13 +8237,15 @@ Registration adds no measurement and re-runs no package:
 * The bundle proves corpus/runner self-sufficiency, not implementation quality.
   The Rust reference run supplies its own binary; the bundle supplies the
   corpus, contract, and adapters.
-* The Python reader still omits modes 18, 19, 20 and `weft.transport.v1`; those
-  are explicit skips, not passes.
+* The Python reader still omits modes 19 and 20 and `weft.transport.v1`; those
+  are explicit skips, not passes. It decodes mode 18, but the reference adapter
+  does not dispatch the `float-tiled-streams` directory, so those vectors are
+  skipped as well.
 * Live PyPI/crates.io/GHCR state was not re-queried; the artifact receipt is the
   record at the tag.
 * No physical power loss, host-cache loss, GPU, fleet, or live-cloud claim.
-* `Go` still lacks the Azure backend, mode-19 store writer, v2 manifests, and
-  the parent-graph planner; MW3 is not implemented.
+* `Go` still lacks the parent-graph planner, the KV prefix tier, Ed25519
+  envelope verification, and MW2 on `azure`; MW3 is not implemented.
 
 ## Subphase R12b — checkpoint completion latency (2026-11-11)
 
@@ -8659,7 +8671,7 @@ R13 commit, it never compiled (`unexpected EOF` at line 208), and the helper is
 now copy-then-verify so a full disk can no longer destroy the only copy.
 
 - 2026-11-11 (R14, Go parity: Azure Blob): parent `staging` `e2b25b1`,
-  WeftFS-Go `staging` `318d4b0`; not pushed. Closed the largest remaining Go
+  WeftFS-Go `staging` `318d4b0`; pushed. Closed the largest remaining Go
   gap: the `azure` plane was Rust-only. `store/azureclient.go` /
   `azureblob.go` / `azurecommit.go` implement Azure Blob REST from the same
   contract the Rust backend speaks (`Put Blob` + `x-ms-blob-type: BlockBlob`
@@ -8709,7 +8721,7 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
     `bench/RESULTS-azure-go.md`.
 
 - 2026-11-11 (R14, Go parity: read-handle pool): WeftFS-Go `staging` `de9a4b9`;
-  not pushed. `store/read_pool.go` is the counterpart of the Rust
+  pushed. `store/read_pool.go` is the counterpart of the Rust
   `src/read_pool.rs`: at most `Options.ReadPoolIdle` idle handles (default 64,
   negative disables), oldest closed first, the mutex protects only the idle map
   and never the I/O, and reads use `ReadAt` so concurrent readers cannot disturb
@@ -8757,11 +8769,11 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
     and eval slices, any upstream adoption).
   * WeftFS-Go `store/rebase.go` recorded tool version `1.1.0` through the
     v1.2.0 release, so a Go rebase provenance record named a tool version that
-    was two releases stale while Rust records `env!("CARGO_PKG_VERSION")`. The
-    constant is now `1.2.0` and carries a comment that it must track the
-    released version. Old records are unchanged (provenance ids are
-    content-addressed); new ones name the right tool. `TestRebase*` and
-    `TestPlanner*` pass in the go court.
+    was two releases stale while Rust records `env!("CARGO_PKG_VERSION")`.
+    R14 aligned it to `1.2.0`; the constant is now `1.3.0` for this release and
+    carries a comment that it must track the released version. Old records are
+    unchanged (provenance ids are content-addressed); new ones name the right
+    tool. `TestRebase*` and `TestPlanner*` pass in the go court.
 
 - 2026-11-11 (R15, store-level KV parity in Rust and Go): parent `08456c1`,
   WeftFS-Go `225eb0d`, WeftCodec `67cea30` (spec mirror), WeftCodec-Go

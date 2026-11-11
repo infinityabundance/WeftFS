@@ -50,8 +50,9 @@ power loss.
 > `If-Match`; a server that ignores either form is refused with
 > `UnsupportedVersion` rather than silently overwriting a head. GCS
 > (`ifGenerationMatch`) and Azure Blob (`If-None-Match` / `If-Match`) have the
-> same contract, and Go implements both S3 and GCS (not Azure). No live AWS,
-> Azure, or Google service, multi-node, media, or power-loss claim is made.
+> same contract, and Go implements S3, GCS, and Azure Blob (R14) with the same
+> contract. No live AWS, Azure, or Google service, multi-node, media, or
+> power-loss claim is made.
 
 ### 0.1 Backend matrix
 
@@ -61,7 +62,7 @@ power loss.
 | `ObjectBackend` | `--backend object` | `tmp` + `fsync` + `link(2)` + unlink + dir `fsync` (rename fallback stated) | yes | `flock(2)` on `LOCK` | `tests/backend.rs` |
 | `S3Backend` | `--backend s3` + `--s3-*` | objects `PUT` `If-None-Match: *`; **v3 `LOCK` record is the publication point** (`If-Match`); superblock is an attested cache | yes | fenced `LOCK` v3, `If-Match` reclaim | `scripts/s3_court.sh` |
 | `GcsBackend` | `--backend gcs` + `--gcs-*` | objects `ifGenerationMatch=0`; **v3 `LOCK` record** (`ifGenerationMatch=<gen>`); superblock cache | yes | fenced `LOCK` v3 | `bench/scripts/gcs_court.sh`, Go `scripts/go-gcs-court.sh` |
-| `AzureBackend` | `--backend azure` + `--azure-*` | `Put Blob` `If-None-Match: *`; **v3 `LOCK` record** (`If-Match`); superblock cache | yes | fenced `LOCK` v3 | `bench/scripts/azure_court.sh` (Rust only) |
+| `AzureBackend` | `--backend azure` + `--azure-*` | `Put Blob` `If-None-Match: *`; **v3 `LOCK` record** (`If-Match`); superblock cache | yes | fenced `LOCK` v3 | `bench/scripts/azure_court.sh` (Rust and Go, Azurite 3.35.0) |
 | `Posix` | caller-declared capabilities | whatever the declaration says (enforced) | declared | `flock(2)` | capability-refusal tests |
 | `ThreeFs` (posix) | `--backend 3fs` | `tmp` + `fsync` + `rename(2)` + dir `fsync` through the 3FS mount | yes | `flock(2)` on `LOCK` | `tests/threefs.rs` |
 | `ThreeFs` (usrbio) | `--backend 3fs --threefs-mode usrbio` | same publication; staging filled through hf3fs rings | yes (rings) | `flock(2)` on `LOCK` | `scripts/threefs_court.sh` (conformance library, not 3FS) |

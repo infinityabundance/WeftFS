@@ -11,23 +11,26 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-1.2.0-py3-none-any.whl
+pip install dist/weftcodec-1.3.0-py3-none-any.whl
 # with the optional dataset extra
-pip install "dist/weftcodec-1.2.0-py3-none-any.whl[torch]"
+pip install "dist/weftcodec-1.3.0-py3-none-any.whl[torch]"
 # with the optional JAX/Orbax adapter extra
-pip install "dist/weftcodec-1.2.0-py3-none-any.whl[orbax]"
+pip install "dist/weftcodec-1.3.0-py3-none-any.whl[orbax]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI.** `weftcodec 1.2.0` is published on PyPI:
-> <https://pypi.org/project/weftcodec/1.2.0/>. The wheel and sdist are built in
-> the Docker court with `scripts/publish-pypi.sh`, and the same artifacts are
-> attached to the GitHub release.
+> **PyPI.** `weftcodec 1.3.0` is published on PyPI:
+> <https://pypi.org/project/weftcodec/1.3.0/> (uploaded by this release's
+> publishing step; the 1.2.0 artifacts remain available). The wheel and sdist
+> are built in the Docker court with `scripts/publish-pypi.sh`, and the same
+> artifacts are attached to the GitHub release. The published **1.2.0** long
+> description is stale — it still says PyPI is unpublished — and is superseded
+> by this one, not re-uploaded.
 >
 > ```sh
-> pip install weftcodec==1.2.0
+> pip install weftcodec==1.3.0
 > ```
 
 ## Usage
@@ -206,10 +209,14 @@ only, single process, no TPU/GPU, no multi-host JAX).
 | `SEMANTIC_DELTA` | 14 | implemented (policy verification against the resolved base) |
 | `TENSOR_TILED` | 15 | implemented (per-tile roots and whole-tensor logical root) |
 | `SPARSE_DELTA` | 16 | implemented (`zero-run-v1`, `delta_root`) |
+| `FLOAT_TILED` | 17 | implemented (independently rooted tiles over `huffman-canonical-v1`) |
+| `FLOAT_TILED_STREAMS` | 18 | implemented (per-tile byte-plane streams, `unpack_multi` layout) |
 
-Every allocated mode 0–18 is implemented. There is no approximate or lossy
-decode path. Reserved mode values 17–127 and experimental values 128–255 are
-rejected by `weftcodec.frame` with `UnsupportedMode`.
+The reader covers every allocated mode 0–18; mode 19 (`KV_CACHE_PROV`) and
+mode 20 (`ENGRAM_SHARD`) are allocated but not implemented here and are
+rejected `UnsupportedMode`. There is no approximate or lossy decode path. Mode
+values 21–127 are reserved and 128–255 experimental; `weftcodec.frame` rejects
+all of them with `UnsupportedMode`.
 
 The reader is deliberately a decoder, not a WEFT-TENSOR container reader: it
 does not claim WeftQL selectors, Context Roots, capability envelopes,

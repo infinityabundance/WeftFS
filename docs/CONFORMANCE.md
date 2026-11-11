@@ -235,9 +235,13 @@ below and none is converted to a pass.
 The transport family (`transport/`, 22 files: 5 valid, 17 reject) is executed
 by both the Rust and Go reference adapters (22/22 pass each). The Python
 adapter reports those vectors as explicit skips because the Python reader has
-no `weft.transport.v1` parser. The same is true for modes 18, 19, and 20: the
-Python adapter has no `float-tiled-streams`, `kv-prov`, or `engram` path, so
-those vectors are explicit skips, not passes.
+no `weft.transport.v1` parser. The same is true for modes 19 and 20: the Python
+adapter has no `kv-prov` or `engram` path, so those vectors are explicit skips,
+not passes. Mode 18 is different: the Python reader **does** decode
+`float_tiled_streams`, but the reference adapter has no dispatch branch for the
+`float-tiled-streams` directory, so those vectors are skipped as well. The
+reader covers every allocated mode 0–18; the adapter executes modes 0–17 plus
+the non-mode surfaces listed below.
 
 The Rust/Go 132 skips are non-codec surfaces plus supersession:
 
@@ -290,7 +294,8 @@ their frame headers.
 
 For modes 0–17 every valid and reject vector is executed; the other skips are
 non-codec surfaces. The previous claim that the Python reader executed every
-mode 0–18 vector was true before mode 18 existed and is corrected here.
+mode 0–18 vector conflated the reader with the adapter: the reader implements
+mode 18, the adapter does not dispatch its directory. It is corrected here.
 
 The earlier aggregate `51fa3dd9…` receipt triple (Rust/Go 246/92, Python
 229/109) is superseded and retained. The current Python test receipt

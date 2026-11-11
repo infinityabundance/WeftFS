@@ -2579,8 +2579,8 @@
  },
  {
   "id": "python_reader_all_modes",
-  "claim": "The Python reader implements every allocated mode 0-17.",
-  "value": "mode 0\u201318",
+  "claim": "The Python reader implements every allocated mode 0–18; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
+  "value": "mode 0–18",
   "locations": [
    "docs/STATUS.md",
    "docs/CONFORMANCE.md",
@@ -4142,7 +4142,7 @@
  },
  {
   "id": "r18_no_go_gcs",
-  "claim": "STATUS records that Go gained a GCS backend after the R14 non-parity note; Go still has no Azure backend.",
+  "claim": "STATUS records that Go gained a GCS backend after the R14 non-parity note and gained a real Azure Blob backend in R14; the remaining Go gaps are the KV prefix tier, Ed25519 envelope verification, and the parent-graph planner.",
   "value": "WeftFS-Go has a GCS backend since R26.",
   "locations": [
    "docs/STATUS.md"
@@ -4823,8 +4823,8 @@
  },
  {
   "id": "v100_crates_current",
-  "claim": "README.md and docs/containers.md advertise the released 1.2.0 crate versions.",
-  "value": "weftcodec = \"1.2.0\"",
+  "claim": "README.md and docs/containers.md advertise the released 1.3.0 crate versions.",
+  "value": "weftcodec = \"1.3.0\"",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -4834,8 +4834,8 @@
  },
  {
   "id": "v100_docker_tag_current",
-  "claim": "README.md and docs/containers.md advertise the v1.2.0 WeftFS image tag.",
-  "value": "weftfs:v1.2.0",
+  "claim": "README.md and docs/containers.md advertise the v1.3.0 WeftFS image tag.",
+  "value": "weftfs:v1.3.0",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -7395,14 +7395,13 @@
  },
  {
   "id": "ai_augmentation_go_s3_gcs_current",
-  "claim": "docs/AI-STORAGE-AUGMENTATION.md records that Go has S3 and GCS backends and no Azure backend.",
-  "value": "Go has S3 and GCS",
+  "claim": "docs/AI-STORAGE-AUGMENTATION.md records that Go has S3, GCS, and Azure Blob backends and names its remaining gaps.",
+  "value": "Go has S3, GCS, and Azure Blob backends",
   "locations": [
    "docs/AI-STORAGE-AUGMENTATION.md"
   ],
   "receipt": null,
-  "kind": "present",
-  "line": 269
+  "kind": "present"
  },
  {
   "id": "threefs_abi_shim_statement",
@@ -9666,9 +9665,9 @@
   "kind": "present"
  },
  {
-  "id": "r14_readme_install_1_2_0",
-  "claim": "README install examples name the live 1.2.0 crates.",
-  "value": "cargo add weftcodec@1.2.0",
+  "id": "r14_readme_install_1_3_0",
+  "claim": "README install examples name the 1.3.0 crates (v1.2.0 remains published).",
+  "value": "cargo add weftcodec@1.3.0",
   "locations": [
    "README.md"
   ],
@@ -9707,8 +9706,8 @@
  },
  {
   "id": "r14_go_tool_version",
-  "claim": "docs/STATUS.md records the Go tool-version alignment.",
-  "value": "The\n    constant is now `1.2.0`",
+  "claim": "docs/STATUS.md records the Go tool-version alignment, including the 1.3.0 constant while keeping the R14 1.2.0 history.",
+  "value": "constant is now `1.3.0`",
   "locations": [
    "docs/STATUS.md"
   ],

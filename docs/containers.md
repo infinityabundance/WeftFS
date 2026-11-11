@@ -20,23 +20,24 @@ image on a `v*` tag or manual dispatch.
 | `ghcr.io/infinityabundance/weftfs` | `weftfs` (Rust) | store + FUSE CLI |
 | `ghcr.io/infinityabundance/weftfs-go` | `weftfs` (Go) | store + FUSE CLI |
 
-Tags: `v1.2.0` and `latest` (release workflow). Images are built from the program
-home commit and the pinned submodule commits.
+Tags: `v1.3.0` and `latest` (release workflow). The v1.2.0 images remain
+published; the v1.3.0 tag is cut by this release's publishing step. Images are
+built from the program home commit and the pinned submodule commits.
 
 ## Pull and run
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftfs-go:v1.2.0
-docker run --rm ghcr.io/infinityabundance/weftcodec:v1.2.0 --help
+docker pull ghcr.io/infinityabundance/weftfs-go:v1.3.0
+docker run --rm ghcr.io/infinityabundance/weftcodec:v1.3.0 --help
 
 # Store operations need a writable volume:
 docker run --rm -v "$PWD/store:/store" \
-  ghcr.io/infinityabundance/weftfs:v1.2.0 --store /store init
+  ghcr.io/infinityabundance/weftfs:v1.3.0 --store /store init
 
 # Mounting a FUSE view requires the device and capability:
 docker run --rm -it --device /dev/fuse --cap-add SYS_ADMIN \
   -v "$PWD/store:/store" -v "$PWD/mnt:/mnt" \
-  ghcr.io/infinityabundance/weftfs:v1.2.0 mount --store /store --mountpoint /mnt --foreground
+  ghcr.io/infinityabundance/weftfs:v1.3.0 mount --store /store --mountpoint /mnt --foreground
 ```
 
 Use `--cap-add SYS_ADMIN` only for mounts; codec/store-only operations do not
@@ -58,13 +59,15 @@ the workflow attempts to set visibility to public.
 The same release publishes the libraries on crates.io:
 
 ```toml
-weftcodec = "1.2.0"
-weftfs = "1.2.0"
+weftcodec = "1.3.0"
+weftfs = "1.3.0"
 ```
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus
-FUSE frontend (the `fuse` feature enables mounting). See
-`docs/RELEASE-v1.2.0.md`, the previous `docs/RELEASE-v1.1.0.md`,
+FUSE frontend (the `fuse` feature enables mounting). The v1.2.0 crates remain
+published; the v1.3.0 crates are published by this release's publishing step.
+See `docs/RELEASE-v1.3.0.md`, the previous `docs/RELEASE-v1.2.0.md`,
+`docs/RELEASE-v1.1.0.md`,
 `docs/RELEASE-v1.0.0.md`,
 `docs/RELEASE-v0.9.0.md`, and `docs/RELEASE-v0.8.0.md`. Image tags
 and crate versions carry no extra claim

@@ -7,8 +7,10 @@ mounted directory. It contains no Rust or Go extension modules.
 Implemented payload modes: RAW, ZSTD, REFERENCE, DELTA, DICTIONARY,
 STRUCTURED, TENSOR, TOKEN_SEQUENCE, QUANTIZED_TENSOR, FLOAT_TENSOR,
 TENSOR_SHARDED, WEIGHT_DELTA, KV_CACHE, ACTIVATION_STREAM, SEMANTIC_DELTA,
-TENSOR_TILED, and SPARSE_DELTA (every allocated mode 0-16). Reserved and
-experimental mode bytes raise :class:`UnsupportedMode` in
+TENSOR_TILED, SPARSE_DELTA, FLOAT_TILED, and FLOAT_TILED_STREAMS: every
+allocated mode 0–18 is implemented here. Modes 19 (KV_CACHE_PROV) and 20
+(ENGRAM_SHARD) are allocated but not implemented in this reader; they raise
+:class:`UnsupportedMode`, as do the reserved and experimental mode bytes in
 :mod:`weftcodec.frame`.
 """
 
@@ -32,7 +34,7 @@ from .frame import Frame, FrameHeader, IMPLEMENTED_MODES, MODE_NAMES, parse
 from .hashing import content_root, content_root_hex, hash_domain
 from .identity import VerifyResult, verify_bytes, verify_frame
 
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 
 __all__ = [
     "Corrupt",

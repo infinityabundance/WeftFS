@@ -195,7 +195,7 @@ is not a media-durability claim.
 | Object namespace (`object`) | `link(2)` in a content-addressed namespace | writer lock + content-token check | `flock(2)` on `LOCK` | `fsync` + link + directory `fsync` | yes | `tests/backend.rs`, crash proxy |
 | S3 (MinIO, Ceph RGW) | `PUT` with `If-None-Match: *` | `PUT` with `If-Match`; the fenced `LOCK` v3 record is the publication point | fenced lease, one conditional write | provider acknowledgement only | yes | `s3-court`, `ceph_rgw`, fenced-writer suites |
 | GCS | upload with `ifGenerationMatch=0` | upload with `ifGenerationMatch=<observed>`; fenced `LOCK` v3 | fenced lease | provider acknowledgement only | yes | `fake-gcs-server` court; no live GCS |
-| Azure Blob | `Put Blob` with `If-None-Match: *` | `Put Blob` with `If-Match`; fenced `LOCK` v3 | fenced lease | provider acknowledgement only | yes | Azurite court; SAS is effectively read-only; no live Azure |
+| Azure Blob | `Put Blob` with `If-None-Match: *` | `Put Blob` with `If-Match`; fenced `LOCK` v3 | fenced lease | provider acknowledgement only | yes | Azurite court in Rust and Go (R14); SAS is effectively read-only; no live Azure |
 | 3FS (POSIX transport) | the store's `tmp` + `fsync` + `rename(2)` through the 3FS mount | writer lock + content-token check | `flock(2)` on `LOCK` | 3FS's `fsync` contract (untested on a cluster) | yes | ABI conformance shim only; **no deployed cluster** |
 | 3FS (USRBIO transport) | data plane uses hf3fs rings; control state stays POSIX | unchanged (POSIX) | unchanged (POSIX) | unchanged (POSIX) | rings | ABI conformance shim only; **no deployed cluster** |
 | DAOS, Lustre, BeeGFS, CephFS, JuiceFS, IBM Storage Scale, WEKA, VAST, AIStore | not integrated | not integrated | not integrated | the system's own | not integrated | none; design only |
@@ -294,8 +294,12 @@ executable specification usable; it is not the integration mechanism.
   scale.
 * **No performance parity or superiority claim.** The published results include
   losses; the release note and `bench/RESULTS-*` documents list them.
-* **No Go Azure backend.** Go has S3 and GCS; `--backend azure` in Go is
-  `InvalidArgument`.
+* **No Go KV prefix tier, Go Ed25519 envelope verification, or Go
+  parent-graph planner.** Go has S3, GCS, and Azure Blob backends (R14/R25/
+  R26); its KV surface (R15) has no prefix tier and verifies no
+  capability-envelope signature, its `recover`/`plan` has no dependency-graph
+  planner, and MW2 on `azure` is refused `Unsupported` in both languages. No
+  writable Go FUSE-over-object run exists.
 * **No writable FUSE over an object store.** Only read-only mounts over S3 and
   GCS are evidenced.
 
