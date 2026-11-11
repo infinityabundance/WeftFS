@@ -8657,3 +8657,53 @@ was truncated to 0 bytes by that disk-full event while the isolation helper
 moved it aside (its original sha256 was `d8eb00d9…351e`); it is not part of any
 R13 commit, it never compiled (`unexpected EOF` at line 208), and the helper is
 now copy-then-verify so a full disk can no longer destroy the only copy.
+
+- 2026-11-11 (R14, Go parity: Azure Blob): parent `staging` `e2b25b1`,
+  WeftFS-Go `staging` `318d4b0`; not pushed. Closed the largest remaining Go
+  gap: the `azure` plane was Rust-only. `store/azureclient.go` /
+  `azureblob.go` / `azurecommit.go` implement Azure Blob REST from the same
+  contract the Rust backend speaks (`Put Blob` + `x-ms-blob-type: BlockBlob`
+  with `If-None-Match: *`; `If-Match: <ETag>` for CAS and for the fenced
+  `LOCK`; ranged `Get Blob`; `HEAD`; `Delete Blob`; `List Blobs` with marker
+  paging). SharedKey is HMAC-SHA256 over the documented string-to-sign with the
+  standard library only; SAS is appended verbatim; anonymous is emulator-only;
+  exactly one credential form is accepted and secrets never reach diagnostics.
+  The If-Match spelling is measured at a writable open (matching accepted,
+  stale refused, winner bytes intact); an endpoint that ignores
+  `If-None-Match: *`, accepts a stale ETag, or passes neither form is refused
+  `Unsupported`. The head is one conditional `LOCK` write carrying the fence
+  and the head; the superblock is a cache; release is a content-addressed
+  tombstone.
+  * The predecessor of `store/azureclient.go` was the 7,178-byte WIP that the
+    R13 disk-full event truncated to 0 bytes. This is a **new** implementation
+    from the Rust contract and the Blob documentation, not a recovery of those
+    bytes.
+  * Court `bench/scripts/azure_court.sh` (pinned Azurite 3.35.0,
+    `sha256:647c63a9…`): Rust `azure_backend` 19 passed / 0 failed (13.68 s),
+    Rust `azure_fencing` 9 passed / 0 failed (18.68 s), Go
+    `go test -run 'TestAzure|TestDecodeBase64' ./store` **18 passed / 0 failed
+    / 0 skipped** (0.476 s). Receipts
+    `bench/receipts/azure-court-20261111T144613Z.json` and
+    `bench/receipts/azure-20261111T144613Z.json`; log
+    `bench/receipts/azure-go-20261111T144613Z.log`. Earlier stamps
+    `144136Z` (a Go credential test described a bare caller while the court
+    exported `WEFT_AZURE_KEY`), `144308Z`, and `144452Z` are retained; the
+    first caught a real test defect, and `144452Z` ran 17 of 18 Go tests
+    because the `-run 'TestAzure'` filter excluded the base64 strictness test.
+  * The Go suite includes two adversarial endpoints a well-behaved emulator
+    cannot produce — one that ignores `If-None-Match: *` and one that accepts a
+    stale `If-Match` — both refused `Unsupported`, plus a literal-comparison
+    endpoint whose dequoted form is negotiated and recorded. One container
+    proves the handoff both ways: Go writes → Rust `info`/`verify --full`/`cat`
+    exact; Rust writes + `checkpoint` → Go reads exact, `verify(true)` clean;
+    Go then reclaims the Rust tombstone and Rust verifies again.
+  * Go MW2 remains `local`/`object`; `--writer-mode optimistic` on the `azure`
+    commit plane is refused `Unsupported`, asserted by test.
+  * Full Go suite `go test -race ./...` in the **fuse** court: 5 packages
+    `ok`, 0 failed (the `go` court lacks `/bin/fusermount`, so `fusefs` fails
+    there — an environment gap, recorded, not a code result).
+  * Not claimed: no live Azure; no SAS-acceptance or anonymous-acceptance
+    court in Go; no performance numbers; single node, tmpfs, loopback; no
+    media/power-loss/fleet/cloud claim; multi-page listing and packing over
+    Azure unexercised. Details and every loss:
+    `bench/RESULTS-azure-go.md`.

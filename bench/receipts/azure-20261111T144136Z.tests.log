@@ -1,0 +1,264 @@
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1406:9
+     |
+1406 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1407:9
+     |
+1407 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1408:9
+     |
+1408 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 11 warnings (run `cargo fix --lib -p weftfs` to apply 10 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5710:8
+     |
+5710 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5717:8
+     |
+5717 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5734:7
+     |
+5734 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5736:4
+     |
+5736 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5769:4
+     |
+5769 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/azure_backend.rs (.docker-cache/target-rust/debug/deps/azure_backend-c43a40d3a3892d3b)
+
+running 19 tests
+test a_hash32_key_path_is_addressed_verbatim ... ok
+test a_literal_dequoted_endpoint_is_negotiated ... ok
+test a_missing_blob_is_not_found_and_transport_errors_are_io ... ok
+test a_stale_etag_accepted_by_the_service_is_refused ... ok
+test a_wrong_account_key_is_unauthorized ... ok
+test create_once_and_compare_and_swap_are_exact ... ok
+test listing_returns_only_the_requested_prefix ... ok
+test live_a_tampered_sas_is_rejected ... R23 SAS: tampered signature refused: class=Unauthorized message=Unauthorized: cannot read FORMAT: Unauthorized: Azure denied FORMAT: <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Error>
+  <Code>AuthorizationFailure</Code>
+  <Message>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the sign
+ok
+test live_anonymous_is_refused_on_a_private_container ... R23 anonymous: private-container open refused: class=Unauthorized message=Unauthorized: cannot read FORMAT: Unauthorized: Azure denied FORMAT: <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Error>
+  <Code>AuthorizationFailure</Code>
+  <Message>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the sign
+ok
+test live_conditional_create_and_cas_are_exact ... ok
+test live_listing_and_ranges_are_exact ... ok
+test live_lock_is_released_with_a_conditional_tombstone ... ok
+test live_read_only_sas_refuses_a_writable_open ... R23 SAS: sp=r writable open refused: class=Unauthorized message=Unauthorized: Azure denied PUT `tmp/conditional-probe-17-24`
+ok
+test live_sas_authorizes_blob_data_but_not_container_properties ... R23 matrix: sp=r HEAD container refused: class=Unauthorized
+R23 matrix: sp=r blob PUT refused: class=Unauthorized
+R23 matrix: sp=rcwdl HEAD container refused: class=Unauthorized
+R23 matrix: sp=rcwdl blob PUT accepted
+R23 matrix: sp=racwdl HEAD container refused: class=Unauthorized
+R23 matrix: sp=racwdl blob PUT accepted
+ok
+test live_sas_token_authenticates_and_preserves_the_store ... R23 SAS: accepted read-only open, object read, and verify(true) over a 
+R23 SAS: container-scoped service SAS (sp=rcwdl)
+R23 SAS: writable open refused: class=Unauthorized message=Unauthorized: Azure denied reading container `weft-az-20261111t144136z-live-sas-7`
+R23 SAS: accepted create-once blob write and blob read over the SAS
+ok
+test live_store_round_trips_and_reopens ... ok
+test sas_and_anonymous_credentials_are_exclusive_forms ... ok
+test store_round_trips_on_azure_with_independent_signature_checks ... ok
+test the_writer_lock_is_released_with_a_conditional_tombstone ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.55s
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1406:9
+     |
+1406 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1407:9
+     |
+1407 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1408:9
+     |
+1408 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 11 warnings (run `cargo fix --lib -p weftfs` to apply 10 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5710:8
+     |
+5710 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5717:8
+     |
+5717 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5734:7
+     |
+5734 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5736:4
+     |
+5736 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5769:4
+     |
+5769 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s

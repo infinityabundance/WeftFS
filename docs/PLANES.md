@@ -93,8 +93,11 @@ Since R20/R25/R26 the Go reference store implements the same plane split
 GCS blob/commit planes (`store/s3blob.go`, `store/s3commit.go`,
 `store/gcsblob.go`, `store/gcscommit.go`). Capabilities are measured on writable
 open with the same probes, and cross-language tests reproduce one head and
-manifest in all four layouts. Go has no Azure backend. The Rust
-`AzureBackend` (`src/azure.rs`) follows the same contract over Azure Blob REST.
+manifest in all four layouts. Go now has an independent Azure Blob backend
+(`WeftFS-Go/store/azure{client,blob,commit}.go`, subphase R14) that speaks the
+same protocol and reads/writes the same store as the Rust `AzureBackend`
+(`src/azure.rs`); the two-way handoff is exercised in
+`bench/scripts/azure_court.sh` and recorded in `bench/RESULTS-azure-go.md`.
 
 ## 2. Key routing
 
