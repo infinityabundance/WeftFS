@@ -289,20 +289,21 @@ Docker court).
 
 ## 1. Repositories and revisions
 
-| Repo | Staging revision at the start of this pass | Role |
+| Repo | `staging` revision pinned by the v1.3.0 aggregate | Role |
 |---|---|---|
-| `WeftFS` | `e77f0e5` | program home, Rust store + FUSE, specs, ADRs, courts |
-| `WeftCodec` | `67cea30` | Rust codec v1 + AI modes, checkpoint and capability support |
-| `WeftCodec-Go` | `5e047c3` | independent Go codec, capability parity |
-| `WeftFS-Go` | `225eb0d` | independent Go store + FUSE, spec mirror |
+| `WeftFS` | `3ab54c7` | program home, Rust store + FUSE, specs, ADRs, courts |
+| `WeftCodec` | `d9234e5` | Rust codec v1 + AI modes, checkpoint and capability support |
+| `WeftCodec-Go` | `fe05240` | independent Go codec, capability parity |
+| `WeftFS-Go` | `80ddb5b` | independent Go store + FUSE, spec mirror |
 
-These are the `staging` heads every repository reported before the v1.3.0
-release-candidate commit pass (`git rev-parse HEAD` in each repository, all
-`staging == origin/staging`). The release-tree aggregate for v1.3.0 will be
-recorded by the follow-up verification pass together with the revisions it
-verifies; no receipt exists for the release candidate at this point. The latest
-complete aggregate is `bench/receipts/verify-20261111T131235Z.json` (**45/45**)
-at WeftFS `40df0cd`.
+These are the `staging` heads the v1.3.0 release-tree aggregate ran against
+(`git rev-parse HEAD` in each repository; each repository has `staging` one
+commit ahead of `origin/staging` because the release candidate is unpushed).
+The aggregate is `bench/receipts/verify-20261111T182601Z.json` (**45/45** courts
+pass, 0 failed, 0 skipped). The heads at the start of the release-candidate
+pass were WeftFS `e77f0e5`, WeftCodec `67cea30`, WeftCodec-Go `5e047c3`,
+WeftFS-Go `225eb0d`; the aggregate immediately before the release candidate is
+`bench/receipts/verify-20261111T131235Z.json` (**45/45**) at WeftFS `40df0cd`.
 
 ## 2. What is implemented and tested
 

@@ -27,7 +27,9 @@ Everything was built and measured in the Docker courts with the hard limits in
 **Date:** 2026-11-11 · **Tag:** `v1.3.0` (created by the release pass, after
 verification) · **Branch:** `staging`.
 
-**Release-tree aggregate: PENDING VERIFICATION PASS**
+**Release-tree aggregate: `bench/receipts/verify-20261111T182601Z.json` — 45/45
+courts pass, 0 failed, 0 skipped; it pins WeftFS `3ab54c7`, WeftCodec
+`d9234e5`, WeftCodec-Go `fe05240`, WeftFS-Go `80ddb5b` on `staging`.**
 
 ## Highlights
 
@@ -233,14 +235,16 @@ FUSE over object stores**. Go has no mode-20 writer.
 
 ## Verification
 
-No aggregate exists yet for the v1.3.0 tree; the verification pass records it
-and replaces the PENDING line above. The state this release is built on:
+The v1.3.0 release-candidate tree has its own aggregate:
+`bench/receipts/verify-20261111T182601Z.json` (**45/45** courts pass, 0 failed,
+0 skipped; raw log beside it). It pins WeftFS `3ab54c7`, WeftCodec `d9234e5`,
+WeftCodec-Go `fe05240`, and WeftFS-Go `80ddb5b` on `staging`.
 
-- **45/45** courts pass at the R13 tree (`verify-20261111T131235Z.json`):
-  `rust_codec`, `rust_store` (771 passed / 158 suites), `go_codec`,
-  `rust_fuse` (814 passed / 0 failed / 2 pre-existing ignored),
-  `go_store_and_fuse`, the four codec cross courts, `spec_drift`, `claims`,
-  `conformance_manifest`, `conformance_coverage`, `generated_types`,
+- **45/45** courts pass at the v1.3.0 release-candidate tree
+  (`verify-20261111T182601Z.json`): `rust_codec`, `rust_store` (772 passed /
+  158 suites), `go_codec`, `rust_fuse` (815 passed / 0 failed / 2 pre-existing
+  ignored), `go_store_and_fuse`, the four codec cross courts, `spec_drift`,
+  `claims`, `conformance_manifest`, `conformance_coverage`, `generated_types`,
   `buck2_cas`, `buck2_cas_store`, `threefs`, `checkpoint_family_lifecycle`,
   `trajectory`, `write_policy`, `recovery_load`, `kv_capability`,
   `parallel_checkpoint`, `throughput`, `restore_scaling`, `index_trust`,
@@ -248,6 +252,9 @@ and replaces the PENDING line above. The state this release is built on:
   `conformance_bundle`, `conformance_python`, the four Context Root cross
   courts, the five authenticated-capability cross courts, `fuzz_diff`, `tla`,
   `multiwriter`, and `multiwriter_failure`.
+- The previous aggregate, **45/45** at the R13 tree
+  (`verify-20261111T131235Z.json`; `rust_store` 771 passed / 158 suites,
+  `rust_fuse` 814 passed / 2 ignored there), is retained as history.
 - The **44/45** run that found the packed-write regression is retained:
   `verify-20261111T103327Z.json` (raw log beside it).
 - The aggregate immediately before it, **42/42**, is
