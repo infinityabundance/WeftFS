@@ -1281,6 +1281,13 @@ pub trait StorageBackend: Send {
         Ok(())
     }
 
+    /// Mask of blob kinds this handle is holding that no other handle can
+    /// resolve yet (see [`crate::planes::BlobPlane::buffered_blob_kinds`]).
+    /// Default: every publication is immediately readable by other handles.
+    fn buffered_blob_kinds(&self) -> u8 {
+        0
+    }
+
     /// `true` when this backend's blob plane can defer its pack catalog to
     /// another handle (see [`crate::planes::BlobPlane::defer_pack_catalog`]).
     fn defer_pack_catalog(&mut self) -> Result<bool> {
@@ -3401,6 +3408,10 @@ impl StorageBackend for CompositeBackend {
 
     fn refresh_blob_metadata(&mut self) -> Result<()> {
         self.blobs.refresh_metadata()
+    }
+
+    fn buffered_blob_kinds(&self) -> u8 {
+        self.blobs.buffered_blob_kinds()
     }
 
     fn defer_pack_catalog(&mut self) -> Result<bool> {

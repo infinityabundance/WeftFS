@@ -84,6 +84,26 @@ pub const CATALOG_ROOT_DOMAIN: &str = "weft/pack/catalog-root/v1";
 /// Domain for a member digest stored in the catalog.
 pub const MEMBER_DOMAIN: &str = "weft/pack/member/v1";
 
+/// Buffered-member kind bit for a chunk object (`objects/`).
+///
+/// A packed plane holds an open pack's members in memory until it seals. These
+/// bits let the store ask which *kinds* a handle is holding, so it can keep
+/// using pooled read handles for the kinds that are already on disk. Index
+/// segments are packed too, but the store always reads them through the handle
+/// that wrote them, so they need no bit.
+pub const BUFFERED_OBJECT: u8 = 1 << 0;
+/// Buffered-member kind bit for a manifest (`manifests/`).
+pub const BUFFERED_MANIFEST: u8 = 1 << 1;
+
+/// Buffered-kind bit for a catalogued member kind byte.
+fn buffered_bit(kind: u8) -> u8 {
+    match kind {
+        0 => BUFFERED_OBJECT,
+        1 => BUFFERED_MANIFEST,
+        _ => 0,
+    }
+}
+
 const SEGMENT_MAGIC: &[u8; 4] = b"WPS1";
 const ROOT_MAGIC: &[u8; 4] = b"WPR1";
 const FORMAT_VERSION: u32 = 1;
@@ -364,6 +384,10 @@ struct CatalogState {
     /// Digest per deferred key, so a second publication of the same key inside
     /// one handle is idempotent and a different payload is still refused.
     pending_digests: BTreeMap<(u8, Hash32), Hash32>,
+    /// Member kinds this handle is holding that no other handle can resolve:
+    /// open-pack members plus deferred members. Maintained with the two lists
+    /// above, never recomputed by scanning them.
+    buffered_kinds: u8,
     /// Keys this plane has *observed* absent in the flat namespace, bounded.
     /// The store reads a blob before publishing it; without this the plane
     /// would ask the inner namespace the same question twice per put.
@@ -820,6 +844,16 @@ impl BlobPlane for PackedBlobPlane {
         seal(inner, catalog, options, &mut state)
     }
 
+    fn buffered_blob_kinds(&self) -> u8 {
+        let state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        // Open-pack members are readable only through this handle, and deferred
+        // members are readable by nobody until the catalog owner adopts them.
+        state.buffered_kinds
+    }
+
     fn pack_counters(&self) -> Option<PackStats> {
         Some(self.pack_stats())
     }
@@ -851,6 +885,7 @@ impl BlobPlane for PackedBlobPlane {
         seal_deferred(inner, options, &mut state)?;
         let entries = std::mem::take(&mut state.pending);
         state.pending_digests.clear();
+        state.buffered_kinds = 0;
         Ok(Some(DeferredPackEntries { entries }))
     }
 
@@ -1312,6 +1347,7 @@ fn append(
     let position = state.open_entries.len();
     state.open_entries.push(entry);
     state.open_index.insert((kind, id), position);
+    state.buffered_kinds |= buffered_bit(kind);
     state.counters.packed_members += 1;
     state.counters.packed_bytes += length;
     Ok(())
@@ -1335,7 +1371,12 @@ fn seal(
     let index = std::mem::take(&mut state.open_index);
     let outcome = seal_inner(inner, catalog, options, state, &pack_bytes, &mut entries);
     match outcome {
-        Ok(()) => Ok(()),
+        Ok(()) => {
+            // Nothing is buffered any more: every member is catalogued and any
+            // pooled read handle can resolve it.
+            state.buffered_kinds = 0;
+            Ok(())
+        }
         Err(err) => {
             // Restore the buffered pack so a retry re-publishes the same pack
             // object idempotently instead of losing members.

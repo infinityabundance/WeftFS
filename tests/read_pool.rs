@@ -18,6 +18,8 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use tempfile::tempdir;
+use weftfs::backend::BackendKind;
+use weftfs::packs::PackOptions;
 use weftfs::recovery::{manifest_path, object_path};
 use weftfs::store::{OpenMode, Options, Store};
 
@@ -281,4 +283,82 @@ fn a_pooled_handle_survives_concurrent_reads_without_mixing_bytes() {
     });
     assert!(store.read_pool_stats().max_in_flight > 1);
     assert!(store.verify(true).unwrap().problems.is_empty());
+}
+
+/// A packed store with the frozen whole-file identity and 64 KiB chunks: every
+/// chunk is at or below the default member threshold, so a create puts all of
+/// them into the writer's open pack.
+fn packed_store(dir: &Path) -> (Store, Options) {
+    let options = Options {
+        owner_uid: 0,
+        owner_gid: 0,
+        chunk_size: 64 * 1024,
+        checkpoint_interval: 4096,
+        gc_grace_secs: 0,
+        fixed_timestamp_ns: None,
+        ..Options::default()
+    };
+    let kind = BackendKind::packed(BackendKind::Local, PackOptions::default()).unwrap();
+    let store = Store::init_with_backend(dir.join("store"), options.clone(), kind).unwrap();
+    (store, options)
+}
+
+#[test]
+fn a_packed_write_reads_back_the_members_it_has_not_yet_catalogued() {
+    // Regression, found by the aggregate court at R13 (`TestRustPacksGoReadsAnd
+    // Verifies`): `store_file_ranges` stores the rewritten chunk and then
+    // re-reads *every* chunk to feed the frozen whole-file ContentId. A packed
+    // plane keeps that new chunk in its open pack until the catalog is sealed,
+    // and a pooled read handle is a different plane instance, so it reported
+    // `missing blob objects/..: does not exist`. Reads of a blob this handle
+    // buffered must therefore use the writer's own handle.
+    let dir = tempdir().unwrap();
+    let (mut store, options) = packed_store(dir.path());
+    let payload = payload(23, 280_000);
+    let root = store.resolve_path("/").unwrap();
+    let id = store
+        .create_file(root, b"packed.bin", &payload, 0o644, 0, 0, BTreeMap::new())
+        .unwrap();
+
+    // The write this failed on: 17 bytes at 120000, inside the second chunk.
+    let edit = b"packed-write-byte";
+    let mut want = payload.clone();
+    want[120_000..120_000 + edit.len()].copy_from_slice(edit);
+    let content = store.write_file(id, 120_000, edit).unwrap();
+    assert_eq!(store.read_object(id).unwrap(), want);
+
+    // The read-back used this handle, not the pool, and said so.
+    let stats = store.read_pool_stats();
+    assert!(
+        stats.buffered_blob_reads > 0,
+        "the whole-file digest must read the buffered chunk through the writer: {stats:?}"
+    );
+
+    // Nothing is buffered once the commit flushed the pack catalog, so pooling
+    // resumes: a later read is served by the pool.
+    let reads_before = store.read_pool_stats().reads;
+    assert_eq!(store.read_object(id).unwrap(), want);
+    assert!(
+        store.read_pool_stats().reads > reads_before,
+        "reads after the flush must use the pool again: {:?}",
+        store.read_pool_stats()
+    );
+
+    assert!(store.verify(true).unwrap().problems.is_empty());
+    let head = store.head();
+    drop(store);
+
+    // A fresh read-only handle sees the same bytes and the same head.
+    let reader = Store::open_with_options_and_backend(
+        dir.path().join("store"),
+        OpenMode::ReadOnly,
+        options,
+        BackendKind::packed(BackendKind::Local, PackOptions::default()).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(reader.read_object(id).unwrap(), want);
+    assert_eq!(reader.head(), head);
+    assert!(reader.verify(true).unwrap().problems.is_empty());
+    // `write_file` returns the new version id; the reopened handle sees it.
+    assert_eq!(content, reader.object_meta(id).unwrap().version);
 }

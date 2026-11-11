@@ -12,6 +12,11 @@
 //! * **Never used for control state.** Only [`crate::backend::Key::object`] and
 //!   [`crate::backend::Key::manifest`] reads go through this pool. The store's
 //!   mutex remains the only path for mutable records and all publication.
+//! * **Never used for bytes this handle has buffered.** A batching blob plane
+//!   keeps a freshly packed member in its own open pack (or deferred list)
+//!   until the catalog names it. Those keys resolve only through the handle
+//!   that buffered them, so [`crate::store::Store`] reads them through the
+//!   writer and counts them separately (`buffered_blob_reads`).
 //! * **Bounded.** At most [`MAX_IDLE_HANDLES`] handles are kept; one handle is
 //!   checked out per concurrent read and returned on completion.
 //! * **Invalidated by mutation.** Every backend mutation bumps the pool's
@@ -63,6 +68,11 @@ pub struct ReadPoolStats {
     pub idle_handles: usize,
     /// Blob reads served by the pool.
     pub reads: u64,
+    /// Reads this handle served itself because it held a blob member that no
+    /// other handle could resolve yet (a batching plane's open pack). They are
+    /// excluded from `reads` and from `bytes`.
+    #[serde(default)]
+    pub buffered_blob_reads: u64,
     /// Bytes returned by those reads.
     pub bytes: u64,
     /// Reads in flight at this instant.
@@ -224,7 +234,7 @@ impl ReadHandlePool {
     /// hash check is the caller's job and must run after this returns, so it
     /// does not hold a handle.
     pub fn read_all(&self, key: &Key) -> Result<(Vec<u8>, u64)> {
-        let mut handle = self.acquire()?;
+        let handle = self.acquire()?;
         let now = self.in_flight.fetch_add(1, Ordering::Relaxed) + 1;
         self.max_in_flight.fetch_max(now, Ordering::Relaxed);
         let started = Instant::now();
@@ -242,7 +252,7 @@ impl ReadHandlePool {
 
     /// Read a byte range of an immutable blob through a pooled handle.
     pub fn read_range(&self, key: &Key, offset: u64, len: u64) -> Result<(Vec<u8>, u64)> {
-        let mut handle = self.acquire()?;
+        let handle = self.acquire()?;
         let now = self.in_flight.fetch_add(1, Ordering::Relaxed) + 1;
         self.max_in_flight.fetch_max(now, Ordering::Relaxed);
         let started = Instant::now();
@@ -271,6 +281,7 @@ impl ReadHandlePool {
             handles_reused: self.handles_reused.load(Ordering::Relaxed),
             idle_handles: Self::lock(&self.idle).len(),
             reads: self.reads.load(Ordering::Relaxed),
+            buffered_blob_reads: 0,
             bytes: self.bytes.load(Ordering::Relaxed),
             in_flight: self.in_flight.load(Ordering::Relaxed),
             max_in_flight: self.max_in_flight.load(Ordering::Relaxed),

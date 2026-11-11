@@ -325,6 +325,18 @@ pub trait BlobPlane: Send {
         None
     }
 
+    /// Which kinds of blob member this handle is holding unpublished.
+    ///
+    /// A batching plane keeps the members of its open pack in memory until
+    /// [`BlobPlane::flush`] seals it and publishes the catalog. While that is
+    /// true, a *different* plane instance (a pooled read handle, or another
+    /// worker) cannot resolve those keys, so a read of one must go through this
+    /// handle. The mask is [`crate::packs::BUFFERED_OBJECT`] and
+    /// [`crate::packs::BUFFERED_MANIFEST`]; every eager plane returns `0`.
+    fn buffered_blob_kinds(&self) -> u8 {
+        0
+    }
+
     /// Drop cached metadata so the next access re-reads it from the plane.
     ///
     /// A batching plane caches its catalog root for the lifetime of the handle

@@ -799,6 +799,15 @@ pub struct Store {
     /// Handles for immutable content-addressed blob reads (subphase R13).
     /// Reads through this pool never take [`Store::backend`].
     read_pool: crate::read_pool::ReadHandlePool,
+    /// Mask of blob kinds this handle is holding that no other handle can
+    /// resolve: a batching blob plane's open pack (or its deferred members) is
+    /// readable only through the handle that buffered it. Immutable reads of
+    /// those kinds use this handle instead of the pool, so a write can read back
+    /// what it just published before the catalog names it.
+    buffered_blob_kinds: std::sync::atomic::AtomicU8,
+    /// Immutable reads that used this handle because it held unpublished
+    /// members. Reported so a receipt can say the pool was bypassed and why.
+    buffered_blob_reads: AtomicU64,
 }
 
 /// Per-tensor attribution guard used by the restore pipeline when the
@@ -1035,6 +1044,8 @@ impl Store {
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
+            buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
+            buffered_blob_reads: AtomicU64::new(0),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -1232,6 +1243,8 @@ impl Store {
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
+            buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
+            buffered_blob_reads: AtomicU64::new(0),
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -1512,9 +1525,27 @@ impl Store {
         };
         let (bytes, io_ns) = {
             let started = Instant::now();
-            let outcome = if self.read_pool.poolable() {
+            // A batching blob plane keeps a member it just published in its own
+            // open pack (or its deferred list) until the catalog names it. That
+            // member is resolvable only through this handle, so while one is
+            // buffered the read must not go to the pool: a pooled handle is a
+            // different plane instance and would report the key as missing.
+            // Restores read only committed blobs, so they keep the pool.
+            let buffered = self
+                .buffered_blob_kinds
+                .load(std::sync::atomic::Ordering::Acquire)
+                & match kind {
+                    BlobKind::Object => crate::packs::BUFFERED_OBJECT,
+                    BlobKind::Manifest => crate::packs::BUFFERED_MANIFEST,
+                }
+                != 0;
+            let outcome = if self.read_pool.poolable() && !buffered {
                 self.read_pool.read_all(&key)
             } else {
+                if buffered {
+                    self.buffered_blob_reads
+                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
                 self.with_backend(|backend| backend.read_all(&key))
                     .map(|bytes| (bytes, started.elapsed().as_nanos() as u64))
             };
@@ -1595,8 +1626,19 @@ impl Store {
                 .backend
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
+            // Publish first, observe after: a reader racing this mutation must
+            // never see a narrow mask while a member is unbuffered-but-not-yet
+            // published. Widening is conservative (it can only route a read
+            // through this handle, never away from it).
+            self.buffered_blob_kinds.store(
+                crate::packs::BUFFERED_OBJECT | crate::packs::BUFFERED_MANIFEST,
+                std::sync::atomic::Ordering::Release,
+            );
             let out = f(&mut **guard);
+            let buffered = guard.buffered_blob_kinds();
             drop(guard);
+            self.buffered_blob_kinds
+                .store(buffered, std::sync::atomic::Ordering::Release);
             // Every mutation can add or replace a content-addressed blob, so
             // pooled reader handles must not be reused across it (a packed
             // handle caches the catalog as of its creation).
@@ -1610,9 +1652,16 @@ impl Store {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         timer.acquired();
+        self.buffered_blob_kinds.store(
+            crate::packs::BUFFERED_OBJECT | crate::packs::BUFFERED_MANIFEST,
+            std::sync::atomic::Ordering::Release,
+        );
         let out = f(&mut **guard);
+        let buffered = guard.buffered_blob_kinds();
         drop(timer);
         drop(guard);
+        self.buffered_blob_kinds
+            .store(buffered, std::sync::atomic::Ordering::Release);
         self.read_pool.invalidate();
         out
     }
@@ -1640,7 +1689,11 @@ impl Store {
 
     /// Immutable-read pool counters (subphase R13).
     pub fn read_pool_stats(&self) -> crate::read_pool::ReadPoolStats {
-        self.read_pool.stats()
+        let mut stats = self.read_pool.stats();
+        stats.buffered_blob_reads = self
+            .buffered_blob_reads
+            .load(std::sync::atomic::Ordering::Relaxed);
+        stats
     }
 
     /// Begin attributing backend entries on this thread to one tensor input.
