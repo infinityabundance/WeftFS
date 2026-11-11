@@ -165,6 +165,15 @@ fi
 run_court bench "throughput" \
   "WEFT_THROUGHPUT_FAMILIES=qwen0.5b WEFT_THROUGHPUT_REPS=1 WEFT_THROUGHPUT_RANKS=8 WEFT_THROUGHPUT_SAVE_CONFIGS=raw WEFT_THROUGHPUT_INGEST_LIMIT=40 WEFT_THROUGHPUT_RESTORE_THREADS='1 4' WEFT_THROUGHPUT_TILE_THREADS=1 bash bench/scripts/throughput_court.sh"
 
+# Restore scaling (R13): the backend-lock probe, the immutable-read pool, and
+# within-tensor shard concurrency. Reduced for the aggregate — one family, two
+# worker counts, one repetition, no MinIO, no readers, no second checkpoint.
+# The full matrices are `restore-scaling-20261111T090904Z` (0.5B) and
+# `restore-scaling-3b-final-20261111T092000Z` (3B), cited in
+# `bench/RESULTS-restore-scaling.md`.
+run_court bench "restore_scaling" \
+  "WEFT_RESTORE_FAMILIES=qwen0.5b WEFT_RESTORE_THREADS='1 4' WEFT_RESTORE_REPS=1 WEFT_RESTORE_MINIO=0 WEFT_RESTORE_SECOND=0 WEFT_RESTORE_READERS=0 bash bench/scripts/restore_scaling_court.sh"
+
 # Index trust: a forged self-consistent index subset must be rejected by the
 # commit attestation, and a genuine cross-language segment must load without a
 # rebuild.
