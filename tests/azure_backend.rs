@@ -40,7 +40,8 @@ use sha2::{Digest, Sha256};
 use tempfile::tempdir;
 
 use weftfs::azure::{AzureBackend, AzureConfig, IfMatchForm};
-use weftfs::backend::{BackendKind, Key};
+use weftfs::backend::{BackendKind, HeadExpectation, Key, StorageBackend};
+use weftfs::error::Class;
 use weftfs::planes::{BlobPlane, CommitPlane};
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::Hash32;
@@ -78,6 +79,12 @@ struct State {
     require_signature: bool,
     /// Requests that failed signature validation.
     signature_failures: Vec<String>,
+    /// When set, the next GET of this blob is answered with the ETag the blob
+    /// had at that instant, and the stored ETag is then replaced while the
+    /// bytes stay identical. That is exactly what a concurrent writer that
+    /// re-publishes the same head does, and it lets a test prove the head
+    /// compare-and-swap is one conditional write rather than a checked write.
+    bump_etag_after_get: Option<String>,
 }
 
 impl State {
@@ -233,6 +240,13 @@ impl FakeAzure {
             .unwrap()
             .blob(container, name)
             .map(|stored| stored.etag.clone())
+    }
+
+    /// Replace the ETag of `name` (keeping its bytes) immediately after the
+    /// next successful GET of that blob has been answered. A conditional write
+    /// holding the answered ETag must then be refused.
+    fn bump_etag_after_next_get(&self, name: &str) {
+        self.state.lock().unwrap().bump_etag_after_get = Some(name.to_owned());
     }
 }
 
@@ -504,6 +518,20 @@ fn route(request: &Request, state: &Arc<Mutex<State>>) -> Response {
                 let Some(stored) = state.blob(container, blob).cloned() else {
                     return Response::new(404).with_header("x-ms-error-code", "BlobNotFound");
                 };
+                // A concurrent re-publication of the same bytes: the caller got
+                // the old tag, the store now holds a new one.
+                if state.bump_etag_after_get.as_deref() == Some(blob) {
+                    state.bump_etag_after_get = None;
+                    state.next_etag += 1;
+                    let etag = format!("\"0x8D{:016X}\"", state.next_etag);
+                    if let Some(entry) = state
+                        .containers
+                        .get_mut(container)
+                        .and_then(|blobs| blobs.get_mut(blob))
+                    {
+                        entry.etag = etag;
+                    }
+                }
                 let mut response = Response::new(200)
                     .with_header("etag", &stored.etag)
                     .with_header("last-modified", "Tue, 14 Nov 2023 22:13:20 GMT");
@@ -1611,4 +1639,334 @@ fn live_anonymous_is_refused_on_a_private_container() {
         "R23 anonymous: private-container open refused: class={} message={err}",
         err.class_name()
     );
+}
+
+// ---------------------------------------------------------------------------
+// MW2 (optimistic multi-writer) over the Azure commit plane (subphase R14d)
+//
+// The Azure plane gets its own `publish_head_conditional`: one `Put Blob` whose
+// `If-Match` is the ETag read together with the head check. These tests prove
+// the exact three properties a lost-update-free head publication needs:
+//
+//   1. a matching expectation is published and is the new head;
+//   2. a stale expectation is `Busy` and changes no byte;
+//   3. an ETag that moved between the read and the write is `Busy`, even when
+//      the observed head still matches — i.e. the compare and the write really
+//      share one token and the write is never retried.
+// ---------------------------------------------------------------------------
+
+fn mw2_options(mode: weftfs::mw2::WriterMode) -> Options {
+    Options {
+        writer_mode: mode,
+        ..options()
+    }
+}
+
+fn mw2_hash(byte: u8) -> Hash32 {
+    Hash32::from_bytes([byte; 32])
+}
+
+#[test]
+fn conditional_head_publication_is_one_exact_cas() {
+    let fake = FakeAzure::start_with(FakeOptions {
+        require_signature: true,
+        ..FakeOptions::default()
+    });
+    let container = "weft-azure-unit-mw2-head";
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let kind = fake.kind(container);
+    {
+        let store = Store::init_with_backend(&path, options(), kind).expect("init");
+        assert_eq!(store.generation(), 1);
+    }
+
+    let mut plane = fake.backend(container);
+    let head = CommitPlane::load_head(&plane)
+        .expect("read head")
+        .expect("a published head");
+    assert_eq!(head.generation, 1);
+
+    let expectation = HeadExpectation {
+        generation: head.generation,
+        commit: head.commit,
+    };
+    let next_commit = mw2_hash(0x42);
+    let next_slot = weftfs::format::SuperblockSlot {
+        generation: 2,
+        commit: next_commit,
+        commit_len: 1234,
+        timestamp_ns: 1_700_000_000_000_000_042,
+    };
+    plane
+        .publish_head_conditional(
+            expectation,
+            2,
+            next_commit,
+            1234,
+            next_slot.timestamp_ns,
+            &next_slot.encode(),
+        )
+        .expect("conditional head publication");
+    let after = CommitPlane::load_head(&plane)
+        .expect("read head")
+        .expect("published head");
+    assert_eq!(after.generation, 2);
+    assert_eq!(after.commit, next_commit);
+    assert_eq!(after.commit_len, 1234);
+
+    // The old expectation is now stale: refused, and the image is untouched.
+    let before = CommitPlane::read_control(&mut plane, &Key::superblock())
+        .expect("read superblock")
+        .expect("superblock record")
+        .bytes;
+    let stale_slot = weftfs::format::SuperblockSlot {
+        generation: 3,
+        commit: mw2_hash(0x43),
+        commit_len: 99,
+        timestamp_ns: 1_700_000_000_000_000_043,
+    };
+    let err = plane
+        .publish_head_conditional(
+            expectation,
+            3,
+            stale_slot.commit,
+            stale_slot.commit_len,
+            stale_slot.timestamp_ns,
+            &stale_slot.encode(),
+        )
+        .unwrap_err();
+    assert_eq!(err.class(), Class::Busy, "{err}");
+    let after_stale = CommitPlane::read_control(&mut plane, &Key::superblock())
+        .expect("read superblock")
+        .expect("superblock record")
+        .bytes;
+    assert_eq!(
+        before, after_stale,
+        "a refused head publication changes no byte"
+    );
+
+    // A stale writer that names the *current* head is still refused once that
+    // head's ETag has moved: the compare and the write use one token, and a
+    // lost race is never retried onto the new head.
+    let current = CommitPlane::load_head(&plane).unwrap().unwrap();
+    let expectation = HeadExpectation {
+        generation: current.generation,
+        commit: current.commit,
+    };
+    fake.bump_etag_after_next_get(&Key::superblock().display_path());
+    let raced_slot = weftfs::format::SuperblockSlot {
+        generation: 3,
+        commit: mw2_hash(0x44),
+        commit_len: 77,
+        timestamp_ns: 1_700_000_000_000_000_044,
+    };
+    let err = plane
+        .publish_head_conditional(
+            expectation,
+            3,
+            raced_slot.commit,
+            raced_slot.commit_len,
+            raced_slot.timestamp_ns,
+            &raced_slot.encode(),
+        )
+        .unwrap_err();
+    assert_eq!(err.class(), Class::Busy, "{err}");
+    let after_race = CommitPlane::read_control(&mut plane, &Key::superblock())
+        .expect("read superblock")
+        .expect("superblock record")
+        .bytes;
+    assert_eq!(
+        before, after_race,
+        "a lost conditional write must not be retried onto the moved head"
+    );
+}
+
+struct Mw2FilePlan {
+    record: weftfs::state::ObjectRecord,
+    entry: weftfs::state::EntryRecord,
+}
+
+fn mw2_plan_file(
+    store: &Store,
+    parent: Hash32,
+    name: &[u8],
+    bytes: &[u8],
+    seed: &[u8],
+) -> Mw2FilePlan {
+    use std::collections::BTreeMap;
+    use weftfs::state::{
+        derive_entry_id, derive_version_id, EntryRecord, ObjectKind, ObjectRecord,
+    };
+    let (manifest, _content_hash, size) = store.prepare_content(bytes).unwrap();
+    let id = weftfs::identity::object_id_from_seed(seed);
+    let now = options().fixed_timestamp_ns.unwrap();
+    let version = derive_version_id(id, manifest, size, now, None).unwrap();
+    let record = ObjectRecord {
+        id,
+        kind: ObjectKind::File,
+        mode: 0o644,
+        uid: 0,
+        gid: 0,
+        mtime_ns: now,
+        version,
+        content: manifest,
+        size,
+        attrs: BTreeMap::new(),
+    };
+    let entry = EntryRecord {
+        id: derive_entry_id(parent, name).unwrap(),
+        parent,
+        name: name.to_vec(),
+        target: id,
+    };
+    Mw2FilePlan { record, entry }
+}
+
+fn mw2_stage(store: &Store, id: &str, plan: &Mw2FilePlan) -> weftfs::mw2::Transaction {
+    let mut tx = store.begin_transaction(id).unwrap();
+    let state = store.current_state();
+    tx.put_object(state, plan.record.clone()).unwrap();
+    tx.put_entry(state, plan.entry.clone()).unwrap();
+    tx.set_tip(state, plan.record.id, plan.record.version)
+        .unwrap();
+    tx
+}
+
+#[test]
+fn two_optimistic_committers_publish_disjoint_files_on_azure() {
+    use weftfs::mw2::{TransactionOptions, WriterMode};
+    use weftfs::state::State;
+
+    let fake = FakeAzure::start_with(FakeOptions {
+        require_signature: true,
+        ..FakeOptions::default()
+    });
+    let container = "weft-azure-unit-mw2-e2e";
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let kind = fake.kind(container);
+    {
+        let store = Store::init_with_backend(&path, options(), kind.clone()).expect("init");
+        assert_eq!(store.generation(), 1);
+    }
+
+    let mut a = Store::open_with_options_and_backend(
+        &path,
+        OpenMode::ReadWrite,
+        mw2_options(WriterMode::Optimistic),
+        kind.clone(),
+    )
+    .expect("optimistic handle A");
+    let mut b = Store::open_with_options_and_backend(
+        &path,
+        OpenMode::ReadWrite,
+        mw2_options(WriterMode::Optimistic),
+        kind.clone(),
+    )
+    .expect("optimistic handle B");
+    assert_eq!(a.options().writer_mode, WriterMode::Optimistic);
+
+    let plan_a = mw2_plan_file(
+        &a,
+        State::ROOT_ID,
+        b"azure-a.txt",
+        b"alpha-azure",
+        b"mw2-az-a",
+    );
+    let plan_b = mw2_plan_file(
+        &a,
+        State::ROOT_ID,
+        b"azure-b.txt",
+        b"beta-azure",
+        b"mw2-az-b",
+    );
+
+    // Both transactions are planned against the same head.
+    let tx_a = mw2_stage(&a, "000000000000000000000000000000a1", &plan_a);
+    let tx_b = mw2_stage(&b, "000000000000000000000000000000b1", &plan_b);
+    assert_eq!(tx_a.base_head(), tx_b.base_head());
+
+    let out_a = a
+        .execute_transaction(&tx_a, &TransactionOptions::default())
+        .expect("commit A");
+    let out_b = b
+        .execute_transaction(&tx_b, &TransactionOptions::default())
+        .expect("commit B");
+    assert!(!out_a.idempotent);
+    assert!(!out_b.idempotent);
+    assert_ne!(out_a.commit, out_b.commit);
+    assert!(out_b.attempts >= 1, "B must rebase onto A's head");
+    assert_eq!(out_b.generation, out_a.generation + 1);
+
+    // A fresh handle sees both names, both bodies, and verifies.
+    let check = Store::open_with_options_and_backend(
+        &path,
+        OpenMode::ReadWrite,
+        mw2_options(WriterMode::Optimistic),
+        kind.clone(),
+    )
+    .expect("fresh optimistic open");
+    let report = check.verify(true).expect("full verify");
+    assert!(report.ok, "verify problems: {:?}", report.problems);
+    let root = State::ROOT_ID;
+    let entries = check.list_dir(root).expect("list root");
+    assert!(
+        entries.iter().any(|entry| entry.name == b"azure-a.txt"),
+        "A's name is visible"
+    );
+    assert!(
+        entries.iter().any(|entry| entry.name == b"azure-b.txt"),
+        "B's name is visible"
+    );
+    assert_eq!(check.read_object(plan_a.record.id).unwrap(), b"alpha-azure");
+    assert_eq!(check.read_object(plan_b.record.id).unwrap(), b"beta-azure");
+    assert_eq!(check.generation(), out_b.generation);
+
+    // A read-only open (which never probes and never writes) sees the same head.
+    let reader = Store::open_with_backend(&path, OpenMode::ReadOnly, kind).expect("read-only");
+    assert_eq!(reader.generation(), out_b.generation);
+    assert!(reader.verify(true).expect("verify").ok);
+}
+
+#[test]
+fn a_single_mode_writable_open_refuses_an_optimistic_azure_store() {
+    use weftfs::mw2::{TransactionOptions, WriterMode};
+    use weftfs::state::State;
+
+    let fake = FakeAzure::start_with(FakeOptions::default());
+    let container = "weft-azure-unit-mw2-refusal";
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("store");
+    let kind = fake.kind(container);
+    {
+        let store = Store::init_with_backend(&path, options(), kind.clone()).expect("init");
+        drop(store);
+    }
+    {
+        let mut store = Store::open_with_options_and_backend(
+            &path,
+            OpenMode::ReadWrite,
+            mw2_options(WriterMode::Optimistic),
+            kind.clone(),
+        )
+        .expect("optimistic open creates the policy record");
+        // Publish one transaction so the store really is an MW2 store with a
+        // head beyond genesis.
+        let plan = mw2_plan_file(&store, State::ROOT_ID, b"mw2.txt", b"mw2", b"mw2-refusal");
+        let tx = mw2_stage(&store, "000000000000000000000000000000c1", &plan);
+        store
+            .execute_transaction(&tx, &TransactionOptions::default())
+            .expect("commit");
+    }
+    let err = match Store::open_with_options_and_backend(
+        &path,
+        OpenMode::ReadWrite,
+        mw2_options(WriterMode::Single),
+        kind,
+    ) {
+        Ok(_) => panic!("a single-mode writable open must refuse an optimistic store"),
+        Err(err) => err,
+    };
+    assert_eq!(err.class(), Class::UnsupportedVersion, "{err}");
 }

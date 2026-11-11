@@ -1115,11 +1115,11 @@ impl Store {
         let mut backend = backend_kind.open(&root)?;
         if mode == OpenMode::ReadWrite
             && writer_mode == crate::mw2::WriterMode::Optimistic
-            && !matches!(backend.label(), "local" | "object" | "3fs" | "s3")
+            && !matches!(backend.label(), "local" | "object" | "3fs" | "s3" | "azure")
         {
             return Err(Error::unsupported_version(format!(
-                "optimistic (MW2) publication is implemented for the local, object, 3fs, and \
-                 s3 commit planes; this backend is `{}`",
+                "optimistic (MW2) publication is implemented for the local, object, 3fs, s3, and \
+                 azure commit planes; this backend is `{}`",
                 backend.label()
             )));
         }
@@ -9546,12 +9546,42 @@ impl Store {
                         Ok(true)
                     }
                     Err(err) if err.class() == Class::Busy => {
-                        // The conditional head write was definitively refused
-                        // (the head still names another commit), so this record
-                        // is unreferenced. Remove it so a later generation is
-                        // not blocked by an orphan.
-                        let _ = backend.delete(&key);
-                        Err(err)
+                        // The conditional head write was definitely refused.
+                        // The record this attempt created is usually
+                        // unreferenced, and removing it keeps a later
+                        // generation from being blocked by an orphan. It is
+                        // *not* always ours, though: create-once publication
+                        // accepts identical bytes, so a twin committer may have
+                        // created the same record and published it. Consult the
+                        // head and only delete when it cannot name this record.
+                        let observed = backend
+                            .read_all(&Key::superblock())
+                            .ok()
+                            .and_then(|image| crate::format::decode_superblock(&image).ok())
+                            .and_then(|slots| {
+                                slots
+                                    .into_iter()
+                                    .flatten()
+                                    .max_by_key(|slot| slot.generation)
+                            });
+                        match observed {
+                            Some(slot)
+                                if slot.generation == commit.generation && slot.commit == hash =>
+                            {
+                                // The identical commit is already published:
+                                // report it as this attempt's outcome.
+                                Ok(true)
+                            }
+                            Some(slot) if slot.generation >= commit.generation => {
+                                // A later head may be built on this record
+                                // (a twin published it). Never delete it.
+                                Err(err)
+                            }
+                            _ => {
+                                let _ = backend.delete(&key);
+                                Err(err)
+                            }
+                        }
                     }
                     Err(err) => {
                         // Any other failure (transport, timeout, local I/O) is
