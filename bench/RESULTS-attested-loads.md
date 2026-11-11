@@ -40,7 +40,10 @@ here contributes two). It is signed (`signed: true`) and its receipt root is
   model. It costs **1.05×** the load itself (2,241.0 ms vs 2,133.2 ms) because
   it re-reads and re-hashes every recorded byte through the shipped restore
   path.
-* **µs per recorded range: 8,230.2** (272 ranges). A range is one whole tensor
+* **µs per recorded range: 8,230.2** (272 ranges). This checkpoint has no
+  tile grid (mode 15), so the smallest independently verified unit is one
+  shard group; a tiled checkpoint would record one range per tile and the same
+  arithmetic applies per tile. A range is one whole tensor
   here; the region case is one range of 57,600 B and costs 92.1 ms, which is
   almost entirely fixed overhead (store open, manifest read, signature), so the
   per-MiB figure for small loads is not meaningful and is not quoted as one.

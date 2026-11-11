@@ -101,11 +101,12 @@ cache.
 5. **Tail latency is worse without the layers**: p95 time-to-first 205 ms vs
    142 ms, and the per-replica total spread (p50 651.4 s, max 671.7 s) shows
    every replica pays the full cost.
-6. **Coalescing depends on timing.** The `with` cell was measured once here;
-   an earlier aborted attempt at the same revision measured 34 s / 14.1 GB /
-   3,736 decodes for the same configuration, because the replicas overlapped
-   differently. The *direction* and the ~13× gap are robust; the absolute
-   `with` wall is not a tight number.
+6. **Coalescing depends on timing.** The `with` cell was measured once here.
+   An earlier aborted attempt at the same revision produced a materially
+   different `with` wall for the same configuration (the replicas overlapped
+   differently); its artifacts were not retained, so its numbers are not
+   quoted. The *direction* and the ~13× gap are robust; the absolute `with`
+   wall is not a tight number.
 7. **One host, loopback MinIO, warm host caches.** No multi-host, network
    partition, cloud, or production-workload claim. The `without` run also
    demonstrates that 100 replicas fit in 8 GiB only because each replica
