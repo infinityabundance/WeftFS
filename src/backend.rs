@@ -937,6 +937,10 @@ pub struct BackendStats {
     pub link_publications: u64,
     pub rename_publications: u64,
     pub rename_fallbacks: u64,
+    /// Durability barriers observed by this backend (`sync_all`/`fsync` of a
+    /// file or a directory). Local and object backends count them; a remote
+    /// backend whose durability is a provider acknowledgement reports 0.
+    pub fsyncs: u64,
 }
 
 impl BackendStats {
@@ -955,6 +959,7 @@ impl BackendStats {
                 .rename_publications
                 .saturating_add(other.rename_publications),
             rename_fallbacks: self.rename_fallbacks.saturating_add(other.rename_fallbacks),
+            fsyncs: self.fsyncs.saturating_add(other.fsyncs),
         }
     }
 }
@@ -969,6 +974,7 @@ struct AtomicStats {
     link_publications: AtomicU64,
     rename_publications: AtomicU64,
     rename_fallbacks: AtomicU64,
+    fsyncs: AtomicU64,
 }
 
 impl AtomicStats {
@@ -982,6 +988,7 @@ impl AtomicStats {
             link_publications: self.link_publications.load(Ordering::Relaxed),
             rename_publications: self.rename_publications.load(Ordering::Relaxed),
             rename_fallbacks: self.rename_fallbacks.load(Ordering::Relaxed),
+            fsyncs: self.fsyncs.load(Ordering::Relaxed),
         }
     }
 }
@@ -1639,6 +1646,7 @@ impl LocalBackend {
             _ => {
                 file.write_all(bytes)?;
                 file.sync_all()?;
+                self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
                 drop(file);
             }
         }
@@ -1670,6 +1678,7 @@ impl LocalBackend {
             .rename_publications
             .fetch_add(1, Ordering::Relaxed);
         fsync_dir(parent)?;
+        self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
         Ok(())
     }
 
@@ -1884,6 +1893,7 @@ impl StorageBackend for LocalBackend {
             .map_err(|err| Error::io(format!("cannot create {}: {err}", tmp.display())))?;
         file.write_all(bytes)?;
         file.sync_all()?;
+        self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
         drop(file);
         fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
         // rename(2) atomically replaces the previous record on POSIX.
@@ -1892,6 +1902,7 @@ impl StorageBackend for LocalBackend {
             Error::io(format!("cannot replace {}: {err}", final_path.display()))
         })?;
         fsync_dir(&parent)?;
+        self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
         self.stats.writes.fetch_add(1, Ordering::Relaxed);
         self.stats
             .bytes_written
@@ -2605,6 +2616,7 @@ impl StorageBackend for ObjectBackend {
             Error::io(format!("cannot replace {}: {err}", final_path.display()))
         })?;
         fsync_dir(&parent)?;
+        self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
         self.stats.writes.fetch_add(1, Ordering::Relaxed);
         self.stats
             .bytes_written

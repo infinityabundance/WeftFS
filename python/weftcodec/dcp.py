@@ -1257,10 +1257,11 @@ class WeftStorageWriter(_StorageWriterBase):
                 self._storage_name,
                 DCP_METADATA_NAME,
             )
+            finish_result = None
             try:
                 if self._prepared:
                     # One atomic publication: tensor state + DCP metadata + head.
-                    self._get_service().finish_checkpoint(
+                    finish_result = self._get_service().finish_checkpoint(
                         self._storage_name, metadata_path, blob
                     )
                     self._prepared = False
@@ -1271,6 +1272,8 @@ class WeftStorageWriter(_StorageWriterBase):
                     "checkpoint %r: the metadata publication failed; %s"
                     % (self._storage_name, exc)
                 ) from exc
+            if self._prepared is False and "finish" not in self._stats:
+                self._stats["finish"] = dict(finish_result or {})
             _probe("adapter.metadata_commit", commit_started)
             self._finished = True
             self._metadata = metadata
@@ -1621,6 +1624,7 @@ class CheckpointSession:
         staging_bytes=DEFAULT_STAGING_BYTES,
         session_idle_secs=30,
         max_tensor_bytes=None,
+        extra_args=(),
     ):
         staging_bytes = int(staging_bytes)
         if staging_bytes <= 0:
@@ -1636,6 +1640,7 @@ class CheckpointSession:
         self._cli = _default_cli(weftfs_cli)
         self._timeout = float(timeout)
         self._max_tensor_bytes = max_tensor_bytes
+        self._extra_args = tuple(str(arg) for arg in extra_args)
         self._service = None
         self._closed = False
         self._pid = os.getpid()
@@ -1666,6 +1671,7 @@ class CheckpointSession:
                 cli=self._cli,
                 timeout=self._timeout,
                 session_idle_secs=self.session_idle_secs,
+                extra_args=self._extra_args,
                 **options,
             )
             self.stats["services_started"] += 1

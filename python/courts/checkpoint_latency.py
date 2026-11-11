@@ -42,6 +42,7 @@ import os
 import platform
 import resource
 import shutil
+import hashlib
 import statistics
 import sys
 import tempfile
@@ -94,26 +95,60 @@ def write_json(path, value):
     os.replace(tmp, path)
 
 
+SIZE_BUCKETS = (
+    (0, 512),
+    (513, 4096),
+    (4097, 16384),
+    (16385, 65536),
+    (65537, 262144),
+    (262145, 1 << 20),
+    ((1 << 20) + 1, 1 << 62),
+)
+
+
+def _bucket_name(low, high):
+    if high >= (1 << 62):
+        return ">1MiB"
+    if low == 0:
+        return "<=512B"
+    return "%dB..%dB" % (low, high)
+
+
 def tree_stats(root):
-    """Bytes and file count per top-level directory, recursively."""
+    """Bytes, file count per top-level directory, and every file's size."""
     root = Path(root)
     total = 0
     files = 0
     by_dir = {}
+    sizes = {}
     for dirpath, _dirnames, filenames in os.walk(root):
         rel = os.path.relpath(dirpath, root)
         key = "root" if rel == "." else rel.split(os.sep)[0]
         bucket = by_dir.setdefault(key, {"bytes": 0, "files": 0})
         for name in filenames:
+            path = os.path.join(dirpath, name)
             try:
-                size = os.path.getsize(os.path.join(dirpath, name))
+                size = os.path.getsize(path)
             except OSError:
                 continue
             total += size
             files += 1
             bucket["bytes"] += size
             bucket["files"] += 1
-    return {"bytes": total, "files": files, "by_dir": by_dir}
+            sizes[os.path.relpath(path, root)] = size
+    return {"bytes": total, "files": files, "by_dir": by_dir, "sizes": sizes}
+
+
+def frame_histogram(before, after):
+    """Size buckets of the files this save *created*."""
+    created = [after["sizes"][name] for name in after["sizes"] if name not in before["sizes"]]
+    out = {_bucket_name(low, high): 0 for low, high in SIZE_BUCKETS}
+    for size in created:
+        for low, high in SIZE_BUCKETS:
+            if low <= size <= high:
+                out[_bucket_name(low, high)] += 1
+                break
+    return {"files": len(created), "buckets": out, "total_bytes": sum(created)}
 
 
 class Collector:
@@ -208,6 +243,7 @@ def one_save(torch, *, store_root, name, state, collector, service_cli, atomic=T
         b = before["by_dir"].get(key, {"bytes": 0, "files": 0})
         a = after["by_dir"].get(key, {"bytes": 0, "files": 0})
         deltas[key] = {"bytes": a["bytes"] - b["bytes"], "files": a["files"] - b["files"]}
+    histogram = frame_histogram(before, after)
 
     return {
         "name": name,
@@ -229,6 +265,8 @@ def one_save(torch, *, store_root, name, state, collector, service_cli, atomic=T
         "store_delta_by_dir": deltas,
         "store_total_bytes": after["bytes"],
         "store_total_files": after["files"],
+        "frame_histogram": histogram,
+        "finish": stats.get("finish"),
         "result": {
             key: value
             for key, value in (
@@ -303,7 +341,17 @@ def decompose(rows):
 
 
 def session_series(
-    torch, *, store_root, state, reps, collector, service_cli, idle_secs, atomic=True
+    torch,
+    *,
+    store_root,
+    state,
+    reps,
+    collector,
+    service_cli,
+    idle_secs,
+    atomic=True,
+    extra_args=(),
+    label="session",
 ):
     """N saves through one long-lived session (warm service + held handle)."""
     from weftcodec.dcp import CheckpointSession
@@ -314,6 +362,7 @@ def session_series(
         weftfs_cli=service_cli,
         staging_bytes=tg.STAGING_BYTES,
         session_idle_secs=idle_secs,
+        extra_args=extra_args,
     )
     try:
         service = session.service()
@@ -339,10 +388,11 @@ def session_series(
                     "bytes": a["bytes"] - b["bytes"],
                     "files": a["files"] - b["files"],
                 }
+            histogram = frame_histogram(before, after)
             rows.append(
                 {
                     "name": "ckpt-%d" % index,
-                    "scenario": "session",
+                    "scenario": label,
                     "index": index,
                     "wall_ms": (saved - started) * 1000.0,
                     "checkpoint_write_ms": stats.get("checkpoint_write_ms"),
@@ -357,16 +407,58 @@ def session_series(
                     "store_delta_by_dir": deltas,
                     "store_total_bytes": after["bytes"],
                     "store_total_files": after["files"],
+                    "frame_histogram": histogram,
+                    "finish": stats.get("finish"),
+                    "session_stats": dict(session.stats),
                 }
             )
         session_stats = dict(session.stats)
         service_pid = session.service_pid
+        restore = restore_latency(session, state)
     finally:
         session.close()
     for row in rows:
         row["session_stats"] = session_stats
         row["service_pid"] = service_pid
+        row["restore"] = restore
     return rows
+
+
+def restore_latency(session, state):
+    """Restore every tensor and one tensor through the same session."""
+    service = session.service()
+    names = service.list_checkpoints()
+    if not names:
+        return None
+    name = names[-1]
+    manifest = service.manifest(name)
+    started = time.perf_counter()
+    total = 0
+    digest = hashlib.sha256()
+    for row in manifest.tensors:
+        buffer = service.restore_tensor(
+            name, row.name, expected_size=row.element_bytes
+        )
+        total += buffer.size
+        digest.update(row.name.encode("utf-8") + b"\x00")
+        digest.update(hashlib.sha256(buffer.view).digest())
+        buffer.close()
+    whole_ms = (time.perf_counter() - started) * 1000.0
+    row = max(manifest.tensors, key=lambda item: item.element_bytes)
+    started = time.perf_counter()
+    buffer = service.restore_tensor(name, row.name, expected_size=row.element_bytes)
+    buffer.close()
+    largest_ms = (time.perf_counter() - started) * 1000.0
+    return {
+        "checkpoint": name,
+        "tensors": len(manifest.tensors),
+        "restore_digest": digest.hexdigest(),
+        "bytes": total,
+        "whole_ms": whole_ms,
+        "largest_tensor": row.name,
+        "largest_bytes": row.element_bytes,
+        "largest_ms": largest_ms,
+    }
 
 
 def run(args):
@@ -437,6 +529,7 @@ def run(args):
             row["scenario"] = "session-two-commit"
 
     session_rows = []
+    packed_rows = []
     if args.mode in ("both", "session"):
         session_store = work / "session"
         session_store.mkdir()
@@ -450,6 +543,58 @@ def run(args):
             service_cli=args.weftfs_cli,
             idle_secs=args.session_idle_secs,
         )
+
+    for target, member in args.pack:
+        label = "packed-%d-%d" % (target, member)
+        fresh_label = label + "-fresh"
+        fresh_pack_store = work / fresh_label
+        fresh_pack_store.mkdir()
+        init_store(fresh_pack_store, weftfs_cli=args.weftfs_cli)
+        fresh_packed = session_series(
+            torch,
+            store_root=fresh_pack_store,
+            state=state,
+            reps=1,
+            collector=collector,
+            service_cli=args.weftfs_cli,
+            idle_secs=args.session_idle_secs,
+            extra_args=(
+                "--pack",
+                "--pack-target-bytes",
+                str(target),
+                "--pack-member-threshold",
+                str(member),
+            ),
+            label=fresh_label,
+        )
+        packed_rows.extend(fresh_packed)
+        pack_store = work / label
+        pack_store.mkdir()
+        init_store(pack_store, weftfs_cli=args.weftfs_cli)
+        rows = session_series(
+            torch,
+            store_root=pack_store,
+            state=state,
+            reps=args.reps,
+            collector=collector,
+            service_cli=args.weftfs_cli,
+            idle_secs=args.session_idle_secs,
+            extra_args=(
+                "--pack",
+                "--pack-target-bytes",
+                str(target),
+                "--pack-member-threshold",
+                str(member),
+            ),
+            label=label,
+        )
+        # A packed store is only readable through the packed plane, so the
+        # plain `weftfs checkpoint verify` CLI cannot see it. Exactness is
+        # proven by restoring every tensor through the session instead (the
+        # receipt's `restore_digest` must equal the unpacked one).
+        for row in rows:
+            row["pack_verify"] = None
+        packed_rows.extend(rows)
 
     verify = verify_checkpoint(store, "ckpt-%d" % (args.reps - 1), weftfs_cli=args.weftfs_cli)
     session_verify = None
@@ -533,6 +678,71 @@ def run(args):
                 if session_rows
                 else None
             ),
+            "packed": {
+                label: {
+                    "wall_ms": [
+                        round(r["wall_ms"], 3)
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ],
+                    "median_ms": statistics.median(
+                        r["wall_ms"] for r in packed_rows if r["scenario"] == label
+                    ),
+                    "files": [
+                        r["store_delta_files"]
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ][-1],
+                    "bytes": [
+                        r["store_delta_bytes"]
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ][-1],
+                    "fsyncs": [
+                        (r.get("finish") or {}).get("backend_fsyncs")
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ][-1],
+                    "histogram": [
+                        r.get("frame_histogram")
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ][-1],
+                    "restore": [
+                        r.get("restore")
+                        for r in packed_rows
+                        if r["scenario"] == label
+                    ][-1],
+                }
+                for label in sorted({r["scenario"] for r in packed_rows})
+            },
+            "fresh_files": fresh_rows[0]["store_delta_files"] if fresh_rows else None,
+            "fresh_bytes": fresh_rows[0]["store_delta_bytes"] if fresh_rows else None,
+            "fresh_fsyncs": (
+                (fresh_rows[0].get("finish") or {}).get("backend_fsyncs")
+                if fresh_rows
+                else None
+            ),
+            "fresh_histogram": (
+                fresh_rows[0].get("frame_histogram") if fresh_rows else None
+            ),
+            "unpacked_files": [
+                r["store_delta_files"] for r in session_rows
+            ][-1] if session_rows else None,
+            "unpacked_bytes": [
+                r["store_delta_bytes"] for r in session_rows
+            ][-1] if session_rows else None,
+            "unpacked_fsyncs": (
+                (session_rows[-1].get("finish") or {}).get("backend_fsyncs")
+                if session_rows
+                else None
+            ),
+            "unpacked_histogram": (
+                session_rows[-1].get("frame_histogram") if session_rows else None
+            ),
+            "unpacked_restore": (
+                session_rows[-1].get("restore") if session_rows else None
+            ),
         },
         "decomposition": {
             "fresh_store": decompose(fresh_rows),
@@ -545,8 +755,12 @@ def run(args):
             "session_two_commit": (
                 decompose(two_commit_rows) if two_commit_rows else {}
             ),
+            **{
+                label: decompose([r for r in packed_rows if r["scenario"] == label])
+                for label in sorted({r["scenario"] for r in packed_rows})
+            },
         },
-        "runs": all_rows + two_commit_rows + session_rows,
+        "runs": all_rows + two_commit_rows + session_rows + packed_rows,
         "verify": verify,
         "session_verify": session_verify,
         "peak_rss_kib": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
@@ -582,10 +796,21 @@ def main(argv):
     )
     run_p.add_argument("--session-idle-secs", type=int, default=30)
     run_p.add_argument(
+        "--pack",
+        action="append",
+        default=None,
+        metavar="TARGET:MEMBER",
+        help="add a packed variant (target bytes:member-threshold bytes)",
+    )
+    run_p.add_argument(
         "--weftfs-cli",
         default=os.environ.get("WEFTFS_CLI", "/work/.docker-cache/target-rust/release/weftfs"),
     )
     args = parser.parse_args(argv)
+    if getattr(args, "pack", None) is None:
+        args.pack = []
+    else:
+        args.pack = [tuple(int(part) for part in spec.split(":")) for spec in args.pack]
     if args.command == "run":
         return run(args)
     return 2

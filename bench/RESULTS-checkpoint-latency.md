@@ -314,3 +314,66 @@ Honest cost: `finish()` is now the durability point, so a caller that never
 calls `finish` publishes nothing (previously the tensors were already durable).
 That is the intended semantics and it is the repair, but it is a behaviour
 change for any caller that used `write_data` without `finish`.
+
+## 10. Increment 5 — physical aggregation for small frames (measured, mostly a loss)
+
+Receipt `bench/receipts/checkpoint-latency-20261111T034200Z.json` (6 saves per
+series, 2 fresh stores, three pack configurations). The court gained a
+frame-size histogram of the files a save *creates*, per-save backend writes /
+bytes / fsync counts (read from the new `BackendStats::fsyncs`, which counts
+`sync_all` + directory `fsync` calls), and a restore pass that decodes every
+tensor through the same session.
+
+### The frame-size distribution comes first
+
+First save of the 4.97 MB / 169-entry checkpoint, unpacked:
+
+| size bucket | files |
+|---|---:|
+| ≤ 512 B | 147 |
+| 513 B – 4 KiB | 67 |
+| 4 – 16 KiB | 1 |
+| 16 – 64 KiB | 16 |
+| 64 – 256 KiB | 34 |
+| 256 KiB – 1 MiB | 0 |
+| > 1 MiB | 0 |
+| **total** | **265 files, 4,890,427 B, 528 fsyncs** |
+
+A *later* save of the same state writes **7 files, 276,794 B, 14 fsyncs**: the
+tensor frames are content-addressed and already present, so only the new
+checkpoint directory, manifest file, commit, index segment and DCP metadata are
+new. That is the workload R10's packing policy was not designed for — the small
+frames are commit/index/access records, not tensor data, and the tensor data is
+deduplicated across saves.
+
+### Deferred packing, three thresholds
+
+| configuration | first-save files | first-save fsyncs | first-save bytes | later-save files | later-save fsyncs | completion p50 (later) |
+|---|---:|---:|---:|---:|---:|---:|
+| unpacked | 265 | 528 | 4,890,427 | 7 | 14 | **39.3 ms** |
+| pack 1 MiB / 64 KiB | 189 | 380 | 4,869,849 | 8 | 20 | 39.9 ms |
+| pack 4 MiB / 256 KiB | 184 | 372 | 4,878,151 | 8 | 20 | 42.5 ms |
+| pack 16 MiB / 1 MiB | 165 | 332 | 4,874,010 | 7 | 18 | 41.6 ms |
+
+Packing **does** what it says on the first save: 76–100 fewer files and 148–196
+fewer durability barriers, with slightly fewer bytes. It does **not** reduce
+completion: the first save went 47.0 → 40.0/42.3/43.5 ms on one sample per
+configuration, which is inside this court's run-to-run spread (the unpacked
+fresh rows were 47.0 and 100.0 ms). And it **loses** on the steady state that
+matters for training: +2 to +6 fsyncs per save for the pack catalog root and
+segment, +0.5–1.6 KB, and no file reduction (7 → 7/8).
+
+Restore is unchanged and exact: all 169 tensors restore through the packed
+store with the same digest (`b2a00193…a621cee4`), 147.3 ms unpacked versus
+147.0–154.2 ms packed, largest tensor 1.09 vs 1.09–1.36 ms.
+
+**Conclusion: the R10 packing policy does not transfer to checkpoint
+sessions.** It should stay off for this workload (`CheckpointSession` does not
+enable it by default), and the R11 recommendation to pack a large
+single-checkpoint ingest still stands on its own evidence. Losses recorded:
+no completion win, extra fsyncs and bytes in the steady state, a packed store
+is only readable through the packed plane (so a plain `weftfs checkpoint
+verify` on the CLI cannot see it — exactness here was proven by restoring every
+tensor through the session, which is why `verify --full` is not cited for the
+packed rows), and the 304 MB peak RSS is the Python process (torch); the
+service's own RSS is not measured by this court.

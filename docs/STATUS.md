@@ -8383,3 +8383,27 @@ diff), so the last quartile remains ~4x the first. A row-level incremental
 index that consumes committed ops is not implemented; `StateIndex::build`
 stays the oracle. On the 169-object checkpoint fixture the change is inside the
 run-to-run noise (chain depth 1-2).
+
+### Increment 5 — physical aggregation for small frames: measured, and not adopted
+
+Receipt `bench/receipts/checkpoint-latency-20261111T034200Z.json`. The court now
+reports the frame-size histogram of the files a save creates, per-save backend
+writes/bytes/fsync counts (new `BackendStats::fsyncs`, counting `sync_all` and
+directory `fsync`), and a restore pass over every tensor.
+
+A first save writes **265 files / 4,890,427 B / 528 fsyncs** (147 files ≤512 B,
+67 ≤4 KiB, 16 in 16-64 KiB, 34 in 64-256 KiB); a later save of the same state
+writes **7 files / 276,794 B / 14 fsyncs** because the frames are
+content-addressed and already present. Deferred packing
+(`--pack` at 1 MiB/64 KiB, 4 MiB/256 KiB, 16 MiB/1 MiB) cuts the first save to
+**189 / 184 / 165 files** and **380 / 372 / 332 fsyncs** with slightly fewer
+bytes, but completion is unchanged within noise (47.0 → 40.0 / 42.3 / 43.5 ms,
+one sample each) and the steady state **loses** 2-6 fsyncs and 0.5-1.6 KB per
+save for the catalog. Restore is exact and unchanged (same digest, 147.3 ms
+unpacked vs 147.0-154.2 ms packed).
+
+**Not adopted for this workload:** `CheckpointSession` does not enable packing,
+and the R11 packing result stands on its own (large single-ingest) evidence. A
+packed store is only readable through the packed plane, so the CLI `checkpoint
+verify` cannot see one; exactness here was proven by restoring all 169 tensors
+through the session. Peak RSS 304 MB is the Python process, not the service.

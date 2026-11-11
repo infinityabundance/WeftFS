@@ -208,6 +208,7 @@ pub fn serve(
         requests: 0,
         last_write: Instant::now(),
         deferred: None,
+        deferred_stats: None,
         write_handle_opens: 0,
         write_handle_releases: 0,
     };
@@ -237,6 +238,9 @@ struct Service {
     last_write: Instant,
     /// Name of the checkpoint whose group is open and unpublished.
     deferred: Option<String>,
+    /// Backend counters when the open prepare finished its blob work, so
+    /// `FINISH_CHECKPOINT` can report exactly what the save cost physically.
+    deferred_stats: Option<crate::backend::BackendStats>,
     /// Number of times the writable handle was upgraded, for diagnostics.
     write_handle_opens: u64,
     /// Number of times an idle window released the writer lock.
@@ -412,6 +416,7 @@ impl Service {
                 // a shutdown.
                 self.store.abort_deferred_checkpoint();
                 self.deferred = None;
+                self.deferred_stats = None;
                 return Dispatch::Shutdown;
             }
             other => {
@@ -754,11 +759,21 @@ impl Service {
             }
         };
         self.manifest_cache.clear();
+        // Read the counters before any idle release replaces the handle (a new
+        // handle starts its own counters).
+        let before = self.deferred_stats.take().unwrap_or_default();
+        let after = self.store.backend_stats();
         self.after_publication();
         let mut body = Vec::new();
         put_hash(&mut body, head);
         put_u64(&mut body, self.store.generation());
         put_u64(&mut body, size);
+        put_u64(&mut body, after.writes.saturating_sub(before.writes));
+        put_u64(
+            &mut body,
+            after.bytes_written.saturating_sub(before.bytes_written),
+        );
+        put_u64(&mut body, after.fsyncs.saturating_sub(before.fsyncs));
         put_u64(&mut body, elapsed_us(started));
         Dispatch::Reply {
             op: request.op,
@@ -774,6 +789,7 @@ impl Service {
         }
         self.store.abort_deferred_checkpoint();
         self.deferred = None;
+        self.deferred_stats = None;
         let mut body = Vec::new();
         put_u64(&mut body, self.store.generation());
         put_u64(&mut body, elapsed_us(started));
@@ -886,19 +902,26 @@ impl Service {
         // The session's writable handle is reused when it is already open. A
         // `Busy`/fence refusal is not retried here: the caller sees the typed
         // error and must reopen (a stale fence is never silently replaced).
-        let outcome =
-            (|| -> Result<(crate::checkpoint::CheckpointWriteReport, CheckpointManifest)> {
-                let write_store = self.write_handle()?;
-                let report = write_store.write_checkpoint(&name, &proc_path, &options)?;
-                let manifest = write_store.checkpoint_manifest(&report.name)?;
-                Ok((report, manifest))
-            })();
-        let (report, manifest) = match outcome {
+        let outcome = (|| -> Result<(
+            crate::checkpoint::CheckpointWriteReport,
+            CheckpointManifest,
+            crate::backend::BackendStats,
+        )> {
+            let write_store = self.write_handle()?;
+            // Snapshot before the blob work so `FINISH_CHECKPOINT` reports the
+            // whole save's physical cost, not just the metadata commit.
+            let before = write_store.backend_stats();
+            let report = write_store.write_checkpoint(&name, &proc_path, &options)?;
+            let manifest = write_store.checkpoint_manifest(&report.name)?;
+            Ok((report, manifest, before))
+        })();
+        let (report, manifest, before) = match outcome {
             Ok(outcome) => outcome,
             Err(err) => return Dispatch::Failed(err),
         };
         if defer {
             self.deferred = Some(report.name.clone());
+            self.deferred_stats = Some(before);
         }
         // The checkpoint this handle just published is visible to every later
         // read through the same handle; only a replaced name needs its cached

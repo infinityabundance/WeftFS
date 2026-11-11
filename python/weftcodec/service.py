@@ -969,6 +969,9 @@ class CheckpointService:
                 "head": reader.hash_hex(),
                 "generation": reader.u64(),
                 "bytes": reader.u64(),
+                "backend_writes": reader.u64(),
+                "backend_bytes": reader.u64(),
+                "backend_fsyncs": reader.u64(),
             }
             self.stats["finishes"] = self.stats.get("finishes", 0) + 1
             return result
