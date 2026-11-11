@@ -1036,6 +1036,9 @@ class WeftStorageWriter(_StorageWriterBase):
         session=None,
         retain_container=False,
         atomic_publish=True,
+        write_policy=None,
+        fast_codec=None,
+        fast_zstd_level=None,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -1092,6 +1095,11 @@ class WeftStorageWriter(_StorageWriterBase):
         # them left a checkpoint directory without metadata.
         self.atomic_publish = bool(atomic_publish)
         self._prepared = False
+        # Critical-path policy for the Rust planner. `None` keeps the shipped
+        # defaults (`$WEFT_WRITE_POLICY`, otherwise `planned`).
+        self.write_policy = write_policy
+        self.fast_codec = fast_codec
+        self.fast_zstd_level = fast_zstd_level
         self._stats = {
             "entries": 0,
             "tensor_bytes": 0,
@@ -1501,6 +1509,9 @@ class WeftStorageWriter(_StorageWriterBase):
             shards=shards,
             axis=axis,
             strategy=self.shard_strategy,
+            write_policy=self.write_policy,
+            fast_codec=self.fast_codec,
+            fast_zstd_level=self.fast_zstd_level,
             defer_commit=self.atomic_publish,
         )
         self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0

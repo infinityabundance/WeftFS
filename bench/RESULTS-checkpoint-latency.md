@@ -377,3 +377,39 @@ verify` on the CLI cannot see it — exactness here was proven by restoring ever
 tensor through the session, which is why `verify --full` is not cited for the
 packed rows), and the 304 MB peak RSS is the Python process (torch); the
 service's own RSS is not measured by this court.
+
+## 11. Increment 6 — write-policy comparison on the same fixture
+
+Receipt `bench/receipts/checkpoint-latency-20261111T035900Z.json` (3 saves per
+policy in one store, same session, same fixture, no packing). The policy is
+`CheckpointWriteOptions::write_policy`, now plumbed through
+`WeftStorageWriter(write_policy=..., fast_codec=..., fast_zstd_level=...)`.
+
+| policy | completion p50 | store bytes | restore (all 169) | digest |
+|---|---:|---:|---:|---|
+| `planned` (level-3 ZSTD per shard) | 41.2 ms | 5,453,026 | 144.1 ms | `b2a00193…` |
+| `fast` + raw | **36.0 ms** | 5,912,028 (+8.4 %) | 148.7 ms | `b2a00193…` |
+| `fast` + zstd level 1 | 42.3 ms | 5,453,389 | 147.1 ms | `b2a00193…` |
+| `fast` + zstd-1, then transcode | 39.2 ms (+584 ms later) | 5,453,389 → 12,577,339 | 148.5 → 154.2 ms | `b2a00193…` |
+
+* **Raw is the only fast representation that actually wins here**: 36.0 ms,
+  5.2 ms (12.6 %) faster than planned, for 8.4 % more physical bytes. The
+  tensors are ~29 KB each, so raw needs no encoder at all.
+* **zstd-1 is not a win over level 3 on this data** (42.3 vs 41.2 ms; the walls
+  were 42.3/40.1/45.5 vs 40.0/41.2/123.4, so this is a tie inside the noise).
+  Level 3 on 29 KB inputs is already cheap; the fast path additionally builds a
+  raw candidate that the planned path does not.
+* **Deferred transcode costs 584 ms and grows the store** from 5.45 MB to
+  12.58 MB, because the pass publishes a new version and the old one is
+  retained. Restore is unchanged (same digest). It is a storage optimisation
+  run later, not a latency win, and it must be budgeted accordingly.
+* **Acknowledgement always follows a durable representation.** In `fast` the
+  raw or zstd-1 frame is published and committed before the save returns, so
+  exactly one valid representation exists at ack time; the transcode is a
+  separate, explicit later pass with `--min-saved-percent`. No variant is
+  acknowledged before its frame is durable, and every variant restores the same
+  digest.
+
+Transient storage growth: raw adds 458,962 bytes over four saves (8.4 %);
+transcode adds 7,123,950 bytes (the retained old versions), which GC reclaims
+once the new versions are no longer pinned by a snapshot.

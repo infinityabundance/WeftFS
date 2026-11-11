@@ -8407,3 +8407,23 @@ and the R11 packing result stands on its own (large single-ingest) evidence. A
 packed store is only readable through the packed plane, so the CLI `checkpoint
 verify` cannot see one; exactness here was proven by restoring all 169 tensors
 through the session. Peak RSS 304 MB is the Python process, not the service.
+
+### Increment 6 — write-policy comparison
+
+Receipt `bench/receipts/checkpoint-latency-20261111T035900Z.json`; the policy is
+now plumbed through `WeftStorageWriter(write_policy=, fast_codec=,
+fast_zstd_level=)`.
+
+| policy | p50 | store bytes | restore 169 tensors | digest |
+|---|---:|---:|---:|---|
+| planned (level-3 ZSTD) | 41.2 ms | 5,453,026 | 144.1 ms | `b2a00193…` |
+| fast + raw | **36.0 ms** | 5,912,028 (+8.4 %) | 148.7 ms | same |
+| fast + zstd-1 | 42.3 ms | 5,453,389 | 147.1 ms | same |
+| fast + zstd-1, then transcode | 39.2 ms (+584 ms later) | → 12,577,339 | 148.5 → 154.2 ms | same |
+
+Raw is the only fast representation that wins (36.0 ms, −5.2 ms, +8.4 % bytes);
+zstd-1 ties level 3 on 29 KB shards; deferred transcode costs 584 ms and grows
+the store by 7.1 MB because the old version is retained. **Every variant is
+acknowledged only after its frame is published and committed**, so exactly one
+valid representation exists at ack time and the transcode is a separate,
+budgeted later pass.

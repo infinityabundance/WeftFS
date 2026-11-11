@@ -44,6 +44,7 @@ import resource
 import shutil
 import hashlib
 import statistics
+import subprocess
 import sys
 import tempfile
 import time
@@ -64,6 +65,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import training_goodput as tg  # noqa: E402  (shares the R11 fixture exactly)
 
 from weftcodec.dcp import (  # noqa: E402
+    CheckpointSession,
     WeftStorageWriter,
     init_store,
     set_probe_sink,
@@ -302,6 +304,15 @@ def decompose(rows):
             }
         return out
 
+    if not rows:
+        return {
+            "wall_ms": None,
+            "client": {},
+            "rust": {},
+            "client_top_level_ms": None,
+            "client_accounted_share": None,
+            "rust_top_level_ms": None,
+        }
     client = collect("client")
     rust = collect("rust")
     wall = statistics.median(row["wall_ms"] for row in rows)
@@ -352,6 +363,7 @@ def session_series(
     atomic=True,
     extra_args=(),
     label="session",
+    policy=(),
 ):
     """N saves through one long-lived session (warm service + held handle)."""
     from weftcodec.dcp import CheckpointSession
@@ -373,7 +385,10 @@ def session_series(
             service.profile(0)
             started = time.perf_counter()
             stats = session.save(
-                state, checkpoint_id="ckpt-%d" % index, atomic_publish=atomic
+                state,
+                checkpoint_id="ckpt-%d" % index,
+                atomic_publish=atomic,
+                **dict(policy),
             )
             saved = time.perf_counter()
             rust_profile = service.profile(1)
@@ -596,7 +611,67 @@ def run(args):
             row["pack_verify"] = None
         packed_rows.extend(rows)
 
-    verify = verify_checkpoint(store, "ckpt-%d" % (args.reps - 1), weftfs_cli=args.weftfs_cli)
+    policy_rows = {}
+    for label, policy in args.policy:
+        policy_store = work / label
+        policy_store.mkdir()
+        init_store(policy_store, weftfs_cli=args.weftfs_cli)
+        rows = session_series(
+            torch,
+            store_root=policy_store,
+            state=state,
+            reps=max(3, args.reps // 2),
+            collector=collector,
+            service_cli=args.weftfs_cli,
+            idle_secs=args.session_idle_secs,
+            label=label,
+            policy=policy,
+        )
+        entry = {
+            "walls": [round(r["wall_ms"], 3) for r in rows],
+            "median_ms": statistics.median(r["wall_ms"] for r in rows),
+            "last_delta_bytes": rows[-1]["store_delta_bytes"],
+            "store_bytes": rows[-1]["store_total_bytes"],
+            "restore": rows[-1].get("restore"),
+            "policy": dict(policy),
+        }
+        if label.startswith("fast-deferred"):
+            # One acknowledgement is already durable; this is the later
+            # optimisation pass, with its cost and the split it leaves behind.
+            name = "ckpt-%d" % (len(rows) - 1)
+            started = time.perf_counter()
+            proc = subprocess.run(
+                [
+                    args.weftfs_cli,
+                    "--store",
+                    str(policy_store),
+                    "transcode",
+                    "--root",
+                    "/checkpoints/%s" % name,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            entry["transcode_ms"] = (time.perf_counter() - started) * 1000.0
+            entry["transcode_ok"] = proc.returncode == 0
+            if proc.returncode != 0:
+                entry["transcode_error"] = proc.stderr.strip()[-400:]
+            entry["post_transcode_store_bytes"] = tree_stats(policy_store)["bytes"]
+            with CheckpointSession(
+                policy_store,
+                weftfs_cli=args.weftfs_cli,
+                staging_bytes=tg.STAGING_BYTES,
+                session_idle_secs=args.session_idle_secs,
+            ) as after:
+                entry["post_transcode_restore"] = restore_latency(after, state)
+        policy_rows[label] = entry
+
+    verify = (
+        verify_checkpoint(store, "ckpt-%d" % (args.reps - 1), weftfs_cli=args.weftfs_cli)
+        if sequential_rows
+        else None
+    )
     session_verify = None
     if session_rows:
         session_verify = verify_checkpoint(
@@ -645,18 +720,26 @@ def run(args):
         },
         "summary": {
             "fresh_store_wall_ms": [round(row["wall_ms"], 3) for row in fresh_rows],
-            "fresh_store_median_ms": statistics.median(
-                row["wall_ms"] for row in fresh_rows
+            "fresh_store_median_ms": (
+                statistics.median(row["wall_ms"] for row in fresh_rows)
+                if fresh_rows
+                else None
             ),
             "sequential_wall_ms": [
                 round(row["wall_ms"], 3) for row in sequential_rows
             ],
-            "sequential_first_ms": sequential_rows[0]["wall_ms"],
-            "sequential_later_median_ms": statistics.median(
-                row["wall_ms"] for row in later_rows
+            "sequential_first_ms": (
+                sequential_rows[0]["wall_ms"] if sequential_rows else None
             ),
-            "sequential_all_median_ms": statistics.median(
-                row["wall_ms"] for row in sequential_rows
+            "sequential_later_median_ms": (
+                statistics.median(row["wall_ms"] for row in later_rows)
+                if later_rows
+                else None
+            ),
+            "sequential_all_median_ms": (
+                statistics.median(row["wall_ms"] for row in sequential_rows)
+                if sequential_rows
+                else None
             ),
             "session_wall_ms": [round(row["wall_ms"], 3) for row in session_rows],
             "session_first_ms": (session_rows[0]["wall_ms"] if session_rows else None),
@@ -760,6 +843,7 @@ def run(args):
                 for label in sorted({r["scenario"] for r in packed_rows})
             },
         },
+        "policy": policy_rows,
         "runs": all_rows + two_commit_rows + session_rows + packed_rows,
         "verify": verify,
         "session_verify": session_verify,
@@ -769,14 +853,18 @@ def run(args):
         write_json(args.receipt, receipt)
         print("checkpoint-latency receipt: %s" % args.receipt)
     print(
-        "fresh median %.1f ms | writer-per-save first %.1f / later %.1f | "
-        "session first %.1f / median %.1f"
+        "fresh median %s ms | writer-per-save first %s / later %s | "
+        "session first %s / median %s | policies %s"
         % (
             receipt["summary"]["fresh_store_median_ms"],
             receipt["summary"]["sequential_first_ms"],
             receipt["summary"]["sequential_later_median_ms"],
-            receipt["summary"]["session_first_ms"] or 0.0,
-            receipt["summary"]["session_median_ms"] or 0.0,
+            receipt["summary"]["session_first_ms"],
+            receipt["summary"]["session_median_ms"],
+            {
+                label: round(entry["median_ms"], 1)
+                for label, entry in receipt["policy"].items()
+            },
         )
     )
     return 0
@@ -796,6 +884,13 @@ def main(argv):
     )
     run_p.add_argument("--session-idle-secs", type=int, default=30)
     run_p.add_argument(
+        "--policy",
+        action="append",
+        default=None,
+        metavar="LABEL",
+        help="add a write-policy variant: planned|fast-raw|fast-zstd1|fast-deferred-zstd1",
+    )
+    run_p.add_argument(
         "--pack",
         action="append",
         default=None,
@@ -807,6 +902,21 @@ def main(argv):
         default=os.environ.get("WEFTFS_CLI", "/work/.docker-cache/target-rust/release/weftfs"),
     )
     args = parser.parse_args(argv)
+    policies = {
+        "planned": {},
+        "fast-raw": {"write_policy": "fast", "fast_codec": "raw"},
+        "fast-zstd1": {
+            "write_policy": "fast",
+            "fast_codec": "zstd",
+            "fast_zstd_level": 1,
+        },
+        "fast-deferred-zstd1": {
+            "write_policy": "fast",
+            "fast_codec": "zstd",
+            "fast_zstd_level": 1,
+        },
+    }
+    args.policy = [(label, policies[label]) for label in (args.policy or [])]
     if getattr(args, "pack", None) is None:
         args.pack = []
     else:
