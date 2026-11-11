@@ -28,6 +28,29 @@ with measured tables is at the end of this document. The R4 aggregate is
 failed, 0 skipped) at WeftFS `a3256af`; it now includes `tla`,
 `multiwriter`, and `multiwriter_failure`.
 
+**Subphase R13 (restore scaling), 2026-11-11:** the R10 bottleneck is proven
+and fixed. One backend mutex held **0.41–0.65 of the restore wall** at four
+workers while four threads waited **0.50–0.75 of the wall** in aggregate; the
+lock took 37–60 % of every tensor's wall time. Immutable blob reads now use a
+bounded `ReadHandlePool` (64 idle handles) and verify their hash after the
+handle is released, so the state mutex covers only mutable control state; a
+packed-plane handle is invalidated by every mutation; 3FS is deliberately not
+pooled. A tensor's shards are read and verified with the shipped bounded
+runner (`shard_threads`, default 1). Evidence: state-mutex hold share
+**0.000** in every configuration; store-only Qwen2.5-0.5B restore
+1,188 → 2,792 MB/s at four workers and 3B 1,177 → 3,073 MB/s; shard
+concurrency lifts the single 0.5B embedding from 552 to 454 ms and the 3B
+embedding from 1,303 to 1,072 ms; four independent readers reach 1,860–2,658
+MB/s aggregate; MinIO reaches 495 MB/s at four workers. Losses: the
+whole-file SHA remains a serial floor (3B one-worker −1.5 %), 4×4 shard
+oversubscription is slower than 2×4, peak RSS rises 14–20 %, 3FS is not
+pooled, and region restores remain sequential. Every worker count is
+byte-identical at 1/2/4/8/16 × 1/2 tile × 1/4 shard threads. Receipts
+`restore-scaling-20261111T090904Z`, `restore-scaling-3b-final-20261111T092000Z`,
+`restore-scaling-readers-20261111T091500Z`,
+`restore-scaling-minio-20261111T085500Z`; analysis
+[`bench/RESULTS-restore-scaling.md`](../bench/RESULTS-restore-scaling.md).
+
 **Stage S6 update (2026-11-08):** the current verification receipt is
 `bench/receipts/verify-20261108T165021Z.json` (**37/37** courts `pass`, 0 failed,
 0 skipped) after the Stage 1–6 work below; the previous T2 receipt
@@ -8512,3 +8535,67 @@ Evidence trail: `bench/RESULTS-checkpoint-latency.md` (Sections 1-13),
 above. Gates at the final commit: Rust all-targets 758 passed / 0 failed,
 FUSE 801 passed / 0 failed / 2 pre-existing ignored, Python 368 passed / 70
 skipped, claims 884, spec drift 60/60, conformance manifest 420 entries.
+
+## Subphase R13 — restore scaling: the backend mutex (2026-11-11)
+
+R10 measured 1.21x at 8 requested workers against a 9.92x Amdahl cap and named
+one backend mutex. R13 proves it, removes it for immutable content, adds
+within-tensor shard concurrency, and measures the result. Full analysis and
+every loss: [`bench/RESULTS-restore-scaling.md`](../bench/RESULTS-restore-scaling.md).
+
+**Proof (525f884).** An opt-in lock probe records mutex wait, hold, demand,
+and per-tensor attribution (`tests/lock_probe.rs` proves one thread cannot hold
+longer than its wall time). 0.5B, whole-file SHA: 806/1464/1411/1403/1408 MB/s
+at 1/2/4/8/16 requested workers; hold share 0.21/0.41/0.41/0.41/0.41 and wait
+share 0.00/0.14/0.50/0.50/0.51, demand 1/2/4/4/4. 3B: 818/1709/1976/1975,
+hold 0.23/0.53/0.65/0.65, wait 0.00/0.18/0.75/0.74. At four workers the lock
+was 42 % of the 0.5B embedding's wall and 53-60 % of a 64 MB MLP tensor's
+(37 % and 53-55 % for 3B). Hold p50/p95 15/20 us and 19/28 us; wait p95 48/60
+us. One thread holds; four wait.
+
+**Design.** `src/read_pool.rs` — at most 64 idle handles for `objects/` and
+`manifests/`; borrow, read, release, then hash. Every mutation bumps the pool
+epoch and drops idle handles (a packed-plane handle caches its catalog); a
+released handle's counters are harvested into `BackendStats`, which
+`backend_stats`/`plane_stats` merge. 3FS is not pooled (ring duplication) and
+keeps the old path. `src/checkpoint.rs` reads a tensor's shards with
+`parallel::run_bounded` (`shard_threads`, default 1; `shard_max_inflight_bytes`,
+default 64 MiB); per-shard checks run in the worker, assembly and the
+whole-tensor root check stay in order, lowest-index error wins.
+
+**After (9e821dd).** State-mutex hold share **0.000** everywhere (12 prologue
+entries, 1.7 us). Store-only restore:
+
+| fixture | 1 | 2 | 4 | 8 requested |
+| --- | ---: | ---: | ---: | ---: |
+| 0.5B shard_threads=1 | 1188 | 2233 | 2776 | 2780 MB/s |
+| 0.5B shard_threads=4 | 2354 | 3801 | 2903 | 3394 |
+| 3B shard_threads=1 | 1177 | 2090 | 2998 | 3073 |
+| 3B shard_threads=4 | 2390 | 3480 | 2439 | 2438 |
+
+Same method as the baseline (whole-file SHA): 0.5B 807/1560/1549/1541/1550
+(+1.4/+5.3/+11.2/+9.0/+8.7 %); 3B 792/1896/2039/2050 (**-1.5**/+9.9/+1.5/+2.9
+%). Single embedding: 0.5B 552 → 454 ms, 3B 1303 → 1072 ms. Four independent
+readers: 1,860-2,658 MB/s aggregate (mean 2,233) vs 1,188 single. MinIO:
+179/345/491/495 MB/s at 1/2/4/8; readers 219-379 MB/s. Peak RSS +20.2 % (0.5B)
+and +14.4 % (3B) for shard_threads=4. Exact bytes and container SHA-256 at
+1/2/4/8/16 workers x 1/2 tile threads x 1/4 shard threads.
+
+**Losses.** The whole-file SHA stays a serial 0.39 s / 2.4 s floor (the 3B
+one-worker change is negative and the four-worker change is +1.5 %); 4x4
+oversubscription is slower than 2x4 and triples 3B backend I/O; there is no
+automatic worker budget; 3FS is not pooled; region restores remain sequential;
+MinIO is one loopback process and not a cloud claim; one host, warm cache.
+
+**Receipts.** `restore-scaling-20261111T090904Z` (0.5B),
+`restore-scaling-3b-final-20261111T092000Z` (3B),
+`restore-scaling-readers-20261111T091500Z` (5-repetition readers),
+`restore-scaling-minio-20261111T085500Z` (MinIO); baselines
+`restore-scaling-20261111T063612Z` and
+`restore-scaling-3b-baseline-20261111T071500Z`. Retained failure:
+`restore-scaling-minio-20261111T083500Z.log` (an uppercase, non-DNS bucket
+name refused by MinIO). A cold-cache 3B baseline run was discarded rather than
+cited: it mixed cache state with the worker count.
+
+**Gates.** `cargo test --all-targets` 770 passed / 0 failed; `cargo test
+--features fuse --all-targets` 813 passed / 0 failed / 2 pre-existing ignored.
