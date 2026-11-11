@@ -30,7 +30,9 @@ bytes. The program's own gaps are listed in `docs/STATUS.md` and in each
 ## 2. Registry
 
 Identifiers are stable. They are allocated in dependency order, not in order of
-importance.
+importance. In the vector column, `conformance/v1/…` is relative to
+`WeftCodec/conformance/v1/` (mirrored in `WeftCodec-Go/`); `conformance/`
+without the `v1` is the program-home composite-fixture tree.
 
 | ID | Document | Title | Status | Version | Governs | Conformance vectors |
 |---|---|---|---|---|---|---|

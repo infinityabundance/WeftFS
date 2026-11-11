@@ -8057,8 +8057,8 @@ changed. There is no new performance claim.
 
 `bench/bundles/conformance-1.2.0.tar.zst`:
 
-* **538 files**, **1,328,551 bytes**, SHA-256
-  `3d945b516a6c3bd38a7ab8f6f90e6a7a53caed5469758f5dec9dc86abd46b8df`.
+* **538 files**, **1,328,679 bytes**, SHA-256
+  `5ece88b51ff05cf18979cc90598cdeeb2c928c48e1a3563d3954057511c10b43`.
 * Contents: `conformance/manifest.json` (420 entries, aggregate
   `6287b817…`), all vectors, the checkpoint/context/overlay/store/engram/fuzz
   fixtures, `RUN.md`, the runner, the adapter contract, the Rust/Python
@@ -8071,7 +8071,7 @@ changed. There is no new performance claim.
   **229 / 0 / 191**. Python skips per mode: **18 → 17, 19 → 22, 20 → 21**;
   every other skip is a non-codec surface or a superseded historical reject.
   The receipt's `documented_skips` check is true.
-* Receipt: `bench/receipts/conformance-bundle-20261111T012244Z.json`.
+* Receipt: `bench/receipts/conformance-bundle-20261111T012513Z.json`.
   The earlier `…011629Z` receipt is retained because the verification caught a
   real packaging defect (the checksum list included its own temporary file).
 

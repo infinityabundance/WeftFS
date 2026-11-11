@@ -192,7 +192,7 @@ and 79 returned typed conflicts, exactly one winner. Rust and Go produced
 byte-identical commit and superblock bytes and read each other's objects. The
 failure court recovered old-or-new at every injected stage, with outcome
 lookup, idempotent replay, and `verify --full`. The TLA+ model checked
-2,690,909 states / 268,641 distinct with nine invariants; the buggy variant
+2,690,909 states / 268,641 distinct with ten invariants; the buggy variant
 violates `NoBlindOverwrite` and the GC variant violates
 `GcNeverReclaimsReachable`.
 
@@ -266,7 +266,8 @@ store run finished with `verify --full`; every cross-language run compared
 frames byte-for-byte or decode-equivalence as the mode requires (RAW through
 STRUCTURED promise byte-identical encoding; ZSTD promises decode equivalence).
 A hash mismatch fails closed. The conformance corpus is replayed from one
-manifest by independent Rust, Go, and Python readers.
+manifest by independent Rust, Go, and Python readers, with explicit per-mode
+skips where a reader does not implement a surface.
 
 **Cost model.** Decode and encode rows are host-local calibrations measured on
 the same court and stored in a strict document (`weftfs-r2/decode-calibration`,
