@@ -142,6 +142,24 @@ if ! scripts/docker-court.sh rust "cd /work && bash bench/scripts/azure_inner_co
   inner_status=1
 fi
 
+# The independent Go implementation runs the same contract in the Go court:
+# client unit tests, the in-process double's adversarial endpoints, and the live
+# emulator round trip, GC, conditional CAS, and Rust<->Go handoff. A failure here
+# fails the court; a skipped live test is recorded in the log and never counted
+# as a pass.
+go_status=0
+go_log="bench/receipts/azure-go-${stamp}.log"
+if ! scripts/docker-court.sh go \
+  "cd /work/WeftFS-Go && gofmt -l ./store ./cmd && go test -count=1 -run 'TestAzure|TestDecodeBase64' ./store -v" \
+  >"$go_log" 2>&1; then
+  go_status=1
+fi
+grep -E '^(=== RUN|--- (PASS|FAIL|SKIP)|ok |FAIL|PASS|store/.*\.go)' "$go_log" \
+  >"${go_log%.log}.txt" || true
+if [[ "$go_status" != 0 ]]; then
+  inner_status=1
+fi
+
 court_receipt="bench/receipts/azure-court-${stamp}.json"
 cat > "$court_receipt" <<JSON
 {
@@ -189,6 +207,13 @@ cat > "$court_receipt" <<JSON
   "court": {
     "command": "cargo run --release --quiet --example azure_court -- --out ${WEFT_AZURE_RECEIPT}",
     "receipt": "${WEFT_AZURE_RECEIPT}"
+  },
+  "go": {
+    "command": "scripts/docker-court.sh go \"cd /work/WeftFS-Go && gofmt -l ./store ./cmd && go test -count=1 -run 'TestAzure|TestDecodeBase64' ./store -v\"",
+    "log": "${go_log}",
+    "summary": "${go_log%.log}.txt",
+    "status": "$(if [[ "$go_status" == 0 ]]; then echo ok; else echo failed; fi)",
+    "scope": "client unit tests (exact string-to-sign, canonical query, path encoding, strict base64, config refusals), an in-process double for the endpoints a well-behaved emulator cannot produce (If-Match ignored, If-None-Match ignored, literal ETag comparison), the live emulator store round trip with GC and reopen, live conditional create/CAS with stale-ETag refusal, and a Rust<->Go handoff on one container"
   },
   "label": "Single-host Azurite emulator on loopback in the OOM-protected Docker court with a tmpfs data directory. Not an Azure, cloud, multi-node, fleet, device-cache, media, power-loss, or production claim."
 }
