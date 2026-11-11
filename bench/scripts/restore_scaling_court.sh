@@ -125,18 +125,25 @@ for family in $families; do
     add_input "checkpoint_${family}_instruct=$family_work/checkpoint-instruct.json"
   fi
 
-  for combo in "0:counting" "1:counting" "1:sha256"; do
-    probe="${combo%%:*}"
-    sink="${combo##*:}"
-    echo "== restore $family threads=$thread_csv probe=$probe sink=$sink =="
+  for spec in "0:counting" "1:counting" "1:counting-filehash" "1:sha256"; do
+    probe="${spec%%:*}"
+    sink="${spec##*:}"
+    extra=()
+    tag=""
+    if [[ "$sink" == "counting-filehash" ]]; then
+      sink=counting
+      extra=(--file-hash)
+      tag="-filehash"
+    fi
+    echo "== restore $family threads=$thread_csv probe=$probe sink=$sink${tag} =="
     WEFT_LOCK_PROBE="$probe" "$bin" restore \
       --store "$store" --name "$family" \
       --threads "$thread_csv" --tile-threads "$tile_csv" \
       --max-inflight-bytes 268435456 \
-      --sink "$sink" \
+      --sink "$sink" "${extra[@]}" \
       --reps "$reps" \
-      --out "$family_work/restore-$sink-probe$probe.json"
-    add_input "restore_${family}_${sink}_probe$probe=$family_work/restore-$sink-probe$probe.json"
+      --out "$family_work/restore-$sink$tag-probe$probe.json"
+    add_input "restore_${family}_${sink}${tag//-/_}_probe$probe=$family_work/restore-$sink$tag-probe$probe.json"
   done
 
   if [[ "$readers_on" == "1" ]]; then

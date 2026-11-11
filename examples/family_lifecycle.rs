@@ -2113,10 +2113,27 @@ fn readers(args: &[String]) -> Result<(), String> {
                     let mut bytes = 0u64;
                     let mut sha_match = true;
                     let mut first = true;
+                    // With a counting sink, prove exactness once *outside* the
+                    // measured loop so the numbers are the store's steady-state
+                    // restores, not a SHA-256 pass.
+                    if !use_sha {
+                        let mut verify = RestoreSink::new(true);
+                        store
+                            .restore_checkpoint_pipelined(
+                                name,
+                                &CheckpointRestoreOptions::default(),
+                                &RestorePipelineOptions::default(),
+                                &mut verify,
+                            )
+                            .map_err(|err| format!("reader {reader} verify {name}: {err}"))?;
+                        if let (Some(expected), Some(digest)) = (*expected, verify.digest()) {
+                            sha_match = digest == expected;
+                        }
+                    }
                     for _ in 0..per_reader {
-                        // The first restore always hashes so exactness is
-                        // checked; later restores use the requested sink.
-                        let sha_this = use_sha || first;
+                        // With `--sink sha256` every restore hashes; with
+                        // `counting` the measured restores skip output hashing.
+                        let sha_this = use_sha;
                         let mut sink = RestoreSink::new(sha_this);
                         let restore_started = Instant::now();
                         let report = if sha_this {
@@ -2137,14 +2154,14 @@ fn readers(args: &[String]) -> Result<(), String> {
                         .map_err(|err| format!("reader {reader} restore {name}: {err}"))?;
                         durations.push(restore_started.elapsed().as_secs_f64() * 1000.0);
                         bytes = bytes.saturating_add(report.file_bytes);
-                        if first {
+                        if sha_this && first {
                             if let (Some(expected), Some(digest)) = (*expected, sink.digest()) {
                                 if digest != expected {
                                     sha_match = false;
                                 }
                             }
-                            first = false;
                         }
+                        first = false;
                     }
                     let wall: f64 = durations.iter().sum();
                     Ok(json!({
@@ -2166,8 +2183,14 @@ fn readers(args: &[String]) -> Result<(), String> {
                 .map(|handle| handle.join().expect("reader thread panicked"))
                 .collect::<Result<Vec<_>, String>>()
         })?;
-        let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
-        workload_samples.push(wall_ms);
+        let process_wall_ms = started.elapsed().as_secs_f64() * 1000.0;
+        // The aggregate rate uses the slowest reader's measured restore time,
+        // excluding the untimed exactness pass.
+        let wall_ms = results
+            .iter()
+            .filter_map(|row| row.get("wall_ms").and_then(Json::as_f64))
+            .fold(0.0, f64::max);
+        workload_samples.push(process_wall_ms);
         let total_bytes: u64 = results
             .iter()
             .map(|row| row.get("bytes").and_then(Json::as_u64).unwrap_or(0))
@@ -2191,6 +2214,7 @@ fn readers(args: &[String]) -> Result<(), String> {
             "repetition": rep,
             "readers": reader_count,
             "per_reader": per_reader,
+            "process_wall_ms": round(process_wall_ms),
             "wall_ms": round(wall_ms),
             "total_bytes": total_bytes,
             "aggregate_mb_per_s": round(rate),
@@ -2336,6 +2360,7 @@ fn restore(args: &[String]) -> Result<(), String> {
         ));
     }
     let use_sha = sink_mode == "sha256";
+    let file_hash = flag(args, "--file-hash");
 
     let open_started = Instant::now();
     let store = Store::open_with_options_and_backend(
@@ -2425,6 +2450,13 @@ fn restore(args: &[String]) -> Result<(), String> {
                 let started = Instant::now();
                 let report = if use_sha {
                     store.restore_checkpoint_pipelined(
+                        &name,
+                        &CheckpointRestoreOptions::default(),
+                        &pipeline,
+                        &mut sink,
+                    )
+                } else if file_hash {
+                    store.restore_checkpoint_pipelined_without_tensor_sha(
                         &name,
                         &CheckpointRestoreOptions::default(),
                         &pipeline,
@@ -2613,6 +2645,7 @@ fn restore(args: &[String]) -> Result<(), String> {
             "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count"
         },
         "lock_probe_enabled": probe_enabled,
+        "file_hash": file_hash,
         "single_largest_tensor": distribution(&single),
         "single_largest_tensor_lock": single_lock,
         "configurations": matrix,

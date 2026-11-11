@@ -2454,6 +2454,7 @@ impl RestorePrologue {
         before: crate::backend::BackendStats,
         after: crate::backend::BackendStats,
         pipeline: Option<crate::restore_pipeline::RestorePipelineStats>,
+        check_exact: bool,
     ) -> Result<CheckpointRestoreReport> {
         let exact_source_file = self
             .source_sha256
@@ -2464,7 +2465,7 @@ impl RestorePrologue {
             .as_ref()
             .map(|expected| expected.as_slice() == self.header.as_slice())
             .unwrap_or(false);
-        if self.exact_all {
+        if check_exact && self.exact_all {
             if let Some(expected_len) = self.source_file_bytes {
                 if file_bytes != expected_len {
                     return Err(Error::corrupt(format!(
@@ -2614,6 +2615,7 @@ impl Store {
             before,
             after,
             None,
+            true,
         )
     }
 
@@ -2818,6 +2820,7 @@ impl Store {
             before,
             after,
             Some(outcome),
+            hash_file,
         )
     }
 
