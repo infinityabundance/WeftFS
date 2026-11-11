@@ -399,3 +399,31 @@ Vectors are append-only. Never rewrite, reorder, or "fix" an existing vector.
 
 If a new mode is allocated, add a valid vector and at least one reject vector;
 the coverage gate will fail otherwise.
+
+---
+
+## 7. Third-party distribution
+
+```sh
+scripts/package-conformance.sh
+```
+
+builds `bench/bundles/conformance-<version>.tar.zst` and verifies it by
+extracting it to a private directory and running the runner **from the
+extracted copy only**. The bundle contains the manifest, every vector, the
+runner, the adapter contract, `docs/WRITE-YOUR-OWN-DECODER.md`, `docs/RFC.md`,
+the reference Rust/Python adapters, and the independent Python reader. Its
+`RUN.md` gives the two commands a third party needs.
+
+The bundle is also shaped as a `weftfs.receipt-bundle/1`, so
+`scripts/verify-receipts.sh` checks its checksums and revisions without trusting
+the producer. `scripts/verify-conformance-python.sh` runs the Python second
+opinion in the python court (where `blake3` is installed) and merges its
+per-mode skip table into the receipt.
+
+Current evidence: `bench/receipts/conformance-bundle-20261111T011750Z.json`.
+Bundle SHA-256 `084fe82ccb6a37b45e850ece2e2cad343a02cdd1b8922905a02818788108da01`,
+538 files, 420 manifest entries, aggregate `6287b817…`. Extracted-copy runs:
+Rust 288 pass / 0 fail / 132 skip; Python 229 / 0 / 191. Python skips per mode:
+18 → 17, 19 → 22, 20 → 21; every other skip is a non-codec surface or a
+superseded historical reject. `verify_receipts: pass`.
