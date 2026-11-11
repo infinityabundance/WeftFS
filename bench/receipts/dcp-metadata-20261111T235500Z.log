@@ -1,0 +1,8 @@
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+n=1     bytes=486    reference p50   0.058 ms (p95   0.065) | plan  0.019 | generic  0.023 | native floor  0.015
+n=16    bytes=6484   reference p50   0.378 ms (p95   0.692) | plan  0.059 | generic  0.156 | native floor  0.054
+n=64    bytes=26222  reference p50   1.578 ms (p95   2.589) | plan  0.205 | generic  0.618 | native floor  0.167
+n=169   bytes=71559  reference p50   4.061 ms (p95   5.379) | plan  0.555 | generic  1.633 | native floor  0.441
+n=1024  bytes=401583 reference p50  26.870 ms (p95 101.036) | plan  3.335 | generic 10.669 | native floor  3.126
+dcp-metadata-cost receipt: bench/receipts/dcp-metadata-20261111T235500Z.json

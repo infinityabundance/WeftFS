@@ -1,0 +1,262 @@
+sweep interval=4 config=weft rep=1/3
+  loop_wall=7856.9ms step_p50=11.41ms completion_p50=205.1ms resumes=32/32
+sweep interval=4 config=weft rep=2/3
+  loop_wall=7959.5ms step_p50=11.27ms completion_p50=217.5ms resumes=1/1
+sweep interval=4 config=weft rep=3/3
+  loop_wall=7922.1ms step_p50=11.62ms completion_p50=210.3ms resumes=1/1
+sweep interval=4 config=weft-session rep=1/3
+  loop_wall=2585.8ms step_p50=13.52ms completion_p50=44.3ms resumes=32/32
+sweep interval=4 config=weft-session rep=2/3
+  loop_wall=2511.7ms step_p50=13.34ms completion_p50=42.9ms resumes=1/1
+sweep interval=4 config=weft-session rep=3/3
+  loop_wall=2532.9ms step_p50=13.45ms completion_p50=42.7ms resumes=1/1
+interval 4: weft warm p50=216.426 weft-session warm p50=43.212
+sweep interval=8 config=weft rep=1/3
+  loop_wall=2608.8ms step_p50=11.11ms completion_p50=120.0ms resumes=16/16
+sweep interval=8 config=weft rep=2/3
+  loop_wall=2658.4ms step_p50=11.22ms completion_p50=133.8ms resumes=1/1
+sweep interval=8 config=weft rep=3/3
+  loop_wall=2631.1ms step_p50=10.93ms completion_p50=126.8ms resumes=1/1
+sweep interval=8 config=weft-session rep=1/3
+  loop_wall=1941.5ms step_p50=10.86ms completion_p50=42.1ms resumes=16/16
+sweep interval=8 config=weft-session rep=2/3
+  loop_wall=1952.4ms step_p50=11.02ms completion_p50=43.0ms resumes=1/1
+sweep interval=8 config=weft-session rep=3/3
+  loop_wall=1901.5ms step_p50=10.60ms completion_p50=42.1ms resumes=1/1
+interval 8: weft warm p50=129.732 weft-session warm p50=42.36
+sweep interval=16 config=weft rep=1/3
+  loop_wall=1731.3ms step_p50=10.39ms completion_p50=93.2ms resumes=8/8
+sweep interval=16 config=weft rep=2/3
+  loop_wall=1774.5ms step_p50=10.54ms completion_p50=95.6ms resumes=1/1
+sweep interval=16 config=weft rep=3/3
+  loop_wall=1753.8ms step_p50=10.53ms completion_p50=94.3ms resumes=1/1
+sweep interval=16 config=weft-session rep=1/3
+  loop_wall=1664.5ms step_p50=10.45ms completion_p50=41.9ms resumes=8/8
+sweep interval=16 config=weft-session rep=2/3
+  loop_wall=1783.1ms step_p50=11.04ms completion_p50=42.8ms resumes=1/1
+sweep interval=16 config=weft-session rep=3/3
+  loop_wall=1734.8ms step_p50=10.77ms completion_p50=43.6ms resumes=1/1
+interval 16: weft warm p50=87.404 weft-session warm p50=42.139
+sweep interval=32 config=weft rep=1/3
+  loop_wall=1662.5ms step_p50=10.72ms completion_p50=77.2ms resumes=4/4
+sweep interval=32 config=weft rep=2/3
+  loop_wall=1629.5ms step_p50=10.42ms completion_p50=73.5ms resumes=1/1
+sweep interval=32 config=weft rep=3/3
+  loop_wall=1563.2ms step_p50=10.10ms completion_p50=74.7ms resumes=1/1
+sweep interval=32 config=weft-session rep=1/3
+  loop_wall=1549.1ms step_p50=10.38ms completion_p50=42.9ms resumes=4/4
+sweep interval=32 config=weft-session rep=2/3
+  loop_wall=1544.9ms step_p50=10.35ms completion_p50=40.7ms resumes=1/1
+sweep interval=32 config=weft-session rep=3/3
+  loop_wall=1540.8ms step_p50=10.32ms completion_p50=41.3ms resumes=1/1
+interval 32: weft warm p50=71.353 weft-session warm p50=40.546
+session kill scenario=after_ack rep=1/3 delay_ms=0.0
+  kill=after_ack resumed_from=ckpt-0048 TTSR=1485.5ms exact=True
+session kill scenario=after_ack rep=2/3 delay_ms=0.0
+  kill=after_ack resumed_from=ckpt-0048 TTSR=1455.8ms exact=True
+session kill scenario=after_ack rep=3/3 delay_ms=0.0
+  kill=after_ack resumed_from=ckpt-0048 TTSR=1463.9ms exact=True
+session kill scenario=before_ack_half rep=1/3 delay_ms=21.1
+  kill=before_ack_half resumed_from=ckpt-0016 TTSR=1471.1ms exact=True
+session kill scenario=before_ack_half rep=2/3 delay_ms=21.1
+  kill=before_ack_half resumed_from=ckpt-0016 TTSR=1458.3ms exact=True
+session kill scenario=before_ack_half rep=3/3 delay_ms=21.1
+  kill=before_ack_half resumed_from=ckpt-0016 TTSR=1423.2ms exact=True
+session kill scenario=before_ack_after_completion rep=1/3 delay_ms=48.5
+  kill=before_ack_after_completion resumed_from=ckpt-0032 TTSR=1495.8ms exact=True
+session kill scenario=before_ack_after_completion rep=2/3 delay_ms=48.5
+  kill=before_ack_after_completion resumed_from=ckpt-0032 TTSR=1445.2ms exact=True
+session kill scenario=before_ack_after_completion rep=3/3 delay_ms=48.5
+  kill=before_ack_after_completion resumed_from=ckpt-0032 TTSR=1484.7ms exact=True
+receipt bench/receipts/training-goodput-session-20261112T004500Z.json
+{
+  "intervals": [
+    4,
+    8,
+    16,
+    32
+  ],
+  "warm_p50_ms": {
+    "4": {
+      "weft": 216.426,
+      "weft-session": 43.212
+    },
+    "8": {
+      "weft": 129.732,
+      "weft-session": 42.36
+    },
+    "16": {
+      "weft": 87.404,
+      "weft-session": 42.139
+    },
+    "32": {
+      "weft": 71.353,
+      "weft-session": 40.546
+    }
+  },
+  "warm_p95_ms": {
+    "4": {
+      "weft": 398.962,
+      "weft-session": 46.783
+    },
+    "8": {
+      "weft": 208.266,
+      "weft-session": 45.856
+    },
+    "16": {
+      "weft": 118.589,
+      "weft-session": 47.884
+    },
+    "32": {
+      "weft": 80.111,
+      "weft-session": 43.238
+    }
+  },
+  "warm_p99_ms": {
+    "4": {
+      "weft": 421.083,
+      "weft-session": 50.009
+    },
+    "8": {
+      "weft": 220.752,
+      "weft-session": 46.922
+    },
+    "16": {
+      "weft": 120.362,
+      "weft-session": 48.304
+    },
+    "32": {
+      "weft": 80.111,
+      "weft-session": 43.238
+    }
+  },
+  "loop_wall_ms": {
+    "4": {
+      "weft": 7922.12,
+      "weft-session": 2532.91
+    },
+    "8": {
+      "weft": 2631.081,
+      "weft-session": 1941.545
+    },
+    "16": {
+      "weft": 1753.839,
+      "weft-session": 1734.81
+    },
+    "32": {
+      "weft": 1629.51,
+      "weft-session": 1544.923
+    }
+  },
+  "comparisons": {
+    "4": {
+      "warm_p50_ratio": 0.2,
+      "warm_p95_ratio": 0.117,
+      "cold_p50_ratio": 1.004,
+      "loop_wall_ratio": 0.32,
+      "step_p50_ratio": 1.123,
+      "fsyncs_per_checkpoint_ratio": 1.0,
+      "identical_loss_trajectory": true,
+      "identical_final_state": true
+    },
+    "8": {
+      "warm_p50_ratio": 0.327,
+      "warm_p95_ratio": 0.22,
+      "cold_p50_ratio": 0.93,
+      "loop_wall_ratio": 0.738,
+      "step_p50_ratio": 0.981,
+      "fsyncs_per_checkpoint_ratio": 1.0,
+      "identical_loss_trajectory": true,
+      "identical_final_state": true
+    },
+    "16": {
+      "warm_p50_ratio": 0.482,
+      "warm_p95_ratio": 0.404,
+      "cold_p50_ratio": 1.08,
+      "loop_wall_ratio": 0.989,
+      "step_p50_ratio": 1.012,
+      "fsyncs_per_checkpoint_ratio": 1.0,
+      "identical_loss_trajectory": true,
+      "identical_final_state": true
+    },
+    "32": {
+      "warm_p50_ratio": 0.568,
+      "warm_p95_ratio": 0.54,
+      "cold_p50_ratio": 0.883,
+      "loop_wall_ratio": 0.948,
+      "step_p50_ratio": 0.999,
+      "fsyncs_per_checkpoint_ratio": 1.0,
+      "identical_loss_trajectory": true,
+      "identical_final_state": true
+    }
+  },
+  "exactness": {
+    "resume_checks": 136,
+    "resume_exact": 136
+  },
+  "kill": {
+    "after_ack": {
+      "reps": 3,
+      "time_to_safe_resume_ms_p50": 1463.882,
+      "time_to_safe_resume_ms_p95": 1485.533,
+      "time_to_safe_resume_ms_max": 1485.533,
+      "kill_to_spawn_ms_p50": 42.322,
+      "discovery_ms_p50": 42.321,
+      "steps_lost_median": 0,
+      "resumed_from": [
+        "ckpt-0048",
+        "ckpt-0048",
+        "ckpt-0048"
+      ],
+      "old_count": 0,
+      "new_count": 3,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 3,
+      "resume_load_ms_p50": 251.961
+    },
+    "before_ack_half": {
+      "reps": 3,
+      "time_to_safe_resume_ms_p50": 1458.331,
+      "time_to_safe_resume_ms_p95": 1471.081,
+      "time_to_safe_resume_ms_max": 1471.081,
+      "kill_to_spawn_ms_p50": 43.805,
+      "discovery_ms_p50": 43.804,
+      "steps_lost_median": 16,
+      "resumed_from": [
+        "ckpt-0016",
+        "ckpt-0016",
+        "ckpt-0016"
+      ],
+      "old_count": 3,
+      "new_count": 0,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 0,
+      "resume_load_ms_p50": 236.542
+    },
+    "before_ack_after_completion": {
+      "reps": 3,
+      "time_to_safe_resume_ms_p50": 1484.735,
+      "time_to_safe_resume_ms_p95": 1495.835,
+      "time_to_safe_resume_ms_max": 1495.835,
+      "kill_to_spawn_ms_p50": 47.78,
+      "discovery_ms_p50": 47.78,
+      "steps_lost_median": 0,
+      "resumed_from": [
+        "ckpt-0032",
+        "ckpt-0032",
+        "ckpt-0032"
+      ],
+      "old_count": 0,
+      "new_count": 3,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 3,
+      "resume_load_ms_p50": 240.391
+    }
+  }
+}
