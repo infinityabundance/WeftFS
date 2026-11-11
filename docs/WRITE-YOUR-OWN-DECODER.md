@@ -2,7 +2,9 @@
 
 This is a practical, normative-pointer guide to decoding WFT1 frames. It does
 not replace the specification; it tells you which spec section is authoritative
-for each step and the exact order that determines the error class.
+for each step and the exact order that determines the error class. This guide
+is `WRITE-YOUR-OWN-DECODER.md`; the normative index is
+[`RFC.md`](RFC.md).
 
 Read alongside:
 
@@ -13,7 +15,8 @@ Read alongside:
 - [`../spec/WEFT-CONTEXT-ROOT.md`](../spec/WEFT-CONTEXT-ROOT.md) — Context Roots.
 - [`../spec/WEFT-CAPABILITIES.md`](../spec/WEFT-CAPABILITIES.md) — envelopes.
 - [`CONFORMANCE.md`](CONFORMANCE.md) — vectors and the runner contract.
-- [`WRITE-YOUR-OWN-DECODER.md`](WRITE-YOUR-OWN-DECODER.md) — the practical decoder guide.
+- [`RFC.md`](RFC.md) — the normative index, status vocabulary, and the exact
+  per-mode check order extended to modes 17–20.
 
 You do not need to read the Rust or Go sources. Every value a decoder needs is
 in the frame, the frozen vector, or the normative text.
@@ -32,7 +35,11 @@ in the frame, the frozen vector, or the normative text.
 | TENSOR_SHARDED (10), WEIGHT_DELTA (11), KV_CACHE (12), ACTIVATION_STREAM (13), SEMANTIC_DELTA (14) | **Implemented and frozen for the fields listed** | AI-CODEC §11–§15 |
 | TENSOR_TILED (15) | **Implemented and frozen for the fields listed** | AI-CODEC §16 |
 | SPARSE_DELTA (16) | **Implemented and frozen for the fields listed** | AI-CODEC §17 |
-| Mode values 17–127 | **Reserved**; reject `UnsupportedMode` | FORMAT §3, AI-CODEC §6 |
+| FLOAT_TILED (17) | **Implemented and frozen for the fields listed** | AI-CODEC §18 |
+| FLOAT_TILED_STREAMS (18) | **Implemented; frozen on the wire, experimental in selection** (`n_streams` 1–16) | AI-CODEC §19 |
+| KV_CACHE_PROV (19) | **Implemented and frozen for the fields listed** | AI-CODEC §20, KV-PROVENANCE |
+| ENGRAM_SHARD (20) | **Implemented and frozen for the fields listed** | AI-CODEC §21, ENGRAM |
+| Mode values 21–127 | **Reserved**; reject `UnsupportedMode` | FORMAT §3, AI-CODEC §0 |
 | Mode values 128–255 | **Experimental**; must be rejected for persistence | FORMAT §3 |
 | Self-contained archive layout (`SELF_CONTAINED`) | **Experimental**; v1 readers reject it | FORMAT §7 |
 | WeftFS v2 representation manifests (`weft.manifest.v2`) | **Outside WFT1**; not a frame mode | WEFT-MODEL |
@@ -196,12 +203,21 @@ in one check.
 | 14 | SEMANTIC_DELTA | exact delta plus a verified semantic policy | AI-CODEC §15 |
 | 15 | TENSOR_TILED | descriptor + independently decodable Huffman-coded tiles | AI-CODEC §16 |
 | 16 | SPARSE_DELTA | exact word delta as a varint zero-run stream | AI-CODEC §17 |
+| 17 | FLOAT_TILED | per-tile mode-9 plane payload with per-tile roots | AI-CODEC §18 |
+| 18 | FLOAT_TILED_STREAMS | per-tile interleaved Huffman/raw streams | AI-CODEC §19 |
+| 19 | KV_CACHE_PROV | mode-12 payload plus provenance dimensions in the descriptor | AI-CODEC §20 |
+| 20 | ENGRAM_SHARD | ordered row groups with group roots and supersession | AI-CODEC §21 |
 
-Modes 11, 14, and 16 take a base frame. Resolve it through the dependency table; do
-not accept an inferred substitute. Mode 14 recomputes the base tensor's
-semantic root from the resolved bytes and fails closed on any mismatch. Mode 16
-takes exactly nine descriptor keys, has no payload length (consume the payload
-exactly), and rejects a stored zero word or trailing bytes.
+Modes 11, 14, and 16 take a base frame. Resolve it through the dependency
+table; do not accept an inferred substitute. Mode 14 recomputes the base
+tensor's semantic root from the resolved bytes and fails closed on any mismatch.
+Mode 16 takes exactly nine descriptor keys, has no payload length (consume the
+payload exactly), and rejects a stored zero word or trailing bytes. Mode 19 is a
+mode-12 page with a provenance envelope: decode the page exactly as mode 12,
+then check every derived root and the page cross-checks. Mode 20 is not a tensor
+frame with a chunk table: it carries row groups, each with its own root, and a
+supersession chain. The exact additional check order for every mode is in
+[`RFC.md`](RFC.md) §4.2.
 
 ---
 
@@ -215,7 +231,9 @@ allocating:
 1,048,576, `max_dictionary_bytes` 64 MiB, `max_structured_depth` 64,
 `max_structured_items` 1,000,000, `max_string_bytes` 256 MiB, `max_delta_ops`
 16,777,216, `max_tensor_elements` 2^32, `max_tensor_rank` 8, `max_tokens`
-2^24, `max_sparse_runs` 16,777,216.
+2^24, `max_sparse_runs` 16,777,216, `max_engram_group_elements` (mode 20).
+Mode 18 additionally bounds `n_streams <= 16`; mode 17/18 tile counts are bounded
+by `max_structured_items`.
 
 A configured bound may only be lowered, never raised to bypass a vector.
 
@@ -311,11 +329,14 @@ performs the dependency and chunk field checks from steps 13–14.
    `plaintext_hash`/`content_hash`.
 3. For each reject, assert the exact class, not the message.
 4. Replay `structured`, `selectors`, `context`, `causal`, `tensor`,
-   `capability`, `checkpoint`, and `transport` vectors according to their kinds.
-   A `transport` vector is a `weft.transport.v1` container, not a frame: validate
-   the 4096-byte header and 56-byte section entries, verify each section's
-   enclosed frame root and mode, and reject non-zero padding (see
-   [`../spec/WEFT-TRANSPORT.md`](../spec/WEFT-TRANSPORT.md)).
+   `capability`, `checkpoint`, `transport`, `kv-prov`, and `engram` vectors
+   according to their kinds. A `transport` vector is a `weft.transport.v1`
+   container, not a frame: validate the 4096-byte header and 56-byte section
+   entries, verify each section's enclosed frame root and mode, and reject
+   non-zero padding (see
+   [`../spec/WEFT-TRANSPORT.md`](../spec/WEFT-TRANSPORT.md)). A `kv-prov`
+   vector is a mode-19 frame with provenance-bound identity; an `engram` vector
+   is a mode-20 row-group table.
 5. Run the third-party runner against your adapter:
 
 ```sh
@@ -325,8 +346,9 @@ scripts/run-conformance.sh ./your-adapter
 6. Commit your adapter and the receipt; do not edit the vectors.
 
 Skips are not passes. A decoder that implements only modes 0–5 should report
-explicit skips for modes 6–16, not fabricated successes. The independent
-Python reader in `python/weftcodec/` is a worked reference: it implements
-every mode 0–16 with `huffman-canonical-v1`, the six AI descriptor schemas,
-both delta reconstruction paths, shard-set roots, tile roots, and semantic
-roots, and its conformance adapter executes all mode vectors.
+explicit skips for modes 6–20, not fabricated successes. The independent
+Python reader in `python/weftcodec/` is a worked reference for modes 0–17; it
+currently reports explicit skips for mode 18 (`FLOAT_TILED_STREAMS`), mode 19
+(`KV_CACHE_PROV`), mode 20 (`ENGRAM_SHARD`), and the `weft.transport.v1`
+container. Those skips are listed per mode in `docs/CONFORMANCE.md` and in the
+conformance-bundle receipt.

@@ -163,10 +163,10 @@ The runner:
   "schema": "weft.conformance.run.v1",
   "implementation": "scripts/conformance-adapter-rust.sh",
   "manifest_aggregate_sha256": "...",
-  "total": 295,
-  "pass": 206,
+  "total": 420,
+  "pass": 288,
   "fail": 0,
-  "skip": 89,
+  "skip": 132,
   "result": "pass",
   "mismatches": [],
   "skips": [{"path": "...", "reason": "..."}]
@@ -217,48 +217,83 @@ scripts/docker-court.sh python \
      --json bench/receipts/conformance-python.json"
 ```
 
-Committed reference results (current manifest aggregate
-`51fa3dd9259f36740e41f9437c4d7467f04013a8f66906596e0bb61f40a70126`,
-338 entries, including mode 17 `FLOAT_TILED`; receipts:
-`bench/receipts/conformance-rust-20261107T155350Z.json`,
-`bench/receipts/conformance-go-20261107T155350Z.json`,
-`bench/receipts/conformance-python-20261107T155350Z.json`):
+Committed reference results (current 420-entry manifest, aggregate
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; receipts
+`bench/receipts/conformance-rust-20261111T011110Z.json`,
+`bench/receipts/conformance-go-20261111T011110Z.json`,
+`bench/receipts/conformance-python-20261111T011110Z.json`):
 
-| Implementation | Pass | Fail | Skip |
-|---|---:|---:|---:|
-| Rust `weftcodec` | 246 | 0 | 92 |
-| Go `weftcodec` | 246 | 0 | 92 |
-| Python `weftcodec` | 229 | 0 | 109 |
+| Implementation | Pass | Fail | Skip | Modes executed |
+|---|---:|---:|---:|---|
+| Rust `weftcodec` | 288 | 0 | 132 | 0–20 |
+| Go `weftcodec` | 288 | 0 | 132 | 0–20 |
+| Python `weftcodec` | 229 | 0 | 191 | 0–17 |
 
-The transport family (`transport/`, 22 files: 5 valid, 17 reject) is
-executed by both the Rust and Go reference adapters (22/22 pass each). The
-Python adapter reports those vectors as explicit skips because the Python
-reader has no `weft.transport.v1` parser.
+The Python replay is 229 pass, 0 fail, 191 skip; those skips are itemised
+below and none is converted to a pass.
 
-The Python replay is 229 pass, 0 fail, 126 skip. No mode 0–18 vector is skipped by the Python adapter: it imports the package
-directly and executes codec frames, adversarial decode vectors, shard sets,
-delta bases (including frame-source cycles), KV pages, activation chunks, tiled
-frames, semantic roots, and canonical WCB values. Its 109 skips are:
+The transport family (`transport/`, 22 files: 5 valid, 17 reject) is executed
+by both the Rust and Go reference adapters (22/22 pass each). The Python
+adapter reports those vectors as explicit skips because the Python reader has
+no `weft.transport.v1` parser. The same is true for modes 18, 19, and 20: the
+Python adapter has no `float-tiled-streams`, `kv-prov`, or `engram` path, so
+those vectors are explicit skips, not passes.
+
+The Rust/Go 132 skips are non-codec surfaces plus supersession:
+
+| Reason | Count |
+|---|---:|
+| record-level reject has no CLI verb | 42 |
+| adversarial frame vectors with no adapter (`kind: frame`, 36 files) | 36 |
+| canonical WCB values (`kind: wcb`) | 20 |
+| `weft.checkpoint.v1` manifests | 5 |
+| WFA1 archive verbs (`archive-decode` 4, `archive-create` 1) | 5 |
+| tensor layout descriptors | 4 |
+| semantic roots | 3 |
+| composite store/fuzz fixtures (excluded by default) | 2 |
+| `causal_versions` composite fixture | 1 |
+| superseded historical vectors (including the reserved-mode rejects) | 14 |
+
+(The 36 `kind: frame` entries are the adversarial vectors, whose manifest kind
+is `frame` but whose adapter dispatch is the adversarial subkind; the receipt
+prints `kind None has no adapter` for the two adapter tables that do not model
+that subkind.)
+
+The Python reader executes every vector for the kinds it implements: codec
+frames, adversarial decode vectors, shard sets, delta bases (including
+frame-source cycles), KV pages, activation chunks, tiled frames, semantic
+roots, and canonical WCB values. Its 191 skips are:
 
 | Reason | Count |
 |---|---:|
 | WEFT-TENSOR layout/shard containers (outside the WeftCodec reader) | 29 |
 | WeftQL selector grammar | 22 |
+| `weft.transport.v1` containers | 22 |
+| mode 20 `ENGRAM_SHARD` vectors | 20 |
+| mode 19 `KV_CACHE_PROV` vectors | 20 |
 | Context Root resolution (includes `causal_versions`) | 17 |
+| mode 18 `FLOAT_TILED_STREAMS` vectors | 16 |
 | causal closure identity | 10 |
 | capability envelope verification | 7 |
 | `weft.checkpoint.v1` manifests | 5 |
-| WFA1 archive verbs (`archive-decode`/`archive-create`) | 5 |
+| WFA1 archive verbs (`archive-decode` 4, `archive-create` 1) | 5 |
 | `selector-id` adversarial verb | 2 |
 | composite store/fuzz fixtures (excluded by default) | 2 |
-| superseded historical vectors | 10 |
+| superseded historical mode-reject vectors | 13 |
+| reserved-mode 21 reject (`112_reserved_mode_21`) | 1 |
 
-(The mode-15 and mode-17 vector directories were previously skipped by the
-reference adapters because the path-to-kind map lacked their prefixes; commit
-`817687d` wires them up. The manifest aggregate did not change.)
+Per mode, the Python skips are: mode 18 `17`, mode 19 `22`, mode 20 `21`,
+and every other mode `0` except the one superseded historical reject in modes
+6, 8, 9, 10, 11, 12, 14, 15, 16, and 17. The mode-19 and mode-20 totals
+include the historical reserved-value rejects that carry those mode numbers in
+their frame headers.
 
-The earlier aggregate `3c981f03…` receipt triple (Rust/Go 206/89, Python
-56/270) is superseded and retained. The current Python test receipt
+For modes 0–17 every valid and reject vector is executed; the other skips are
+non-codec surfaces. The previous claim that the Python reader executed every
+mode 0–18 vector was true before mode 18 existed and is corrected here.
+
+The earlier aggregate `51fa3dd9…` receipt triple (Rust/Go 246/92, Python
+229/109) is superseded and retained. The current Python test receipt
 `bench/receipts/python-bindings-20261107T160721Z.json` records 369 tests, 0 failures, 0 errors, 10 skips. `test_ai_modes.py` decodes every valid AI-mode vector to its recorded bytes; `test_random_differential.py` generates at least 2,000 frames per mode 9–16, plus 1,600 body mutants, and compares them with the Rust CLI.
 
 The Rust and Go reference adapters intentionally skip vector kinds their public
