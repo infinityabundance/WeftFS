@@ -536,6 +536,120 @@ def test_session_is_not_usable_in_a_forked_child(store):
 
 
 @requires_torch
+def test_session_keeps_the_writer_lock_until_it_is_closed(store, tmp_path):
+    """A reused session does not weaken the single-writer guarantee.
+
+    While the session is warm its helper holds the writable handle, so an
+    independent ``weftfs`` process must be refused the writer lock. Closing the
+    session releases it and the same command then succeeds. In between, three
+    saves through the one helper must all be complete and exact -- reuse must
+    not change publication semantics.
+    """
+    model = SmallModel()
+    head = tmp_path / "payload.txt"
+    head.write_text("independent-writer\n", encoding="utf-8")
+
+    with CheckpointSession(store, weftfs_cli=WEFTFS_CLI, session_idle_secs=30) as session:
+        for index in range(1, 4):
+            session.save(model.state_dict(), checkpoint_id="lock-%d" % index)
+        assert session.stats["services_started"] == 1
+        assert session.stats["saves"] == 3
+
+        refused = _run(store, "create", "/independent.txt", "--file", head, expect=None)
+        assert refused.returncode != 0
+        text = (refused.stderr + refused.stdout).decode()
+        assert "Busy" in text or "locked" in text.lower(), text
+        listed = _run(store, "checkpoint", "list", "--json")
+        names = {row["name"] for row in json.loads(listed.stdout.decode())["checkpoints"]}
+        assert names == {"lock-1", "lock-2", "lock-3"}
+        for name in sorted(names):
+            result = verify_checkpoint(store, name, full=True, weftfs_cli=WEFTFS_CLI)
+            assert result["full"]["ok"] is True
+
+    # The session is closed: the exclusive lock is gone and the same write works.
+    accepted = _run(store, "create", "/independent.txt", "--file", head)
+    assert accepted.returncode == 0
+
+
+@requires_torch
+def test_session_killed_during_a_save_leaves_no_partial_checkpoint(store):
+    """SIGKILL a process mid-save: the store exposes nothing or a whole one.
+
+    The child owns one session and one save it never finishes; the parent kills
+    it and then asserts the old-or-new contract from outside: no partially
+    published checkpoint, no verify problem, and any checkpoint that does exist
+    restores the exact source bytes.
+    """
+    import time
+
+    def expected_state():
+        generator = torch.Generator().manual_seed(20261105)
+        return {
+            "embed": torch.randn(16, 8, generator=generator),
+            "bias": torch.randn(16, generator=generator),
+            "block.weight": torch.randn(8, 4, generator=generator),
+        }
+
+    source = expected_state()
+    child = (
+        "import sys,time\n"
+        "sys.path.insert(0, %r)\n"
+        "import torch\n"
+        "from weftcodec.dcp import CheckpointSession\n"
+        "gen = torch.Generator().manual_seed(20261105)\n"
+        "state = {'embed': torch.randn(16, 8, generator=gen),\n"
+        "         'bias': torch.randn(16, generator=gen),\n"
+        "         'block.weight': torch.randn(8, 4, generator=gen)}\n"
+        "session = CheckpointSession(%r, weftfs_cli=%r, session_idle_secs=0)\n"
+        "sys.stdout.write('ready\\n')\n"
+        "sys.stdout.flush()\n"
+        "session.save(state, checkpoint_id='killed')\n"
+        "time.sleep(30)\n"
+    ) % (
+        str(Path(__file__).resolve().parents[1]),
+        str(store),
+        str(WEFTFS_CLI),
+    )
+    # Kill points relative to the first byte of the save (the child signals
+    # "ready" after its torch import and helper setup, so the delay is the save
+    # window itself): before the first publication, inside it, and after the
+    # commit. A reused session must not turn any of them into a partial state.
+    for delay in (0.001, 0.01, 0.04):
+        proc = subprocess.Popen(
+            [sys.executable, "-c", child],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            env={
+                **os.environ,
+                "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
+            },
+        )
+        assert proc.stdout.readline().strip() == b"ready"
+        time.sleep(delay)
+        proc.kill()
+        rest = proc.communicate(timeout=120)[0]
+        assert proc.returncode != 0, rest[-2000:]
+
+        listed = _run(store, "checkpoint", "list", "--json")
+        rows = json.loads(listed.stdout.decode())["checkpoints"]
+        for row in rows:
+            assert row["complete"] is True, row
+            result = verify_checkpoint(
+                store, row["name"], full=True, weftfs_cli=WEFTFS_CLI
+            )
+            assert result["full"]["ok"] is True, result
+            reader = WeftStorageReader(
+                row["name"], store_root=store, weftfs_cli=WEFTFS_CLI
+            )
+            try:
+                target = expected_state()
+                dcp.load(target, storage_reader=reader, no_dist=True)
+            finally:
+                reader.close()
+            _assert_state_equal(source, target)
+
+
+@requires_torch
 def test_direct_container_matches_the_staged_path(store, tmp_path):
     """One copy instead of two, and byte-identical restored content."""
     from weftcodec.service import CheckpointService
