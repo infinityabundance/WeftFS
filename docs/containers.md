@@ -58,8 +58,8 @@ the workflow attempts to set visibility to public.
 The same release publishes the libraries on crates.io:
 
 ```toml
-weftcodec = "1.1.0"
-weftfs = "1.1.0"
+weftcodec = "1.2.0"
+weftfs = "1.2.0"
 ```
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus

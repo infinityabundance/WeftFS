@@ -8735,3 +8735,30 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
     Spread is wide; no tighter figure is asserted and **no restore-throughput,
     p50/p99, Rust-comparison or fleet claim** is made. Details:
     `bench/RESULTS-go-read-pool.md`.
+
+- 2026-11-11 (R14, documentation and tool-version hygiene): review items
+  T001–T003 and T006–T007, which were the cheap credibility defects.
+  * README engineering rule 6 no longer says "Not a multi-writer protocol":
+    it now states MW1 default, MW2 opt-in (`--writer-mode optimistic`, explicit
+    transaction API, not FUSE or generic checkpoint publication), and MW3 not
+    implemented and not claimed, pointing at `docs/FENCING.md` and
+    `spec/WEFT-MULTIWRITER.md`.
+  * README Rust install examples moved from `1.1.0` to `1.2.0`
+    (`cargo add weftcodec@1.2.0`, `cargo add weftfs@1.2.0`), matching the live
+    crates.
+  * README gained a `## What's new in v1.2.0` section above the historical
+    v1.1.0 one, summarising S7–S13b and the MW2/mode-19/retention/transport/
+    index work, and repeating the stale-PyPI-long-description defect that only
+    a 1.2.1 upload can fix.
+  * `docs/PROGRAM.md` E1, E2, E5 and E7 said "not started" while Context Roots,
+    `causal_exact`, training-ready materialization and the Buck2/agent-memory/
+    adapter surfaces all exist. They now state what exists, with the receipt,
+    and name what is still absent (minimal sufficient closure queries, dataset
+    and eval slices, any upstream adoption).
+  * WeftFS-Go `store/rebase.go` recorded tool version `1.1.0` through the
+    v1.2.0 release, so a Go rebase provenance record named a tool version that
+    was two releases stale while Rust records `env!("CARGO_PKG_VERSION")`. The
+    constant is now `1.2.0` and carries a comment that it must track the
+    released version. Old records are unchanged (provenance ids are
+    content-addressed); new ones name the right tool. `TestRebase*` and
+    `TestPlanner*` pass in the go court.

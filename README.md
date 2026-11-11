@@ -213,6 +213,44 @@ comparison.
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
 
+## What's new in v1.2.0
+
+Full note with every limit and every loss: [`docs/RELEASE-v1.2.0.md`](docs/RELEASE-v1.2.0.md).
+No frozen wire format changed (codec modes 0–19, WFT1, `weft.manifest.v1`–`v4`,
+store fixture v1, every conformance vector). The release covers S7–S13b plus
+the multi-writer, provenance, retention, transport, and index work that landed
+before it.
+
+- **S7 mode 18 `FLOAT_TILED_STREAMS`** — additive and kept experimental; never
+  auto-selected without `--allow-experimental-modes`.
+- **S8 write policy, transcode, trajectory, load receipts, recovery-first** —
+  `--write-policy fast|planned|auto` cuts the checkpoint pause 12.06x (DCP) and
+  10.62x (Orbax) on the adapter fixture; a trajectory court covers nine real
+  Pythia checkpoints; `weft.load.receipt.v1` records lazily verified loads.
+- **S9 parallel checkpoint prepare/commit, RSA ladder, commit-attested index** —
+  one atomic publication after N blob workers, 3.89x prepare at 8 ranks; the
+  signing ladder is constant-shape but **not** proven constant-time; index
+  segments are trusted only when the commit attests them.
+- **S10 writer-lock root cause and the KV prefix tier** — `flock`/OFD locks are
+  inherited across `fork`; prefix chains and dedup land with a documented O(N)
+  lookup.
+- **S11 GC accounting, planner write cost, mode-18 gate, stronger candidates** —
+  `deleted_bytes` is data-only; the planner prices write cost; level-19 zstd and
+  mode-4 patch candidates are measured, and both lose where they lose.
+- **S12 bounded / streaming ingest** — the real Qwen2.5-3B family fits the
+  default 3 GiB court (2,765,636 KiB peak), byte-identical to the streaming
+  path.
+- **S13 / S13b dependency-graph planning** — chain/restart plans under bytes and
+  a restore SLA, plus a measured restore floor; the 850 ms SLA **misses** by
+  36.5 ms and that is published.
+- **MW2**, **mode 19 `KV_CACHE_PROV`**, **retention classes with class-aware GC**,
+  **`weft.transport.v1`**, and **per-commit incremental index segments** are in
+  this release with their own receipts; each has a loss recorded.
+- **Artifacts:** crates.io `weftcodec 1.2.0` and `weftfs 1.2.0`, PyPI
+  `weftcodec 1.2.0`, four GHCR images, and four GitHub releases. The published
+  PyPI long description is stale (it still says PyPI is unpublished); that is a
+  1.2.1 fix, not a re-upload.
+
 ## What's new in v1.1.0
 
 Full note with every limit and every loss: [`docs/RELEASE-v1.1.0.md`](docs/RELEASE-v1.1.0.md).
@@ -640,10 +678,16 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
    Containers enforce hard memory/swap/pids/CPU limits.
 5. **Identity separation.** A selector is a query, not an object. A hash is not
    an authorization token. Ambiguity is returned, never silently resolved.
-6. **One writer.** The store is single-writer: enforced by `flock` on a local
-   or object namespace, and by a **fenced lease whose conditional write is both
-   the fence and head publication** on S3, GCS, and Azure. See
-   [`docs/FENCING.md`](docs/FENCING.md). Not a multi-writer protocol.
+6. **One writer by default, multi-writer by opt-in.** MW1 is the default: one
+   committer, enforced by `flock` on a local or object namespace, and by a
+   **fenced lease whose conditional write is both the fence and head
+   publication** on S3, GCS, and Azure. **MW2** (independent committers against
+   one shared head, typed conflicts, bounded retries) is implemented and opt-in
+   via `--writer-mode optimistic` on the explicit transaction API, not on FUSE
+   mutations or generic checkpoint publication. **MW3** (conflict domains,
+   sharded heads) is not implemented and not claimed. See
+   [`docs/FENCING.md`](docs/FENCING.md) and
+   [`spec/WEFT-MULTIWRITER.md`](spec/WEFT-MULTIWRITER.md).
 
 ## Container images
 
@@ -666,13 +710,13 @@ Published on crates.io:
 
 ```toml
 [dependencies]
-weftcodec = "1.1.0"
-weftfs = "1.1.0"
+weftcodec = "1.2.0"
+weftfs = "1.2.0"
 ```
 
 ```sh
-cargo add weftcodec@1.1.0
-cargo add weftfs@1.1.0
+cargo add weftcodec@1.2.0
+cargo add weftfs@1.2.0
 ```
 
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the
