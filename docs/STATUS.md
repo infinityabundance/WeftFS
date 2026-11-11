@@ -8641,3 +8641,19 @@ Gates after the fix: Rust all-targets 771 passed / 0 failed (158 suites), FUSE
 all-targets 814 passed / 0 failed / 2 ignored, WeftFS-Go `go vet` + CGO=0 build
 + `go test -race ./store/...` ok (136.3 s), claims 892, spec drift 60/60,
 conformance manifest/coverage 420.
+
+**Aggregate (45/45).** With the fix in place the full court aggregate passes:
+`bench/receipts/verify-20261111T131235Z.json`, **45 courts, 45 passed, 0
+failed, 0 skipped** at WeftFS `40df0cd`, including the reduced
+`restore_scaling` court registered by `3f96fe0`. The `rust_store` court records
+771 passed / 0 failed (158 suites) and `rust_fuse` 814 passed / 0 failed / 2
+pre-existing ignored. The failing run that found the packed regression,
+`bench/receipts/verify-20261111T103327Z.json` (44/45), is retained. A second
+attempt at 45 courts (`verify-20261111T120727Z`) is retained as an
+**environmental** failure, not a code result: the host filesystem ran out of
+space during `restore_scaling` and the court log stops mid-write; the run left
+no receipt. The untracked, non-R13 WIP file `WeftFS-Go/store/azureclient.go`
+was truncated to 0 bytes by that disk-full event while the isolation helper
+moved it aside (its original sha256 was `d8eb00d9…351e`); it is not part of any
+R13 commit, it never compiled (`unexpected EOF` at line 208), and the helper is
+now copy-then-verify so a full disk can no longer destroy the only copy.

@@ -35,16 +35,16 @@ and two material claims in other documents. All corrections are listed in §3.
 | A12 | DAOS/Lustre/BeeGFS/CephFS/JuiceFS/IBM/WEKA/VAST/AIStore: designed, not executed. Live clouds inaccessible. | Integration status | No adapter/court; `docs/AI-STORAGE-AUGMENTATION.md` §7 | — | ✔ (stated as non-claims). |
 | A13 | Qwen2.5-0.5B family: 1,276,128,956 B, 17 % smaller than 1,535,945,154 B per-tensor zstd-19; 3.07 % under ZipNN. | What is measured | `planner-float-20261106T035316Z` | `ba5a0e6` | ✔ (1,276,128,956 / 1,535,945,154 = 16.9 %, rounded to 17 %). |
 | A14 | Embedding 1-row read 749.26 → 2.12 ms (353×) and 100-row 777.08 → 2.30 ms (337×) at +0.51 % bytes. | What is measured | `float-tiled-20261107T042955Z` | `042955Z` run | ✔ |
-| A15 | "41/41 verification courts ... 355 conformance vectors." | What is measured | Current receipt is 42/42; current manifest is 420. The 41/41/355 pair was the R4 tree. | `verify-20261110T234609Z`; manifest `6287b817…` | **Corrected.** Now 42/42 and 420. |
+| A15 | "41/41 verification courts ... 355 conformance vectors." | What is measured | Current receipt is 45/45; current manifest is 420. The 41/41/355 pair was the R4 tree. | `verify-20261111T131235Z`; manifest `6287b817…` | **Corrected.** Now 45/45 and 420. |
 | A16 | Multiwriter: 4,000 tx/s at N=1 → 638 tx/s at N=32, efficiency 0.0050; hot name one winner; MinIO N=4 212.8 tx/s. | What is measured | `bench-multiwriter-20261109T150423Z` rows N=1/N=32 and S3 N=4 | `b0bcbc5` | ✔ (later runs measured 542–580 tx/s at N=32; the cited receipt is the one quoted). |
 | A17 | Pythia step0→1: 42,211 B vs 30,265 B whole-file patch-from; the baseline is 28 % smaller. | Demonstrated results | `family-lifecycle-20261108T053655Z` | `053655Z` run | ✔ (42,211 / 30,265 = 1.395, so the patch is 28.3 % smaller). |
 | A18 | Model family stores in 1.276 GB vs 1.536 GB independent zstd-19, 17 % smaller, 3.07 % under ZipNN. | Demonstrated results | same as A13 | `ba5a0e6` | ✔ |
 | A19 | Region reads: 749.3 → 2.12 ms, +0.51 % bytes, 3.25× write. | Demonstrated results | same as A14 (`write_ms` 2,286.7 → 7,434.7) | `042955Z` run | ✔ |
 | A20 | "60 codec, 20 WCB, 22 selector, 16 context, 10 causal, 36 adversarial vectors." | Status P2 | Manifest counts: codec 91, WCB 20, selector 22, context 16, causal 10, adversarial 36. | manifest `6287b817…` | **Corrected.** 60 → 91. |
-| A21 | Rust store core: "39 core tests". | Status P4 | 42/42 receipt log: 746 tests across 153 binaries, 0 failed; `docs/STATUS.md` records 747 at the final R12 commit (one test added after the receipt). | `verify-20261110T234609Z` | **Corrected.** 39 → 746 (747 at the final R12 commit). |
-| A22 | Rust FUSE: "232 Rust FUSE-court tests pass". | Status P5 | 42/42 receipt log: 789 passed, 0 failed, 2 ignored; `docs/STATUS.md` records 790 at the final R12 commit. | `verify-20261110T234609Z` | **Corrected.** 232 → 789 (790 at the final R12 commit). |
+| A21 | Rust store core: "39 core tests". | Status P4 | 45/45 receipt log: 771 tests across 158 binaries, 0 failed. | `verify-20261111T131235Z` | **Corrected.** 39 → 771. |
+| A22 | Rust FUSE: "232 Rust FUSE-court tests pass". | Status P5 | 45/45 receipt log: 814 passed, 0 failed, 2 ignored. | `verify-20261111T131235Z` | **Corrected.** 232 → 814. |
 | A23 | Go: "31 Go tests + 13 GC tests". | Status P6 | R12 records 125 top-level Go tests, 7 skipped under `-race`. | `docs/STATUS.md` R12; `verify-20261110T234609Z` | **Corrected.** 31+13 → 125 top-level (7 skipped). |
-| A24 | "Latest full verification at the release tree: 37/37." | Status P7 | 37/37 is the release tree; the latest is 42/42. | `verify-20261109T112958Z` vs `verify-20261110T234609Z` | **Corrected.** Both stated, with which tree each covers. |
+| A24 | "Latest full verification at the release tree: 37/37." | Status P7 | 37/37 is the release tree; the latest is 45/45. | `verify-20261109T112958Z` vs `verify-20261111T131235Z` | **Corrected.** Both stated, with which tree each covers. |
 | A25 | 1,000 concurrent context mounts, 4,250 file checks, 1,000 digests, at 52g/8/16384; 692/1000 at 24g/8/4096. | Status F3 | `context-mounts-20261105T122643Z`, `…131116Z`, `…140342Z` | `6e4aea1` | ✔ (explicit overrides recorded; not a default-court fit). |
 | A26 | 100,000/100,000 crash iterations, 19.2 it/s, 0 partial. | Status F5 | `crash-torture-20261104T104233Z` | `6316fd4` | ✔ (process-fault proxy, not physical power loss). |
 | A27 | AI codec modes 6–20 implemented; mode 20 update 4/64 groups 62.7 ms / 16.79 MB vs 499.7 ms / 118.73 MB. | Status F6 | `engram-20261109T232921Z`; conformance mode 20 6 valid / 14 reject | `232921Z` run | ✔ (and loses whole-table size/decode to ZSTD). |
@@ -85,13 +85,13 @@ recorded, not rewritten.
    named the Go gaps.
 2. **A3** — replaced "linearizable head publication" with "one authoritative
    head sequence", explicitly not a machine-checked linearizability proof.
-3. **A15** — 41/41 → **42/42**; 355 → **420** vectors.
+3. **A15** — 41/41 → **45/45**; 355 → **420** vectors.
 4. **A20** — 60 codec vectors → **91**.
-5. **A21** — 39 store tests → **746** tests across 153 binaries.
-6. **A22** — 232 FUSE tests → **789 passed / 2 ignored**.
+5. **A21** — 39 store tests → **771** tests across 158 binaries.
+6. **A22** — 232 FUSE tests → **814 passed / 2 ignored**.
 7. **A23** — 31 Go + 13 GC → **125 top-level Go tests, 7 skipped under
    `-race`**.
-8. **A24** — "latest 37/37" → latest **42/42** at the R12 tree; the release
+8. **A24** — "latest 37/37" → latest **45/45** at the R13 tree; the release
    tree's 37/37 is stated separately.
 9. **A31** — "parallel reconstruction is not implemented" → bounded parallel
    restore (R2) and pipelined restore (R10) named; materialize remains
@@ -121,7 +121,7 @@ recorded, not rewritten.
 - **Live external state.** PyPI, crates.io, and GHCR were not re-queried in
   R13. `release-artifacts-20261109T124325Z` records what was observed at the
   tag; the audit can only confirm that the receipt says so.
-- **Historical test counts.** A20–A23 now use the 42/42 receipt log at the R12
+- **Historical test counts.** A20–A23 now use the 45/45 receipt log at the R13
   tree. The exact per-binary counts are in that log, not in the receipt
   summary; the log is committed beside the receipt.
 - **No physical media or fleet evidence exists anywhere in this repository.**
