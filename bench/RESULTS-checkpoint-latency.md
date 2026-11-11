@@ -451,3 +451,68 @@ but it now reads the bytes **from the mapping** instead of a second payload
 object, so one buffer serves the copy and the hash. The Python root is
 deliberately kept: it is the independent check against the Rust manifest
 (`_verify_report`), and removing it would remove a proof rather than a copy.
+
+## 13. Where R12b landed
+
+p50 completion of the R11 fixture, per increment (same fixture, same court
+unless noted):
+
+| increment | p50 | receipt |
+|---|---:|---|
+| R11 baseline | 444.1 ms | `training-goodput-20261110T200930Z` |
+| 1 — profiler, no optimisation | 472.6 (later) / 211.1 (fresh) | `checkpoint-latency-20261111T021640Z` |
+| 2a — implicit semantic search opt-in | 81.5 / 67.9 | `…T022409Z` |
+| 2b — pinned-strategy shortcut | 60.6 / 42.6 | `…T022557Z` |
+| 2c — `CheckpointSession` | **42.2** | `…T022638Z` |
+| 3 — one atomic commit | **37.7** | `…T024824Z` |
+| 4 — index chain kept in memory | 40.6 (fixture too small; the 1,250-commit court is the evidence) | `…T030522Z` |
+| 5 — packing measured, not adopted | 39.3 (unpacked) | `…T034200Z` |
+| 6 — fast policy | **36.0** (raw) / 41.2 (planned) | `…T035900Z` |
+| 7 — container built in the memfd | 40.1 | `…T041200Z` |
+
+The honest headline: **444.1 → 37.7 ms p50 (11.8x) with the planned policy,
+36.0 ms with raw frames**, and the training-goodput court's own completion
+(75.6 ms async on a contended 4-vCPU box) is 17-18x the equivalent-durability
+`torch.save` baseline.
+
+### Why 20 ms was not reached, with the measured shares
+
+The remaining 36-40 ms is:
+`WRITE_CHECKPOINT` round trip 21-23 ms (of which ZSTD encode 5.7, digest 3.0,
+blob publish 1.6, index segment 3.7, commit 0.45, and ~6 ms of chunking,
+manifest construction and state application), Python DCP-metadata WCB
+serialisation 4.2 ms, the `FINISH_CHECKPOINT` commit 4.0 ms, Python staging
+2.2 + hashing 0.85 + memfd 0.35 ms, and ~6 ms of DCP plan/writer overhead
+outside every instrumented section.
+
+Each candidate for the last 16-20 ms is either unimplemented or measured to be
+insufficient on its own:
+
+1. **Row-level incremental index** (`StateIndex::apply_ops`): would remove
+   `index_build` (0.9-1.6 ms) and most of `index_segment` (3.3-5.2 ms) at this
+   state size. Not implemented; the chain cache removes only the re-read.
+2. **Python metadata serialisation** (4.2 ms for 169 entries): a pure-Python
+   WCB encoder. Not optimised in R12b.
+3. **One round trip instead of two**: DCP only produces its metadata after
+   `write_data`, so `finish` needs a second call. A caller that can supply the
+   metadata up front could use one; the adapter cannot.
+4. **Fewer durability barriers / smaller frames**: packing was measured and did
+   not help the steady state (Section 10).
+5. **Parallel per-tensor hashing/encoding**: the service is single-request and
+   single-threaded per connection; a bounded worker pool inside
+   `WRITE_CHECKPOINT` is not implemented.
+
+### What was verified, and what was not
+
+Verified: every increment's numbers are from a court run at a named revision;
+the atomic-publication crash test (6/6); the index-chain court and its oracle
+test; exactness at every step (40/40 and 80/80 restored states, identical
+digests across policies); the kill court 5/5 old-or-new; Rust 758/0 and FUSE
+801/0/2; Python 368 passed / 70 skipped; claims 882; spec drift 60/60;
+conformance manifest 420.
+
+Not verified / not claimed: 20 ms; a row-level incremental index; a
+multi-writer or fleet training claim; GPU; physical power loss; a production
+queueing/skip policy for intervals shorter than completion (the wait is
+measured, not solved); Go parity for any R12b change (all of it is Rust and
+Python).

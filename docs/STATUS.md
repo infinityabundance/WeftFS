@@ -8474,3 +8474,41 @@ previous save (`weft-fast` 161.8 ms), lands four steps late and costs a
 **2,490 ms** loop against 951/939/1,188 ms for A/D/B — **2.6x** `torch.save`
 and 2.1x the durable baseline. All 80 checkpoints restored exactly. This is the
 regression R11 predicted and did not measure, and it is not fixed.
+
+### R12b — where it landed
+
+| increment | p50 completion | receipt |
+|---|---:|---|
+| R11 baseline | 444.1 ms | `training-goodput-20261110T200930Z` |
+| 1 profiler | 472.6 later / 211.1 fresh | `checkpoint-latency-20261111T021640Z` |
+| 2a semantic-search opt-in | 81.5 / 67.9 | `…T022409Z` |
+| 2b pinned-strategy shortcut | 60.6 / 42.6 | `…T022557Z` |
+| 2c session | **42.2** | `…T022638Z` |
+| 3 one atomic commit | **37.7** | `…T024824Z` |
+| 4 index chain kept | 40.6 (noise on this fixture) | `…T030522Z` |
+| 5 packing (not adopted) | 39.3 unpacked | `…T034200Z` |
+| 6 fast policy | **36.0** raw / 41.2 planned | `…T035900Z` |
+| 7 container in the memfd | 40.1 | `…T041200Z` |
+| 8 goodput with D/E | 75.6 async on a contended box | `training-goodput-20261111T044800Z` |
+
+**444.1 → 37.7 ms p50 (11.8x) with the planned policy, 36.0 ms with raw
+frames.** 20 ms was **not** reached, and the measured shares say why: the round
+trip is 21-23 ms (encode 5.7, digest 3.0, blob publish 1.6, index 3.7, commit
+0.45, ~6 ms of chunking/manifest/state apply), Python DCP-metadata
+serialisation 4.2, the finish commit 4.0, Python staging + hashing + memfd 3.4,
+and ~6 ms of DCP overhead outside every instrumented section. The candidates
+for the last 16-20 ms — a row-level incremental index, optimising the Python WCB
+encoder, folding the two round trips, packing, and in-service parallel encode —
+are each either unimplemented or measured as insufficient alone (packing was
+measured and rejected; the index chain cache only removed the re-read).
+
+The short-interval regression (a save completing slower than the checkpoint
+interval) is measured (149.9 ms wait, 2.6x `torch.save`) and not fixed. Go has
+no R12b parity because every change is Rust or Python.
+
+Evidence trail: `bench/RESULTS-checkpoint-latency.md` (Sections 1-13),
+`bench/RESULTS-training-goodput.md` Section 10, `docs/INDEX-AMPLIFICATION.md`
+(R12b section), `docs/PYTORCH-DCP.md` Sections 9.1-9.2, and the receipts named
+above. Gates at the final commit: Rust all-targets 758 passed / 0 failed,
+FUSE 801 passed / 0 failed / 2 pre-existing ignored, Python 368 passed / 70
+skipped, claims 884, spec drift 60/60, conformance manifest 420 entries.
