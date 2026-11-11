@@ -9,7 +9,8 @@ implemented, tested, ignored, and not done. **v1.3.0 is released**: tags are
 `3ab54c7`, three commits before the final tag commit with no codec, store or
 runtime change between them; crates.io checksums, GHCR index digests and the
 PyPI block are in `bench/receipts/release-artifacts-20261111T200115Z.json`.
-**No aggregate exists at the current `staging` HEAD** (`d3db8aa`), which carries
+**No aggregate exists at the current `staging` HEAD** (the R12c work described
+below, which started at `d3db8aa`), which also carries
 unverified R14d Azure-MW2 work in progress; the plan for the R12c follow-up is
 [`docs/PLAN-R12C.md`](PLAN-R12C.md). **v1.2.0 is released**: tags are
 `WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
