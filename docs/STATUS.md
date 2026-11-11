@@ -8108,7 +8108,7 @@ the 420-entry manifest.
 
 ### Gates
 
-* `scripts/check-claims.sh` — **848/848** entries.
+* `scripts/check-claims.sh` — **855/855** entries.
 * `scripts/check-spec-drift.sh` — **60/60** file comparisons across the three
   mirrors.
 * `scripts/gen-conformance-manifest.sh --check` — **420 entries**, aggregate
@@ -8116,12 +8116,79 @@ the 420-entry manifest.
 * `scripts/check-conformance-coverage.sh` — **OK**; modes 0–20 all have valid
   and reject vectors.
 * `scripts/package-conformance.sh` in the fuse court — bundle built, Rust
-  extracted-copy run clean, `verify-receipts.sh` **pass**.
+  extracted-copy run clean, `verify-receipts.sh` **pass**. Registered as the
+  `conformance_bundle` court (below).
 * `scripts/verify-conformance-python.sh` in the python court — **229/0/191**,
-  documented skips true, receipt merged.
+  documented skips true, receipt merged. Registered as the
+  `conformance_python` court (below).
 * The 42/42 aggregate (`verify-20261110T234609Z.json`) is **not** re-run for
-  R13: no code, format, planner, or court changed. The new packaging courts are
-  standalone and are **not** registered in `verify-all.sh`.
+  R13: no wire format, planner coefficient, or court measurement changed. R13
+  later registered its two packaging courts in `verify-all.sh`, so the next
+  aggregate runs **44** courts; the 42/42 receipt stays the cited aggregate
+  until such a run exists.
+
+### Court registration (R13 completion)
+
+Registration adds no measurement and re-runs no package:
+
+* `conformance_bundle` (`scripts/conformance_bundle_court.sh`) runs
+  `scripts/package-conformance.sh` in the fuse court after building
+  `weftcodec` from the mounted `WeftCodec` tree, then verifies the bundle with
+  `scripts/verify-receipts.sh --repo-root .` **again from the host**, so the
+  receipt's revisions must resolve to real commits in the mounted
+  repositories. The packaging script has no cost knob, so this is its full
+  default configuration (all 420 vectors, extracted-copy Rust run, checksums,
+  unlisted-file rejection, revision checks); the only deferred phase is the
+  Python second opinion, and the receipt's `configuration` block names that
+  split. `configuration.reduced` is therefore `false` — the aggregate does not
+  run a cheaper packaging run.
+* `conformance_python` (`scripts/conformance_python_court.sh`) runs
+  `scripts/verify-conformance-python.sh` in the python court against the
+  bundle and receipt of the same stamp, re-checks the bundle SHA-256 before
+  anything runs, and fails unless the merged receipt reports zero Python
+  failures and only documented skips.
+* Both print exactly one `conformance_bundle: skip <reason>` /
+  `conformance_python: skip <reason>` line and exit 78 when the environment
+  cannot run them (no Docker, no court image, or no bundle/receipt for this
+  stamp). `verify-all.sh` records that as `skip`, never as a pass.
+* Both ran once at this tree, stamped `20261111T015329Z`:
+  **`conformance_bundle` pass** — `bench/bundles/conformance-1.2.0.tar.zst`,
+  **1,328,473 bytes**, **538 files**, SHA-256
+  `e12853f46f3588c9832d268d04842bc0795e53241ec00fe6eda58b4bd9296207`; Rust
+  **288 pass / 0 fail / 132 skip** from the extracted copy only;
+  `verify-receipts.sh` pass in the court and on the host.
+  **`conformance_python` pass** — **229 pass / 0 fail / 191 skip**, per-mode
+  skips 18 → 17, 19 → 22, 20 → 21, no undocumented or non-codec skip.
+  Receipt: `bench/receipts/conformance-bundle-20261111T015329Z.json` (both
+  courts' blocks), host verification log
+  `bench/receipts/conformance-bundle-20261111T015329Z.verify.log`.
+
+### Packaging-court defects found while finishing R13
+
+* The first registration attempt failed: the host-side verification could not
+  update a receipt written by a root court. The producer now makes its receipt
+  world-writable (`chmod 0666`), exactly like the receipts/bundles directories
+  the court already widens, and `verify-conformance-python.sh` does the same
+  after it merges. No court result changed; the failing attempt produced no
+  retained receipt.
+* A rebuilt bundle does **not** reproduce the historical SHA-256
+  (`5ece88b5…`): the bundle's own `manifest.json` embeds `generated_at`, and
+  `docs/CONFORMANCE.md`, `docs/RFC.md` and `docs/PAPER.md` changed after
+  `3b475f7`. The receipt's `bundle_sha256` names the artifact that run
+  verified; it is not a bit-reproducibility claim.
+
+### Working-tree state
+
+* Three root-owned `bench/receipts/.r13-conformance-*-probe.json` files were
+  deleted. No committed receipt, script, or document referenced them, and
+  `git grep`/`git log -S` find no reference in history; they were unreferenced
+  byproducts of the R13 runs.
+* The PyPI build byproducts `python/build/` and `python/weftcodec.egg-info/`
+  were deleted. Both are gitignored and untracked; nothing in the tree
+  references them.
+* `WeftFS-Go/store/azureclient.go` is an unfinished, untracked Go Azure
+  backend attempt. It is left exactly as found: not built, not tested, not
+  shipped, and not a parity claim.
 
 ### What R13 does not establish
 
