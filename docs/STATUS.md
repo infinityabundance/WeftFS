@@ -8762,3 +8762,50 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
     released version. Old records are unchanged (provenance ids are
     content-addressed); new ones name the right tool. `TestRebase*` and
     `TestPlanner*` pass in the go court.
+
+- 2026-11-11 (R15, store-level KV parity in Rust and Go): parent `08456c1`,
+  WeftFS-Go `225eb0d`, WeftCodec `67cea30` (spec mirror), WeftCodec-Go
+  `5e047c3` (spec mirror); pushed. Closes the R14c bookkeeping gap and the
+  reviewer-visible weakness behind it.
+  * The Rust CLI had no page-level KV writer, so the old Rust→Go mode-19 test
+    copied attribute values Rust had printed for a **Go-written** object: it
+    proved Rust's byte copy and Go's reader, not that Rust's
+    `write_kv_prov_page` derives the same descriptor. `weftfs kv prov-write`
+    now exists (additive; frozen formats untouched). It takes the element bytes
+    verbatim, every mode-12 geometry field and every provenance dimension,
+    calls the shipped writer, and prints object/descriptor/provenance-root/
+    frame/page sizes.
+  * `tests/kv_provenance.rs::cli_prov_write_matches_the_store_api` (rust court
+    6/6 for the file) proves the CLI and `Store::write_kv_prov_page` publish
+    the same descriptor id, provenance root and frame bytes for identical
+    inputs. The full parent suite at `08456c1` is 158 suites / 772 passed /
+    0 failed / 0 ignored. WeftFS-Go's `TestKvProvHandoffRustThenGo` now calls
+    the verb and asserts the same equality in the other direction. Observed
+    identity: descriptor `9c8344b0…6ea3b1a`, provenance root
+    `ba5ec110…0d5d7f5f`, 5,509-byte frame, 4,096 exact bytes — equal in both
+    languages.
+  * Go store parity itself (`store/kv.go`, WeftFS-Go `db35a4e`) covers mode 12
+    and mode 19 write/read, the two canonical descriptors and strict parsers,
+    the reserved attribute set, the one denial text and the normative
+    authorization order. `KvPrincipal{Principal, Capability}` is the documented
+    API difference: Go has no envelope type and verifies no signature on this
+    path (pre-existing gap, not widened here).
+  * Measured Go costs (go court, tmpfs, warm cache, 200 iterations, one commit
+    per write, benchmem): 4 KiB page write 10.56 ms/op / 4.08 MB alloc,
+    4 KiB read 0.697 ms / 238 KB alloc, 64 KiB read 2.46 ms / 406 KB alloc.
+    Published as costs, not a competitive result: the Go store has no
+    decoded-object cache or single-flight, and every page write is its own
+    commit. No p50/p99/Rust-comparison/fleet claim.
+  * Go full suite in the fuse court at `225eb0d`: cmd/weftfs 44.544 s,
+    fusefs 7.273 s, index 1.004 s, model 1.009 s, store 215.102 s, 0 failures;
+    gofmt/vet/CGO-disabled build clean. Logs
+    `bench/receipts/kv-go-parity-fuse-20261111T154406Z.log` (plus the focused
+    Rust and Go logs of the same stamp) and
+    `kv-go-bench-20261111T154406Z.log`. Analysis:
+    `bench/RESULTS-kv-go-parity.md`.
+  * Spec: `spec/WEFT-KV-PROVENANCE.md` §10 now covers both stores and §11 no
+    longer says the capability surface is Rust-only. Mirrors re-exported;
+    spec drift 60/60.
+  * Still absent: Go KV prefix tier (`kv_prefix_*`, `kv gc`), Go envelope
+    verification, any FUSE or serving-engine KV path, and a Go CLI KV page
+    writer.

@@ -1,0 +1,24 @@
++ exec docker run --rm --init --name weft-go-court-721542 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=08456c1057f8a31b5a79bb3ffb78db2d014e6e97 -e WEFT_REPO_WEFTFS_GO=225eb0dc9012bd93b51cf5fe6523ebfe5eadc601 -e WEFT_REPO_WEFTCODEC=67cea30dd27cf6d51348622d88b8c1416c45920e -e WEFT_REPO_WEFTCODEC_GO=5e047c3c1872dab23cbc85d9d4be4106a6455fba -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftFS-Go && gofmt -l ./store ./cmd && go vet ./... && CGO_ENABLED=0 go build ./... && go test -race -count=1 -run '\''TestKv'\'' ./store -v'
+=== RUN   TestKvStoreScopeIsTheProvenanceDescriptorID
+    kv_test.go:205: COURT written object=d41c87c040a0e7e58bca1fa53419886917bcadad29a9a21d3010a064d59c3bf6 descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a provenance_root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f mode=19
+    kv_test.go:222: COURT authorized_read bytes=4096 exact=true
+    kv_test.go:408: COURT denials all class=Unauthorized text="kv page is not available to this principal" plain_attrs=6 prov_attrs=8
+--- PASS: TestKvStoreScopeIsTheProvenanceDescriptorID (0.02s)
+=== RUN   TestKvProvForgeryIsRejected
+--- PASS: TestKvProvForgeryIsRejected (0.02s)
+=== RUN   TestKvDescriptorCanonicalForms
+--- PASS: TestKvDescriptorCanonicalForms (0.00s)
+=== RUN   TestKvProvHandoffGoThenRust
+    kv_test.go:779: COURT rust_cat bytes=5509 equals_go_stored=true
+    kv_test.go:798: COURT rust_descriptor_roots a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e distinct=true
+    kv_test.go:820: COURT rust_codec_decoded bytes=4096 exact=true
+--- PASS: TestKvProvHandoffGoThenRust (0.02s)
+=== RUN   TestKvPageHandoffRustThenGo
+    kv_test.go:865: COURT rust_written_pages=2
+    kv_test.go:961: COURT rust_written_page_bytes=65536 descriptor_and_frame_match=true
+--- PASS: TestKvPageHandoffRustThenGo (0.02s)
+=== RUN   TestKvProvHandoffRustThenGo
+    kv_test.go:1089: COURT rust_verb_written descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f frame_bytes=5509 exact=true
+--- PASS: TestKvProvHandoffRustThenGo (0.02s)
+PASS
+ok  	github.com/infinityabundance/WeftFS-Go/store	1.103s

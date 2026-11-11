@@ -76,7 +76,7 @@ tensor's `LogicalTensorRoot` is invariant across raw, zstd, mode-9 float, tiled,
 and delta encodings, so the same state can be re-encoded, rebased, or
 transcoded without invalidating a single reference. Frozen v1 wire formats are
 byte-identical across the Rust and Go codecs where both implement them; the Go
-gaps (mode-19 store writer, v2 manifests, Azure, and the parent-graph planner)
+gaps (Go KV prefix tier, v2 manifests, Azure, and the parent-graph planner)
 are listed in `docs/STATUS.md`, `WeftFS-Go/NOTES.md`, and the receipts. Every
 claim in this repository is backed by a court receipt under hard memory, CPU,
 and pid limits. The Rust and Go filesystems are reference filesystems
