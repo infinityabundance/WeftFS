@@ -2278,6 +2278,7 @@ def session_sweep(args):
         "torch_version": torch.__version__,
         "fixture": fixture,
         "configs": {config: CONFIG_LABEL.get(config, config) for config in configs},
+        "metadata_encoding": os.environ.get("WEFT_DCP_METADATA_ENCODING", "auto"),
         "cells": cells,
         "comparisons": comparisons,
         "session_kill_resume": kill_rows,

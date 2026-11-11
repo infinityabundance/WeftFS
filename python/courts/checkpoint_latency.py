@@ -259,6 +259,7 @@ def one_save(torch, *, store_root, name, state, collector, service_cli, atomic=T
         "container_bytes": stats.get("container_bytes"),
         "entries": stats.get("entries"),
         "tensor_bytes": stats.get("tensor_bytes"),
+        "metadata_encode": stats.get("metadata_encode"),
         "client": collector.summary(),
         "rust": rust_profile,
         "profile_available": profile_available,
@@ -277,6 +278,27 @@ def one_save(torch, *, store_root, name, state, collector, service_cli, atomic=T
             )
         },
     }
+
+
+def metadata_encode_summary(rows):
+    """Count which metadata encoder each save used (proves the fast path ran)."""
+    modes = {}
+    counters = {}
+    for row in rows:
+        report = row.get("metadata_encode") or {}
+        mode = report.get("mode")
+        modes[mode] = modes.get(mode, 0) + 1
+        for key in (
+            "plan_hits",
+            "plan_builds",
+            "fallbacks",
+            "oracle_checks",
+            "oracle_mismatches",
+            "plans_cached",
+        ):
+            if key in report:
+                counters[key] = max(counters.get(key, 0), int(report[key]))
+    return {"modes": modes, "counters": counters}
 
 
 def decompose(rows):
@@ -416,6 +438,7 @@ def session_series(
                     "staging_buffer_bytes": stats.get("staging_buffer_bytes"),
                     "entries": stats.get("entries"),
                     "tensor_bytes": stats.get("tensor_bytes"),
+                    "metadata_encode": stats.get("metadata_encode"),
                     "client": collector.summary(),
                     "rust": rust_profile,
                     "profile_available": True,
@@ -724,6 +747,9 @@ def run(args):
             "fresh": args.fresh,
             "wait_for_previous": False,
             "writer_per_save": True,
+            "metadata_encoding": os.environ.get(
+                "WEFT_DCP_METADATA_ENCODING", "auto"
+            ),
         },
         "summary": {
             "fresh_store_wall_ms": [round(row["wall_ms"], 3) for row in fresh_rows],
@@ -747,6 +773,9 @@ def run(args):
                 statistics.median(row["wall_ms"] for row in sequential_rows)
                 if sequential_rows
                 else None
+            ),
+            "metadata_encode": metadata_encode_summary(
+                fresh_rows + sequential_rows + two_commit_rows + session_rows + packed_rows
             ),
             "session_wall_ms": [round(row["wall_ms"], 3) for row in session_rows],
             "session_first_ms": (session_rows[0]["wall_ms"] if session_rows else None),

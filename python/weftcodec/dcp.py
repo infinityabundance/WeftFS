@@ -53,8 +53,10 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import wcb
+from . import varint, wcb, wcb_fast
+from .errors import LimitExceeded
 from .hashing import content_root
+from .limits import Limits
 from .service import (
     CheckpointService,
     ServiceError,
@@ -668,38 +670,35 @@ class RestoredEntry:
         return self.content_root.hex()
 
 
+def _state_dict_row_value(fqn, item):
+    """One ``state_dict`` row, exactly as the canonical metadata encodes it."""
+    if _TensorStorageMetadata is not None and isinstance(item, _TensorStorageMetadata):
+        return {
+            "fqn": fqn,
+            "kind": "tensor",
+            "dtype": _dtype_name(item.properties.dtype),
+            "size": _u_list(item.size),
+            "chunks": [
+                {
+                    "offsets": _u_list(chunk.offsets),
+                    "sizes": _u_list(chunk.sizes),
+                }
+                for chunk in item.chunks
+            ],
+        }
+    if _BytesStorageMetadata is not None and isinstance(item, _BytesStorageMetadata):
+        return {"fqn": fqn, "kind": "bytes"}
+    raise UnsupportedStateObject(
+        "state dict entry %r has storage metadata %s; this adapter "
+        "persists plain tensors and byte objects only"
+        % (fqn, type(item).__name__)
+    )
+
+
 def _state_dict_value(state_dict_metadata):
     rows = []
     for fqn in sorted(state_dict_metadata):
-        item = state_dict_metadata[fqn]
-        if _TensorStorageMetadata is not None and isinstance(
-            item, _TensorStorageMetadata
-        ):
-            rows.append(
-                {
-                    "fqn": fqn,
-                    "kind": "tensor",
-                    "dtype": _dtype_name(item.properties.dtype),
-                    "size": _u_list(item.size),
-                    "chunks": [
-                        {
-                            "offsets": _u_list(chunk.offsets),
-                            "sizes": _u_list(chunk.sizes),
-                        }
-                        for chunk in item.chunks
-                    ],
-                }
-            )
-        elif _BytesStorageMetadata is not None and isinstance(
-            item, _BytesStorageMetadata
-        ):
-            rows.append({"fqn": fqn, "kind": "bytes"})
-        else:
-            raise UnsupportedStateObject(
-                "state dict entry %r has storage metadata %s; this adapter "
-                "persists plain tensors and byte objects only"
-                % (fqn, type(item).__name__)
-            )
+        rows.append(_state_dict_row_value(fqn, state_dict_metadata[fqn]))
     return rows
 
 
@@ -725,30 +724,43 @@ def _planner_data_value(planner_data):
     )
 
 
-def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
-    """Canonical WCB bytes for a DCP ``Metadata`` object."""
-    storage_rows = []
+def _storage_key_order(key):
+    return (key.fqn, tuple(key.offset or ()))
+
+
+def _storage_row_value(key, info):
+    return {
+        "fqn": key.fqn,
+        "offset": None if key.offset is None else _u_list(key.offset),
+        "index": None if key.index is None else _u(key.index),
+        "info": info.to_value(),
+    }
+
+
+def metadata_parts(metadata, *, checkpoint_id, storage_name):
+    """The canonical ``weft.dcp.metadata.v1`` value tree.
+
+    This is the single description of the metadata schema: the reference
+    encoder (``serialize_metadata``) and the fast path
+    (``serialize_metadata_fast``) both derive from it.
+    """
     storage_data = metadata.storage_data
     if storage_data is None:
-        raise InvalidMetadata("metadata.storage_data is None; write_data/finish "
-                              "must run before metadata is serialised")
-    for key in sorted(storage_data, key=lambda k: (k.fqn, tuple(k.offset or ()))):
+        raise InvalidMetadata(
+            "metadata.storage_data is None; write_data/finish "
+            "must run before metadata is serialised"
+        )
+    storage_rows = []
+    for key in sorted(storage_data, key=_storage_key_order):
         info = storage_data[key]
         if not isinstance(info, StorageInfo):
             raise InvalidMetadata(
                 "storage_data[%r] is %s, expected StorageInfo"
                 % (key, type(info).__name__)
             )
-        storage_rows.append(
-            {
-                "fqn": key.fqn,
-                "offset": None if key.offset is None else _u_list(key.offset),
-                "index": None if key.index is None else _u(key.index),
-                "info": info.to_value(),
-            }
-        )
+        storage_rows.append(_storage_row_value(key, info))
     version = getattr(metadata, "version", None)
-    value = {
+    return {
         "schema": DCP_METADATA_SCHEMA,
         "checkpoint_id": checkpoint_id,
         "storage_name": storage_name,
@@ -757,7 +769,570 @@ def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
         "storage_data": storage_rows,
         "planner_data": _planner_data_value(getattr(metadata, "planner_data", None)),
     }
-    return wcb.encode(value)
+
+
+def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
+    """Canonical WCB bytes for a DCP ``Metadata`` object.
+
+    This is the **reference oracle** for ``weft.dcp.metadata.v1``: the bytes it
+    emits define the format, and every faster path is differentially checked
+    against it (``tests/test_dcp_metadata_fast.py``).
+    """
+    return wcb.encode(
+        metadata_parts(
+            metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+        )
+    )
+
+
+# -- fast metadata encoding (R12c item 3) -------------------------------------
+#
+# `serialize_metadata` above is the reference oracle and stays the definition of
+# the bytes. `serialize_metadata_fast` builds the same bytes from a
+# `MetadataPlan`: the per-entry fragments are encoded once per (entry-set shape,
+# limits), and each later save re-emits only the fields that change (content
+# roots, checkpoint/storage names, planner data, DCP version).
+#
+# Safety rules, in order of application:
+#   1. A plan is only cached after its assembled bytes have been compared with
+#      the oracle's bytes for the same metadata object. A mismatch is reported
+#      (`mode == "reference"`) and the plan is never cached.
+#   2. Every save re-derives the plan's signature from the current metadata
+#      *before* any fragment is emitted. A plan that does not match is not used:
+#      the save falls back to a whole-tree encode and rebuilds the plan.
+#   3. The plan holds no store, capability or authorization state; it is a pure
+#      function of the entry-set shape and the limits.
+
+_TAG_TEXT_B = bytes((wcb.TAG_TEXT,))
+_TAG_BYTES_B = bytes((wcb.TAG_BYTES,))
+_TAG_MAP_B = bytes((wcb.TAG_MAP,))
+_TAG_ARRAY_B = bytes((wcb.TAG_ARRAY,))
+_TAG_NULL_B = bytes((wcb.TAG_NULL,))
+
+#: Encoded text fragments (map keys and the repeated dtype/kind strings), with
+#: the raw byte length used to re-check a lowered ``max_string_bytes``. Bounded;
+#: a miss recomputes the identical bytes.
+_METADATA_TEXT_CACHE: "dict[str, tuple[bytes, int]]" = {}
+_METADATA_TEXT_CACHE_MAX = 4096
+
+#: Bounded set of cached plans. Each plan holds the encoded static fragments of
+#: one entry-set shape, so the byte bound is the sum of those fragments.
+PLAN_CACHE_MAX_PLANS = 4
+PLAN_CACHE_MAX_BYTES = 8 << 20
+
+
+def _wcb_text_fragment(value, limits):
+    """Encoded WCB text value (and therefore also encoded map key)."""
+    cached = _METADATA_TEXT_CACHE.get(value)
+    if cached is not None:
+        if cached[1] > limits.max_string_bytes:
+            raise LimitExceeded(
+                "text length %d exceeds limit %d"
+                % (cached[1], limits.max_string_bytes)
+            )
+        return cached[0]
+    raw = value.encode("utf-8")
+    length = len(raw)
+    if length > limits.max_string_bytes:
+        raise LimitExceeded(
+            "text length %d exceeds limit %d" % (length, limits.max_string_bytes)
+        )
+    fragment = _TAG_TEXT_B + varint.encode_bytes(length) + raw
+    if len(_METADATA_TEXT_CACHE) >= _METADATA_TEXT_CACHE_MAX:
+        _METADATA_TEXT_CACHE.clear()
+    _METADATA_TEXT_CACHE[value] = (fragment, length)
+    return fragment
+
+
+def _wcb_header(tag, count, limits):
+    return bytes((tag,)) + varint.encode_bytes(count)
+
+
+def _count_items(value):
+    """Values in one tree, counted exactly like ``wcb._Encoder`` (keys are not)."""
+    total = 1
+    if isinstance(value, dict):
+        for child in value.values():
+            total += _count_items(child)
+    elif isinstance(value, (list, tuple)):
+        for child in value:
+            total += _count_items(child)
+    return total
+
+
+def _max_container_depth(value, depth=1):
+    """Deepest array/map depth in one tree (0 for a scalar)."""
+    if isinstance(value, dict):
+        best = depth
+        for child in value.values():
+            child_depth = _max_container_depth(child, depth + 1)
+            if child_depth > best:
+                best = child_depth
+        return best
+    if isinstance(value, (list, tuple)):
+        best = depth
+        for child in value:
+            child_depth = _max_container_depth(child, depth + 1)
+            if child_depth > best:
+                best = child_depth
+        return best
+    return 0
+
+
+class MetadataPlan:
+    """Encoded invariant fragments for one DCP metadata entry-set shape."""
+
+    __slots__ = (
+        "limits",
+        "state_keys",
+        "state_kinds",
+        "state_dtypes",
+        "state_sizes",
+        "state_chunks",
+        "storage_keys",
+        "storage_info",
+        "storage_prefixes",
+        "storage_suffixes",
+        "head",
+        "key_dcp_version",
+        "key_planner_data",
+        "key_storage_data",
+        "key_storage_name",
+        "key_checkpoint_id",
+        "base_items",
+        "static_depth",
+        "cached_bytes",
+    )
+
+    def __init__(self, metadata, limits):
+        self.limits = limits
+        state = metadata.state_dict_metadata
+        storage = metadata.storage_data
+        if storage is None:
+            raise InvalidMetadata(
+                "metadata.storage_data is None; write_data/finish "
+                "must run before metadata is serialised"
+            )
+
+        self.state_keys = sorted(state)
+        self.state_kinds = []
+        self.state_dtypes = []
+        self.state_sizes = []
+        self.state_chunks = []
+        state_rows = []
+        items = 1 + 1 + 1  # root map, schema, state_dict array
+        depth = 2  # the state_dict array itself lives at depth 2
+        for fqn in self.state_keys:
+            item = state[fqn]
+            row_value = _state_dict_row_value(fqn, item)
+            state_rows.append(wcb_fast.encode(row_value, limits))
+            items += _count_items(row_value)
+            depth = max(depth, 2 + _max_container_depth(row_value))
+            if _TensorStorageMetadata is not None and isinstance(
+                item, _TensorStorageMetadata
+            ):
+                self.state_kinds.append("tensor")
+                self.state_dtypes.append(item.properties.dtype)
+                self.state_sizes.append(tuple(item.size))
+                self.state_chunks.append(
+                    tuple(
+                        (tuple(chunk.offsets), tuple(chunk.sizes))
+                        for chunk in item.chunks
+                    )
+                )
+            else:
+                self.state_kinds.append("bytes")
+                self.state_dtypes.append(None)
+                self.state_sizes.append(None)
+                self.state_chunks.append(())
+
+        self.storage_keys = []
+        self.storage_info = []
+        self.storage_prefixes = []
+        self.storage_suffixes = []
+        items += 1  # storage_data array
+        depth = max(depth, 2)
+        for key in sorted(storage, key=_storage_key_order):
+            info = storage[key]
+            if not isinstance(info, StorageInfo):
+                raise InvalidMetadata(
+                    "storage_data[%r] is %s, expected StorageInfo"
+                    % (key, type(info).__name__)
+                )
+            row_value = _storage_row_value(key, info)
+            expected = wcb_fast.encode(row_value, limits)
+            prefix, suffix = self._split_storage_row(key, info, limits)
+            content_root_bytes = bytes(info.content_root)
+            encoded_root = (
+                _TAG_BYTES_B
+                + varint.encode_bytes(len(content_root_bytes))
+                + content_root_bytes
+            )
+            if prefix + encoded_root + suffix != expected:
+                raise _PlanMismatch(
+                    "storage row fragments do not reassemble the canonical row"
+                )
+            self.storage_keys.append(
+                (
+                    key.fqn,
+                    None if key.offset is None else tuple(key.offset),
+                    None if key.index is None else int(key.index),
+                )
+            )
+            self.storage_info.append(
+                (
+                    info.entry,
+                    info.dtype,
+                    info.shape,
+                    info.lengths,
+                    info.storage_offsets,
+                )
+            )
+            self.storage_prefixes.append(prefix)
+            self.storage_suffixes.append(suffix)
+            items += _count_items(row_value)
+            depth = max(depth, 2 + _max_container_depth(row_value))
+
+        text = lambda name: _wcb_text_fragment(name, limits)
+        head = [
+            _TAG_MAP_B + varint.encode_bytes(7),
+            text("schema"),
+            text(DCP_METADATA_SCHEMA),
+            text("state_dict"),
+            _TAG_ARRAY_B + varint.encode_bytes(len(state_rows)),
+        ]
+        head.extend(state_rows)
+        self.head = b"".join(head)
+        self.key_dcp_version = text("dcp_version")
+        self.key_planner_data = text("planner_data")
+        self.key_storage_data = text("storage_data")
+        self.key_storage_name = text("storage_name")
+        self.key_checkpoint_id = text("checkpoint_id")
+        self.base_items = items
+        self.static_depth = depth
+        self.cached_bytes = len(self.head) + sum(
+            len(fragment)
+            for fragment in (
+                list(self.storage_prefixes)
+                + list(self.storage_suffixes)
+                + [
+                    self.key_dcp_version,
+                    self.key_planner_data,
+                    self.key_storage_data,
+                    self.key_storage_name,
+                    self.key_checkpoint_id,
+                ]
+            )
+        )
+
+    @staticmethod
+    def _split_storage_row(key, info, limits):
+        """Static prefix and suffix around the one variable field.
+
+        ``content_root`` is the fifth of six keys in the canonical ``info`` map,
+        so the row is ``prefix + encoded(content_root) + suffix``.
+        """
+        text = lambda value: _wcb_text_fragment(value, limits)
+        info_value = info.to_value()
+        prefix = b"".join(
+            (
+                _TAG_MAP_B + varint.encode_bytes(4),
+                text("fqn"),
+                text(key.fqn),
+                text("info"),
+                _TAG_MAP_B + varint.encode_bytes(6),
+                text("dtype"),
+                text(info_value["dtype"]),
+                text("entry"),
+                text(info_value["entry"]),
+                text("shape"),
+                wcb_fast.encode(info_value["shape"], limits),
+                text("lengths"),
+                wcb_fast.encode(info_value["lengths"], limits),
+                text("content_root"),
+            )
+        )
+        suffix = b"".join(
+            (
+                text("storage_offsets"),
+                wcb_fast.encode(info_value["storage_offsets"], limits),
+                text("index"),
+                wcb_fast.encode(
+                    None if key.index is None else _u(key.index), limits
+                ),
+                text("offset"),
+                wcb_fast.encode(
+                    None if key.offset is None else _u_list(key.offset), limits
+                ),
+            )
+        )
+        return prefix, suffix
+
+    def matches(self, metadata):
+        """Content roots in plan order, or ``None`` when the plan is stale.
+
+        Every cached fragment is re-derived from the current metadata here, so a
+        returned list means every fragment is still the right bytes.
+        """
+        try:
+            state = metadata.state_dict_metadata
+            storage = metadata.storage_data
+            if storage is None or state is None:
+                return None
+            if len(state) != len(self.state_keys):
+                return None
+            if sorted(state) != self.state_keys:
+                return None
+            for index, fqn in enumerate(self.state_keys):
+                item = state[fqn]
+                kind = self.state_kinds[index]
+                if kind == "tensor":
+                    if not (
+                        _TensorStorageMetadata is not None
+                        and isinstance(item, _TensorStorageMetadata)
+                    ):
+                        return None
+                    if item.properties.dtype != self.state_dtypes[index]:
+                        return None
+                    if item.size != self.state_sizes[index]:
+                        return None
+                    chunks = item.chunks
+                    cached_chunks = self.state_chunks[index]
+                    if len(chunks) != len(cached_chunks):
+                        return None
+                    for chunk, cached in zip(chunks, cached_chunks):
+                        if chunk.offsets != cached[0] or chunk.sizes != cached[1]:
+                            return None
+                else:
+                    if not (
+                        _BytesStorageMetadata is not None
+                        and isinstance(item, _BytesStorageMetadata)
+                    ):
+                        return None
+            if len(storage) != len(self.storage_keys):
+                return None
+            roots = []
+            for index, key in enumerate(sorted(storage, key=_storage_key_order)):
+                cached_key = self.storage_keys[index]
+                if key.fqn != cached_key[0]:
+                    return None
+                offset = None if key.offset is None else tuple(key.offset)
+                if offset != cached_key[1]:
+                    return None
+                if (None if key.index is None else int(key.index)) != cached_key[2]:
+                    return None
+                info = storage[key]
+                if not isinstance(info, StorageInfo):
+                    return None
+                cached_info = self.storage_info[index]
+                if (
+                    info.entry != cached_info[0]
+                    or info.dtype != cached_info[1]
+                    or info.shape != cached_info[2]
+                    or info.lengths != cached_info[3]
+                    or info.storage_offsets != cached_info[4]
+                ):
+                    return None
+                roots.append(bytes(info.content_root))
+            return roots
+        except (AttributeError, TypeError, KeyError):
+            return None
+
+    def assemble(self, metadata, checkpoint_id, storage_name, limits, roots):
+        """Emit the metadata bytes from the cached fragments and `roots`."""
+        out = [self.head, self.key_dcp_version]
+        version = getattr(metadata, "version", None)
+        out.append(
+            _TAG_NULL_B
+            if version is None
+            else _wcb_text_fragment(str(version), limits)
+        )
+        out.append(self.key_planner_data)
+        planner_value = _planner_data_value(getattr(metadata, "planner_data", None))
+        out.append(wcb_fast.encode(planner_value, limits))
+        out.append(self.key_storage_data)
+        out.append(_TAG_ARRAY_B + varint.encode_bytes(len(self.storage_prefixes)))
+        for index, raw in enumerate(roots):
+            out.append(self.storage_prefixes[index])
+            out.append(_TAG_BYTES_B + varint.encode_bytes(len(raw)) + raw)
+            out.append(self.storage_suffixes[index])
+        out.append(self.key_storage_name)
+        out.append(_wcb_text_fragment(storage_name, limits))
+        out.append(self.key_checkpoint_id)
+        out.append(_wcb_text_fragment(checkpoint_id, limits))
+
+        items = self.base_items + 3 + _count_items(planner_value)
+        if items > limits.max_structured_items:
+            raise LimitExceeded(
+                "WCB item count %d exceeds limit %d"
+                % (items, limits.max_structured_items)
+            )
+        depth = max(self.static_depth, 1 + _max_container_depth(planner_value))
+        if depth > limits.max_structured_depth:
+            raise LimitExceeded(
+                "WCB nesting depth %d exceeds limit %d"
+                % (depth, limits.max_structured_depth)
+            )
+        return b"".join(out)
+
+
+class _PlanMismatch(Exception):
+    """Internal: a plan failed its own consistency checks; never cached."""
+
+
+class MetadataPlanCache:
+    """Bounded, process-local set of metadata plans with counters."""
+
+    def __init__(self, max_plans=PLAN_CACHE_MAX_PLANS, max_bytes=PLAN_CACHE_MAX_BYTES):
+        self.max_plans = max_plans
+        self.max_bytes = max_bytes
+        self._plans = []
+        self._bytes = 0
+        self._lock = threading.Lock()
+        self.stats = {
+            "plan_hits": 0,
+            "plan_builds": 0,
+            "plan_evictions": 0,
+            "fallbacks": 0,
+            "oracle_checks": 0,
+            "oracle_mismatches": 0,
+            "last_mode": None,
+        }
+
+    def clear(self):
+        with self._lock:
+            self._plans = []
+            self._bytes = 0
+
+    def _match(self, metadata):
+        with self._lock:
+            plans = list(self._plans)
+        for plan in plans:
+            roots = plan.matches(metadata)
+            if roots is not None:
+                return plan, roots
+        return None, None
+
+    def _store(self, plan):
+        with self._lock:
+            if plan.cached_bytes > self.max_bytes:
+                return
+            self._plans.append(plan)
+            self._bytes += plan.cached_bytes
+            while len(self._plans) > self.max_plans or self._bytes > self.max_bytes:
+                dropped = self._plans.pop(0)
+                self._bytes -= dropped.cached_bytes
+                self.stats["plan_evictions"] += 1
+
+    def encode(
+        self, metadata, *, checkpoint_id, storage_name, limits=None, report=None
+    ):
+        limits = limits or Limits()
+        plan, roots = self._match(metadata)
+        if plan is not None and plan.limits == limits:
+            blob = plan.assemble(metadata, checkpoint_id, storage_name, limits, roots)
+            with self._lock:
+                self.stats["plan_hits"] += 1
+                self.stats["last_mode"] = "plan"
+            if report is not None:
+                report.update(self._snapshot("plan"))
+            return blob
+
+        # No usable plan: encode the whole tree with the fast generic encoder,
+        # then try to build and *prove* a plan for later saves.
+        with self._lock:
+            self.stats["fallbacks"] += 1
+        blob = wcb_fast.encode(
+            metadata_parts(
+                metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+            ),
+            limits,
+        )
+        mode = "rebuilt"
+        try:
+            candidate = MetadataPlan(metadata, limits)
+            candidate_roots = candidate.matches(metadata)
+            if candidate_roots is None:
+                raise _PlanMismatch("a freshly built plan does not match its metadata")
+            assembled = candidate.assemble(
+                metadata, checkpoint_id, storage_name, limits, candidate_roots
+            )
+            with self._lock:
+                self.stats["oracle_checks"] += 1
+            if assembled != blob:
+                with self._lock:
+                    self.stats["oracle_mismatches"] += 1
+                raise _PlanMismatch("plan bytes differ from the encoded tree")
+            self._store(candidate)
+            with self._lock:
+                self.stats["plan_builds"] += 1
+        except _PlanMismatch:
+            # The plan failed its own proof. The generic bytes are already
+            # verified against the shape by construction, but the oracle is the
+            # definition, so pay for it once rather than ship unproven bytes.
+            mode = "reference"
+            blob = serialize_metadata(
+                metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+            )
+        with self._lock:
+            self.stats["last_mode"] = mode
+        if report is not None:
+            report.update(self._snapshot(mode))
+        return blob
+
+    def _snapshot(self, mode):
+        snapshot = dict(self.stats)
+        snapshot["mode"] = mode
+        snapshot["plans_cached"] = len(self._plans)
+        snapshot["cached_bytes"] = self._bytes
+        return snapshot
+
+
+#: The process-wide plan cache used by ``WeftStorageWriter.finish``.
+METADATA_PLANS = MetadataPlanCache()
+
+
+#: Which metadata encoder a writer uses. ``auto`` is the shipped path (the
+#: reusable plan with the reference oracle as its proof); ``reference`` forces
+#: the pure-Python oracle so a court can measure the two against each other on
+#: one revision. ``WEFT_DCP_METADATA_ENCODING`` selects it for a whole run.
+METADATA_ENCODING_MODES = ("auto", "reference")
+
+
+def _metadata_encoding_from_env():
+    value = os.environ.get("WEFT_DCP_METADATA_ENCODING", "auto").strip().lower()
+    if value not in METADATA_ENCODING_MODES:
+        raise ValueError(
+            "WEFT_DCP_METADATA_ENCODING=%r is not one of %s"
+            % (value, ", ".join(METADATA_ENCODING_MODES))
+        )
+    return value
+
+
+def serialize_metadata_fast(
+    metadata,
+    *,
+    checkpoint_id,
+    storage_name,
+    cache=None,
+    limits=None,
+    report=None,
+) -> bytes:
+    """Canonical DCP metadata bytes from the reusable plan when it is valid.
+
+    Byte-identical to :func:`serialize_metadata`; the plan is verified against
+    that oracle before it is cached, and a plan that does not match the current
+    metadata is never used. ``report`` (a dict) receives the counter snapshot
+    and the ``mode`` used: ``plan``, ``rebuilt`` or ``reference``.
+    """
+    chosen = METADATA_PLANS if cache is None else cache
+    return chosen.encode(
+        metadata,
+        checkpoint_id=checkpoint_id,
+        storage_name=storage_name,
+        limits=limits,
+        report=report,
+    )
 
 
 def _metadata_from_value(value, *, storage_name):
@@ -1037,6 +1612,11 @@ class WeftStorageWriter(_StorageWriterBase):
         When True (default) a second save to the same id is written as a new
         generation ``<id>.v2``, ``<id>.v3``, ... (no store-side delete exists).
         When False an existing generation raises ``FileExistsError``.
+    metadata_encoding:
+        ``auto`` (default) uses the reusable metadata plan, which is proven
+        against the pure-Python reference oracle before it is cached;
+        ``reference`` forces the oracle for an A/B measurement.
+        ``WEFT_DCP_METADATA_ENCODING`` sets the same choice for a whole run.
     """
 
     def __init__(
@@ -1060,9 +1640,20 @@ class WeftStorageWriter(_StorageWriterBase):
         fast_codec=None,
         fast_zstd_level=None,
         direct_container=True,
+        metadata_encoding=None,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
+        # Which metadata encoder this writer uses: `auto` (the shipped plan) or
+        # `reference` (the pure-Python oracle). An invalid override fails here,
+        # before any store access, not at publication time.
+        encoding = metadata_encoding or _metadata_encoding_from_env()
+        if encoding not in METADATA_ENCODING_MODES:
+            raise ValueError(
+                "metadata_encoding=%r is not one of %s"
+                % (encoding, ", ".join(METADATA_ENCODING_MODES))
+            )
+        self.metadata_encoding = encoding
         self._topology = _parse_topology(topology, axis)
         if shard_strategy not in ("tensor-sharded", "tensor-tiled", "zstd", "raw"):
             raise ValueError(
@@ -1100,6 +1691,9 @@ class WeftStorageWriter(_StorageWriterBase):
         self._pending_metadata = None
         self._finished = False
         self._manifest = None
+        # The last metadata encode's plan counters and mode (`plan`, `rebuilt`,
+        # `reference`), so a court can prove which path ran.
+        self._metadata_encode = None
         # An optional long-lived session: when given, the service process (and
         # its writable store handle) outlive this writer, and `close()` leaves
         # it alone. `None` keeps the historical one-service-per-writer shape.
@@ -1213,6 +1807,11 @@ class WeftStorageWriter(_StorageWriterBase):
                 "topology": self._topology,
                 "shard_strategy": self.shard_strategy,
                 "staging_bytes": self.staging_bytes,
+                "metadata_encode": (
+                    None
+                    if self._metadata_encode is None
+                    else dict(self._metadata_encode)
+                ),
             }
         )
         return payload
@@ -1234,6 +1833,7 @@ class WeftStorageWriter(_StorageWriterBase):
             self._pending_metadata = None
             self._finished = False
             self._manifest = None
+            self._metadata_encode = None
             self._release_container()
             self._stats = {
                 "entries": 0,
@@ -1298,11 +1898,28 @@ class WeftStorageWriter(_StorageWriterBase):
             if getattr(metadata, "version", None) is None:
                 metadata.version = "1.0.0"
             serialize_started = time.perf_counter_ns()
-            blob = serialize_metadata(
-                metadata,
-                checkpoint_id=self._path,
-                storage_name=self._storage_name,
-            )
+            encode_report = {}
+            if self.metadata_encoding == "reference":
+                blob = serialize_metadata(
+                    metadata,
+                    checkpoint_id=self._path,
+                    storage_name=self._storage_name,
+                )
+                encode_report = {
+                    "mode": "reference-forced",
+                    "plan_hits": 0,
+                    "plan_builds": 0,
+                    "fallbacks": 0,
+                }
+            else:
+                blob = serialize_metadata_fast(
+                    metadata,
+                    checkpoint_id=self._path,
+                    storage_name=self._storage_name,
+                    report=encode_report,
+                )
+            encode_report["requested"] = self.metadata_encoding
+            self._metadata_encode = encode_report
             _probe("adapter.metadata_serialize", serialize_started)
             commit_started = time.perf_counter_ns()
             metadata_path = "/checkpoints/%s/%s" % (
