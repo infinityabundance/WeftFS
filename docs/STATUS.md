@@ -8162,6 +8162,13 @@ Registration adds no measurement and re-runs no package:
   Receipt: `bench/receipts/conformance-bundle-20261111T015329Z.json` (both
   courts' blocks), host verification log
   `bench/receipts/conformance-bundle-20261111T015329Z.verify.log`.
+* The run happened at parent revision `ff89472` **plus the uncommitted court
+  and packaging-script changes that are this section's payload**. None of
+  those files is part of the bundle payload (the bundle carries the corpus,
+  `docs/CONFORMANCE.md`, `docs/WRITE-YOUR-OWN-DECODER.md`, `docs/RFC.md`,
+  `docs/PAPER.md`, the runner, the adapters and the Python package), so the
+  bundle content corresponds to `ff89472`; the receipt records that revision
+  and the exact commands in its `courts` blocks.
 
 ### Packaging-court defects found while finishing R13
 
