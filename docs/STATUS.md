@@ -9006,8 +9006,9 @@ in that phase.
     section equality against `StateIndex::build` every 500 ops and at the end,
     query equality against the scan oracle, group commits, and damaged/absent/
     orphan segment rejection; unit tests 5/5; `tests/index_chain.rs` gains a
-    self-consistent wrong-ancestor rejection. Rust all-targets 782 passed /
-    0 failed; FUSE 827 passed / 0 failed / 2 pre-existing ignored; Go store
+    self-consistent wrong-ancestor rejection. Rust all-targets 784 passed /
+    0 failed (at `8d324dc`; the `7d7e2af` message's 782 predates the last two
+    unit tests); FUSE 827 passed / 0 failed / 2 pre-existing ignored; Go store
     `Index|Handoff` suite PASS (78.7 s).
   * Cross-language is format compatibility only: Go resolves the Rust delta
     chain and re-encodes it byte-identically, and a Rust store at this revision

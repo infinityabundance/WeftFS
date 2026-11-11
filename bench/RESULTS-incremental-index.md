@@ -234,10 +234,13 @@ Maintenance rules (`src/index_incremental.rs`):
   `ok=true full=true generation=6 commit=22218594…` with 6 commits,
   3 objects, 3 manifests, 3 chunks checked. Go has **no incremental
   maintenance** in this session and no Go timing is claimed.
-* **Suites**: Rust `cargo test --all-targets` 782 passed / 0 failed
-  (161 binaries); FUSE `cargo test --features fuse --all-targets` 827 passed /
+* **Suites**: Rust `cargo test --all-targets` 784 passed / 0 failed
+  (161 binaries, measured at `8d324dc`); FUSE
+  `cargo test --features fuse --all-targets` 827 passed /
   0 failed / 2 ignored (the two pre-existing ignores). Go store suite:
   `go test -race ./store -run 'Index|Handoff'` PASS (78.7 s).
+  (The `7d7e2af` commit message quotes 782: that run predates the last two unit
+  tests; no code changed after the 784-test run except documentation.)
 
 ## Losses, residual risks, not claimed
 
