@@ -300,6 +300,39 @@ fn the_chain_depth_bound_and_byte_budget_are_enforced() {
     assert!(budget.index_bytes_total().unwrap() <= 1);
 }
 
+#[test]
+fn a_self_consistent_but_wrong_ancestor_is_rejected() {
+    // Every byte here is a genuine WFX3 segment with a correct digest. The head
+    // file is replaced by one of its ancestors, so the chain it names is real
+    // but is not the chain the commit attests. The attestation must refute it.
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), options()).unwrap();
+    write_files(&mut store, 12, "f");
+    let head = store.head();
+    let (kind, depth) = store.index_head_chain().unwrap();
+    assert_eq!(kind, "delta");
+    assert!(depth > 0);
+    drop(store);
+
+    let head_path = index_path(dir.path(), head);
+    let head_bytes = fs::read(&head_path).unwrap();
+    // A delta header names its base commit at offset 57; that base segment is
+    // also a valid file. Copy it over the head.
+    let base_commit =
+        weftfs::identity::Hash32::from_bytes(head_bytes[57..89].try_into().expect("base commit"));
+    let base_path = index_path(dir.path(), base_commit);
+    assert!(base_path.exists(), "the base segment must still exist");
+    fs::copy(&base_path, &head_path).unwrap();
+
+    let store = Store::open(dir.path(), OpenMode::ReadOnly).unwrap();
+    store.reset_index_stats();
+    assert_answers_equal(&store, None, "ancestor swapped into the head");
+    let stats = store.index_stats();
+    assert_eq!(stats.disk_loads, 0, "{stats:?}");
+    assert!(stats.rejects >= 1, "{stats:?}");
+    assert!(stats.builds >= 1, "{stats:?}");
+}
+
 /// The writer's in-memory chain is only a cache: the answers it produces must
 /// equal a fresh full-segment store's answers *and* a fresh read-only handle's
 /// answers from the persisted chain (`StateIndex::build` at a cold start is the
@@ -324,7 +357,10 @@ fn the_writer_chain_cache_answers_like_a_cold_oracle() {
     // Queries on the hot writer use the cached chain and never rebuild.
     assert_answers_equal(&cached, None, "hot writer");
     let stats = cached.index_stats();
-    assert_eq!(stats.builds, 0, "the hot writer must not rebuild: {stats:?}");
+    assert_eq!(
+        stats.builds, 1,
+        "the hot writer must not rebuild (one build is the genesis commit): {stats:?}"
+    );
     assert_eq!(stats.rejects, 0, "{stats:?}");
     assert_answers_equal(&oracle, None, "full-segment oracle");
     drop(cached);

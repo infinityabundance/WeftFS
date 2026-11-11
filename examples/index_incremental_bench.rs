@@ -163,6 +163,7 @@ fn options(mode: &str) -> Options {
         gc_grace_secs: 0,
         fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
         incremental_index: mode != "full",
+        incremental_index_maintenance: !maintenance_off(mode),
         ..Options::default()
     }
 }
@@ -414,6 +415,8 @@ fn run(mode: &str, live: usize, checkpoints: &[u64]) -> serde_json::Value {
             "index_stats": {
                 "loads": index_notes.disk_loads,
                 "builds": index_notes.builds,
+                "maintenance_updates": index_notes.maintenance_updates,
+                "maintenance_fallbacks": index_notes.maintenance_fallbacks,
                 "rejects": index_notes.rejects,
                 "writes": index_notes.writes,
                 "write_errors": index_notes.write_errors,
@@ -448,6 +451,8 @@ fn run(mode: &str, live: usize, checkpoints: &[u64]) -> serde_json::Value {
             "index_stats": {
                 "loads": index_stats.disk_loads,
                 "builds": index_stats.builds,
+                "maintenance_updates": index_stats.maintenance_updates,
+                "maintenance_fallbacks": index_stats.maintenance_fallbacks,
                 "rejects": index_stats.rejects,
                 "writes": index_stats.writes,
                 "write_errors": index_stats.write_errors,
@@ -486,10 +491,7 @@ fn main() {
         "WEFT_INDEX_MODE must be delta, full, or delta-no-maint"
     );
     if maintenance_off(&mode) {
-        // The control cell only means anything on a revision that has the
-        // switch; a revision without it refuses rather than silently measuring
-        // the default path under a different label.
-        panic!("this revision has no incremental-maintenance switch; use `delta` or `full`");
+        // Recorded in the receipt as the same-revision control cell.
     }
 
     let report = run(&mode, live, &checkpoints);
@@ -529,7 +531,6 @@ fn main() {
         },
         "control_variables": {
             "WEFT_INDEX_MODE": env("WEFT_INDEX_MODE"),
-            "WEFT_INDEX_MAINTENANCE": env("WEFT_INDEX_MAINTENANCE"),
             "WEFT_INDEX_SIZES": env("WEFT_INDEX_SIZES"),
             "WEFT_INDEX_LIVE": env("WEFT_INDEX_LIVE"),
             "WEFT_INDEX_WINDOW": env("WEFT_INDEX_WINDOW"),

@@ -199,6 +199,12 @@ pub struct Options {
     /// full WFX3 segment for every attested commit (the chain depth is always
     /// 0); WFX2 segments are still readable either way.
     pub incremental_index: bool,
+    /// Derive the next advisory index from the committed operation stream
+    /// instead of rebuilding every row from state. Default on: the commit path
+    /// touches only the rows the ops changed, while `StateIndex::build` remains
+    /// the oracle and the fallback. Turning it off reproduces the pre-incremental
+    /// writer (a whole-state build on every publish) for differential courts.
+    pub incremental_index_maintenance: bool,
     /// MW2 writer policy. `Single` (the default) is MW1: an exclusive writer
     /// holds `LOCK` and no concurrent committer is admitted. `Optimistic`
     /// publishes through a conditional head compare-and-swap and is implemented
@@ -231,6 +237,7 @@ impl Default for Options {
             index_chain_max_deltas: crate::index_chain::DEFAULT_MAX_CHAIN_DELTAS,
             index_bytes_budget: None,
             incremental_index: true,
+            incremental_index_maintenance: true,
             writer_mode: crate::mw2::WriterMode::Single,
         }
     }
@@ -477,6 +484,12 @@ pub struct IndexStats {
     pub disk_loads: u64,
     /// `StateIndex::build` calls from replayed state.
     pub builds: u64,
+    /// Commits whose index was derived from the previous index and the op
+    /// stream (the incremental fast path).
+    pub maintenance_updates: u64,
+    /// Commits where incremental maintenance could not be proven exact and the
+    /// whole-state oracle ran instead. Never a wrong answer: a fallback rebuild.
+    pub maintenance_fallbacks: u64,
     /// Index files ignored because of a decode, integrity, or shape failure.
     pub rejects: u64,
     /// Advisory index files written after a commit.
@@ -495,6 +508,10 @@ pub struct IndexStats {
 struct PreparedIndex {
     bytes: Vec<u8>,
     index: StateIndex,
+    /// The attested candidate root of `index`, computed once for the commit.
+    /// Cached with the in-memory chain so the next commit's cheap validation
+    /// does not re-encode the whole index.
+    candidates_root: Hash32,
     /// The attested chain the bytes belong to, so the writer can keep the next
     /// commit's diff base in memory instead of re-reading the chain.
     chain: Option<IndexChain>,
@@ -505,6 +522,9 @@ struct PreparedIndex {
 struct AttestedCache {
     commit: Hash32,
     index: Arc<StateIndex>,
+    /// The attested candidate root of `index`. Comparison against the published
+    /// commit record is cheap; the disk path still recomputes it.
+    candidates_root: Hash32,
     chain: IndexChain,
 }
 
@@ -642,6 +662,28 @@ fn split_path(path: &[u8]) -> Result<(Vec<u8>, &[u8])> {
     Ok((parent, &path[position + 1..]))
 }
 
+/// True when `index` and `chain` are exactly the ones `attestation` names.
+///
+/// `candidates_root` is passed in so a caller that already computed it (or
+/// recorded it when the index was written) never re-encodes the whole index
+/// just to compare.
+fn attestation_matches(
+    attestation: &IndexAttestation,
+    index: &StateIndex,
+    candidates_root: Hash32,
+    chain: &IndexChain,
+) -> bool {
+    attestation.is_v3()
+        && index.object_count() as u64 == attestation.object_count
+        && index.relation_count() as u64 == attestation.relation_count
+        && index.entry_count() as u64 == attestation.entry_count
+        && candidates_root == attestation.candidates_root
+        && Some(chain.kind) == attestation.segment_kind
+        && chain.base() == attestation.segment_base
+        && chain.depth() == attestation.segment_depth
+        && chain.root(index.generation()).ok() == Some(attestation.segment_root)
+}
+
 fn crash_point(phase: &str) {
     if let Ok(configured) = std::env::var("WEFT_CRASH_PHASE") {
         if configured == phase {
@@ -760,6 +802,9 @@ pub struct Store {
     /// group commit's quota delta is measured against the state before the
     /// group, not the live state that already contains the ops.
     group_pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
+    /// The same pre-group image for relation ids, so the incremental index
+    /// maintainer can remove exactly the rows the group replaced or deleted.
+    group_pre_relations: BTreeMap<Hash32, Option<RelationRecord>>,
     /// Number of chunk blobs read by the most recent range write, for tests
     /// and receipts that prove Merkle identity does not stream the whole file.
     range_write_chunk_reads: AtomicU64,
@@ -1031,6 +1076,7 @@ impl Store {
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
+            group_pre_relations: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
             plane_probes,
             access: Mutex::new(crate::access::AccessCounts::default()),
@@ -1230,6 +1276,7 @@ impl Store {
             blob_index: BTreeMap::new(),
             blob_index_ready: false,
             group_pre_objects: BTreeMap::new(),
+            group_pre_relations: BTreeMap::new(),
             range_write_chunk_reads: AtomicU64::new(0),
             plane_probes,
             access: Mutex::new(access),
@@ -2182,60 +2229,137 @@ impl Store {
         &self,
         state: &State,
         commit: &crate::format::Commit,
+        ops: &[Op],
+        pre: &crate::index_incremental::PreImages,
     ) -> Result<(Option<IndexAttestation>, Option<PreparedIndex>)> {
         let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::IndexSegment);
         if !self.options.attest_indexes || self.mode != OpenMode::ReadWrite {
             return Ok((None, None));
         }
-        let index = {
-            let _build = crate::phase_profile::scope(crate::phase_profile::Phase::IndexBuild);
-            StateIndex::build(state)
-        };
+        let generation = state.generation;
+        // A delta can only name the immediately previous segment.
+        let can_delta = !self
+            .force_full_index
+            .load(std::sync::atomic::Ordering::Relaxed)
+            && self.options.incremental_index
+            && self.head != Hash32::ZERO
+            && generation > 1;
+        let maintain = self.options.incremental_index_maintenance;
+
+        let mut index: StateIndex;
+        // A delta derived from the operation stream.
+        let mut changed: Option<(crate::index_incremental::IndexDelta, IndexChain)> = None;
+        // A base index that has to be diffed with the whole-state encoder (the
+        // pre-incremental writer, kept as a control).
+        let mut full_diff: Option<(Arc<StateIndex>, IndexChain)> = None;
+
+        if maintain && self.head != Hash32::ZERO && generation > 1 {
+            // The base is the previous head's index, validated against the
+            // published commit record before any use.
+            match self.take_head_index() {
+                Some((base_index, base_chain)) => {
+                    let usable = can_delta
+                        && base_chain.depth() < u64::from(self.options.index_chain_max_deltas);
+                    match crate::index_incremental::apply(base_index, state, ops, pre) {
+                        Some((derived, delta)) if usable => {
+                            self.bump_index_stat(|stats| stats.maintenance_updates += 1);
+                            index = derived;
+                            changed = Some((delta, base_chain));
+                        }
+                        Some((derived, _)) => {
+                            // A full segment is forced (compaction or
+                            // `incremental_index = false`), but the index is
+                            // still derived rather than rebuilt.
+                            self.bump_index_stat(|stats| stats.maintenance_updates += 1);
+                            index = derived;
+                        }
+                        None => {
+                            // The ops and the base disagreed: rebuild from the
+                            // post state. Nothing partial is ever attested.
+                            self.bump_index_stat(|stats| stats.maintenance_fallbacks += 1);
+                            index = self.build_index_phase(state);
+                            if can_delta {
+                                let _load = crate::phase_profile::scope(
+                                    crate::phase_profile::Phase::IndexLoad,
+                                );
+                                full_diff = self.load_attested_chain(self.head).map(|base| {
+                                    let AttestedBase { index, chain } = base;
+                                    (index, chain)
+                                });
+                            }
+                        }
+                    }
+                }
+                None => {
+                    // No usable in-memory chain: the head carries no attested
+                    // v3 segment, or resolving it failed. Build, and diff only
+                    // when a delta could still name the on-disk chain.
+                    index = self.build_index_phase(state);
+                    if can_delta {
+                        let _load =
+                            crate::phase_profile::scope(crate::phase_profile::Phase::IndexLoad);
+                        full_diff = self
+                            .load_attested_chain(self.head)
+                            .map(|base| (base.index, base.chain));
+                    }
+                }
+            }
+        } else if !maintain && can_delta {
+            // Pre-change control path: whole-state build and whole-state diff.
+            index = self.build_index_phase(state);
+            let _load = crate::phase_profile::scope(crate::phase_profile::Phase::IndexLoad);
+            full_diff = self
+                .load_attested_chain(self.head)
+                .map(|base| (base.index, base.chain));
+        } else {
+            index = self.build_index_phase(state);
+        }
+
         if !index.complete() {
             // An incomplete index is never persisted; without an attestation
             // the commit is v1 and no segment can be trusted.
             return Ok((None, None));
         }
-        let generation = index.generation();
         let state_root = identity::h(INDEX_STATE_DOMAIN, &commit.encode_fields()?);
         let candidates_root = index.candidates_root()?;
 
-        let force_full = self
-            .force_full_index
-            .load(std::sync::atomic::Ordering::Relaxed)
-            || !self.options.incremental_index
-            || self.head == Hash32::ZERO
-            || generation <= 1;
-        let base = if force_full {
-            None
-        } else {
-            let _load = crate::phase_profile::scope(crate::phase_profile::Phase::IndexLoad);
-            self.load_attested_chain(self.head)
-        };
         let (bytes, chain) = {
             let _attest = crate::phase_profile::scope(crate::phase_profile::Phase::IndexAttest);
             // Derive the delta first: a full-state encode is only needed when a
             // delta is not chosen (or cannot be built), so the common case no
             // longer pays for both.
             let mut chosen: Option<(Vec<u8>, Vec<Hash32>)> = None;
-            if let Some(base) = base {
-                if base.index.generation().checked_add(1) == Some(generation)
-                    && base.chain.depth() < u64::from(self.options.index_chain_max_deltas)
+            let rows = index.object_count() + index.relation_count() + index.entry_count();
+            if let Some((delta, base_chain)) = changed {
+                let delta_bytes = crate::index_chain::encode_delta_changed(
+                    &delta,
+                    &index,
+                    base_chain.chain[0],
+                    self.head,
+                )?;
+                // A tiny delta on a state big enough that any full segment must
+                // dwarf it is chosen without encoding the full segment;
+                // otherwise the comparison is exact, as before. 256 rows of
+                // names + ids exceed 1 KiB by a wide margin, so this is a bound,
+                // not a heuristic guess.
+                let small = delta_bytes.len() <= 1024 && rows >= 256;
+                let wins =
+                    small || delta_bytes.len() < crate::index_chain::encode_full(&index)?.len();
+                if wins {
+                    chosen = Some((delta_bytes, base_chain.chain.clone()));
+                }
+            } else if let Some((base, base_chain)) = full_diff {
+                if base.generation().checked_add(1) == Some(generation)
+                    && base_chain.depth() < u64::from(self.options.index_chain_max_deltas)
                 {
-                    let base_id = base.chain.chain[0];
+                    let base_id = base_chain.chain[0];
                     let delta =
-                        crate::index_chain::encode_delta(&base.index, &index, base_id, self.head)?;
-                    // A tiny delta on a state big enough that any full
-                    // segment must dwarf it is chosen without encoding the full
-                    // segment; otherwise the comparison is exact, as before.
-                    // 256 rows of names + ids exceed 1 KiB by a wide margin, so
-                    // this is a bound, not a heuristic guess.
-                    let rows = index.object_count() + index.relation_count() + index.entry_count();
+                        crate::index_chain::encode_delta(&base, &index, base_id, self.head)?;
                     let small = delta.len() <= 1024 && rows >= 256;
                     let wins =
                         small || delta.len() < crate::index_chain::encode_full(&index)?.len();
                     if wins {
-                        chosen = Some((delta, base.chain.chain.clone()));
+                        chosen = Some((delta, base_chain.chain.clone()));
                     }
                 }
             }
@@ -2295,9 +2419,86 @@ impl Store {
             Some(PreparedIndex {
                 bytes,
                 index,
+                candidates_root,
                 chain: Some(chain),
             }),
         ))
+    }
+
+    /// Whole-state index build, counted and attributed. This is the oracle, not
+    /// the fast path: only a cold start, a forced full segment without a usable
+    /// base, or a failed maintenance step reaches it.
+    fn build_index_phase(&self, state: &State) -> StateIndex {
+        let _build = crate::phase_profile::scope(crate::phase_profile::Phase::IndexBuild);
+        self.bump_index_stat(|stats| stats.builds += 1);
+        StateIndex::build(state)
+    }
+
+    /// The attested v3 record for `commit`, if this generation's commit file
+    /// re-hashes to it.
+    fn attested_record(&self, commit: Hash32) -> Option<IndexAttestation> {
+        let (_, record) = self.read_commit_record(self.generation)?;
+        if record.id().ok()? != commit {
+            return None;
+        }
+        let attestation = record.index_attestation?;
+        attestation.is_v3().then_some(attestation)
+    }
+
+    /// Take ownership of the previous head's index for incremental maintenance.
+    ///
+    /// The in-memory cache is trusted only after its counts, chain and the
+    /// candidate root recorded when it was written agree with the *published*
+    /// commit record. The candidates root is compared, not recomputed: the
+    /// cached object was produced by this writer and its root was placed in the
+    /// commit, and every read path re-derives and checks the root from the
+    /// segment bytes it actually loaded.
+    ///
+    /// `None` means "no trustworthy base": the caller rebuilds from state.
+    fn take_head_index(&self) -> Option<(StateIndex, IndexChain)> {
+        // Drop the read cache's reference so the cached index can move out by
+        // value instead of being copied.
+        self.index_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .remove(self.head);
+        if let Some(cached) = self
+            .attested_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .take()
+        {
+            let attested = self
+                .attested_record(self.head)
+                .map(|attestation| {
+                    attestation_matches(
+                        &attestation,
+                        &cached.index,
+                        cached.candidates_root,
+                        &cached.chain,
+                    )
+                })
+                .unwrap_or(false);
+            if cached.commit == self.head && attested {
+                return Some(match Arc::try_unwrap(cached.index) {
+                    Ok(index) => (index, cached.chain),
+                    // A reader still holds a clone: one copy is cheaper than a
+                    // rebuild, and the copy is what gets maintained.
+                    Err(shared) => ((*shared).clone(), cached.chain),
+                });
+            }
+        }
+        let base = self.load_attested_chain(self.head)?;
+        // `load_attested_chain` repopulates the cache; drop it so this handle
+        // owns the only reference to the index.
+        self.attested_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .take();
+        Some(match Arc::try_unwrap(base.index) {
+            Ok(index) => (index, base.chain),
+            Err(shared) => ((*shared).clone(), base.chain),
+        })
     }
 
     /// Resolve the attested chain for an already-published commit. Used when
@@ -2311,27 +2512,14 @@ impl Store {
     /// chain deepens, without weakening the attestation: the same checks run on
     /// both paths.
     fn load_attested_chain(&self, commit: Hash32) -> Option<AttestedBase> {
-        let (_, record) = self.read_commit_record(self.generation)?;
-        if record.id().ok()? != commit {
-            return None;
-        }
-        let attestation = record.index_attestation?;
-        if !attestation.is_v3() {
-            return None;
-        }
+        let attestation = self.attested_record(commit)?;
         let matches = |index: &StateIndex, chain: &IndexChain| -> Option<()> {
-            if index.object_count() as u64 != attestation.object_count
-                || index.relation_count() as u64 != attestation.relation_count
-                || index.entry_count() as u64 != attestation.entry_count
-                || index.candidates_root().ok()? != attestation.candidates_root
-                || chain.kind != attestation.segment_kind?
-                || chain.base() != attestation.segment_base
-                || chain.depth() != attestation.segment_depth
-                || chain.root(index.generation()).ok()? != attestation.segment_root
-            {
-                return None;
+            let candidates_root = index.candidates_root().ok()?;
+            if attestation_matches(&attestation, index, candidates_root, chain) {
+                Some(())
+            } else {
+                None
             }
-            Some(())
         };
         if let Some(cached) = self
             .attested_cache
@@ -2354,6 +2542,7 @@ impl Store {
         })
         .ok()?;
         matches(&resolved.index, &resolved.chain)?;
+        let candidates_root = resolved.index.candidates_root().ok()?;
         let index = Arc::new(resolved.index);
         let chain = resolved.chain;
         *self
@@ -2362,6 +2551,7 @@ impl Store {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(AttestedCache {
             commit,
             index: Arc::clone(&index),
+            candidates_root,
             chain: chain.clone(),
         });
         Some(AttestedBase { index, chain })
@@ -2447,6 +2637,7 @@ impl Store {
                 .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(AttestedCache {
                 commit,
                 index,
+                candidates_root: prepared.candidates_root,
                 chain,
             });
         }
@@ -2613,6 +2804,32 @@ impl Store {
         let index = StateIndex::build(state);
         self.bump_index_stat(|stats| stats.builds += 1);
         index.object_count()
+    }
+
+    /// Test hook: the candidate sections of the index the writer currently
+    /// holds for its head (the incrementally maintained one).
+    #[doc(hidden)]
+    pub fn head_index_sections_for_test(&self) -> Result<Vec<u8>> {
+        let cached = self
+            .attested_cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let cached = cached.as_ref().ok_or_else(|| {
+            Error::invalid_argument("the writer holds no attested in-memory index")
+        })?;
+        if cached.commit != self.head {
+            return Err(Error::invalid_argument(
+                "the in-memory index is not for the current head",
+            ));
+        }
+        cached.index.encode_sections()
+    }
+
+    /// Test hook: the oracle — a full `StateIndex::build` over the live state,
+    /// encoded with the same canonical section layout.
+    #[doc(hidden)]
+    pub fn rebuilt_index_sections_for_test(&self) -> Result<Vec<u8>> {
+        self.build_index_phase(&self.state).encode_sections()
     }
 
     /// Rebuild the state at an arbitrary commit by replay.
@@ -6570,6 +6787,7 @@ impl Store {
         self.pending_ops.clear();
         self.group_undo.clear();
         self.group_pre_objects.clear();
+        self.group_pre_relations.clear();
         self.group_force_checkpoint = false;
         Ok(())
     }
@@ -6585,12 +6803,13 @@ impl Store {
         let ops = std::mem::take(&mut self.pending_ops);
         let undo = std::mem::take(&mut self.group_undo);
         let pre_objects = std::mem::take(&mut self.group_pre_objects);
+        let pre_relations = std::mem::take(&mut self.group_pre_relations);
         let force_checkpoint = std::mem::replace(&mut self.group_force_checkpoint, false);
         self.group_depth = 0;
         if ops.is_empty() {
             return Ok(self.head);
         }
-        match self.publish_staged(ops, pre_objects, force_checkpoint) {
+        match self.publish_staged(ops, pre_objects, pre_relations, force_checkpoint) {
             Ok(hash) => Ok(hash),
             Err(err) => {
                 // Nothing is published on an error return, so the in-memory
@@ -6611,6 +6830,7 @@ impl Store {
         self.rollback(&undo);
         self.pending_ops.clear();
         self.group_pre_objects.clear();
+        self.group_pre_relations.clear();
         self.group_force_checkpoint = false;
         self.group_depth = 0;
     }
@@ -6795,10 +7015,11 @@ impl Store {
             // authorization would otherwise be evaluated against a state the
             // store never published.
             let base = std::mem::replace(&mut self.state, candidate);
+            let pre_images = crate::index_incremental::PreImages::capture(&base, &ops);
             self.next_generation = generation
                 .checked_add(1)
                 .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
-            match self.try_publish_staged(generation, ops, false) {
+            match self.try_publish_staged(generation, ops, false, pre_images) {
                 Ok(hash) => {
                     if let Some(plan) = quota {
                         self.record_quota_after_commit(plan);
@@ -8356,6 +8577,7 @@ impl Store {
         } else {
             None
         };
+        let pre = crate::index_incremental::PreImages::capture(&self.state, &ops);
         let mut commit = Commit {
             generation: new_generation,
             parent: Some(self.head),
@@ -8364,7 +8586,8 @@ impl Store {
             checkpoint,
             index_attestation: None,
         };
-        let (attestation, built_index) = self.index_attestation_for(&next_state, &commit)?;
+        let (attestation, built_index) =
+            self.index_attestation_for(&next_state, &commit, &[], &pre)?;
         commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
         self.state = next_state;
@@ -9090,6 +9313,7 @@ impl Store {
         let mut state = State::default();
         state.apply_ops(&ops)?;
         state.generation = 1;
+        let pre = crate::index_incremental::PreImages::empty();
         let mut commit = Commit {
             generation: 1,
             parent: None,
@@ -9098,7 +9322,7 @@ impl Store {
             checkpoint: None,
             index_attestation: None,
         };
-        let (attestation, built_index) = self.index_attestation_for(&state, &commit)?;
+        let (attestation, built_index) = self.index_attestation_for(&state, &commit, &[], &pre)?;
         commit.index_attestation = attestation;
         self.publish_commit(&commit)?;
         self.state = state;
@@ -9154,6 +9378,9 @@ impl Store {
         // Every content blob and checkpoint manifest is durable here.
         crash_point("after_objects");
 
+        // `self.state` is still the pre-op state: capture the index pre-images
+        // before the in-memory state is replaced below.
+        let pre = crate::index_incremental::PreImages::capture(&self.state, &ops);
         let mut commit = Commit {
             generation: new_generation,
             parent: Some(self.head),
@@ -9162,7 +9389,8 @@ impl Store {
             checkpoint,
             index_attestation: None,
         };
-        let (attestation, built_index) = self.index_attestation_for(&next_state, &commit)?;
+        let (attestation, built_index) =
+            self.index_attestation_for(&next_state, &commit, &commit.ops, &pre)?;
         commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
 
@@ -9229,13 +9457,20 @@ impl Store {
             Op::DelEntry(id) => self
                 .group_undo
                 .push(Undo::Entry(*id, self.state.entries.get(id).cloned())),
-            Op::PutRelation(record) => self.group_undo.push(Undo::Relation(
-                record.id,
-                self.state.relations.get(&record.id).cloned(),
-            )),
-            Op::DelRelation(id) => self
-                .group_undo
-                .push(Undo::Relation(*id, self.state.relations.get(id).cloned())),
+            Op::PutRelation(record) => {
+                let previous = self.state.relations.get(&record.id).cloned();
+                self.group_pre_relations
+                    .entry(record.id)
+                    .or_insert_with(|| previous.clone());
+                self.group_undo.push(Undo::Relation(record.id, previous))
+            }
+            Op::DelRelation(id) => {
+                let previous = self.state.relations.get(id).cloned();
+                self.group_pre_relations
+                    .entry(*id)
+                    .or_insert_with(|| previous.clone());
+                self.group_undo.push(Undo::Relation(*id, previous))
+            }
             Op::SetSnapshot { name, .. } => self.group_undo.push(Undo::Snapshot(
                 name.clone(),
                 self.state.snapshots.get(name).copied(),
@@ -9283,6 +9518,7 @@ impl Store {
         &mut self,
         ops: Vec<Op>,
         pre_objects: BTreeMap<Hash32, Option<ObjectRecord>>,
+        pre_relations: BTreeMap<Hash32, Option<RelationRecord>>,
         force_checkpoint: bool,
     ) -> Result<Hash32> {
         let mut ops = ops;
@@ -9294,9 +9530,13 @@ impl Store {
         if let Some(plan) = &quota {
             ops.push(Self::quota_usage_op(plan));
         }
+        let pre = crate::index_incremental::PreImages {
+            objects: pre_objects,
+            relations: pre_relations,
+        };
         let previous_state_generation = self.state.generation;
         self.state.generation = new_generation;
-        match self.try_publish_staged(new_generation, ops, force_checkpoint) {
+        match self.try_publish_staged(new_generation, ops, force_checkpoint, pre) {
             Ok(hash) => {
                 self.next_generation = next_generation;
                 if let Some(plan) = quota {
@@ -9319,6 +9559,7 @@ impl Store {
         new_generation: u64,
         ops: Vec<Op>,
         force_checkpoint: bool,
+        pre: crate::index_incremental::PreImages,
     ) -> Result<Hash32> {
         let timestamp = self.now_ns();
         let interval = self.options.checkpoint_interval;
@@ -9343,7 +9584,8 @@ impl Store {
             checkpoint,
             index_attestation: None,
         };
-        let (attestation, built_index) = self.index_attestation_for(&self.state, &commit)?;
+        let (attestation, built_index) =
+            self.index_attestation_for(&self.state, &commit, &commit.ops, &pre)?;
         commit.index_attestation = attestation;
         let hash = self.publish_commit(&commit)?;
 
