@@ -67,7 +67,12 @@ small-fixture courts cannot see. (7) is the aggregate gate.
   concurrent writers. Indexes stay advisory: a reject must rebuild, never
   answer from an unverified index.
 
-### 3. DCP metadata serialisation cost — **planned, not started**
+### 3. DCP metadata serialisation cost — **implemented 2026-11-12 (R12c item 3)**
+
+Outcome: [`bench/RESULTS-dcp-metadata.md`](../bench/RESULTS-dcp-metadata.md)
+(baseline confirmed at 3.957 ms p50; a reusable plan plus a fast generic
+encoder take it to 0.555 ms; the native round-trip option is measured and
+refuted; every loss published, including the first-save plan build).
 
 * **Mechanism.** The R12b profiler attribute ~4.2 ms of a 169-entry save to the
   pure-Python WCB metadata encoder. Candidate direction: reduce the encoding
