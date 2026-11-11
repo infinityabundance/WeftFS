@@ -254,3 +254,59 @@ MinIO binary itself). Gates for the code: `cargo test --all-targets` (770
 tests, 0 failed) and `cargo test --features fuse --all-targets` (813, 0
 failed), both in the courts; `scripts/check-claims.sh`; `scripts/spec-drift.sh`;
 and the conformance manifest/coverage checks.
+
+## 7. The aggregate court found a regression in the new read path
+
+The 45-court aggregate on the registered tree
+(`bench/receipts/verify-20261111T103327Z.json`, 44 pass / 1 fail) failed
+`go_store_and_fuse`: `TestRustPacksGoReadsAndVerifies` saw
+`weft --store … --pack write /rustpacked.bin --offset 120000 --text …`
+exit 1 with `Corrupt: missing blob objects/49/4986e1ee…: does not exist`.
+
+This was a real defect in increment 2, reproduced in the fuse court and then in
+a Rust unit test. A packed blob plane holds the members of its open pack in
+memory until `seal` publishes the catalog. `Store::store_file_ranges` stores the
+rewritten chunk and then re-reads *every* chunk to feed the frozen whole-file
+`ContentId`; before R13 those reads used the writer's own handle, and after
+commit `80c7c97` they used the immutable-read pool. A pooled handle is a
+*different* plane instance: its catalog was loaded before the member existed, so
+the read fell through to the flat namespace and reported the key missing. The
+pool was right about content-addressed blobs in general — a member that has been
+packed but not yet catalogued is simply not one of them yet.
+
+**Fix (`dd86171`).** The plane reports which *kinds* it is holding unpublished
+(`BlobPlane::buffered_blob_kinds`; bits for `objects/` and `manifests/`).
+`Store::read_blob_verified_keyed` bypasses the pool only for a buffered kind and
+counts those reads as `ReadPoolStats::buffered_blob_reads`. The mask is widened
+before a mutation and narrowed from the plane afterwards, so a reader racing a
+mutation never sees a narrow mask, and it is maintained with the member lists
+rather than by scanning them. Index segments are packable but are always read
+through the handle that wrote them, so they carry no bit and do not disable
+pooling. Restores read only committed blobs: `buffered_blob_reads` is **0** in
+every row of the post-fix receipt.
+
+**Confirmation (`restore-scaling-20261111T120026Z`).** The full 0.5B local
+matrix was re-run on the fixed tree (`dd86171`, same bench court, same
+configuration and corpus digests):
+
+| 0.5B store-only | 1 | 2 | 4 | 8 | 16 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| before `9e821dd` | 1187.9 | 2232.9 | 2776.4 | 2779.9 | 2792.2 MB/s |
+| after `dd86171` | 1198.7 | 2248.7 | 2808.2 | 2813.6 | 2803.4 MB/s |
+
+Whole-file-SHA rows are 491.7–696.9 vs 498.1–705.1 MB/s (the same serial sink
+dominates), the shard-4 rows are 1855–2929 vs 2354–3801 MB/s (one host, one
+rep, cache-dependent; the 8-worker shard-4 cell is 2762 vs 3394 and is reported
+as a loss, not smoothed), and the four-reader aggregate is 2,438 vs 2,443 MB/s.
+Backend bytes (992,589,671), decode bytes (988,065,536) and every container
+SHA-256 are identical. The read path therefore costs one atomic load per blob
+read and changes no measured result; the packed path keeps the state mutex for
+exactly the members that require it.
+
+**Regression test.** `tests/read_pool.rs::a_packed_write_reads_back_the_members_it_has_not_yet_catalogued`
+creates a 280,000-byte file in a packed store, writes 17 bytes at 120,000,
+asserts `buffered_blob_reads > 0`, that a later read uses the pool again, that
+`verify --full` is clean, and that a fresh read-only reopen returns the same
+bytes, head and version. The cross-language court
+(`TestRustPacksGoReadsAndVerifies`, `TestGoPacksRustReadsAndVerifies`,
+`TestGoGCReclaimsPacksThenRustVerifies`) passes in the fuse court.

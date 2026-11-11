@@ -8599,3 +8599,45 @@ cited: it mixed cache state with the worker count.
 
 **Gates.** `cargo test --all-targets` 770 passed / 0 failed; `cargo test
 --features fuse --all-targets` 813 passed / 0 failed / 2 pre-existing ignored.
+
+### R13 follow-up — the aggregate caught a packed-write regression (dd86171)
+
+The 45-court aggregate on the registered tree
+(`verify-20261111T103327Z.json`) ran 44 pass / 1 fail: `go_store_and_fuse`
+failed `TestRustPacksGoReadsAndVerifies` because `weft --pack write` exited 1
+with `Corrupt: missing blob objects/49/4986e1ee…: does not exist`. This is a
+real defect in increment 2, not a test artefact, and it is reproduced in the
+fuse court and in Rust.
+
+**Cause.** A packed blob plane keeps the members of its open pack in memory
+until `seal` publishes the catalog. `Store::store_file_ranges` stores the
+rewritten chunk, then re-reads *every* chunk to feed the frozen whole-file
+`ContentId`. Before R13 that read-back used the writer's own handle; after the
+pool landed it used a pooled handle, which is a different plane instance whose
+catalog predates the member, so the key resolved as missing.
+
+**Fix (implemented, `dd86171`).** `BlobPlane::buffered_blob_kinds()` reports
+which kinds a handle is holding unpublished (`BUFFERED_OBJECT`,
+`BUFFERED_MANIFEST`); `Store::read_blob_verified_keyed` keeps the pool for every
+other read and counts the bypassed ones as
+`ReadPoolStats::buffered_blob_reads`. The mask is widened before each mutation
+and narrowed from the plane after it (no reader can see a narrow mask while a
+member is unpublished); `CatalogState::buffered_kinds` is maintained with the
+member lists instead of scanning them. Index segments are packable but always
+read through the writing handle, so they carry no bit and do not disable
+pooling. Publication order, content addressing, the state mutex, and the frozen
+formats are untouched.
+
+**Evidence.** The full 0.5B local matrix was re-run on the fixed tree:
+`restore-scaling-20261111T120026Z`, 0.5B store-only 1,198.7 / 2,248.7 / 2,808.2
+/ 2,813.6 / 2,803.4 MB/s at 1/2/4/8/16 workers against 1,187.9 / 2,232.9 /
+2,776.4 / 2,779.9 / 2,792.2 before; identical backend bytes (992,589,671),
+decode bytes (988,065,536) and container SHA-256; `buffered_blob_reads` 0 in
+every restore row (restores never bypass the pool). The shard-4 8-worker cell
+is 2,762 vs 3,394 MB/s and the shard-4 16-worker cell 2,537 vs 2,953: one host,
+one repetition, cache-dependent — reported, not smoothed. Regression test
+`tests/read_pool.rs::a_packed_write_reads_back_the_members_it_has_not_yet_catalogued`.
+Gates after the fix: Rust all-targets 771 passed / 0 failed (158 suites), FUSE
+all-targets 814 passed / 0 failed / 2 ignored, WeftFS-Go `go vet` + CGO=0 build
++ `go test -race ./store/...` ok (136.3 s), claims 892, spec drift 60/60,
+conformance manifest/coverage 420.
