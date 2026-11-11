@@ -9094,3 +9094,68 @@ in that phase.
     so it grows at 0.674x data); O(1) GC (it lists and reads every commit); any
     wire-format change (none: WFX2/WFX3, `weftfs.commit.v2` and every attested
     root are untouched).
+
+- 2026-11-12 (R12c item 3, DCP metadata serialisation cost): parent `staging`
+  code `4947ef2`; not pushed. Full analysis:
+  [`bench/RESULTS-dcp-metadata.md`](../bench/RESULTS-dcp-metadata.md).
+  * The R12b figure is confirmed, not assumed. `bench/scripts/dcp_metadata_court.sh`
+    (python court, real `torch.distributed.checkpoint` metadata from one genuine
+    save per size) measures the pure-Python encoder at **3.96 ms p50** for the
+    169-entry fixture (71,559 B), and the `adapter.metadata_serialize` probe
+    inside a real save reads 4.32-4.68 ms in the same session.
+  * Breakdown at 169 entries: tree construction 0.68 ms (17 %), `wcb.encode`
+    3.29 ms (83 %), memfd copy 0.008, sha256 0.03, and **zero Rust round trips**
+    (0 `CheckpointService._call` during the window). Inside the encoder the
+    cost is dispatch and per-byte `append`: 26,233 `isinstance` calls, 17,787
+    `bytearray.append`, 8,784 `varint.encode`, 847 key sorts per encode.
+  * Options measured on the same fixture (30 iterations): (a) reusable plan
+    **0.555 ms** warm (0.121 signature + 0.400 assembly), build 6.28 ms once;
+    (b) native floor — one `stat_file` round trip + client `struct.pack`
+    marshalling of the entry table — **0.443 ms**, i.e. 80 % of (a) *before any
+    Rust encoding, reply copy or service lookup*, so (b) is refuted without
+    being built; (c) generic fast encoder **1.63 ms** (2.0x). Chosen: (a) with
+    (c) as the fallback; the format stays defined once, by the oracle.
+  * Shipped: `weftcodec/wcb_fast.py` (generic canonical encoder, exact-type
+    dispatch, bounded key/varint caches, one join) and
+    `dcp.serialize_metadata_fast` + `MetadataPlan`/`MetadataPlanCache` in
+    `python/weftcodec/dcp.py`. `serialize_metadata` is unchanged and documented
+    as the reference oracle; `metadata_parts` is the single schema description.
+    `writer.stats["metadata_encode"]` reports mode + counters;
+    `WEFT_DCP_METADATA_ENCODING=reference` forces the oracle for an A/B.
+  * Safety: a plan is cached only after its assembled bytes equal the oracle's
+    bytes for the same object (`oracle_checks`/`oracle_mismatches`); every save
+    re-derives the signature from the current metadata before emitting any
+    fragment, so a changed entry set, dtype, shape, chunk layout, storage info,
+    offset or index (and a changed `MetadataIndex.index`, which torch compares
+    as `compare=False`) falls back, counted, and rebuilds. Tests: 5 seeds x 200
+    randomized metadata trees byte-identical cold and warm; a 12-case stale-plan
+    matrix; invalid metadata, out-of-range values and lowered limits raise the
+    same classes as the oracle; the 169-entry store-backed save writes the
+    oracle's bytes and restores exactly. `test_wcb_fast.py`: 5 seeds x 200 value
+    trees, boundary varints, unicode/bytes/empty containers, subclasses, a
+    duplicate-yielding mapping (same bytes, decoder rejects), and a cache-leak
+    test proving a cached key cannot bypass a lowered limit. Python suite
+    423 passed / 70 skipped / 0 failed in the python court at `4947ef2` (the
+    skips are the pre-existing guards; both new files pass in full).
+  * End to end on one revision, A/B by encoder only:
+    `checkpoint-latency-20261112T000500Z` (reference) vs `…T001500Z` (auto), same
+    fixture/court/config: `adapter.metadata_serialize` session 4.679 → **0.631
+    ms (-4.05)**; completion p50 40.03 → **34.58 ms**; client top-level 32.84 →
+    28.27; Rust top-level unchanged. Modes counted: before `{reference-forced:
+    21}`, after `{plan: 20, rebuilt: 1}` with 1 plan build, 1 oracle check, 0
+    mismatches — the fast path is taken and the oracle is never silently
+    substituted. Training-goodput session court (`…T003000Z` vs `…T004500Z`,
+    4/8/16/32-step sweep, 128 steps, 3 reps): `weft-session` warm p50 46.85 /
+    45.02 / 45.19 / 44.76 → 43.21 / 42.36 / 42.14 / 40.55 ms (mean **-3.39**);
+    exactness 136/136 in both.
+  * Losses: the first save of a shape pays build + oracle proof (6.28 ms + a
+    2.4 ms generic encode vs 4.06 ms reference, break-even at the second save),
+    visible as a 3.5-20.7 ms rise in `weft-session` cold p50 (n=3); one save per
+    process never amortises; `matches` is O(entries) (0.121 / 0.789 ms at
+    169 / 1024); 0.555 ms remains; 52,613 B cached at 169 entries against an
+    8 MiB / 4-plan bound; the fallback path is worse than before when the shape
+    changes every save; p95 stays bimodal at 1024 entries (GC).
+  * Not claimed: any format, wire or store change; Rust/Go involvement in
+    metadata encoding; Orbax (its encoder is untouched and unmeasured); 20 ms
+    completion; multi-rank, fleet, GPU or durability. No Rust native
+    encoder was written — option (b) is a measurement, not an implementation.

@@ -77,7 +77,7 @@ from weftcodec.dcp import (
 )
 ```
 
-### `WeftStorageWriter(path, *, store_root, topology=1, axis=None, shard_strategy="zstd", staging_bytes=256 MiB, overwrite=True, init_store=False, keep_staging=False, weftfs_cli=None, timeout=1800)`
+### `WeftStorageWriter(path, *, store_root, topology=1, axis=None, shard_strategy="zstd", staging_bytes=256 MiB, overwrite=True, init_store=False, keep_staging=False, weftfs_cli=None, timeout=1800, metadata_encoding=None)`
 
 | Member | Behaviour |
 |---|---|
@@ -87,8 +87,8 @@ from weftcodec.dcp import (
 | `storage_meta()` | Returns `StorageMeta(checkpoint_id=..., save_id=<uuid>)`. |
 | `write_metadata(metadata)` | Interface parity; **torch 2.15 does not call it** (metadata is persisted in `finish`). |
 | `write_data(plan, planner)` | Resolves each item, writes a staging safetensors container, runs `weftfs checkpoint write`, verifies the manifest, returns `torch.futures.Future[list[WriteResult]]`. |
-| `finish(metadata, results)` | Fills `metadata.storage_data`, serialises canonical WCB and publishes `/checkpoints/<name>/dcp.metadata`. |
-| `checkpoint_id`, `store_name`, `stats` | Requested id, resolved store name, counters (entries, bytes, staging peak, CLI ms). |
+| `finish(metadata, results)` | Fills `metadata.storage_data`, serialises canonical WCB through the reusable metadata plan (the oracle's bytes, see §3.1) and publishes `/checkpoints/<name>/dcp.metadata`. |
+| `checkpoint_id`, `store_name`, `stats` | Requested id, resolved store name, counters (entries, bytes, staging peak, CLI ms, `metadata_encode`). |
 | `validate_checkpoint_id(id)` | True for a non-empty single-segment name. |
 
 `topology` is `n` or `(n, axis)`. It is handed to the Rust CLI as
@@ -189,6 +189,36 @@ Only the exact WEFT-TENSOR v1 dtypes are accepted: `f16`, `bf16`, `f32`, `f64`,
 `i8`, `u8`, `i16`, `i32`, `i64` (torch `float16`, `bfloat16`, `float32`,
 `float64`, `int8`, `uint8`, `int16`, `int32`, `int64`). `bool`, complex and
 float8 tensors fail closed (`UnsupportedDtype`); there is no coercion.
+
+### 3.1 How those bytes are produced (R12c item 3)
+
+`weftcodec.dcp.serialize_metadata` is the **reference oracle**: it builds the
+value tree (`metadata_parts`) and encodes it with `weftcodec.wcb.encode`. It is
+unchanged and stays the definition of the format.
+
+`finish()` calls `serialize_metadata_fast`, which reuses a `MetadataPlan` when
+one matches the current metadata:
+
+* the plan caches each `state_dict` row's encoded bytes, each `storage_data`
+  row split around the one field that changes (`content_root`), and the
+  canonical key/array fragments, per entry-set shape and `Limits`;
+* every save re-derives the signature from the *current* metadata before any
+  byte is emitted, so a changed entry set, dtype, shape, chunk layout, storage
+  info, offset or index falls back (counted) to a whole-tree encode;
+* a plan is only cached after its assembled bytes have been compared with the
+  oracle's bytes for the same object; a mismatch is reported and the plan is
+  dropped;
+* the fallback encoder is `weftcodec.wcb_fast`, a generic canonical encoder
+  that is differentially tested against `wcb.encode` (including lowered
+  limits, which a cache hit can never bypass).
+
+`writer.stats["metadata_encode"]` reports the mode (`plan`, `rebuilt`,
+`reference`, `reference-forced`) and the counters (`plan_hits`, `plan_builds`,
+`fallbacks`, `oracle_checks`, `oracle_mismatches`, `plans_cached`,
+`cached_bytes`). `WEFT_DCP_METADATA_ENCODING=reference` (or
+`metadata_encoding="reference"`) forces the oracle for an A/B run; an unknown
+value fails at writer construction. The measured cost of all of this is in
+`bench/RESULTS-dcp-metadata.md` (4.06 → 0.56 ms at the 169-entry fixture).
 
 ## 4. Exactness and failure semantics
 
