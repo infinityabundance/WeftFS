@@ -134,38 +134,45 @@ fn pipelined_restore_is_byte_identical_at_every_worker_count() {
         )
         .unwrap();
 
-    for threads in [1usize, 2, 4, 8] {
+    for threads in [1usize, 2, 4, 8, 16] {
         for tile_threads in [1usize, 2] {
-            let options = RestorePipelineOptions {
-                threads,
-                // Deliberately below the largest tensor so the oversized path
-                // is exercised.
-                max_inflight_bytes: 256 * 1024,
-                tile_threads,
-            };
-            let mut output = Vec::new();
-            let report = store
-                .restore_checkpoint_pipelined(
-                    "ckpt",
-                    &CheckpointRestoreOptions::default(),
-                    &options,
-                    &mut output,
-                )
-                .unwrap();
-            assert_eq!(
-                output, sequential,
-                "threads={threads} tile_threads={tile_threads}: bytes differ"
-            );
-            assert!(
-                report.exact_source_file,
-                "threads={threads}: the source file was not reproduced exactly"
-            );
-            assert_eq!(
-                hex(&report.file_sha256),
-                fixture.source_sha256,
-                "threads={threads} tile_threads={tile_threads}: SHA-256 differs"
-            );
-            assert_eq!(report.tensors.len(), 6);
+            for shard_threads in [1usize, 4] {
+                let options = RestorePipelineOptions {
+                    threads,
+                    // Deliberately below the largest tensor so the oversized
+                    // path is exercised.
+                    max_inflight_bytes: 256 * 1024,
+                    tile_threads,
+                    shard_threads,
+                    shard_max_inflight_bytes: 256 * 1024,
+                };
+                let mut output = Vec::new();
+                let report = store
+                    .restore_checkpoint_pipelined(
+                        "ckpt",
+                        &CheckpointRestoreOptions::default(),
+                        &options,
+                        &mut output,
+                    )
+                    .unwrap();
+                assert_eq!(
+                    output, sequential,
+                    "threads={threads} tile_threads={tile_threads} \
+                     shard_threads={shard_threads}: bytes differ"
+                );
+                assert!(
+                    report.exact_source_file,
+                    "threads={threads} shard_threads={shard_threads}: the source file was not \
+                     reproduced exactly"
+                );
+                assert_eq!(
+                    hex(&report.file_sha256),
+                    fixture.source_sha256,
+                    "threads={threads} tile_threads={tile_threads} \
+                     shard_threads={shard_threads}: SHA-256 differs"
+                );
+                assert_eq!(report.tensors.len(), 6);
+            }
         }
     }
 }
@@ -181,6 +188,8 @@ fn pipelined_restore_is_bounded_and_reports_the_bound() {
         threads: 4,
         max_inflight_bytes: 128 * 1024,
         tile_threads: 1,
+        shard_threads: 1,
+        shard_max_inflight_bytes: 128 * 1024,
     };
     let report = store
         .restore_checkpoint_pipelined(
@@ -221,6 +230,8 @@ fn pipelined_single_tensor_and_region_match_the_sequential_path() {
             threads: 4,
             max_inflight_bytes: 4096,
             tile_threads: 2,
+            shard_threads: 1,
+            shard_max_inflight_bytes: 4096,
         };
         let mut pipelined = Vec::new();
         store
@@ -276,6 +287,8 @@ fn pipelined_restore_of_a_tiled_checkpoint_matches_sequential() {
                 threads,
                 max_inflight_bytes: 512 * 1024,
                 tile_threads,
+                shard_threads: 1,
+                shard_max_inflight_bytes: 512 * 1024,
             };
             let mut output = Vec::new();
             let report = reader

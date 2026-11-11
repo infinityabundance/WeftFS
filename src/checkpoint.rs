@@ -2594,6 +2594,8 @@ impl Store {
                 snapshot,
                 lazy_tiles,
                 &tiles,
+                1,
+                crate::parallel::DEFAULT_MAX_INFLIGHT_BYTES,
             )?;
             writer
                 .write_all(&restored.bytes)
@@ -2765,7 +2767,17 @@ impl Store {
             |_index, tensor| {
                 let _probe = self.begin_tensor_probe(_index);
                 self.restore_tensor(
-                    name, tensor, region, topology, &limits, state, snapshot, lazy_tiles, &tiles,
+                    name,
+                    tensor,
+                    region,
+                    topology,
+                    &limits,
+                    state,
+                    snapshot,
+                    lazy_tiles,
+                    &tiles,
+                    pipeline.shard_threads,
+                    pipeline.shard_max_inflight_bytes,
                 )
             },
             |restored| restored.bytes.len(),
@@ -2943,6 +2955,8 @@ impl Store {
             snapshot,
             false,
             &crate::parallel::TileDecodeOptions::default(),
+            1,
+            crate::parallel::DEFAULT_MAX_INFLIGHT_BYTES,
         )?;
         let report = RestoredTensor {
             name: tensor.name.clone(),
@@ -3151,6 +3165,8 @@ impl Store {
         snapshot: Option<Hash32>,
         lazy_tiles: bool,
         tiles: &crate::parallel::TileDecodeOptions,
+        shard_threads: usize,
+        shard_max_inflight_bytes: usize,
     ) -> Result<RestoredBytes> {
         let dtype = TensorElementDtype::parse(&tensor.dtype)?;
         let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
@@ -3164,47 +3180,67 @@ impl Store {
             None => {
                 let mut shards = tensor.shards.clone();
                 shards.sort_by_key(|shard| shard.index);
-                let mut payloads = Vec::with_capacity(shards.len());
+                // Each shard is an independent immutable object. Read and
+                // verify them with the shipped bounded runner so a tensor's own
+                // reads overlap; the runner preserves input order and reports
+                // the lowest failing index. With `shard_threads == 1` this is
+                // the sequential walk it replaced.
+                let declared: Vec<Result<usize>> = shards
+                    .iter()
+                    .map(|shard| Ok(usize::try_from(shard.byte_len).unwrap_or(usize::MAX)))
+                    .collect();
+                let (verified_shards, _run) = crate::parallel::run_bounded(
+                    &shards,
+                    &declared,
+                    shard_threads,
+                    shard_max_inflight_bytes,
+                    |_index, shard| {
+                        let (bytes, units) = self.read_shard(
+                            checkpoint, tensor, shard, state, snapshot, lazy_tiles, tiles,
+                        )?;
+                        if bytes.len() as u64 != shard.byte_len {
+                            return Err(context(
+                                &tensor.name,
+                                shard,
+                                Error::corrupt(format!(
+                                    "shard payload is {} bytes but the manifest records {}",
+                                    bytes.len(),
+                                    shard.byte_len
+                                )),
+                            ));
+                        }
+                        if identity::content_hash(&bytes) != shard.content_root {
+                            return Err(context(
+                                &tensor.name,
+                                shard,
+                                Error::corrupt("shard content root mismatch"),
+                            ));
+                        }
+                        let shard_shape =
+                            tc::shard_shape(&tensor.shape, shard.axis, shard.shards, shard.index)?;
+                        let shard_root =
+                            tc::logical_root(physical, &shard_shape, &bytes, limits)
+                                .map_err(|err| context(&tensor.name, shard, Error::from(err)))?;
+                        if shard_root != shard.logical_root {
+                            return Err(context(
+                                &tensor.name,
+                                shard,
+                                Error::corrupt(format!(
+                                    "shard logical root {shard_root} does not match the checkpoint's \
+                                     {}",
+                                    shard.logical_root
+                                )),
+                            ));
+                        }
+                        Ok((bytes, units))
+                    },
+                    |(bytes, _units)| bytes.len(),
+                )?;
+                let mut payloads = Vec::with_capacity(verified_shards.len());
                 let mut verified = 0usize;
                 let mut units_touched = 0u64;
-                for shard in &shards {
-                    let (bytes, units) = self.read_shard(
-                        checkpoint, tensor, shard, state, snapshot, lazy_tiles, tiles,
-                    )?;
+                for (bytes, units) in verified_shards {
                     units_touched += units;
-                    if bytes.len() as u64 != shard.byte_len {
-                        return Err(context(
-                            &tensor.name,
-                            shard,
-                            Error::corrupt(format!(
-                                "shard payload is {} bytes but the manifest records {}",
-                                bytes.len(),
-                                shard.byte_len
-                            )),
-                        ));
-                    }
-                    if identity::content_hash(&bytes) != shard.content_root {
-                        return Err(context(
-                            &tensor.name,
-                            shard,
-                            Error::corrupt("shard content root mismatch"),
-                        ));
-                    }
-                    let shard_shape =
-                        tc::shard_shape(&tensor.shape, shard.axis, shard.shards, shard.index)?;
-                    let shard_root = tc::logical_root(physical, &shard_shape, &bytes, limits)
-                        .map_err(|err| context(&tensor.name, shard, Error::from(err)))?;
-                    if shard_root != shard.logical_root {
-                        return Err(context(
-                            &tensor.name,
-                            shard,
-                            Error::corrupt(format!(
-                                "shard logical root {shard_root} does not match the checkpoint's \
-                                 {}",
-                                shard.logical_root
-                            )),
-                        ));
-                    }
                     verified += 1;
                     payloads.push(bytes);
                 }

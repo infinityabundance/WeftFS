@@ -70,6 +70,16 @@ pub struct RestorePipelineOptions {
     /// `1` is the shipped sequential read; this is separate from `threads`,
     /// which parallelises across tensors.
     pub tile_threads: usize,
+    /// Workers for one tensor's shards inside a full checkpoint restore.
+    /// `1` is the shipped sequential shard walk. Each shard is an independent
+    /// immutable object, so this overlaps their reads and decodes without
+    /// changing the assembled order.
+    pub shard_threads: usize,
+    /// Staging bound for one tensor's concurrent shard reads. A shard whose
+    /// declared size alone exceeds this runs alone. The outer
+    /// `max_inflight_bytes` still bounds how many tensors are in flight, and a
+    /// tensor's full decoded payload is reserved there before it starts.
+    pub shard_max_inflight_bytes: usize,
 }
 
 impl Default for RestorePipelineOptions {
@@ -78,6 +88,8 @@ impl Default for RestorePipelineOptions {
             threads: 1,
             max_inflight_bytes: DEFAULT_MAX_INFLIGHT_BYTES,
             tile_threads: 1,
+            shard_threads: 1,
+            shard_max_inflight_bytes: DEFAULT_MAX_INFLIGHT_BYTES,
         }
     }
 }

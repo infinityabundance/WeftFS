@@ -146,6 +146,18 @@ for family in $families; do
     add_input "restore_${family}_${sink}${tag//-/_}_probe$probe=$family_work/restore-$sink$tag-probe$probe.json"
   done
 
+  if [[ "${WEFT_RESTORE_SHARD_MATRIX:-1}" == "1" ]]; then
+    echo "== restore $family threads=$thread_csv shard-threads=4 (store only) =="
+    WEFT_LOCK_PROBE=1 "$bin" restore \
+      --store "$store" --name "$family" \
+      --threads "$thread_csv" --tile-threads "$tile_csv" \
+      --max-inflight-bytes 268435456 \
+      --shard-threads 4 --shard-max-inflight-bytes 268435456 \
+      --sink counting --reps "$reps" \
+      --out "$family_work/restore-counting-shard4-probe1.json"
+    add_input "restore_${family}_counting_shard4_probe1=$family_work/restore-counting-shard4-probe1.json"
+  fi
+
   if [[ "$readers_on" == "1" ]]; then
     echo "== independent readers $family (4 readers, 2 distinct checkpoints) =="
     WEFT_LOCK_PROBE=1 "$bin" readers \

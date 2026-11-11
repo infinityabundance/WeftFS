@@ -1434,6 +1434,8 @@ fn measure(args: &[String]) -> Result<(), String> {
             threads: thread_count,
             max_inflight_bytes: 64 * 1024 * 1024,
             tile_threads: thread_count,
+            shard_threads: 1,
+            shard_max_inflight_bytes: 64 * 1024 * 1024,
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -1497,6 +1499,8 @@ fn measure(args: &[String]) -> Result<(), String> {
             threads: thread_count,
             max_inflight_bytes: 64 * 1024 * 1024,
             tile_threads: thread_count,
+            shard_threads: 1,
+            shard_max_inflight_bytes: 64 * 1024 * 1024,
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -1657,6 +1661,8 @@ fn measure(args: &[String]) -> Result<(), String> {
             threads: 1,
             max_inflight_bytes: 64 * 1024 * 1024,
             tile_threads: 1,
+            shard_threads: 1,
+            shard_max_inflight_bytes: 64 * 1024 * 1024,
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -2353,6 +2359,9 @@ fn restore(args: &[String]) -> Result<(), String> {
         })
         .collect::<Result<Vec<_>, _>>()?;
     let max_inflight = parse_u64(args, "--max-inflight-bytes", 256 * 1024 * 1024)? as usize;
+    let shard_threads = parse_u64(args, "--shard-threads", 1)? as usize;
+    let shard_max_inflight =
+        parse_u64(args, "--shard-max-inflight-bytes", 64 * 1024 * 1024)? as usize;
     let sink_mode = value_of(args, "--sink").unwrap_or_else(|| "sha256".to_owned());
     if sink_mode != "sha256" && sink_mode != "counting" {
         return Err(format!(
@@ -2420,6 +2429,8 @@ fn restore(args: &[String]) -> Result<(), String> {
                 threads: worker_threads,
                 max_inflight_bytes: max_inflight,
                 tile_threads: tile_worker_threads,
+                shard_threads,
+                shard_max_inflight_bytes: shard_max_inflight,
             };
             let mut samples = Vec::new();
             let mut backend_bytes = 0u64;
@@ -2645,6 +2656,8 @@ fn restore(args: &[String]) -> Result<(), String> {
             "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count"
         },
         "lock_probe_enabled": probe_enabled,
+        "shard_threads": shard_threads,
+        "shard_max_inflight_bytes": shard_max_inflight,
         "file_hash": file_hash,
         "single_largest_tensor": distribution(&single),
         "single_largest_tensor_lock": single_lock,

@@ -1435,6 +1435,8 @@ fn restore_checkpoint(
                 // The pipeline already parallelises across tensors; using the
                 // same count inside each tensor would multiply the worker set.
                 tile_threads: 1,
+                shard_threads: 1,
+                shard_max_inflight_bytes: options.max_inflight_bytes,
             };
             Some(
                 store
