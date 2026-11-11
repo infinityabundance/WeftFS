@@ -1039,6 +1039,10 @@ impl Store {
         backend_kind: BackendKind,
         writer_mode: crate::mw2::WriterMode,
     ) -> Result<Store> {
+        // `store_open` encloses the whole open, including the two nested phases
+        // below (`state_replay`, `plane_probe`). A receipt must not add the
+        // nested totals to it.
+        let _open = crate::phase_profile::scope(crate::phase_profile::Phase::StoreOpen);
         let root = path.as_ref().to_path_buf();
         if mode == OpenMode::ReadWrite {
             backend_kind.require_plane_contract()?;
@@ -1093,7 +1097,9 @@ impl Store {
         // A read-only open never writes, so it never probes. A writable open
         // proves both planes before it is trusted with a commit.
         let plane_probes = if mode == OpenMode::ReadWrite {
-            backend.probe_planes()?
+            crate::phase_profile::timed(crate::phase_profile::Phase::PlaneProbe, || {
+                backend.probe_planes()
+            })?
         } else {
             None
         };
@@ -1102,12 +1108,15 @@ impl Store {
         // must observe the highest commit generation so `next_generation`
         // never reuses a rejected generation; they still bound commit decodes
         // to the checkpoint window.
-        let recovery = if full_scan {
-            recovery::recover_full_scan_via(&*backend)?
-        } else if mode == OpenMode::ReadWrite {
-            recovery::recover_for_write_via(&*backend)?
-        } else {
-            recovery::recover_via(&*backend)?
+        let recovery = {
+            let _replay = crate::phase_profile::scope(crate::phase_profile::Phase::StateReplay);
+            if full_scan {
+                recovery::recover_full_scan_via(&*backend)?
+            } else if mode == OpenMode::ReadWrite {
+                recovery::recover_for_write_via(&*backend)?
+            } else {
+                recovery::recover_via(&*backend)?
+            }
         };
         // A writable open repairs the superblock cache from the writer lock
         // record: the record is the publication point, the cache is a cache.
@@ -1923,7 +1932,10 @@ impl Store {
         if !self.options.attest_indexes || self.mode != OpenMode::ReadWrite {
             return Ok((None, None));
         }
-        let index = StateIndex::build(state);
+        let index = {
+            let _build = crate::phase_profile::scope(crate::phase_profile::Phase::IndexBuild);
+            StateIndex::build(state)
+        };
         if !index.complete() {
             // An incomplete index is never persisted; without an attestation
             // the commit is v1 and no segment can be trusted.
@@ -1933,17 +1945,24 @@ impl Store {
         let state_root = identity::h(INDEX_STATE_DOMAIN, &commit.encode_fields()?);
         let candidates_root = index.candidates_root()?;
 
-        let full_bytes = crate::index_chain::encode_full(&index)?;
-        let full_id = crate::index_chain::file_segment_id(&full_bytes)?;
         let force_full = self
             .force_full_index
             .load(std::sync::atomic::Ordering::Relaxed)
             || !self.options.incremental_index
             || self.head == Hash32::ZERO
             || generation <= 1;
-        let mut chosen: Option<(Vec<u8>, Vec<Hash32>)> = None;
-        if !force_full {
-            if let Some(base) = self.load_attested_chain(self.head) {
+        let base = if force_full {
+            None
+        } else {
+            let _load = crate::phase_profile::scope(crate::phase_profile::Phase::IndexLoad);
+            self.load_attested_chain(self.head)
+        };
+        let (bytes, chain) = {
+            let _attest = crate::phase_profile::scope(crate::phase_profile::Phase::IndexAttest);
+            let full_bytes = crate::index_chain::encode_full(&index)?;
+            let full_id = crate::index_chain::file_segment_id(&full_bytes)?;
+            let mut chosen: Option<(Vec<u8>, Vec<Hash32>)> = None;
+            if let Some(base) = base {
                 if base.index.generation().checked_add(1) == Some(generation)
                     && base.chain.depth() < u64::from(self.options.index_chain_max_deltas)
                 {
@@ -1955,26 +1974,26 @@ impl Store {
                     }
                 }
             }
-        }
-        let (bytes, chain) = match chosen {
-            Some((delta, base_chain)) => {
-                let id = crate::index_chain::file_segment_id(&delta)?;
-                let mut chain = Vec::with_capacity(base_chain.len() + 1);
-                chain.push(id);
-                chain.extend(base_chain);
-                let chain = IndexChain {
-                    kind: SegmentKind::Delta,
-                    chain,
-                };
-                (delta, chain)
+            match chosen {
+                Some((delta, base_chain)) => {
+                    let id = crate::index_chain::file_segment_id(&delta)?;
+                    let mut chain = Vec::with_capacity(base_chain.len() + 1);
+                    chain.push(id);
+                    chain.extend(base_chain);
+                    let chain = IndexChain {
+                        kind: SegmentKind::Delta,
+                        chain,
+                    };
+                    (delta, chain)
+                }
+                None => (
+                    full_bytes,
+                    IndexChain {
+                        kind: SegmentKind::Full,
+                        chain: vec![full_id],
+                    },
+                ),
             }
-            None => (
-                full_bytes,
-                IndexChain {
-                    kind: SegmentKind::Full,
-                    chain: vec![full_id],
-                },
-            ),
         };
         // Byte policy: a configured cap may skip the write. The commit then
         // carries no attestation, exactly like `attest_indexes = false`; the

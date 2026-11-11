@@ -8211,3 +8211,57 @@ Registration adds no measurement and re-runs no package:
 * No physical power loss, host-cache loss, GPU, fleet, or live-cloud claim.
 * `Go` still lacks the Azure backend, mode-19 store writer, v2 manifests, and
   the parent-graph planner; MW3 is not implemented.
+
+## Subphase R12b — checkpoint completion latency (2026-11-11)
+
+Numbering: the earlier **R12** (7B scale, fleet cold-start, attested loads)
+keeps its name. This subphase is the follow-up to R11's 444.1 ms checkpoint:
+the same fixture, decomposed, then driven down.
+
+Full evidence and every loss:
+[`bench/RESULTS-checkpoint-latency.md`](../bench/RESULTS-checkpoint-latency.md).
+Receipt `bench/receipts/checkpoint-latency-20261111T021640Z.json`, measured in
+`weft/python-court:1` (`sha256:aec5deb0…76152`), Linux `7.3.3-1-cachyos`,
+3 GiB / 4 CPUs / 1024 pids / 1 GiB `/tmp`, `cap-drop=ALL`, torch 2.15.0+cpu.
+No wire, frame, manifest or planner-identity change.
+
+### Increment 1 — the completion profiler
+
+The fixture is the R11 fixture by construction: the court imports
+`build_model`/`make_optimizer`/`capture_state` from
+`python/courts/training_goodput.py`, runs one real optimizer step, and saves
+the same **169 entries / 4,973,352 bytes** with a fresh writer per save.
+
+The shipped profiler (`src/phase_profile.rs`) gained eleven phases (`store_open`,
+`state_replay`, `plane_probe`, `index_build`, `index_load`, `index_attest`,
+`metadata_commit`, `encode_zstd`, `encode_zstd19`, `encode_float_tensor`,
+`encode_semantic`), each nested phase carrying `nested_in` so it is never added
+to its parent; the service exposes them over a new protocol-3 `PROFILE` op
+(modes 0/1/2), and `weftcodec.service.set_probe_sink` reports twelve client
+sections. Instrumentation is off unless a court asks for it.
+
+Measured (median of 3 fresh stores, 1 first save, 5 later saves):
+
+| | fresh store | first in a store | later in a store |
+|---|---:|---:|---:|
+| completion | 211.1 ms | 211.1 ms | 472.6 ms |
+| `encode_semantic` (mode-14 search) | **130.4** | **131.8** | **344.5** |
+| `encode_float_tensor` (mode 9) | 22.8 | 23.2 | 23.0 |
+| `encode_zstd` (level 3) | 5.9 | 5.9 | 6.8 |
+| `store_open` (4 opens) | 12.4 | 12.8 | 44.9 |
+| `state_replay` (nested) | 9.8 | 10.2 | 42.2 |
+| client `write_request` | 185.7 | 186.8 | 422.2 |
+| client `metadata_commit` (`WRITE_FILE`) | 9.3 | 9.7 | 28.0 |
+| accounted share of wall | 96.8 % | 97.1 % | 98.7 % |
+
+**The 444 ms was the planner, not the store.** `tensor_semantic_candidates`
+scans every file object in the store state and decodes every same-dtype,
+same-shape tensor to price a mode-14 semantic delta. With no explicit candidate
+list that is `O(objects)` per tensor, so each checkpoint's 169 new objects make
+every later checkpoint's planner slower — the "store-state bookkeeping" that
+R11 measured and did not localise. Reopening the store four times per save
+(12.4 → 44.9 ms) and opening it again for the 30 KB DCP metadata blob
+(9.3 → 28.0 ms) are the second and third causes. Python staging, hashing and
+the memfd handoff together are under 5 ms.
+
+No optimisation was made before this measurement, and none is claimed here.

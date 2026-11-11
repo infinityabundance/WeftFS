@@ -76,9 +76,21 @@ than one attached descriptor, or a truncated frame is a protocol violation.
 | `0x08` | `WRITE_FILE` | `str store_path` | `u64 bytes`, `u64 generation`, `u64 elapsed_us` | in: payload |
 | `0x09` | `STAT_FILE` | `str store_path` | `u8 exists`, `u64 size` | – |
 | `0x0a` | `READ_FILE` | `str store_path` | `u64 bytes` | in: caller buffer |
+| `0x0b` | `PROFILE` | `u8 mode` (0 begin, 1 take, 2 end) | `u32 phase_count`, per phase `str name, u64 count, u64 total_ns, u64 max_ns` | – |
 | `0x7f` | `SHUTDOWN` | empty | empty | – |
 
 `str` is `u32 length` followed by UTF-8 bytes. A `32B` field is the raw digest.
+
+Protocol **3** adds `PROFILE` after `READ_FILE`. It is a measurement aid: it
+controls the phase profiler in `src/phase_profile.rs` (mode 0 clears and
+enables it, 1 returns the totals without clearing, 2 stops and returns), and
+it never changes published bytes. Nested phases are reported with their own
+names (`state_replay`/`plane_probe` inside `store_open`, `index_build`/
+`index_load`/`index_attest` inside `index_segment`, `encode_zstd`/
+`encode_zstd19`/`encode_float_tensor`/`encode_semantic` inside `encode`); a
+client must not add a nested total to its parent. `PROFILE` is a client-driven
+window, so a service that is not being profiled pays one relaxed atomic load
+per instrumented site and allocates nothing.
 
 ### 3.2 Manifest
 

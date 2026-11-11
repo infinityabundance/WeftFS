@@ -250,3 +250,20 @@ def test_typed_errors_and_bounds(store):
 def test_unavailable_cli_is_a_typed_failure(tmp_path):
     with pytest.raises(ServiceUnavailable):
         CheckpointService(tmp_path / "store", cli=os.fspath(tmp_path / "nope"))
+
+
+def test_phase_profile_reports_a_measured_window(store):
+    """Protocol 3 exposes an opt-in phase profile over a real operation."""
+    root, payload = store
+    with CheckpointService(root, cli=CLI) as service:
+        assert service.profile(0) == {}
+        buffer = service.restore_tensor("svc", TENSOR)
+        buffer.close()
+        profile = service.profile(1)
+        assert "source_read" in profile or "digest" in profile
+        for name, row in profile.items():
+            assert row["count"] >= 1
+            assert row["total_ns"] >= 0
+        # mode 2 stops measuring and clears the collector.
+        service.profile(2)
+        assert service.profile(1) == {}

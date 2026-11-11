@@ -59,7 +59,9 @@ from .service import (
     ServiceError,
     ServiceProtocolError,
     ServiceUnavailable,
+    _probe,
     canonical_element_bytes,
+    set_probe_sink,
 )
 
 __all__ = [
@@ -1089,9 +1091,11 @@ class WeftStorageWriter(_StorageWriterBase):
     def _get_service(self):
         """One helper process for every operation of this writer."""
         if self._service is None:
+            started = time.perf_counter_ns()
             self._service = CheckpointService(
                 self.store_root, cli=self._service_cli, timeout=self._timeout
             )
+            _probe("adapter.service_obtain", started)
         return self._service
 
     def close(self):
@@ -1196,11 +1200,14 @@ class WeftStorageWriter(_StorageWriterBase):
             metadata.storage_meta = self.storage_meta()
             if getattr(metadata, "version", None) is None:
                 metadata.version = "1.0.0"
+            serialize_started = time.perf_counter_ns()
             blob = serialize_metadata(
                 metadata,
                 checkpoint_id=self._path,
                 storage_name=self._storage_name,
             )
+            _probe("adapter.metadata_serialize", serialize_started)
+            commit_started = time.perf_counter_ns()
             try:
                 self._get_service().write_file(
                     "/checkpoints/%s/%s" % (self._storage_name, DCP_METADATA_NAME),
@@ -1211,6 +1218,7 @@ class WeftStorageWriter(_StorageWriterBase):
                     "checkpoint %r was published but its DCP metadata was not: %s"
                     % (self._storage_name, exc)
                 ) from exc
+            _probe("adapter.metadata_commit", commit_started)
             self._finished = True
             self._metadata = metadata
         return None
@@ -1359,6 +1367,7 @@ class WeftStorageWriter(_StorageWriterBase):
         # safetensors bytes because the checkpoint manifest records the source
         # header and SHA-256, but it never reaches the disk, is never a path
         # argument to a CLI process, and is handed to the helper over a memfd.
+        stage_started = time.perf_counter_ns()
         container = bytearray(struct.pack("<Q", len(header_raw)))
         container += header_raw
         infos = []
@@ -1367,7 +1376,9 @@ class WeftStorageWriter(_StorageWriterBase):
             if row["kind"] == "bytes":
                 payload = row["payload"]
             else:
+                resolve_started = time.perf_counter_ns()
                 tensor = planner.resolve_data(row["item"])
+                _probe("adapter.resolve", resolve_started)
                 if not hasattr(tensor, "detach"):
                     raise UnsupportedStateObject(
                         "tensor write item %r resolved to %s"
@@ -1404,6 +1415,9 @@ class WeftStorageWriter(_StorageWriterBase):
                     % (row["entry"], len(payload), row["nbytes"])
                 )
             container += payload
+            hash_started = time.perf_counter_ns()
+            roots = content_root(payload)
+            _probe("adapter.hash", hash_started)
             infos.append(
                 StorageInfo(
                     entry=row["entry"],
@@ -1411,12 +1425,15 @@ class WeftStorageWriter(_StorageWriterBase):
                     shape=row["shape"],
                     storage_offsets=row["offsets"],
                     lengths=row["lengths"],
-                    content_root=content_root(payload),
+                    content_root=roots,
                 )
             )
+        _probe("adapter.stage_total", stage_started)
 
         shards, axis = self._topology
+        allocate_started = time.perf_counter_ns()
         storage_name = self._allocate_storage_name()
+        _probe("adapter.allocate_name", allocate_started)
         service = self._get_service()
         started = time.monotonic()
         write_report = service.write_checkpoint(
@@ -1429,6 +1446,7 @@ class WeftStorageWriter(_StorageWriterBase):
         self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0
         self._stats["container_bytes"] = len(container)
         manifest_value = write_report.manifest.to_value()
+        verify_started = time.perf_counter_ns()
         self._verify_report(
             {
                 "complete": write_report.complete,
@@ -1438,6 +1456,7 @@ class WeftStorageWriter(_StorageWriterBase):
             infos,
             storage_name,
         )
+        _probe("adapter.manifest_verify", verify_started)
         self._storage_name = storage_name
         self._manifest = {
             "manifest_root": write_report.manifest_root,

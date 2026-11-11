@@ -3463,7 +3463,9 @@ impl Store {
                 let codec_chunk =
                     crate::representation::codec_chunk_size(self.options().chunk_size.max(1))
                         as usize;
-                match weftcodec::modes::encode_zstd(logical, level, Some(codec_chunk), &limits) {
+                match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                    weftcodec::modes::encode_zstd(logical, level, Some(codec_chunk), &limits)
+                }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
                         let estimate = options.estimate_ns_at_pattern(
@@ -3562,12 +3564,14 @@ impl Store {
                 "q8_0 identity requires the mode-10 scale plane".to_owned(),
             ));
         } else {
-            match weftcodec::modes::encode_zstd(
-                logical,
-                crate::representation::CODEC_ZSTD_LEVEL,
-                Some(codec_chunk),
-                &limits,
-            ) {
+            match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                weftcodec::modes::encode_zstd(
+                    logical,
+                    crate::representation::CODEC_ZSTD_LEVEL,
+                    Some(codec_chunk),
+                    &limits,
+                )
+            }) {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
                     let estimate = options.estimate_ns_at_pattern(
@@ -3651,7 +3655,9 @@ impl Store {
                     ),
                 ));
             } else {
-                match weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits) {
+                match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd19, || {
+                    weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits)
+                }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
                         let estimate = options.estimate_ns_at_pattern(
@@ -3709,7 +3715,10 @@ impl Store {
             .and_then(|item| item.candidate.physical_bytes);
         match float_tensor_dtype(dtype) {
             Some(float_dtype) => {
-                match weftcodec::modes::encode_float_tensor(logical, float_dtype, shape, &limits) {
+                match crate::phase_profile::timed(
+                    crate::phase_profile::Phase::EncodeFloatTensor,
+                    || weftcodec::modes::encode_float_tensor(logical, float_dtype, shape, &limits),
+                ) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
                         let worthwhile = match zstd_physical {
@@ -4463,7 +4472,9 @@ impl Store {
                 ),
             ));
         } else {
-            match self.prepare_semantic(dtype, shape, logical, options, &limits) {
+            match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeSemantic, || {
+                self.prepare_semantic(dtype, shape, logical, options, &limits)
+            }) {
                 Ok(Some((frame, dependency, policy))) => {
                     let physical = frame.len() as u64;
                     let estimate = options.estimate_ns_at_pattern(

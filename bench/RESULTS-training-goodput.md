@@ -300,3 +300,14 @@ Raw receipt fields used above: `configs.*.summary`, `resume_exactness`,
 `resume_startup_probe`, `losses`, `wins`, `method`. The log beside the receipt
 contains every run and kill line, including the per-run loop wall, pause,
 completion and byte counts printed by the harness.
+
+## 9. Follow-up: the 444 ms decomposed (R12b)
+
+`bench/RESULTS-checkpoint-latency.md` re-measures this fixture's checkpoint
+half with the shipped phase profiler. The dominant cost is not the store, the
+commit or the index: it is the planner's implicit mode-14 semantic search
+(`tensor_semantic_candidates`), which scans every file object in the store and
+decodes every same-dtype/same-shape tensor to price one candidate. It is
+130.4 ms of a 211.1 ms fresh-store save and 344.5 ms of a 472.6 ms later save.
+The rest of the growth is four store opens per save (a fresh writable handle
+and a fresh read-only handle for both the checkpoint and the DCP metadata).

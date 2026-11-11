@@ -36,12 +36,23 @@
 //! | `manifest_commit` | `Store::publish_commit` (commit record + superblock publication) |
 //! | `index_segment` | `Store::index_attestation_for` and `Store::persist_built_index` |
 //! | `verify` | `Store::verify` and committer fragment verification |
+//! | `store_open` | the whole `Store::open_with_options_and_backend` call at a call site |
+//! | `state_replay` | `recovery::recover*` inside that open (nested in `store_open`) |
+//! | `plane_probe` | `StorageBackend::probe_planes` inside a writable open (nested) |
+//! | `index_build` | `StateIndex::build` inside `index_attestation_for` (nested) |
+//! | `index_load` | `Store::load_attested_chain` inside `index_attestation_for` (nested) |
+//! | `index_attest` | `encode_full`/`encode_delta` and the chain roots (nested) |
+//! | `metadata_commit` | the store commit that publishes a small metadata file |
+//! | `encode_zstd` / `encode_zstd19` / `encode_float_tensor` | one candidate encoder call inside `encode` (nested) |
 //!
 //! The phases are deliberately not a partition of the wall time: chunking,
 //! planner cost arithmetic, in-memory state application, and the harness's own
 //! bookkeeping are outside every section. A report therefore states the
 //! measured total per phase and leaves the residual to the caller rather than
-//! inventing an "other" bucket.
+//! inventing an "other" bucket. Four phases are explicitly **nested** inside
+//! another (`state_replay` and `plane_probe` in `store_open`; `index_build`,
+//! `index_load` and `index_attest` in `index_segment`) and are labelled by
+//! [`Phase::nested_in`] so a reader never adds them to a wall time twice.
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -70,6 +81,31 @@ pub enum Phase {
     IndexSegment,
     /// Verifying objects, fragments, or a whole store.
     Verify,
+    /// One whole `Store::open_with_options_and_backend` call.
+    StoreOpen,
+    /// Commit replay inside a store open (nested in [`Phase::StoreOpen`]).
+    StateReplay,
+    /// Capability probing of the blob and commit planes (nested in
+    /// [`Phase::StoreOpen`]).
+    PlaneProbe,
+    /// `StateIndex::build` (nested in [`Phase::IndexSegment`]).
+    IndexBuild,
+    /// Resolving the previous attested index chain (nested in
+    /// [`Phase::IndexSegment`]).
+    IndexLoad,
+    /// Encoding the full/delta segment and deriving its roots (nested in
+    /// [`Phase::IndexSegment`]).
+    IndexAttest,
+    /// The store commit that publishes one small metadata file.
+    MetadataCommit,
+    /// The level-3 ZSTD frame encode (nested in [`Phase::Encode`]).
+    EncodeZstd,
+    /// The level-19 ZSTD frame encode (nested in [`Phase::Encode`]).
+    EncodeZstd19,
+    /// A mode-9 FLOAT_TENSOR encode (nested in [`Phase::Encode`]).
+    EncodeFloatTensor,
+    /// The mode-14 semantic-candidate search (nested in [`Phase::Encode`]).
+    EncodeSemantic,
 }
 
 impl Phase {
@@ -83,11 +119,38 @@ impl Phase {
             Phase::ManifestCommit => "manifest_commit",
             Phase::IndexSegment => "index_segment",
             Phase::Verify => "verify",
+            Phase::StoreOpen => "store_open",
+            Phase::StateReplay => "state_replay",
+            Phase::PlaneProbe => "plane_probe",
+            Phase::IndexBuild => "index_build",
+            Phase::IndexLoad => "index_load",
+            Phase::IndexAttest => "index_attest",
+            Phase::MetadataCommit => "metadata_commit",
+            Phase::EncodeZstd => "encode_zstd",
+            Phase::EncodeZstd19 => "encode_zstd19",
+            Phase::EncodeFloatTensor => "encode_float_tensor",
+            Phase::EncodeSemantic => "encode_semantic",
+        }
+    }
+
+    /// The enclosing phase when this one is measured inside another.
+    ///
+    /// A receipt must never add a nested phase to its parent as if the two were
+    /// disjoint; this is the machine-readable statement of the nesting.
+    pub fn nested_in(self) -> Option<Phase> {
+        match self {
+            Phase::StateReplay | Phase::PlaneProbe => Some(Phase::StoreOpen),
+            Phase::IndexBuild | Phase::IndexLoad | Phase::IndexAttest => Some(Phase::IndexSegment),
+            Phase::EncodeZstd
+            | Phase::EncodeZstd19
+            | Phase::EncodeFloatTensor
+            | Phase::EncodeSemantic => Some(Phase::Encode),
+            _ => None,
         }
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 7] = [
+    pub const ALL: [Phase; 18] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -95,6 +158,17 @@ impl Phase {
         Phase::ManifestCommit,
         Phase::IndexSegment,
         Phase::Verify,
+        Phase::StoreOpen,
+        Phase::StateReplay,
+        Phase::PlaneProbe,
+        Phase::IndexBuild,
+        Phase::IndexLoad,
+        Phase::IndexAttest,
+        Phase::MetadataCommit,
+        Phase::EncodeZstd,
+        Phase::EncodeZstd19,
+        Phase::EncodeFloatTensor,
+        Phase::EncodeSemantic,
     ];
 }
 
@@ -204,6 +278,7 @@ impl PhaseSnapshot {
                 phase.as_str().to_owned(),
                 serde_json::json!({
                     "sections": totals.count,
+                    "nested_in": phase.nested_in().map(|parent| parent.as_str()),
                     "total_ms": totals.total_ns as f64 / 1_000_000.0,
                     "mean_ms": totals.mean_ns() / 1_000_000.0,
                     "max_ms": totals.max_ns as f64 / 1_000_000.0,

@@ -387,3 +387,29 @@ SIGKILL not power loss, single-writer store; no GPU or distributed claim.
   rejects rather than pads.
 * Version 0.8.0 of the Python package; the wheel is a court artifact, not a
   PyPI publication.
+
+## 9. Completion latency (R12b)
+
+R11 measured a 444.1 ms p50 completion on the training-goodput fixture. R12b
+decomposes that number with the shipped phase profiler rather than guessing.
+
+* `python/courts/checkpoint_latency.py` saves the **same** state as R11 (it
+  imports `build_model`, `make_optimizer` and `capture_state` from
+  `python/courts/training_goodput.py`; 169 entries, 4,973,352 bytes) and
+  records the client wall time plus two decompositions: twelve client sections
+  reported by `weftcodec.service.set_probe_sink`, and the service's Rust phase
+  profile read over the protocol-3 `PROFILE` op.
+* The profile is opt-in. `PROTOCOL_VERSION` is now **3**; the new op is
+  `0x0b`, added after `READ_FILE`. An older service is refused by the existing
+  version check, never silently mis-decoded.
+* Nested Rust phases (`state_replay`, `plane_probe` in `store_open`;
+  `index_build`, `index_load`, `index_attest` in `index_segment`;
+  `encode_zstd`, `encode_zstd19`, `encode_float_tensor`, `encode_semantic` in
+  `encode`) are labelled `nested_in` and must not be added to their parent.
+
+The first measurement: **211.1 ms in a fresh store, 472.6 ms p50 for later
+saves in the same store**, of which **130.4 / 344.5 ms is the planner's
+implicit mode-14 semantic search** (`tensor_semantic_candidates` scanning every
+object in the store for each tensor), 12.4-44.9 ms is four store opens per
+save, and 9.3-28.0 ms is the second writable open that publishes the DCP
+metadata blob. See `bench/RESULTS-checkpoint-latency.md`.

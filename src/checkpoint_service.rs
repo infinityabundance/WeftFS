@@ -43,7 +43,7 @@ use crate::store::{OpenMode, Options, Store};
 mod ancillary;
 
 /// Protocol version carried by the `INFO` response.
-pub const PROTOCOL_VERSION: u32 = 2;
+pub const PROTOCOL_VERSION: u32 = 3;
 /// Largest accepted control frame (header + body) in either direction.
 pub const MAX_FRAME_BYTES: usize = 1 << 20;
 /// Default bound on one restored tensor / one staged container.
@@ -68,6 +68,9 @@ pub mod op {
     pub const STAT_FILE: u8 = 0x09;
     /// Read one small store file into a caller-supplied memfd.
     pub const READ_FILE: u8 = 0x0a;
+    /// Diagnostic phase-profile control (`u8` mode: 0 begin, 1 take, 2 end).
+    /// Additive in protocol 3; it never changes published bytes.
+    pub const PROFILE: u8 = 0x0b;
     pub const SHUTDOWN: u8 = 0x7f;
 }
 
@@ -279,6 +282,7 @@ impl Service {
             op::WRITE_FILE => self.handle_write_file(request, started),
             op::STAT_FILE => self.handle_stat_file(request),
             op::READ_FILE => self.handle_read_file(request),
+            op::PROFILE => self.handle_profile(request),
             op::SHUTDOWN => {
                 if !request.body.is_empty() || !request.fds.is_empty() {
                     return Dispatch::Failed(Error::malformed(
@@ -565,11 +569,7 @@ impl Service {
                 fast_codec = match codec {
                     0 => crate::tensor_store::FastCodec::Raw,
                     1 => crate::tensor_store::FastCodec::Zstd,
-                    other => {
-                        return Err(Error::malformed(format!(
-                            "unknown fast codec {other}"
-                        )))
-                    }
+                    other => return Err(Error::malformed(format!("unknown fast codec {other}"))),
                 };
                 write_policy = match policy {
                     0 => crate::tensor_store::WritePolicy::Planned,
@@ -578,11 +578,7 @@ impl Service {
                         on_critical_path,
                         deadline_ms,
                     },
-                    other => {
-                        return Err(Error::malformed(format!(
-                            "unknown write policy {other}"
-                        )))
-                    }
+                    other => return Err(Error::malformed(format!("unknown write policy {other}"))),
                 };
             }
             cursor.finish()?;
@@ -747,15 +743,19 @@ impl Service {
                 write_store.options().owner_uid,
                 write_store.options().owner_gid,
             );
-            write_store.create_file(
-                parent_id,
-                name.as_bytes(),
-                &bytes,
-                0o644,
-                uid,
-                gid,
-                std::collections::BTreeMap::new(),
-            )?;
+            {
+                let _commit =
+                    crate::phase_profile::scope(crate::phase_profile::Phase::MetadataCommit);
+                write_store.create_file(
+                    parent_id,
+                    name.as_bytes(),
+                    &bytes,
+                    0o644,
+                    uid,
+                    gid,
+                    std::collections::BTreeMap::new(),
+                )?;
+            }
             Ok(())
         })();
         match outcome {
@@ -828,6 +828,55 @@ impl Service {
         }
         let mut body = Vec::new();
         put_u64(&mut body, bytes.len() as u64);
+        Dispatch::Reply {
+            op: request.op,
+            body,
+            fd: None,
+        }
+    }
+
+    /// Diagnostic phase-profile control.
+    ///
+    /// ``mode`` 0 clears the collector and enables profiling, 1 returns the
+    /// totals collected so far without clearing them, and 2 stops profiling.
+    /// The response is a bounded list of `(name, count, total_ns, max_ns)`; it
+    /// is a measurement aid and never affects published bytes.
+    fn handle_profile(&mut self, request: &Request) -> Dispatch {
+        let mut cursor = Cursor::new(&request.body);
+        let mode = match cursor.u8() {
+            Ok(mode) => mode,
+            Err(err) => return Dispatch::Failed(err),
+        };
+        if let Err(err) = cursor.finish() {
+            return Dispatch::Failed(err);
+        }
+        let snapshot = match mode {
+            0 => {
+                crate::phase_profile::begin();
+                crate::phase_profile::PhaseSnapshot::default()
+            }
+            1 => crate::phase_profile::snapshot(),
+            2 => crate::phase_profile::finish(),
+            other => {
+                return Dispatch::Failed(Error::invalid_argument(format!(
+                    "PROFILE mode {other} is not 0, 1, or 2"
+                )))
+            }
+        };
+        let mut body = Vec::new();
+        let present: Vec<crate::phase_profile::Phase> = crate::phase_profile::Phase::ALL
+            .iter()
+            .copied()
+            .filter(|phase| snapshot.phases.contains_key(phase.as_str()))
+            .collect();
+        put_u32(&mut body, present.len() as u32);
+        for phase in present {
+            let totals = &snapshot.phases[phase.as_str()];
+            put_str(&mut body, phase.as_str());
+            put_u64(&mut body, totals.count);
+            put_u64(&mut body, totals.total_ns.min(u128::from(u64::MAX)) as u64);
+            put_u64(&mut body, totals.max_ns);
+        }
         Dispatch::Reply {
             op: request.op,
             body,

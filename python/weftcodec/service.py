@@ -31,7 +31,7 @@ import subprocess
 import threading
 import time
 
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
 MAX_FRAME_BYTES = 1 << 20
 DEFAULT_MAX_TENSOR_BYTES = 4 << 30
 MAX_FILE_BYTES = 16 << 20
@@ -48,12 +48,35 @@ OP_REFRESH = 0x07
 OP_WRITE_FILE = 0x08
 OP_STAT_FILE = 0x09
 OP_READ_FILE = 0x0A
+OP_PROFILE = 0x0B
 OP_SHUTDOWN = 0x7F
 
 STATUS_OK = 0
 STATUS_ERROR = 1
 
 _FRAME_HEADER = struct.Struct("<I")  # u32 length
+
+
+# A measurement hook. ``None`` unless a court calls :func:`set_probe_sink`, so
+# the shipped path pays one ``is not None`` test per instrumented section.
+_PROBE_SINK = None
+
+
+def set_probe_sink(sink):
+    """Install (or clear, with ``None``) the client-side probe callback.
+
+    The callback receives ``(name, duration_ns)``; it is called once per
+    measured client section. It is a measurement aid only: nothing measured
+    here is persisted, hashed, or included in any published artifact.
+    """
+    global _PROBE_SINK
+    _PROBE_SINK = sink
+
+
+def _probe(name, started_ns):
+    sink = _PROBE_SINK
+    if sink is not None:
+        sink(name, time.perf_counter_ns() - started_ns)
 
 
 class ServiceError(RuntimeError):
@@ -482,6 +505,7 @@ class CheckpointService:
     # -- lifecycle ----------------------------------------------------------
 
     def _start(self):
+        probe_started = time.perf_counter_ns()
         parent, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
         child.set_inheritable(True)
         command = [
@@ -522,6 +546,7 @@ class CheckpointService:
                 "service speaks protocol %r, client speaks %d"
                 % (info["protocol"], PROTOCOL_VERSION)
             )
+        _probe("client.service_start", probe_started)
 
     def close(self):
         with self._lock:
@@ -704,6 +729,30 @@ class CheckpointService:
         reader = _Reader(body)
         return {"generation": reader.u64(), "head": reader.hash_hex()}
 
+    def profile(self, mode):
+        """Read the service's phase profile (diagnostic, protocol 3).
+
+        ``mode`` 0 begins a measurement (clearing the collector), 1 returns the
+        totals collected so far, 2 stops measuring. The result maps a phase
+        name to ``{"count", "total_ns", "max_ns"}``. Nested phases are named by
+        the caller: ``state_replay``/``plane_probe`` sit inside ``store_open``
+        and ``index_build``/``index_load``/``index_attest`` inside
+        ``index_segment``; they must not be added to their parent.
+        """
+        if mode not in (0, 1, 2):
+            raise ValueError("profile mode must be 0, 1, or 2")
+        body = self._call(OP_PROFILE, bytes((int(mode),)))
+        reader = _Reader(body)
+        out = {}
+        for _ in range(reader.u32()):
+            name = reader.string()
+            out[name] = {
+                "count": reader.u64(),
+                "total_ns": reader.u64(),
+                "max_ns": reader.u64(),
+            }
+        return out
+
     def _allocate_memfd(self, size, name="weft-tensor"):
         fd = os.memfd_create(name, os.MFD_CLOEXEC)
         if size:
@@ -815,11 +864,13 @@ class CheckpointService:
         if fast_codec not in codec_codes:
             raise ValueError("fast_codec must be raw or zstd")
         view = memoryview(container)
+        started = time.perf_counter_ns()
         fd = self._allocate_memfd(len(view), "weft-container")
         try:
             offset = 0
             while offset < len(view):
                 offset += os.write(fd, view[offset:])
+            _probe("client.container_memfd", started)
             body = bytearray()
             body += _string(name)
             body += _u32(shards)
@@ -839,7 +890,9 @@ class CheckpointService:
             else:
                 body += bytes((1,))
                 body += _u64(int(deadline_ms))
+            request_started = time.perf_counter_ns()
             response = self._call(OP_WRITE_CHECKPOINT, bytes(body), fd=fd)
+            _probe("client.write_request", request_started)
             report = WriteReport(response)
             self.stats["writes"] += 1
             self.stats["written_bytes"] += len(view)
@@ -867,7 +920,9 @@ class CheckpointService:
             while offset < len(view):
                 offset += os.write(fd, view[offset:])
             body = _string(store_path)
+            request_started = time.perf_counter_ns()
             response = self._call(OP_WRITE_FILE, body, fd=fd)
+            _probe("client.metadata_request", request_started)
             reader = _Reader(response)
             return {"bytes": reader.u64(), "generation": reader.u64()}
         finally:
