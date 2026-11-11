@@ -18,18 +18,37 @@
 //!
 //! This is one host with N processes, not a fleet claim.
 
+// Without `fuse` this example builds to a stub: a target that is valid only
+// with a feature needs `required-features`, which in turn would require this
+// source in the image build context (only `src/` is copied there).
+#[cfg(not(feature = "fuse"))]
+fn main() {
+    eprintln!("fleet_coldstart: rebuild with --features fuse");
+    std::process::exit(2);
+}
+
+#[cfg(feature = "fuse")]
 use std::fs;
+#[cfg(feature = "fuse")]
 use std::io::Read;
+#[cfg(feature = "fuse")]
 use std::path::{Path, PathBuf};
+#[cfg(feature = "fuse")]
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+#[cfg(feature = "fuse")]
 use serde_json::{json, Value as Json};
+#[cfg(feature = "fuse")]
 use sha2::{Digest, Sha256};
 
+#[cfg(feature = "fuse")]
 use weftfs::backend::BackendKind;
+#[cfg(feature = "fuse")]
 use weftfs::fuse::{SharedMount, SharedViewSpec};
+#[cfg(feature = "fuse")]
 use weftfs::store::{OpenMode, Options, Store};
 
+#[cfg(feature = "fuse")]
 fn main() {
     if let Err(err) = run() {
         eprintln!("fleet_coldstart: {err}");
@@ -37,6 +56,7 @@ fn main() {
     }
 }
 
+#[cfg(feature = "fuse")]
 fn run() -> Result<(), String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let phase = args.first().cloned().unwrap_or_default();
@@ -49,6 +69,7 @@ fn run() -> Result<(), String> {
     }
 }
 
+#[cfg(feature = "fuse")]
 fn value_of(args: &[String], flag: &str) -> Option<String> {
     args.iter()
         .position(|arg| arg == flag)
@@ -56,11 +77,13 @@ fn value_of(args: &[String], flag: &str) -> Option<String> {
         .cloned()
 }
 
+#[cfg(feature = "fuse")]
 fn required(args: &[String], flag: &str) -> Result<String, String> {
     value_of(args, flag).ok_or_else(|| format!("missing {flag}"))
 }
 
 
+#[cfg(feature = "fuse")]
 fn parse_u64(args: &[String], flag: &str, default: u64) -> Result<u64, String> {
     match value_of(args, flag) {
         None => Ok(default),
@@ -70,6 +93,7 @@ fn parse_u64(args: &[String], flag: &str, default: u64) -> Result<u64, String> {
     }
 }
 
+#[cfg(feature = "fuse")]
 fn now_ns() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -77,6 +101,7 @@ fn now_ns() -> u64 {
         .unwrap_or(0)
 }
 
+#[cfg(feature = "fuse")]
 fn peak_rss_kib() -> u64 {
     let Ok(status) = fs::read_to_string("/proc/self/status") else {
         return 0;
@@ -95,6 +120,7 @@ fn peak_rss_kib() -> u64 {
 // Server
 // ---------------------------------------------------------------------------
 
+#[cfg(feature = "fuse")]
 fn server(args: &[String]) -> Result<(), String> {
     let store_path = PathBuf::from(required(args, "--store")?);
     let mounts_file = PathBuf::from(required(args, "--mounts")?);
@@ -244,6 +270,7 @@ fn server(args: &[String]) -> Result<(), String> {
 // Replica
 // ---------------------------------------------------------------------------
 
+#[cfg(feature = "fuse")]
 fn replica(args: &[String]) -> Result<(), String> {
     let mount = PathBuf::from(required(args, "--mount")?);
     let dir = value_of(args, "--dir").unwrap_or_else(|| "model".to_owned());
@@ -333,6 +360,7 @@ fn replica(args: &[String]) -> Result<(), String> {
 
 /// `(name, size)` of every regular file in `dir`, smallest first so the fleet
 /// converges on cheap tensors before any large one.
+#[cfg(feature = "fuse")]
 fn list_model(dir: &Path) -> Result<Vec<(String, u64)>, String> {
     let mut entries = Vec::new();
     for entry in fs::read_dir(dir).map_err(|err| format!("{}: {err}", dir.display()))? {
@@ -351,10 +379,12 @@ fn list_model(dir: &Path) -> Result<Vec<(String, u64)>, String> {
     Ok(entries)
 }
 
+#[cfg(feature = "fuse")]
 fn round(value: f64) -> f64 {
     (value * 1000.0).round() / 1000.0
 }
 
+#[cfg(feature = "fuse")]
 fn write_json(path: &Path, value: &Json) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         if !parent.as_os_str().is_empty() {

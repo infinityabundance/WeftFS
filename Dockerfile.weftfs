@@ -9,10 +9,6 @@ WORKDIR /src
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY WeftCodec ./WeftCodec
-# Cargo refuses to parse the manifest when a declared target is absent, so the
-# `[[example]] fleet_coldstart` source must be in the build context even though
-# `--bin weftfs` never builds it.
-COPY examples ./examples
 RUN cargo build --release --locked --features fuse --bin weftfs \
  && strip /src/target/release/weftfs
 
