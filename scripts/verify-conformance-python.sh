@@ -125,6 +125,9 @@ record["checks"]["python_skips_documented"] = documented
 with open(receipt_path, "w", encoding="utf-8") as handle:
     json.dump(record, handle, indent=2, sort_keys=True)
     handle.write("\n")
+# The court runs as uid 0 with cap-drop=ALL; a host-side verification step must
+# be able to read and update this receipt afterwards.
+os.chmod(receipt_path, 0o666)
 
 print("python run: %d pass, %d fail, %d skip" % (python["pass"], python["fail"], python["skip"]))
 print("python skips per mode:", json.dumps(record["python_skips_per_mode"], sort_keys=True))

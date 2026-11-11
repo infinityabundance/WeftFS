@@ -24,6 +24,14 @@ if [ -z "$VERSION" ]; then
 fi
 STAMP="${WEFT_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# `standalone` is a direct run; `aggregate` is the packaging court, which
+# defers the Python second opinion to its own court when this court has no
+# blake3. Recorded verbatim in the receipt so a reader can tell them apart.
+MODE="${WEFT_CONFORMANCE_MODE:-standalone}"
+case "$MODE" in
+  standalone|aggregate) ;;
+  *) echo "unknown WEFT_CONFORMANCE_MODE='$MODE' (expected standalone|aggregate)" >&2; exit 64 ;;
+esac
 BUNDLES="$ROOT/bench/bundles"
 CACHE="$ROOT/.docker-cache"
 BUNDLE="$BUNDLES/conformance-$VERSION.tar.zst"
@@ -253,10 +261,11 @@ fi
 # ---- receipt --------------------------------------------------------------
 python3 - "$RECEIPT" "$BUNDLE" "$BUNDLE_SHA" "$BUNDLE_SIZE" "$FILE_COUNT" \
   "$STAMP" "$GENERATED_AT" "$VERSION" "$VERIFY" "$VERIFY_RESULT" \
-  "$PYTHON_STATUS" "$PYTHON_REASON" <<'PY'
+  "$PYTHON_STATUS" "$PYTHON_REASON" "$MODE" <<'PY'
 import json, os, sys
 (receipt_path, bundle, bundle_sha, bundle_size, file_count, stamp, generated_at,
- version, verify, verify_result, python_status, python_reason) = sys.argv[1:13]
+ version, verify, verify_result, python_status, python_reason,
+ mode) = sys.argv[1:14]
 manifest = json.load(open(os.path.join(verify, "conformance", "manifest.json")))
 by_path = {entry["path"]: entry for entry in manifest["vectors"]}
 def run(name):
@@ -298,6 +307,18 @@ record = {
     "manifest_aggregate_sha256": manifest.get("aggregate_sha256"),
     "extracted_only": True,
     "verify_receipts": verify_result,
+    "configuration": {
+        "mode": mode,
+        "reduced": False,
+        "vectors": manifest.get("vector_count"),
+        "adapters": ["rust"] + (["python"] if python is not None else []),
+        "python_second_opinion": ("executed" if python is not None else "deferred"),
+        "bundles_dir": os.path.dirname(os.path.relpath(bundle)),
+        "note": ("the packaging run has no cost knob; this is the full default "
+                 "configuration. 'aggregate' means the Python second opinion is "
+                 "deferred to scripts/conformance_python_court.sh, which merges "
+                 "its run into this receipt"),
+    },
     "python_second_opinion": {
         "status": python_status,
         "reason": python_reason,
@@ -323,6 +344,10 @@ record = {
 with open(receipt_path, "w", encoding="utf-8") as handle:
     json.dump(record, handle, indent=2, sort_keys=True)
     handle.write("\n")
+# The court runs as uid 0 with cap-drop=ALL; a host-side verification step must
+# be able to update this receipt afterwards, so make it world-writable like the
+# receipts directory itself.
+os.chmod(receipt_path, 0o666)
 print("receipt:", receipt_path)
 PY
 

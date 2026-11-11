@@ -227,6 +227,19 @@ run_orchestrated_court augmentation_local augmentation_court \
   env WEFT_AUGMENTATION_REDUCED=1 WEFT_AUGMENTATION_STAMP="$stamp" \
   bash scripts/augmentation_court.sh --local
 
+# R13 third-party conformance distribution: build the bundle in the fuse court,
+# run the reference Rust adapter from the extracted copy only, and verify the
+# bundle with `scripts/verify-receipts.sh` in the court and again on the host
+# with `--repo-root .`. The packaging script has no cost knob, so this is its
+# full default configuration; the only deferred phase is the independent Python
+# second opinion, run by the next court because the fuse court has no blake3.
+# The receipt's `configuration` block records that split. Both courts share
+# $stamp, so the Python court merges into the receipt the bundle court wrote.
+run_orchestrated_court conformance_bundle conformance_bundle \
+  env WEFT_STAMP="$stamp" bash scripts/conformance_bundle_court.sh
+run_orchestrated_court conformance_python conformance_python \
+  env WEFT_STAMP="$stamp" bash scripts/conformance_python_court.sh
+
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
 run_court rust "context_cross_rust_gen" \
@@ -330,13 +343,21 @@ skipped="$(grep -c '=skip$' "$results" || true)"
     echo "  \"result_note\": \"$skipped court(s) skipped explicitly; a skip is not a pass\","
   fi
   echo "  \"receipts\": {"
-  echo "    \"ceph_rgw\": \"bench/receipts/ceph-rgw-${stamp}.json\","
+  receipts_count=0
+  emit_receipt() {
+    if [[ "$receipts_count" -ne 0 ]]; then echo ","; fi
+    printf '    "%s": "%s"' "$1" "$2"
+    receipts_count=$((receipts_count + 1))
+  }
+  emit_receipt ceph_rgw "bench/receipts/ceph-rgw-${stamp}.json"
+  emit_receipt s3_court "bench/receipts/s3-court-${stamp}.json"
   if [[ -f "bench/receipts/augmentation-local-${stamp}.json" ]]; then
-    echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\","
-    echo "    \"augmentation_local\": \"bench/receipts/augmentation-local-${stamp}.json\""
-  else
-    echo "    \"s3_court\": \"bench/receipts/s3-court-${stamp}.json\""
+    emit_receipt augmentation_local "bench/receipts/augmentation-local-${stamp}.json"
   fi
+  if [[ -f "bench/receipts/conformance-bundle-${stamp}.json" ]]; then
+    emit_receipt conformance_bundle "bench/receipts/conformance-bundle-${stamp}.json"
+  fi
+  echo ""
   echo "  },"
   echo "  \"result\": \"$([ "$status" -eq 0 ] && echo pass || echo fail)\","
   echo "  \"raw_log\": \"$log\""
