@@ -2650,7 +2650,7 @@ impl Store {
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         self.restore_checkpoint_pipelined_inner(
-            None, None, name, options, pipeline, false, true, writer,
+            None, None, name, options, pipeline, false, true, true, writer,
         )
     }
 
@@ -2670,7 +2670,28 @@ impl Store {
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         self.restore_checkpoint_pipelined_inner(
-            None, None, name, options, pipeline, false, false, writer,
+            None, None, name, options, pipeline, false, false, true, writer,
+        )
+    }
+
+    /// The ordered restore with **no** whole-file or per-tensor SHA-256 pass.
+    ///
+    /// Every shard root, whole-tensor content root, logical root, and the
+    /// container header are still verified by the store; what is skipped is
+    /// the serial SHA-256 of the restored output used for the convenience
+    /// `file_sha256` / `exact_source_file` report fields. Those fields are
+    /// therefore zero/false. A scaling court that wants the store's throughput
+    /// must verify exactness out of band (one hashing restore, or a sink that
+    /// hashes). A production restore uses [`Store::restore_checkpoint_pipelined`].
+    pub fn restore_checkpoint_pipelined_unhashed<W: Write>(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        self.restore_checkpoint_pipelined_inner(
+            None, None, name, options, pipeline, false, false, false, writer,
         )
     }
 
@@ -2692,6 +2713,7 @@ impl Store {
             pipeline,
             false,
             true,
+            true,
             writer,
         )
     }
@@ -2706,6 +2728,7 @@ impl Store {
         pipeline: &crate::restore_pipeline::RestorePipelineOptions,
         lazy_tiles: bool,
         hash_tensors: bool,
+        hash_file: bool,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         let prologue = self.restore_prologue(state, snapshot, name, options)?;
@@ -2748,7 +2771,9 @@ impl Store {
                 writer
                     .write_all(&restored.bytes)
                     .map_err(|err| Error::io(format!("restore output: {err}")))?;
-                hasher.update(&restored.bytes);
+                if hash_file {
+                    hasher.update(&restored.bytes);
+                }
                 file_bytes += restored.bytes.len() as u64;
                 shards_read += restored.shards_read;
                 units_touched += restored.units_touched;

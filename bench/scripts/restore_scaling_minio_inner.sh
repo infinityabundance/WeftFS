@@ -116,7 +116,7 @@ for family in $families; do
   echo "== minio independent readers $family =="
   WEFT_LOCK_PROBE=1 "$bin" readers \
     --backend s3 --store "$store" --names "$family" \
-    --readers 4 --per-reader 2 --reps "$reps" \
+    --readers 4 --per-reader 2 --reps "$reps" --sink counting \
     --out "$family_work/readers.json"
   add_input "readers_${family}=$family_work/readers.json"
 done

@@ -2055,6 +2055,13 @@ fn readers(args: &[String]) -> Result<(), String> {
     let per_reader = parse_u64(args, "--per-reader", 1)? as usize;
     let reps = parse_u64(args, "--reps", 1)? as usize;
     let out = PathBuf::from(required(args, "--out")?);
+    let sink_mode = value_of(args, "--sink").unwrap_or_else(|| "sha256".to_owned());
+    if sink_mode != "sha256" && sink_mode != "counting" {
+        return Err(format!(
+            "--sink must be sha256 or counting (got `{sink_mode}`)"
+        ));
+    }
+    let use_sha = sink_mode == "sha256";
 
     let store = Store::open_with_options_and_backend(
         &store_path,
@@ -2090,6 +2097,7 @@ fn readers(args: &[String]) -> Result<(), String> {
 
     let mut workload_samples = Vec::new();
     let mut aggregate: Vec<Json> = Vec::new();
+    let sink_label = sink_mode.as_str();
     for rep in 0..reps {
         if probe_enabled {
             store.reset_lock_probe();
@@ -2104,27 +2112,38 @@ fn readers(args: &[String]) -> Result<(), String> {
                     let mut durations = Vec::new();
                     let mut bytes = 0u64;
                     let mut sha_match = true;
+                    let mut first = true;
                     for _ in 0..per_reader {
-                        let mut sink = HashSink {
-                            hasher: Sha256::new(),
-                            bytes: 0,
-                        };
+                        // The first restore always hashes so exactness is
+                        // checked; later restores use the requested sink.
+                        let sha_this = use_sha || first;
+                        let mut sink = RestoreSink::new(sha_this);
                         let restore_started = Instant::now();
-                        let report = store
-                            .restore_checkpoint_pipelined(
+                        let report = if sha_this {
+                            store.restore_checkpoint_pipelined(
                                 name,
                                 &CheckpointRestoreOptions::default(),
                                 &RestorePipelineOptions::default(),
                                 &mut sink,
                             )
-                            .map_err(|err| format!("reader {reader} restore {name}: {err}"))?;
+                        } else {
+                            store.restore_checkpoint_pipelined_unhashed(
+                                name,
+                                &CheckpointRestoreOptions::default(),
+                                &RestorePipelineOptions::default(),
+                                &mut sink,
+                            )
+                        }
+                        .map_err(|err| format!("reader {reader} restore {name}: {err}"))?;
                         durations.push(restore_started.elapsed().as_secs_f64() * 1000.0);
                         bytes = bytes.saturating_add(report.file_bytes);
-                        if let Some(expected) = expected {
-                            let digest: [u8; 32] = sink.hasher.finalize().into();
-                            if digest != *expected {
-                                sha_match = false;
+                        if first {
+                            if let (Some(expected), Some(digest)) = (*expected, sink.digest()) {
+                                if digest != expected {
+                                    sha_match = false;
+                                }
                             }
+                            first = false;
                         }
                     }
                     let wall: f64 = durations.iter().sum();
@@ -2137,6 +2156,7 @@ fn readers(args: &[String]) -> Result<(), String> {
                         "wall_ms": round(wall),
                         "mb_per_s": round(bytes as f64 / 1_000_000.0 / (wall / 1000.0).max(1e-9)),
                         "sha256_match": sha_match,
+                        "sink": sink_label,
                         "latency": distribution(&durations),
                     }))
                 }));
@@ -2188,6 +2208,7 @@ fn readers(args: &[String]) -> Result<(), String> {
         "per_reader": per_reader,
         "reps": reps,
         "lock_probe_enabled": probe_enabled,
+        "sink": sink_mode,
         "sink": "SHA-256 hashing sink per reader: decode + backend read + hash, no host writeback",
         "workload_wall": distribution(&workload_samples),
         "repetitions": aggregate,
@@ -2387,7 +2408,7 @@ fn restore(args: &[String]) -> Result<(), String> {
             {
                 let mut warm = RestoreSink::new(false);
                 store
-                    .restore_checkpoint_pipelined_without_tensor_sha(
+                    .restore_checkpoint_pipelined_unhashed(
                         &name,
                         &CheckpointRestoreOptions::default(),
                         &RestorePipelineOptions::default(),
@@ -2410,7 +2431,7 @@ fn restore(args: &[String]) -> Result<(), String> {
                         &mut sink,
                     )
                 } else {
-                    store.restore_checkpoint_pipelined_without_tensor_sha(
+                    store.restore_checkpoint_pipelined_unhashed(
                         &name,
                         &CheckpointRestoreOptions::default(),
                         &pipeline,
