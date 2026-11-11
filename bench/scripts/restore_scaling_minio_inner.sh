@@ -79,8 +79,10 @@ for family in $families; do
 
   family_work="$work/$family"
   mkdir -p "$family_work"
-  # One bucket per family; the harness appends `-<storedirname>-kept`.
-  export WEFT_S3_BUCKET="weft-rs-$stamp-$family"
+  # One bucket per family; the harness appends `-<storedirname>-kept`. S3 bucket
+  # names are DNS-style (lowercase, no dots), so sanitise the stamp and family.
+  bucket_suffix="$(printf '%s-%s' "$stamp" "$family" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9-')"
+  export WEFT_S3_BUCKET="weft-rs-$bucket_suffix"
   store="$family_work/store"
 
   echo "== minio checkpoint $family =="

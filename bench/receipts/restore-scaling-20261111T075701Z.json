@@ -1,0 +1,5552 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "inputs": {
+    "checkpoint_qwen0.5b": {
+      "axis": 0,
+      "backend": {
+        "bytes_read": 952,
+        "bytes_written": 992503266,
+        "link_publications": 0,
+        "range_reads": 1,
+        "reads": 7,
+        "rename_fallbacks": 0,
+        "rename_publications": 19179,
+        "writes": 19181
+      },
+      "complete": true,
+      "fast_codec": "raw",
+      "filters": [],
+      "head": "81320e3d6c545de88df1e3d859fff32d291f47695d26155a1bb4e6340614fc55",
+      "manifest_id": "112eb6b8ee23dfa838801c48d39bbc847863157006dc4a0939e3cb410e4acd4e",
+      "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+      "name": "qwen0.5b",
+      "pack": false,
+      "pack_stats": null,
+      "peak_rss_kib": 40276,
+      "phase": "checkpoint",
+      "phase_note": "phase profiling was off (set WEFT_PHASE_PROFILE=1)",
+      "phases": null,
+      "physical": {
+        "commits_bytes": 1650421,
+        "data_only_bytes": 989962103,
+        "indexes_bytes": 874125,
+        "indexes_percent_of_total": 0.088,
+        "manifests_bytes": 1314355,
+        "objects_bytes": 988647748,
+        "other_bytes": 8207,
+        "refs_bytes": 0,
+        "store_total_bytes": 992494856
+      },
+      "schema": "weft.family-lifecycle.checkpoint.v1",
+      "shard_objects": 2320,
+      "shards": 8,
+      "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store",
+      "strategy": "tensor-sharded",
+      "tensors": 290,
+      "tile_shape": null,
+      "total_element_bytes": 988065536,
+      "verify": {
+        "ok": true,
+        "problems": 0
+      },
+      "wall_ms": 114865.45,
+      "write_policy": "fast"
+    },
+    "checkpoint_qwen0.5b_instruct": {
+      "axis": 0,
+      "backend": {
+        "bytes_read": 10112128,
+        "bytes_written": 992488405,
+        "link_publications": 0,
+        "range_reads": 1,
+        "reads": 4666,
+        "rename_fallbacks": 0,
+        "rename_publications": 19165,
+        "writes": 19166
+      },
+      "complete": true,
+      "fast_codec": "raw",
+      "filters": [],
+      "head": "669b3a3bdf96b706ea50d7268354ee460003bbca0ede47374a814b84742fcb86",
+      "manifest_id": "6f11d53a13ef123c10136277e75b11a389dc5c7fcfd8c7ff45172c1fa23ccf3e",
+      "manifest_root": "ecf7d45915bbf131551b3c2d41170b5b64fda8c921602e350414e3315ec82280",
+      "name": "qwen0.5b-instruct",
+      "pack": false,
+      "pack_stats": null,
+      "peak_rss_kib": 58796,
+      "phase": "checkpoint",
+      "phase_note": "phase profiling was off (set WEFT_PHASE_PROFILE=1)",
+      "phases": null,
+      "physical": {
+        "commits_bytes": 3299723,
+        "data_only_bytes": 1979922840,
+        "indexes_bytes": 1748177,
+        "indexes_percent_of_total": 0.088,
+        "manifests_bytes": 2627495,
+        "objects_bytes": 1977295345,
+        "other_bytes": 8207,
+        "refs_bytes": 0,
+        "store_total_bytes": 1984978947
+      },
+      "schema": "weft.family-lifecycle.checkpoint.v1",
+      "shard_objects": 2320,
+      "shards": 8,
+      "source_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store",
+      "strategy": "tensor-sharded",
+      "tensors": 290,
+      "tile_shape": null,
+      "total_element_bytes": 988065536,
+      "verify": {
+        "ok": true,
+        "problems": 0
+      },
+      "wall_ms": 108426.15,
+      "write_policy": "fast"
+    },
+    "readers_qwen0.5b": {
+      "checkpoints": [
+        "qwen0.5b",
+        "qwen0.5b-instruct"
+      ],
+      "lock_probe_enabled": true,
+      "peak_rss_kib": 2182492,
+      "per_reader": 2,
+      "phase": "readers",
+      "readers": 4,
+      "repetitions": [
+        {
+          "aggregate_mb_per_s": 2581.468,
+          "lock": {
+            "hold": {
+              "count": 24,
+              "max_ns": 461,
+              "mean_ns": 169.04166666666666,
+              "p50_ns": 110,
+              "p95_ns": 451,
+              "p99_ns": 461,
+              "retained_samples": 24,
+              "total_ns": 4057
+            },
+            "hold_share_of_wall": 0.0,
+            "io": {
+              "count": 285720,
+              "max_ns": 2026670,
+              "mean_ns": 26882.067247655046,
+              "p50_ns": 4308,
+              "p95_ns": 175568,
+              "p99_ns": 300340,
+              "retained_samples": 250000,
+              "total_ns": 7680744254
+            },
+            "max_demand": 2,
+            "mean_demand": 1.208,
+            "wait": {
+              "count": 24,
+              "max_ns": 1182,
+              "mean_ns": 227.45833333333337,
+              "p50_ns": 40,
+              "p95_ns": 1012,
+              "p99_ns": 1182,
+              "retained_samples": 24,
+              "total_ns": 5459
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "per_reader": 2,
+          "process_wall_ms": 6899.924,
+          "readers": 4,
+          "readers_report": [
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  940.709,
+                  1501.885
+                ],
+                "max_ms": 1501.885,
+                "mean_ms": 1221.297,
+                "min_ms": 940.709,
+                "p50_ms": 1501.885,
+                "p95_ms": 1501.885,
+                "p99_ms": 1501.885,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 809.056,
+              "reader": 0,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 2442.594
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  1238.196,
+                  1823.913
+                ],
+                "max_ms": 1823.913,
+                "mean_ms": 1531.055,
+                "min_ms": 1238.196,
+                "p50_ms": 1823.913,
+                "p95_ms": 1823.913,
+                "p99_ms": 1823.913,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 645.371,
+              "reader": 1,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3062.109
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  940.718,
+                  1501.931
+                ],
+                "max_ms": 1501.931,
+                "mean_ms": 1221.325,
+                "min_ms": 940.718,
+                "p50_ms": 1501.931,
+                "p95_ms": 1501.931,
+                "p99_ms": 1501.931,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 809.038,
+              "reader": 2,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 2442.649
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  1238.178,
+                  1823.949
+                ],
+                "max_ms": 1823.949,
+                "mean_ms": 1531.063,
+                "min_ms": 1238.178,
+                "p50_ms": 1823.949,
+                "p95_ms": 1823.949,
+                "p99_ms": 1823.949,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 645.367,
+              "reader": 3,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3062.127
+            }
+          ],
+          "repetition": 0,
+          "total_bytes": 7904782592,
+          "wall_ms": 3062.127
+        },
+        {
+          "aggregate_mb_per_s": 2406.993,
+          "lock": {
+            "hold": {
+              "count": 24,
+              "max_ns": 481,
+              "mean_ns": 157.29166666666666,
+              "p50_ns": 110,
+              "p95_ns": 421,
+              "p99_ns": 481,
+              "retained_samples": 24,
+              "total_ns": 3775
+            },
+            "hold_share_of_wall": 0.0,
+            "io": {
+              "count": 285720,
+              "max_ns": 4067115,
+              "mean_ns": 33278.33026389472,
+              "p50_ns": 4649,
+              "p95_ns": 193321,
+              "p99_ns": 386110,
+              "retained_samples": 250000,
+              "total_ns": 9508284523
+            },
+            "max_demand": 2,
+            "mean_demand": 1.167,
+            "wait": {
+              "count": 24,
+              "max_ns": 2024,
+              "mean_ns": 251.29166666666663,
+              "p50_ns": 50,
+              "p95_ns": 1042,
+              "p99_ns": 2024,
+              "retained_samples": 24,
+              "total_ns": 6031
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "per_reader": 2,
+          "process_wall_ms": 7148.385,
+          "readers": 4,
+          "readers_report": [
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  1305.803,
+                  1753.251
+                ],
+                "max_ms": 1753.251,
+                "mean_ms": 1529.527,
+                "min_ms": 1305.803,
+                "p50_ms": 1753.251,
+                "p95_ms": 1753.251,
+                "p99_ms": 1753.251,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 646.015,
+              "reader": 0,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3059.054
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  1120.252,
+                  2163.838
+                ],
+                "max_ms": 2163.838,
+                "mean_ms": 1642.045,
+                "min_ms": 1120.252,
+                "p50_ms": 2163.838,
+                "p95_ms": 2163.838,
+                "p99_ms": 2163.838,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 601.748,
+              "reader": 1,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3284.091
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  1305.8,
+                  1753.25
+                ],
+                "max_ms": 1753.25,
+                "mean_ms": 1529.525,
+                "min_ms": 1305.8,
+                "p50_ms": 1753.25,
+                "p95_ms": 1753.25,
+                "p99_ms": 1753.25,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 646.016,
+              "reader": 2,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3059.049
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  1120.101,
+                  2163.893
+                ],
+                "max_ms": 2163.893,
+                "mean_ms": 1641.997,
+                "min_ms": 1120.101,
+                "p50_ms": 2163.893,
+                "p95_ms": 2163.893,
+                "p99_ms": 2163.893,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 601.766,
+              "reader": 3,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3283.993
+            }
+          ],
+          "repetition": 1,
+          "total_bytes": 7904782592,
+          "wall_ms": 3284.091
+        },
+        {
+          "aggregate_mb_per_s": 2409.554,
+          "lock": {
+            "hold": {
+              "count": 24,
+              "max_ns": 521,
+              "mean_ns": 164.91666666666666,
+              "p50_ns": 100,
+              "p95_ns": 491,
+              "p99_ns": 521,
+              "retained_samples": 24,
+              "total_ns": 3958
+            },
+            "hold_share_of_wall": 0.0,
+            "io": {
+              "count": 285720,
+              "max_ns": 5086406,
+              "mean_ns": 45219.70207895842,
+              "p50_ns": 6672,
+              "p95_ns": 321840,
+              "p99_ns": 765107,
+              "retained_samples": 250000,
+              "total_ns": 12920173278
+            },
+            "max_demand": 2,
+            "mean_demand": 1.167,
+            "wait": {
+              "count": 24,
+              "max_ns": 892,
+              "mean_ns": 161.20833333333334,
+              "p50_ns": 40,
+              "p95_ns": 781,
+              "p99_ns": 892,
+              "retained_samples": 24,
+              "total_ns": 3869
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "per_reader": 2,
+          "process_wall_ms": 9120.873,
+          "readers": 4,
+          "readers_report": [
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  1583.099,
+                  1697.449
+                ],
+                "max_ms": 1697.449,
+                "mean_ms": 1640.274,
+                "min_ms": 1583.099,
+                "p50_ms": 1697.449,
+                "p95_ms": 1697.449,
+                "p99_ms": 1697.449,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 602.398,
+              "reader": 0,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3280.549
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  957.809,
+                  965.899
+                ],
+                "max_ms": 965.899,
+                "mean_ms": 961.854,
+                "min_ms": 957.809,
+                "p50_ms": 965.899,
+                "p95_ms": 965.899,
+                "p99_ms": 965.899,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 1027.285,
+              "reader": 1,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 1923.708
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b",
+              "latency": {
+                "all_ms": [
+                  1583.129,
+                  1697.47
+                ],
+                "max_ms": 1697.47,
+                "mean_ms": 1640.3,
+                "min_ms": 1583.129,
+                "p50_ms": 1697.47,
+                "p95_ms": 1697.47,
+                "p99_ms": 1697.47,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 602.389,
+              "reader": 2,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 3280.6
+            },
+            {
+              "bytes": 1976195648,
+              "checkpoint": "qwen0.5b-instruct",
+              "latency": {
+                "all_ms": [
+                  957.811,
+                  965.739
+                ],
+                "max_ms": 965.739,
+                "mean_ms": 961.775,
+                "min_ms": 957.811,
+                "p50_ms": 965.739,
+                "p95_ms": 965.739,
+                "p99_ms": 965.739,
+                "samples": 2
+              },
+              "logical_bytes": 988065536,
+              "mb_per_s": 1027.369,
+              "reader": 3,
+              "restores": 2,
+              "sha256_match": true,
+              "sink": "counting",
+              "wall_ms": 1923.55
+            }
+          ],
+          "repetition": 2,
+          "total_bytes": 7904782592,
+          "wall_ms": 3280.6
+        }
+      ],
+      "reps": 3,
+      "schema": "weft.family-lifecycle.readers.v1",
+      "sink": "SHA-256 hashing sink per reader: decode + backend read + hash, no host writeback",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store",
+      "workload_wall": {
+        "all_ms": [
+          6899.924,
+          7148.385,
+          9120.873
+        ],
+        "max_ms": 9120.873,
+        "mean_ms": 7723.061,
+        "min_ms": 6899.924,
+        "p50_ms": 7148.385,
+        "p95_ms": 9120.873,
+        "p99_ms": 9120.873,
+        "samples": 3
+      }
+    },
+    "restore_qwen0.5b_counting_filehash_probe1": {
+      "amdahl_cap_speedup": 3.629000744674449,
+      "checkpoint": "qwen0.5b",
+      "configurations": {
+        "threads_16_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              637.293,
+              637.997,
+              639.645
+            ],
+            "max_ms": 639.645,
+            "mean_ms": 638.312,
+            "min_ms": 637.293,
+            "p50_ms": 637.997,
+            "p95_ms": 639.645,
+            "p99_ms": 639.645,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2789.286,
+            "hold": {
+              "count": 12,
+              "max_ns": 581,
+              "mean_ns": 179.5,
+              "p50_ns": 80,
+              "p95_ns": 511,
+              "p99_ns": 581,
+              "retained_samples": 12,
+              "total_ns": 2154
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 104845,
+              "mean_ns": 4298.963670726585,
+              "p50_ns": 4218,
+              "p95_ns": 8055,
+              "p99_ns": 14006,
+              "retained_samples": 71430,
+              "total_ns": 307074975
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.088,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 659.677,
+                "elapsed_ms": 723.269,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 63.592,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.162,
+                "bytes": 28464,
+                "decode_cpu_ms": 1.127,
+                "elapsed_ms": 1.344,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.217,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.097,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.911,
+                "elapsed_ms": 26.493,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.582,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.097,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.307,
+                "elapsed_ms": 26.917,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.61,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.076,
+                "elapsed_ms": 26.586,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.511,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.272,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.511,
+                "elapsed_ms": 0.702,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.191,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.291,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.454,
+                "elapsed_ms": 0.641,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.187,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.178,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.442,
+                "elapsed_ms": 1.755,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.312,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.127,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.079,
+                "elapsed_ms": 4.674,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.595,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.28,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.537,
+                "elapsed_ms": 0.746,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.209,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2154,
+                "io_ns": 169584,
+                "thread": 0,
+                "wait_ns": 662
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22997017,
+                "thread": 41,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 23941815,
+                "thread": 42,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32408296,
+                "thread": 43,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22079149,
+                "thread": 44,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 24326037,
+                "thread": 45,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33177542,
+                "thread": 46,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21563953,
+                "thread": 47,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 23561027,
+                "thread": 48,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21791673,
+                "thread": 49,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 35141910,
+                "thread": 50,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20837470,
+                "thread": 51,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 25079502,
+                "thread": 52,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 110,
+              "mean_ns": 55.166666666666664,
+              "p50_ns": 30,
+              "p95_ns": 101,
+              "p99_ns": 110,
+              "retained_samples": 12,
+              "total_ns": 662
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1550.41,
+          "pipeline": {
+            "decode_sum_ms": 928.393,
+            "decode_wall_ms": 529.159,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 16,
+            "tasks": 290,
+            "total_ms": 630.165,
+            "transfer_ms": 240.593,
+            "worker_utilisation": 0.368,
+            "write_ms": 386.117
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 16,
+          "tile_threads": 1
+        },
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1206.599,
+              1210.856,
+              1213.239
+            ],
+            "max_ms": 1213.239,
+            "mean_ms": 1210.232,
+            "min_ms": 1206.599,
+            "p50_ms": 1210.856,
+            "p95_ms": 1213.239,
+            "p99_ms": 1213.239,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2453.763,
+            "hold": {
+              "count": 12,
+              "max_ns": 451,
+              "mean_ns": 116.25,
+              "p50_ns": 40,
+              "p95_ns": 311,
+              "p99_ns": 451,
+              "retained_samples": 12,
+              "total_ns": 1395
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 91431,
+              "mean_ns": 3275.2940641187174,
+              "p50_ns": 3787,
+              "p95_ns": 4448,
+              "p99_ns": 5460,
+              "retained_samples": 71430,
+              "total_ns": 233954255
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.078,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 630.656,
+                "elapsed_ms": 684.01,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 53.354,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.249,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.676,
+                "elapsed_ms": 0.9,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.224,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.093,
+                "bytes": 52374408,
+                "decode_cpu_ms": 19.174,
+                "elapsed_ms": 21.139,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 1.964,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 17.876,
+                "elapsed_ms": 19.724,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 1.847,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.093,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.118,
+                "elapsed_ms": 19.972,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 1.854,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.271,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.431,
+                "elapsed_ms": 0.591,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.16,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.291,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.379,
+                "elapsed_ms": 0.535,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.155,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.131,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.416,
+                "elapsed_ms": 1.63,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.214,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.108,
+                "bytes": 9662664,
+                "decode_cpu_ms": 3.976,
+                "elapsed_ms": 4.455,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.479,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.284,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.449,
+                "elapsed_ms": 0.627,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.178,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1395,
+                "io_ns": 233954255,
+                "thread": 0,
+                "wait_ns": 330
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 50,
+              "mean_ns": 27.5,
+              "p50_ns": 20,
+              "p95_ns": 50,
+              "p99_ns": 50,
+              "retained_samples": 12,
+              "total_ns": 330
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 818.884,
+          "pipeline": {
+            "decode_sum_ms": 815.905,
+            "decode_wall_ms": 815.905,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 272269312,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 290,
+            "total_ms": 1199.926,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.68,
+            "write_ms": 383.599
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              631.713,
+              635.844,
+              639.886
+            ],
+            "max_ms": 639.886,
+            "mean_ms": 635.814,
+            "min_ms": 631.713,
+            "p50_ms": 635.844,
+            "p95_ms": 639.886,
+            "p99_ms": 639.886,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2642.857,
+            "hold": {
+              "count": 12,
+              "max_ns": 791,
+              "mean_ns": 207.75,
+              "p50_ns": 60,
+              "p95_ns": 711,
+              "p99_ns": 791,
+              "retained_samples": 12,
+              "total_ns": 2493
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 85950,
+              "mean_ns": 3842.959218815624,
+              "p50_ns": 4128,
+              "p95_ns": 6221,
+              "p99_ns": 9357,
+              "retained_samples": 71430,
+              "total_ns": 274502577
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.083,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 647.303,
+                "elapsed_ms": 705.615,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 58.311,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.117,
+                "bytes": 28464,
+                "decode_cpu_ms": 1.749,
+                "elapsed_ms": 1.981,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.232,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.097,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.482,
+                "elapsed_ms": 24.887,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.405,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.101,
+                "bytes": 52374408,
+                "decode_cpu_ms": 19.188,
+                "elapsed_ms": 21.335,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.147,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.097,
+                "bytes": 52374408,
+                "decode_cpu_ms": 19.505,
+                "elapsed_ms": 21.612,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.107,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.273,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.489,
+                "elapsed_ms": 0.673,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.184,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.289,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.419,
+                "elapsed_ms": 0.59,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.171,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.159,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.454,
+                "elapsed_ms": 1.73,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.276,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.128,
+                "bytes": 9662664,
+                "decode_cpu_ms": 3.989,
+                "elapsed_ms": 4.574,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.585,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.282,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.523,
+                "elapsed_ms": 0.728,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.205,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2493,
+                "io_ns": 176708,
+                "thread": 0,
+                "wait_ns": 720
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 43445321,
+                "thread": 1,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 49300695,
+                "thread": 2,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 48482850,
+                "thread": 3,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 43109564,
+                "thread": 4,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 41850734,
+                "thread": 5,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 48136705,
+                "thread": 6,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 150,
+              "mean_ns": 60.0,
+              "p50_ns": 40,
+              "p95_ns": 120,
+              "p99_ns": 150,
+              "retained_samples": 12,
+              "total_ns": 720
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1564.106,
+          "pipeline": {
+            "decode_sum_ms": 872.561,
+            "decode_wall_ms": 543.223,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 290,
+            "total_ms": 622.794,
+            "transfer_ms": 233.775,
+            "worker_utilisation": 0.701,
+            "write_ms": 385.857
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              633.144,
+              641.699,
+              641.792
+            ],
+            "max_ms": 641.792,
+            "mean_ms": 638.878,
+            "min_ms": 633.144,
+            "p50_ms": 641.699,
+            "p95_ms": 641.792,
+            "p99_ms": 641.792,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2785.022,
+            "hold": {
+              "count": 12,
+              "max_ns": 591,
+              "mean_ns": 179.5,
+              "p50_ns": 91,
+              "p95_ns": 561,
+              "p99_ns": 591,
+              "retained_samples": 12,
+              "total_ns": 2154
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 111518,
+              "mean_ns": 4323.1515889682205,
+              "p50_ns": 4258,
+              "p95_ns": 8235,
+              "p99_ns": 14376,
+              "retained_samples": 71430,
+              "total_ns": 308802718
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.087,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 664.271,
+                "elapsed_ms": 727.557,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 63.286,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.111,
+                "bytes": 28464,
+                "decode_cpu_ms": 1.811,
+                "elapsed_ms": 2.038,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.227,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.102,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.014,
+                "elapsed_ms": 26.741,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.727,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.107,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.717,
+                "elapsed_ms": 26.556,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.839,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.11,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.864,
+                "elapsed_ms": 25.697,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.832,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.283,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.476,
+                "elapsed_ms": 0.664,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.188,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.293,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.408,
+                "elapsed_ms": 0.577,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.169,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.152,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.452,
+                "elapsed_ms": 1.712,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.26,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.127,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.022,
+                "elapsed_ms": 4.605,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.584,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.28,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.493,
+                "elapsed_ms": 0.684,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.191,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2154,
+                "io_ns": 175620,
+                "thread": 0,
+                "wait_ns": 831
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33686905,
+                "thread": 9,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22214481,
+                "thread": 10,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 24021244,
+                "thread": 11,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21190477,
+                "thread": 12,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21009511,
+                "thread": 13,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33387481,
+                "thread": 14,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 25422511,
+                "thread": 15,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 25105987,
+                "thread": 16,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33156656,
+                "thread": 17,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21348233,
+                "thread": 18,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21978498,
+                "thread": 19,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 26105114,
+                "thread": 20,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 230,
+              "mean_ns": 69.25,
+              "p50_ns": 50,
+              "p95_ns": 131,
+              "p99_ns": 230,
+              "retained_samples": 12,
+              "total_ns": 831
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1560.569,
+          "pipeline": {
+            "decode_sum_ms": 928.344,
+            "decode_wall_ms": 533.983,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 290,
+            "total_ms": 633.647,
+            "transfer_ms": 245.339,
+            "worker_utilisation": 0.366,
+            "write_ms": 385.91
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              637.631,
+              638.783,
+              638.926
+            ],
+            "max_ms": 638.926,
+            "mean_ms": 638.446,
+            "min_ms": 637.631,
+            "p50_ms": 638.783,
+            "p95_ms": 638.926,
+            "p99_ms": 638.926,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2765.308,
+            "hold": {
+              "count": 12,
+              "max_ns": 591,
+              "mean_ns": 177.0,
+              "p50_ns": 70,
+              "p95_ns": 551,
+              "p99_ns": 591,
+              "retained_samples": 12,
+              "total_ns": 2124
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 91450,
+              "mean_ns": 4224.355074898502,
+              "p50_ns": 4177,
+              "p95_ns": 8005,
+              "p99_ns": 13916,
+              "retained_samples": 71430,
+              "total_ns": 301745683
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.087,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 661.993,
+                "elapsed_ms": 725.392,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 63.398,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.195,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.904,
+                "elapsed_ms": 1.123,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.219,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.107,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.246,
+                "elapsed_ms": 26.026,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.781,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.103,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.865,
+                "elapsed_ms": 25.488,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.623,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.107,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.795,
+                "elapsed_ms": 25.525,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.73,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.272,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.508,
+                "elapsed_ms": 0.698,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.19,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.292,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.432,
+                "elapsed_ms": 0.611,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.179,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.156,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.458,
+                "elapsed_ms": 1.728,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.27,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.135,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.098,
+                "elapsed_ms": 4.736,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.638,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.289,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.47,
+                "elapsed_ms": 0.662,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.191,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2124,
+                "io_ns": 172559,
+                "thread": 0,
+                "wait_ns": 731
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22194731,
+                "thread": 25,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 34214054,
+                "thread": 26,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 23699285,
+                "thread": 27,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21622017,
+                "thread": 28,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22091216,
+                "thread": 29,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 34002645,
+                "thread": 30,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21829427,
+                "thread": 31,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22039384,
+                "thread": 32,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33044036,
+                "thread": 33,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21477459,
+                "thread": 34,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21823981,
+                "thread": 35,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 23534889,
+                "thread": 36,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 130,
+              "mean_ns": 60.916666666666664,
+              "p50_ns": 50,
+              "p95_ns": 120,
+              "p99_ns": 130,
+              "retained_samples": 12,
+              "total_ns": 731
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1549.589,
+          "pipeline": {
+            "decode_sum_ms": 920.8,
+            "decode_wall_ms": 529.776,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 290,
+            "total_ms": 630.98,
+            "transfer_ms": 241.916,
+            "worker_utilisation": 0.365,
+            "write_ms": 384.808
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "file_hash": true,
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 272269312,
+      "lock_probe_enabled": true,
+      "logical_bytes": 988065536,
+      "open_ms": 168.652,
+      "peak_rss_kib": 899764,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          551.6,
+          552.073,
+          554.883
+        ],
+        "max_ms": 554.883,
+        "mean_ms": 552.852,
+        "min_ms": 551.6,
+        "p50_ms": 552.073,
+        "p95_ms": 554.883,
+        "p99_ms": 554.883,
+        "samples": 3
+      },
+      "single_largest_tensor_lock": {
+        "elapsed_total_ms_over_tensors": 681.88,
+        "hold": {
+          "count": 6,
+          "max_ns": 661,
+          "mean_ns": 317.1666666666667,
+          "p50_ns": 521,
+          "p95_ns": 661,
+          "p99_ns": 661,
+          "retained_samples": 6,
+          "total_ns": 1903
+        },
+        "hold_share_of_wall": 0.0,
+        "hold_total_ms_over_tensors": 0.0,
+        "io": {
+          "count": 12582,
+          "max_ns": 68388,
+          "mean_ns": 4137.412652996344,
+          "p50_ns": 3988,
+          "p95_ns": 4879,
+          "p99_ns": 6482,
+          "retained_samples": 12582,
+          "total_ns": 52056926
+        },
+        "max_demand": 1,
+        "mean_demand": 1.0,
+        "tensor_rows": 1,
+        "tensors": [
+          {
+            "backend_share_of_elapsed": 0.076,
+            "bytes": 1635539784,
+            "decode_cpu_ms": 630.031,
+            "elapsed_ms": 681.88,
+            "element_bytes": 272269312,
+            "entries": 0,
+            "hold_ms": 0.0,
+            "index": 0,
+            "name": "model.embed_tokens.weight",
+            "transport_ms": 51.849,
+            "wait_ms": 0.0
+          }
+        ],
+        "threads": [
+          {
+            "entries": 6,
+            "hold_ns": 1903,
+            "io_ns": 52056926,
+            "thread": 0,
+            "wait_ns": 1031
+          }
+        ],
+        "wait": {
+          "count": 6,
+          "max_ns": 270,
+          "mean_ns": 171.83333333333334,
+          "p50_ns": 200,
+          "p95_ns": 270,
+          "p99_ns": 270,
+          "retained_samples": 6,
+          "total_ns": 1031
+        },
+        "wait_share_of_wall": 0.0
+      },
+      "sink": "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store"
+    },
+    "restore_qwen0.5b_counting_probe0": {
+      "amdahl_cap_speedup": 3.629000744674449,
+      "checkpoint": "qwen0.5b",
+      "configurations": {
+        "threads_16_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              348.721,
+              350.545,
+              352.779
+            ],
+            "max_ms": 352.779,
+            "mean_ms": 350.682,
+            "min_ms": 348.721,
+            "p50_ms": 350.545,
+            "p95_ms": 352.779,
+            "p99_ms": 352.779,
+            "samples": 3
+          },
+          "lock": null,
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2833.396,
+          "pipeline": {
+            "decode_sum_ms": 915.527,
+            "decode_wall_ms": 342.112,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 16,
+            "tasks": 290,
+            "total_ms": 342.121,
+            "transfer_ms": 340.004,
+            "worker_utilisation": 0.669,
+            "write_ms": 0.093
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 16,
+          "tile_threads": 1
+        },
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              818.611,
+              820.238,
+              820.999
+            ],
+            "max_ms": 820.999,
+            "mean_ms": 819.949,
+            "min_ms": 818.611,
+            "p50_ms": 820.238,
+            "p95_ms": 820.999,
+            "p99_ms": 820.999,
+            "samples": 3
+          },
+          "lock": null,
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1207.003,
+          "pipeline": {
+            "decode_sum_ms": 812.847,
+            "decode_wall_ms": 812.847,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 272269312,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 290,
+            "total_ms": 813.533,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.999,
+            "write_ms": 0.027
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              438.224,
+              440.093,
+              469.099
+            ],
+            "max_ms": 469.099,
+            "mean_ms": 449.139,
+            "min_ms": 438.224,
+            "p50_ms": 440.093,
+            "p95_ms": 469.099,
+            "p99_ms": 469.099,
+            "samples": 3
+          },
+          "lock": null,
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2254.702,
+          "pipeline": {
+            "decode_sum_ms": 856.064,
+            "decode_wall_ms": 429.349,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 537019904,
+            "observed_max_inflight_tasks": 102,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 290,
+            "total_ms": 430.052,
+            "transfer_ms": 426.319,
+            "worker_utilisation": 0.995,
+            "write_ms": 0.094
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              354.751,
+              359.024,
+              363.997
+            ],
+            "max_ms": 363.997,
+            "mean_ms": 359.257,
+            "min_ms": 354.751,
+            "p50_ms": 359.024,
+            "p95_ms": 363.997,
+            "p99_ms": 363.997,
+            "samples": 3
+          },
+          "lock": null,
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2785.234,
+          "pipeline": {
+            "decode_sum_ms": 920.578,
+            "decode_wall_ms": 346.419,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 290,
+            "total_ms": 346.429,
+            "transfer_ms": 344.094,
+            "worker_utilisation": 0.664,
+            "write_ms": 0.107
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              351.872,
+              354.706,
+              355.977
+            ],
+            "max_ms": 355.977,
+            "mean_ms": 354.185,
+            "min_ms": 351.872,
+            "p50_ms": 354.706,
+            "p95_ms": 355.977,
+            "p99_ms": 355.977,
+            "samples": 3
+          },
+          "lock": null,
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2808.026,
+          "pipeline": {
+            "decode_sum_ms": 928.155,
+            "decode_wall_ms": 347.855,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 290,
+            "total_ms": 348.067,
+            "transfer_ms": 344.718,
+            "worker_utilisation": 0.667,
+            "write_ms": 0.104
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "file_hash": false,
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 272269312,
+      "lock_probe_enabled": false,
+      "logical_bytes": 988065536,
+      "open_ms": 170.949,
+      "peak_rss_kib": 907808,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          553.364,
+          553.954,
+          554.902
+        ],
+        "max_ms": 554.902,
+        "mean_ms": 554.073,
+        "min_ms": 553.364,
+        "p50_ms": 553.954,
+        "p95_ms": 554.902,
+        "p99_ms": 554.902,
+        "samples": 3
+      },
+      "single_largest_tensor_lock": null,
+      "sink": "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store"
+    },
+    "restore_qwen0.5b_counting_probe1": {
+      "amdahl_cap_speedup": 3.629000744674449,
+      "checkpoint": "qwen0.5b",
+      "configurations": {
+        "threads_16_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              352.471,
+              354.326,
+              354.764
+            ],
+            "max_ms": 354.764,
+            "mean_ms": 353.854,
+            "min_ms": 352.471,
+            "p50_ms": 354.326,
+            "p95_ms": 354.764,
+            "p99_ms": 354.764,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2776.582,
+            "hold": {
+              "count": 12,
+              "max_ns": 291,
+              "mean_ns": 93.58333333333331,
+              "p50_ns": 40,
+              "p95_ns": 251,
+              "p99_ns": 291,
+              "retained_samples": 12,
+              "total_ns": 1123
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 272999,
+              "mean_ns": 4176.57473050539,
+              "p50_ns": 4088,
+              "p95_ns": 7875,
+              "p99_ns": 14417,
+              "retained_samples": 71430,
+              "total_ns": 298332733
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.088,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 657.28,
+                "elapsed_ms": 720.508,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 63.228,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.267,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.57,
+                "elapsed_ms": 0.778,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.208,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.101,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.682,
+                "elapsed_ms": 25.218,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.536,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.097,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.174,
+                "elapsed_ms": 25.673,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.499,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.106,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.407,
+                "elapsed_ms": 26.193,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.787,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.272,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.547,
+                "elapsed_ms": 0.751,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.204,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.3,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.415,
+                "elapsed_ms": 0.594,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.178,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.147,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.451,
+                "elapsed_ms": 1.701,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.251,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.124,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.181,
+                "elapsed_ms": 4.774,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.592,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.268,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.506,
+                "elapsed_ms": 0.691,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.185,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1123,
+                "io_ns": 156989,
+                "thread": 0,
+                "wait_ns": 431
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33780269,
+                "thread": 41,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22965788,
+                "thread": 42,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22857521,
+                "thread": 43,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22464426,
+                "thread": 44,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33418497,
+                "thread": 45,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21805528,
+                "thread": 46,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22187658,
+                "thread": 47,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21925445,
+                "thread": 48,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33088899,
+                "thread": 49,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21354609,
+                "thread": 50,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21718688,
+                "thread": 51,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20608416,
+                "thread": 52,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 101,
+              "mean_ns": 35.916666666666664,
+              "p50_ns": 30,
+              "p95_ns": 50,
+              "p99_ns": 101,
+              "retained_samples": 12,
+              "total_ns": 431
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2803.254,
+          "pipeline": {
+            "decode_sum_ms": 922.101,
+            "decode_wall_ms": 346.58,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 16,
+            "tasks": 290,
+            "total_ms": 346.59,
+            "transfer_ms": 343.144,
+            "worker_utilisation": 0.665,
+            "write_ms": 0.095
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 16,
+          "tile_threads": 1
+        },
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              819.697,
+              826.63,
+              826.648
+            ],
+            "max_ms": 826.648,
+            "mean_ms": 824.325,
+            "min_ms": 819.697,
+            "p50_ms": 826.63,
+            "p95_ms": 826.648,
+            "p99_ms": 826.648,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2451.104,
+            "hold": {
+              "count": 12,
+              "max_ns": 281,
+              "mean_ns": 79.33333333333333,
+              "p50_ns": 20,
+              "p95_ns": 231,
+              "p99_ns": 281,
+              "retained_samples": 12,
+              "total_ns": 952
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 92973,
+              "mean_ns": 3199.8359652806944,
+              "p50_ns": 3697,
+              "p95_ns": 4338,
+              "p99_ns": 5240,
+              "retained_samples": 71430,
+              "total_ns": 228564283
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.077,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 629.122,
+                "elapsed_ms": 681.269,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 52.147,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.259,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.621,
+                "elapsed_ms": 0.837,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.216,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.095,
+                "bytes": 52374408,
+                "decode_cpu_ms": 19.036,
+                "elapsed_ms": 21.044,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.007,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.092,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.049,
+                "elapsed_ms": 19.87,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 1.821,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.091,
+                "bytes": 52374408,
+                "decode_cpu_ms": 17.862,
+                "elapsed_ms": 19.65,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 1.787,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.274,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.424,
+                "elapsed_ms": 0.585,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.16,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.297,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.371,
+                "elapsed_ms": 0.527,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.156,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.13,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.418,
+                "elapsed_ms": 1.631,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.213,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.112,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.033,
+                "elapsed_ms": 4.544,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.511,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.276,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.42,
+                "elapsed_ms": 0.58,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.16,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 952,
+                "io_ns": 228564283,
+                "thread": 0,
+                "wait_ns": 291
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 30,
+              "mean_ns": 24.25,
+              "p50_ns": 21,
+              "p95_ns": 30,
+              "p99_ns": 30,
+              "retained_samples": 12,
+              "total_ns": 291
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 1205.403,
+          "pipeline": {
+            "decode_sum_ms": 819.534,
+            "decode_wall_ms": 819.534,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 272269312,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 290,
+            "total_ms": 819.98,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.999,
+            "write_ms": 0.029
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              435.587,
+              440.267,
+              448.017
+            ],
+            "max_ms": 448.017,
+            "mean_ms": 441.29,
+            "min_ms": 435.587,
+            "p50_ms": 440.267,
+            "p95_ms": 448.017,
+            "p99_ms": 448.017,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2595.26,
+            "hold": {
+              "count": 12,
+              "max_ns": 351,
+              "mean_ns": 94.41666666666669,
+              "p50_ns": 30,
+              "p95_ns": 331,
+              "p99_ns": 351,
+              "retained_samples": 12,
+              "total_ns": 1133
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 234287,
+              "mean_ns": 3656.1316393672128,
+              "p50_ns": 3928,
+              "p95_ns": 5690,
+              "p99_ns": 8957,
+              "retained_samples": 71430,
+              "total_ns": 261157483
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.08,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 648.717,
+                "elapsed_ms": 705.224,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 56.508,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.256,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.573,
+                "elapsed_ms": 0.771,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.198,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.104,
+                "bytes": 52374408,
+                "decode_cpu_ms": 20.819,
+                "elapsed_ms": 23.225,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.406,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.1,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.818,
+                "elapsed_ms": 20.899,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.081,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.092,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.882,
+                "elapsed_ms": 20.802,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 1.92,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.282,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.488,
+                "elapsed_ms": 0.68,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.191,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.297,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.411,
+                "elapsed_ms": 0.585,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.174,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.148,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.432,
+                "elapsed_ms": 1.68,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.248,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.129,
+                "bytes": 9662664,
+                "decode_cpu_ms": 3.969,
+                "elapsed_ms": 4.558,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.589,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.285,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.459,
+                "elapsed_ms": 0.642,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.183,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1133,
+                "io_ns": 149085,
+                "thread": 0,
+                "wait_ns": 420
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 47836106,
+                "thread": 1,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 40723960,
+                "thread": 2,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 41167272,
+                "thread": 3,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 46873875,
+                "thread": 4,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 38662742,
+                "thread": 5,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 45744443,
+                "thread": 6,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 70,
+              "mean_ns": 35.0,
+              "p50_ns": 30,
+              "p95_ns": 50,
+              "p99_ns": 70,
+              "retained_samples": 12,
+              "total_ns": 420
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2268.354,
+          "pipeline": {
+            "decode_sum_ms": 852.476,
+            "decode_wall_ms": 427.79,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 537019904,
+            "observed_max_inflight_tasks": 102,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 290,
+            "total_ms": 427.799,
+            "transfer_ms": 424.875,
+            "worker_utilisation": 0.996,
+            "write_ms": 0.086
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              349.948,
+              350.478,
+              350.815
+            ],
+            "max_ms": 350.815,
+            "mean_ms": 350.414,
+            "min_ms": 349.948,
+            "p50_ms": 350.478,
+            "p95_ms": 350.815,
+            "p99_ms": 350.815,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2763.154,
+            "hold": {
+              "count": 12,
+              "max_ns": 401,
+              "mean_ns": 102.83333333333331,
+              "p50_ns": 20,
+              "p95_ns": 331,
+              "p99_ns": 401,
+              "retained_samples": 12,
+              "total_ns": 1234
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 468033,
+              "mean_ns": 4181.886770264595,
+              "p50_ns": 4087,
+              "p95_ns": 7764,
+              "p99_ns": 14507,
+              "retained_samples": 71430,
+              "total_ns": 298712172
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.087,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 651.998,
+                "elapsed_ms": 713.903,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 61.906,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.383,
+                "bytes": 28464,
+                "decode_cpu_ms": 1.089,
+                "elapsed_ms": 1.763,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.674,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.095,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.663,
+                "elapsed_ms": 26.156,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.493,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.095,
+                "bytes": 52374408,
+                "decode_cpu_ms": 25.056,
+                "elapsed_ms": 27.676,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.62,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.104,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.557,
+                "elapsed_ms": 25.186,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.628,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.273,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.582,
+                "elapsed_ms": 0.8,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.219,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.291,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.424,
+                "elapsed_ms": 0.598,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.174,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.15,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.454,
+                "elapsed_ms": 1.71,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.256,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.127,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.054,
+                "elapsed_ms": 4.645,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.591,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.288,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.47,
+                "elapsed_ms": 0.66,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.19,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1234,
+                "io_ns": 156871,
+                "thread": 0,
+                "wait_ns": 431
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33680810,
+                "thread": 9,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22708983,
+                "thread": 10,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21815348,
+                "thread": 11,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21076549,
+                "thread": 12,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 34081344,
+                "thread": 13,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21793826,
+                "thread": 14,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21816740,
+                "thread": 15,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21497841,
+                "thread": 16,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32390676,
+                "thread": 17,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22296642,
+                "thread": 18,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22442547,
+                "thread": 19,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22953995,
+                "thread": 20,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 70,
+              "mean_ns": 35.916666666666664,
+              "p50_ns": 30,
+              "p95_ns": 60,
+              "p99_ns": 70,
+              "retained_samples": 12,
+              "total_ns": 431
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2823.468,
+          "pipeline": {
+            "decode_sum_ms": 917.682,
+            "decode_wall_ms": 342.3,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 290,
+            "total_ms": 342.309,
+            "transfer_ms": 339.79,
+            "worker_utilisation": 0.67,
+            "write_ms": 0.1
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              351.561,
+              351.748,
+              353.436
+            ],
+            "max_ms": 353.436,
+            "mean_ms": 352.248,
+            "min_ms": 351.561,
+            "p50_ms": 351.748,
+            "p95_ms": 353.436,
+            "p99_ms": 353.436,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2766.857,
+            "hold": {
+              "count": 12,
+              "max_ns": 330,
+              "mean_ns": 93.41666666666669,
+              "p50_ns": 30,
+              "p95_ns": 280,
+              "p99_ns": 330,
+              "retained_samples": 12,
+              "total_ns": 1121
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 198901,
+              "mean_ns": 4153.192720145597,
+              "p50_ns": 4077,
+              "p95_ns": 7975,
+              "p99_ns": 14197,
+              "retained_samples": 71430,
+              "total_ns": 296662556
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.088,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 657.197,
+                "elapsed_ms": 720.378,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 63.181,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.28,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.539,
+                "elapsed_ms": 0.749,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.21,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.104,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.72,
+                "elapsed_ms": 26.471,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.751,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.1,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.739,
+                "elapsed_ms": 26.39,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.651,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.092,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.14,
+                "elapsed_ms": 26.582,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.442,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.273,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.47,
+                "elapsed_ms": 0.647,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.177,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.301,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.417,
+                "elapsed_ms": 0.596,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.179,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.147,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.44,
+                "elapsed_ms": 1.689,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.249,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.125,
+                "bytes": 9662664,
+                "decode_cpu_ms": 3.996,
+                "elapsed_ms": 4.567,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.571,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.285,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.481,
+                "elapsed_ms": 0.673,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.192,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1121,
+                "io_ns": 147035,
+                "thread": 0,
+                "wait_ns": 490
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32800911,
+                "thread": 25,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21382108,
+                "thread": 26,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22312835,
+                "thread": 27,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22118545,
+                "thread": 28,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33838038,
+                "thread": 29,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21564840,
+                "thread": 30,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21822468,
+                "thread": 31,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21597803,
+                "thread": 32,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33427991,
+                "thread": 33,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22047026,
+                "thread": 34,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21499578,
+                "thread": 35,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22103378,
+                "thread": 36,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 70,
+              "mean_ns": 40.833333333333336,
+              "p50_ns": 40,
+              "p95_ns": 60,
+              "p99_ns": 70,
+              "retained_samples": 12,
+              "total_ns": 490
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 2810.512,
+          "pipeline": {
+            "decode_sum_ms": 921.77,
+            "decode_wall_ms": 345.7,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 290,
+            "total_ms": 345.713,
+            "transfer_ms": 342.657,
+            "worker_utilisation": 0.667,
+            "write_ms": 0.107
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": false,
+            "file_sha256": "a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "file_hash": false,
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 272269312,
+      "lock_probe_enabled": true,
+      "logical_bytes": 988065536,
+      "open_ms": 168.762,
+      "peak_rss_kib": 895956,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          550.34,
+          550.523,
+          551.173
+        ],
+        "max_ms": 551.173,
+        "mean_ms": 550.679,
+        "min_ms": 550.34,
+        "p50_ms": 550.523,
+        "p95_ms": 551.173,
+        "p99_ms": 551.173,
+        "samples": 3
+      },
+      "single_largest_tensor_lock": {
+        "elapsed_total_ms_over_tensors": 675.408,
+        "hold": {
+          "count": 6,
+          "max_ns": 652,
+          "mean_ns": 337.3333333333333,
+          "p50_ns": 541,
+          "p95_ns": 652,
+          "p99_ns": 652,
+          "retained_samples": 6,
+          "total_ns": 2024
+        },
+        "hold_share_of_wall": 0.0,
+        "hold_total_ms_over_tensors": 0.0,
+        "io": {
+          "count": 12582,
+          "max_ns": 66995,
+          "mean_ns": 4192.596248609124,
+          "p50_ns": 4037,
+          "p95_ns": 4739,
+          "p99_ns": 7144,
+          "retained_samples": 12582,
+          "total_ns": 52751246
+        },
+        "max_demand": 1,
+        "mean_demand": 1.0,
+        "tensor_rows": 1,
+        "tensors": [
+          {
+            "backend_share_of_elapsed": 0.078,
+            "bytes": 1635539784,
+            "decode_cpu_ms": 622.871,
+            "elapsed_ms": 675.408,
+            "element_bytes": 272269312,
+            "entries": 0,
+            "hold_ms": 0.0,
+            "index": 0,
+            "name": "model.embed_tokens.weight",
+            "transport_ms": 52.537,
+            "wait_ms": 0.0
+          }
+        ],
+        "threads": [
+          {
+            "entries": 6,
+            "hold_ns": 2024,
+            "io_ns": 52751246,
+            "thread": 0,
+            "wait_ns": 931
+          }
+        ],
+        "wait": {
+          "count": 6,
+          "max_ns": 360,
+          "mean_ns": 155.16666666666666,
+          "p50_ns": 200,
+          "p95_ns": 360,
+          "p99_ns": 360,
+          "retained_samples": 6,
+          "total_ns": 931
+        },
+        "wait_share_of_wall": 0.0
+      },
+      "sink": "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store"
+    },
+    "restore_qwen0.5b_sha256_probe1": {
+      "amdahl_cap_speedup": 3.629000744674449,
+      "checkpoint": "qwen0.5b",
+      "configurations": {
+        "threads_16_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1403.298,
+              1405.141,
+              1406.734
+            ],
+            "max_ms": 1406.734,
+            "mean_ms": 1405.058,
+            "min_ms": 1403.298,
+            "p50_ms": 1405.141,
+            "p95_ms": 1406.734,
+            "p99_ms": 1406.734,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2758.617,
+            "hold": {
+              "count": 12,
+              "max_ns": 601,
+              "mean_ns": 163.66666666666666,
+              "p50_ns": 40,
+              "p95_ns": 521,
+              "p99_ns": 601,
+              "retained_samples": 12,
+              "total_ns": 1964
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 211284,
+              "mean_ns": 4072.0142237155255,
+              "p50_ns": 4168,
+              "p95_ns": 6983,
+              "p99_ns": 11411,
+              "retained_samples": 71430,
+              "total_ns": 290863976
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.089,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 661.783,
+                "elapsed_ms": 726.749,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 64.966,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.397,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.659,
+                "elapsed_ms": 1.094,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.435,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.103,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.632,
+                "elapsed_ms": 25.239,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.606,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.1,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.796,
+                "elapsed_ms": 26.432,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.636,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.113,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.895,
+                "elapsed_ms": 25.813,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.918,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.278,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.474,
+                "elapsed_ms": 0.656,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.182,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.301,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.406,
+                "elapsed_ms": 0.58,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.175,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.142,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.445,
+                "elapsed_ms": 1.685,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.24,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.121,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.211,
+                "elapsed_ms": 4.793,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.582,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.283,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.534,
+                "elapsed_ms": 0.744,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.21,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1964,
+                "io_ns": 186797,
+                "thread": 0,
+                "wait_ns": 790
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32426650,
+                "thread": 31,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22254225,
+                "thread": 32,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21111853,
+                "thread": 33,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21364368,
+                "thread": 34,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33741483,
+                "thread": 35,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20641163,
+                "thread": 36,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20535519,
+                "thread": 37,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21462337,
+                "thread": 38,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20766910,
+                "thread": 39,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33274559,
+                "thread": 40,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21241573,
+                "thread": 41,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21856539,
+                "thread": 42,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 140,
+              "mean_ns": 65.83333333333333,
+              "p50_ns": 60,
+              "p95_ns": 110,
+              "p99_ns": 140,
+              "retained_samples": 12,
+              "total_ns": 790
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 704.102,
+          "pipeline": {
+            "decode_sum_ms": 918.8,
+            "decode_wall_ms": 1083.704,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 16,
+            "tasks": 290,
+            "total_ms": 1395.466,
+            "transfer_ms": 240.691,
+            "worker_utilisation": 0.165,
+            "write_ms": 1151.699
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 16,
+          "tile_threads": 1
+        },
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1971.125,
+              1971.884,
+              1972.604
+            ],
+            "max_ms": 1972.604,
+            "mean_ms": 1971.871,
+            "min_ms": 1971.125,
+            "p50_ms": 1971.884,
+            "p95_ms": 1972.604,
+            "p99_ms": 1972.604,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2446.158,
+            "hold": {
+              "count": 12,
+              "max_ns": 311,
+              "mean_ns": 96.91666666666669,
+              "p50_ns": 40,
+              "p95_ns": 310,
+              "p99_ns": 311,
+              "retained_samples": 12,
+              "total_ns": 1163
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 84077,
+              "mean_ns": 3249.848341033179,
+              "p50_ns": 3787,
+              "p95_ns": 4448,
+              "p99_ns": 5209,
+              "retained_samples": 71430,
+              "total_ns": 232136667
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.075,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 624.539,
+                "elapsed_ms": 675.526,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 50.986,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.255,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.628,
+                "elapsed_ms": 0.843,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.215,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 19.177,
+                "elapsed_ms": 21.175,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 1.997,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.102,
+                "bytes": 52374408,
+                "decode_cpu_ms": 17.829,
+                "elapsed_ms": 19.848,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.019,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 17.938,
+                "elapsed_ms": 19.806,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 1.868,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.277,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.433,
+                "elapsed_ms": 0.598,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.166,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.292,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.376,
+                "elapsed_ms": 0.531,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.155,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.135,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.417,
+                "elapsed_ms": 1.639,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.221,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.106,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.15,
+                "elapsed_ms": 4.643,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.492,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.277,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.429,
+                "elapsed_ms": 0.593,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.164,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1163,
+                "io_ns": 232136667,
+                "thread": 0,
+                "wait_ns": 400
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 60,
+              "mean_ns": 33.333333333333336,
+              "p50_ns": 30,
+              "p95_ns": 50,
+              "p99_ns": 60,
+              "retained_samples": 12,
+              "total_ns": 400
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 501.27,
+          "pipeline": {
+            "decode_sum_ms": 815.46,
+            "decode_wall_ms": 815.46,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 272269312,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 290,
+            "total_ms": 1965.154,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.415,
+            "write_ms": 1149.28
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1400.294,
+              1407.908,
+              1409.189
+            ],
+            "max_ms": 1409.189,
+            "mean_ms": 1405.797,
+            "min_ms": 1400.294,
+            "p50_ms": 1407.908,
+            "p95_ms": 1409.189,
+            "p99_ms": 1409.189,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2637.105,
+            "hold": {
+              "count": 12,
+              "max_ns": 581,
+              "mean_ns": 171.16666666666666,
+              "p50_ns": 40,
+              "p95_ns": 541,
+              "p99_ns": 581,
+              "retained_samples": 12,
+              "total_ns": 2054
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 82514,
+              "mean_ns": 3839.7658266834665,
+              "p50_ns": 4117,
+              "p95_ns": 6021,
+              "p99_ns": 8927,
+              "retained_samples": 71430,
+              "total_ns": 274274473
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.083,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 646.072,
+                "elapsed_ms": 704.445,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 58.374,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.253,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.639,
+                "elapsed_ms": 0.856,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.217,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.099,
+                "bytes": 52374408,
+                "decode_cpu_ms": 21.126,
+                "elapsed_ms": 23.438,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.312,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.101,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.784,
+                "elapsed_ms": 20.889,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.106,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.092,
+                "bytes": 52374408,
+                "decode_cpu_ms": 18.574,
+                "elapsed_ms": 20.467,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 1.893,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.275,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.473,
+                "elapsed_ms": 0.652,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.179,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.294,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.412,
+                "elapsed_ms": 0.585,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.172,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.147,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.439,
+                "elapsed_ms": 1.686,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.247,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.131,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.003,
+                "elapsed_ms": 4.605,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.602,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.289,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.459,
+                "elapsed_ms": 0.645,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.187,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2054,
+                "io_ns": 177851,
+                "thread": 0,
+                "wait_ns": 661
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 41685173,
+                "thread": 1,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 48753911,
+                "thread": 2,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 49069437,
+                "thread": 3,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 42927174,
+                "thread": 4,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 48972125,
+                "thread": 5,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 42688802,
+                "thread": 6,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 111,
+              "mean_ns": 55.083333333333336,
+              "p50_ns": 40,
+              "p95_ns": 110,
+              "p99_ns": 111,
+              "retained_samples": 12,
+              "total_ns": 661
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 705.613,
+          "pipeline": {
+            "decode_sum_ms": 875.562,
+            "decode_wall_ms": 1084.991,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 290,
+            "total_ms": 1399.978,
+            "transfer_ms": 235.078,
+            "worker_utilisation": 0.313,
+            "write_ms": 1162.238
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1401.239,
+              1408.681,
+              1411.091
+            ],
+            "max_ms": 1411.091,
+            "mean_ms": 1407.004,
+            "min_ms": 1401.239,
+            "p50_ms": 1408.681,
+            "p95_ms": 1411.091,
+            "p99_ms": 1411.091,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2748.323,
+            "hold": {
+              "count": 12,
+              "max_ns": 662,
+              "mean_ns": 183.66666666666663,
+              "p50_ns": 120,
+              "p95_ns": 541,
+              "p99_ns": 662,
+              "retained_samples": 12,
+              "total_ns": 2204
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 109094,
+              "mean_ns": 4043.8713705725886,
+              "p50_ns": 4178,
+              "p95_ns": 6783,
+              "p99_ns": 10930,
+              "retained_samples": 71430,
+              "total_ns": 288853732
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.087,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 654.732,
+                "elapsed_ms": 717.331,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 62.6,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.258,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.622,
+                "elapsed_ms": 0.838,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.216,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.541,
+                "elapsed_ms": 27.089,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.548,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.1,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.774,
+                "elapsed_ms": 27.527,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.754,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.103,
+                "bytes": 52374408,
+                "decode_cpu_ms": 21.948,
+                "elapsed_ms": 24.475,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.527,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.287,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.483,
+                "elapsed_ms": 0.678,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.195,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.307,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.427,
+                "elapsed_ms": 0.617,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.19,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.166,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.443,
+                "elapsed_ms": 1.731,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.288,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.128,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.17,
+                "elapsed_ms": 4.781,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.611,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.285,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.517,
+                "elapsed_ms": 0.724,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.206,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 2204,
+                "io_ns": 174716,
+                "thread": 0,
+                "wait_ns": 780
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 33170425,
+                "thread": 7,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21915538,
+                "thread": 8,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21083952,
+                "thread": 9,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20833275,
+                "thread": 10,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21799151,
+                "thread": 11,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32599958,
+                "thread": 12,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20765357,
+                "thread": 13,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20958408,
+                "thread": 14,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20653833,
+                "thread": 15,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 31542818,
+                "thread": 16,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22460871,
+                "thread": 17,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20895430,
+                "thread": 18,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 140,
+              "mean_ns": 65.0,
+              "p50_ns": 40,
+              "p95_ns": 130,
+              "p99_ns": 140,
+              "retained_samples": 12,
+              "total_ns": 780
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 705.137,
+          "pipeline": {
+            "decode_sum_ms": 915.747,
+            "decode_wall_ms": 1085.276,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 290,
+            "total_ms": 1400.846,
+            "transfer_ms": 238.813,
+            "worker_utilisation": 0.163,
+            "write_ms": 1158.297
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 3.629000744674449,
+          "backend_bytes_read_last_rep": 992589671,
+          "backend_requests_last_rep": 23810,
+          "decode_bytes_last_rep": 988065536,
+          "largest_tensor_bytes": 272269312,
+          "latency": {
+            "all_ms": [
+              1404.356,
+              1406.546,
+              1408.339
+            ],
+            "max_ms": 1408.339,
+            "mean_ms": 1406.414,
+            "min_ms": 1404.356,
+            "p50_ms": 1406.546,
+            "p95_ms": 1408.339,
+            "p99_ms": 1408.339,
+            "samples": 3
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 2760.952,
+            "hold": {
+              "count": 12,
+              "max_ns": 531,
+              "mean_ns": 155.25,
+              "p50_ns": 40,
+              "p95_ns": 501,
+              "p99_ns": 531,
+              "retained_samples": 12,
+              "total_ns": 1863
+            },
+            "hold_share_of_wall": 0.0,
+            "hold_total_ms_over_tensors": 0.0,
+            "io": {
+              "count": 71430,
+              "max_ns": 99505,
+              "mean_ns": 4059.0939241215174,
+              "p50_ns": 4178,
+              "p95_ns": 6933,
+              "p99_ns": 11241,
+              "retained_samples": 71430,
+              "total_ns": 289941079
+            },
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 290,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.089,
+                "bytes": 1635539784,
+                "decode_cpu_ms": 658.536,
+                "elapsed_ms": 722.668,
+                "element_bytes": 272269312,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "transport_ms": 64.131,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.264,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.621,
+                "elapsed_ms": 0.844,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 1,
+                "name": "model.layers.0.input_layernorm.weight",
+                "transport_ms": 0.223,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.101,
+                "bytes": 52374408,
+                "decode_cpu_ms": 24.275,
+                "elapsed_ms": 27.012,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 2,
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "transport_ms": 2.737,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.094,
+                "bytes": 52374408,
+                "decode_cpu_ms": 23.171,
+                "elapsed_ms": 25.584,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 3,
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "transport_ms": 2.413,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.1,
+                "bytes": 52374408,
+                "decode_cpu_ms": 22.151,
+                "elapsed_ms": 24.62,
+                "element_bytes": 8716288,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 4,
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "transport_ms": 2.469,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.271,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.504,
+                "elapsed_ms": 0.691,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 5,
+                "name": "model.layers.0.post_attention_layernorm.weight",
+                "transport_ms": 0.187,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.284,
+                "bytes": 19032,
+                "decode_cpu_ms": 0.453,
+                "elapsed_ms": 0.633,
+                "element_bytes": 256,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 6,
+                "name": "model.layers.0.self_attn.k_proj.bias",
+                "transport_ms": 0.18,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.14,
+                "bytes": 1394184,
+                "decode_cpu_ms": 1.44,
+                "elapsed_ms": 1.675,
+                "element_bytes": 229376,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 7,
+                "name": "model.layers.0.self_attn.k_proj.weight",
+                "transport_ms": 0.235,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.126,
+                "bytes": 9662664,
+                "decode_cpu_ms": 4.091,
+                "elapsed_ms": 4.678,
+                "element_bytes": 1605632,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 8,
+                "name": "model.layers.0.self_attn.o_proj.weight",
+                "transport_ms": 0.587,
+                "wait_ms": 0.0
+              },
+              {
+                "backend_share_of_elapsed": 0.278,
+                "bytes": 28464,
+                "decode_cpu_ms": 0.462,
+                "elapsed_ms": 0.641,
+                "element_bytes": 1792,
+                "entries": 0,
+                "hold_ms": 0.0,
+                "index": 9,
+                "name": "model.layers.0.self_attn.q_proj.bias",
+                "transport_ms": 0.178,
+                "wait_ms": 0.0
+              }
+            ],
+            "threads": [
+              {
+                "entries": 12,
+                "hold_ns": 1863,
+                "io_ns": 185144,
+                "thread": 0,
+                "wait_ns": 611
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21255882,
+                "thread": 19,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32413600,
+                "thread": 20,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21877951,
+                "thread": 21,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 22459323,
+                "thread": 22,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21775666,
+                "thread": 23,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32478973,
+                "thread": 24,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21429342,
+                "thread": 25,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20706870,
+                "thread": 26,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21136286,
+                "thread": 27,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 32133018,
+                "thread": 28,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 20852194,
+                "thread": 29,
+                "wait_ns": 0
+              },
+              {
+                "entries": 0,
+                "hold_ns": 0,
+                "io_ns": 21236830,
+                "thread": 30,
+                "wait_ns": 0
+              }
+            ],
+            "wait": {
+              "count": 12,
+              "max_ns": 130,
+              "mean_ns": 50.916666666666664,
+              "p50_ns": 30,
+              "p95_ns": 100,
+              "p99_ns": 130,
+              "retained_samples": 12,
+              "total_ns": 611
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 988065536,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 703.572,
+          "pipeline": {
+            "decode_sum_ms": 916.494,
+            "decode_wall_ms": 1084.942,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 540694016,
+            "observed_max_inflight_tasks": 110,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 290,
+            "total_ms": 1396.547,
+            "transfer_ms": 240.685,
+            "worker_utilisation": 0.164,
+            "write_ms": 1152.384
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 988097824,
+            "exact_source_file": true,
+            "file_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+            "header_reproduced": true,
+            "manifest_root": "c38606109d3812c38fb5b40a362c107cf28b61d9ce548ee41aec93729f19b049",
+            "shards_read": 2320,
+            "tasks": 290,
+            "units_touched": 2320
+          },
+          "tensors": 290,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "file_hash": false,
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 272269312,
+      "lock_probe_enabled": true,
+      "logical_bytes": 988065536,
+      "open_ms": 165.607,
+      "peak_rss_kib": 901840,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          550.183,
+          551.47,
+          552.548
+        ],
+        "max_ms": 552.548,
+        "mean_ms": 551.4,
+        "min_ms": 550.183,
+        "p50_ms": 551.47,
+        "p95_ms": 552.548,
+        "p99_ms": 552.548,
+        "samples": 3
+      },
+      "single_largest_tensor_lock": {
+        "elapsed_total_ms_over_tensors": 677.582,
+        "hold": {
+          "count": 6,
+          "max_ns": 661,
+          "mean_ns": 278.8333333333333,
+          "p50_ns": 220,
+          "p95_ns": 661,
+          "p99_ns": 661,
+          "retained_samples": 6,
+          "total_ns": 1673
+        },
+        "hold_share_of_wall": 0.0,
+        "hold_total_ms_over_tensors": 0.0,
+        "io": {
+          "count": 12582,
+          "max_ns": 66524,
+          "mean_ns": 4149.555952948657,
+          "p50_ns": 3997,
+          "p95_ns": 4699,
+          "p99_ns": 6933,
+          "retained_samples": 12582,
+          "total_ns": 52209713
+        },
+        "max_demand": 1,
+        "mean_demand": 1.0,
+        "tensor_rows": 1,
+        "tensors": [
+          {
+            "backend_share_of_elapsed": 0.077,
+            "bytes": 1635539784,
+            "decode_cpu_ms": 625.577,
+            "elapsed_ms": 677.582,
+            "element_bytes": 272269312,
+            "entries": 0,
+            "hold_ms": 0.0,
+            "index": 0,
+            "name": "model.embed_tokens.weight",
+            "transport_ms": 52.005,
+            "wait_ms": 0.0
+          }
+        ],
+        "threads": [
+          {
+            "entries": 6,
+            "hold_ns": 1673,
+            "io_ns": 52209713,
+            "thread": 0,
+            "wait_ns": 992
+          }
+        ],
+        "wait": {
+          "count": 6,
+          "max_ns": 240,
+          "mean_ns": 165.33333333333334,
+          "p50_ns": 201,
+          "p95_ns": 240,
+          "p99_ns": 240,
+          "retained_samples": 6,
+          "total_ns": 992
+        },
+        "wait_share_of_wall": 0.0
+      },
+      "sink": "SHA-256 hashing sink: decode + backend read + hash, no host writeback",
+      "store": "/work/.docker-cache/restore-scaling-20261111T075701Z/qwen0.5b/store"
+    }
+  },
+  "label": "ordered checkpoint restore scaling with the backend-lock probe (families: qwen0.5b; threads: 1 2 4 8 16; tile threads: 1; reps: 3; shards: 8; minio: 0)",
+  "labels": [
+    "Single host, warm page cache, one run per configuration unless the inner receipt says otherwise; no fleet, media, power-loss, or cloud claim.",
+    "Phase totals are wall-clock sums across every thread and are not a partition of wall time; unmeasured time is the residual.",
+    "Restore throughput is measured with a SHA-256 hashing sink, so it is decode + backend read + hash, not host writeback."
+  ],
+  "peak_rss_kib": 4804,
+  "phase": "throughput",
+  "revisions": {
+    "weftcodec": "301ea653a6d25e9feafa2fb074bfc3545aaf2042",
+    "weftcodec_go": "6fd2097963299119bb1c21dd48f16d19004ff34d",
+    "weftfs": "1d1b28c930797e787e1baf4c92ff2907135bff2e",
+    "weftfs_go": "afbd40303a62e2ab4e5107f52cb2f1874d63f4d3"
+  },
+  "schema": "weft.throughput-court.v1"
+}

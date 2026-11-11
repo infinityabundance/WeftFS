@@ -1,0 +1,12 @@
+restore_scaling_3b: scripts/docker-court.sh bench (inline 3B restore-only, after increment 2)
+corpus sha256:
+52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab  .docker-cache/real-corpus/Qwen2.5-3B.safetensors
+== probe=0 counting (store only) ==
+.docker-cache/restore-3b-20261111T080500Z/r-count-p0.json
+== probe=1 counting (store only) ==
+.docker-cache/restore-3b-20261111T080500Z/r-count-p1.json
+== probe=1 counting + whole-file SHA ==
+.docker-cache/restore-3b-20261111T080500Z/r-count-fh-p1.json
+== exactness, 2 workers, full SHA ==
+.docker-cache/restore-3b-20261111T080500Z/r-sha-p1.json
+bench/receipts/restore-scaling-3b-after-20261111T080500Z.json

@@ -1,0 +1,14 @@
+restore_scaling_minio: starting MinIO
+restore_scaling_minio: MinIO up pid=12
+== minio checkpoint qwen0.5b ==
+/work/.docker-cache/restore-minio-20261111T084500Z/qwen0.5b/checkpoint.json
+== minio restore qwen0.5b threads=1,2,4,8 probe=0 sink=counting ==
+/work/.docker-cache/restore-minio-20261111T084500Z/qwen0.5b/restore-counting-probe0.json
+== minio restore qwen0.5b threads=1,2,4,8 probe=1 sink=counting ==
+/work/.docker-cache/restore-minio-20261111T084500Z/qwen0.5b/restore-counting-probe1.json
+== minio restore qwen0.5b exactness (sha256 sink) ==
+/work/.docker-cache/restore-minio-20261111T084500Z/qwen0.5b/restore-sha256.json
+== minio independent readers qwen0.5b ==
+/work/.docker-cache/restore-minio-20261111T084500Z/qwen0.5b/readers.json
+/work/.docker-cache/restore-minio-20261111T084500Z/minio.json
+restore_scaling_minio: receipt /work/.docker-cache/restore-minio-20261111T084500Z/minio.json
