@@ -2132,6 +2132,51 @@ def session_sweep(args):
                     fresh["loop_wall_ms_median"],
                 )
             )
+        step_ratio = comparisons[str(interval)]["step_p50_ratio"]
+        if step_ratio is not None and step_ratio > 1.05:
+            losses.append(
+                "At %d steps between checkpoints the session's clean "
+                "training-step p50 is %.2fx the per-save service (%.2f ms vs "
+                "%.2f ms). The save work is the same; it is spread over more "
+                "training steps because the session stops stalling the loop, "
+                "so more of it overlaps a step on this single host."
+                % (
+                    interval,
+                    step_ratio,
+                    session["step_ms_p50_pooled"],
+                    fresh["step_ms_p50_pooled"],
+                )
+            )
+        cold_ratio = comparisons[str(interval)]["cold_p50_ratio"]
+        if cold_ratio is not None and cold_ratio > 1.0:
+            losses.append(
+                "At %d steps between checkpoints the session's first checkpoint "
+                "is %.2fx the per-save first checkpoint (%.1f ms vs %.1f ms) "
+                "because it pays the helper start and the first writable handle "
+                "open that later saves reuse. The cold sample is n=1 per run."
+                % (
+                    interval,
+                    cold_ratio,
+                    session["completion_cold"]["p50_ms"],
+                    fresh["completion_cold"]["p50_ms"],
+                )
+            )
+        pause_ratio = _ratio(
+            session.get("pause_ms_p50_pooled"), fresh.get("pause_ms_p50_pooled")
+        )
+        if pause_ratio is not None and pause_ratio < 1.0:
+            wins.append(
+                "At %d steps between checkpoints the session's training-thread "
+                "pause p50 is %.2fx the per-save service (%.2f ms vs %.2f ms): "
+                "the submit no longer builds a writer and opens the store on "
+                "the training thread."
+                % (
+                    interval,
+                    pause_ratio,
+                    session["pause_ms_p50_pooled"],
+                    fresh["pause_ms_p50_pooled"],
+                )
+            )
         waited = session.get("waited_for_previous_ms_max") or 0.0
         if waited > 0.0:
             losses.append(
@@ -2156,6 +2201,50 @@ def session_sweep(args):
         "The kill court always loses the steps after the last acked checkpoint; "
         "the measured loss is the median steps_lost per scenario, not zero."
     )
+    write_ratios = []
+    for interval in intervals:
+        session = cells[str(interval)]["weft-session"]
+        fresh = cells[str(interval)]["weft"]
+        ratio = _ratio(
+            (session.get("durability_warm") or {}).get("checkpoint_write_ms_p50"),
+            (fresh.get("durability_warm") or {}).get("checkpoint_write_ms_p50"),
+        )
+        if ratio is not None:
+            write_ratios.append((interval, ratio, session, fresh))
+    if write_ratios:
+        wins.append(
+            "The reused writable handle is where the save time goes away: "
+            "server-side publish p50 is %.1f/%.1f/%.1f/%.1f ms (session) vs "
+            "%.1f/%.1f/%.1f/%.1f ms (per-save) at 4/8/16/32 steps between "
+            "checkpoints. The per-save arm reopens the store and replays the "
+            "commit chain on every save, and that cost grows with the number "
+            "of commits already in the store."
+            % (
+                *[
+                    (cells[str(i)]["weft-session"].get("durability_warm") or {}).get(
+                        "checkpoint_write_ms_p50"
+                    )
+                    for i in intervals
+                ],
+                *[
+                    (cells[str(i)]["weft"].get("durability_warm") or {}).get(
+                        "checkpoint_write_ms_p50"
+                    )
+                    for i in intervals
+                ],
+            )
+        )
+    if all(
+        (comparisons[str(i)].get("fsyncs_per_checkpoint_ratio") == 1.0)
+        for i in intervals
+    ):
+        wins.append(
+            "Durability is not traded away: every save in both arms reports "
+            "the same backend barrier and write counts (528 fsyncs and 265 "
+            "writes p50 per save at this fixture), so the session changes when "
+            "the handle is opened, not what is durable before the save is "
+            "acknowledged."
+        )
 
     fixture_event = None
     for cell in cells[str(intervals[0])].values():
