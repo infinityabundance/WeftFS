@@ -844,10 +844,6 @@ def _wcb_text_fragment(value, limits):
     return fragment
 
 
-def _wcb_header(tag, count, limits):
-    return bytes((tag,)) + varint.encode_bytes(count)
-
-
 def _count_items(value):
     """Values in one tree, counted exactly like ``wcb._Encoder`` (keys are not)."""
     total = 1
