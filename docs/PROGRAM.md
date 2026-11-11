@@ -118,29 +118,43 @@ evidence.
 
 ## P8 — Third-party conformance surface (implemented)
 
-- **Manifest.** `conformance/manifest.json` enumerates every vector (295
+- **Manifest.** `conformance/manifest.json` enumerates every vector (**420**
   entries) with kind, mode, expectation, supersession, SHA-256, and mirror
-  paths; `scripts/gen-conformance-manifest.sh --check` fails on drift. The
-  shared Rust↔Go corpus (288 files) has aggregate
-  `5f428820e4ad6a2aa9dcf107352106f1db059187db07ce6e1f89c6e2fb04eab1`.
+  paths; `scripts/gen-conformance-manifest.sh --check` fails on drift.
+  Aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`.
+  The shared Rust↔Go corpus is **413** identical files (common aggregate
+  `aa3abcad1f73573990b64ee8d0397265627f1221b37c05a726a2b324c32b50c9`, zero
+  differing, zero only-in-one).
 - **Runner contract.** `<adapter> VECTOR.json` prints one JSON object
   (`ok` with `content_root`/`decoded_sha256`, `error` with `class`, or `skip`
   with a reason). `scripts/run-conformance.sh` compares against the manifest,
   prints `VECTOR MISMATCH <path>: expected ... got ...`, and exits non-zero.
   `docs/CONFORMANCE.md` is the precise contract.
 - **Reference adapters.** Rust, Go, and Python adapters wrap the shipped CLIs.
-  Committed results: Rust 206/0/89, Go 206/0/89, Python 56/0/239
-  (pass/fail/skip); receipts are named in `docs/CONFORMANCE.md`.
+  Current results (receipts `conformance-rust-20261111T011110Z.json`,
+  `conformance-go-20261111T011110Z.json`,
+  `conformance-python-20261111T011110Z.json`): Rust 288 pass / 0 fail / 132
+  skip, Go 288 / 0 / 132, Python 229 / 0 / 191. Every skip is itemised with its
+  reason in `docs/CONFORMANCE.md`; none is counted as a pass.
+- **Codec-mode coverage by language.** Both shipped codecs execute modes 0–20.
+  The independent Python reader decodes modes 0–18 and has no `kv-prov`,
+  `engram`, or `weft.transport.v1` path, so those vectors are explicit skips.
 - **Decoder guide.** `docs/WRITE-YOUR-OWN-DECODER.md` covers WFT1 framing,
-  WCB, domain-separated hashing, modes 0–14, limits, failure classes, the exact
-  check order, frozen/experimental status, and a 50-line skeleton.
-- **Coverage.** `scripts/check-conformance-coverage.sh` requires mode 0–14
-  valid+reject coverage, valid identity records for every kind, complete
-  expectations, and mirror identity. Both it and the manifest check are
-  host-only courts in `scripts/verify-all.sh`.
-- **Evidence.** `bench/receipts/verify-20261105T174254Z.json` (27/27), plus the
-  three conformance run receipts. Residual: the reference adapters explicitly
-  skip kinds without a public CLI verb; the Python reader implements modes 0–8.
+  WCB, domain-separated hashing, modes 0–20 and `weft.transport.v1`, limits,
+  failure classes, the exact check order, frozen/experimental status, and a
+  50-line skeleton.
+- **Coverage.** `scripts/check-conformance-coverage.sh` requires modes 0–20
+  (whole allocated range) to have a valid *and* a reject vector, valid identity
+  records for every identity kind, complete expectations, and mirror identity.
+  Both it and the manifest check are host-only courts in `scripts/verify-all.sh`.
+- **Evidence.** The 45/45 aggregate `bench/receipts/verify-20261111T182601Z.json`
+  (parent `3ab54c7`) includes `conformance_manifest`, `conformance_coverage`,
+  `conformance_bundle`, and `conformance_python`.
+- **Historical (superseded, kept only so older receipts stay readable):** when
+  P8 opened the manifest had 295 entries, the shared corpus was 288 files with
+  aggregate `5f428820…`, the adapters were Rust/Go 206 pass / 0 fail / 89 skip
+  and Python 56 / 0 / 239, coverage required modes 0–14, and the Python reader
+  stopped at mode 8. None of those numbers describes the current tree.
 
 ## Non-negotiables
 

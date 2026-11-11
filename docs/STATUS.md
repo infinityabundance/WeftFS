@@ -1,17 +1,23 @@
-# Implementation status — 2026-11-11 (v1.3.0 release candidate)
+# Implementation status — 2026-11-11 (v1.3.0 released; R12c in progress)
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. **v1.2.0 is released**: tags are
+implemented, tested, ignored, and not done. **v1.3.0 is released**: tags are
+`WeftFS` `e0d8cb6`, `WeftCodec` `d9234e5`, `WeftCodec-Go` `fe05240`,
+`WeftFS-Go` `80ddb5b`; the note is
+[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md). Its aggregate
+`bench/receipts/verify-20261111T182601Z.json` (**45/45**) was run at parent
+`3ab54c7`, three commits before the final tag commit with no codec, store or
+runtime change between them; crates.io checksums, GHCR index digests and the
+PyPI block are in `bench/receipts/release-artifacts-20261111T200115Z.json`.
+**No aggregate exists at the current `staging` HEAD** (`d3db8aa`), which carries
+unverified R14d Azure-MW2 work in progress; the plan for the R12c follow-up is
+[`docs/PLAN-R12C.md`](PLAN-R12C.md). **v1.2.0 is released**: tags are
 `WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
 `WeftFS-Go` `6d58137`; the full note with every loss, including the published
 850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
 release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
 (**37/37** courts `pass`, 0 failed, 0 skipped) at WeftFS `135a382`, WeftCodec
-`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. **v1.3.0 is a release
-candidate on `staging`**: its note is
-[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md), and the release-tree aggregate
-is recorded by the follow-up verification pass (no receipt is claimed yet).
-The v1.1.0-era state below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
+`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. The v1.1.0-era state below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
 `99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
 every allocated mode 0–20; the independent Python reader covers every allocated
@@ -297,8 +303,9 @@ Docker court).
 | `WeftFS-Go` | `80ddb5b` | independent Go store + FUSE, spec mirror |
 
 These are the `staging` heads the v1.3.0 release-tree aggregate ran against
-(`git rev-parse HEAD` in each repository; each repository has `staging` one
-commit ahead of `origin/staging` because the release candidate is unpushed).
+(`git rev-parse HEAD` in each repository; the aggregate was run while the
+release candidate was still unpushed, and `staging` has since been pushed and
+then advanced by the R14d work in progress).
 The aggregate is `bench/receipts/verify-20261111T182601Z.json` (**45/45** courts
 pass, 0 failed, 0 skipped). The heads at the start of the release-candidate
 pass were WeftFS `e77f0e5`, WeftCodec `67cea30`, WeftCodec-Go `5e047c3`,

@@ -11,6 +11,12 @@ started** = nothing below has been built or run. No item below is a promise of
 a number; every acceptance criterion is "measured and published, including the
 loss".
 
+**Session scope.** This session covers **subphase A** (close the
+credibility/reproducibility gaps: this plan plus the stale-document and claim
+fixes it lists) and **subphase B** (item 1 below, persistent sessions inside
+the training-goodput court). Subphases C–G — items 2–7 here — are later
+sessions and nothing in them has been started.
+
 ## Ordered items
 
 The order is the review's order and is dependency-driven: (1) is the only item
