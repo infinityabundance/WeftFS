@@ -1,9 +1,10 @@
 //! R13 backend-lock probe: accounting sanity and the read-path contract.
 //!
 //! These tests prove the probe itself is honest before any receipt cites it:
-//! one thread cannot hold the store's backend mutex for longer than its own
-//! wall time, and the per-tensor attribution reports exactly the entries the
-//! tensor decode made.
+//! one thread cannot spend longer inside immutable reads than its own wall
+//! time, the probe changes no bytes or state, and control-state access still
+//! records state-mutex holds (the probe has not silently stopped measuring the
+//! path it exists to measure).
 
 use std::time::Instant;
 
@@ -42,7 +43,7 @@ fn store_with_file(bytes: usize) -> (tempfile::TempDir, Store, weftfs::Hash32) {
 }
 
 #[test]
-fn hold_time_cannot_exceed_wall_on_one_thread() {
+fn immutable_read_time_cannot_exceed_wall_on_one_thread() {
     let (_dir, store, id) = store_with_file(1024 * 1024);
     // Warm the state and the page cache, then measure only the reads.
     store.read_object(id).unwrap();
@@ -57,15 +58,33 @@ fn hold_time_cannot_exceed_wall_on_one_thread() {
     let wall_ns = started.elapsed().as_nanos();
 
     let report = store.lock_probe_report();
-    assert!(report.hold.count > 0, "probe recorded no entries");
+    assert!(report.io.count > 0, "probe recorded no blob reads");
     assert!(
-        report.hold.total_ns <= wall_ns,
-        "hold {} ns exceeds one-thread wall {} ns",
-        report.hold.total_ns,
+        report.io.total_ns <= wall_ns,
+        "immutable read time {} ns exceeds one-thread wall {} ns",
+        report.io.total_ns,
         wall_ns
     );
-    assert_eq!(report.max_demand, 1);
-    assert_eq!(report.hold.count, report.wait.count);
+    // Since R13 increment 2 an immutable read never takes the state mutex.
+    assert_eq!(report.hold.count, 0);
+    assert_eq!(report.wait.count, 0);
+    store.set_lock_probe(false);
+}
+
+#[test]
+fn control_state_access_still_records_a_state_mutex_hold() {
+    let (_dir, store, id) = store_with_file(64 * 1024);
+    store.read_object(id).unwrap();
+    store.set_lock_probe(true);
+    store.reset_lock_probe();
+    // `backend_stats` reads the backend's control-side counters through the
+    // state mutex; the probe must see it.
+    let _ = store.backend_stats();
+    let report = store.lock_probe_report();
+    assert!(
+        report.hold.count >= 1,
+        "control-state access did not record a hold"
+    );
     store.set_lock_probe(false);
 }
 
@@ -81,6 +100,7 @@ fn disabled_probe_records_nothing() {
     let report = store.lock_probe_report();
     assert_eq!(report.hold.count, 0);
     assert_eq!(report.wait.count, 0);
+    assert_eq!(report.io.count, 0);
 }
 
 #[test]
@@ -98,7 +118,7 @@ fn probe_does_not_change_bytes_or_state() {
 
     assert_eq!(before, during);
     assert_eq!(before, after);
-    assert!(report.hold.count > 0);
+    assert!(report.io.count > 0);
     assert_eq!(store.head(), head_before);
     assert_eq!(store.generation(), generation_before);
     assert!(store.verify(true).unwrap().problems.is_empty());
@@ -117,6 +137,6 @@ fn reopen_read_only_never_writes_probe_state() {
     let bytes = reopened.read_object(id).unwrap();
     assert_eq!(bytes.len(), 64 * 1024);
     let report = reopened.lock_probe_report();
-    assert!(report.hold.count > 0);
+    assert!(report.io.count > 0);
     assert!(reopened.verify(true).unwrap().problems.is_empty());
 }

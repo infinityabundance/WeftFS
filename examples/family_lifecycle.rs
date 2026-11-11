@@ -2158,6 +2158,7 @@ fn readers(args: &[String]) -> Result<(), String> {
             json!({
                 "wait": report.wait,
                 "hold": report.hold,
+                "io": report.io,
                 "max_demand": report.max_demand,
                 "mean_demand": round(report.mean_demand),
                 "hold_share_of_wall": report.hold_share_of_wall.map(round),
@@ -2213,6 +2214,7 @@ fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &
         wait_ns: u128,
         hold_ns: u128,
         elapsed_ns: u128,
+        io_ns: u128,
     }
     let mut by_index: BTreeMap<usize, Agg> = BTreeMap::new();
     for row in &report.tensors {
@@ -2222,6 +2224,7 @@ fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &
         entry.wait_ns = entry.wait_ns.saturating_add(row.wait_ns);
         entry.hold_ns = entry.hold_ns.saturating_add(row.hold_ns);
         entry.elapsed_ns = entry.elapsed_ns.saturating_add(row.elapsed_ns);
+        entry.io_ns = entry.io_ns.saturating_add(row.io_ns);
     }
     let mut rows: Vec<(usize, Agg)> = by_index.into_iter().collect();
     rows.sort_by(|left, right| right.1.hold_ns.cmp(&left.1.hold_ns));
@@ -2234,7 +2237,10 @@ fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &
         .iter()
         .take(10)
         .map(|(index, row)| {
-            let backend_ns = row.wait_ns.saturating_add(row.hold_ns);
+            let backend_ns = row
+                .wait_ns
+                .saturating_add(row.hold_ns)
+                .saturating_add(row.io_ns);
             let share = if row.elapsed_ns == 0 {
                 0.0
             } else {
@@ -2249,6 +2255,7 @@ fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &
                 "bytes": row.bytes,
                 "wait_ms": round(row.wait_ns as f64 / 1e6),
                 "hold_ms": round(row.hold_ns as f64 / 1e6),
+                "transport_ms": round(row.io_ns as f64 / 1e6),
                 "elapsed_ms": round(row.elapsed_ns as f64 / 1e6),
                 "backend_share_of_elapsed": round(share),
                 "decode_cpu_ms": round(cpu_ns as f64 / 1e6),
@@ -2258,6 +2265,7 @@ fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &
     json!({
         "wait": report.wait,
         "hold": report.hold,
+        "io": report.io,
         "max_demand": report.max_demand,
         "mean_demand": round(report.mean_demand),
         "hold_share_of_wall": report.hold_share_of_wall.map(round),

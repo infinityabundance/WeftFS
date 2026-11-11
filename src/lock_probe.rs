@@ -126,8 +126,11 @@ pub struct TensorLockRow {
     /// Time spent holding the backend mutex.
     pub hold_ns: u128,
     /// Wall time from the start of the tensor decode to its end (including
-    /// `wait_ns` and `hold_ns`).
+    /// `wait_ns`, `hold_ns`, and `io_ns`).
     pub elapsed_ns: u128,
+    /// Time spent inside immutable-blob read calls (the transport part of the
+    /// decode, measured outside the state mutex since R13 increment 2).
+    pub io_ns: u128,
 }
 
 /// One probe report.
@@ -136,6 +139,8 @@ pub struct LockProbeReport {
     pub enabled: bool,
     pub wait: SectionSummary,
     pub hold: SectionSummary,
+    /// Immutable-blob read calls: count, total, max, and percentiles.
+    pub io: SectionSummary,
     /// Peak number of threads inside a backend helper at the same time
     /// (waiting plus holding).
     pub max_demand: u64,
@@ -163,6 +168,8 @@ pub struct ThreadProbeRow {
     pub hold_ns: u128,
     /// Time spent waiting for it on this thread.
     pub wait_ns: u128,
+    /// Time spent inside immutable-blob read calls on this thread.
+    pub io_ns: u128,
 }
 
 impl LockProbeReport {
@@ -181,6 +188,7 @@ impl LockProbeReport {
 struct Sections {
     wait: SectionSamples,
     hold: SectionSamples,
+    io: SectionSamples,
     demand_samples: u64,
     demand_sum: u64,
     tensors: Vec<TensorLockRow>,
@@ -272,6 +280,26 @@ impl LockProbe {
         });
     }
 
+    /// Record one immutable-blob read call (transport time only; the hash check
+    /// runs after the handle is released).
+    pub fn note_io(&self, io_ns: u64) {
+        let thread = thread_ordinal();
+        {
+            let mut guard = self.lock();
+            guard.io.note(io_ns);
+            let row = guard.threads.entry(thread).or_insert(ThreadProbeRow {
+                thread,
+                ..ThreadProbeRow::default()
+            });
+            row.io_ns = row.io_ns.saturating_add(u128::from(io_ns));
+        }
+        TENSOR.with(|cell| {
+            if let Some(accum) = cell.borrow_mut().as_mut() {
+                accum.io_ns = accum.io_ns.saturating_add(u128::from(io_ns));
+            }
+        });
+    }
+
     /// Attribute `bytes` returned by a backend read to the tensor currently
     /// being decoded on this thread, if a tensor guard is alive.
     pub fn note_bytes(&self, bytes: u64) {
@@ -310,6 +338,7 @@ impl LockProbe {
             enabled: self.enabled(),
             wait: guard.wait.summary(),
             hold: guard.hold.summary(),
+            io: guard.io.summary(),
             max_demand: self.max_demand.load(Ordering::Relaxed),
             mean_demand,
             hold_share_of_wall: None,
@@ -337,6 +366,7 @@ struct TensorAccum {
     bytes: u64,
     wait_ns: u128,
     hold_ns: u128,
+    io_ns: u128,
 }
 
 thread_local! {
@@ -384,6 +414,7 @@ impl Drop for TensorGuard<'_> {
             wait_ns: accum.wait_ns,
             hold_ns: accum.hold_ns,
             elapsed_ns,
+            io_ns: accum.io_ns,
         });
     }
 }

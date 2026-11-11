@@ -944,6 +944,28 @@ pub struct BackendStats {
 }
 
 impl BackendStats {
+    /// Element-wise difference from an earlier snapshot, saturating at zero.
+    /// Used to harvest a pooled handle's counters when it is released.
+    pub fn delta_since(&self, earlier: &BackendStats) -> BackendStats {
+        BackendStats {
+            reads: self.reads.saturating_sub(earlier.reads),
+            range_reads: self.range_reads.saturating_sub(earlier.range_reads),
+            bytes_read: self.bytes_read.saturating_sub(earlier.bytes_read),
+            writes: self.writes.saturating_sub(earlier.writes),
+            bytes_written: self.bytes_written.saturating_sub(earlier.bytes_written),
+            link_publications: self
+                .link_publications
+                .saturating_sub(earlier.link_publications),
+            rename_publications: self
+                .rename_publications
+                .saturating_sub(earlier.rename_publications),
+            rename_fallbacks: self
+                .rename_fallbacks
+                .saturating_sub(earlier.rename_fallbacks),
+            fsyncs: self.fsyncs.saturating_sub(earlier.fsyncs),
+        }
+    }
+
     /// Element-wise sum, used to report two planes as one request stream.
     pub fn merged(&self, other: &BackendStats) -> BackendStats {
         BackendStats {

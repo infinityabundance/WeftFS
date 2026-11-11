@@ -64,6 +64,7 @@ pub mod plan_graph;
 pub mod planes;
 pub mod provenance;
 pub mod quota;
+pub mod read_pool;
 pub mod rebase;
 pub mod receipt_bundle;
 pub mod recovery;
@@ -130,6 +131,7 @@ pub use provenance::{
     ProvenanceInput, ProvenanceNode, ProvenancePrincipal, ProvenanceRecord, RecoveryCandidate,
     RecoveryChoice, RecoveryCosts, RecoveryRejection, RecoveryStrategy,
 };
+pub use read_pool::{ReadHandlePool, ReadPoolStats};
 pub use rebase::{
     RebaseCandidate, RebaseOptions, RebaseOutcome, RebasePlan, RebaseReport, RebaseSkip,
 };

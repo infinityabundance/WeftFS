@@ -10,7 +10,7 @@ use std::io::{ErrorKind, Read};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use weftcodec::context::CausalClosure;
 use weftcodec::dependency::MapResolver;
@@ -796,12 +796,27 @@ pub struct Store {
     /// a court harness enables it; never consulted by a commit, receipt, or
     /// format decision.
     lock_probe: crate::lock_probe::LockProbe,
+    /// Handles for immutable content-addressed blob reads (subphase R13).
+    /// Reads through this pool never take [`Store::backend`].
+    read_pool: crate::read_pool::ReadHandlePool,
 }
 
 /// Per-tensor attribution guard used by the restore pipeline when the
 /// backend-lock probe is enabled. Publishes one row on drop.
 pub(crate) struct TensorProbeGuard<'a> {
     _guard: crate::lock_probe::TensorGuard<'a>,
+}
+
+/// Map a blob-read backend error to the store's established classification:
+/// an I/O failure keeps its class, and everything else (including a missing
+/// blob) is a `Corrupt` result naming the key.
+fn blob_read_failure(key: &Key, err: Error) -> Error {
+    let message = format!("missing blob {}: {}", key.display_path(), err.message());
+    if err.class() == Class::Io {
+        Error::io(message)
+    } else {
+        Error::corrupt(message)
+    }
 }
 
 /// Bounded most-recently-used cache of validated overlay chunk tables.
@@ -979,6 +994,7 @@ impl Store {
         let cache_enabled = options.cache_bytes > 0;
         let single_flight_options = SingleFlightOptions::from_options(&options);
         let cache_options = ObjectCacheOptions::from_options(&options);
+        let read_pool = crate::read_pool::ReadHandlePool::new(backend_kind.clone(), root.clone());
         let mut store = Store {
             root,
             mode: OpenMode::ReadWrite,
@@ -1018,6 +1034,7 @@ impl Store {
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
+            read_pool,
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -1174,6 +1191,7 @@ impl Store {
             .max(recovery.highest_file_generation)
             .checked_add(1)
             .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        let read_pool = crate::read_pool::ReadHandlePool::new(backend_kind.clone(), root.clone());
         let mut store = Store {
             root,
             mode,
@@ -1213,6 +1231,7 @@ impl Store {
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
+            read_pool,
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -1380,8 +1399,13 @@ impl Store {
 
     /// Physical I/O counters for receipts and tests.
     pub fn backend_stats(&self) -> BackendStats {
-        self.with_backend(|backend| Ok(backend.stats()))
-            .unwrap_or_default()
+        let control = self
+            .with_backend(|backend| Ok(backend.stats()))
+            .unwrap_or_default();
+        // Reads served by pooled immutable handles are counted on those
+        // handles; merge their harvested deltas so a receipt reports one
+        // request stream.
+        control.merged(&self.read_pool.harvested())
     }
 
     /// Backend diagnostics (for example a publication-primitive fallback).
@@ -1459,27 +1483,54 @@ impl Store {
     /// backend. A single backend reports `None`, because its one request
     /// stream is already exposed by [`Store::backend_stats`].
     pub fn plane_stats(&self) -> Option<crate::planes::PlaneStats> {
-        self.with_backend(|backend| Ok(backend.plane_stats()))
+        let mut stats = self
+            .with_backend(|backend| Ok(backend.plane_stats()))
             .ok()
-            .flatten()
+            .flatten()?;
+        // Every pooled read addresses an immutable blob (`objects/` or
+        // `manifests/`), so its harvested counters belong to the blob plane.
+        stats.blobs = stats.blobs.merged(&self.read_pool.harvested());
+        Some(stats)
     }
 
     /// Read and verify an immutable content-addressed blob.
     ///
     /// `objects/` and `manifests/` bytes never change once published. This
-    /// helper is the single read path for them, so a later increment can move
-    /// the read off the state mutex in one place. It also attributes the bytes
-    /// to the tensor being decoded when the backend-lock probe is enabled.
+    /// helper is the single read path for them: it takes a handle from the
+    /// read pool (so the store's state mutex is not involved), releases the
+    /// handle, and only then verifies the domain-separated hash. The bytes are
+    /// attributed to the tensor being decoded when the probe is enabled.
     pub(crate) fn read_blob_verified_keyed(
         &self,
         kind: BlobKind,
         hash: Hash32,
         domain: &str,
     ) -> Result<Vec<u8>> {
-        let bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(backend, kind, hash, domain)
-        })?;
+        let key = match kind {
+            BlobKind::Object => Key::object(hash),
+            BlobKind::Manifest => Key::manifest(hash),
+        };
+        let (bytes, io_ns) = {
+            let started = Instant::now();
+            let outcome = if self.read_pool.poolable() {
+                self.read_pool.read_all(&key)
+            } else {
+                self.with_backend(|backend| backend.read_all(&key))
+                    .map(|bytes| (bytes, started.elapsed().as_nanos() as u64))
+            };
+            outcome.map_err(|err| blob_read_failure(&key, err))?
+        };
+        if self.lock_probe.enabled() {
+            self.lock_probe.note_io(io_ns);
+        }
         self.note_probe_bytes(bytes.len() as u64);
+        let actual = identity::h(domain, &bytes);
+        if actual != hash {
+            return Err(Error::corrupt(format!(
+                "blob {} fails its hash check (expected {hash}, got {actual})",
+                key.display_path()
+            )));
+        }
         Ok(bytes)
     }
 
@@ -1544,7 +1595,13 @@ impl Store {
                 .backend
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            return f(&mut **guard);
+            let out = f(&mut **guard);
+            drop(guard);
+            // Every mutation can add or replace a content-addressed blob, so
+            // pooled reader handles must not be reused across it (a packed
+            // handle caches the catalog as of its creation).
+            self.read_pool.invalidate();
+            return out;
         }
         let _demand = self.lock_probe.enter();
         let mut timer = crate::lock_probe::SectionTimer::new(&self.lock_probe);
@@ -1555,6 +1612,8 @@ impl Store {
         timer.acquired();
         let out = f(&mut **guard);
         drop(timer);
+        drop(guard);
+        self.read_pool.invalidate();
         out
     }
 
@@ -1577,6 +1636,11 @@ impl Store {
     /// Everything the backend-lock probe has recorded since the last reset.
     pub fn lock_probe_report(&self) -> crate::lock_probe::LockProbeReport {
         self.lock_probe.report()
+    }
+
+    /// Immutable-read pool counters (subphase R13).
+    pub fn read_pool_stats(&self) -> crate::read_pool::ReadPoolStats {
+        self.read_pool.stats()
     }
 
     /// Begin attributing backend entries on this thread to one tensor input.
