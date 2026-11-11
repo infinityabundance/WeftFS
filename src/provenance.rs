@@ -839,7 +839,7 @@ impl Store {
     ) -> Result<Vec<RecoveryCandidate>> {
         let object = self.object_meta(object_id)?;
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, object.content))?;
+            self.read_manifest_keyed(object.content)?;
         let raw = manifest
             .representation
             .as_ref()
@@ -925,14 +925,7 @@ impl Store {
         let mut leaves: Vec<(u64, Hash32)> = Vec::new();
         let mut total: u64 = 0;
         for chunk in &manifest.chunks {
-            let bytes = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Object,
-                    chunk.hash,
-                    identity::CHUNK_DOMAIN,
-                )
-            })?;
+            let bytes = self.read_blob_verified_keyed(BlobKind::Object, chunk.hash, identity::CHUNK_DOMAIN)?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
                     "chunk {} length disagrees with the manifest",
@@ -969,7 +962,7 @@ impl Store {
     /// Is this content root present and exactly verifiable in this store?
     fn content_verified(&self, content_root: Hash32) -> bool {
         let manifest =
-            match self.with_backend(|backend| recovery::read_manifest_via(backend, content_root)) {
+            match self.read_manifest_keyed(content_root) {
                 Ok(manifest) => manifest,
                 Err(_) => return false,
             };

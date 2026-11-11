@@ -190,7 +190,7 @@ impl Store {
                 }
             };
             let manifest =
-                self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+                self.read_manifest_keyed(record.content)?;
             let from_strategy = manifest
                 .representation
                 .as_ref()
@@ -337,7 +337,7 @@ impl Store {
             return Err(Error::corrupt("rebase decode-cost cycle"));
         }
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, content))?;
+            self.read_manifest_keyed(content)?;
         let strategy = manifest
             .representation
             .as_ref()
@@ -351,7 +351,7 @@ impl Store {
         if let Some(rep) = &manifest.representation {
             for dependency in &rep.dependencies {
                 let dependency_manifest =
-                    self.with_backend(|backend| recovery::read_manifest_via(backend, *dependency))?;
+                    self.read_manifest_keyed(*dependency)?;
                 total = total.saturating_add(self.decode_cost_of_content(
                     *dependency,
                     dependency_manifest.size,

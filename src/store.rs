@@ -792,6 +792,16 @@ pub struct Store {
     /// cache is advisory: every hit is a table that was fully validated (root,
     /// lengths, base cross-checks) before insertion.
     overlay_tables: Mutex<OverlayTableCache>,
+    /// Opt-in instrumentation of the backend mutex (subphase R13). Off unless
+    /// a court harness enables it; never consulted by a commit, receipt, or
+    /// format decision.
+    lock_probe: crate::lock_probe::LockProbe,
+}
+
+/// Per-tensor attribution guard used by the restore pipeline when the
+/// backend-lock probe is enabled. Publishes one row on drop.
+pub(crate) struct TensorProbeGuard<'a> {
+    _guard: crate::lock_probe::TensorGuard<'a>,
 }
 
 /// Bounded most-recently-used cache of validated overlay chunk tables.
@@ -1007,6 +1017,7 @@ impl Store {
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
+            lock_probe: crate::lock_probe::LockProbe::new(),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -1201,6 +1212,7 @@ impl Store {
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
+            lock_probe: crate::lock_probe::LockProbe::new(),
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -1452,6 +1464,42 @@ impl Store {
             .flatten()
     }
 
+    /// Read and verify an immutable content-addressed blob.
+    ///
+    /// `objects/` and `manifests/` bytes never change once published. This
+    /// helper is the single read path for them, so a later increment can move
+    /// the read off the state mutex in one place. It also attributes the bytes
+    /// to the tensor being decoded when the backend-lock probe is enabled.
+    pub(crate) fn read_blob_verified_keyed(
+        &self,
+        kind: BlobKind,
+        hash: Hash32,
+        domain: &str,
+    ) -> Result<Vec<u8>> {
+        let bytes = self.with_backend(|backend| {
+            recovery::read_blob_verified_via(backend, kind, hash, domain)
+        })?;
+        self.note_probe_bytes(bytes.len() as u64);
+        Ok(bytes)
+    }
+
+    /// Read an immutable manifest by id and decode it. The blob hash is
+    /// verified against the manifest id before the canonical bytes are parsed.
+    pub(crate) fn read_manifest_keyed(&self, id: Hash32) -> Result<Manifest> {
+        let bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, id, identity::MANIFEST_DOMAIN)?;
+        let value = crate::wcb_util::decode(&bytes)?;
+        Manifest::from_wcb(&value)
+    }
+
+    /// Read a checkpoint state manifest by id and decode it.
+    pub(crate) fn read_state_manifest_keyed(&self, id: Hash32) -> Result<State> {
+        let bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, id, identity::MANIFEST_DOMAIN)?;
+        let value = crate::wcb_util::decode(&bytes)?;
+        crate::format::decode_state(&value)
+    }
+
     /// Capability evidence from the writable open, if any.
     pub fn plane_probes(&self) -> Option<&crate::planes::PlaneProbes> {
         self.plane_probes.as_ref()
@@ -1468,22 +1516,88 @@ impl Store {
         &self,
         f: impl FnOnce(&dyn StorageBackend) -> Result<T>,
     ) -> Result<T> {
+        if !self.lock_probe.enabled() {
+            let guard = self
+                .backend
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            return f(&**guard);
+        }
+        let _demand = self.lock_probe.enter();
+        let mut timer = crate::lock_probe::SectionTimer::new(&self.lock_probe);
         let guard = self
             .backend
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        f(&**guard)
+        timer.acquired();
+        let out = f(&**guard);
+        drop(timer);
+        out
     }
 
     pub(crate) fn with_backend_mut<T>(
         &self,
         f: impl FnOnce(&mut dyn StorageBackend) -> Result<T>,
     ) -> Result<T> {
+        if !self.lock_probe.enabled() {
+            let mut guard = self
+                .backend
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            return f(&mut **guard);
+        }
+        let _demand = self.lock_probe.enter();
+        let mut timer = crate::lock_probe::SectionTimer::new(&self.lock_probe);
         let mut guard = self
             .backend
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        f(&mut **guard)
+        timer.acquired();
+        let out = f(&mut **guard);
+        drop(timer);
+        out
+    }
+
+    /// Enable or disable the backend-lock probe (subphase R13). Off by
+    /// default; a probe run publishes exactly the bytes a non-probe run does.
+    pub fn set_lock_probe(&self, enabled: bool) {
+        self.lock_probe.set_enabled(enabled);
+    }
+
+    /// Whether the backend-lock probe is recording.
+    pub fn lock_probe_enabled(&self) -> bool {
+        self.lock_probe.enabled()
+    }
+
+    /// Discard every probe sample and per-tensor row.
+    pub fn reset_lock_probe(&self) {
+        self.lock_probe.reset();
+    }
+
+    /// Everything the backend-lock probe has recorded since the last reset.
+    pub fn lock_probe_report(&self) -> crate::lock_probe::LockProbeReport {
+        self.lock_probe.report()
+    }
+
+    /// Begin attributing backend entries on this thread to one tensor input.
+    /// The returned guard publishes a row on drop; a no-op when the probe is
+    /// disabled.
+    pub(crate) fn begin_tensor_probe(&self, index: usize) -> Option<TensorProbeGuard<'_>> {
+        if self.lock_probe.enabled() {
+            Some(TensorProbeGuard {
+                _guard: self.lock_probe.begin_tensor(index),
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Attribute bytes returned by a backend read to the tensor being decoded
+    /// on this thread.
+    pub(crate) fn note_probe_bytes(&self, bytes: u64) {
+        if self.lock_probe.enabled() {
+            self.lock_probe.note_bytes(bytes);
+        }
     }
 
     /// Replace runtime options on an open store.
@@ -2644,8 +2758,7 @@ impl Store {
                 .map(|bytes| bytes.to_vec())
                 .ok_or_else(|| Error::corrupt("symlink object has no target attribute"))?,
             ObjectKind::File => {
-                let manifest = self
-                    .with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+                let manifest = self.read_manifest_keyed(record.content)?;
                 if manifest.size != record.size {
                     return Err(Error::corrupt("object size disagrees with manifest"));
                 }
@@ -2680,9 +2793,7 @@ impl Store {
                         .map(|bytes| bytes.to_vec())
                         .ok_or_else(|| Error::corrupt("symlink object has no target attribute"))?,
                     ObjectKind::File => {
-                        let manifest = self.with_backend(|backend| {
-                            recovery::read_manifest_via(backend, record.content)
-                        })?;
+                        let manifest = self.read_manifest_keyed(record.content)?;
                         if manifest.size != record.size {
                             return Err(Error::corrupt("object size disagrees with manifest"));
                         }
@@ -2720,8 +2831,7 @@ impl Store {
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2744,8 +2854,7 @@ impl Store {
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2757,8 +2866,7 @@ impl Store {
     /// Read a byte range directly from a content root (manifest id). Safe for
     /// snapshot materialization because it does not consult live object state.
     pub fn read_content(&self, content_root: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
+        let manifest = self.read_manifest_keyed(content_root)?;
         let whole = offset == 0 && length >= manifest.size;
         self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
     }
@@ -2785,8 +2893,7 @@ impl Store {
                 "authorization token does not cover this content root",
             ));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
+        let manifest = self.read_manifest_keyed(content_root)?;
         let whole = offset == 0 && length >= manifest.size;
         self.read_manifest_bytes_gated(
             &manifest,
@@ -2899,8 +3006,7 @@ impl Store {
         offset: u64,
         length: u64,
     ) -> Result<RegionVerification> {
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, content_root))?;
+        let manifest = self.read_manifest_keyed(content_root)?;
         if manifest.identity != ContentIdentity::MerkleV3 {
             return Err(Error::invalid_argument(
                 "verify_region requires a weft.manifest.v3 Merkle content root",
@@ -2935,14 +3041,7 @@ impl Store {
                 continue;
             }
             let bytes = self
-                .with_backend(|backend| {
-                    recovery::read_blob_verified_via(
-                        backend,
-                        BlobKind::Object,
-                        chunk.hash,
-                        identity::CHUNK_DOMAIN,
-                    )
-                })
+                .read_blob_verified_keyed(BlobKind::Object, chunk.hash, identity::CHUNK_DOMAIN)
                 .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
@@ -2963,7 +3062,7 @@ impl Store {
     /// manifest the store itself would decode for an object whose `content` is
     /// `id`; callers use it to seed a [`ManifestCache`].
     pub fn manifest_of(&self, id: Hash32) -> Result<Manifest> {
-        self.with_backend(|backend| recovery::read_manifest_via(backend, id))
+        self.read_manifest_keyed(id)
     }
 
     /// Decode and verify a manifest's whole logical content through this
@@ -3319,18 +3418,12 @@ impl Store {
                 continue;
             }
             let bytes = self
-                .with_backend(|backend| {
-                    recovery::read_blob_verified_via(
-                        backend,
-                        BlobKind::Object,
-                        chunk.hash,
-                        identity::CHUNK_DOMAIN,
-                    )
-                })
+                .read_blob_verified_keyed(BlobKind::Object, chunk.hash, identity::CHUNK_DOMAIN)
                 .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if count_overlay_reads {
                 representation::note_overlay_chunk_read();
             }
+            self.note_probe_bytes(bytes.len() as u64);
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
                     "chunk {index} length disagrees with manifest"
@@ -3474,8 +3567,7 @@ impl Store {
         // Resolve the base table first. A base must itself be a Merkle chunk
         // table (v3 raw or a v4 overlay); frame-backed and whole-file bases are
         // not composable and fail closed.
-        let base_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, overlay.base))?;
+        let base_manifest = self.read_manifest_keyed(overlay.base)?;
         if base_manifest.content_hash != overlay.base_content_root {
             return Err(Error::corrupt(format!(
                 "overlay base {} content root {} disagrees with the declared {}",
@@ -3693,14 +3785,9 @@ impl Store {
                 "codec representation decoded_size disagrees with manifest size",
             ));
         }
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        self.note_probe_bytes(frame_bytes.len() as u64);
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match rep.strategy.as_str() {
@@ -3739,8 +3826,7 @@ impl Store {
             if seen.contains(&dep_root) {
                 return Err(Error::corrupt("codec representation dependency cycle"));
             }
-            let dep_manifest =
-                self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
+            let dep_manifest = self.read_manifest_keyed(dep_root)?;
             seen.push(dep_root);
             let bytes = self.read_manifest_bytes_inner_gated(
                 &dep_manifest,
@@ -4268,7 +4354,7 @@ impl Store {
             Some(cache) if cache.content == old.content && cache.manifest.size == old.size => {
                 cache.manifest.clone()
             }
-            _ => self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?,
+            _ => self.read_manifest_keyed(old.content)?,
         };
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
@@ -4384,8 +4470,7 @@ impl Store {
                 "append_file_streaming requires a file object",
             ));
         }
-        let old_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let old_manifest = self.read_manifest_keyed(old.content)?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -4445,14 +4530,11 @@ impl Store {
             // Merkle identity folds the stored chunk hashes; whole-file identity
             // must re-read every chunk to feed the streaming digest.
             if whole_file_identity {
-                let bytes = self.with_backend(|backend| {
-                    recovery::read_blob_verified_via(
-                        backend,
-                        BlobKind::Object,
-                        reference.hash,
-                        identity::CHUNK_DOMAIN,
-                    )
-                })?;
+                let bytes = self.read_blob_verified_keyed(
+                    BlobKind::Object,
+                    reference.hash,
+                    identity::CHUNK_DOMAIN,
+                )?;
                 if bytes.len() as u64 != reference.len {
                     return Err(Error::corrupt("chunk length disagrees with manifest"));
                 }
@@ -4467,14 +4549,11 @@ impl Store {
                 .chunks
                 .get(checked_usize(full_chunks, "chunk index")?)
                 .ok_or_else(|| Error::corrupt("manifest chunk is missing"))?;
-            let bytes = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Object,
-                    reference.hash,
-                    identity::CHUNK_DOMAIN,
-                )
-            })?;
+            let bytes = self.read_blob_verified_keyed(
+                BlobKind::Object,
+                reference.hash,
+                identity::CHUNK_DOMAIN,
+            )?;
             if bytes.len() as u64 != reference.len {
                 return Err(Error::corrupt("chunk length disagrees with manifest"));
             }
@@ -4705,8 +4784,7 @@ impl Store {
                 "test manifest publication requires a file object",
             ));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id))?;
+        let manifest = self.read_manifest_keyed(manifest_id)?;
         if manifest.size != size {
             return Err(Error::invalid_argument(
                 "test manifest publication size disagrees with the manifest",
@@ -4809,8 +4887,7 @@ impl Store {
         if zero_end <= offset {
             return Ok(old.version);
         }
-        let old_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let old_manifest = self.read_manifest_keyed(old.content)?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -4852,8 +4929,7 @@ impl Store {
         if offset > old.size || length > old.size - offset {
             return Err(Error::invalid_argument("collapse range lies past EOF"));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let manifest = self.read_manifest_keyed(old.content)?;
         if manifest_is_overlay(&manifest) || self.overlay_mode() {
             return Err(Error::unsupported_representation(
                 "collapse_range on an overlay object would shorten the file and shift every \
@@ -4891,8 +4967,7 @@ impl Store {
         if offset > old.size {
             return Err(Error::invalid_argument("insert offset lies past EOF"));
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let manifest = self.read_manifest_keyed(old.content)?;
         if manifest_is_overlay(&manifest) || self.overlay_mode() {
             return Err(Error::unsupported_representation(
                 "insert_range on an overlay object rewrites every byte after the insert point; \
@@ -4985,8 +5060,7 @@ impl Store {
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("truncate requires a file object"));
         }
-        let old_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let old_manifest = self.read_manifest_keyed(old.content)?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -5060,8 +5134,7 @@ impl Store {
         if old.kind != ObjectKind::File {
             return Err(Error::invalid_argument("compact requires a file object"));
         }
-        let old_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, old.content))?;
+        let old_manifest = self.read_manifest_keyed(old.content)?;
         if old_manifest.size != old.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -5088,14 +5161,7 @@ impl Store {
         let mut leaves: Vec<(u64, Hash32)> = Vec::with_capacity(table.len());
         for (index, chunk) in table.iter().enumerate() {
             let bytes = self
-                .with_backend(|backend| {
-                    recovery::read_blob_verified_via(
-                        backend,
-                        BlobKind::Object,
-                        chunk.hash,
-                        identity::CHUNK_DOMAIN,
-                    )
-                })
+                .read_blob_verified_keyed(BlobKind::Object, chunk.hash, identity::CHUNK_DOMAIN)
                 .map_err(|err| chunk_read_failure(index, chunk.hash, err))?;
             if bytes.len() as u64 != chunk.len {
                 return Err(Error::corrupt(format!(
@@ -7166,9 +7232,7 @@ impl Store {
         {
             if let Some(checkpoint) = commit.commit.checkpoint {
                 report.checked_manifests += 1;
-                match self
-                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
-                {
+                match self.read_state_manifest_keyed(checkpoint) {
                     Ok(state) => {
                         if state.generation != commit.generation {
                             report.problems.push(VerifyProblem {
@@ -7336,14 +7400,11 @@ impl Store {
         };
         for stored in stored_envelopes {
             report.checked_capability_envelopes += 1;
-            let bytes = match self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Manifest,
-                    stored.blob_id,
-                    weftcodec::capability::DOMAIN_BLOB,
-                )
-            }) {
+            let bytes = match self.read_blob_verified_keyed(
+                BlobKind::Manifest,
+                stored.blob_id,
+                weftcodec::capability::DOMAIN_BLOB,
+            ) {
                 Ok(bytes) => bytes,
                 Err(err) => {
                     report.problems.push(VerifyProblem {
@@ -7484,14 +7545,11 @@ impl Store {
                             continue;
                         }
                     };
-                    match self.with_backend(|backend| {
-                        recovery::read_blob_verified_via(
-                            backend,
-                            BlobKind::Manifest,
-                            hash,
-                            weftcodec::hash::DOMAIN_CAUSAL,
-                        )
-                    }) {
+                    match self.read_blob_verified_keyed(
+                        BlobKind::Manifest,
+                        hash,
+                        weftcodec::hash::DOMAIN_CAUSAL,
+                    ) {
                         Ok(bytes) => match CausalClosure::from_canonical_bytes(&bytes, &limits) {
                             Ok(stored_closure) if stored_closure == closure => {}
                             Ok(_) => report.problems.push(VerifyProblem {
@@ -7526,8 +7584,7 @@ impl Store {
                 continue;
             }
             report.checked_objects += 1;
-            match self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))
-            {
+            match self.read_manifest_keyed(record.content) {
                 Ok(manifest) => {
                     report.checked_manifests += 1;
                     if manifest.size != record.size {
@@ -7612,14 +7669,11 @@ impl Store {
                         let mut total: u64 = 0;
                         for (index, chunk) in manifest.chunks.iter().enumerate() {
                             report.checked_chunks += 1;
-                            match self.with_backend(|backend| {
-                                recovery::read_blob_verified_via(
-                                    backend,
-                                    BlobKind::Object,
-                                    chunk.hash,
-                                    identity::CHUNK_DOMAIN,
-                                )
-                            }) {
+                            match self.read_blob_verified_keyed(
+                                BlobKind::Object,
+                                chunk.hash,
+                                identity::CHUNK_DOMAIN,
+                            ) {
                                 Ok(bytes) => {
                                     if bytes.len() as u64 != chunk.len {
                                         report.problems.push(VerifyProblem {
@@ -7809,9 +7863,7 @@ impl Store {
             if let Some(checkpoint) = commit.commit.checkpoint {
                 let origin = format!("checkpoint:{}", checkpoint.to_hex());
                 reach.mark_manifest(checkpoint, &origin);
-                match self
-                    .with_backend(|backend| recovery::read_state_manifest_via(backend, checkpoint))
-                {
+                match self.read_state_manifest_keyed(checkpoint) {
                     Ok(state) => mark_state(self, &state, &mut reach, &origin, problems),
                     Err(err) => {
                         problems.push(format!("checkpoint {checkpoint} is unreadable: {err}"))
@@ -8592,14 +8644,11 @@ impl Store {
         if index.contains_key(&manifest_id) || additions.contains_key(&manifest_id) {
             return Ok(0);
         }
-        let bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                manifest_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let bytes = self.read_blob_verified_keyed(
+            BlobKind::Manifest,
+            manifest_id,
+            identity::MANIFEST_DOMAIN,
+        )?;
         let size = bytes.len() as u64;
         let value = crate::wcb_util::decode(&bytes)?;
         let manifest = Manifest::from_wcb(&value)?;
@@ -9558,8 +9607,7 @@ impl Store {
         if record.kind != ObjectKind::File {
             return Ok(self.options.content_identity);
         }
-        let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         Ok(match manifest.identity {
             ContentIdentity::MerkleV3 => ContentIdentity::MerkleV3,
             ContentIdentity::WholeFileV1 => self.options.content_identity,
@@ -9926,14 +9974,11 @@ impl Store {
                     "chunk keep length",
                 )?;
                 if keep > 0 {
-                    let stored = self.with_backend(|backend| {
-                        recovery::read_blob_verified_via(
-                            backend,
-                            BlobKind::Object,
-                            old_ref.hash,
-                            identity::CHUNK_DOMAIN,
-                        )
-                    })?;
+                    let stored = self.read_blob_verified_keyed(
+                        BlobKind::Object,
+                        old_ref.hash,
+                        identity::CHUNK_DOMAIN,
+                    )?;
                     self.note_range_write_chunk_read();
                     if stored.len() as u64 != old_ref.len {
                         return Err(Error::corrupt("chunk length disagrees with manifest"));
@@ -9977,14 +10022,11 @@ impl Store {
             ContentIdentity::WholeFileV1 => {
                 let mut hasher = identity::content_hash_hasher();
                 for chunk in &chunks {
-                    let data = self.with_backend(|backend| {
-                        recovery::read_blob_verified_via(
-                            backend,
-                            BlobKind::Object,
-                            chunk.hash,
-                            identity::CHUNK_DOMAIN,
-                        )
-                    })?;
+                    let data = self.read_blob_verified_keyed(
+                        BlobKind::Object,
+                        chunk.hash,
+                        identity::CHUNK_DOMAIN,
+                    )?;
                     self.note_range_write_chunk_read();
                     if data.len() as u64 != chunk.len {
                         return Err(Error::corrupt("chunk length disagrees with manifest"));
@@ -10221,14 +10263,11 @@ impl Store {
             if let Some(old_ref) = old_ref {
                 let keep = checked_usize(old_ref.len.min(chunk_len), "chunk keep length")?;
                 if keep > 0 {
-                    let stored = self.with_backend(|backend| {
-                        recovery::read_blob_verified_via(
-                            backend,
-                            BlobKind::Object,
-                            old_ref.hash,
-                            identity::CHUNK_DOMAIN,
-                        )
-                    })?;
+                    let stored = self.read_blob_verified_keyed(
+                        BlobKind::Object,
+                        old_ref.hash,
+                        identity::CHUNK_DOMAIN,
+                    )?;
                     self.note_range_write_chunk_read();
                     if stored.len() as u64 != old_ref.len {
                         return Err(Error::corrupt("chunk length disagrees with manifest"));
@@ -10332,7 +10371,7 @@ impl Store {
         let base_manifest = if base_id == old.content {
             old_manifest.clone()
         } else {
-            self.with_backend(|backend| recovery::read_manifest_via(backend, base_id))?
+            self.read_manifest_keyed(base_id)?
         };
         if base_manifest.content_hash != base_root || base_manifest.size != base_size {
             return Err(Error::corrupt(
@@ -10916,7 +10955,7 @@ pub(crate) fn mark_manifest_tree(
         return;
     }
     reach.mark_manifest(manifest_id, origin);
-    match store.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id)) {
+    match store.read_manifest_keyed(manifest_id) {
         Ok(manifest) => {
             if let Some(rep) = &manifest.representation {
                 if rep.kind == RepresentationKind::Codec || rep.kind == RepresentationKind::Tensor {

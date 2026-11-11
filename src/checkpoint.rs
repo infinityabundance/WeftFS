@@ -515,6 +515,10 @@ pub struct CheckpointRestoreReport {
     /// Backend bytes read (manifest + frame blobs), measured by the backend.
     pub store_bytes_read: u64,
     pub store_reads: u64,
+    /// Ordered-pipeline counters when the restore ran through
+    /// [`Store::restore_checkpoint_pipelined`]; `None` for the sequential
+    /// restore. Never affects exactness.
+    pub pipeline: Option<crate::restore_pipeline::RestorePipelineStats>,
 }
 
 // ---------------------------------------------------------------------------
@@ -2449,6 +2453,7 @@ impl RestorePrologue {
         file_sha256: [u8; 32],
         before: crate::backend::BackendStats,
         after: crate::backend::BackendStats,
+        pipeline: Option<crate::restore_pipeline::RestorePipelineStats>,
     ) -> Result<CheckpointRestoreReport> {
         let exact_source_file = self
             .source_sha256
@@ -2492,6 +2497,7 @@ impl RestorePrologue {
             store_bytes_read: after.bytes_read.saturating_sub(before.bytes_read),
             store_reads: after.reads.saturating_sub(before.reads)
                 + after.range_reads.saturating_sub(before.range_reads),
+            pipeline,
         })
     }
 }
@@ -2607,6 +2613,7 @@ impl Store {
             hasher.finalize().into(),
             before,
             after,
+            None,
         )
     }
 
@@ -2642,7 +2649,29 @@ impl Store {
         pipeline: &crate::restore_pipeline::RestorePipelineOptions,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
-        self.restore_checkpoint_pipelined_inner(None, None, name, options, pipeline, false, writer)
+        self.restore_checkpoint_pipelined_inner(
+            None, None, name, options, pipeline, false, true, writer,
+        )
+    }
+
+    /// The same ordered restore without the per-tensor SHA-256 report field.
+    ///
+    /// The store still verifies every shard root, the whole-tensor content
+    /// root, the logical root, and (for an exact restore) the source SHA-256;
+    /// only the convenience `sha256` field of each [`RestoredTensor`] is left
+    /// zero. This exists so a scaling court can measure the store rather than
+    /// the harness's single-threaded hash of every tensor; a caller that wants
+    /// the field uses [`Store::restore_checkpoint_pipelined`].
+    pub fn restore_checkpoint_pipelined_without_tensor_sha<W: Write>(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        writer: &mut W,
+    ) -> Result<CheckpointRestoreReport> {
+        self.restore_checkpoint_pipelined_inner(
+            None, None, name, options, pipeline, false, false, writer,
+        )
     }
 
     /// [`Store::restore_checkpoint_pipelined`] against a pinned snapshot.
@@ -2662,6 +2691,7 @@ impl Store {
             options,
             pipeline,
             false,
+            true,
             writer,
         )
     }
@@ -2675,6 +2705,7 @@ impl Store {
         options: &CheckpointRestoreOptions,
         pipeline: &crate::restore_pipeline::RestorePipelineOptions,
         lazy_tiles: bool,
+        hash_tensors: bool,
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         let prologue = self.restore_prologue(state, snapshot, name, options)?;
@@ -2707,6 +2738,7 @@ impl Store {
             &sizes,
             pipeline,
             |_index, tensor| {
+                let _probe = self.begin_tensor_probe(_index);
                 self.restore_tensor(
                     name, tensor, region, topology, &limits, state, snapshot, lazy_tiles, &tiles,
                 )
@@ -2734,7 +2766,11 @@ impl Store {
                     full_root_verified: restored.full_root_verified,
                     shard_roots_verified: restored.shard_roots_verified,
                     topology_root: restored.topology_root,
-                    sha256: safetensors::sha256(&restored.bytes),
+                    sha256: if hash_tensors {
+                        safetensors::sha256(&restored.bytes)
+                    } else {
+                        [0u8; 32]
+                    },
                 });
                 Ok(())
             },
@@ -2756,6 +2792,7 @@ impl Store {
             hasher.finalize().into(),
             before,
             after,
+            Some(outcome),
         )
     }
 

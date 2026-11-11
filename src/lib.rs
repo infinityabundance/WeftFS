@@ -54,6 +54,7 @@ pub mod kv_capability;
 pub mod kv_prefix;
 pub mod load_attestation;
 pub mod load_receipt;
+pub mod lock_probe;
 pub mod mw2;
 pub mod object_cache;
 pub mod packs;
@@ -108,6 +109,7 @@ pub use load_receipt::{
     LoadReceipt, LoadReceiptOptions, LoadReceiptTensor, LoadVerification, LOAD_RECEIPT_SCHEMA,
     LOAD_SET_DOMAIN,
 };
+pub use lock_probe::{LockProbeReport, SectionSummary, TensorLockRow, ThreadProbeRow};
 pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStats};
 pub use packs::{PackOptions, PackReclaim, PackStats, PackedBlobPlane};
 pub use parallel::{

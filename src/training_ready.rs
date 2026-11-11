@@ -478,9 +478,7 @@ impl Store {
                             record.size
                         )));
                     }
-                    let manifest = self.with_backend(|backend| {
-                        recovery::read_manifest_via(backend, record.content)
-                    })?;
+                    let manifest = self.read_manifest_keyed(record.content)?;
                     let identity_name = manifest.identity.as_str().to_owned();
                     (
                         identity::content_hash(&bytes),

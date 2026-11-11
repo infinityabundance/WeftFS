@@ -226,7 +226,7 @@ impl Store {
                 }
             };
             let manifest =
-                self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+                self.read_manifest_keyed(record.content)?;
             let from_strategy = manifest
                 .representation
                 .as_ref()
@@ -439,9 +439,7 @@ impl Store {
                     })?);
                 }
                 for dependency in &rep.dependencies {
-                    let dependency_manifest = self.with_backend(|backend| {
-                        recovery::read_manifest_via(backend, *dependency)
-                    })?;
+                    let dependency_manifest = self.read_manifest_keyed(*dependency)?;
                     total = total
                         .saturating_add(self.representation_physical_bytes(&dependency_manifest)?);
                 }

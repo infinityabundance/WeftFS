@@ -70,6 +70,7 @@ fn run() -> Result<(), String> {
         "baselines" => baselines(&args[1..]),
         "checkpoint" => checkpoint(&args[1..]),
         "restore" => restore(&args[1..]),
+        "readers" => readers(&args[1..]),
         "throughput" => throughput(&args[1..]),
         "topology" => topology(&args[1..]),
         "crash-child" => crash_child(&args[1..]),
@@ -1268,6 +1269,68 @@ impl Write for HashSink {
     }
 }
 
+/// Counts restored bytes without hashing them, so a scaling run measures the
+/// store's decode + read path rather than the harness's single-threaded
+/// SHA-256 of the output. Exactness is proven separately with a `HashSink`.
+struct CountSink {
+    bytes: u64,
+}
+
+impl Write for CountSink {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.bytes += buf.len() as u64;
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+/// The restore destination chosen by `--sink`.
+enum RestoreSink {
+    Sha(HashSink),
+    Count(CountSink),
+}
+
+impl RestoreSink {
+    fn new(sha: bool) -> Self {
+        if sha {
+            RestoreSink::Sha(HashSink {
+                hasher: Sha256::new(),
+                bytes: 0,
+            })
+        } else {
+            RestoreSink::Count(CountSink { bytes: 0 })
+        }
+    }
+
+    fn bytes(&self) -> u64 {
+        match self {
+            RestoreSink::Sha(sink) => sink.bytes,
+            RestoreSink::Count(sink) => sink.bytes,
+        }
+    }
+
+    fn digest(self) -> Option<[u8; 32]> {
+        match self {
+            RestoreSink::Sha(sink) => Some(sink.hasher.finalize().into()),
+            RestoreSink::Count(_) => None,
+        }
+    }
+}
+
+impl Write for RestoreSink {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            RestoreSink::Sha(sink) => sink.write(buf),
+            RestoreSink::Count(sink) => sink.write(buf),
+        }
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 fn measure(args: &[String]) -> Result<(), String> {
     let store_path = PathBuf::from(required(args, "--store")?);
     let ingest_path = PathBuf::from(required(args, "--ingest")?);
@@ -1866,23 +1929,30 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
     .map_err(|err| err.to_string())?;
     let profiling = phase_profiling_requested();
 
-    if !backend_is_remote(args) && store_path.exists() {
+    if !backend_is_remote(args) && store_path.exists() && !flag(args, "--append") {
         fs::remove_dir_all(&store_path)
             .map_err(|err| format!("{}: {err}", store_path.display()))?;
     }
-    let mut store = Store::init_with_backend(
-        &store_path,
-        options(65_536, 256),
-        backend_from_with_suffix(
-            args,
-            &if backend_is_remote(args) {
-                remote_suffix(&store_path, 0, 1)
-            } else {
-                String::new()
-            },
-        )?,
-    )
-    .map_err(|e| e.to_string())?;
+    let backend = backend_from_with_suffix(
+        args,
+        &if backend_is_remote(args) {
+            remote_suffix(&store_path, 0, 1)
+        } else {
+            String::new()
+        },
+    )?;
+    let mut store = if flag(args, "--append") {
+        Store::open_with_options_and_backend(
+            &store_path,
+            OpenMode::ReadWrite,
+            options(65_536, 256),
+            backend,
+        )
+        .map_err(|err| format!("open {} for append: {err}", store_path.display()))?
+    } else {
+        Store::init_with_backend(&store_path, options(65_536, 256), backend)
+            .map_err(|e| e.to_string())?
+    };
     let started = Instant::now();
     if profiling {
         weftfs::phase_profile::begin();
@@ -1963,6 +2033,243 @@ fn phase_profiling_requested() -> bool {
     weftfs::phase_profile::enabled()
 }
 
+/// Concurrent independent readers on distinct checkpoints.
+///
+/// Opens one read-only [`Store`] and runs `--readers` scoped threads, each
+/// restoring one of `--names` (round-robin) `--per-reader` times per
+/// repetition. Every restore is checked against its checkpoint's recorded
+/// source SHA-256. The report is the per-reader rate, the aggregate rate, and
+/// (with `WEFT_LOCK_PROBE=1`) the same backend-lock probe the single-restore
+/// phase reports.
+fn readers(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let names: Vec<String> = required(args, "--names")?
+        .split(',')
+        .map(|name| name.trim().to_owned())
+        .filter(|name| !name.is_empty())
+        .collect();
+    if names.is_empty() {
+        return Err("--names must name at least one checkpoint".to_owned());
+    }
+    let reader_count = parse_u64(args, "--readers", 4)? as usize;
+    let per_reader = parse_u64(args, "--per-reader", 1)? as usize;
+    let reps = parse_u64(args, "--reps", 1)? as usize;
+    let out = PathBuf::from(required(args, "--out")?);
+
+    let store = Store::open_with_options_and_backend(
+        &store_path,
+        OpenMode::ReadOnly,
+        options(65_536, 256),
+        backend_from_with_suffix(
+            args,
+            &if backend_is_remote(args) {
+                remote_suffix(&store_path, 0, 1)
+            } else {
+                String::new()
+            },
+        )?,
+    )
+    .map_err(|err| format!("open {}: {err}", store_path.display()))?;
+
+    // Load each checkpoint once so every reader checks against the recorded
+    // source SHA-256, not against the first reader's output.
+    let mut checkpoints: Vec<(String, Option<[u8; 32]>, u64)> = Vec::new();
+    for name in &names {
+        let manifest = store
+            .load_checkpoint(name)
+            .map_err(|err| format!("load checkpoint {name}: {err}"))?;
+        checkpoints.push((name.clone(), manifest.source_sha256, manifest.element_bytes));
+    }
+
+    let probe_enabled = std::env::var("WEFT_LOCK_PROBE")
+        .map(|value| value == "1")
+        .unwrap_or(false);
+    if probe_enabled {
+        store.set_lock_probe(true);
+    }
+
+    let mut workload_samples = Vec::new();
+    let mut aggregate: Vec<Json> = Vec::new();
+    for rep in 0..reps {
+        if probe_enabled {
+            store.reset_lock_probe();
+        }
+        let started = Instant::now();
+        let results: Vec<Json> = std::thread::scope(|scope| {
+            let mut handles = Vec::new();
+            for reader in 0..reader_count {
+                let (name, expected, logical) = &checkpoints[reader % checkpoints.len()];
+                let store = &store;
+                handles.push(scope.spawn(move || -> Result<Json, String> {
+                    let mut durations = Vec::new();
+                    let mut bytes = 0u64;
+                    let mut sha_match = true;
+                    for _ in 0..per_reader {
+                        let mut sink = HashSink {
+                            hasher: Sha256::new(),
+                            bytes: 0,
+                        };
+                        let restore_started = Instant::now();
+                        let report = store
+                            .restore_checkpoint_pipelined(
+                                name,
+                                &CheckpointRestoreOptions::default(),
+                                &RestorePipelineOptions::default(),
+                                &mut sink,
+                            )
+                            .map_err(|err| format!("reader {reader} restore {name}: {err}"))?;
+                        durations.push(restore_started.elapsed().as_secs_f64() * 1000.0);
+                        bytes = bytes.saturating_add(report.file_bytes);
+                        if let Some(expected) = expected {
+                            let digest: [u8; 32] = sink.hasher.finalize().into();
+                            if digest != *expected {
+                                sha_match = false;
+                            }
+                        }
+                    }
+                    let wall: f64 = durations.iter().sum();
+                    Ok(json!({
+                        "reader": reader,
+                        "checkpoint": name,
+                        "logical_bytes": logical,
+                        "restores": per_reader,
+                        "bytes": bytes,
+                        "wall_ms": round(wall),
+                        "mb_per_s": round(bytes as f64 / 1_000_000.0 / (wall / 1000.0).max(1e-9)),
+                        "sha256_match": sha_match,
+                        "latency": distribution(&durations),
+                    }))
+                }));
+            }
+            handles
+                .into_iter()
+                .map(|handle| handle.join().expect("reader thread panicked"))
+                .collect::<Result<Vec<_>, String>>()
+        })?;
+        let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
+        workload_samples.push(wall_ms);
+        let total_bytes: u64 = results
+            .iter()
+            .map(|row| row.get("bytes").and_then(Json::as_u64).unwrap_or(0))
+            .sum();
+        let rate = total_bytes as f64 / 1_000_000.0 / (wall_ms / 1000.0).max(1e-9);
+        let lock = if probe_enabled {
+            let report = store.lock_probe_report().with_wall_ms(wall_ms);
+            json!({
+                "wait": report.wait,
+                "hold": report.hold,
+                "max_demand": report.max_demand,
+                "mean_demand": round(report.mean_demand),
+                "hold_share_of_wall": report.hold_share_of_wall.map(round),
+                "wait_share_of_wall": report.wait_share_of_wall.map(round),
+            })
+        } else {
+            Json::Null
+        };
+        aggregate.push(json!({
+            "repetition": rep,
+            "readers": reader_count,
+            "per_reader": per_reader,
+            "wall_ms": round(wall_ms),
+            "total_bytes": total_bytes,
+            "aggregate_mb_per_s": round(rate),
+            "readers_report": results,
+            "lock": lock,
+        }));
+    }
+
+    let receipt = json!({
+        "schema": "weft.family-lifecycle.readers.v1",
+        "phase": "readers",
+        "store": store_path.display().to_string(),
+        "checkpoints": names,
+        "readers": reader_count,
+        "per_reader": per_reader,
+        "reps": reps,
+        "lock_probe_enabled": probe_enabled,
+        "sink": "SHA-256 hashing sink per reader: decode + backend read + hash, no host writeback",
+        "workload_wall": distribution(&workload_samples),
+        "repetitions": aggregate,
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    write_json(&out, &receipt)?;
+    println!("{}", out.display());
+    Ok(())
+}
+
+/// Render one backend-lock probe report with per-tensor attribution.
+///
+/// `names` and `sizes` are indexed by restore input position, so a row can be
+/// resolved back to the tensor the pipeline was decoding. Durations are
+/// reported in milliseconds; `backend_share_of_elapsed` is `(wait + hold) /
+/// elapsed` and `decode_cpu_ms` is `elapsed - wait - hold` for the same tensor
+/// (the part of its wall time that was not spent inside the store's backend
+/// lock).
+fn lock_report_json(report: &weftfs::LockProbeReport, names: &[String], sizes: &[u64]) -> Json {
+    #[derive(Default, Clone, Copy)]
+    struct Agg {
+        entries: u64,
+        bytes: u64,
+        wait_ns: u128,
+        hold_ns: u128,
+        elapsed_ns: u128,
+    }
+    let mut by_index: BTreeMap<usize, Agg> = BTreeMap::new();
+    for row in &report.tensors {
+        let entry = by_index.entry(row.index).or_default();
+        entry.entries = entry.entries.saturating_add(row.entries);
+        entry.bytes = entry.bytes.saturating_add(row.bytes);
+        entry.wait_ns = entry.wait_ns.saturating_add(row.wait_ns);
+        entry.hold_ns = entry.hold_ns.saturating_add(row.hold_ns);
+        entry.elapsed_ns = entry.elapsed_ns.saturating_add(row.elapsed_ns);
+    }
+    let mut rows: Vec<(usize, Agg)> = by_index.into_iter().collect();
+    rows.sort_by(|left, right| right.1.hold_ns.cmp(&left.1.hold_ns));
+    let hold_total_ms: f64 = rows.iter().map(|(_, row)| row.hold_ns as f64 / 1e6).sum();
+    let elapsed_total_ms: f64 = rows
+        .iter()
+        .map(|(_, row)| row.elapsed_ns as f64 / 1e6)
+        .sum();
+    let tensors: Vec<Json> = rows
+        .iter()
+        .take(10)
+        .map(|(index, row)| {
+            let backend_ns = row.wait_ns.saturating_add(row.hold_ns);
+            let share = if row.elapsed_ns == 0 {
+                0.0
+            } else {
+                backend_ns as f64 / row.elapsed_ns as f64
+            };
+            let cpu_ns = row.elapsed_ns.saturating_sub(backend_ns);
+            json!({
+                "index": index,
+                "name": names.get(*index).cloned(),
+                "element_bytes": sizes.get(*index).copied(),
+                "entries": row.entries,
+                "bytes": row.bytes,
+                "wait_ms": round(row.wait_ns as f64 / 1e6),
+                "hold_ms": round(row.hold_ns as f64 / 1e6),
+                "elapsed_ms": round(row.elapsed_ns as f64 / 1e6),
+                "backend_share_of_elapsed": round(share),
+                "decode_cpu_ms": round(cpu_ns as f64 / 1e6),
+            })
+        })
+        .collect();
+    json!({
+        "wait": report.wait,
+        "hold": report.hold,
+        "max_demand": report.max_demand,
+        "mean_demand": round(report.mean_demand),
+        "hold_share_of_wall": report.hold_share_of_wall.map(round),
+        "wait_share_of_wall": report.wait_share_of_wall.map(round),
+        "hold_total_ms_over_tensors": round(hold_total_ms),
+        "elapsed_total_ms_over_tensors": round(elapsed_total_ms),
+        "tensor_rows": rows.len(),
+        "tensors": tensors,
+        "threads": report.threads,
+    })
+}
+
 /// Pipelined full-checkpoint restore at several worker counts.
 ///
 /// The sink hashes every restored byte and counts it, so exactness is proven
@@ -1993,6 +2300,13 @@ fn restore(args: &[String]) -> Result<(), String> {
         })
         .collect::<Result<Vec<_>, _>>()?;
     let max_inflight = parse_u64(args, "--max-inflight-bytes", 256 * 1024 * 1024)? as usize;
+    let sink_mode = value_of(args, "--sink").unwrap_or_else(|| "sha256".to_owned());
+    if sink_mode != "sha256" && sink_mode != "counting" {
+        return Err(format!(
+            "--sink must be sha256 or counting (got `{sink_mode}`)"
+        ));
+    }
+    let use_sha = sink_mode == "sha256";
 
     let open_started = Instant::now();
     let store = Store::open_with_options_and_backend(
@@ -2023,6 +2337,28 @@ fn restore(args: &[String]) -> Result<(), String> {
         .unwrap_or(0);
     let tensors = manifest.tensors.len();
 
+    // Restore order is the container's `source_offset` order, so a probe row's
+    // index is resolved back to the tensor the pipeline was decoding.
+    let mut restore_order: Vec<(usize, String, u64)> = manifest
+        .tensors
+        .iter()
+        .enumerate()
+        .map(|(position, tensor)| (position, tensor.name.clone(), tensor.element_bytes))
+        .collect();
+    restore_order.sort_by_key(|(position, _, _)| manifest.tensors[*position].source_offset);
+    let order_names: Vec<String> = restore_order
+        .iter()
+        .map(|(_, name, _)| name.clone())
+        .collect();
+    let order_sizes: Vec<u64> = restore_order.iter().map(|(_, _, size)| *size).collect();
+
+    let probe_enabled = std::env::var("WEFT_LOCK_PROBE")
+        .map(|value| value == "1")
+        .unwrap_or(false);
+    if probe_enabled {
+        store.set_lock_probe(true);
+    }
+
     let mut matrix: BTreeMap<String, Json> = BTreeMap::new();
     for &worker_threads in &threads {
         for &tile_worker_threads in &tile_threads {
@@ -2037,30 +2373,60 @@ fn restore(args: &[String]) -> Result<(), String> {
             let mut decode_bytes = 0u64;
             let mut stats_row = Json::Null;
             let mut sha_match = false;
+            let mut last_pipeline = RestorePipelineStats::default();
+            // One unrecorded restore immediately before this configuration, so
+            // a configuration never pays for the previous one's cache state.
+            {
+                let mut warm = RestoreSink::new(false);
+                store
+                    .restore_checkpoint_pipelined_without_tensor_sha(
+                        &name,
+                        &CheckpointRestoreOptions::default(),
+                        &RestorePipelineOptions::default(),
+                        &mut warm,
+                    )
+                    .map_err(|err| format!("warm-up restore: {err}"))?;
+            }
+            if probe_enabled {
+                store.reset_lock_probe();
+            }
             for rep in 0..reps {
                 let before = store.backend_stats();
-                let mut sink = HashSink {
-                    hasher: Sha256::new(),
-                    bytes: 0,
-                };
+                let mut sink = RestoreSink::new(use_sha);
                 let started = Instant::now();
-                let report = store
-                    .restore_checkpoint_pipelined(
+                let report = if use_sha {
+                    store.restore_checkpoint_pipelined(
                         &name,
                         &CheckpointRestoreOptions::default(),
                         &pipeline,
                         &mut sink,
                     )
-                    .map_err(|err| format!("pipelined restore: {err}"))?;
+                } else {
+                    store.restore_checkpoint_pipelined_without_tensor_sha(
+                        &name,
+                        &CheckpointRestoreOptions::default(),
+                        &pipeline,
+                        &mut sink,
+                    )
+                }
+                .map_err(|err| format!("pipelined restore: {err}"))?;
                 samples.push(started.elapsed().as_secs_f64() * 1000.0);
                 let after = store.backend_stats();
                 backend_bytes = after.bytes_read.saturating_sub(before.bytes_read);
                 requests = after.reads.saturating_sub(before.reads)
                     + after.range_reads.saturating_sub(before.range_reads);
+                if let Some(stats) = report.pipeline {
+                    last_pipeline = stats;
+                }
+                let sink_bytes = sink.bytes();
+                if let Some(digest) = sink.digest() {
+                    if rep == 0 {
+                        sha_match =
+                            source_sha256.is_empty() || hex::encode(digest) == source_sha256;
+                    }
+                }
                 if rep == 0 {
-                    let digest = hex::encode(sink.hasher.finalize());
-                    sha_match = source_sha256.is_empty() || digest == source_sha256;
-                    if sink.bytes != report.file_bytes {
+                    if sink_bytes != report.file_bytes {
                         return Err("restored sink saw a different byte count".to_owned());
                     }
                     decode_bytes = report.tensors.iter().map(|tensor| tensor.bytes).sum();
@@ -2076,12 +2442,67 @@ fn restore(args: &[String]) -> Result<(), String> {
                     });
                 }
             }
+            // Snapshot the probe before the untimed verification restore, so
+            // the measured window is exactly the repetitions above.
+            let probe_snapshot = if probe_enabled {
+                Some(store.lock_probe_report())
+            } else {
+                None
+            };
+            // A counting sink never hashed its output; prove exactness with one
+            // untimed SHA-256 pass at this worker count.
+            if !use_sha {
+                let mut verify = RestoreSink::new(true);
+                store
+                    .restore_checkpoint_pipelined(
+                        &name,
+                        &CheckpointRestoreOptions::default(),
+                        &pipeline,
+                        &mut verify,
+                    )
+                    .map_err(|err| format!("verification restore: {err}"))?;
+                sha_match = source_sha256.is_empty()
+                    || verify
+                        .digest()
+                        .map(|digest| hex::encode(digest) == source_sha256)
+                        .unwrap_or(false);
+            }
             let best_ms = samples
                 .iter()
                 .cloned()
                 .fold(f64::INFINITY, f64::min)
                 .max(1.0);
             let mb_per_s = logical_bytes as f64 / 1_000_000.0 / (best_ms / 1000.0);
+            let wall_sum_ms: f64 = samples.iter().sum();
+            let utilisation = if last_pipeline.total_ms > 0.0 {
+                last_pipeline.decode_sum_ms
+                    / (last_pipeline.total_ms * last_pipeline.effective_threads.max(1) as f64)
+            } else {
+                0.0
+            };
+            let pipeline_json = json!({
+                "requested_threads": last_pipeline.requested_threads,
+                "effective_threads": last_pipeline.effective_threads,
+                "tasks": last_pipeline.tasks,
+                "observed_max_inflight_bytes": last_pipeline.observed_max_inflight_bytes,
+                "observed_max_inflight_tasks": last_pipeline.observed_max_inflight_tasks,
+                "oversized_tasks": last_pipeline.oversized_tasks,
+                "decode_wall_ms": round(last_pipeline.decode_wall_ms),
+                "decode_sum_ms": round(last_pipeline.decode_sum_ms),
+                "transfer_ms": round(last_pipeline.transfer_ms),
+                "write_ms": round(last_pipeline.write_ms),
+                "total_ms": round(last_pipeline.total_ms),
+                "worker_utilisation": round(utilisation),
+            });
+            let lock_json = if let Some(report) = probe_snapshot {
+                lock_report_json(
+                    &report.with_wall_ms(wall_sum_ms),
+                    &order_names,
+                    &order_sizes,
+                )
+            } else {
+                Json::Null
+            };
             matrix.insert(
                 format!("threads_{worker_threads}_tiles_{tile_worker_threads}"),
                 json!({
@@ -2095,9 +2516,12 @@ fn restore(args: &[String]) -> Result<(), String> {
                     "decode_bytes_last_rep": decode_bytes,
                     "backend_bytes_read_last_rep": backend_bytes,
                     "backend_requests_last_rep": requests,
-                    "mb_per_s_best": mb_per_s,
+                    "mb_per_s_best": round(mb_per_s),
                     "sha256_match": sha_match,
+                    "sink": sink_mode,
                     "stats": stats_row,
+                    "pipeline": pipeline_json,
+                    "lock": lock_json,
                     "latency": distribution(&samples),
                 }),
             );
@@ -2113,6 +2537,9 @@ fn restore(args: &[String]) -> Result<(), String> {
         .map(|tensor| tensor.name.clone())
         .ok_or_else(|| "checkpoint has no tensors".to_owned())?;
     let mut single = Vec::new();
+    if probe_enabled {
+        store.reset_lock_probe();
+    }
     for _ in 0..reps {
         let options = CheckpointRestoreOptions {
             tensor: Some(subject.clone()),
@@ -2133,6 +2560,13 @@ fn restore(args: &[String]) -> Result<(), String> {
             .map_err(|err| format!("single tensor restore: {err}"))?;
         single.push(started.elapsed().as_secs_f64() * 1000.0);
     }
+    let single_wall_ms: f64 = single.iter().sum();
+    let single_lock = if probe_enabled {
+        let report = store.lock_probe_report().with_wall_ms(single_wall_ms);
+        lock_report_json(&report, &[subject.clone()], &[largest])
+    } else {
+        Json::Null
+    };
 
     let receipt = json!({
         "schema": "weft.family-lifecycle.restore.v1",
@@ -2144,8 +2578,14 @@ fn restore(args: &[String]) -> Result<(), String> {
         "largest_tensor": subject,
         "largest_tensor_bytes": largest,
         "amdahl_cap_speedup": if largest > 0 { logical_bytes as f64 / largest as f64 } else { 0.0 },
-        "sink": "SHA-256 hashing sink: decode + backend read + hash, no host writeback",
+        "sink": if use_sha {
+            "SHA-256 hashing sink: decode + backend read + hash, no host writeback"
+        } else {
+            "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count"
+        },
+        "lock_probe_enabled": probe_enabled,
         "single_largest_tensor": distribution(&single),
+        "single_largest_tensor_lock": single_lock,
         "configurations": matrix,
         "peak_rss_kib": peak_rss_kib(),
     });

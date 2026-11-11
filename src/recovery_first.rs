@@ -266,7 +266,7 @@ impl Store {
             ));
         }
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, content))?;
+            self.read_manifest_keyed(content)?;
         let mut deepest = depth;
         if let Some(representation) = &manifest.representation {
             for dependency in &representation.dependencies {

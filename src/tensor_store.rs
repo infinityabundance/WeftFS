@@ -1967,7 +1967,7 @@ impl Store {
     ) -> Result<Vec<u8>> {
         let record = self.object_meta(authorized.object_id())?;
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2020,7 +2020,7 @@ impl Store {
     ) -> Result<(Vec<u8>, TileDecodeStats)> {
         let record = self.object_meta(id)?;
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2085,7 +2085,7 @@ impl Store {
             ));
         }
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -2102,14 +2102,7 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("engram representation has no frame id"))?;
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let meta = weftcodec::engram::engram_metadata(&frame, &limits)?;
@@ -2265,7 +2258,7 @@ impl Store {
     ) -> Result<(RegionRead, TileDecodeStats)> {
         let record = self.object_meta(id)?;
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
@@ -2315,14 +2308,7 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected = match tensor.tensor_mode {
@@ -2365,21 +2351,14 @@ impl Store {
         let mut resolver = MapResolver::new();
         for dependency in &rep.dependencies {
             let manifest =
-                self.with_backend(|backend| recovery::read_manifest_via(backend, *dependency))?;
+                self.read_manifest_keyed(*dependency)?;
             let dep_rep = manifest
                 .representation
                 .ok_or_else(|| Error::corrupt("engram dependency has no representation"))?;
             let frame_id = dep_rep
                 .frame
                 .ok_or_else(|| Error::corrupt("engram dependency has no frame id"))?;
-            let frame_bytes = self.with_backend(|backend| {
-                recovery::read_blob_verified_via(
-                    backend,
-                    BlobKind::Manifest,
-                    frame_id,
-                    identity::MANIFEST_DOMAIN,
-                )
-            })?;
+            let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
             let frame = Frame::parse(&frame_bytes, &limits)?;
             resolver.insert(frame.header.content_hash, frame_bytes);
         }
@@ -2402,14 +2381,7 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         if frame.header.mode != Mode::EngramShard {
@@ -3202,7 +3174,7 @@ impl Store {
         record: &ObjectRecord,
     ) -> Result<weftcodec::TensorShardedMeta> {
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -3214,14 +3186,7 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         Ok(weftcodec::decode_shard_frame(&frame, &limits)?.meta)
@@ -3252,7 +3217,7 @@ impl Store {
             ));
         }
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, record.content))?;
+            self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 let tensor = rep
@@ -4969,7 +4934,7 @@ impl Store {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
         let manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, manifest_id))?;
+            self.read_manifest_keyed(manifest_id)?;
         let Some(rep) = &manifest.representation else {
             return Ok(0);
         };
@@ -5286,14 +5251,7 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                frame_id,
-                identity::MANIFEST_DOMAIN,
-            )
-        })?;
+        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match tensor.tensor_mode {
@@ -5894,7 +5852,7 @@ impl Store {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
         let dep_manifest =
-            self.with_backend(|backend| recovery::read_manifest_via(backend, dep_root))?;
+            self.read_manifest_keyed(dep_root)?;
         seen.push(dep_root);
         let base_bytes = self.read_manifest_bytes_inner_gated(
             &dep_manifest,

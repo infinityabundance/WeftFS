@@ -797,14 +797,7 @@ impl Store {
             .into_iter()
             .find(|item| item.envelope_id == envelope_id)
             .ok_or_else(|| Error::not_found("no stored capability envelope has this id"))?;
-        let bytes = self.with_backend(|backend| {
-            recovery::read_blob_verified_via(
-                backend,
-                BlobKind::Manifest,
-                stored.blob_id,
-                DOMAIN_BLOB,
-            )
-        })?;
+        let bytes = self.read_blob_verified_keyed(BlobKind::Manifest, stored.blob_id, DOMAIN_BLOB)?;
         let verified = verify_envelope(&bytes, revocations, now_ns, None)
             .map_err(|err| Error::unauthorized(format!("capability envelope: {err}")))?;
         if verified.envelope_id != envelope_id {
@@ -1608,14 +1601,7 @@ pub(crate) fn selector_predicates_allowed(selector: &Selector, cap: &CapabilityC
 pub(crate) fn store_causal_closure(store: &Store, closure: &CausalClosure) -> Result<Hash32> {
     let bytes = closure.canonical_bytes()?;
     let id = closure.id()?;
-    let stored = store.with_backend(|backend| {
-        recovery::read_blob_verified_via(
-            backend,
-            BlobKind::Manifest,
-            id,
-            weftcodec::hash::DOMAIN_CAUSAL,
-        )
-    });
+    let stored = store.read_blob_verified_keyed(BlobKind::Manifest, id, weftcodec::hash::DOMAIN_CAUSAL);
     if stored.is_err() {
         store.store_causal_blob(&bytes)?;
     }
