@@ -21,7 +21,9 @@ image on a `v*` tag or manual dispatch.
 | `ghcr.io/infinityabundance/weftfs-go` | `weftfs` (Go) | store + FUSE CLI |
 
 Tags: `v1.3.0` and `latest` (release workflow). The v1.2.0 images remain
-published; the v1.3.0 tag is cut by this release's publishing step. Images are
+published, and the four `v1.3.0` images are published; their image-index
+digests are recorded in
+`bench/receipts/release-artifacts-20261111T200115Z.json`. Images are
 built from the program home commit and the pinned submodule commits.
 
 ## Pull and run
@@ -65,7 +67,9 @@ weftfs = "1.3.0"
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus
 FUSE frontend (the `fuse` feature enables mounting). The v1.2.0 crates remain
-published; the v1.3.0 crates are published by this release's publishing step.
+published, and crates.io serves `weftcodec 1.3.0` and `weftfs 1.3.0`; the live
+checksums are recorded in
+`bench/receipts/release-artifacts-20261111T200115Z.json`.
 See `docs/RELEASE-v1.3.0.md`, the previous `docs/RELEASE-v1.2.0.md`,
 `docs/RELEASE-v1.1.0.md`,
 `docs/RELEASE-v1.0.0.md`,

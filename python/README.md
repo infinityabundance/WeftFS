@@ -21,17 +21,26 @@ pip install "dist/weftcodec-1.3.0-py3-none-any.whl[orbax]"
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI.** `weftcodec 1.3.0` is published on PyPI:
-> <https://pypi.org/project/weftcodec/1.3.0/> (uploaded by this release's
-> publishing step; the 1.2.0 artifacts remain available). The wheel and sdist
-> are built in the Docker court with `scripts/publish-pypi.sh`, and the same
-> artifacts are attached to the GitHub release. The published **1.2.0** long
-> description is stale — it still says PyPI is unpublished — and is superseded
-> by this one, not re-uploaded.
+> **PyPI.** `weftcodec 1.3.0` is **not published on PyPI.**
+> `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`; that file does
+> not exist and no token was available, so the wheel and sdist are built and
+> `twine check`-clean but were not uploaded. Exact artifacts:
+> `weftcodec-1.3.0-py3-none-any.whl` sha256
+> `ba1ddf26c8fcb2791f875d9a16b766dfaa7ba999c4fbcbb10bf4d744d51f3660` and
+> `weftcodec-1.3.0.tar.gz` sha256
+> `d6eb391ef25bbe7e361a7232422f0d239f50af2bc60bd52203b194cefea655c7`; the
+> built files sit in `python/dist/`. Recorded in
+> `bench/receipts/release-artifacts-20261111T200115Z.json`. **PyPI serves
+> 1.2.0**, whose published long description is stale (it says PyPI is
+> unpublished and stops at mode 16); it is superseded by this document, not
+> re-uploaded.
 >
 > ```sh
-> pip install weftcodec==1.3.0
+> pip install weftcodec==1.2.0     # what PyPI actually serves today
 > ```
+
+Install the 1.3.0 wheel from `python/dist/` (commands above) or from the GitHub
+release; `pip install weftcodec==1.3.0` fails until the upload is unblocked.
 
 ## Usage
 
