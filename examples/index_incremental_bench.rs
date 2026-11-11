@@ -94,6 +94,62 @@ fn data_bytes(root: &Path) -> u64 {
     dir_bytes(&root.join("objects")) + dir_bytes(&root.join("manifests"))
 }
 
+/// Bytes actually allocated on the filesystem (tmpfs charges whole pages), not
+/// the apparent file length. This is what exhausts a bounded `/tmp`.
+fn allocated_bytes(path: &Path) -> u64 {
+    use std::os::unix::fs::MetadataExt;
+    let Ok(entries) = fs::read_dir(path) else {
+        return 0;
+    };
+    let mut total = 0;
+    for entry in entries.flatten() {
+        let Ok(meta) = entry.metadata() else { continue };
+        if meta.is_dir() {
+            total += allocated_bytes(&entry.path());
+        } else {
+            total += meta.blocks() * 512;
+        }
+    }
+    total
+}
+
+fn file_count(path: &Path) -> u64 {
+    let Ok(entries) = fs::read_dir(path) else {
+        return 0;
+    };
+    let mut total = 0;
+    for entry in entries.flatten() {
+        let Ok(meta) = entry.metadata() else { continue };
+        if meta.is_dir() {
+            total += file_count(&entry.path());
+        } else {
+            total += 1;
+        }
+    }
+    total
+}
+
+/// Store-wide allocation breakdown: the three trees whose file count drives the
+/// page floor plus their apparent sizes.
+fn tree_breakdown(root: &Path) -> serde_json::Value {
+    let tree = |name: &str| {
+        let path = root.join(name);
+        json!({
+            "apparent_bytes": dir_bytes(&path),
+            "allocated_bytes": allocated_bytes(&path),
+            "files": file_count(&path),
+        })
+    };
+    json!({
+        "commits": tree("commits"),
+        "indexes": tree("indexes"),
+        "objects": tree("objects"),
+        "manifests": tree("manifests"),
+        "total_allocated_bytes": allocated_bytes(root),
+        "total_files": file_count(root),
+    })
+}
+
 fn index_path(root: &Path, commit: weftfs::identity::Hash32) -> PathBuf {
     let hex = commit.to_hex();
     root.join("indexes")
@@ -340,7 +396,9 @@ fn run(mode: &str, live: usize, checkpoints: &[u64]) -> serde_json::Value {
                 "class": format!("{:?}", err.class()),
                 "message": err.to_string(),
                 "index_bytes": dir_bytes(&root.join("indexes")),
+                "commit_bytes": dir_bytes(&root.join("commits")),
                 "data_bytes": data_bytes(&root),
+                "allocation": tree_breakdown(&root),
             });
             break;
         }
@@ -405,6 +463,10 @@ fn run(mode: &str, live: usize, checkpoints: &[u64]) -> serde_json::Value {
             },
             "index_bytes": index_bytes,
             "data_bytes": data,
+            "commit_bytes": dir_bytes(&root.join("commits")),
+            "index_files": file_count(&root.join("indexes")),
+            "commit_files": file_count(&root.join("commits")),
+            "allocated_bytes": allocated_bytes(&root),
             "index_ppm_of_data": if data == 0 {
                 0
             } else {
@@ -446,6 +508,8 @@ fn run(mode: &str, live: usize, checkpoints: &[u64]) -> serde_json::Value {
             "generation": store_generation(&root),
             "index_bytes": index_bytes,
             "data_bytes": data,
+            "commit_bytes": dir_bytes(&root.join("commits")),
+            "allocation": tree_breakdown(&root),
             "head_segment": kind,
             "head_chain_depth": depth,
             "index_stats": {
