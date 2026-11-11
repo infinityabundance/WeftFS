@@ -1,0 +1,192 @@
+{
+  "command": "scripts/docker-court.sh rust \"cd /work && bash bench/scripts/kv_capability_court.sh\"",
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/rust-court:1",
+    "court_image_id": "sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb",
+    "court_kernel": "7.3.3-1-cachyos",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "repo_weftcodec": "4cd729f55b65a80370946499feaff70a5277ef04",
+    "repo_weftfs": "93b33d8deefd64a2853df657c3b09e7ec8a9ea31",
+    "reps_per_path": 1000
+  },
+  "fixture": {
+    "cache_state": "warm (one warm-up read before sampling)",
+    "grant": "Ed25519 weft.capability.envelope.v1, namespaces=[kv.tenant-a], roots=[descriptor id]",
+    "kind": "synthetic deterministic BF16 KV page",
+    "model": "qwen2.5-0.5b@060db649",
+    "session": "session-42",
+    "store": "normative local backend, fixed clock",
+    "tenant": "tenant-a"
+  },
+  "label": "Single host, warm cache, synthetic page bytes, in-process store. Not a network or production claim.",
+  "schema": "weft.receipt.kv-capability.v1",
+  "sizes": [
+    {
+      "anonymous_denial_text": "kv page is not available to this principal",
+      "authorized_exact_bytes": true,
+      "cost": {
+        "authorize_decode_control": {
+          "max_us": 2296.553,
+          "mean_us": 28.109,
+          "min_us": 17.794,
+          "p50_ns": 18084,
+          "p50_us": 18.084,
+          "p95_us": 20.338,
+          "p99_ns": 53830,
+          "p99_us": 53.83,
+          "samples": 1000
+        },
+        "cached_verify_once_authorize_decode": {
+          "max_us": 3067.17,
+          "mean_us": 45.724,
+          "min_us": 32.561,
+          "p50_ns": 34464,
+          "p50_us": 34.464,
+          "p95_us": 45.595,
+          "p99_ns": 110366,
+          "p99_us": 110.366,
+          "samples": 1000
+        },
+        "denied_path": {
+          "max_us": 90.709,
+          "mean_us": 6.469,
+          "min_us": 6.151,
+          "p50_ns": 6332,
+          "p50_us": 6.332,
+          "p95_us": 6.472,
+          "p99_ns": 8496,
+          "p99_us": 8.496,
+          "samples": 1000
+        },
+        "envelope_load_and_verify_only": {
+          "max_us": 177.16,
+          "mean_us": 50.193,
+          "min_us": 45.835,
+          "p50_ns": 48189,
+          "p50_us": 48.189,
+          "p95_us": 53.299,
+          "p99_ns": 115455,
+          "p99_us": 115.455,
+          "samples": 1001
+        },
+        "full_load_verify_authorize_decode": {
+          "max_us": 3604.973,
+          "mean_us": 94.887,
+          "min_us": 79.639,
+          "p50_ns": 83345,
+          "p50_us": 83.345,
+          "p95_us": 112.49,
+          "p99_ns": 185506,
+          "p99_us": 185.506,
+          "samples": 1000
+        },
+        "object_read_control": {
+          "max_us": 3165.634,
+          "mean_us": 18.216,
+          "min_us": 7.454,
+          "p50_ns": 7554,
+          "p50_us": 7.554,
+          "p95_us": 9.247,
+          "p99_ns": 11612,
+          "p99_us": 11.612,
+          "samples": 1000
+        }
+      },
+      "descriptor_id": "31d91d0d041fa44674661916006f98c0822d1f1bd96803ed451d8d78f2fa0c46",
+      "descriptor_schema": "weft.kv.capability.v1",
+      "dtype": "bf16",
+      "envelope_id": "149fe4e329091510d55cda02c107d2b0e4b5d8d5ca9ad488e237685eae18eaa1",
+      "frame_bytes": 1855,
+      "head_count": 4,
+      "head_dim": 64,
+      "label": "1KiB",
+      "page_bytes": 1024,
+      "page_rows": 2
+    },
+    {
+      "anonymous_denial_text": "kv page is not available to this principal",
+      "authorized_exact_bytes": true,
+      "cost": {
+        "authorize_decode_control": {
+          "max_us": 2586.444,
+          "mean_us": 205.549,
+          "min_us": 188.391,
+          "p50_ns": 189473,
+          "p50_us": 189.473,
+          "p95_us": 222.866,
+          "p99_ns": 325678,
+          "p99_us": 325.678,
+          "samples": 1000
+        },
+        "cached_verify_once_authorize_decode": {
+          "max_us": 3022.908,
+          "mean_us": 226.738,
+          "min_us": 203.69,
+          "p50_ns": 205614,
+          "p50_us": 205.614,
+          "p95_us": 273.189,
+          "p99_ns": 347298,
+          "p99_us": 347.298,
+          "samples": 1000
+        },
+        "denied_path": {
+          "max_us": 11.301,
+          "mean_us": 6.461,
+          "min_us": 6.171,
+          "p50_ns": 6332,
+          "p50_us": 6.332,
+          "p95_us": 7.013,
+          "p99_ns": 9828,
+          "p99_us": 9.828,
+          "samples": 1000
+        },
+        "envelope_load_and_verify_only": {
+          "max_us": 264.413,
+          "mean_us": 47.824,
+          "min_us": 45.415,
+          "p50_ns": 46216,
+          "p50_us": 46.216,
+          "p95_us": 55.674,
+          "p99_ns": 70502,
+          "p99_us": 70.502,
+          "samples": 1001
+        },
+        "full_load_verify_authorize_decode": {
+          "max_us": 3732.441,
+          "mean_us": 264.854,
+          "min_us": 248.894,
+          "p50_ns": 251900,
+          "p50_us": 251.9,
+          "p95_us": 282.497,
+          "p99_ns": 321900,
+          "p99_us": 321.9,
+          "samples": 1000
+        },
+        "object_read_control": {
+          "max_us": 2367.705,
+          "mean_us": 38.388,
+          "min_us": 28.392,
+          "p50_ns": 28793,
+          "p50_us": 28.793,
+          "p95_us": 32.05,
+          "p99_ns": 34564,
+          "p99_us": 34.564,
+          "samples": 1000
+        }
+      },
+      "descriptor_id": "531087a51989fc13dc3e1612b32e9d10ba5840b0bf640dc0a26ff644e6ee0bcd",
+      "descriptor_schema": "weft.kv.capability.v1",
+      "dtype": "bf16",
+      "envelope_id": "d101ca29674b3fc18ac9dc9a0213bb978d257d075907099a4251392a7164bd4d",
+      "frame_bytes": 66419,
+      "head_count": 4,
+      "head_dim": 64,
+      "label": "64KiB",
+      "page_bytes": 65536,
+      "page_rows": 128
+    }
+  ],
+  "stamp": "20261111T002507Z"
+}

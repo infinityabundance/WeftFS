@@ -8020,3 +8020,5 @@ and restores failed because the court re-opened the packed store without
 * The three R12 courts are **standalone and not registered in
   `verify-all.sh`**; `verify-all` still reports the 42 courts it already had.
   Their receipts are the evidence above.
+* Full aggregate: `bench/receipts/verify-20261110T234609Z.json` — **42/42 courts
+  pass, 0 failed, 0 skipped**, at the revision that carries this section.

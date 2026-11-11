@@ -404,8 +404,9 @@ Full note with every limit and every loss: [`docs/RELEASE-v0.9.0.md`](docs/RELEA
   `weft.load-attestation.v1` loads: 272 tensors in 2,133 ms, verification
   8,734 µs/MiB (1.05x the load), a 456 KB receipt, unloaded tensors listed as
   unverified, a tampered record or store rejected, and an **independent Go
-  verifier** for the shared Ed25519/WCB signature. Evidence in
-  [`bench/RESULTS-scale-7b.md`](bench/RESULTS-scale-7b.md),
+  verifier** for the shared Ed25519/WCB signature. Full verification
+  `bench/receipts/verify-20261110T234609Z.json` (**42/42** courts pass).
+  Evidence in [`bench/RESULTS-scale-7b.md`](bench/RESULTS-scale-7b.md),
   [`bench/RESULTS-fleet-coldstart.md`](bench/RESULTS-fleet-coldstart.md) and
   [`bench/RESULTS-attested-loads.md`](bench/RESULTS-attested-loads.md); design
   in [`docs/LOAD-ATTESTATION.md`](docs/LOAD-ATTESTATION.md).
