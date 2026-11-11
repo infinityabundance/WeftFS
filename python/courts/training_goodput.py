@@ -1768,6 +1768,8 @@ def _durability_stats(events):
     fsyncs = _worker_values(events, "finish", "backend_fsyncs")
     writes = _worker_values(events, "finish", "backend_writes")
     requests = _worker_values(events, "service", "requests")
+    write_ms = _worker_values(events, "checkpoint_write_ms")
+    request_ms = _worker_values(events, "service", "request_ms")
     return {
         "checkpoints": len(events),
         "backend_fsyncs_total": int(sum(fsyncs)) if fsyncs else None,
@@ -1775,6 +1777,12 @@ def _durability_stats(events):
         "backend_writes_p50": round3(median(writes)),
         "service_requests_p50": round3(median(requests)),
         "service_requests_total": int(sum(requests)) if requests else None,
+        # Server-side write time (the publish inside the helper) and the
+        # client-observed request time. For the per-save arm the publish is
+        # measured on a freshly opened handle; for the session arm on the
+        # reused one. That is where the difference shows up.
+        "checkpoint_write_ms_p50": round3(median(write_ms)),
+        "service_request_ms_p50": round3(median(request_ms)),
     }
 
 
@@ -2029,7 +2037,10 @@ def session_sweep(args):
         }
 
     # Crash consistency for the reused session: the same old-or-new contract the
-    # per-save court proves, driven through one session.
+    # per-save court proves, driven through one session. The deterministic
+    # pre-publication branches are covered by
+    # tests/test_dcp.py::test_session_save_aborted_at_each_publication_phase_*
+    # (WEFT_CRASH_PHASE); these scenarios sample the wall clock around a save.
     kill_rows = {}
     kill_interval = min(16, args.steps)
     session_warm_p50 = (
@@ -2037,10 +2048,15 @@ def session_sweep(args):
         if str(kill_interval) in cells and "weft-session" in cells[str(kill_interval)]
         else None
     )
-    for scenario in ("after_ack", "before_ack_midflight"):
+    kill_scenarios = (
+        ("after_ack", 0.0),
+        ("before_ack_half", 0.5),
+        ("before_ack_after_completion", 1.15),
+    )
+    for scenario, factor in kill_scenarios:
         delay = 0.0
-        if scenario == "before_ack_midflight":
-            delay = max(10.0, 0.9 * float(session_warm_p50 or 100.0))
+        if factor:
+            delay = max(10.0, factor * float(session_warm_p50 or 100.0))
         rows = []
         for rep in range(args.kill_reps):
             print(

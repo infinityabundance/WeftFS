@@ -650,6 +650,109 @@ def test_session_killed_during_a_save_leaves_no_partial_checkpoint(store):
 
 
 @requires_torch
+def test_session_save_aborted_at_each_publication_phase_leaves_old_or_new(store):
+    """The store's own crash phases, driven through a reused session.
+
+    ``WEFT_CRASH_PHASE`` aborts the publishing process -- here the session's
+    helper -- at a named point in the commit protocol. ``after_objects`` and
+    ``after_commit_file`` must leave the store on the previous generation and
+    expose no new checkpoint; ``after_superblock_write`` must expose the new
+    checkpoint whole. Nothing partial may appear, and every exposed checkpoint
+    must verify and restore exactly.
+    """
+    def expected_state():
+        generator = torch.Generator().manual_seed(20261105)
+        return {
+            "embed": torch.randn(16, 8, generator=generator),
+            "bias": torch.randn(16, generator=generator),
+            "block.weight": torch.randn(8, 4, generator=generator),
+        }
+
+    source = expected_state()
+    child = (
+        "import sys\n"
+        "sys.path.insert(0, %r)\n"
+        "import torch\n"
+        "from weftcodec.dcp import CheckpointSession\n"
+        "name = sys.argv[1]\n"
+        "gen = torch.Generator().manual_seed(20261105)\n"
+        "state = {'embed': torch.randn(16, 8, generator=gen),\n"
+        "         'bias': torch.randn(16, generator=gen),\n"
+        "         'block.weight': torch.randn(8, 4, generator=gen)}\n"
+        "with CheckpointSession(%r, weftfs_cli=%r, session_idle_secs=0) as session:\n"
+        "    session.save(state, checkpoint_id=name)\n"
+    ) % (
+        str(Path(__file__).resolve().parents[1]),
+        str(store),
+        str(WEFTFS_CLI),
+    )
+
+    def run_child(name, phase=None):
+        env = {
+            **os.environ,
+            "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
+        }
+        env.pop("WEFT_CRASH_PHASE", None)
+        if phase is not None:
+            env["WEFT_CRASH_PHASE"] = phase
+        return subprocess.run(
+            [sys.executable, "-c", child, name],
+            capture_output=True,
+            timeout=300,
+            env=env,
+        )
+
+    # A pre-existing checkpoint, published without the fault injection.
+    baseline = run_child("base")
+    assert baseline.returncode == 0, baseline.stdout + baseline.stderr
+
+    for phase, expect_new in (
+        ("after_objects", False),
+        ("after_commit_file", False),
+        ("after_superblock_write", True),
+    ):
+        proc = run_child("crash", phase)
+        assert proc.returncode != 0, "phase %s did not abort" % phase
+        listed = _run(store, "checkpoint", "list", "--json")
+        rows = json.loads(listed.stdout.decode())["checkpoints"]
+        names = {row["name"]: row for row in rows}
+        assert "base" in names, "phase %s lost the baseline checkpoint" % phase
+        assert ("crash" in names) is expect_new, (
+            phase,
+            "exposed %s" % sorted(names),
+        )
+        for name, row in names.items():
+            assert row["complete"] is True, (phase, row)
+            result = verify_checkpoint(
+                store, name, full=True, weftfs_cli=WEFTFS_CLI
+            )
+            problems = result["full"].get("problems") or []
+            if phase == "after_commit_file":
+                # The old state is exposed and exact, but the abort landed after
+                # the commit file was fsynced and before the superblock, so an
+                # orphan commit file sits above the published generation. The
+                # store reports that rather than hiding it; it must be the only
+                # problem, and readers must still see the old generation.
+                assert result["full"]["ok"] is False, problems
+                assert problems, "the orphan commit file was not reported"
+                assert all(
+                    "above the highest published superblock" in str(
+                        problem.get("detail", "")
+                    )
+                    for problem in problems
+                ), problems
+            else:
+                assert result["full"]["ok"] is True, problems
+            reader = WeftStorageReader(name, store_root=store, weftfs_cli=WEFTFS_CLI)
+            try:
+                target = expected_state()
+                dcp.load(target, storage_reader=reader, no_dist=True)
+            finally:
+                reader.close()
+            _assert_state_equal(source, target)
+
+
+@requires_torch
 def test_direct_container_matches_the_staged_path(store, tmp_path):
     """One copy instead of two, and byte-identical restored content."""
     from weftcodec.service import CheckpointService
