@@ -8006,10 +8006,10 @@ and restores failed because the court re-opened the packed store without
 
 ### Gates at this change
 
-* Rust `cargo test --all-targets`: **153 suites, 746 passed / 0 failed / 0
-  ignored**.
-* FUSE `cargo test --features fuse --all-targets`: **154 suites, 789 passed /
-  0 failed / 2 ignored** (the two pre-existing ignores).
+* Rust `cargo test --all-targets` at the final revision: **153 suites, 747
+  passed / 0 failed / 0 ignored**.
+* FUSE `cargo test --features fuse --all-targets` at the final revision: **154
+  suites, 790 passed / 0 failed / 2 ignored** (the two pre-existing ignores).
 * Go `go test -race -count=1 ./...` in the **fuse** court: all packages pass
   (cmd 46.2 s, fusefs 12.7 s, index, model, store 212.1 s). The same command in
   the *go* court fails only because that image has no `/bin/fusermount`
